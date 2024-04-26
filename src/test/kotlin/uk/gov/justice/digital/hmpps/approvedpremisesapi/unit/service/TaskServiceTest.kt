@@ -319,6 +319,8 @@ class TaskServiceTest {
         TaskEntityType.ASSESSMENT,
         (it.application as ApprovedPremisesApplicationEntity).name,
         it.allocatedToUser?.name,
+        it.submittedAt?.toLocalDateTime(),
+        it.decision?.name,
       )
     }
     val placementApplicationTasks = placementApplications.map {
@@ -328,15 +330,20 @@ class TaskServiceTest {
         TaskEntityType.PLACEMENT_APPLICATION,
         it.application.name,
         it.allocatedToUser?.name,
+        it.submittedAt?.toLocalDateTime(),
+        it.decision?.name,
       )
     }
     val placementRequestTasks = placementRequests.map {
+      val (outcomeRecordedAt, outcome) = it.getOutcomeDetails()
       Task(
         it.id,
         it.createdAt.toLocalDateTime(),
         TaskEntityType.PLACEMENT_REQUEST,
         it.application.name,
         it.allocatedToUser?.name,
+        outcomeRecordedAt?.toLocalDateTime(),
+        outcome?.name,
       )
     }
 

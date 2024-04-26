@@ -245,6 +245,8 @@ data class Task(
   val type: TaskEntityType,
   val person: String,
   val allocatedTo: String?,
+  val completedAt: LocalDateTime?,
+  val decision: String?,
 )
 
 enum class TaskEntityType {
