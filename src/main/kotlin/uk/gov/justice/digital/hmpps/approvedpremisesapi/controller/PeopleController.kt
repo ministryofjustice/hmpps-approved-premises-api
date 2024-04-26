@@ -83,7 +83,7 @@ class PeopleController(
   }
 
   override fun peopleCrnPrisonCaseNotesGet(crn: String): ResponseEntity<List<PrisonCaseNote>> {
-    val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw NotFoundProblem(crn, "Case Notes")
@@ -102,7 +102,7 @@ class PeopleController(
   }
 
   override fun peopleCrnAdjudicationsGet(crn: String): ResponseEntity<List<Adjudication>> {
-    val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw NotFoundProblem(crn, "Adjudications")
@@ -121,7 +121,7 @@ class PeopleController(
   }
 
   override fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
-    val offenderDetails = getOffenderDetailsIgnoringLaoQualification(crn)
+    val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw NotFoundProblem(crn, "ACCT Alerts")
@@ -271,13 +271,19 @@ class PeopleController(
   }
 
   private fun ensureUserCanAccessOffenderInfo(crn: String) {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    getOffenderDetails(crn)
   }
 
-  private fun getOffenderDetailsIgnoringLaoQualification(crn: String): OffenderDetailSummary {
+  private fun getOffenderDetails(crn: String): OffenderDetailSummary {
     val user = userService.getUserForRequest()
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, false)) {
+    val offenderDetails = when (
+      val offenderDetailsResult = offenderService.getOffenderByCrn(
+        crn = crn,
+        userDistinguishedName = user.deliusUsername,
+        ignoreLaoRestrictions = false,
+      )
+    ) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
