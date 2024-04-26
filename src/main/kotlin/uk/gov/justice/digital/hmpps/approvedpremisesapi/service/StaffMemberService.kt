@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -9,19 +10,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 
 @Service
 class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextApiClient) {
-  fun getStaffMemberByCode(code: String, qCode: String): AuthorisableActionResult<StaffMember> {
-    val premisesStaffMembersResult = getStaffMembersForQCode(qCode)
 
-    val premisesStaffMembers = when (premisesStaffMembersResult) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getStaffMemberByCode(code: String, qCode: String): AuthorisableActionResult<StaffMember> {
+    val premisesStaffMembers = when (val premisesStaffMembersResult = getStaffMembersForQCode(qCode)) {
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
       is AuthorisableActionResult.Success -> premisesStaffMembersResult.entity
     }
 
     val staffMember = premisesStaffMembers.content.firstOrNull { it.code == code }
-      ?: return AuthorisableActionResult.NotFound()
 
-    return AuthorisableActionResult.Success(staffMember)
+    return if (staffMember != null) {
+      AuthorisableActionResult.Success(staffMember)
+    } else {
+      log.warn("Whilst a result was returning for qCode $qCode, no staff member with code $code was found in it")
+      AuthorisableActionResult.NotFound()
+    }
   }
 
   fun getStaffMembersForQCode(qCode: String) = when (val staffMembersResponse = apDeliusContextApiClient.getStaffMembers(qCode)) {
