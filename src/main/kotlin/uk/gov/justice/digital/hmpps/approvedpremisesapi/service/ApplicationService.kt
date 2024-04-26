@@ -120,7 +120,7 @@ class ApplicationService(
     page: Int?,
     crnOrName: String?,
     sortDirection: SortDirection?,
-    status: ApprovedPremisesApplicationStatus?,
+    status: List<ApprovedPremisesApplicationStatus>,
     sortBy: ApplicationSortField?,
     apAreaId: UUID?,
     pageSize: Int? = 10,
@@ -133,11 +133,14 @@ class ApplicationService(
     }
     val pageable = getPageable(sortField, sortDirection, page, pageSize)
 
+    val statusNames = status.map { it.name }
+
     val response = applicationRepository.findAllApprovedPremisesSummaries(
-      pageable,
-      crnOrName,
-      status,
-      apAreaId,
+      pageable = pageable,
+      crnOrName = crnOrName,
+      statusProvided = statusNames.isNotEmpty(),
+      status = statusNames,
+      apAreaId = apAreaId,
     )
 
     return Pair(response.content, getMetadata(response, page, pageSize))

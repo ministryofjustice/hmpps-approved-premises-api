@@ -37,7 +37,7 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
   ;
 
   companion object {
-    fun valueOf(apiValue: ApiApprovedPremisesApplicationStatus): ApprovedPremisesApplicationStatus? =
-      ApprovedPremisesApplicationStatus.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: ApiApprovedPremisesApplicationStatus): ApprovedPremisesApplicationStatus =
+      ApprovedPremisesApplicationStatus.entries.first { it.apiValue == apiValue }
   }
 }

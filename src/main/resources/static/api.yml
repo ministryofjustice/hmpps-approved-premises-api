@@ -1758,9 +1758,11 @@ paths:
             $ref: '_shared.yml#/components/schemas/SortDirection'
         - name: status
           in: query
-          description: The application status
+          description: Application statuses to filter on. If none provided, all will be returned
           schema:
-            $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
         - name: sortBy
           in: query
           description: The field to sort the results by.

@@ -104,7 +104,7 @@ class ApplicationsController(
     page: Int?,
     crnOrName: String?,
     sortDirection: SortDirection?,
-    status: ApprovedPremisesApplicationStatus?,
+    status: List<ApprovedPremisesApplicationStatus>?,
     sortBy: ApplicationSortField?,
     apAreaId: UUID?,
   ): ResponseEntity<List<ApplicationSummary>> {
@@ -112,7 +112,7 @@ class ApplicationsController(
       throw ForbiddenProblem()
     }
     val user = userService.getUserForRequest()
-    val statusTransformed = status?.let { DomainApprovedPremisesApplicationStatus.valueOf(it) }
+    val statusTransformed = status?.map { DomainApprovedPremisesApplicationStatus.valueOf(it) } ?: emptyList()
 
     val (applications, metadata) =
       applicationService.getAllApprovedPremisesApplications(

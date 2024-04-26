@@ -117,12 +117,12 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
             },
           )
 
-          ApprovedPremisesApplicationStatus.entries.forEach {
+          ApprovedPremisesApplicationStatus.entries.forEach { status ->
             allApplications.add(
               approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
-                withStatus(it)
+                withStatus(status)
                 withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
                 withArrivalDate(OffsetDateTime.now().plusDays(Random.nextLong(1, 25)))
                 withRiskRatings(
@@ -190,7 +190,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, null, null, null, null)
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, null, emptyList(), null, null)
 
       assertThat(metadata).isNotNull()
       assertThat(metadata!!.currentPage).isEqualTo(page + 1)
@@ -207,7 +207,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @Test
   fun `findAllApprovedPremisesSummaries filters by CRN`() {
     val expectedApplications = allApplications.filter { it.crn == crn1 }
-    val result = applicationService.getAllApprovedPremisesApplications(1, crn1, null, null, null, null)
+    val result = applicationService.getAllApprovedPremisesApplications(1, crn1, null, emptyList(), null, null)
 
     result.first.forEachIndexed { index, summary ->
       assertThat(summary.matches(expectedApplications[index]))
@@ -217,7 +217,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @Test
   fun `findAllApprovedPremisesSummaries filters by name`() {
     val expectedApplications = allApplications.filter { it.name == name }
-    val result = applicationService.getAllApprovedPremisesApplications(1, name, null, null, null, null)
+    val result = applicationService.getAllApprovedPremisesApplications(1, name, null, emptyList(), null, null)
 
     result.first.forEachIndexed { index, summary ->
       assertThat(summary.matches(expectedApplications[index]))
@@ -229,7 +229,25 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   fun `findAllApprovedPremisesSummaries filters by status`(status: ApprovedPremisesApplicationStatus) {
     val expectedApplications = allApplications.filter { it.status == status }
 
-    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, status, null, null)
+    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, listOf(status), null, null)
+
+    result.first.forEachIndexed { index, summary ->
+      assertThat(summary.matches(expectedApplications[index]))
+    }
+  }
+
+  @Test
+  fun `findAllApprovedPremisesSummaries filters by statuses`() {
+    val statuses = listOf(
+      ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+      ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+      ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
+    )
+
+    val expectedApplications = allApplications.filter { statuses.contains(it.status) }
+    assertThat(expectedApplications).hasSizeGreaterThan(2)
+
+    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, statuses, null, null)
 
     result.first.forEachIndexed { index, summary ->
       assertThat(summary.matches(expectedApplications[index]))
@@ -240,7 +258,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   fun `findAllApprovedPremisesSummaries filters by AP Area`() {
     val expectedApplications = allApplications.filter { it.apArea?.id == apArea.id }
 
-    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, null, null, apArea.id)
+    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, emptyList(), null, apArea.id)
 
     result.first.forEachIndexed { index, summary ->
       assertThat(summary.matches(expectedApplications[index]))
@@ -250,7 +268,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @Test
   fun `findAllApprovedPremisesSummaries handles pagination`() {
     allApplications.forEachIndexed { index, application ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(index + 1, null, null, null, null, null, 1)
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(index + 1, null, null, emptyList(), null, null, 1)
 
       assertThat(metadata).isNotNull()
       assertThat(metadata!!.currentPage).isEqualTo(index + 1)
@@ -270,7 +288,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, SortDirection.asc, null, sortField, null)
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, SortDirection.asc, emptyList(), sortField, null)
 
       assertThat(metadata).isNotNull()
       assertThat(metadata!!.currentPage).isEqualTo(page + 1)
@@ -291,7 +309,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, SortDirection.desc, null, sortField, null)
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, SortDirection.desc, emptyList(), sortField, null)
 
       assertThat(metadata).isNotNull()
       assertThat(metadata!!.currentPage).isEqualTo(page + 1)
