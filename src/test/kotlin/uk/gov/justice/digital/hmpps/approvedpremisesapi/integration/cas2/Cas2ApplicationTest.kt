@@ -78,7 +78,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class ControlsOnExternalUsers {
     @ParameterizedTest
-    @ValueSource(strings = ["ROLE_LICENCE_CA", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
+    @ValueSource(strings = ["ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
     fun `creating an application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
@@ -95,7 +95,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["ROLE_LICENCE_CA", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
+    @ValueSource(strings = ["ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
     fun `updating an application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
@@ -1156,115 +1156,239 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class PostToCreate {
-    @Test
-    fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
-      `Given a CAS2 POM User` { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationSchema =
-            cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
+
+    @Nested
+    inner class PomUsers {
+      @Test
+      fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
+        `Given a CAS2 POM User` { userEntity, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
+
+            val result = webTestClient.post()
+              .uri("/cas2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .bodyValue(
+                NewApplication(
+                  crn = offenderDetails.otherIds.crn,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isCreated
+              .returnResult(Cas2Application::class.java)
+
+            Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
+              it.matches(Regex("/cas2/applications/.+"))
             }
 
-          val result = webTestClient.post()
+            Assertions.assertThat(result.responseBody.blockFirst()).matches {
+              it.person.crn == offenderDetails.otherIds.crn &&
+                it.schemaVersion == applicationSchema.id
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Create new application returns 404 when a person cannot be found`() {
+        `Given a CAS2 POM User` { userEntity, jwt ->
+          val crn = "X1234"
+
+          CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+          loadPreemptiveCacheForOffenderDetails(crn)
+
+          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          webTestClient.post()
             .uri("/cas2/applications")
             .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
               NewApplication(
-                crn = offenderDetails.otherIds.crn,
+                crn = crn,
               ),
             )
             .exchange()
             .expectStatus()
-            .isCreated
-            .returnResult(Cas2Application::class.java)
-
-          Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
-            it.matches(Regex("/cas2/applications/.+"))
-          }
-
-          Assertions.assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn &&
-              it.schemaVersion == applicationSchema.id
-          }
+            .isNotFound
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
         }
       }
     }
 
-    @Test
-    fun `Create new application returns 404 when a person cannot be found`() {
-      `Given a CAS2 POM User` { userEntity, jwt ->
-        val crn = "X1234"
+    @Nested
+    inner class LicenceCaseAdminUsers {
+      @Test
+      fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
+        `Given a CAS2 Licence Case Admin User` { _, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
 
-        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-        loadPreemptiveCacheForOffenderDetails(crn)
+            val result = webTestClient.post()
+              .uri("/cas2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .bodyValue(
+                NewApplication(
+                  crn = offenderDetails.otherIds.crn,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isCreated
+              .returnResult(Cas2Application::class.java)
 
-        cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
+            Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
+              it.matches(Regex("/cas2/applications/.+"))
+            }
+
+            Assertions.assertThat(result.responseBody.blockFirst()).matches {
+              it.person.crn == offenderDetails.otherIds.crn &&
+                it.schemaVersion == applicationSchema.id
+            }
+          }
         }
+      }
 
-        webTestClient.post()
-          .uri("/cas2/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = crn,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isNotFound
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+      @Test
+      fun `Create new application returns 404 when a person cannot be found`() {
+        `Given a CAS2 Licence Case Admin User` { _, jwt ->
+          val crn = "X1234"
+
+          CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+          loadPreemptiveCacheForOffenderDetails(crn)
+
+          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          webTestClient.post()
+            .uri("/cas2/applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = crn,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isNotFound
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+        }
       }
     }
   }
 
   @Nested
   inner class PutToUpdate {
-    @Test
-    fun `Update existing CAS2 application returns 200 with correct body`() {
-      `Given a CAS2 POM User` { submittingUser, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-          val applicationSchema =
-            cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                schema,
-              )
+    @Nested
+    inner class PomUsers {
+      @Test
+      fun `Update existing CAS2 application returns 200 with correct body`() {
+        `Given a CAS2 POM User` { submittingUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+                withSchema(
+                  schema,
+                )
+              }
+
+            cas2ApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
             }
 
-          cas2ApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
+            val resultBody = webTestClient.put()
+              .uri("/cas2/applications/$applicationId")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateCas2Application(
+                  data = mapOf("thingId" to 123),
+                  type = UpdateApplicationType.CAS2,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(String::class.java)
+              .responseBody
+              .blockFirst()
+
+            val result = objectMapper.readValue(resultBody, Application::class.java)
+
+            Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
+        }
+      }
+    }
 
-          val resultBody = webTestClient.put()
-            .uri("/cas2/applications/$applicationId")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              UpdateCas2Application(
-                data = mapOf("thingId" to 123),
-                type = UpdateApplicationType.CAS2,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult(String::class.java)
-            .responseBody
-            .blockFirst()
+    @Nested
+    inner class LicenceCaseAdminUsers {
+      @Test
+      fun `Update existing CAS2 application returns 200 with correct body`() {
+        `Given a CAS2 Licence Case Admin User` { submittingUser, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-          val result = objectMapper.readValue(resultBody, Application::class.java)
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+                withSchema(
+                  schema,
+                )
+              }
 
-          Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+            cas2ApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+            }
+
+            val resultBody = webTestClient.put()
+              .uri("/cas2/applications/$applicationId")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateCas2Application(
+                  data = mapOf("thingId" to 123),
+                  type = UpdateApplicationType.CAS2,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(String::class.java)
+              .responseBody
+              .blockFirst()
+
+            val result = objectMapper.readValue(resultBody, Application::class.java)
+
+            Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+          }
         }
       }
     }
