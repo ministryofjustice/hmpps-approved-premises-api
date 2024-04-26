@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -16,10 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
@@ -33,17 +38,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.REJECTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -1424,6 +1433,494 @@ class TasksTest {
         )
         .hasSameElementsAs(completeTasks)
     }
+  }
+
+  @Nested
+  inner class SortByTest : InitialiseDatabasePerClassTestBase() {
+    lateinit var jwt: String
+    lateinit var crn: String
+
+    private lateinit var tasks: Map<UUID, Task>
+    private lateinit var assessments: Map<UUID, AssessmentEntity>
+    private lateinit var placementRequests: Map<UUID, PlacementRequestEntity>
+    private lateinit var placementApplications: Map<UUID, PlacementApplicationEntity>
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+            this.crn = offenderDetails.otherIds.crn
+
+            val (assessment1, _) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+            )
+
+            val (assessment2, _) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+            )
+
+            val (placementRequest1, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              booking = bookingEntityFactory.produceAndPersist {
+                withPremises(
+                  approvedPremisesEntityFactory.produceAndPersist {
+                    withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                    withYieldedProbationRegion {
+                      probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                    }
+                  },
+                )
+              },
+            )
+
+            val (placementRequest2, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              booking = bookingEntityFactory.produceAndPersist {
+                withPremises(
+                  approvedPremisesEntityFactory.produceAndPersist {
+                    withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                    withYieldedProbationRegion {
+                      probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                    }
+                  },
+                )
+              },
+            )
+
+            val (placementRequest3, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+            )
+
+            placementRequest3.bookingNotMades = mutableListOf(
+              bookingNotMadeFactory.produceAndPersist {
+                withPlacementRequest(placementRequest3)
+              },
+            )
+
+            val placementApplication1 = `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              decision = REJECTED,
+            )
+
+            val placementApplication2 = `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+              decision = ACCEPTED,
+            )
+
+            assessments = mapOf(
+              assessment1.id to assessment1,
+              assessment2.id to assessment2,
+              placementRequest1.assessment.id to placementRequest1.assessment,
+              placementRequest2.assessment.id to placementRequest2.assessment,
+              placementRequest3.assessment.id to placementRequest3.assessment,
+              placementApplication1.application.getLatestAssessment()!!.id to placementApplication1.application.getLatestAssessment()!!,
+              placementApplication2.application.getLatestAssessment()!!.id to placementApplication2.application.getLatestAssessment()!!,
+            )
+
+            placementRequests = mapOf(
+              placementRequest1.id to placementRequest1,
+              placementRequest2.id to placementRequest2,
+              placementRequest3.id to placementRequest3,
+            )
+
+            placementApplications = mapOf(
+              placementApplication1.id to placementApplication1,
+              placementApplication2.id to placementApplication2,
+            )
+
+            tasks = mapOf()
+            tasks += assessments.mapValues {
+              taskTransformer.transformAssessmentToTask(
+                it.value,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              )
+            }
+            tasks += placementRequests.mapValues {
+              taskTransformer.transformPlacementRequestToTask(
+                it.value,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              )
+            }
+            tasks += placementApplications.mapValues {
+              taskTransformer.transformPlacementApplicationToTask(
+                it.value,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              )
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all tasks sorts by createdAt in ascending order by default`() {
+      val url = "/tasks?isCompleted=true"
+
+      println(objectMapper.writeValueAsString(tasksSortedByCreatedAt()))
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByCreatedAt(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by createdAt in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByCreatedAt(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by createdAt in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByCreatedAt(SortDirection.desc),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by dueAt in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByDueAt(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by dueAt in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByDueAt(SortDirection.desc),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by allocatedTo in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByAllocatedTo(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by allocatedTo in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByAllocatedTo(SortDirection.desc),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by person in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByPerson(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by person in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByPerson(SortDirection.desc),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by completedAt in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByCompletedAt(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by completedAt in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByCompletedAt(SortDirection.desc),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by taskType in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByTaskType(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by taskType in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByTaskType(SortDirection.desc),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by decision in ascending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=asc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByDecision(),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks sorts by decision in descending order`() {
+      val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=desc"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            tasksSortedByDecision(SortDirection.desc),
+          ),
+        )
+    }
+
+    private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        val createdAt = when (val task = tasks[id]!!) {
+          is AssessmentTask -> assessments[id]!!.createdAt
+          is PlacementRequestTask -> placementRequests[id]!!.createdAt
+          is PlacementApplicationTask -> placementApplications[id]!!.createdAt
+          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        }
+
+        createdAt.toInstant()
+      }
+
+    private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.dueAt
+      }
+
+    private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.personName
+      }
+
+    private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.allocatedToStaffMember!!.name
+      }
+
+    private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.outcomeRecordedAt
+      }
+
+    private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.taskType
+      }
+
+    private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) =
+      sortTasks(sortDirection) { id: UUID ->
+        when (val task = tasks[id]!!) {
+          is AssessmentTask -> task.outcome?.value
+          is PlacementRequestTask -> task.outcome?.value
+          is PlacementApplicationTask -> task.outcome?.value
+          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        }
+      }
+
+    private fun <T : Comparable<T>> sortTasks(sortDirection: SortDirection, sortFunc: (UUID) -> T?) =
+      tasks
+        .keys
+        .apply {
+          when (sortDirection) {
+            SortDirection.asc -> sortedBy(sortFunc)
+            SortDirection.desc -> sortedByDescending(sortFunc)
+          }
+        }
+        .map { tasks[it]!! }
   }
 
   @Nested
