@@ -258,8 +258,8 @@ case-notes-service-upstream-timeout-ms: 30000
 web-clients:
   # 0.7MB
   max-response-in-memory-size-bytes: 750000
-  # 1 MB
-  prison-api-max-response-in-memory-size-bytes: 1048576
+  # 2.5 MB
+  prison-api-max-response-in-memory-size-bytes: 2621440
 
 migration-job:
   throttle-enabled: true
