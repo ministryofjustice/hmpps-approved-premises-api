@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -107,6 +108,7 @@ class ApplicationsController(
     status: List<ApprovedPremisesApplicationStatus>?,
     sortBy: ApplicationSortField?,
     apAreaId: UUID?,
+    releaseType: ReleaseTypeOption?,
   ): ResponseEntity<List<ApplicationSummary>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
@@ -122,6 +124,7 @@ class ApplicationsController(
         statusTransformed,
         sortBy,
         apAreaId,
+        releaseType?.name,
       )
 
     return ResponseEntity.ok().headers(

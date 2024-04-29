@@ -123,12 +123,14 @@ class ApplicationService(
     status: List<ApprovedPremisesApplicationStatus>,
     sortBy: ApplicationSortField?,
     apAreaId: UUID?,
+    releaseType: String?,
     pageSize: Int? = 10,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
     val sortField = when (sortBy) {
       ApplicationSortField.arrivalDate -> "arrivalDate"
       ApplicationSortField.createdAt -> "a.created_at"
       ApplicationSortField.tier -> "tier"
+      ApplicationSortField.releaseType -> "releaseType"
       else -> "a.created_at"
     }
     val pageable = getPageable(sortField, sortDirection, page, pageSize)
@@ -141,6 +143,7 @@ class ApplicationService(
       statusProvided = statusNames.isNotEmpty(),
       status = statusNames,
       apAreaId = apAreaId,
+      releaseType,
     )
 
     return Pair(response.content, getMetadata(response, page, pageSize))
