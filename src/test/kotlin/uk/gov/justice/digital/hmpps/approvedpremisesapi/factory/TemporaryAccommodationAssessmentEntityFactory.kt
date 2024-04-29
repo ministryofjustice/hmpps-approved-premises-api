@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -38,6 +39,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var completedAt: Yielded<OffsetDateTime?> = { null }
   private var summaryData: Yielded<String> = { "{}" }
   private var dueAt: Yielded<OffsetDateTime?> = { null }
+  private var referralRejectionReason: Yielded<ReferralRejectionReasonEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -130,6 +132,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     completedAt = this.completedAt(),
     summaryData = this.summaryData(),
     isWithdrawn = false,
+    referralRejectionReason = this.referralRejectionReason(),
     dueAt = this.dueAt(),
   )
 }

@@ -7371,6 +7371,11 @@ components:
           $ref: '#/components/schemas/AnyValue'
         rejectionRationale:
           type: string
+        referralRejectionReasonId:
+          type: string
+          format: uuid
+        isWithdrawn:
+          type: boolean
       required:
         - document
         - rejectionRationale

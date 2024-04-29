@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
@@ -62,6 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -96,6 +98,7 @@ class AssessmentServiceTest {
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
+  private val referralRejectionReasonRepositoryMock = mockk<ReferralRejectionReasonRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
@@ -116,6 +119,7 @@ class AssessmentServiceTest {
     assessmentRepositoryMock,
     assessmentClarificationNoteRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
+    referralRejectionReasonRepositoryMock,
     jsonSchemaServiceMock,
     domainEventServiceMock,
     offenderServiceMock,
@@ -1505,6 +1509,7 @@ class AssessmentServiceTest {
   @Test
   fun `rejectAssessment sets completed at timestamp to null for Temporary Accommodation`() {
     val assessmentId = UUID.randomUUID()
+    val referralRejectionReasonId = UUID.randomUUID()
 
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -1537,6 +1542,10 @@ class AssessmentServiceTest {
       .withData("{\"test\": \"data\"}")
       .produce()
 
+    val referralRejectionReason = ReferralRejectionReasonEntityFactory()
+      .withId(referralRejectionReasonId)
+      .produce()
+
     every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
@@ -1546,6 +1555,8 @@ class AssessmentServiceTest {
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+    every { referralRejectionReasonRepositoryMock.findByIdOrNull(referralRejectionReasonId) } returns referralRejectionReason
 
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(assessment.application.crn)
@@ -1564,7 +1575,7 @@ class AssessmentServiceTest {
     every { userServiceMock.getUserForRequest() } returns user
     every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
-    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning", referralRejectionReasonId, false)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -2229,6 +2240,7 @@ class AssessmentServiceTest {
       assessmentRepositoryMock,
       assessmentClarificationNoteRepositoryMock,
       assessmentReferralHistoryNoteRepositoryMock,
+      referralRejectionReasonRepositoryMock,
       jsonSchemaServiceMock,
       domainEventServiceMock,
       offenderServiceMock,

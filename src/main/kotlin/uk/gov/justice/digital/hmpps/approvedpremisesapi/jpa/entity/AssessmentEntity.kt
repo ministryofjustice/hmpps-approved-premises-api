@@ -342,6 +342,9 @@ class TemporaryAccommodationAssessmentEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var summaryData: String,
   isWithdrawn: Boolean,
+  @ManyToOne
+  @JoinColumn(name = "referral_rejection_reason_id")
+  var referralRejectionReason: ReferralRejectionReasonEntity?,
   dueAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
