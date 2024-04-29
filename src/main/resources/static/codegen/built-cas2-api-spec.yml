@@ -4181,6 +4181,7 @@ components:
         - approved_premises_assessment_more_info_bug_fix
         - approved_premises_redact_assessment_details
         - approved_premises_withdraw_placement_request
+        - approved_premises_replay_domain_events
     MigrationJobRequest:
       type: object
       properties:

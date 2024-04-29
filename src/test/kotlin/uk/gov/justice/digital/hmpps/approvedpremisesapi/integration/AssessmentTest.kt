@@ -2090,7 +2090,7 @@ class AssessmentTest : IntegrationTestBase() {
               assertThat(persistedAssessment.submittedAt).isNotNull
 
               val emittedMessage =
-                domainEventAsserter.blockForEmittedDomainEvent("approved-premises.application.assessed")
+                domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
 
               assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
               assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2203,7 +2203,7 @@ class AssessmentTest : IntegrationTestBase() {
               assertThat(persistedAssessment.submittedAt).isNotNull
 
               val emittedMessage =
-                domainEventAsserter.blockForEmittedDomainEvent("approved-premises.application.assessed")
+                domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
 
               assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
               assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2365,7 +2365,7 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
+        val emittedMessage = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
 
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
         assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2471,7 +2471,7 @@ class AssessmentTest : IntegrationTestBase() {
           .jsonPath("$.query").isEqualTo("some text")
 
         val emittedMessage =
-          domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeName)
+          domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
 
         assertThat(emittedMessage.description).isEqualTo(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeDescription)
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)

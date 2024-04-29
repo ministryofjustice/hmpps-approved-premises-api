@@ -2,7 +2,7 @@
 
 # script/run_seed_job: Run a seed job for given type and name of CSV file in seed directory.  e.g.
 #                      script/run_seed_job approved_premises ap_upload
-#                      Would start a seed job for the ap_upload.csv file
+#                      Would start a seed job for the hmpps-approved-premises-api/seed/ap_upload.csv file
 
 set -e
 
