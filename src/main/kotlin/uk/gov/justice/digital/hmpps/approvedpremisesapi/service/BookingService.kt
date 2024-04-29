@@ -81,6 +81,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -165,13 +166,20 @@ class BookingService(
       // Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
       check(premises is ApprovedPremisesEntity) { "Booking has a Key Worker specified but Premises is not an ApprovedPremises" }
 
-      val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
-
-      if (staffMemberResult !is AuthorisableActionResult.Success) {
-        throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
+      when (val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)) {
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+        is AuthorisableActionResult.NotFound -> {
+          if (staffMemberResult.entityType == "Staff Code") {
+            val error = "Unable to get Key Worker via Staff Code: $keyWorkerStaffCode"
+            log.error(error)
+            Sentry.captureException(InternalServerErrorProblem(error))
+            null
+          } else {
+            throw InternalServerErrorProblem("Unable to get staff for QCode ${premises.qCode}")
+          }
+        }
+        is AuthorisableActionResult.Success -> staffMemberResult.entity
       }
-
-      staffMemberResult.entity
     }
 
     return AuthorisableActionResult.Success(BookingAndPersons(booking, personInfo, staffMember))
