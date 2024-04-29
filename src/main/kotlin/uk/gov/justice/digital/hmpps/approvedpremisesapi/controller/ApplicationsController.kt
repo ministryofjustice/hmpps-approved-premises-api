@@ -268,6 +268,7 @@ class ApplicationsController(
           isInapplicable = body.isInapplicable,
           noticeType = body.noticeType,
         ),
+        userForRequest = user,
       )
 
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(

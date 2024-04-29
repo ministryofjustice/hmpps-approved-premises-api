@@ -499,6 +499,7 @@ class ApplicationService(
   fun updateApprovedPremisesApplication(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
+    userForRequest: UserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -517,9 +518,7 @@ class ApplicationService(
       )
     }
 
-    val user = userService.getUserForRequest()
-
-    if (application.createdByUser != user) {
+    if (application.createdByUser != userForRequest) {
       return AuthorisableActionResult.Unauthorised()
     }
 

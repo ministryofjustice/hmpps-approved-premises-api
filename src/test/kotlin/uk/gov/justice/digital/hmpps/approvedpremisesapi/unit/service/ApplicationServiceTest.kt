@@ -935,22 +935,23 @@ class ApplicationServiceTest {
             isInapplicable = null,
             noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
+          userForRequest = user,
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
     }
 
     @Test
     fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val otherUser = UserEntityFactory()
         .withDeliusUsername(username)
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
             .withYieldedApArea { ApAreaEntityFactory().produce() }
             .produce()
-        }
-        .produce()
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+        }.produce()
 
       assertThat(
         applicationService.updateApprovedPremisesApplication(
@@ -967,6 +968,7 @@ class ApplicationServiceTest {
             isInapplicable = null,
             noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
+          userForRequest = otherUser,
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
     }
@@ -993,6 +995,7 @@ class ApplicationServiceTest {
           isInapplicable = null,
           noticeType = null,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1026,6 +1029,7 @@ class ApplicationServiceTest {
           isInapplicable = null,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1059,6 +1063,7 @@ class ApplicationServiceTest {
           isInapplicable = null,
           noticeType = null,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1102,6 +1107,7 @@ class ApplicationServiceTest {
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1157,6 +1163,7 @@ class ApplicationServiceTest {
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1218,6 +1225,7 @@ class ApplicationServiceTest {
           isInapplicable = false,
           noticeType = null,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
