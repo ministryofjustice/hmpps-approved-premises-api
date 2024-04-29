@@ -17,4 +17,5 @@ WHERE
                 where
                     response is null
             )
+        and reallocated_at is null
     );
