@@ -250,14 +250,14 @@ class OffenderServiceTest {
   fun `getRisksByCrn returns NotFound result when Community API Client returns 404`() {
     every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
-    assertThat(offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
+    assertThat(offenderService.getRiskByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
   fun `getRisksByCrn throws when Community API Client returns other non-2xx status code`() {
     every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
-    val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") }
+    val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn", "distinguished.name") }
     assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
   }
 
@@ -275,7 +275,7 @@ class OffenderServiceTest {
     every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThat(offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(offenderService.getRiskByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
   }
 
   @Test

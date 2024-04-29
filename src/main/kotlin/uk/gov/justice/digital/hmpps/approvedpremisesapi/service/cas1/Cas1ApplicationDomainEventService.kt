@@ -48,7 +48,6 @@ class Cas1ApplicationDomainEventService(
     application: ApprovedPremisesApplicationEntity,
     submitApplication: SubmitApprovedPremisesApplication,
     username: String,
-    jwt: String,
   ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
@@ -70,7 +69,7 @@ class Cas1ApplicationDomainEventService(
       }
 
     val risks =
-      when (val riskResult = offenderService.getRiskByCrn(application.crn, jwt, username)) {
+      when (val riskResult = offenderService.getRiskByCrn(application.crn, username)) {
         is AuthorisableActionResult.Success -> riskResult.entity
         is AuthorisableActionResult.Unauthorised ->
           throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")

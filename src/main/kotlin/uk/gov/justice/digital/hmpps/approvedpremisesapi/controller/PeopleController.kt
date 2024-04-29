@@ -73,7 +73,7 @@ class PeopleController(
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
 
-    val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.token.tokenValue, principal.name)) {
+    val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.name)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Success -> risksResult.entity

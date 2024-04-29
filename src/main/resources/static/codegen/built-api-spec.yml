@@ -8267,6 +8267,7 @@ components:
         - approved_premises_redact_assessment_details
         - approved_premises_withdraw_placement_request
         - approved_premises_replay_domain_events
+        - approved_premises_duplicate_application
     MigrationJobRequest:
       type: object
       properties:

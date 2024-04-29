@@ -142,7 +142,6 @@ class Cas1ApplicationDomainEventServiceTest {
       every {
         mockOffenderService.getRiskByCrn(
           application.crn,
-          any(),
           user.deliusUsername,
         )
       } returns AuthorisableActionResult.Success(
@@ -182,7 +181,6 @@ class Cas1ApplicationDomainEventServiceTest {
         application,
         submitApprovedPremisesApplication,
         username,
-        "jwt",
       )
 
       verify(exactly = 1) {

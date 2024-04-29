@@ -319,7 +319,7 @@ class ApplicationServiceTest {
       ),
     )
 
-    val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, "jwt", null, null, null)
+    val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, null, null, null)
 
     assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
     result as ValidatableActionResult.FieldValidationError
@@ -388,11 +388,11 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
       riskRatings,
     )
 
-    val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, "jwt", 123, "1", "A12HI")
+    val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
 
     assertThat(result is ValidatableActionResult.Success).isTrue
     result as ValidatableActionResult.Success
@@ -426,7 +426,6 @@ class ApplicationServiceTest {
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -461,7 +460,6 @@ class ApplicationServiceTest {
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -500,7 +498,6 @@ class ApplicationServiceTest {
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -542,7 +539,6 @@ class ApplicationServiceTest {
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       null,
       null,
       null,
@@ -619,14 +615,13 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
       riskRatings,
     )
 
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -703,14 +698,13 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
       riskRatings,
     )
 
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -786,14 +780,13 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
       riskRatings,
     )
 
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -869,14 +862,13 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
       riskRatings,
     )
 
     val actionResult = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
-      "jwt",
       123,
       "1",
       "A12HI",
@@ -943,22 +935,23 @@ class ApplicationServiceTest {
             isInapplicable = null,
             noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
+          userForRequest = user,
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
     }
 
     @Test
     fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val otherUser = UserEntityFactory()
         .withDeliusUsername(username)
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
             .withYieldedApArea { ApAreaEntityFactory().produce() }
             .produce()
-        }
-        .produce()
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+        }.produce()
 
       assertThat(
         applicationService.updateApprovedPremisesApplication(
@@ -975,6 +968,7 @@ class ApplicationServiceTest {
             isInapplicable = null,
             noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
+          userForRequest = otherUser,
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
     }
@@ -1001,6 +995,7 @@ class ApplicationServiceTest {
           isInapplicable = null,
           noticeType = null,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1034,6 +1029,7 @@ class ApplicationServiceTest {
           isInapplicable = null,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1067,6 +1063,7 @@ class ApplicationServiceTest {
           isInapplicable = null,
           noticeType = null,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1110,6 +1107,7 @@ class ApplicationServiceTest {
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1165,6 +1163,7 @@ class ApplicationServiceTest {
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1226,6 +1225,7 @@ class ApplicationServiceTest {
           isInapplicable = false,
           noticeType = null,
         ),
+        userForRequest = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1484,7 +1484,6 @@ class ApplicationServiceTest {
           applicationId,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
           null,
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
@@ -1509,7 +1508,6 @@ class ApplicationServiceTest {
           applicationId,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
           null,
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
@@ -1534,7 +1532,6 @@ class ApplicationServiceTest {
         applicationId,
         submitApprovedPremisesApplication,
         username,
-        "jwt",
         null,
       )
 
@@ -1569,7 +1566,6 @@ class ApplicationServiceTest {
         applicationId,
         submitApprovedPremisesApplication,
         username,
-        "jwt",
         null,
       )
 
@@ -1620,7 +1616,6 @@ class ApplicationServiceTest {
         applicationId,
         submitApprovedPremisesApplication,
         username,
-        "jwt",
         null,
       )
 
@@ -1671,7 +1666,6 @@ class ApplicationServiceTest {
         applicationId,
         submitApprovedPremisesApplication,
         username,
-        "jwt",
         null,
       )
 
@@ -1738,7 +1732,6 @@ class ApplicationServiceTest {
           applicationId,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
           user.probationRegion.id,
         )
 
@@ -1771,7 +1764,6 @@ class ApplicationServiceTest {
           application,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
         )
       }
 
@@ -1834,7 +1826,6 @@ class ApplicationServiceTest {
           applicationId,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
           user.probationRegion.id,
         )
 
@@ -1862,7 +1853,6 @@ class ApplicationServiceTest {
           application,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
         )
       }
 
@@ -1922,7 +1912,6 @@ class ApplicationServiceTest {
           applicationId,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
           user.probationRegion.id,
         )
 
@@ -1952,7 +1941,6 @@ class ApplicationServiceTest {
           application,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
         )
       }
 
@@ -2034,7 +2022,6 @@ class ApplicationServiceTest {
           applicationId,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
           user.probationRegion.id,
         )
 
@@ -2092,7 +2079,6 @@ class ApplicationServiceTest {
         applicationId,
         submitApprovedPremisesApplication,
         username,
-        "jwt",
         user.probationRegion.id,
       )
 
@@ -2124,7 +2110,6 @@ class ApplicationServiceTest {
           application,
           submitApprovedPremisesApplication,
           username,
-          "jwt",
         )
       } returns Unit
 
