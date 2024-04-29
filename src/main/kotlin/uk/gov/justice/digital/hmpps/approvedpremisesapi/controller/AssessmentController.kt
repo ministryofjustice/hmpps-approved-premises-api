@@ -94,8 +94,8 @@ class AssessmentController(
       .body(summaries)
   }
 
-  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLao: Boolean = false) = summaries.map {
-    val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, ignoreLao)
+  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLaoRestrictions: Boolean = false) = summaries.map {
+    val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     assessmentTransformer.transformDomainToApiSummary(
       it,
@@ -113,9 +113,9 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val ignoreLao = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+    val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLao)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),

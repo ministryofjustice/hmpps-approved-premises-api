@@ -82,10 +82,10 @@ class OffenderService(
   fun getOffenderSummariesByCrns(
     crns: Set<String>,
     deliusUsername: String,
-    ignoreLao: Boolean = false,
+    ignoreLaoRestrictions: Boolean = false,
     forceApDeliusContextApi: Boolean = false,
   ): List<PersonSummaryInfoResult> {
-    if (forceApDeliusContextApi) return getOffenderSummariesByCrns(crns.toList(), deliusUsername, ignoreLao)
+    if (forceApDeliusContextApi) return getOffenderSummariesByCrns(crns.toList(), deliusUsername, ignoreLaoRestrictions)
 
     if (crns.isEmpty()) return emptyList()
 
@@ -97,7 +97,7 @@ class OffenderService(
       val accessResponse = userAccessList[crn]
 
       val offender = getOffender(
-        ignoreLao,
+        ignoreLaoRestrictions,
         { offenderResponse },
         { accessResponse },
       )
@@ -115,9 +115,9 @@ class OffenderService(
     }
   }
 
-  @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLao, true)"))
+  @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLaoRestrictions, true)"))
   @SuppressWarnings("CyclomaticComplexMethod")
-  fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLao: Boolean = false): List<PersonSummaryInfoResult> {
+  fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
     }
@@ -128,7 +128,7 @@ class OffenderService(
       is ClientResult.Failure -> response.throwException()
     }
 
-    val laoResponse = if (!ignoreLao) {
+    val laoResponse = if (!ignoreLaoRestrictions) {
       when (val response = apDeliusContextApiClient.getUserAccessForCrns(userDistinguishedName, crns)) {
         is ClientResult.Success -> response.body
         is ClientResult.Failure.StatusCode -> response.throwException()
@@ -156,17 +156,17 @@ class OffenderService(
     }
   }
 
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLao: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
+  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
     return getOffender(
-      ignoreLao,
+      ignoreLaoRestrictions,
       { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
       { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
     )
   }
 
-  @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth", "detekt:ReturnCount") // Extracted logic from `getOffenderByCrn` to be reusable without significant refactoring
+  @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth", "detekt:ReturnCount")
   private fun getOffender(
-    ignoreLao: Boolean,
+    ignoreLaoRestrictions: Boolean,
     offenderProducer: () -> ClientResult<OffenderDetailSummary>?,
     userAccessProducer: () -> ClientResult<UserOffenderAccess>?,
   ): AuthorisableActionResult<OffenderDetailSummary> {
@@ -180,12 +180,12 @@ class OffenderService(
       null -> return AuthorisableActionResult.NotFound()
     }
 
-    if (!ignoreLao) {
+    if (!ignoreLaoRestrictions) {
       if (offender.currentExclusion || offender.currentRestriction) {
         val access = when (val accessResponse = userAccessProducer()) {
           is ClientResult.Success -> accessResponse.body
           is ClientResult.Failure.StatusCode -> {
-            if (accessResponse.status.equals(HttpStatus.FORBIDDEN)) {
+            if (accessResponse.status == HttpStatus.FORBIDDEN) {
               try {
                 accessResponse.deserializeTo<UserOffenderAccess>()
                 return AuthorisableActionResult.Unauthorised()
@@ -497,7 +497,8 @@ class OffenderService(
     outputStream: OutputStream,
   ) = communityApiClient.getDocument(crn, documentId, outputStream)
 
-  fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLao: Boolean): PersonInfoResult {
+  @SuppressWarnings("CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
+  fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLaoRestrictions: Boolean): PersonInfoResult {
     val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
@@ -512,7 +513,7 @@ class OffenderService(
       is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
     }
 
-    if (!ignoreLao) {
+    if (!ignoreLaoRestrictions) {
       if (offender.currentExclusion || offender.currentRestriction) {
         val access =
           when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn)) {

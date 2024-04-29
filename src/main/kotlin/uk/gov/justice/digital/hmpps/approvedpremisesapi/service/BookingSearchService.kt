@@ -71,7 +71,7 @@ class BookingSearchService(
     val offenderSummaries = offenderService.getOffenderSummariesByCrns(
       bookingSearchResultDtos.map { it.personCrn }.toSet(),
       user.deliusUsername,
-      ignoreLao = false,
+      ignoreLaoRestrictions = false,
       forceApDeliusContextApi = false,
     )
 
