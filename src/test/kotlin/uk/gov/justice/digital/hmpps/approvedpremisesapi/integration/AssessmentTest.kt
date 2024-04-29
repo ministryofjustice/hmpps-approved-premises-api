@@ -2379,6 +2379,102 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Reject Temporary Accommodation assessment returns 200 and persists decision`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        assessment.schemaUpToDate = true
+
+        val referralRejectionReasonId = UUID.randomUUID()
+
+        val referralRejectionReason = referralRejectionReasonEntityFactory.produceAndPersist {
+          withId(referralRejectionReasonId)
+        }
+
+        webTestClient.post()
+          .uri("/assessments/${assessment.id}/rejection")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning", referralRejectionReasonId = referralRejectionReasonId, isWithdrawn = true))
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
+        assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+        assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+        assertThat(persistedAssessment.submittedAt).isNotNull
+        assertThat(persistedAssessment.completedAt).isNull()
+        assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason)
+        assertThat(persistedAssessment.isWithdrawn).isTrue()
+      }
+    }
+  }
+
+  @Test
+  fun `Reject Temporary Accommodation assessment returns 404 when the referral rejection reason not exists`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        assessment.schemaUpToDate = true
+
+        val referralRejectionReasonId = UUID.randomUUID()
+
+        webTestClient.post()
+          .uri("/assessments/${assessment.id}/rejection")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning", referralRejectionReasonId = referralRejectionReasonId, isWithdrawn = false))
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+          .expectBody()
+          .jsonPath("detail").isEqualTo("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
+      }
+    }
+  }
+
+  @Test
   fun `Close assessment without JWT returns 401`() {
     webTestClient.post()
       .uri("/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/closure")

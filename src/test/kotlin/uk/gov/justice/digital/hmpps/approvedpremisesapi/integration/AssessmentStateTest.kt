@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class AssessmentStateTest : IntegrationTestBase() {
   @Test
@@ -158,11 +159,19 @@ class AssessmentStateTest : IntegrationTestBase() {
   }
 
   private fun TemporaryAccommodationAssessmentEntity.reject(jwt: String) {
+    val referralRejectionReasonId = UUID.randomUUID()
+
+    referralRejectionReasonEntityFactory
+      .produceAndPersist {
+        withId(referralRejectionReasonId)
+        withIsActive(true)
+      }
+
     webTestClient.post()
       .uri("/assessments/${this.id}/rejection")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-      .bodyValue(AssessmentRejection(document = {}, rejectionRationale = "Some reason or another"))
+      .bodyValue(AssessmentRejection(document = {}, rejectionRationale = "Some reason or another", referralRejectionReasonId, true))
       .exchange()
       .expectStatus()
       .is2xxSuccessful

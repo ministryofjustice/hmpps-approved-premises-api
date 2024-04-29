@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
@@ -67,6 +69,7 @@ class AssessmentService(
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
+  private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
@@ -263,6 +266,7 @@ class AssessmentService(
         completedAt = null,
         summaryData = objectMapper.writeValueAsString(summaryData),
         isWithdrawn = false,
+        referralRejectionReason = null,
         dueAt = null,
       ),
     )
@@ -513,6 +517,8 @@ class AssessmentService(
     assessmentId: UUID,
     document: String?,
     rejectionRationale: String,
+    referralRejectionReasonId: UUID? = null,
+    isWithdrawn: Boolean? = null,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now()
@@ -565,7 +571,12 @@ class AssessmentService(
     assessment.rejectionRationale = rejectionRationale
 
     if (assessment is TemporaryAccommodationAssessmentEntity) {
+      val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId)
+        ?: throw InternalServerErrorProblem("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
+
       assessment.completedAt = null
+      assessment.referralRejectionReason = referralRejectionReason
+      assessment.isWithdrawn = isWithdrawn!!
     }
 
     val savedAssessment = assessmentRepository.save(assessment)

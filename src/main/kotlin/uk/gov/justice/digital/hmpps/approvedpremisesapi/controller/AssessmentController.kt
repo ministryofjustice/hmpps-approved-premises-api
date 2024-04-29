@@ -187,7 +187,15 @@ class AssessmentController(
 
     val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
 
-    val assessmentAuthResult = assessmentService.rejectAssessment(user, assessmentId, serializedData, assessmentRejection.rejectionRationale)
+    val assessmentAuthResult =
+      assessmentService.rejectAssessment(
+        user,
+        assessmentId,
+        serializedData,
+        assessmentRejection.rejectionRationale,
+        assessmentRejection.referralRejectionReasonId,
+        assessmentRejection.isWithdrawn,
+      )
 
     val assessmentValidationResult = when (assessmentAuthResult) {
       is AuthorisableActionResult.Success -> assessmentAuthResult.entity
