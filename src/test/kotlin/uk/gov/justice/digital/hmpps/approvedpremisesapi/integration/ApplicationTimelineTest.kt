@@ -13,14 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createDomainEventOfType
 
@@ -31,15 +29,11 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer
 
-  @Autowired
-  lateinit var assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
-
   lateinit var user: UserEntity
   lateinit var application: ApprovedPremisesApplicationEntity
   lateinit var assessment: ApprovedPremisesAssessmentEntity
   lateinit var domainEvents: List<DomainEventEntity>
   lateinit var notes: List<ApplicationTimelineNoteEntity>
-  lateinit var clarificationNotes: List<AssessmentClarificationNoteEntity>
 
   @BeforeAll
   fun setup() {
@@ -84,9 +78,6 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
     notes = createTimelineNotes(application, 5)
     createTimelineNotes(otherApplication, 3)
-
-    clarificationNotes = createClarificationNotes(assessment, user, 4)
-    createClarificationNotes(otherAssessment, user, 2)
   }
 
   @Test
@@ -151,7 +142,6 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
         },
       )
       expectedItems.addAll(notes.map { applicationTimelineNoteTransformer.transformToTimelineEvents(it) })
-      expectedItems.addAll(clarificationNotes.map { assessmentClarificationNoteTransformer.transformToTimelineEvent(it) })
 
       assertThat(responseBody.count()).isEqualTo(expectedItems.count())
       assertThat(responseBody).hasSameElementsAs(expectedItems)
@@ -184,14 +174,5 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createTimelineNotes(applicationEntity: ApprovedPremisesApplicationEntity, count: Int) = applicationTimelineNoteEntityFactory.produceAndPersistMultiple(count) {
     withApplicationId(applicationEntity.id)
-  }.toMutableList()
-
-  private fun createClarificationNotes(
-    assessmentEntity: ApprovedPremisesAssessmentEntity,
-    userEntity: UserEntity,
-    count: Int,
-  ) = assessmentClarificationNoteEntityFactory.produceAndPersistMultiple(count) {
-    withAssessment(assessmentEntity)
-    withCreatedBy(userEntity)
   }.toMutableList()
 }
