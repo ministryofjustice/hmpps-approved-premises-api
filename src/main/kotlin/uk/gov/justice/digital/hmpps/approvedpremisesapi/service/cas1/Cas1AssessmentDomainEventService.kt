@@ -87,7 +87,7 @@ class Cas1AssessmentDomainEventService(
     }
 
     val id = UUID.randomUUID()
-    val occurredAt = Instant.now()
+    val occurredAt = clarificationNoteEntity.createdAt.toInstant()
 
     val data = FurtherInformationRequestedEnvelope(
       id = id,
