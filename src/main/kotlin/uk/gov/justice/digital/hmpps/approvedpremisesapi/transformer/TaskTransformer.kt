@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
@@ -19,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import java.time.Instant
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
@@ -52,7 +50,7 @@ class TaskTransformer(
   )
 
   fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, personName: String): PlacementRequestTask {
-    val (outcomeRecordedAt, outcome) = getPlacementRequestOutcomeDetails(placementRequest)
+    val (outcomeRecordedAt, outcome) = placementRequest.getOutcomeDetails()
     return PlacementRequestTask(
       id = placementRequest.id,
       applicationId = placementRequest.application.id,
@@ -69,7 +67,7 @@ class TaskTransformer(
       placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
       releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType),
       apArea = getApArea(placementRequest.application),
-      outcomeRecordedAt = outcomeRecordedAt,
+      outcomeRecordedAt = outcomeRecordedAt?.toInstant(),
       outcome = outcome,
     )
   }
@@ -132,20 +130,6 @@ class TaskTransformer(
     } else {
       userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
     }
-  }
-
-  private fun getPlacementRequestOutcomeDetails(placementRequest: PlacementRequestEntity): Pair<Instant?, PlacementRequestTaskOutcome?> {
-    val bookingNotMades = placementRequest.bookingNotMades
-
-    if (bookingNotMades.size > 0) {
-      return Pair(bookingNotMades.last().createdAt.toInstant(), PlacementRequestTaskOutcome.unableToMatch)
-    }
-
-    if (placementRequest.hasActiveBooking()) {
-      return Pair(placementRequest.booking!!.createdAt.toInstant(), PlacementRequestTaskOutcome.matched)
-    }
-
-    return Pair(null, null)
   }
 
   // Use the sure operator here as entities will definitely have a `dueAt` value by the time they're surfaced as tasks

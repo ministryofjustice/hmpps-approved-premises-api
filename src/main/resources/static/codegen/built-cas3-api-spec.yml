@@ -396,6 +396,9 @@ components:
         - dueAt
         - person
         - allocatedTo
+        - completedAt
+        - taskType
+        - decision
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'
