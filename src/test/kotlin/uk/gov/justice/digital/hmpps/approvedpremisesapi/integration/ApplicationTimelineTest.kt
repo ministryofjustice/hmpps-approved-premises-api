@@ -168,7 +168,6 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
       val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
         withAssessment(assessmentEntity)
         withCreatedBy(userEntity)
-        withHasDomainEvent(true)
       }
 
       createDomainEventOfType(type, clarificationNote.id)
@@ -194,6 +193,5 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   ) = assessmentClarificationNoteEntityFactory.produceAndPersistMultiple(count) {
     withAssessment(assessmentEntity)
     withCreatedBy(userEntity)
-    withHasDomainEvent(false)
   }.toMutableList()
 }

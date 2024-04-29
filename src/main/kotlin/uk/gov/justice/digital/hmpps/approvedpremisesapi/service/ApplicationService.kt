@@ -928,7 +928,6 @@ class ApplicationService(
     val assessments = applicationRepository.findAllAssessmentsById(applicationId)
     val allClarifications = assessments
       .flatMap { it.clarificationNotes }
-      .filter { !it.hasDomainEvent }
     return allClarifications.map {
       assessmentClarificationNoteTransformer.transformToTimelineEvent(it)
     }
