@@ -6,6 +6,7 @@ spring:
   application:
     name: approved-premises-api
   codec:
+    # note that we use configuration in web-clients: for any WebClients we construct ourselves
     max-in-memory-size: 40MB
 
   jackson:
@@ -254,7 +255,11 @@ arrived-departed-domain-events-disabled: true
 upstream-timeout-ms: 10000
 case-notes-service-upstream-timeout-ms: 30000
 
-max-response-in-memory-size-bytes: 750000
+web-clients:
+  # 0.7MB
+  max-response-in-memory-size-bytes: 750000
+  # 1 MB
+  prison-api-max-response-in-memory-size-bytes: 1048576
 
 migration-job:
   throttle-enabled: true
