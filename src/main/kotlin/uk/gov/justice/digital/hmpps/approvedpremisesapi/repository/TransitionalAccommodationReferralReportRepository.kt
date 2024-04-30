@@ -28,6 +28,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       probation_region.name AS probationRegionName,
       a.decision AS assessmentDecision,
       a.rejection_rationale AS assessmentRejectionReason,
+      rrr.name AS referralRejectionReason,
       a.submitted_at AS assessmentSubmittedDate,
       CAST(b.id AS text) AS bookingId,
       taa.is_eligible AS isReferralEligibleForCas3,
@@ -46,6 +47,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
     LEFT JOIN probation_regions probation_region ON probation_region.id = taa.probation_region_id
     LEFT JOIN bookings b on b.application_id = ap.id AND b.service='temporary-accommodation'
     LEFT JOIN premises premises ON premises.id = b.premises_id and premises.service='temporary-accommodation'
+    LEFT JOIN referral_rejection_reasons rrr ON aa.referral_rejection_reason_id = rrr.id AND rrr.service_scope='temporary-accommodation'
     WHERE
       a.service = 'temporary-accommodation'
       AND ap.submitted_at BETWEEN :startDate AND :endDate
@@ -82,6 +84,7 @@ interface TransitionalAccommodationReferralReportData {
   val dutyToReferLocalAuthorityAreaName: String?
   val assessmentDecision: String?
   val assessmentRejectionReason: String?
+  val referralRejectionReason: String?
   val assessmentSubmittedDate: LocalDate?
   val referralEligibleForCas3: Boolean?
   val referralEligibilityReason: String?

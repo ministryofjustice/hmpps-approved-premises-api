@@ -109,6 +109,10 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.summaryData = { summaryData }
   }
 
+  fun withReferralRejectionReason(referralRejectionReason: ReferralRejectionReasonEntity) = apply {
+    this.referralRejectionReason = { referralRejectionReason }
+  }
+
   fun withDueAt(dueAt: OffsetDateTime) = apply {
     this.dueAt = { dueAt }
   }
