@@ -9,6 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApStaffUserSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -77,6 +81,59 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
+  }
+
+  @Test fun `Seeding a pre-existing user leaves roles and qualifications untouched`() {
+    val user = userEntityFactory.produceAndPersist {
+      withDeliusUsername("PRE-EXISTING-USER")
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        }
+      }
+    }
+
+    val roleEntities = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER).map { role ->
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(user)
+        withRole(role)
+      }
+    }
+    user.roles.addAll(roleEntities)
+
+    val qualificationEntities = listOf(UserQualification.PIPE, UserQualification.WOMENS).map { qualification ->
+      userQualificationAssignmentEntityFactory.produceAndPersist {
+        withUser(user)
+        withQualification(qualification)
+      }
+    }
+    user.qualifications.addAll(qualificationEntities)
+
+    withCsv(
+      "pre-existing-user",
+      apStaffUserSeedCsvRowsToCsv(
+        listOf(
+          ApStaffUserSeedCsvRowFactory()
+            .withDeliusUsername("PRE-EXISTING-USER")
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "pre-existing-user")
+
+    val persistedUser = userRepository.findByDeliusUsername("PRE-EXISTING-USER")
+
+    assertThat(persistedUser).isNotNull
+
+    assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_WORKFLOW_MANAGER,
+    )
+    assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
+      UserQualification.PIPE,
+      UserQualification.WOMENS,
+    )
   }
 
   private fun apStaffUserSeedCsvRowsToCsv(rows: List<ApStaffUserSeedCsvRow>): String {
