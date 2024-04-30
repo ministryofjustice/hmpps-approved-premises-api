@@ -402,13 +402,6 @@ enum class AssessmentDecision {
 @Repository
 interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarificationNoteEntity, UUID> {
   fun findByAssessmentIdAndId(assessmentId: UUID, id: UUID): AssessmentClarificationNoteEntity?
-
-  @Query("SELECT a from AssessmentClarificationNoteEntity a WHERE a.hasDomainEvent = false")
-  fun findAllWhereHasDomainEventFalse(page: Pageable): Slice<AssessmentClarificationNoteEntity>
-
-  @Modifying
-  @Query("UPDATE AssessmentClarificationNoteEntity a SET a.hasDomainEvent = true WHERE a.id = :id")
-  fun updateHasDomainEvent(id: UUID)
 }
 
 @EntityListeners(AssessmentClarificationNoteListener::class)
@@ -432,8 +425,6 @@ data class AssessmentClarificationNoteEntity(
   var response: String?,
 
   var responseReceivedOn: LocalDate?,
-
-  var hasDomainEvent: Boolean = false,
 )
 
 @Repository

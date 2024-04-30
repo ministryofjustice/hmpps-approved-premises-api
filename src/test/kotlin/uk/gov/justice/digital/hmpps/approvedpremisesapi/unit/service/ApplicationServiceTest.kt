@@ -90,7 +90,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
@@ -115,7 +114,6 @@ class ApplicationServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
@@ -138,7 +136,6 @@ class ApplicationServiceTest {
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockUserAccessService,
-    mockAssessmentClarificationNoteTransformer,
     mockObjectMapper,
     mockApAreaRepository,
     applicationTimelineTransformerMock,

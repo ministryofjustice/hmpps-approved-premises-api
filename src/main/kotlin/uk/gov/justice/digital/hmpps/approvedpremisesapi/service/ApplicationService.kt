@@ -52,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.LocalDate
@@ -86,7 +85,6 @@ class ApplicationService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val userAccessService: UserAccessService,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val objectMapper: ObjectMapper,
   private val apAreaRepository: ApAreaRepository,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
@@ -912,7 +910,6 @@ class ApplicationService(
   fun getApplicationTimeline(applicationId: UUID): List<TimelineEvent> {
     val timelineEvents = mutableListOf<TimelineEvent>()
     timelineEvents += getAllDomainEventTimelineEventsForApplication(applicationId)
-    timelineEvents += getAllAssessmentClarificationNoteTimeLineEventsForApplication(applicationId)
     timelineEvents += getAllNoteTimelineEventsForApplication(applicationId)
     return timelineEvents
   }
@@ -921,16 +918,6 @@ class ApplicationService(
     val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
     return domainEvents.map {
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
-    }
-  }
-
-  private fun getAllAssessmentClarificationNoteTimeLineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
-    val assessments = applicationRepository.findAllAssessmentsById(applicationId)
-    val allClarifications = assessments
-      .flatMap { it.clarificationNotes }
-      .filter { !it.hasDomainEvent }
-    return allClarifications.map {
-      assessmentClarificationNoteTransformer.transformToTimelineEvent(it)
     }
   }
 

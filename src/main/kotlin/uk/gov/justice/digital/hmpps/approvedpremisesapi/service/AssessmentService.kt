@@ -872,7 +872,6 @@ class AssessmentService(
         query = text,
         response = null,
         responseReceivedOn = null,
-        hasDomainEvent = true,
       ),
     )
 

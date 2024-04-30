@@ -602,7 +602,7 @@ class AssessmentServiceTest {
           match {
             it.assessment == assessment &&
               it.createdByUser == user &&
-              it.query == text && it.hasDomainEvent
+              it.query == text
           },
         )
       }
@@ -666,7 +666,7 @@ class AssessmentServiceTest {
           match {
             it.assessment == assessment &&
               it.createdByUser == user &&
-              it.query == text && it.hasDomainEvent
+              it.query == text
           },
         )
       }
