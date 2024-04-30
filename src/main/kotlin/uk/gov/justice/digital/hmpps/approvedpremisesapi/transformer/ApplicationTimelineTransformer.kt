@@ -79,12 +79,14 @@ class ApplicationTimelineTransformer(
   }
 
   fun generateUrlsForTimelineEventType(domainEventSummary: DomainEventSummary): List<TimelineEventAssociatedUrl> {
-    return if (domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) {
-      listOfNotNull(
+    return when (domainEventSummary.type) {
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> listOfNotNull(
         appealUrlOrNull(domainEventSummary),
       )
-    } else {
-      listOfNotNull(
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> listOfNotNull(
+        applicationUrlOrNull(domainEventSummary),
+      )
+      else -> listOfNotNull(
         applicationUrlOrNull(domainEventSummary),
         assessmentUrlOrNull(domainEventSummary),
         bookingUrlOrNull(domainEventSummary),
