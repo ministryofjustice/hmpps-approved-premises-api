@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
@@ -111,9 +112,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -316,6 +321,144 @@ class BookingServiceTest {
 
     assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
       .isEqualTo(GetBookingForPremisesResult.Success(bookingEntity))
+  }
+
+  @Nested
+  inner class GetBooking {
+    val premises = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    private val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withPremises(premises)
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .produce()
+
+    private val personInfo = PersonInfoResult.Success.Full(
+      crn = bookingEntity.crn,
+      offenderDetailSummary = OffenderDetailsSummaryFactory().produce(),
+      inmateDetail = InmateDetailFactory().produce(),
+    )
+
+    @Test
+    fun `returns a booking`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
+      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Success(keyWorker)
+
+      val result = bookingService.getBooking(bookingEntity.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue()
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity).isEqualTo(BookingService.BookingAndPersons(bookingEntity, personInfo, keyWorker))
+    }
+
+    @Test
+    fun `returns NotFound if the booking cannot be found`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns null
+
+      val result = bookingService.getBooking(bookingEntity.id)
+
+      assertThat(result is AuthorisableActionResult.NotFound).isTrue()
+      result as AuthorisableActionResult.NotFound
+
+      assertThat(result.id).isEqualTo(bookingEntity.id.toString())
+      assertThat(result.entityType).isEqualTo("Booking")
+    }
+
+    @Test
+    fun `returns Unauthorised if the user cannot view the booking`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns false
+
+      val result = bookingService.getBooking(bookingEntity.id)
+
+      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue()
+    }
+
+    @Test
+    fun `handles a missing keyworker`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
+      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound("Staff Code", keyWorker.code)
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val result = bookingService.getBooking(bookingEntity.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue()
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity).isEqualTo(BookingService.BookingAndPersons(bookingEntity, personInfo, null))
+
+      verify { Sentry.captureException(any()) }
+    }
+
+    @Test
+    fun `throws an error when all staff members for a Qcode cannot be found`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
+      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound("QCode", premises.qCode)
+
+      assertThatExceptionOfType(InternalServerErrorProblem::class.java)
+        .isThrownBy { bookingService.getBooking(bookingEntity.id) }
+        .withMessage("Internal Server Error: Unable to get staff for QCode ${premises.qCode}")
+    }
+
+    @Test
+    fun `throws ForbiddenProblem when the upstream service returns Unauthorised`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
+      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Unauthorised()
+
+      assertThatExceptionOfType(ForbiddenProblem::class.java)
+        .isThrownBy { bookingService.getBooking(bookingEntity.id) }
+    }
+
+    @Test
+    fun `throws IllegalStateException if the premises is not an Approved Premises`() {
+      val otherPremises = TemporaryAccommodationPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+
+      val otherBooking = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-25"))
+        .withPremises(otherPremises)
+        .withStaffKeyWorkerCode(keyWorker.code)
+        .produce()
+
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns otherBooking
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanViewBooking(user, otherBooking) } returns true
+      every { mockOffenderService.getInfoForPerson(otherBooking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+
+      assertThatExceptionOfType(IllegalStateException::class.java)
+        .isThrownBy { bookingService.getBooking(bookingEntity.id) }
+        .withMessage("Booking has a Key Worker specified but Premises is not an ApprovedPremises")
+    }
   }
 
   @Nested
