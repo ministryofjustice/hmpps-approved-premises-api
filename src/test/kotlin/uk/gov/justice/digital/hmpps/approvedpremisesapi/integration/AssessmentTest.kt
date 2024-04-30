@@ -208,7 +208,10 @@ class AssessmentTest : IntegrationTestBase() {
 
             val url = "/assessments"
             val expectedAssessments =
-              assessmentSummaryMapper(offenderDetails, inmateDetails = null).toSummaries(assessment, status = IN_PROGRESS)
+              assessmentSummaryMapper(offenderDetails, inmateDetails = null).toSummaries(
+                assessment,
+                status = IN_PROGRESS,
+              )
 
             assertResponseForUrl(
               jwt,
@@ -538,28 +541,44 @@ class AssessmentTest : IntegrationTestBase() {
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
+            assessmentMutator = {
+              withCreatedAt(
+                OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
+            },
           )
 
           val veryNew = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().plusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
+            assessmentMutator = {
+              withCreatedAt(
+                OffsetDateTime.now().plusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
+            },
           )
 
           val old = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
+            assessmentMutator = {
+              withCreatedAt(
+                OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
+            },
           )
 
           val veryOld = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(5).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
+            assessmentMutator = {
+              withCreatedAt(
+                OffsetDateTime.now().minusDays(5).roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
+            },
           )
 
           assertAssessmentsReturnedGivenStatus(
@@ -593,7 +612,10 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.approvedPremises,
             listOf(
-              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(awaitingResponse, status = AWAITING_RESPONSE),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(
+                awaitingResponse,
+                status = AWAITING_RESPONSE,
+              ),
               assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(completed, status = COMPLETED),
               assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(inProgress, status = IN_PROGRESS),
               assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(notStarted, status = NOT_STARTED),
@@ -930,7 +952,8 @@ class AssessmentTest : IntegrationTestBase() {
             createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
 
-          val statusParams = listOf(AssessmentStatus.cas3Closed, cas3Rejected).map { "statuses=${it.value}" }.joinToString("&")
+          val statusParams =
+            listOf(AssessmentStatus.cas3Closed, cas3Rejected).map { "statuses=${it.value}" }.joinToString("&")
 
           val page1Response = assertResponseForUrl(
             jwt,
@@ -1283,18 +1306,28 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          val assessment1 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
-          val assessment2 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
-          val assessment3 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
-          val assessment4 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
-          val assessment5 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment3 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment4 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment5 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
 
           val page1Response = assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=1&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
             ExpectedResponse.OK(
-              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment1, assessment2, assessment3, status = COMPLETED),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+                assessment1,
+                assessment2,
+                assessment3,
+                status = COMPLETED,
+              ),
             ),
           )
 
@@ -1303,7 +1336,11 @@ class AssessmentTest : IntegrationTestBase() {
             ServiceName.temporaryAccommodation,
             "/assessments?page=2&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
             ExpectedResponse.OK(
-              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment4, assessment5, status = COMPLETED),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+                assessment4,
+                assessment5,
+                status = COMPLETED,
+              ),
             ),
           )
 
@@ -1586,8 +1623,20 @@ class AssessmentTest : IntegrationTestBase() {
     url: String,
     expectedResponse: ExpectedResponse,
   ): WebTestClient.ResponseSpec = when (expectedResponse) {
-    is ExpectedResponse.OK -> assertUrlReturnsAssessments(jwt, serviceName, url, expectedResponse.expectedAssessmentSummaries)
-    is ExpectedResponse.Error -> assertUrlReturnsError(jwt, serviceName, url, expectedResponse.status, expectedResponse.errorDetail)
+    is ExpectedResponse.OK -> assertUrlReturnsAssessments(
+      jwt,
+      serviceName,
+      url,
+      expectedResponse.expectedAssessmentSummaries,
+    )
+
+    is ExpectedResponse.Error -> assertUrlReturnsError(
+      jwt,
+      serviceName,
+      url,
+      expectedResponse.status,
+      expectedResponse.errorDetail,
+    )
   }
 
   private fun assertUrlReturnsAssessments(
@@ -1923,7 +1972,10 @@ class AssessmentTest : IntegrationTestBase() {
           .jsonPath("$.referralHistoryNotes")
           .value<JSONArray> { json ->
             val notes = json.toList().map {
-              objectMapper.readValue(objectMapper.writeValueAsString(it), object : TypeReference<ReferralHistoryNote>() {})
+              objectMapper.readValue(
+                objectMapper.writeValueAsString(it),
+                object : TypeReference<ReferralHistoryNote>() {},
+              )
             }
 
             assertThat(notes).hasSize(7)
@@ -2365,7 +2417,8 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        val emittedMessage = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+        val emittedMessage =
+          snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
 
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
         assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2412,10 +2465,20 @@ class AssessmentTest : IntegrationTestBase() {
           withId(referralRejectionReasonId)
         }
 
+        val referralRejectionReasonDetail = "Other referral rejection reason detail"
+
         webTestClient.post()
           .uri("/assessments/${assessment.id}/rejection")
           .header("Authorization", "Bearer $jwt")
-          .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning", referralRejectionReasonId = referralRejectionReasonId, isWithdrawn = true))
+          .bodyValue(
+            AssessmentRejection(
+              document = mapOf("document" to "value"),
+              rejectionRationale = "reasoning",
+              referralRejectionReasonId = referralRejectionReasonId,
+              referralRejectionReasonDetail = referralRejectionReasonDetail,
+              isWithdrawn = true,
+            ),
+          )
           .exchange()
           .expectStatus()
           .isOk
@@ -2426,6 +2489,77 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.submittedAt).isNotNull
         assertThat(persistedAssessment.completedAt).isNull()
         assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason)
+        assertThat(persistedAssessment.referralRejectionReasonDetail).isEqualTo(referralRejectionReasonDetail)
+        assertThat(persistedAssessment.isWithdrawn).isTrue()
+      }
+    }
+  }
+
+  @Test
+  fun `Reject Temporary Accommodation assessment returns 200 and persists decision when a referral rejection reason exists for the assessment`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val referralRejectionReason1 = referralRejectionReasonEntityFactory.produceAndPersist {
+          withId(UUID.randomUUID())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withReferralRejectionReason(referralRejectionReason1)
+          withReferralRejectionReasonDetail("Old referral rejection reason detail")
+        }
+
+        assessment.schemaUpToDate = true
+
+        val referralRejectionReasonId2 = UUID.randomUUID()
+
+        val referralRejectionReason2 = referralRejectionReasonEntityFactory.produceAndPersist {
+          withId(referralRejectionReasonId2)
+        }
+
+        val referralRejectionReasonDetail = "New referral rejection reason detail"
+
+        webTestClient.post()
+          .uri("/assessments/${assessment.id}/rejection")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            AssessmentRejection(
+              document = mapOf("document" to "value"),
+              rejectionRationale = "reasoning",
+              referralRejectionReasonId = referralRejectionReasonId2,
+              referralRejectionReasonDetail = referralRejectionReasonDetail,
+              isWithdrawn = true,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
+        assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+        assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+        assertThat(persistedAssessment.submittedAt).isNotNull
+        assertThat(persistedAssessment.completedAt).isNull()
+        assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason2)
+        assertThat(persistedAssessment.referralRejectionReasonDetail).isEqualTo(referralRejectionReasonDetail)
         assertThat(persistedAssessment.isWithdrawn).isTrue()
       }
     }
@@ -2464,12 +2598,20 @@ class AssessmentTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/assessments/${assessment.id}/rejection")
           .header("Authorization", "Bearer $jwt")
-          .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning", referralRejectionReasonId = referralRejectionReasonId, isWithdrawn = false))
+          .bodyValue(
+            AssessmentRejection(
+              document = mapOf("document" to "value"),
+              rejectionRationale = "reasoning",
+              referralRejectionReasonId = referralRejectionReasonId,
+              isWithdrawn = false,
+            ),
+          )
           .exchange()
           .expectStatus()
           .is5xxServerError
           .expectBody()
-          .jsonPath("detail").isEqualTo("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
+          .jsonPath("detail")
+          .isEqualTo("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
       }
     }
   }
@@ -2726,14 +2868,18 @@ class AssessmentTest : IntegrationTestBase() {
     private val inmateDetails: InmateDetail?,
   ) {
 
-    fun toSummaries(vararg assessments: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): List<AssessmentSummary> {
+    fun toSummaries(
+      vararg assessments: AssessmentEntity,
+      status: DomainAssessmentSummaryStatus? = null,
+    ): List<AssessmentSummary> {
       return assessments.map { toSummary(it, status) }
     }
 
-    fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary = assessmentTransformer.transformDomainToApiSummary(
-      toAssessmentSummaryEntity(assessment, status),
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-    )
+    fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary =
+      assessmentTransformer.transformDomainToApiSummary(
+        toAssessmentSummaryEntity(assessment, status),
+        PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+      )
 
     fun toRestricted(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary =
       assessmentTransformer.transformDomainToApiSummary(
@@ -2741,7 +2887,10 @@ class AssessmentTest : IntegrationTestBase() {
         PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
       )
 
-    private fun toAssessmentSummaryEntity(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus?): DomainAssessmentSummary =
+    private fun toAssessmentSummaryEntity(
+      assessment: AssessmentEntity,
+      status: DomainAssessmentSummaryStatus?,
+    ): DomainAssessmentSummary =
       DomainAssessmentSummaryImpl(
         type = when (assessment.application) {
           is ApprovedPremisesApplicationEntity -> "approved-premises"

@@ -7374,6 +7374,8 @@ components:
         referralRejectionReasonId:
           type: string
           format: uuid
+        referralRejectionReasonDetail:
+          type: string
         isWithdrawn:
           type: boolean
       required:

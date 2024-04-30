@@ -345,6 +345,7 @@ class TemporaryAccommodationAssessmentEntity(
   @ManyToOne
   @JoinColumn(name = "referral_rejection_reason_id")
   var referralRejectionReason: ReferralRejectionReasonEntity?,
+  var referralRejectionReasonDetail: String?,
   dueAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
