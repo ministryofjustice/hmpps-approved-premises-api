@@ -6,7 +6,7 @@ import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readExcel
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -82,7 +82,7 @@ import java.time.Period
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class ApplicationReportsTest : IntegrationTestBase() {
+class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
 
@@ -115,12 +115,24 @@ class ApplicationReportsTest : IntegrationTestBase() {
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
   lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
 
-  companion object Costants {
+  lateinit var applicationWithoutAssessment: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithBooking: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithPlacementApplication: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithReallocatedCompleteAssessments: ApprovedPremisesApplicationEntity
+  lateinit var applicationShortNotice: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithAcceptedAppeal: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithRejectedAppeal: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithMultipleAppeals: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithMultipleAssessments: ApprovedPremisesApplicationEntity
+
+  companion object Constants {
     const val AUTHORISED_DURATION_DAYS: Int = 12
   }
 
-  @BeforeEach
+  @BeforeAll
   fun setup() {
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
     referrerTeam = StaffUserTeamMembershipFactory().produce()
     referrerProbationArea = "Referrer probation area"
 
@@ -157,6 +169,39 @@ class ApplicationReportsTest : IntegrationTestBase() {
     placementApplicationSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
+
+    applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
+
+    val applicationWithBookingArgs = createApplicationWithBooking("applicationWithBooking")
+    applicationWithBooking = applicationWithBookingArgs.first
+
+    applicationWithPlacementApplication = createApplicationWithCompletedAssessment("applicationWithPlacementApplication")
+    createAndAcceptPlacementApplication(applicationWithPlacementApplication)
+    createBookingForApplication(applicationWithPlacementApplication)
+
+    applicationWithMultipleAssessments = createApplication("applicationWithMultipleAssessments")
+    reallocateAssessment(applicationWithMultipleAssessments)
+    acceptAssessmentForApplication(applicationWithMultipleAssessments)
+
+    applicationWithReallocatedCompleteAssessments = createApplication("applicationWithReallocatedCompleteAssessments")
+    reallocateAssessment(applicationWithReallocatedCompleteAssessments)
+    acceptAssessmentForApplication(applicationWithReallocatedCompleteAssessments)
+
+    applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
+    acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
+
+    applicationWithAcceptedAppeal = createApplication("applicationWithAcceptedAppeal")
+    val assessmentToAppealAccepted = rejectAssessmentForApplication(applicationWithAcceptedAppeal)
+    acceptAppealForAssessment(assessmentToAppealAccepted)
+
+    applicationWithRejectedAppeal = createApplication("applicationWithRejectedAppeal")
+    val assessmentToAppealRejected = rejectAssessmentForApplication(applicationWithRejectedAppeal)
+    rejectAppealForAssessment(assessmentToAppealRejected)
+
+    applicationWithMultipleAppeals = createApplication("applicationWithMultipleAppeals")
+    val assessmentToAppealMultiple = rejectAssessmentForApplication(applicationWithMultipleAppeals)
+    rejectAppealForAssessment(assessmentToAppealMultiple)
+    acceptAppealForAssessment(assessmentToAppealMultiple)
   }
 
   @Test
@@ -190,36 +235,6 @@ class ApplicationReportsTest : IntegrationTestBase() {
   @Test
   fun `Get application report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
-      val applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
-
-      val (applicationWithBooking, _) = createApplicationWithBooking("applicationWithBooking")
-
-      val applicationWithPlacementApplication = createApplicationWithCompletedAssessment("applicationWithPlacementApplication")
-      createAndAcceptPlacementApplication(applicationWithPlacementApplication)
-      createBookingForApplication(applicationWithPlacementApplication)
-
-      val applicationWithReallocatedCompleteAssessments = createApplication("applicationWithReallocatedCompleteAssessments")
-      reallocateAssessment(applicationWithReallocatedCompleteAssessments)
-      acceptAssessmentForApplication(applicationWithReallocatedCompleteAssessments)
-
-      val applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
-      acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
-
-      val applicationWithAcceptedAppeal = createApplication("applicationWithAcceptedAppeal")
-      val assessmentToAppealAccepted = rejectAssessmentForApplication(applicationWithAcceptedAppeal)
-      acceptAppealForAssessment(assessmentToAppealAccepted)
-
-      val applicationWithRejectedAppeal = createApplication("applicationWithRejectedAppeal")
-      val assessmentToAppealRejected = rejectAssessmentForApplication(applicationWithRejectedAppeal)
-      rejectAppealForAssessment(assessmentToAppealRejected)
-
-      val applicationWithMultipleAppeals = createApplication("applicationWithMultipleAppeals")
-      val assessmentToAppealMultiple = rejectAssessmentForApplication(applicationWithMultipleAppeals)
-      rejectAppealForAssessment(assessmentToAppealMultiple)
-      acceptAppealForAssessment(assessmentToAppealMultiple)
-
       webTestClient.get()
         .uri("/reports/applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -234,12 +249,13 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(8)
+          assertThat(actual.size).isEqualTo(9)
 
           assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, userEntity, ApplicationFacets(isAssessed = false, isAccepted = false))
           assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity)
           assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasPlacementApplication = true))
           assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity)
           assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, userEntity, ApplicationFacets(isShortNotice = true))
           assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
           assertApplicationRowHasCorrectData(actual, applicationWithRejectedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
@@ -251,37 +267,6 @@ class ApplicationReportsTest : IntegrationTestBase() {
   @Test
   fun `Get referrals report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
-      val applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
-
-      val (applicationWithBooking, _) = createApplicationWithBooking("applicationWithBooking")
-
-      val applicationWithPlacementApplication = createApplicationWithCompletedAssessment(crn = "applicationWithPlacementApplication", withArrivalDate = false)
-      createAndAcceptPlacementApplication(applicationWithPlacementApplication)
-      createBookingForApplication(applicationWithPlacementApplication)
-      createBookingForApplication(applicationWithPlacementApplication)
-
-      val applicationWithMultipleAssessments = createApplication("applicationWithMultipleAssessments")
-      reallocateAssessment(applicationWithMultipleAssessments)
-      acceptAssessmentForApplication(applicationWithMultipleAssessments)
-
-      val applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
-      acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
-
-      val applicationWithAcceptedAppeal = createApplication("applicationWithAcceptedAppeal")
-      val assessmentToAppealAccepted = rejectAssessmentForApplication(applicationWithAcceptedAppeal)
-      acceptAppealForAssessment(assessmentToAppealAccepted)
-
-      val applicationWithRejectedAppeal = createApplication("applicationWithRejectedAppeal")
-      val assessmentToAppealRejected = rejectAssessmentForApplication(applicationWithRejectedAppeal)
-      rejectAppealForAssessment(assessmentToAppealRejected)
-
-      val applicationWithMultipleAppeals = createApplication("applicationWithMultipleAppeals")
-      val assessmentToAppealMultiple = rejectAssessmentForApplication(applicationWithMultipleAppeals)
-      rejectAppealForAssessment(assessmentToAppealMultiple)
-      acceptAppealForAssessment(assessmentToAppealMultiple)
-
       webTestClient.get()
         .uri("/reports/referrals?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -296,11 +281,12 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(8)
+          assertThat(actual.size).isEqualTo(9)
 
           assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isAssessed = false))
           assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isShortNotice = true))
           assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false, reportType = ReportType.Referrals))
