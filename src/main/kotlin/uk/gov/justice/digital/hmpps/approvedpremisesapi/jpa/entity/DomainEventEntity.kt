@@ -224,7 +224,7 @@ enum class DomainEventType(val typeName: String, val typeDescription: String, va
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED(
     Cas1EventType.requestForPlacementCreated.value,
     "An Approved Premises Request for Placement has been created",
-    TimelineEventType.approvedPremisesPlacementApplicationAllocated,
+    TimelineEventType.approvedPremisesRequestForPlacementCreated,
   ),
   CAS2_APPLICATION_SUBMITTED(
     Cas2EventType.applicationSubmitted.value,
