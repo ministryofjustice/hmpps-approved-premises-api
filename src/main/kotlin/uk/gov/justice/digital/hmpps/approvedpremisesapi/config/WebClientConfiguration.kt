@@ -103,10 +103,10 @@ class WebClientConfiguration(
   @Bean(name = ["hmppsTierApiWebClient"])
   fun hmppsTierApiWebClient(
     clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String,
   ): WebClient {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
     oauth2Client.setDefaultClientRegistrationId("hmpps-tier")
 

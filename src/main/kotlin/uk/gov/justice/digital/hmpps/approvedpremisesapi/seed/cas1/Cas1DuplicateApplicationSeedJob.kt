@@ -111,7 +111,7 @@ class Cas1DuplicateApplicationSeedJob(
       user = null,
     )
 
-    log.info("Have duplicated application $applicationIdToDuplicate as $newApplicationEntity.id")
+    log.info("Have duplicated application $applicationIdToDuplicate as ${newApplicationEntity.id}")
   }
 }
 
