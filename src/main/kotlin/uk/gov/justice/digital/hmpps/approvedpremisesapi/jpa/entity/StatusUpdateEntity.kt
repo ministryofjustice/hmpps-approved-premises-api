@@ -38,6 +38,10 @@ data class Cas2StatusUpdateEntity(
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
 
+  @ManyToOne
+  @JoinColumn(name = "assessment_id")
+  val assessment: Cas2AssessmentEntity? = null,
+
   @OneToMany(mappedBy = "statusUpdate")
   val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
 
