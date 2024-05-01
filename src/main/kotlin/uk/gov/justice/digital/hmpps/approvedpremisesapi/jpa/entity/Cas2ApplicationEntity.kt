@@ -61,6 +61,7 @@ LEFT JOIN
 ON a.id = asu.application_id
 JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.created_by_user_id = :userId
+AND (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
 ORDER BY createdAt DESC
 """,
     countQuery =
@@ -87,6 +88,7 @@ FROM cas_2_applications a
 ON a.id = asu.application_id
 JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.referring_prison_code = :prisonCode
+AND (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
 ORDER BY createdAt DESC
 """,
     countQuery =
@@ -114,6 +116,7 @@ ON a.id = asu.application_id
 JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.created_by_user_id = :userId
 AND a.submitted_at IS NOT NULL
+AND a.conditional_release_date >= current_date
 ORDER BY createdAt DESC
 """,
     countQuery =
@@ -142,6 +145,7 @@ ON a.id = asu.application_id
 JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.referring_prison_code = :prisonCode
 AND a.submitted_at IS NOT NULL
+AND a.conditional_release_date >= current_date
 ORDER BY createdAt DESC
 """,
     countQuery =

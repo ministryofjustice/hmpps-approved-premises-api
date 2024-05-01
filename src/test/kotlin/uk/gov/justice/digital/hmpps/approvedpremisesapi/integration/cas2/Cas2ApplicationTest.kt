@@ -34,6 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -189,6 +191,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
+            // unsubmitted application
             val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
@@ -198,6 +201,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withHdcEligibilityDate(LocalDate.now().plusMonths(3))
             }
 
+            // submitted application, CRD >= today so should be returned
             val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
@@ -205,6 +209,18 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
               withSubmittedAt(OffsetDateTime.now())
+              withConditionalReleaseDate(LocalDate.now())
+            }
+
+            // submitted application, CRD = yesterday, so should not be returned
+            val thirdApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+              withSubmittedAt(OffsetDateTime.now())
+              withConditionalReleaseDate(LocalDate.now().minusDays(1))
             }
 
             val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -245,6 +261,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 firstApplicationEntity.hdcEligibilityDate == it.hdcEligibilityDate &&
                 firstApplicationEntity.createdByUser.name == it.createdByUserName
+            }
+
+            Assertions.assertThat(responseBody).noneMatch {
+              thirdApplicationEntity.id == it.id
             }
 
             Assertions.assertThat(responseBody).noneMatch {
@@ -411,6 +431,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               val userBPrisonAApplicationIds = mutableListOf<UUID>()
 
+              // submitted applications with conditional release dates in the future
               repeat(6) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
@@ -421,9 +442,38 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
                   }.id,
                 )
               }
+
+              // submitted applications with conditional release dates today
+              repeat(2) {
+                userBPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userBPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                    withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                    withConditionalReleaseDate(LocalDate.now())
+                  }.id,
+                )
+              }
+
+              // submitted application with a conditional release date before today
+              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userBPrisonA)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withCreatedAt(OffsetDateTime.now().minusDays(14))
+                withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                withSubmittedAt(OffsetDateTime.now())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+              }.id
 
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
@@ -453,6 +503,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               val responseBody =
                 objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+              Assertions.assertThat(responseBody).noneMatch {
+                excludedApplicationId == it.id
+              }
 
               val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
@@ -514,9 +568,38 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
                     withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
                   }.id,
                 )
               }
+
+              // submitted applications with conditional release dates today
+              repeat(2) {
+                userBPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userBPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                    withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                    withConditionalReleaseDate(LocalDate.now())
+                  }.id,
+                )
+              }
+
+              // submitted application with a conditional release date before today
+              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userBPrisonA)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withCreatedAt(OffsetDateTime.now().minusDays(14))
+                withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                withSubmittedAt(OffsetDateTime.now())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+              }.id
 
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
@@ -533,6 +616,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               val responseBody =
                 objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+              Assertions.assertThat(responseBody).noneMatch {
+                excludedApplicationId == it.id
+              }
 
               val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
@@ -645,6 +732,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               val userBPrisonAApplicationIds = mutableListOf<UUID>()
 
+              // submitted applications with conditional release dates in the future
               repeat(6) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
@@ -655,9 +743,38 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
                     withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
                   }.id,
                 )
               }
+
+              // submitted applications with conditional release date of today
+              repeat(2) {
+                userBPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(pomUserPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                    withConditionalReleaseDate(LocalDate.now())
+                  }.id,
+                )
+              }
+
+              // submitted application with a conditional release date before today
+              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(pomUserPrisonA)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+              }.id
 
               val pomUserPrisonB = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId("other_prison")
@@ -687,6 +804,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               val responseBody =
                 objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
+              Assertions.assertThat(responseBody).noneMatch {
+                excludedApplicationId == it.id
+              }
               val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
               Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
@@ -721,6 +841,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     var jwtForUser: String? = null
     val submittedIds = mutableSetOf<UUID>()
     val unSubmittedIds = mutableSetOf<UUID>()
+    lateinit var excludedApplicationId: UUID
 
     @BeforeEach
     fun setup() {
@@ -736,7 +857,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               // create 3 x submitted applications for this user
-              // with most recent first
+              // with most recent first and conditional release dates in the future
               repeat(3) {
                 submittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
@@ -746,9 +867,37 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
                   }.id,
                 )
               }
+
+              // create 2 x submitted applications for this user
+              // with most recent first and conditional release dates of today
+              repeat(2) {
+                submittedIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userEntity)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
+                    withConditionalReleaseDate(LocalDate.now())
+                  }.id,
+                )
+              }
+
+              // submitted application with a conditional release date before today
+              excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+                withCreatedAt(OffsetDateTime.now().minusDays(14))
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userEntity)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withSubmittedAt(OffsetDateTime.now())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+              }.id
 
               addStatusUpdates(submittedIds.first(), assessor)
 
@@ -804,6 +953,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       val responseBody =
         objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
+      Assertions.assertThat(responseBody).noneMatch {
+        excludedApplicationId == it.id
+      }
+
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds.union(unSubmittedIds))
     }
@@ -823,6 +976,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       val responseBody =
         objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+      Assertions.assertThat(responseBody).noneMatch {
+        excludedApplicationId == it.id
+      }
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
