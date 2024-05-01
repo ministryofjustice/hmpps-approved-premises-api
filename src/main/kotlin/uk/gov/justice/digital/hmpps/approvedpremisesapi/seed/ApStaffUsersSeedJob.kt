@@ -40,10 +40,9 @@ class ApStaffUsersSeedJob(
   }
 
   private fun seedingReport(user: UserEntity): String {
-    val ageInMinutes = ChronoUnit.MINUTES.between(user.createdAt, OffsetDateTime.now())
-    val actionTaken = if (ageInMinutes > 1) "Found pre-existing" else "Seeded"
-
-    return "-> $actionTaken: ${user.deliusUsername} (created $ageInMinutes mins ago)"
+    val timestamp = user.updatedAt ?: user.createdAt
+    val ageInMinutes = ChronoUnit.MINUTES.between(timestamp, OffsetDateTime.now())
+    return "-> User record for: ${user.deliusUsername} last updated $ageInMinutes mins ago"
   }
 }
 
