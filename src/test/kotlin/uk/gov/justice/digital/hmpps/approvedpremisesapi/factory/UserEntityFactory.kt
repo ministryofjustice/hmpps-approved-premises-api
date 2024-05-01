@@ -69,6 +69,10 @@ class UserEntityFactory : Factory<UserEntity> {
     this.email = { email }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime?) = apply {
+    this.createdAt = { createdAt }
+  }
+
   fun withTelephoneNumber(telephoneNumber: String?) = apply {
     this.telephoneNumber = { telephoneNumber }
   }

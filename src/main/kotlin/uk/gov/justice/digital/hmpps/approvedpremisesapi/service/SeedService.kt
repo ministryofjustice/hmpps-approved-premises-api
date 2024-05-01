@@ -160,6 +160,7 @@ class SeedService(
         SeedFileType.approvedPremisesApStaffUsers -> ApStaffUsersSeedJob(
           filename,
           applicationContext.getBean(UserService::class.java),
+          seedLogger,
         )
         SeedFileType.nomisUsers -> NomisUsersSeedJob(
           filename,

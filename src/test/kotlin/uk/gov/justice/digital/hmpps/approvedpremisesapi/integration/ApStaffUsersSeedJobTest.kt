@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApStaffUserSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.OffsetDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class APStaffUsersSeedJobTest : SeedTestBase() {
@@ -81,11 +82,17 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
+
+    assertThat(logEntries).anyMatch {
+      it.level == "info" &&
+        it.message.contains("Seeded: UNKNOWN-USER")
+    }
   }
 
   @Test fun `Seeding a pre-existing user leaves roles and qualifications untouched`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PRE-EXISTING-USER")
+      withCreatedAt(OffsetDateTime.now().minusDays(3))
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
           withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
@@ -134,6 +141,11 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
       UserQualification.PIPE,
       UserQualification.WOMENS,
     )
+
+    assertThat(logEntries).anyMatch {
+      it.level == "info" &&
+        it.message.contains("Found pre-existing: PRE-EXISTING-USER")
+    }
   }
 
   private fun apStaffUserSeedCsvRowsToCsv(rows: List<ApStaffUserSeedCsvRow>): String {

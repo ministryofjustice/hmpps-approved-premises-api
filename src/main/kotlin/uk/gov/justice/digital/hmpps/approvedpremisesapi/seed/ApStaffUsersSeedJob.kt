@@ -1,12 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
-import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class ApStaffUsersSeedJob(
   fileName: String,
   private val userService: UserService,
+  private val seedLogger: SeedLogger,
 ) : SeedJob<ApStaffUserSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
@@ -14,7 +17,6 @@ class ApStaffUsersSeedJob(
     "deliusUsername",
   ),
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = ApStaffUserSeedCsvRow(
     deliusUsername = columns["deliusUsername"]!!.trim().uppercase(),
@@ -22,13 +24,21 @@ class ApStaffUsersSeedJob(
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
   override fun processRow(row: ApStaffUserSeedCsvRow) {
-    log.info("Processing AP Staff seeding for ${row.deliusUsername}")
+    seedLogger.info("Processing AP Staff seeding for ${row.deliusUsername}")
 
     val user = try {
       userService.getExistingUserOrCreate(row.deliusUsername)
     } catch (exception: Exception) {
       throw RuntimeException("Could not get user ${row.deliusUsername}", exception)
     }
+    seedLogger.info(seedingReport(user))
+  }
+
+  private fun seedingReport(user: UserEntity): String {
+    val ageInMinutes = ChronoUnit.MINUTES.between(user.createdAt, OffsetDateTime.now())
+    val actionTaken = if (ageInMinutes > 1) "Found pre-existing" else "Seeded"
+
+    return "-> $actionTaken: ${user.deliusUsername} (created $ageInMinutes mins ago)"
   }
 }
 
