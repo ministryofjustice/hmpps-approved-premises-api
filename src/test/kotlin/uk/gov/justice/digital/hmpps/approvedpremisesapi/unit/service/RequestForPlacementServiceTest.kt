@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -28,18 +29,20 @@ class RequestForPlacementServiceTest {
   private val placementApplicationService = mockk<PlacementApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
   private val requestForPlacementTransformer = mockk<RequestForPlacementTransformer>()
+  private val cas1WithdrawableService = mockk<Cas1WithdrawableService>()
 
   private val requestForPlacementService = RequestForPlacementService(
     applicationService,
     placementApplicationService,
     placementRequestService,
     requestForPlacementTransformer,
+    cas1WithdrawableService,
   )
 
   @BeforeEach
   fun setupRequestForPlacementTransformerMock() {
-    every { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(any()) } returns mockk()
-    every { requestForPlacementTransformer.transformPlacementRequestEntityToApi(any()) } returns mockk()
+    every { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(any(), any()) } returns mockk()
+    every { requestForPlacementTransformer.transformPlacementRequestEntityToApi(any(), any()) } returns mockk()
   }
 
   companion object {
@@ -54,7 +57,7 @@ class RequestForPlacementServiceTest {
     fun `Returns NotFound result if no application with the specified ID was found`() {
       every { applicationService.getApplication(any()) } returns null
 
-      val result = requestForPlacementService.getRequestsForPlacementByApplication(UUID.randomUUID())
+      val result = requestForPlacementService.getRequestsForPlacementByApplication(UUID.randomUUID(), user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -78,17 +81,21 @@ class RequestForPlacementServiceTest {
         placementApplicationService.getAllPlacementApplicationsForApplicationId(application.id)
       } returns placementApplications
 
+      placementApplications.forEach {
+        every { cas1WithdrawableService.isDirectlyWithdrawable(it, user) } returns true
+      }
+
       every {
         placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
       } returns listOf()
 
-      val result = requestForPlacementService.getRequestsForPlacementByApplication(application.id)
+      val result = requestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
       assertThat(result.entity).hasSize(placementApplications.size)
       placementApplications.forEach {
-        verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(it) }
+        verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(it, true) }
       }
     }
 
@@ -126,13 +133,17 @@ class RequestForPlacementServiceTest {
         placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
       } returns placementRequests
 
-      val result = requestForPlacementService.getRequestsForPlacementByApplication(application.id)
+      placementRequests.forEach {
+        every { cas1WithdrawableService.isDirectlyWithdrawable(it, user) } returns true
+      }
+
+      val result = requestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
       assertThat(result.entity).hasSize(placementRequests.size)
       placementRequests.forEach {
-        verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(it) }
+        verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(it, true) }
       }
     }
   }
@@ -148,7 +159,7 @@ class RequestForPlacementServiceTest {
       every { placementApplicationService.getApplicationOrNull(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
 
-      val result = requestForPlacementService.getRequestForPlacement(application, UUID.randomUUID())
+      val result = requestForPlacementService.getRequestForPlacement(application, UUID.randomUUID(), user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -166,12 +177,13 @@ class RequestForPlacementServiceTest {
 
       every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
+      every { cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user) } returns true
 
-      val result = requestForPlacementService.getRequestForPlacement(application, placementApplication.id)
+      val result = requestForPlacementService.getRequestForPlacement(application, placementApplication.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
 
-      verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication) }
+      verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true) }
     }
 
     @Test
@@ -198,12 +210,13 @@ class RequestForPlacementServiceTest {
 
       every { placementApplicationService.getApplicationOrNull(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      every { cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user) } returns true
 
-      val result = requestForPlacementService.getRequestForPlacement(application, placementRequest.id)
+      val result = requestForPlacementService.getRequestForPlacement(application, placementRequest.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
 
-      verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest) }
+      verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true) }
     }
   }
 }

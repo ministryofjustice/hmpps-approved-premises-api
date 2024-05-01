@@ -17,6 +17,7 @@ class RequestForPlacementTransformer(
 ) {
   fun transformPlacementApplicationEntityToApi(
     placementApplicationEntity: PlacementApplicationEntity,
+    canBeDirectlyWithdrawn: Boolean,
   ) = RequestForPlacement(
     id = placementApplicationEntity.id,
     createdByUserId = placementApplicationEntity.createdByUser.id,
@@ -27,13 +28,14 @@ class RequestForPlacementTransformer(
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
     document = placementApplicationEntity.document?.let(objectMapper::readTree),
-    canBeDirectlyWithdrawn = false,
+    canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
     withdrawalReason = placementApplicationEntity.withdrawalReason?.apiValue,
     status = placementApplicationEntity.deriveStatus(),
   )
 
   fun transformPlacementRequestEntityToApi(
     placementRequestEntity: PlacementRequestEntity,
+    canBeDirectlyWithdrawn: Boolean,
   ) = RequestForPlacement(
     id = placementRequestEntity.id,
     createdByUserId = placementRequestEntity.application.createdByUser.id,
@@ -49,7 +51,7 @@ class RequestForPlacementTransformer(
     submittedAt = placementRequestEntity.createdAt.toInstant(),
     requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),
     document = null,
-    canBeDirectlyWithdrawn = false,
+    canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
     withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
     status = placementRequestEntity.deriveStatus(),
   )

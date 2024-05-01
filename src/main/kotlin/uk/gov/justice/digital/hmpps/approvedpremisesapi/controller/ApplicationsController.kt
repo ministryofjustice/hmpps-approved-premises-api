@@ -335,7 +335,7 @@ class ApplicationsController(
   }
 
   override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
-    val requestsForPlacement = when (val result = requestForPlacementService.getRequestsForPlacementByApplication(applicationId)) {
+    val requestsForPlacement = when (val result = requestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())) {
       is AuthorisableActionResult.Success -> result.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -350,7 +350,7 @@ class ApplicationsController(
   ): ResponseEntity<RequestForPlacement> {
     val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
 
-    val requestForPlacement = when (val result = requestForPlacementService.getRequestForPlacement(application, requestForPlacementId)) {
+    val requestForPlacement = when (val result = requestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())) {
       is AuthorisableActionResult.Success -> result.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "RequestForPlacement")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
