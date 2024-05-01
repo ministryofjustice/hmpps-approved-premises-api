@@ -27,6 +27,7 @@ class RequestForPlacementTransformer(
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
     document = placementApplicationEntity.document?.let(objectMapper::readTree),
+    canBeDirectlyWithdrawn = false,
     withdrawalReason = placementApplicationEntity.withdrawalReason?.apiValue,
     status = placementApplicationEntity.deriveStatus(),
   )
@@ -48,6 +49,7 @@ class RequestForPlacementTransformer(
     submittedAt = placementRequestEntity.createdAt.toInstant(),
     requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),
     document = null,
+    canBeDirectlyWithdrawn = false,
     withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
     status = placementRequestEntity.deriveStatus(),
   )
