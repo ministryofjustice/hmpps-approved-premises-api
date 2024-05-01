@@ -21,7 +21,7 @@ import java.util.UUID
 import javax.transaction.Transactional
 
 @Service
-class WithdrawableService(
+class Cas1WithdrawableService(
   private val applicationService: ApplicationService,
   private val placementRequestService: PlacementRequestService,
   private val placementApplicationService: PlacementApplicationService,
