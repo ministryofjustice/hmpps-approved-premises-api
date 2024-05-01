@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -14,6 +15,7 @@ import java.util.UUID
 class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var assessor: Yielded<ExternalUserEntity> = { ExternalUserEntityFactory().produce() }
+  private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
   private var application: Yielded<Cas2ApplicationEntity>? = null
   private var statusId: Yielded<UUID> = { Cas2ApplicationStatusSeeding.statusList().random().id }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -27,6 +29,10 @@ class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
 
   fun withAssessor(assessor: ExternalUserEntity) = apply {
     this.assessor = { assessor }
+  }
+
+  fun withAssessment(assessment: Cas2AssessmentEntity) = apply {
+    this.assessment = { assessment }
   }
 
   fun withApplication(application: Cas2ApplicationEntity) = apply {
@@ -57,6 +63,7 @@ class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
     id = this.id(),
     assessor = this.assessor(),
     application = this.application?.invoke() ?: error("Must provide a submitted application"),
+    assessment = this.assessment(),
     statusId = this.statusId(),
     createdAt = this.createdAt(),
     label = this.label(),
