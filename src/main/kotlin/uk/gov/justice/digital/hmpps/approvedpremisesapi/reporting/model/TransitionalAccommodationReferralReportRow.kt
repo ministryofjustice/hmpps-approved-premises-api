@@ -22,6 +22,7 @@ data class TransitionalAccommodationReferralReportRow(
   val dutyToReferMade: String?,
   val dateDutyToReferMade: LocalDate?,
   val dutyToReferLocalAuthorityAreaName: String?,
+  val dutyToReferOutcome: String?,
   val town: String?,
   val postCode: String?,
   val probationRegion: String,
