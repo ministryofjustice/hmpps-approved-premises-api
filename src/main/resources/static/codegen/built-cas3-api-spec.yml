@@ -3736,6 +3736,7 @@ components:
         - update_application_ap_areas
         - update_task_due_dates
         - update_cas2_applications_with_assessments
+        - update_cas2_status_updates_with_assessments
         - update_cas1_user_details
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types

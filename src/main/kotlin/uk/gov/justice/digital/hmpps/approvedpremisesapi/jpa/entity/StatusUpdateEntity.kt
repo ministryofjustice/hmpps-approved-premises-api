@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.CreationTimestamp
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
@@ -17,6 +20,11 @@ import javax.persistence.Table
 @Repository
 interface Cas2StatusUpdateRepository : JpaRepository<Cas2StatusUpdateEntity, UUID> {
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2StatusUpdateEntity?
+
+  @Query(
+    "SELECT su FROM Cas2StatusUpdateEntity su WHERE su.assessment IS NULL",
+  )
+  fun findAllStatusUpdatesWithoutAssessment(pageable: Pageable?): Slice<Cas2StatusUpdateEntity>
 }
 
 @Entity
@@ -40,7 +48,7 @@ data class Cas2StatusUpdateEntity(
 
   @ManyToOne
   @JoinColumn(name = "assessment_id")
-  val assessment: Cas2AssessmentEntity? = null,
+  var assessment: Cas2AssessmentEntity? = null,
 
   @OneToMany(mappedBy = "statusUpdate")
   val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
