@@ -6,7 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.util.UUID
-
+/**
+ * Seeds users, along with their roles and qualifications.
+ *
+ *  NB: this clears roles and qualifications.
+ *
+ *  If you want to seed users without touching the pre-existing
+ *  roles/qualifications of pre-existing users, then consider
+ *  using ApStaffUsersSeedJob.
+ */
 class UsersSeedJob(
   fileName: String,
   private val useRolesForServices: List<ServiceName>,

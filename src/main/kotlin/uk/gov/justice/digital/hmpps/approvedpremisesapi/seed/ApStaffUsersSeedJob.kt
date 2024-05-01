@@ -5,7 +5,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
+/**
+ * Seeds users, without touching roles and qualifications.
+ *
+ *  If you want to set roles and qualifications as part of
+ *  the seeding then look at UsersSeedJob.
+ */
 class ApStaffUsersSeedJob(
   fileName: String,
   private val userService: UserService,
