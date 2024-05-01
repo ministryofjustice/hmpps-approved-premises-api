@@ -132,10 +132,25 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get report returns 400 if dates provided is more than 3 months`(reportType: Cas3ReportType) {
+  fun `Get report returns 400 if dates provided is more than or equal to 3 months`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
       val endDate = "2023-08-02"
+      webTestClient.get()
+        .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
+    }
+
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      val startDate = "2023-04-01"
+      val endDate = "2023-07-01"
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
         .header("Authorization", "Bearer $jwt")
