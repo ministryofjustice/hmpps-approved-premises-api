@@ -267,6 +267,7 @@ class AssessmentService(
         summaryData = objectMapper.writeValueAsString(summaryData),
         isWithdrawn = false,
         referralRejectionReason = null,
+        referralRejectionReasonDetail = null,
         dueAt = null,
       ),
     )
@@ -518,6 +519,7 @@ class AssessmentService(
     document: String?,
     rejectionRationale: String,
     referralRejectionReasonId: UUID? = null,
+    referralRejectionReasonDetail: String? = null,
     isWithdrawn: Boolean? = null,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
@@ -576,6 +578,7 @@ class AssessmentService(
 
       assessment.completedAt = null
       assessment.referralRejectionReason = referralRejectionReason
+      assessment.referralRejectionReasonDetail = referralRejectionReasonDetail
       assessment.isWithdrawn = isWithdrawn!!
     }
 

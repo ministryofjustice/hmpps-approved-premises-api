@@ -194,6 +194,7 @@ class AssessmentController(
         serializedData,
         assessmentRejection.rejectionRationale,
         assessmentRejection.referralRejectionReasonId,
+        assessmentRejection.referralRejectionReasonDetail,
         assessmentRejection.isWithdrawn,
       )
 

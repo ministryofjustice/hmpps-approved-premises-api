@@ -171,7 +171,7 @@ class AssessmentStateTest : IntegrationTestBase() {
       .uri("/assessments/${this.id}/rejection")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-      .bodyValue(AssessmentRejection(document = {}, rejectionRationale = "Some reason or another", referralRejectionReasonId, true))
+      .bodyValue(AssessmentRejection(document = {}, rejectionRationale = "Some reason or another", referralRejectionReasonId, null, true))
       .exchange()
       .expectStatus()
       .is2xxSuccessful

@@ -1575,7 +1575,7 @@ class AssessmentServiceTest {
     every { userServiceMock.getUserForRequest() } returns user
     every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
-    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning", referralRejectionReasonId, false)
+    val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning", referralRejectionReasonId, "referral rejection reason detail", false)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1585,6 +1585,8 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+    assertThat(updatedAssessment.referralRejectionReason?.id).isEqualTo(referralRejectionReasonId)
+    assertThat(updatedAssessment.referralRejectionReasonDetail).isEqualTo("referral rejection reason detail")
     assertThat(updatedAssessment.completedAt).isNull()
     assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.REJECTED)
   }

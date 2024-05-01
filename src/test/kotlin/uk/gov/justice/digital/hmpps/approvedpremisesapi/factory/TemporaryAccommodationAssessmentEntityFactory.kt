@@ -40,6 +40,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var summaryData: Yielded<String> = { "{}" }
   private var dueAt: Yielded<OffsetDateTime?> = { null }
   private var referralRejectionReason: Yielded<ReferralRejectionReasonEntity?> = { null }
+  private var referralRejectionReasonDetail: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -113,6 +114,10 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.referralRejectionReason = { referralRejectionReason }
   }
 
+  fun withReferralRejectionReasonDetail(referralRejectionReasonDetail: String?) = apply {
+    this.referralRejectionReasonDetail = { referralRejectionReasonDetail }
+  }
+
   fun withDueAt(dueAt: OffsetDateTime) = apply {
     this.dueAt = { dueAt }
   }
@@ -137,6 +142,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     summaryData = this.summaryData(),
     isWithdrawn = false,
     referralRejectionReason = this.referralRejectionReason(),
+    referralRejectionReasonDetail = this.referralRejectionReasonDetail(),
     dueAt = this.dueAt(),
   )
 }
