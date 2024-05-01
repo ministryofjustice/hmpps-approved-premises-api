@@ -3842,6 +3842,11 @@ components:
           format: date-time
         document:
           $ref: '#/components/schemas/AnyValue'
+        canBeDirectlyWithdrawn:
+          description: |
+            If true, the user making this request can withdraw this request for placement. 
+            If false, it may still be possible to indirectly withdraw this request for placement by withdrawing the application.
+          type: boolean
         isWithdrawn:
           type: boolean
         withdrawalReason:
@@ -3858,6 +3863,7 @@ components:
         - id
         - createdByUserId
         - createdAt
+        - canBeDirectlyWithdrawn
         - isWithdrawn
         - type
         - placementDates

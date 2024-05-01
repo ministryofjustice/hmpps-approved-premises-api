@@ -74,7 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
@@ -132,7 +132,7 @@ class PremisesController(
   private val bedDetailTransformer: BedDetailTransformer,
   private val calendarTransformer: CalendarTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
-  private val withdrawableService: WithdrawableService,
+  private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PremisesApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -533,7 +533,7 @@ class PremisesController(
 
     when (booking.premises) {
       is ApprovedPremisesEntity -> {
-        val result = withdrawableService.withdrawBooking(
+        val result = cas1WithdrawableService.withdrawBooking(
           booking = booking,
           user = user,
           cancelledAt = body.date,

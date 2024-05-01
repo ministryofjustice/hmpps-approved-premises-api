@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -36,7 +36,7 @@ class PlacementApplicationsController(
   private val placementApplicationService: PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
-  private val withdrawalService: WithdrawableService,
+  private val withdrawalService: Cas1WithdrawableService,
 ) : PlacementApplicationsApiDelegate {
   override fun placementApplicationsPost(newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()

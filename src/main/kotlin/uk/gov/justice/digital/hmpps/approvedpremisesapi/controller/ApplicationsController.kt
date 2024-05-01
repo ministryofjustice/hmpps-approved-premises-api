@@ -54,8 +54,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -82,7 +82,7 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
-  private val withdrawableService: WithdrawableService,
+  private val cas1WithdrawableService: Cas1WithdrawableService,
   private val appealService: AppealService,
   private val appealTransformer: AppealTransformer,
   private val placementRequestService: PlacementRequestService,
@@ -315,7 +315,7 @@ class ApplicationsController(
 
     return ResponseEntity.ok(
       extractEntityFromCasResult(
-        withdrawableService.withdrawApplication(
+        cas1WithdrawableService.withdrawApplication(
           applicationId = applicationId,
           user = user,
           withdrawalReason = body.reason.value,
@@ -335,7 +335,7 @@ class ApplicationsController(
   }
 
   override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
-    val requestsForPlacement = when (val result = requestForPlacementService.getRequestsForPlacementByApplication(applicationId)) {
+    val requestsForPlacement = when (val result = requestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())) {
       is AuthorisableActionResult.Success -> result.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -350,7 +350,7 @@ class ApplicationsController(
   ): ResponseEntity<RequestForPlacement> {
     val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
 
-    val requestForPlacement = when (val result = requestForPlacementService.getRequestForPlacement(application, requestForPlacementId)) {
+    val requestForPlacement = when (val result = requestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())) {
       is AuthorisableActionResult.Success -> result.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "RequestForPlacement")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -569,7 +569,7 @@ class ApplicationsController(
       throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
-    val withdrawables = withdrawableService.allWithdrawables(application, user)
+    val withdrawables = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     return ResponseEntity.ok(
       withdrawables.map { entity ->

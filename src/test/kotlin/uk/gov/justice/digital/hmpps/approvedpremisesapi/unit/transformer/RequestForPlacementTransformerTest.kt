@@ -76,7 +76,7 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.id).isEqualTo(placementApplication.id)
       assertThat(result.createdByUserId).isEqualTo(placementApplication.createdByUser.id)
@@ -107,7 +107,7 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
     }
@@ -158,7 +158,7 @@ class RequestForPlacementTransformerTest {
           placementRequest.booking = this
         }
 
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
     }
@@ -177,7 +177,7 @@ class RequestForPlacementTransformerTest {
         .withDecision(PlacementApplicationDecision.REJECTED)
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestRejected)
     }
@@ -194,7 +194,7 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
     }
@@ -210,9 +210,47 @@ class RequestForPlacementTransformerTest {
         .withApplication(application)
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+    }
+
+    @Test
+    fun `canBeDirectlyWithdrawn is false`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+        placementApplication,
+        canBeDirectlyWithdrawn = false,
+      )
+
+      assertThat(result.canBeDirectlyWithdrawn).isEqualTo(false)
+    }
+
+    @Test
+    fun `canBeDirectlyWithdrawn is true`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+        placementApplication,
+        canBeDirectlyWithdrawn = true,
+      )
+
+      assertThat(result.canBeDirectlyWithdrawn).isEqualTo(true)
     }
   }
 
@@ -241,7 +279,7 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.id).isEqualTo(placementRequest.id)
       assertThat(result.createdByUserId).isEqualTo(placementRequest.application.createdByUser.id)
@@ -281,7 +319,7 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
     }
@@ -321,7 +359,7 @@ class RequestForPlacementTransformerTest {
           placementRequest.booking = this
         }
 
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
     }
@@ -357,7 +395,7 @@ class RequestForPlacementTransformerTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestRejected)
     }
@@ -391,7 +429,7 @@ class RequestForPlacementTransformerTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
     }
@@ -424,9 +462,69 @@ class RequestForPlacementTransformerTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+    }
+
+    @Test
+    fun `canBeDirectlyWithdrawn is false`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(
+        placementRequest,
+        canBeDirectlyWithdrawn = false,
+      )
+
+      assertThat(result.canBeDirectlyWithdrawn).isEqualTo(false)
+    }
+
+    @Test
+    fun `canBeDirectlyWithdrawn is true`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(
+        placementRequest,
+        canBeDirectlyWithdrawn = true,
+      )
+
+      assertThat(result.canBeDirectlyWithdrawn).isEqualTo(true)
     }
   }
 }

@@ -21,7 +21,7 @@ import java.util.UUID
 import javax.transaction.Transactional
 
 @Service
-class WithdrawableService(
+class Cas1WithdrawableService(
   private val applicationService: ApplicationService,
   private val placementRequestService: PlacementRequestService,
   private val placementApplicationService: PlacementApplicationService,
@@ -31,7 +31,7 @@ class WithdrawableService(
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun allWithdrawables(
+  fun allDirectlyWithdrawables(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ): Set<WithdrawableEntity> {
@@ -53,6 +53,22 @@ class WithdrawableService(
         )
       }
       .toSet()
+  }
+
+  fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
+    return allDirectlyWithdrawables(
+      application = placementRequest.application,
+      user = user,
+    )
+      .any { it.type == WithdrawableEntityType.PlacementRequest && it.id == placementRequest.id }
+  }
+
+  fun isDirectlyWithdrawable(placementApplication: PlacementApplicationEntity, user: UserEntity): Boolean {
+    return allDirectlyWithdrawables(
+      application = placementApplication.application,
+      user = user,
+    )
+      .any { it.type == WithdrawableEntityType.PlacementApplication && it.id == placementApplication.id }
   }
 
   @Transactional

@@ -82,8 +82,16 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication),
-                  requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest),
+                  // user created the placement application, but it's not submitted, so they can't withdraw
+                  requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+                    placementApplication,
+                    canBeDirectlyWithdrawn = false,
+                  ),
+                  // user created associated application, so they can withdraw the placement request
+                  requestForPlacementTransformer.transformPlacementRequestEntityToApi(
+                    placementRequest,
+                    canBeDirectlyWithdrawn = true,
+                  ),
                 ),
               ),
             )
@@ -182,7 +190,11 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             .expectBody()
             .json(
               objectMapper.writeValueAsString(
-                requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest),
+                requestForPlacementTransformer.transformPlacementRequestEntityToApi(
+                  placementRequest,
+                  // user created associated application, so they can withdraw the placement request
+                  canBeDirectlyWithdrawn = true,
+                ),
               ),
             )
         }
@@ -194,7 +206,11 @@ class RequestsForPlacementTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist()
 
-        `Given a Placement Application`(createdByUser = user, schema = schema) { placementApplication ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = schema,
+          submittedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+        ) { placementApplication ->
           webTestClient.get()
             .uri("/applications/${placementApplication.application.id}/requests-for-placement/${placementApplication.id}")
             .header("Authorization", "Bearer $jwt")
@@ -204,7 +220,12 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             .expectBody()
             .json(
               objectMapper.writeValueAsString(
-                requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication),
+
+                requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+                  placementApplication,
+                  // user created the placement application and it's submitted, so they can withdraw
+                  canBeDirectlyWithdrawn = true,
+                ),
               ),
             )
         }

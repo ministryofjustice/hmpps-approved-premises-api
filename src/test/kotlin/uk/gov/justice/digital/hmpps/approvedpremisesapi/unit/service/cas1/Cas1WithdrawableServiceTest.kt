@@ -24,17 +24,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas1WithdrawableServiceTest {
@@ -45,7 +46,7 @@ class Cas1WithdrawableServiceTest {
   private val cas1WithdrawableTreeBuilder = mockk<Cas1WithdrawableTreeBuilder>()
   private val cas1WithdrawableTreeOperations = mockk<Cas1WithdrawableTreeOperations>()
 
-  private val withdrawableService = WithdrawableService(
+  private val cas1WithdrawableService = Cas1WithdrawableService(
     applicationService,
     placementRequestService,
     placementApplicationService,
@@ -65,7 +66,7 @@ class Cas1WithdrawableServiceTest {
     .produce()
 
   @Test
-  fun `allWithdrawables correctly maps for given tree node`() {
+  fun `allDirectlyWithdrawables correctly maps for given tree node`() {
     val appId = UUID.randomUUID()
 
     every {
@@ -82,7 +83,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = withdrawableService.allWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     assertThat(result).hasSize(1)
 
@@ -98,7 +99,7 @@ class Cas1WithdrawableServiceTest {
   }
 
   @Test
-  fun `allWithdrawables only returns entities the user can withdraw`() {
+  fun `allDirectlyWithdrawables only returns entities the user can withdraw`() {
     val appWithdrawableId = UUID.randomUUID()
     val placementRequest1WithdrawableId = UUID.randomUUID()
     val placementRequestWithdrawableButNotPermittedId = UUID.randomUUID()
@@ -166,7 +167,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = withdrawableService.allWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     assertThat(result).hasSize(5)
     assertThat(result).anyMatch { it.id == appWithdrawableId }
@@ -177,7 +178,7 @@ class Cas1WithdrawableServiceTest {
   }
 
   @Test
-  fun `allWithdrawables doesn't return entities that are blocking, or ancestors of blocking`() {
+  fun `allDirectlyWithdrawables doesn't return entities that are blocking, or ancestors of blocking`() {
     val appWithdrawableButBlockedId = UUID.randomUUID()
     val placementRequest1WithdrawableButBlockedId = UUID.randomUUID()
     val placementRequestWithdrawableButNotPermittedId = UUID.randomUUID()
@@ -245,7 +246,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = withdrawableService.allWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     assertThat(result).hasSize(2)
     assertThat(result).anyMatch { it.id == placementRequest2WithdrawableId }
@@ -282,7 +283,7 @@ class Cas1WithdrawableServiceTest {
         )
       } returns Unit
 
-      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+      val result = cas1WithdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
       assertThat(result is CasResult.Success)
 
@@ -311,7 +312,7 @@ class Cas1WithdrawableServiceTest {
           .withCreatedByUser(user)
           .produce()
 
-      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+      val result = cas1WithdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
       assertThat(result is CasResult.GeneralValidationError)
     }
@@ -329,7 +330,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
-      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+      val result = cas1WithdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
       assertThat(result is CasResult.Unauthorised).isTrue()
     }
@@ -347,7 +348,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
-      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+      val result = cas1WithdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Application is not in a withdrawable state")
@@ -374,7 +375,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
-      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+      val result = cas1WithdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Application withdrawal is blocked")
@@ -429,7 +430,7 @@ class Cas1WithdrawableServiceTest {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
-      val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
       assertThat(result is CasResult.Success)
 
@@ -459,7 +460,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
-      val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
       assertThat(result is CasResult.Unauthorised).isTrue()
     }
@@ -477,7 +478,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
-      val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement is not in a withdrawable state")
@@ -504,7 +505,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
-      val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement withdrawal is blocked")
@@ -545,7 +546,7 @@ class Cas1WithdrawableServiceTest {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
-      val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
       assertThat(result is CasResult.Success)
 
@@ -575,7 +576,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
-      val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
       assertThat(result is CasResult.Unauthorised).isTrue()
     }
@@ -593,7 +594,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
-      val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement is not in a withdrawable state")
@@ -620,7 +621,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
-      val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
+      val result = cas1WithdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement withdrawal is blocked")
@@ -661,7 +662,7 @@ class Cas1WithdrawableServiceTest {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
+      val result = cas1WithdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.Success)
 
@@ -692,7 +693,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
+      val result = cas1WithdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.Unauthorised).isTrue()
     }
@@ -708,7 +709,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
+      val result = cas1WithdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement is not in a withdrawable state")
@@ -725,10 +726,117 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
+      val result = cas1WithdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement withdrawal is blocked")
+    }
+  }
+
+  @Nested
+  inner class IsDirectlyWithdrawableForPlacementApplication {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withDefaults()
+      .withApplication(application)
+      .produce()
+
+    @Test
+    fun `is withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementApplication,
+          entityId = placementApplication.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user)
+
+      assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `is not withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementApplication,
+          entityId = placementApplication.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user)
+
+      assertThat(result).isFalse()
+    }
+  }
+
+  @Nested
+  inner class IsDirectlyWithdrawableForPlacementRequest {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+      .produce()
+
+    val placementRequirements = PlacementRequirementsEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(placementRequirements)
+      .produce()
+
+    @Test
+    fun `is withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementRequest,
+          entityId = placementRequest.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user)
+
+      assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `is not withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementApplication,
+          entityId = placementRequest.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user)
+
+      assertThat(result).isFalse()
     }
   }
 }
