@@ -31,7 +31,7 @@ class Cas1WithdrawableService(
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun allWithdrawables(
+  fun allDirectlyWithdrawables(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ): Set<WithdrawableEntity> {

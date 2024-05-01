@@ -569,7 +569,7 @@ class ApplicationsController(
       throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
-    val withdrawables = cas1WithdrawableService.allWithdrawables(application, user)
+    val withdrawables = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     return ResponseEntity.ok(
       withdrawables.map { entity ->

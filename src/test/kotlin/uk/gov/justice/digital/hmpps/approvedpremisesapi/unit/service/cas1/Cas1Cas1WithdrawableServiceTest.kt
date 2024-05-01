@@ -65,7 +65,7 @@ class Cas1Cas1WithdrawableServiceTest {
     .produce()
 
   @Test
-  fun `allWithdrawables correctly maps for given tree node`() {
+  fun `allDirectlyWithdrawables correctly maps for given tree node`() {
     val appId = UUID.randomUUID()
 
     every {
@@ -82,7 +82,7 @@ class Cas1Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = cas1WithdrawableService.allWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     assertThat(result).hasSize(1)
 
@@ -98,7 +98,7 @@ class Cas1Cas1WithdrawableServiceTest {
   }
 
   @Test
-  fun `allWithdrawables only returns entities the user can withdraw`() {
+  fun `allDirectlyWithdrawables only returns entities the user can withdraw`() {
     val appWithdrawableId = UUID.randomUUID()
     val placementRequest1WithdrawableId = UUID.randomUUID()
     val placementRequestWithdrawableButNotPermittedId = UUID.randomUUID()
@@ -166,7 +166,7 @@ class Cas1Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = cas1WithdrawableService.allWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     assertThat(result).hasSize(5)
     assertThat(result).anyMatch { it.id == appWithdrawableId }
@@ -177,7 +177,7 @@ class Cas1Cas1WithdrawableServiceTest {
   }
 
   @Test
-  fun `allWithdrawables doesn't return entities that are blocking, or ancestors of blocking`() {
+  fun `allDirectlyWithdrawables doesn't return entities that are blocking, or ancestors of blocking`() {
     val appWithdrawableButBlockedId = UUID.randomUUID()
     val placementRequest1WithdrawableButBlockedId = UUID.randomUUID()
     val placementRequestWithdrawableButNotPermittedId = UUID.randomUUID()
@@ -245,7 +245,7 @@ class Cas1Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = cas1WithdrawableService.allWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     assertThat(result).hasSize(2)
     assertThat(result).anyMatch { it.id == placementRequest2WithdrawableId }
