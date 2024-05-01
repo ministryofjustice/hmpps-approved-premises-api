@@ -10,13 +10,13 @@ import javax.persistence.Table
 
 @Repository
 interface ReferralRejectionReasonRepository : JpaRepository<ReferralRejectionReasonEntity, UUID> {
-  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*'")
+  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' ORDER BY m.sortOrder")
   fun findAllByServiceScope(serviceName: String): List<ReferralRejectionReasonEntity>
 
-  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' AND m.isActive = true")
+  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' AND m.isActive = true ORDER BY m.sortOrder")
   fun findActiveByServiceScope(serviceName: String): List<ReferralRejectionReasonEntity>
 
-  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.isActive = true")
+  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.isActive = true ORDER BY m.sortOrder")
   fun findActive(): List<ReferralRejectionReasonEntity>
 }
 
@@ -28,6 +28,7 @@ data class ReferralRejectionReasonEntity(
   val name: String,
   val isActive: Boolean,
   val serviceScope: String,
+  val sortOrder: Int,
 ) {
   override fun toString() = "ReferralRejectionReasonEntity:$id"
 }

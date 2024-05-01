@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
@@ -183,7 +184,7 @@ class ReferenceDataController(
   ): ResponseEntity<List<ReferralRejectionReason>> {
     val referralRejectionReasons = when (xServiceName != null) {
       true -> referralRejectionReasonRepository.findAllByServiceScope(xServiceName.value)
-      else -> referralRejectionReasonRepository.findAll()
+      else -> referralRejectionReasonRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"))
     }
 
     return ResponseEntity.ok(referralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi))
