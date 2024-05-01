@@ -55,6 +55,22 @@ class Cas1WithdrawableService(
       .toSet()
   }
 
+  fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
+    return allDirectlyWithdrawables(
+      application = placementRequest.application,
+      user = user,
+    )
+      .any { it.type == WithdrawableEntityType.PlacementRequest && it.id == placementRequest.id }
+  }
+
+  fun isDirectlyWithdrawable(placementApplication: PlacementApplicationEntity, user: UserEntity): Boolean {
+    return allDirectlyWithdrawables(
+      application = placementApplication.application,
+      user = user,
+    )
+      .any { it.type == WithdrawableEntityType.PlacementApplication && it.id == placementApplication.id }
+  }
+
   @Transactional
   fun withdrawApplication(
     applicationId: UUID,

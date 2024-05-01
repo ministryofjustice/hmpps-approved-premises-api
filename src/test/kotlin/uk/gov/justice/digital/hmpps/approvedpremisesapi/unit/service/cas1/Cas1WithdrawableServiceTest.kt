@@ -35,9 +35,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class Cas1Cas1WithdrawableServiceTest {
+class Cas1WithdrawableServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
   private val placementApplicationService = mockk<PlacementApplicationService>()
@@ -729,6 +730,113 @@ class Cas1Cas1WithdrawableServiceTest {
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement withdrawal is blocked")
+    }
+  }
+
+  @Nested
+  inner class IsDirectlyWithdrawableForPlacementApplication {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withDefaults()
+      .withApplication(application)
+      .produce()
+
+    @Test
+    fun `is withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementApplication,
+          entityId = placementApplication.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user)
+
+      assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `is not withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementApplication,
+          entityId = placementApplication.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user)
+
+      assertThat(result).isFalse()
+    }
+  }
+
+  @Nested
+  inner class IsDirectlyWithdrawableForPlacementRequest {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+      .produce()
+
+    val placementRequirements = PlacementRequirementsEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(placementRequirements)
+      .produce()
+
+    @Test
+    fun `is withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementRequest,
+          entityId = placementRequest.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user)
+
+      assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `is not withdrawable`() {
+      every {
+        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+      } returns
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          entityType = WithdrawableEntityType.PlacementApplication,
+          entityId = placementRequest.id,
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          dates = emptyList(),
+        )
+
+      val result = cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user)
+
+      assertThat(result).isFalse()
     }
   }
 }
