@@ -264,6 +264,43 @@ class ApplicationTimelineTransformerTest {
   }
 
   @Test
+  fun `transformDomainEventSummaryToTimelineEvent does not include assessment URL for ASSESSMENT_ALLOCATED`() {
+    val assessmentId = UUID.randomUUID()
+    val applicationId = UUID.randomUUID()
+
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      occurredAt = OffsetDateTime.now(),
+      bookingId = null,
+      applicationId = applicationId,
+      assessmentId = assessmentId,
+      premisesId = null,
+      appealId = null,
+      triggeredByUser = null,
+    )
+
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
+    Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent).associatedUrls)
+      .containsOnly(
+        TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+      )
+
+    Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
+      TimelineEvent(
+        id = domainEvent.id,
+        type = TimelineEventType.approvedPremisesAssessmentAllocated,
+        occurredAt = domainEvent.occurredAt.toInstant(),
+        associatedUrls = listOf(
+          TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+        ),
+        content = "Some event",
+      ),
+    )
+  }
+
+  @Test
   fun `transformDomainEventSummaryToTimelineEvent adds all possible url types`() {
     val applicationId = UUID.randomUUID()
     val assessmentId = UUID.randomUUID()

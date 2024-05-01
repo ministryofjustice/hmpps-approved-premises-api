@@ -83,7 +83,9 @@ class ApplicationTimelineTransformer(
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> listOfNotNull(
         appealUrlOrNull(domainEventSummary),
       )
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> listOfNotNull(
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      -> listOfNotNull(
         applicationUrlOrNull(domainEventSummary),
       )
       else -> listOfNotNull(
