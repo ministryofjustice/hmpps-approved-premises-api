@@ -131,7 +131,7 @@ class ReportsController(
       startDate.isAfter(endDate) || startDate.isEqual(endDate) -> throw BadRequestProblem(invalidParams = mapOf("$.startDate" to "afterEndDate"))
       endDate.isAfter(LocalDate.now()) -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to "inFuture"))
       ChronoUnit.MONTHS.between(startDate, endDate)
-        .toInt() > MAXIMUM_REPORT_DURATION_IN_MONTHS -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to "rangeTooLarge"))
+        .toInt() >= MAXIMUM_REPORT_DURATION_IN_MONTHS -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to "rangeTooLarge"))
     }
   }
 
