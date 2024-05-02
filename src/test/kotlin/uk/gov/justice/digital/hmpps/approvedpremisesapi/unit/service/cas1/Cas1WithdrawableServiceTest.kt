@@ -747,7 +747,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `is withdrawable`() {
       every {
-        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+        cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
       } returns
         WithdrawableTreeNode(
           applicationId = application.id,
@@ -765,7 +765,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `is not withdrawable`() {
       every {
-        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+        cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
       } returns
         WithdrawableTreeNode(
           applicationId = application.id,
@@ -806,7 +806,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `is withdrawable`() {
       every {
-        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+        cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
       } returns
         WithdrawableTreeNode(
           applicationId = application.id,
@@ -824,7 +824,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `is not withdrawable`() {
       every {
-        cas1WithdrawableTreeBuilder.treeForApp(application, user)
+        cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
       } returns
         WithdrawableTreeNode(
           applicationId = application.id,
