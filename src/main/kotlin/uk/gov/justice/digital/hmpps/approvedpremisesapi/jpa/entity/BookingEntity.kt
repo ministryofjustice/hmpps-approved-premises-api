@@ -25,6 +25,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
+import javax.persistence.Version
 
 @Repository
 interface BookingRepository : JpaRepository<BookingEntity, UUID> {
@@ -252,6 +253,8 @@ data class BookingEntity(
   @Enumerated(value = EnumType.STRING)
   var status: BookingStatus?,
   val adhoc: Boolean? = null,
+  @Version
+  var version: Long = 1,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }
