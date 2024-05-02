@@ -85,14 +85,14 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "info" &&
-        it.message.contains("Seeded: UNKNOWN-USER")
+        it.message.contains("User record for: UNKNOWN-USER last updated")
     }
   }
 
   @Test fun `Seeding a pre-existing user leaves roles and qualifications untouched`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PRE-EXISTING-USER")
-      withCreatedAt(OffsetDateTime.now().minusDays(3))
+      withUpdatedAt(OffsetDateTime.now().minusDays(3))
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
           withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
@@ -144,7 +144,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "info" &&
-        it.message.contains("Found pre-existing: PRE-EXISTING-USER")
+        it.message.contains("User record for: PRE-EXISTING-USER last updated")
     }
   }
 

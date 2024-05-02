@@ -73,6 +73,10 @@ class UserEntityFactory : Factory<UserEntity> {
     this.createdAt = { createdAt }
   }
 
+  fun withUpdatedAt(updatedAt: OffsetDateTime?) = apply {
+    this.updatedAt = { updatedAt }
+  }
+
   fun withTelephoneNumber(telephoneNumber: String?) = apply {
     this.telephoneNumber = { telephoneNumber }
   }
