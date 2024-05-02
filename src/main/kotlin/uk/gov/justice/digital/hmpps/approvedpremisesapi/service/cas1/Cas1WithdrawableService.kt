@@ -41,33 +41,28 @@ class Cas1WithdrawableService(
       log.debug("Withdrawables tree for application ${application.id} is $rootNode")
     }
 
-    return rootNode.flatten()
-      .filter { it.status.withdrawable }
-      .filter { !it.isBlocked() }
-      .filter { it.status.userMayDirectlyWithdraw }
-      .map {
-        WithdrawableEntity(
-          it.entityType,
-          it.entityId,
-          it.dates,
-        )
-      }
-      .toSet()
+    return toDirectlyWithdrawableEntities(rootNode)
   }
 
   fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
-    return allDirectlyWithdrawables(
-      application = placementRequest.application,
-      user = user,
-    )
+    val rootNode = cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
+
+    if (log.isDebugEnabled) {
+      log.debug("Withdrawables tree for placement request ${placementRequest.id} is $rootNode")
+    }
+
+    return toDirectlyWithdrawableEntities(rootNode)
       .any { it.type == WithdrawableEntityType.PlacementRequest && it.id == placementRequest.id }
   }
 
   fun isDirectlyWithdrawable(placementApplication: PlacementApplicationEntity, user: UserEntity): Boolean {
-    return allDirectlyWithdrawables(
-      application = placementApplication.application,
-      user = user,
-    )
+    val rootNode = cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
+
+    if (log.isDebugEnabled) {
+      log.debug("Withdrawables tree for placement app ${placementApplication.id} is $rootNode")
+    }
+
+    return toDirectlyWithdrawableEntities(rootNode)
       .any { it.type == WithdrawableEntityType.PlacementApplication && it.id == placementApplication.id }
   }
 
@@ -200,6 +195,19 @@ class Cas1WithdrawableService(
     }
     return withdrawalResult
   }
+
+  private fun toDirectlyWithdrawableEntities(rootNode: WithdrawableTreeNode) = rootNode.flatten()
+    .filter { it.status.withdrawable }
+    .filter { !it.isBlocked() }
+    .filter { it.status.userMayDirectlyWithdraw }
+    .map {
+      WithdrawableEntity(
+        it.entityType,
+        it.entityId,
+        it.dates,
+      )
+    }
+    .toSet()
 }
 
 data class WithdrawalContext(
