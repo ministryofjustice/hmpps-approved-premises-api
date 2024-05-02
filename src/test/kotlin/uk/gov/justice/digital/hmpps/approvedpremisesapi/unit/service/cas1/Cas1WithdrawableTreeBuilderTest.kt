@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 
@@ -92,10 +93,10 @@ class Cas1WithdrawableTreeBuilderTest {
     setupWithdrawableState(placementApp1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1 = createPlacementRequest()
     placementApp1.placementRequests.add(placementApp1PlacementRequest1)
-    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true))
+    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
     placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
-    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
+    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1))
 
     val placementApplication2 = createPlacementApplication()
     setupWithdrawableState(placementApplication2, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true))
@@ -105,7 +106,7 @@ class Cas1WithdrawableTreeBuilderTest {
     } returns listOf(placementApp1, placementApplication2)
 
     val adhocBooking1 = createBooking(adhoc = true)
-    setupWithdrawableState(adhocBooking1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = false))
+    setupWithdrawableState(adhocBooking1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
 
     every {
       bookingService.getAllAdhocOrUnknownForApplication(application)
@@ -119,8 +120,8 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
 ------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
-------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKING
----------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N
+------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
+---------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
 ---> PlacementApplication(), withdrawable:Y, mayDirectlyWithdraw:Y
 ---> Booking(), withdrawable:N, mayDirectlyWithdraw:N
       """
@@ -151,16 +152,16 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
     setupWithdrawableState(placementApp1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1 = createPlacementRequest()
     placementApp1.placementRequests.add(placementApp1PlacementRequest1)
-    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true))
+    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
     placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
-    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
+    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1))
 
     val placementApp2 = createPlacementApplication()
     setupWithdrawableState(placementApp2, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp2PlacementRequest1 = createPlacementRequest()
     placementApp2.placementRequests.add(placementApp2PlacementRequest1)
-    setupWithdrawableState(placementApp2PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true))
+    setupWithdrawableState(placementApp2PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp2PlacementRequest1Booking = createBooking(adhoc = null)
     placementApp2PlacementRequest1.booking = placementApp2PlacementRequest1Booking
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
@@ -178,10 +179,10 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
-------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKING
----------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N
----> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
-------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKING
+------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
+---------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
+---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N
+------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
       """
         .trim(),
     )

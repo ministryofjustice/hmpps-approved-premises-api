@@ -133,7 +133,9 @@ data class WithdrawableTreeNode(
     return result
   }
 
-  fun isBlocked(): Boolean = status.blockAncestorWithdrawals || children.any { it.isBlocked() }
+  private fun isBlockAncestorWithdrawals() = status.blockingReason != null
+
+  fun isBlocked(): Boolean = isBlockAncestorWithdrawals() || children.any { it.isBlocked() }
 
   override fun toString(): String {
     return "\n\n${render(0)}\n"
@@ -161,8 +163,8 @@ data class WithdrawableTreeNode(
     "N"
   }
 
-  private fun blockingDescription() = if (status.blockAncestorWithdrawals) {
-    ", BLOCKING"
+  private fun blockingDescription() = if (isBlockAncestorWithdrawals()) {
+    ", BLOCKING - ${status.blockingReason}"
   } else if (isBlocked()) {
     ", BLOCKED"
   } else {

@@ -257,15 +257,19 @@ data class WithdrawableState(
    */
   val userMayDirectlyWithdraw: Boolean,
   /**
-   * If true, not only is this entity not withdrawable, but any ancestor
+   * If set, not only is this entity not withdrawable, but any ancestor
    * of this entity is also not withdrawable. For example, bookings with
    * arrivals will block the withdrawal of any associated request for
    * placement and application
    */
-  val blockAncestorWithdrawals: Boolean = false,
+  val blockingReason: BlockingReason? = null,
 )
 
 data class WithdrawableDatePeriod(
   val startDate: LocalDate,
   val endDate: LocalDate,
 )
+
+enum class BlockingReason {
+  ArrivalRecordedInCas1,
+}

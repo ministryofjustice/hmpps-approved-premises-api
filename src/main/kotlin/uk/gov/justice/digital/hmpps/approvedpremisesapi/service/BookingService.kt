@@ -86,6 +86,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -1136,7 +1137,7 @@ class BookingService(
     return WithdrawableState(
       withdrawable = booking.isInCancellableStateCas1(),
       userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
-      blockAncestorWithdrawals = booking.hasArrivals(),
+      blockingReason = if (booking.hasArrivals()) { BlockingReason.ArrivalRecordedInCas1 } else { null },
     )
   }
 

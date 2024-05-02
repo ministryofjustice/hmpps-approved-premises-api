@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
@@ -207,7 +208,7 @@ class Cas1WithdrawableServiceTest {
                 applicationId = application.id,
                 entityType = WithdrawableEntityType.Booking,
                 entityId = placementWithdrawableButBlockingId,
-                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
               ),
             ),
           ),
@@ -227,7 +228,7 @@ class Cas1WithdrawableServiceTest {
                 applicationId = application.id,
                 entityType = WithdrawableEntityType.PlacementRequest,
                 entityId = placementRequest2WithdrawableId,
-                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = false),
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = null),
               ),
             ),
           ),
@@ -368,7 +369,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             WithdrawableEntityType.Booking,
             UUID.randomUUID(),
-            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
           ),
         ),
       )
@@ -498,7 +499,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             WithdrawableEntityType.Booking,
             UUID.randomUUID(),
-            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
           ),
         ),
       )
@@ -614,7 +615,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             WithdrawableEntityType.PlacementApplication,
             placementApplication.id,
-            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
           ),
         ),
       )
@@ -721,7 +722,7 @@ class Cas1WithdrawableServiceTest {
         applicationId = application.id,
         WithdrawableEntityType.Booking,
         booking.id,
-        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
       )
 
       every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
