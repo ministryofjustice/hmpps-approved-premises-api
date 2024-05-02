@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -17,6 +18,7 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   }
   private var nacroReferralId: String? = null
   private var assessorName: String? = null
+  private var statusUpdates: MutableList<Cas2StatusUpdateEntity> = mutableListOf()
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -24,6 +26,10 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
 
   fun withApplication(application: Cas2ApplicationEntity) = apply {
     this.application = { application }
+  }
+
+  fun withStatusUpdates(statusUpdates: MutableList<Cas2StatusUpdateEntity>) = apply {
+    this.statusUpdates = statusUpdates
   }
 
   fun withNacroReferralId(id: String) = apply {
@@ -40,5 +46,6 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
     application = this.application(),
     nacroReferralId = this.nacroReferralId,
     assessorName = this.assessorName,
+    statusUpdates = this.statusUpdates,
   )
 }

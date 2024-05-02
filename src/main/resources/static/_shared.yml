@@ -2570,6 +2570,10 @@ components:
           type: string
         assessorName:
           type: string
+        statusUpdates:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas2StatusUpdate'
       required:
         - id
     UpdateCas2Assessment:

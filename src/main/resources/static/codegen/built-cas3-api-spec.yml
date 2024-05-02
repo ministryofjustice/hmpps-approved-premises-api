@@ -2661,6 +2661,10 @@ components:
           type: string
         assessorName:
           type: string
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdate'
       required:
         - id
     UpdateCas2Assessment:
