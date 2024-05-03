@@ -190,8 +190,6 @@ class ReportsController(
       throw ForbiddenProblem()
     }
 
-    val user = userService.getUserForRequest()
-
     validateParameters(null, month)
 
     val properties = PlacementApplicationReportProperties(year, month)

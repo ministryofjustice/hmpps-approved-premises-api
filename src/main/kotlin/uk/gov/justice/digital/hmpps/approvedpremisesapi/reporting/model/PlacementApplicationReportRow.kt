@@ -31,6 +31,7 @@ data class PlacementApplicationReportRow(
   val applicationWithdrawalDate: LocalDate?,
   val applicationWithdrawalReason: String?,
   val placementRequestType: String?,
+  val paroleDecisionDate: LocalDate?,
   val assessmentAppealCount: Int?,
   val lastAssessmentAppealedDecision: String?,
   val lastAssessmentAppealedDate: LocalDate?,
