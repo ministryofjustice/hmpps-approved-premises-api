@@ -35,43 +35,37 @@ class Cas1WithdrawableService(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ): WithdrawableEntitiesWithNotes {
-    val rootNode = cas1WithdrawableTreeBuilder.treeForApp(application, user)
+    val tree = cas1WithdrawableTreeBuilder.treeForApp(application, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for application ${application.id} is $rootNode")
-    }
-
-    val notes = mutableListOf<String>()
-
-    if (rootNode.isBlocked()) {
-      notes.add("The application cannot be withdrawn as 1 or more placements have arrivals recorded")
+      log.debug("Withdrawables tree for application ${application.id} is $tree")
     }
 
     return WithdrawableEntitiesWithNotes(
-      notes = notes.toList(),
-      withdrawables = toDirectlyWithdrawableEntities(rootNode),
+      notes = tree.notes(),
+      withdrawables = toDirectlyWithdrawableEntities(tree.rootNode),
     )
   }
 
   fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
-    val rootNode = cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
+    val tree = cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for placement request ${placementRequest.id} is $rootNode")
+      log.debug("Withdrawables tree for placement request ${placementRequest.id} is $tree")
     }
 
-    return toDirectlyWithdrawableEntities(rootNode)
+    return toDirectlyWithdrawableEntities(tree.rootNode)
       .any { it.type == WithdrawableEntityType.PlacementRequest && it.id == placementRequest.id }
   }
 
   fun isDirectlyWithdrawable(placementApplication: PlacementApplicationEntity, user: UserEntity): Boolean {
-    val rootNode = cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
+    val tree = cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for placement app ${placementApplication.id} is $rootNode")
+      log.debug("Withdrawables tree for placement app ${placementApplication.id} is $tree")
     }
 
-    return toDirectlyWithdrawableEntities(rootNode)
+    return toDirectlyWithdrawableEntities(tree.rootNode)
       .any { it.type == WithdrawableEntityType.PlacementApplication && it.id == placementApplication.id }
   }
 
@@ -94,7 +88,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForApp(application, user),
+      cas1WithdrawableTreeBuilder.treeForApp(application, user).rootNode,
       withdrawalContext,
     ) {
       applicationService.withdrawApprovedPremisesApplication(applicationId, user, withdrawalReason, otherReason)
@@ -117,7 +111,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user),
+      cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user).rootNode,
       withdrawalContext,
     ) {
       placementRequestService.withdrawPlacementRequest(placementRequestId, userProvidedReason, withdrawalContext)
@@ -140,7 +134,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user),
+      cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user).rootNode,
       withdrawalContext,
     ) {
       placementApplicationService.withdrawPlacementApplication(placementApplicationId, userProvidedReason, withdrawalContext)
@@ -163,7 +157,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForBooking(booking, user),
+      cas1WithdrawableTreeBuilder.treeForBooking(booking, user).rootNode,
       withdrawalContext,
     ) {
       bookingService.createCas1Cancellation(

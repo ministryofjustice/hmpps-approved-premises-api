@@ -34,45 +34,49 @@ class Cas1WithdrawableTreeBuilder(
   @Lazy private val placementApplicationService: PlacementApplicationService,
   @Lazy private val applicationService: ApplicationService,
 ) {
-  fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTreeNode {
+  fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTree {
     val children = mutableListOf<WithdrawableTreeNode>()
 
     placementRequestService.getPlacementRequestForInitialApplicationDates(application.id).forEach {
-      children.add(treeForPlacementReq(it, user))
+      children.add(treeForPlacementReq(it, user).rootNode)
     }
 
     placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id).forEach {
-      children.add(treeForPlacementApp(it, user))
+      children.add(treeForPlacementApp(it, user).rootNode)
     }
 
     bookingService.getAllAdhocOrUnknownForApplication(application).forEach {
-      children.add(treeForBooking(it, user))
+      children.add(treeForBooking(it, user).rootNode)
     }
 
-    return WithdrawableTreeNode(
-      applicationId = application.id,
-      entityType = WithdrawableEntityType.Application,
-      entityId = application.id,
-      status = applicationService.getWithdrawableState(application, user),
-      dates = emptyList(),
-      children = children,
+    return WithdrawableTree(
+      rootNode = WithdrawableTreeNode(
+        applicationId = application.id,
+        entityType = WithdrawableEntityType.Application,
+        entityId = application.id,
+        status = applicationService.getWithdrawableState(application, user),
+        dates = emptyList(),
+        children = children,
+      ),
     )
   }
 
-  fun treeForPlacementApp(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableTreeNode {
-    val children = placementApplication.placementRequests.map { treeForPlacementReq(it, user) }
+  fun treeForPlacementApp(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableTree {
+    val children = placementApplication.placementRequests.map { treeForPlacementReq(it, user).rootNode }
 
-    return WithdrawableTreeNode(
-      applicationId = placementApplication.application.id,
-      entityType = WithdrawableEntityType.PlacementApplication,
-      entityId = placementApplication.id,
-      status = placementApplicationService.getWithdrawableState(placementApplication, user),
-      dates = placementApplication.placementDates.map { WithdrawableDatePeriod(it.expectedArrival, it.expectedDeparture()) },
-      children = children,
+    return WithdrawableTree(
+      WithdrawableTreeNode(
+        applicationId = placementApplication.application.id,
+        entityType = WithdrawableEntityType.PlacementApplication,
+        entityId = placementApplication.id,
+        status = placementApplicationService.getWithdrawableState(placementApplication, user),
+        dates = placementApplication.placementDates.map { WithdrawableDatePeriod(it.expectedArrival, it.expectedDeparture()) },
+        children = children,
+      ),
     )
   }
 
-  fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTreeNode {
+  fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTree {
     val booking = placementRequest.booking
 
     /*
@@ -85,30 +89,56 @@ class Cas1WithdrawableTreeBuilder(
      * If adhoc is null, we treat it as 'potentially adhoc' and exclude it.
      */
     val children = if (booking != null && booking.adhoc == false) {
-      listOf(treeForBooking(booking, user))
+      listOf(treeForBooking(booking, user).rootNode)
     } else {
       emptyList()
     }
 
-    return WithdrawableTreeNode(
-      applicationId = placementRequest.application.id,
-      entityType = WithdrawableEntityType.PlacementRequest,
-      entityId = placementRequest.id,
-      status = placementRequestService.getWithdrawableState(placementRequest, user),
-      dates = listOf(WithdrawableDatePeriod(placementRequest.expectedArrival, placementRequest.expectedDeparture())),
-      children = children,
+    return WithdrawableTree(
+      WithdrawableTreeNode(
+        applicationId = placementRequest.application.id,
+        entityType = WithdrawableEntityType.PlacementRequest,
+        entityId = placementRequest.id,
+        status = placementRequestService.getWithdrawableState(placementRequest, user),
+        dates = listOf(WithdrawableDatePeriod(placementRequest.expectedArrival, placementRequest.expectedDeparture())),
+        children = children,
+      ),
     )
   }
 
-  fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTreeNode {
-    return WithdrawableTreeNode(
-      applicationId = booking.application?.id,
-      entityType = WithdrawableEntityType.Booking,
-      entityId = booking.id,
-      status = bookingService.getWithdrawableState(booking, user),
-      dates = listOf(WithdrawableDatePeriod(booking.arrivalDate, booking.departureDate)),
-      children = emptyList(),
+  fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTree {
+    return WithdrawableTree(
+      WithdrawableTreeNode(
+        applicationId = booking.application?.id,
+        entityType = WithdrawableEntityType.Booking,
+        entityId = booking.id,
+        status = bookingService.getWithdrawableState(booking, user),
+        dates = listOf(WithdrawableDatePeriod(booking.arrivalDate, booking.departureDate)),
+        children = emptyList(),
+      ),
     )
+  }
+}
+
+data class WithdrawableTree(
+  val rootNode: WithdrawableTreeNode,
+) {
+  fun notes(): List<String> {
+    val notes = mutableListOf<String>()
+
+    if (rootNode.isBlocked()) {
+      notes.add("1 or more placements cannot be withdrawn as they have an arrival")
+    }
+
+    return notes
+  }
+
+  fun render(includeIds: Boolean = true): String {
+    return "${rootNode.render(0,includeIds)}\nNotes: ${notes()}\n"
+  }
+
+  override fun toString(): String {
+    return "\n\n${render()}\n"
   }
 }
 

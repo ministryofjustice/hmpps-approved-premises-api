@@ -405,7 +405,7 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               val expected = Withdrawables(
-                notes = listOf("The application cannot be withdrawn as 1 or more placements have arrivals recorded"),
+                notes = listOf("1 or more placements cannot be withdrawn as they have an arrival"),
                 withdrawables = listOf(
                   toWithdrawable(placementApplication1),
                   toWithdrawable(booking1NoArrival),
@@ -496,7 +496,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
 
             val expected = Withdrawables(
-              notes = listOf("The application cannot be withdrawn as 1 or more placements have arrivals recorded"),
+              notes = listOf("1 or more placements cannot be withdrawn as they have an arrival"),
               withdrawables = listOf(
                 toWithdrawable(placementApplication1),
                 toWithdrawable(placementApplication2),

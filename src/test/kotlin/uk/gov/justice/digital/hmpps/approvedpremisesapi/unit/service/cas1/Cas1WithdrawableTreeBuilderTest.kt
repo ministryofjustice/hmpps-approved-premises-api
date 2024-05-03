@@ -96,7 +96,7 @@ class Cas1WithdrawableTreeBuilderTest {
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
     placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
-    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1))
+    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
 
     val placementApplication2 = createPlacementApplication()
     setupWithdrawableState(placementApplication2, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true))
@@ -114,16 +114,18 @@ class Cas1WithdrawableTreeBuilderTest {
 
     val result = service.treeForApp(application, user)
 
-    assertThat(result.render(0, includeIds = false).trim()).isEqualTo(
+    assertThat(result.render(includeIds = false).trim()).isEqualTo(
       """
-Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
+Application(), withdrawable:Y, mayDirectlyWithdraw:Y
 ---> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
 ------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N
----> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
-------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
----------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
+---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N
+------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
+---------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawable:Y, mayDirectlyWithdraw:Y
 ---> Booking(), withdrawable:N, mayDirectlyWithdraw:N
+
+Notes: []
       """
         .trim(),
     )
@@ -174,7 +176,7 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 
     val result = service.treeForApp(application, user)
 
-    assertThat(result.render(0, includeIds = false).trim()).isEqualTo(
+    assertThat(result.render(includeIds = false).trim()).isEqualTo(
       """
 Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
@@ -183,6 +185,8 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
 ---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N
 ------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
+
+Notes: [1 or more placements cannot be withdrawn as they have an arrival]
       """
         .trim(),
     )
