@@ -109,13 +109,7 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
-          val expected = listOf(
-            Withdrawable(
-              application.id,
-              WithdrawableType.application,
-              emptyList(),
-            ),
-          )
+          val expected = listOf(toWithdrawable(application))
 
           webTestClient.get()
             .uri("/applications/${application.id}/withdrawables")
@@ -153,10 +147,10 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val placementRequest = createPlacementRequest(application)
             val bookingNoArrival = createBooking(
-              application = application,
+              application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(1),
-              endDate = LocalDate.now().plusDays(6),
+              startDate = nowPlusDays(1),
+              endDate = nowPlusDays(6),
             )
             addBookingToPlacementRequest(placementRequest, bookingNoArrival)
 
@@ -168,7 +162,7 @@ class WithdrawalTest : IntegrationTestBase() {
               withIsWithdrawn(true)
             }
 
-            val placementApplicationExpectedArrival = LocalDate.now().plusDays(50)
+            val placementApplicationExpectedArrival = nowPlusDays(50)
             val placementApplicationDuration = 6
             val placementApplication = createPlacementApplication(
               application,
@@ -179,21 +173,9 @@ class WithdrawalTest : IntegrationTestBase() {
             }
 
             val expected = listOf(
-              Withdrawable(
-                application.id,
-                WithdrawableType.application,
-                emptyList(),
-              ),
-              Withdrawable(
-                placementRequest.id,
-                WithdrawableType.placementRequest,
-                listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
-              ),
-              Withdrawable(
-                placementApplication.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
-              ),
+              toWithdrawable(application),
+              toWithdrawable(placementRequest),
+              toWithdrawable(placementApplication),
             )
 
             webTestClient.get()
@@ -233,9 +215,9 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
-            val submittedApplication1ExpectedArrival1 = LocalDate.now().plusDays(1)
+            val submittedApplication1ExpectedArrival1 = nowPlusDays(1)
             val submittedApplication1Duration1 = 5
-            val submittedApplication1ExpectedArrival2 = LocalDate.now().plusDays(10)
+            val submittedApplication1ExpectedArrival2 = nowPlusDays(10)
             val submittedApplication1Duration2 = 10
 
             val submittedPlacementApplication1 = createPlacementApplication(
@@ -246,7 +228,7 @@ class WithdrawalTest : IntegrationTestBase() {
               ),
             )
 
-            val submittedApplication2ExpectedArrival = LocalDate.now().plusDays(50)
+            val submittedApplication2ExpectedArrival = nowPlusDays(50)
             val submittedApplication2Duration = 6
             val submittedPlacementApplication2 = createPlacementApplication(
               application,
@@ -262,7 +244,7 @@ class WithdrawalTest : IntegrationTestBase() {
               withReallocatedAt(OffsetDateTime.now())
             }
 
-            val applicationWithAcceptedDecisionExpectedArrival = LocalDate.now().plusDays(50)
+            val applicationWithAcceptedDecisionExpectedArrival = nowPlusDays(50)
             val applicationWithAcceptedDecisionDuration = 6
             val applicationWithAcceptedDecision = createPlacementApplication(
               application,
@@ -279,7 +261,7 @@ class WithdrawalTest : IntegrationTestBase() {
               withDecision(PlacementApplicationDecision.WITHDRAWN_BY_PP)
             }
 
-            val applicationWithRejectedDecisionExpectedArrival = LocalDate.now().plusDays(50)
+            val applicationWithRejectedDecisionExpectedArrival = nowPlusDays(50)
             val applicationWithRejectedDecisionDuration = 6
             val applicationWithRejectedDecision = createPlacementApplication(
               application,
@@ -289,34 +271,11 @@ class WithdrawalTest : IntegrationTestBase() {
             }
 
             val expected = listOf(
-              Withdrawable(
-                application.id,
-                WithdrawableType.application,
-                emptyList(),
-              ),
-              Withdrawable(
-                submittedPlacementApplication1.id,
-                WithdrawableType.placementApplication,
-                listOf(
-                  datePeriodForDuration(submittedApplication1ExpectedArrival1, submittedApplication1Duration1),
-                  datePeriodForDuration(submittedApplication1ExpectedArrival2, submittedApplication1Duration2),
-                ),
-              ),
-              Withdrawable(
-                submittedPlacementApplication2.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(submittedApplication2ExpectedArrival, submittedApplication2Duration)),
-              ),
-              Withdrawable(
-                applicationWithAcceptedDecision.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(applicationWithAcceptedDecisionExpectedArrival, applicationWithAcceptedDecisionDuration)),
-              ),
-              Withdrawable(
-                applicationWithRejectedDecision.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(applicationWithRejectedDecisionExpectedArrival, applicationWithRejectedDecisionDuration)),
-              ),
+              toWithdrawable(application),
+              toWithdrawable(submittedPlacementApplication1),
+              toWithdrawable(submittedPlacementApplication2),
+              toWithdrawable(applicationWithAcceptedDecision),
+              toWithdrawable(applicationWithRejectedDecision),
             )
 
             webTestClient.get()
@@ -365,8 +324,8 @@ class WithdrawalTest : IntegrationTestBase() {
                 application = application,
                 hasArrival = false,
                 adhoc = false,
-                startDate = LocalDate.now().plusDays(1),
-                endDate = LocalDate.now().plusDays(6),
+                startDate = nowPlusDays(1),
+                endDate = nowPlusDays(6),
               )
               addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
@@ -384,7 +343,7 @@ class WithdrawalTest : IntegrationTestBase() {
                 application = application,
                 hasArrival = true,
                 startDate = LocalDate.now(),
-                endDate = LocalDate.now().plusDays(1),
+                endDate = nowPlusDays(1),
               )
               addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
 
@@ -392,46 +351,30 @@ class WithdrawalTest : IntegrationTestBase() {
                 application = application,
                 adhoc = true,
                 hasArrival = false,
-                startDate = LocalDate.now().plusDays(20),
-                endDate = LocalDate.now().plusDays(26),
+                startDate = nowPlusDays(20),
+                endDate = nowPlusDays(26),
               )
 
               createBooking(
                 application = otherApplication,
                 adhoc = true,
                 hasArrival = false,
-                startDate = LocalDate.now().plusDays(20),
-                endDate = LocalDate.now().plusDays(26),
+                startDate = nowPlusDays(20),
+                endDate = nowPlusDays(26),
               )
               createBooking(
                 application = otherApplication,
                 adhoc = null,
                 hasArrival = false,
-                startDate = LocalDate.now().plusDays(20),
-                endDate = LocalDate.now().plusDays(26),
+                startDate = nowPlusDays(20),
+                endDate = nowPlusDays(26),
               )
 
               val expected = listOf(
-                Withdrawable(
-                  placementApplication1.id,
-                  WithdrawableType.placementApplication,
-                  listOf(datePeriodForDuration(placementApplication1.placementDates[0].expectedArrival, placementApplication1.placementDates[0].duration)),
-                ),
-                Withdrawable(
-                  booking1NoArrival.id,
-                  WithdrawableType.booking,
-                  listOf(DatePeriod(booking1NoArrival.arrivalDate, booking1NoArrival.departureDate)),
-                ),
-                Withdrawable(
-                  placementApplication2.id,
-                  WithdrawableType.placementApplication,
-                  listOf(datePeriodForDuration(placementApplication2.placementDates[0].expectedArrival, placementApplication2.placementDates[0].duration)),
-                ),
-                Withdrawable(
-                  adhocBooking.id,
-                  WithdrawableType.booking,
-                  listOf(DatePeriod(adhocBooking.arrivalDate, adhocBooking.departureDate)),
-                ),
+                toWithdrawable(placementApplication1),
+                toWithdrawable(booking1NoArrival),
+                toWithdrawable(placementApplication2),
+                toWithdrawable(adhocBooking),
               )
 
               webTestClient.get()
@@ -478,8 +421,8 @@ class WithdrawalTest : IntegrationTestBase() {
             val booking1NoArrival = createBooking(
               application = application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(1),
-              endDate = LocalDate.now().plusDays(6),
+              startDate = nowPlusDays(1),
+              endDate = nowPlusDays(6),
             )
             addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
@@ -497,28 +440,20 @@ class WithdrawalTest : IntegrationTestBase() {
               application = application,
               hasArrival = true,
               startDate = LocalDate.now(),
-              endDate = LocalDate.now().plusDays(1),
+              endDate = nowPlusDays(1),
             )
             addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
 
             createBooking(
               application = application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(20),
-              endDate = LocalDate.now().plusDays(26),
+              startDate = nowPlusDays(20),
+              endDate = nowPlusDays(26),
             )
 
             val expected = listOf(
-              Withdrawable(
-                placementApplication1.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(placementApplication1.placementDates[0].expectedArrival, placementApplication1.placementDates[0].duration)),
-              ),
-              Withdrawable(
-                placementApplication2.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(placementApplication2.placementDates[0].expectedArrival, placementApplication2.placementDates[0].duration)),
-              ),
+              toWithdrawable(placementApplication1),
+              toWithdrawable(placementApplication2),
             )
 
             webTestClient.get()
@@ -628,12 +563,12 @@ class WithdrawalTest : IntegrationTestBase() {
             val booking1NoArrival = createBooking(
               application = application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(1),
-              endDate = LocalDate.now().plusDays(6),
+              startDate = nowPlusDays(1),
+              endDate = nowPlusDays(6),
             )
             addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
-            val placementApplication2NoBookingBeingAssessed = createPlacementApplication(application, listOf(LocalDate.now().plusDays(2) to 2)) {
+            val placementApplication2NoBookingBeingAssessed = createPlacementApplication(application, listOf(nowPlusDays(2) to 2)) {
               withAllocatedToUser(requestForPlacementAssessor)
               withDecision(null)
             }
@@ -642,16 +577,16 @@ class WithdrawalTest : IntegrationTestBase() {
             val booking2NoArrival = createBooking(
               application = application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(5),
-              endDate = LocalDate.now().plusDays(15),
+              startDate = nowPlusDays(5),
+              endDate = nowPlusDays(15),
             )
             addBookingToPlacementRequest(placementRequest2, booking2NoArrival)
 
             val adhocBooking1NoArrival = createBooking(
               application = application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(1),
-              endDate = LocalDate.now().plusDays(6),
+              startDate = nowPlusDays(1),
+              endDate = nowPlusDays(6),
               adhoc = true,
             )
 
@@ -661,8 +596,8 @@ class WithdrawalTest : IntegrationTestBase() {
             val adhocBooking2NoArrival = createBooking(
               application = application,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(1),
-              endDate = LocalDate.now().plusDays(6),
+              startDate = nowPlusDays(1),
+              endDate = nowPlusDays(6),
               adhoc = null,
             )
 
@@ -672,15 +607,15 @@ class WithdrawalTest : IntegrationTestBase() {
               application = otherApplication,
               adhoc = true,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(20),
-              endDate = LocalDate.now().plusDays(26),
+              startDate = nowPlusDays(20),
+              endDate = nowPlusDays(26),
             )
             createBooking(
               application = otherApplication,
               adhoc = null,
               hasArrival = false,
-              startDate = LocalDate.now().plusDays(20),
-              endDate = LocalDate.now().plusDays(26),
+              startDate = nowPlusDays(20),
+              endDate = nowPlusDays(26),
             )
 
             withdrawApplication(application, jwt)
@@ -781,8 +716,8 @@ class WithdrawalTest : IntegrationTestBase() {
           val bookingWithArrival = createBooking(
             application = application,
             hasArrival = true,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
+            startDate = nowPlusDays(1),
+            endDate = nowPlusDays(6),
           )
           addBookingToPlacementRequest(placementRequest, bookingWithArrival)
 
@@ -832,8 +767,8 @@ class WithdrawalTest : IntegrationTestBase() {
           val booking1NoArrival = createBooking(
             application = application,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
+            startDate = nowPlusDays(1),
+            endDate = nowPlusDays(6),
           )
           addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
@@ -843,8 +778,8 @@ class WithdrawalTest : IntegrationTestBase() {
           val booking2NoArrival = createBooking(
             application = application,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(10),
-            endDate = LocalDate.now().plusDays(21),
+            startDate = nowPlusDays(10),
+            endDate = nowPlusDays(21),
           )
           addBookingToPlacementRequest(placementRequest2, booking2NoArrival)
 
@@ -855,8 +790,8 @@ class WithdrawalTest : IntegrationTestBase() {
           val booking3NoArrival = createBooking(
             application = application,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(10),
-            endDate = LocalDate.now().plusDays(21),
+            startDate = nowPlusDays(10),
+            endDate = nowPlusDays(21),
           )
           addBookingToPlacementRequest(placementRequest3, booking3NoArrival)
 
@@ -939,8 +874,8 @@ class WithdrawalTest : IntegrationTestBase() {
             application = application,
             adhoc = true,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
+            startDate = nowPlusDays(1),
+            endDate = nowPlusDays(6),
           )
           addBookingToPlacementRequest(placementRequest1, booking1Adhoc)
 
@@ -951,8 +886,8 @@ class WithdrawalTest : IntegrationTestBase() {
             application = application,
             adhoc = false,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(10),
-            endDate = LocalDate.now().plusDays(21),
+            startDate = nowPlusDays(10),
+            endDate = nowPlusDays(21),
           )
           addBookingToPlacementRequest(placementRequest2, booking2NoArrival)
 
@@ -963,8 +898,8 @@ class WithdrawalTest : IntegrationTestBase() {
             application = application,
             adhoc = null,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(10),
-            endDate = LocalDate.now().plusDays(21),
+            startDate = nowPlusDays(10),
+            endDate = nowPlusDays(21),
           )
           addBookingToPlacementRequest(placementRequest3, booking3PotentiallyAdhoc)
 
@@ -1090,8 +1025,8 @@ class WithdrawalTest : IntegrationTestBase() {
           val bookingNoArrival = createBooking(
             application = application,
             hasArrival = false,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
+            startDate = nowPlusDays(1),
+            endDate = nowPlusDays(6),
           )
           addBookingToPlacementRequest(placementRequest, bookingNoArrival)
 
@@ -1469,5 +1404,33 @@ class WithdrawalTest : IntegrationTestBase() {
     return booking
   }
 
-  private fun datePeriodForDuration(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
+  private fun nowPlusDays(days: Long) = LocalDate.now().plusDays(days)
+
+  private fun toDatePeriod(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
+
+  fun toWithdrawable(application: ApplicationEntity) = Withdrawable(
+    application.id,
+    WithdrawableType.application,
+    emptyList(),
+  )
+
+  fun toWithdrawable(placementRequest: PlacementRequestEntity) = Withdrawable(
+    placementRequest.id,
+    WithdrawableType.placementRequest,
+    listOf(toDatePeriod(placementRequest.expectedArrival, placementRequest.duration)),
+  )
+
+  fun toWithdrawable(placementApplication: PlacementApplicationEntity) =
+    Withdrawable(
+      placementApplication.id,
+      WithdrawableType.placementApplication,
+      placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
+    )
+
+  fun toWithdrawable(booking: BookingEntity) =
+    Withdrawable(
+      booking.id,
+      WithdrawableType.booking,
+      listOf(DatePeriod(booking.arrivalDate, booking.departureDate)),
+    )
 }
