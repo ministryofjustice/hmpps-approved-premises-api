@@ -2912,6 +2912,33 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /reference-data/prison-release-types:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all prison release types
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only prison release types for this service will be returned
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/PrisonReleaseType'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /tasks:
     get:
       tags:

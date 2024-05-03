@@ -4985,6 +4985,24 @@ components:
         - name
         - serviceScope
         - isActive
+    PrisonReleaseType:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Post sentence supervision (PSS)
+        serviceScope:
+          type: string
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - serviceScope
+        - isActive
     CacheType:
       type: string
       enum:
