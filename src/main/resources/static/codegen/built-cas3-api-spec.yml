@@ -1792,6 +1792,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cas2StatusUpdate'
+            assessment:
+              $ref: '#/components/schemas/Cas2Assessment'
             timelineEvents:
               type: array
               items:
