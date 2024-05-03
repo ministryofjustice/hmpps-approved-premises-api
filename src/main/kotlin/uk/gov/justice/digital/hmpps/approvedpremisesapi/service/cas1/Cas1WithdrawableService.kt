@@ -34,14 +34,23 @@ class Cas1WithdrawableService(
   fun allDirectlyWithdrawables(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-  ): Set<WithdrawableEntity> {
+  ): WithdrawableEntitiesWithNotes {
     val rootNode = cas1WithdrawableTreeBuilder.treeForApp(application, user)
 
     if (log.isDebugEnabled) {
       log.debug("Withdrawables tree for application ${application.id} is $rootNode")
     }
 
-    return toDirectlyWithdrawableEntities(rootNode)
+    val notes = mutableListOf<String>()
+
+    if (rootNode.isBlocked()) {
+      notes.add("The application cannot be withdrawn as 1 or more placements have arrivals recorded")
+    }
+
+    return WithdrawableEntitiesWithNotes(
+      notes = notes.toList(),
+      withdrawables = toDirectlyWithdrawableEntities(rootNode),
+    )
   }
 
   fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
@@ -232,6 +241,11 @@ data class WithdrawableEntity(
   val type: WithdrawableEntityType,
   val id: UUID,
   val dates: List<WithdrawableDatePeriod>,
+)
+
+data class WithdrawableEntitiesWithNotes(
+  val notes: List<String>,
+  val withdrawables: Set<WithdrawableEntity>,
 )
 
 enum class WithdrawableEntityType(val label: String) {

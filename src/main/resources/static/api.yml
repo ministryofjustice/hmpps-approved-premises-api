@@ -2356,6 +2356,38 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /applications/{applicationId}/withdrawablesWithNotes:
+    get:
+      tags:
+        - Operations on applications
+      summary: Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: If given, only users for this service will be returned
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Withdrawables'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /applications/{applicationId}/requests-for-placement:
     get:
       summary: Returns a list of Requests for Placement for the given application.

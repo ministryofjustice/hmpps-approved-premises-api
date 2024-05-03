@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -31,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -55,12 +54,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.WithdrawableTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -87,6 +87,7 @@ class ApplicationsController(
   private val appealTransformer: AppealTransformer,
   private val placementRequestService: PlacementRequestService,
   private val requestForPlacementService: RequestForPlacementService,
+  private val withdrawableTransformer: WithdrawableTransformer,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -547,10 +548,31 @@ class ApplicationsController(
     return ResponseEntity.ok(initialPlacementRequests.plus(additionalPlacementRequests))
   }
 
+  override fun applicationsApplicationIdWithdrawablesWithNotesGet(
+    applicationId: UUID,
+    xServiceName: ServiceName,
+  ): ResponseEntity<Withdrawables> {
+    val result = getWithdrawables(applicationId, xServiceName)
+
+    return ResponseEntity.ok(
+      Withdrawables(
+        notes = result.notes,
+        withdrawables = result.withdrawables.map { withdrawableTransformer.toApi(it) },
+      ),
+    )
+  }
+
   override fun applicationsApplicationIdWithdrawablesGet(
     applicationId: UUID,
     xServiceName: ServiceName,
   ): ResponseEntity<List<Withdrawable>> {
+    val withdrawables = getWithdrawables(applicationId, xServiceName).withdrawables
+
+    return ResponseEntity.ok(withdrawables.map { withdrawableTransformer.toApi(it) })
+  }
+
+  @SuppressWarnings("ThrowsCount")
+  private fun getWithdrawables(applicationId: UUID, xServiceName: ServiceName): WithdrawableEntitiesWithNotes {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
     }
@@ -569,22 +591,7 @@ class ApplicationsController(
       throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
-    val withdrawables = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
-
-    return ResponseEntity.ok(
-      withdrawables.map { entity ->
-        Withdrawable(
-          entity.id,
-          when (entity.type) {
-            WithdrawableEntityType.Application -> WithdrawableType.application
-            WithdrawableEntityType.PlacementRequest -> WithdrawableType.placementRequest
-            WithdrawableEntityType.PlacementApplication -> WithdrawableType.placementApplication
-            WithdrawableEntityType.Booking -> WithdrawableType.booking
-          },
-          entity.dates.map { DatePeriod(it.startDate, it.endDate) },
-        )
-      },
-    )
+    return cas1WithdrawableService.allDirectlyWithdrawables(application, user)
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {

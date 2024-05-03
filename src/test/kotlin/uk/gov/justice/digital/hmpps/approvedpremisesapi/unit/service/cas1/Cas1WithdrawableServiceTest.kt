@@ -84,7 +84,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user).withdrawables
 
     assertThat(result).hasSize(1)
 
@@ -168,7 +168,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user).withdrawables
 
     assertThat(result).hasSize(5)
     assertThat(result).anyMatch { it.id == appWithdrawableId }
@@ -249,9 +249,12 @@ class Cas1WithdrawableServiceTest {
 
     val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
-    assertThat(result).hasSize(2)
-    assertThat(result).anyMatch { it.id == placementRequest2WithdrawableId }
-    assertThat(result).anyMatch { it.id == placementApplication1WithdrawableId }
+    assertThat(result.notes).contains("The application cannot be withdrawn as 1 or more placements have arrivals recorded")
+
+    val withdrawables = result.withdrawables
+    assertThat(withdrawables).hasSize(2)
+    assertThat(withdrawables).anyMatch { it.id == placementRequest2WithdrawableId }
+    assertThat(withdrawables).anyMatch { it.id == placementApplication1WithdrawableId }
   }
 
   @Nested

@@ -4528,6 +4528,20 @@ components:
         - UnknownPerson
         - FullPersonInfo
         - RestrictedPersonInfo
+    Withdrawables:
+      type: object
+      properties:
+        notes:
+          type: array
+          items:
+            type: string
+        withdrawables:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Withdrawable'
+      required:
+        - notes
+        - withdrawables
     Withdrawable:
       type: object
       properties:

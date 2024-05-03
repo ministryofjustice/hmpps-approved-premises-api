@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -81,6 +82,11 @@ class WithdrawalTest : IntegrationTestBase() {
           `Given an Offender` { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
+            val expected = Withdrawables(
+              notes = emptyList(),
+              withdrawables = emptyList(),
+            )
+
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
               .header("Authorization", "Bearer $jwt")
@@ -89,7 +95,17 @@ class WithdrawalTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json("[]")
+              .jsonForObject(expected.withdrawables)
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawablesWithNotes")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonForObject(expected)
           }
         }
       }
@@ -108,10 +124,23 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
-          val expected = listOf(toWithdrawable(application))
+          val expected = Withdrawables(
+            notes = emptyList(),
+            withdrawables = listOf(toWithdrawable(application)),
+          )
 
           webTestClient.get()
             .uri("/applications/${application.id}/withdrawables")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonForObject(expected.withdrawables)
+
+          webTestClient.get()
+            .uri("/applications/${application.id}/withdrawablesWithNotes")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -160,14 +189,27 @@ class WithdrawalTest : IntegrationTestBase() {
             val placementApplication = createPlacementApplication(application, DatePeriod(nowPlusDays(50), duration = 6))
             createPlacementRequest(application, placementApplication = placementApplication)
 
-            val expected = listOf(
-              toWithdrawable(application),
-              toWithdrawable(placementRequest),
-              toWithdrawable(placementApplication),
+            val expected = Withdrawables(
+              notes = emptyList(),
+              withdrawables = listOf(
+                toWithdrawable(application),
+                toWithdrawable(placementRequest),
+                toWithdrawable(placementApplication),
+              ),
             )
 
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonForObject(expected.withdrawables)
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -252,16 +294,29 @@ class WithdrawalTest : IntegrationTestBase() {
               decision = PlacementApplicationDecision.REJECTED,
             )
 
-            val expected = listOf(
-              toWithdrawable(application),
-              toWithdrawable(submittedPlacementApplication1),
-              toWithdrawable(submittedPlacementApplication2),
-              toWithdrawable(applicationWithAcceptedDecision),
-              toWithdrawable(applicationWithRejectedDecision),
+            val expected = Withdrawables(
+              notes = emptyList(),
+              withdrawables = listOf(
+                toWithdrawable(application),
+                toWithdrawable(submittedPlacementApplication1),
+                toWithdrawable(submittedPlacementApplication2),
+                toWithdrawable(applicationWithAcceptedDecision),
+                toWithdrawable(applicationWithRejectedDecision),
+              ),
             )
 
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonForObject(expected.withdrawables)
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -349,15 +404,28 @@ class WithdrawalTest : IntegrationTestBase() {
                 endDate = nowPlusDays(26),
               )
 
-              val expected = listOf(
-                toWithdrawable(placementApplication1),
-                toWithdrawable(booking1NoArrival),
-                toWithdrawable(placementApplication2),
-                toWithdrawable(adhocBooking),
+              val expected = Withdrawables(
+                notes = listOf("The application cannot be withdrawn as 1 or more placements have arrivals recorded"),
+                withdrawables = listOf(
+                  toWithdrawable(placementApplication1),
+                  toWithdrawable(booking1NoArrival),
+                  toWithdrawable(placementApplication2),
+                  toWithdrawable(adhocBooking),
+                ),
               )
 
               webTestClient.get()
                 .uri("/applications/${application.id}/withdrawables")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonForObject(expected.withdrawables)
+
+              webTestClient.get()
+                .uri("/applications/${application.id}/withdrawablesWithNotes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -427,13 +495,16 @@ class WithdrawalTest : IntegrationTestBase() {
               endDate = nowPlusDays(26),
             )
 
-            val expected = listOf(
-              toWithdrawable(placementApplication1),
-              toWithdrawable(placementApplication2),
+            val expected = Withdrawables(
+              notes = listOf("The application cannot be withdrawn as 1 or more placements have arrivals recorded"),
+              withdrawables = listOf(
+                toWithdrawable(placementApplication1),
+                toWithdrawable(placementApplication2),
+              ),
             )
 
             webTestClient.get()
-              .uri("/applications/${application.id}/withdrawables")
+              .uri("/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
