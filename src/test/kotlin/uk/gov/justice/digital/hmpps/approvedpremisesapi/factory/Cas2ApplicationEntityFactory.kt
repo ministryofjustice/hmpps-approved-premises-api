@@ -36,6 +36,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
   private var referringPrisonCode: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
+  private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -105,6 +106,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.hdcEligibilityDate = { hdcEligibilityDate }
   }
 
+  fun withConditionalReleaseDate(conditionalReleaseDate: LocalDate) = apply {
+    this.conditionalReleaseDate = { conditionalReleaseDate }
+  }
+
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -122,5 +127,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     assessment = this.assessment(),
     referringPrisonCode = this.referringPrisonCode(),
     hdcEligibilityDate = this.hdcEligibilityDate(),
+    conditionalReleaseDate = this.conditionalReleaseDate(),
   )
 }
