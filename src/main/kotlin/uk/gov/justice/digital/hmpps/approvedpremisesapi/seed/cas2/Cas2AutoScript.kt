@@ -116,6 +116,7 @@ class Cas2AutoScript(
       Cas2StatusUpdateEntity(
         id = UUID.randomUUID(),
         application = application,
+        assessment = application.assessment,
         assessor = assessor,
         description = status.description,
         label = status.label,
