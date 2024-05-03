@@ -35,7 +35,7 @@ generic-service:
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     SEED_AUTO_ENABLED: true
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
-    SEED_AUTO-SCRIPT_ENABLED: true
+    SEED_AUTO-SCRIPT_CAS2-ENABLED: true
     SEED_AUTO-SCRIPT_NOMS: G9542VP
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#id

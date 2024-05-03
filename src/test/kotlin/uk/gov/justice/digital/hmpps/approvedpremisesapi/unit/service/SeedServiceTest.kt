@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Called
 import io.mockk.called
 import io.mockk.every
 import io.mockk.mockk
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -34,10 +36,18 @@ class SeedServiceTest {
   private val mockApplicationContext = mockk<ApplicationContext>()
   private val mockTransactionTemplate = mockk<TransactionTemplate>()
   private val mockSeedLogger = mockk<SeedLogger>()
+  private val mockCas1AutoScript = mockk<Cas1AutoScript>()
   private val mockCas2AutoScript = mockk<Cas2AutoScript>()
   private val logEntries = mutableListOf<LogEntry>()
 
-  private val seedService = SeedService(seedConfig, mockApplicationContext, mockTransactionTemplate, mockSeedLogger, mockCas2AutoScript)
+  private val seedService = SeedService(
+    seedConfig,
+    mockApplicationContext,
+    mockTransactionTemplate,
+    mockSeedLogger,
+    mockCas1AutoScript,
+    mockCas2AutoScript,
+  )
 
   @BeforeEach
   fun setUp() {
@@ -53,6 +63,7 @@ class SeedServiceTest {
     every { mockSeedLogger.error(any(), any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", it.invocation.args[1] as Throwable)
     }
+    every { mockCas1AutoScript.script() } answers { }
     every { mockCas2AutoScript.script() } answers { }
   }
 
@@ -151,24 +162,51 @@ class SeedServiceTest {
   }
 
   @Nested
-  inner class AutoScript {
+  inner class AutoScriptCas1 {
     @Test
     fun `does nothing if autoScript is NOT enabled`() {
       seedConfig.auto.enabled = true
 
-      seedConfig.autoScript.enabled = false
+      seedConfig.autoScript.cas1Enabled = false
       seedService.autoSeed()
 
-      verify(exactly = 0) { mockCas2AutoScript.script() }
+      verify { mockCas1AutoScript wasNot Called }
+      verify { mockCas2AutoScript wasNot Called }
+    }
+
+    @Test
+    fun `runs Cas1AutoScript when autoScript IS enabled (along with auto-seeding)`() {
+      seedConfig.auto.enabled = true
+
+      seedConfig.autoScript.cas1Enabled = true
+      seedService.autoSeed()
+
+      verify { mockCas1AutoScript.script() }
+      verify { mockCas2AutoScript wasNot Called }
+    }
+  }
+
+  @Nested
+  inner class AutoScriptCas2 {
+    @Test
+    fun `does nothing if autoScript is NOT enabled`() {
+      seedConfig.auto.enabled = true
+
+      seedConfig.autoScript.cas2Enabled = false
+      seedService.autoSeed()
+
+      verify { mockCas1AutoScript wasNot Called }
+      verify { mockCas2AutoScript wasNot Called }
     }
 
     @Test
     fun `runs Cas2AutoScript when autoScript IS enabled (along with auto-seeding)`() {
       seedConfig.auto.enabled = true
 
-      seedConfig.autoScript.enabled = true
+      seedConfig.autoScript.cas2Enabled = true
       seedService.autoSeed()
 
+      verify { mockCas1AutoScript wasNot Called }
       verify { mockCas2AutoScript.script() }
     }
   }

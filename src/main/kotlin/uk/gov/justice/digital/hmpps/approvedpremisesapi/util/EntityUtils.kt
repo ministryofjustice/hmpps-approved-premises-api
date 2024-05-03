@@ -21,6 +21,10 @@ fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableAct
   is ValidatableActionResult.Success -> result.entity
 }
 
+fun <EntityType> ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>) {
+  extractEntityFromNestedAuthorisableValidatableActionResult(result)
+}
+
 fun <EntityType> extractEntityFromNestedAuthorisableValidatableActionResult(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>): EntityType {
   val validatableResult = extractEntityFromAuthorisableActionResult(result)
   return extractEntityFromValidatableActionResult(validatableResult)

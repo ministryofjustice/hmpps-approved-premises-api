@@ -518,7 +518,7 @@ class ApplicationService(
       )
     }
 
-    if (application.createdByUser != userForRequest) {
+    if (application.createdByUser.id != userForRequest.id) {
       return AuthorisableActionResult.Unauthorised()
     }
 
