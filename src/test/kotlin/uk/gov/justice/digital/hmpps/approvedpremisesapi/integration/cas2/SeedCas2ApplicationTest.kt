@@ -150,8 +150,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication.assessment).isNotNull()
     assertThat(persistedApplication.referringPrisonCode).isEqualTo("EXAMPLE_CODE")
     assertThat(persistedApplication.preferredAreas).isEqualTo("Bristol | Newcastle")
-    assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(LocalDate.parse("2024-02-28"))
-    assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(LocalDate.parse("2024-02-22"))
+    assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(LocalDate.now())
+    assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(LocalDate.now().plusMonths(2))
     assertThat(persistedApplication.telephoneNumber).isEqualTo("0800 123 456")
   }
 

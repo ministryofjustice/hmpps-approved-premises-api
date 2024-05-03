@@ -102,8 +102,8 @@ class Cas2AutoScript(
       application.apply {
         referringPrisonCode = "BRI"
         preferredAreas = "Luton | Hertford"
-        hdcEligibilityDate = LocalDate.parse("2024-02-28")
-        conditionalReleaseDate = LocalDate.parse("2024-02-22")
+        hdcEligibilityDate = LocalDate.now()
+        conditionalReleaseDate = LocalDate.now().plusMonths(2)
         telephoneNumber = "0800 123 456"
       },
     )
