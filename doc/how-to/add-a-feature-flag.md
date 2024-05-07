@@ -5,7 +5,7 @@ for all of our live environments:
 
 - [Dev / Test](https://feature-flags-dev.hmpps.service.justice.gov.uk)
 - [Preprod](https://feature-flags-preprod.hmpps.service.justice.gov.uk)
-- [Prod](https://feature-flags-dev.hmpps.service.justice.gov.uk)
+- [Prod](https://feature-flags.hmpps.service.justice.gov.uk)
 
 ## Adding a feature flag
 
