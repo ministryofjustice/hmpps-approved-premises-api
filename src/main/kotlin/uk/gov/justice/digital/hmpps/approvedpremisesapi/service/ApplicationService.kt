@@ -482,8 +482,10 @@ class ApplicationService(
 
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,
+    @Deprecated("use apType")
     val isPipeApplication: Boolean?,
     val isEmergencyApplication: Boolean?,
+    @Deprecated("use apType")
     val isEsapApplication: Boolean?,
     val apType: ApType?,
     val releaseType: String?,
