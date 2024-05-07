@@ -3168,43 +3168,6 @@ class BookingTest : IntegrationTestBase() {
         }
       }
     }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
-      role: UserRole,
-    ) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-        val booking = bookingEntityFactory.produceAndPersist {
-          withYieldedPremises {
-            approvedPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-              }
-            }
-          }
-          withServiceName(ServiceName.approvedPremises)
-        }
-
-        webTestClient.post()
-          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewConfirmation(
-              notes = null,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-          .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
-          .jsonPath("$.notes").isEqualTo(null)
-          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-      }
-    }
   }
 
   @Test
@@ -4126,6 +4089,43 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            }
+          }
+        }
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewConfirmation(
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+        .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
+        .jsonPath("$.notes").isEqualTo(null)
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
   }
 
   @Test
