@@ -345,41 +345,6 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /submissions/{applicationId}/status-updates:
-    post:
-      tags:
-        - Operations on submitted CAS2 applications (Assessors)
-      summary: Creates a status update on a submitted application
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application whose status is to be updated
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: Information on the new status to be applied
-        content:
-          'application/json':
-            schema:
-              $ref: '_shared.yml#/components/schemas/Cas2AssessmentStatusUpdate'
-        required: true
-      responses:
-        200:
-          description: successfully created the status update
-        400:
-          description: status update has already been submitted
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /submissions/{applicationId}/notes:
     post:
       tags:
