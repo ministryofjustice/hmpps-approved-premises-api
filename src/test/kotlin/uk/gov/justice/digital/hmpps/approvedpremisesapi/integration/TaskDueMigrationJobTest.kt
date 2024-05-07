@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -62,19 +63,22 @@ class TaskDueMigrationJobTest : IntegrationTestBase() {
     assessments.forEach {
       val updatedAssessment = assessmentTestRepository.findByIdOrNull(it.id)!!
       assertThat(updatedAssessment.dueAt).isNotNull()
-      assertThat(updatedAssessment.dueAt).isEqualTo(taskDeadlineService.getDeadline(it))
+      assertThat(updatedAssessment.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .isEqualTo(taskDeadlineService.getDeadline(it)?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
 
     placementRequests.forEach {
       val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(it.id)!!
       assertThat(updatedPlacementRequest.dueAt).isNotNull()
-      assertThat(updatedPlacementRequest.dueAt).isEqualTo(taskDeadlineService.getDeadline(it))
+      assertThat(updatedPlacementRequest.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .isEqualTo(taskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
 
     placementApplications.forEach {
       val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(it.id)!!
       assertThat(updatedPlacementApplication.dueAt).isNotNull()
-      assertThat(updatedPlacementApplication.dueAt).isEqualTo(taskDeadlineService.getDeadline(it))
+      assertThat(updatedPlacementApplication.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .isEqualTo(taskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
   }
 
