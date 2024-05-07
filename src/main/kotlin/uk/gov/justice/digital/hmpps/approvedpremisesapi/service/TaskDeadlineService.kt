@@ -18,20 +18,20 @@ class TaskDeadlineService(
 ) {
   fun getDeadline(assessment: AssessmentEntity): OffsetDateTime? {
     val application = assessment.application
-    val effectiveApplicationCreatedAt = assessment.createdAt.slewedToWorkingPattern()
+    val effectiveAssessmentCreatedAt = assessment.createdAt.slewedToWorkingPattern()
 
     return when {
       application !is ApprovedPremisesApplicationEntity ->
         null
 
       application.noticeType == Cas1ApplicationTimelinessCategory.emergency ->
-        effectiveApplicationCreatedAt.plusHours(ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS)
+        effectiveAssessmentCreatedAt.plusHours(ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS)
 
       application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice ->
-        addWorkingDays(effectiveApplicationCreatedAt, ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
+        addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
 
       else ->
-        addWorkingDays(effectiveApplicationCreatedAt, ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS)
+        addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS)
     }
   }
 
