@@ -9,9 +9,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
+import java.time.ZonedDateTime
+
+fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(crn: String, bookingId: String, arrivedAt: ZonedDateTime?) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/probation-case/$crn/referrals/$bookingId",
+    responseBody = ReferralDetail(
+      arrivedAt = arrivedAt,
+    ),
+  )
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) =
   mockSuccessfulGetCallWithJsonResponse(

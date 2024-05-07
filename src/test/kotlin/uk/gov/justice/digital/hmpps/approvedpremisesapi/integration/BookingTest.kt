@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -3134,6 +3135,12 @@ class BookingTest : IntegrationTestBase() {
             val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
               withServiceScope("*")
             }
+
+            APDeliusContext_mockSuccessfulGetReferralDetails(
+              crn = booking.crn,
+              bookingId = booking.id.toString(),
+              arrivedAt = null,
+            )
 
             webTestClient.post()
               .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")

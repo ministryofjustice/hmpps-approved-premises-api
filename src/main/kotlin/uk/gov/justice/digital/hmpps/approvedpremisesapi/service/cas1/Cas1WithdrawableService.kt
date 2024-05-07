@@ -280,4 +280,5 @@ data class WithdrawableDatePeriod(
 
 enum class BlockingReason {
   ArrivalRecordedInCas1,
+  ArrivalRecordedInDelius,
 }

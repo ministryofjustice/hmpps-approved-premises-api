@@ -77,3 +77,7 @@ data class MappaDetail(
 data class CaseSummaries(
   var cases: List<CaseSummary>,
 )
+
+data class ReferralDetail(
+  val arrivedAt: ZonedDateTime?,
+)
