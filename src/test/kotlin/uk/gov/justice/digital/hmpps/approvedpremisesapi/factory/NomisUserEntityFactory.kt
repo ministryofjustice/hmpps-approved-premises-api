@@ -53,6 +53,18 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     this.email = { email }
   }
 
+  fun withAccountType(accountType: String) = apply {
+    this.accountType = { accountType }
+  }
+
+  fun withEnabled(enabled: Boolean) = apply {
+    this.isEnabled = { enabled }
+  }
+
+  fun withActive(active: Boolean) = apply {
+    this.isActive = { active }
+  }
+
   override fun produce(): NomisUserEntity = NomisUserEntity(
     id = this.id(),
     nomisUsername = this.nomisUsername(),
