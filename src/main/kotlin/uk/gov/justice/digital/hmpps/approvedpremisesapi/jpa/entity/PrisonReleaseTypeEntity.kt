@@ -12,12 +12,6 @@ import javax.persistence.Table
 interface PrisonReleaseTypeRepository : JpaRepository<PrisonReleaseTypeEntity, UUID> {
   @Query("SELECT m FROM PrisonReleaseTypeEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' ORDER BY m.sortOrder")
   fun findAllByServiceScope(serviceName: String): List<PrisonReleaseTypeEntity>
-
-  @Query("SELECT m FROM PrisonReleaseTypeEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' AND m.isActive = true ORDER BY m.sortOrder")
-  fun findActiveByServiceScope(serviceName: String): List<PrisonReleaseTypeEntity>
-
-  @Query("SELECT m FROM PrisonReleaseTypeEntity m WHERE m.isActive = true ORDER BY m.sortOrder")
-  fun findActive(): List<PrisonReleaseTypeEntity>
 }
 
 @Entity
