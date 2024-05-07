@@ -523,56 +523,56 @@ class TaskDeadlineServiceTest {
     @ParameterizedTest
     @CsvSource(
       // Winter (GMT/UTC), i.e. noon local time is at 12:00Z
-      // Sunday 11am. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T11:00:00Z,2023-01-16T09:00:00Z",
-      // Sunday 12:59pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T12:59:59Z,2023-01-16T09:00:00Z",
-      // Sunday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T13:00:00Z,2023-01-16T09:00:00Z",
-      // Sunday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T14:00:00Z,2023-01-16T09:00:00Z",
-      // Monday 11am. 10 working days later, so two weeks on Monday
-      "2023-01-02T11:00:00Z,2023-01-16T11:00:00Z",
-      // Monday 12:59pm. 10 working days later, so two weeks on Monday
-      "2023-01-02T12:59:59Z,2023-01-16T12:59:59Z",
-      // Monday 1pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-01-02T13:00:00Z,2023-01-17T09:00:00Z",
-      // Monday 2pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-01-02T14:00:00Z,2023-01-17T09:00:00Z",
-      // Thursday 2pm. 10 working days after 9am on the next working day (Friday), so two weeks on Friday
-      "2023-01-05T14:00:00Z,2023-01-20T09:00:00Z",
-      // Friday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-06T14:00:00Z,2023-01-23T09:00:00Z",
+      // Sunday 11am. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T11:00:00Z,2023-01-04T09:00:00Z",
+      // Sunday 12:59pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T12:59:59Z,2023-01-04T09:00:00Z",
+      // Sunday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T13:00:00Z,2023-01-04T09:00:00Z",
+      // Sunday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T14:00:00Z,2023-01-04T09:00:00Z",
+      // Monday 11am. 2 working days later (Wednesday)
+      "2023-01-02T11:00:00Z,2023-01-04T11:00:00Z",
+      // Monday 12:59pm. 2 working days later (Wednesday)
+      "2023-01-02T12:59:59Z,2023-01-04T12:59:59Z",
+      // Monday 1pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-01-02T13:00:00Z,2023-01-05T09:00:00Z",
+      // Monday 2pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-01-02T14:00:00Z,2023-01-05T09:00:00Z",
+      // Thursday 2pm. 2 working days after 9am on the next working day (Friday), so 9am Tuesday
+      "2023-01-05T14:00:00Z,2023-01-10T09:00:00Z",
+      // Friday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-06T14:00:00Z,2023-01-11T09:00:00Z",
 
       // Summer (BST/UTC+1), i.e. noon local time is at 11:00Z
-      // Sunday 11am. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T10:00:00Z,2023-06-19T08:00:00Z",
-      // Sunday 12:59pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T11:59:59Z,2023-06-19T08:00:00Z",
-      // Sunday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T12:00:00Z,2023-06-19T08:00:00Z",
-      // Sunday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T13:00:00Z,2023-06-19T08:00:00Z",
-      // Monday 11am. 10 working days later, so two weeks on Monday
-      "2023-06-05T10:00:00Z,2023-06-19T10:00:00Z",
-      // Monday 12:59pm. 10 working days later, so two weeks on Monday
-      "2023-06-05T11:59:59Z,2023-06-19T11:59:59Z",
-      // Monday 1pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-06-05T12:00:00Z,2023-06-20T08:00:00Z",
-      // Monday 2pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-06-05T13:00:00Z,2023-06-20T08:00:00Z",
-      // Thursday 2pm. 10 working days after 9am on the next working day (Friday), so two weeks on Friday
-      "2023-06-08T13:00:00Z,2023-06-23T08:00:00Z",
-      // Friday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-09T13:00:00Z,2023-06-26T08:00:00Z",
+      // Sunday 11am. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T10:00:00Z,2023-06-07T08:00:00Z",
+      // Sunday 12:59pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T11:59:59Z,2023-06-07T08:00:00Z",
+      // Sunday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T12:00:00Z,2023-06-07T08:00:00Z",
+      // Sunday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T13:00:00Z,2023-06-07T08:00:00Z",
+      // Monday 11am. 2 working days later (Wednesday)
+      "2023-06-05T10:00:00Z,2023-06-07T10:00:00Z",
+      // Monday 12:59pm. 2 working days later (Wednesday)
+      "2023-06-05T11:59:59Z,2023-06-07T11:59:59Z",
+      // Monday 1pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-06-05T12:00:00Z,2023-06-08T08:00:00Z",
+      // Monday 2pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-06-05T13:00:00Z,2023-06-08T08:00:00Z",
+      // Thursday 2pm. 2 working days after 9am on the next working day (Friday), so 9am Tuesday
+      "2023-06-08T13:00:00Z,2023-06-13T08:00:00Z",
+      // Friday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-09T13:00:00Z,2023-06-14T08:00:00Z",
 
       // Multi-timezone drifting!!
-      // GMT -> BST: Friday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-03-24T13:00:00Z,2023-04-10T08:00:00Z",
-      // BST -> GMT: Friday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-10-27T12:00:00Z,2023-11-13T09:00:00Z",
+      // GMT -> BST: Friday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-03-24T13:00:00Z,2023-03-29T08:00:00Z",
+      // BST -> GMT: Friday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-10-27T12:00:00Z,2023-11-01T09:00:00Z",
     )
-    fun `getDeadline for a standard placement application returns submitted date plus 10 working days, or 10 working days after 9am on the next working day if after 1pm or a non-working day`(
+    fun `getDeadline for a standard placement application returns submitted date plus 2 working days, or 2 working days after 9am on the next working day if after 1pm or a non-working day`(
       submittedAt: OffsetDateTime,
       expectedDeadline: OffsetDateTime,
     ) {
@@ -590,56 +590,56 @@ class TaskDeadlineServiceTest {
     @ParameterizedTest
     @CsvSource(
       // Winter (GMT/UTC), i.e. noon local time is at 12:00Z
-      // Sunday 11am. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T11:00:00Z,2023-01-16T09:00:00Z",
-      // Sunday 12:59pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T12:59:59Z,2023-01-16T09:00:00Z",
-      // Sunday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T13:00:00Z,2023-01-16T09:00:00Z",
-      // Sunday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T14:00:00Z,2023-01-16T09:00:00Z",
-      // Monday 11am. 10 working days later, so two weeks on Monday
-      "2023-01-02T11:00:00Z,2023-01-16T11:00:00Z",
-      // Monday 12:59pm. 10 working days later, so two weeks on Monday
-      "2023-01-02T12:59:59Z,2023-01-16T12:59:59Z",
-      // Monday 1pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-01-02T13:00:00Z,2023-01-17T09:00:00Z",
-      // Monday 2pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-01-02T14:00:00Z,2023-01-17T09:00:00Z",
-      // Thursday 2pm. 10 working days after 9am on the next working day (Friday), so two weeks on Friday
-      "2023-01-05T14:00:00Z,2023-01-20T09:00:00Z",
-      // Friday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-06T14:00:00Z,2023-01-23T09:00:00Z",
+      // Sunday 11am. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T11:00:00Z,2023-01-04T09:00:00Z",
+      // Sunday 12:59pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T12:59:59Z,2023-01-04T09:00:00Z",
+      // Sunday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T13:00:00Z,2023-01-04T09:00:00Z",
+      // Sunday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T14:00:00Z,2023-01-04T09:00:00Z",
+      // Monday 11am. 2 working days later (Wednesday)
+      "2023-01-02T11:00:00Z,2023-01-04T11:00:00Z",
+      // Monday 12:59pm. 2 working days later (Wednesday)
+      "2023-01-02T12:59:59Z,2023-01-04T12:59:59Z",
+      // Monday 1pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-01-02T13:00:00Z,2023-01-05T09:00:00Z",
+      // Monday 2pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-01-02T14:00:00Z,2023-01-05T09:00:00Z",
+      // Thursday 2pm. 2 working days after 9am on the next working day (Friday), so 9am Tuesday
+      "2023-01-05T14:00:00Z,2023-01-10T09:00:00Z",
+      // Friday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-06T14:00:00Z,2023-01-11T09:00:00Z",
 
       // Summer (BST/UTC+1), i.e. noon local time is at 11:00Z
-      // Sunday 11am. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T10:00:00Z,2023-06-19T08:00:00Z",
-      // Sunday 12:59pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T11:59:59Z,2023-06-19T08:00:00Z",
-      // Sunday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T12:00:00Z,2023-06-19T08:00:00Z",
-      // Sunday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T13:00:00Z,2023-06-19T08:00:00Z",
-      // Monday 11am. 10 working days later, so two weeks on Monday
-      "2023-06-05T10:00:00Z,2023-06-19T10:00:00Z",
-      // Monday 12:59pm. 10 working days later, so two weeks on Monday
-      "2023-06-05T11:59:59Z,2023-06-19T11:59:59Z",
-      // Monday 1pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-06-05T12:00:00Z,2023-06-20T08:00:00Z",
-      // Monday 2pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-06-05T13:00:00Z,2023-06-20T08:00:00Z",
-      // Thursday 2pm. 10 working days after 9am on the next working day (Friday), so two weeks on Friday
-      "2023-06-08T13:00:00Z,2023-06-23T08:00:00Z",
-      // Friday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-09T13:00:00Z,2023-06-26T08:00:00Z",
+      // Sunday 11am. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T10:00:00Z,2023-06-07T08:00:00Z",
+      // Sunday 12:59pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T11:59:59Z,2023-06-07T08:00:00Z",
+      // Sunday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T12:00:00Z,2023-06-07T08:00:00Z",
+      // Sunday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T13:00:00Z,2023-06-07T08:00:00Z",
+      // Monday 11am. 2 working days later (Wednesday)
+      "2023-06-05T10:00:00Z,2023-06-07T10:00:00Z",
+      // Monday 12:59pm. 2 working days later (Wednesday)
+      "2023-06-05T11:59:59Z,2023-06-07T11:59:59Z",
+      // Monday 1pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-06-05T12:00:00Z,2023-06-08T08:00:00Z",
+      // Monday 2pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-06-05T13:00:00Z,2023-06-08T08:00:00Z",
+      // Thursday 2pm. 2 working days after 9am on the next working day (Friday), so 9am Tuesday
+      "2023-06-08T13:00:00Z,2023-06-13T08:00:00Z",
+      // Friday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-09T13:00:00Z,2023-06-14T08:00:00Z",
 
       // Multi-timezone drifting!!
-      // GMT -> BST: Friday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-03-24T13:00:00Z,2023-04-10T08:00:00Z",
-      // BST -> GMT: Friday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-10-27T12:00:00Z,2023-11-13T09:00:00Z",
+      // GMT -> BST: Friday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-03-24T13:00:00Z,2023-03-29T08:00:00Z",
+      // BST -> GMT: Friday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-10-27T12:00:00Z,2023-11-01T09:00:00Z",
     )
-    fun `getDeadline for a short notice placement application returns submitted date plus 10 working days, or 10 working days after 9am on the next working day if after 1pm or a non-working day`(
+    fun `getDeadline for a short notice placement application returns submitted date plus 2 working days, or 2 working days after 9am on the next working day if after 1pm or a non-working day`(
       submittedAt: OffsetDateTime,
       expectedDeadline: OffsetDateTime,
     ) {
@@ -657,56 +657,56 @@ class TaskDeadlineServiceTest {
     @ParameterizedTest
     @CsvSource(
       // Winter (GMT/UTC), i.e. noon local time is at 12:00Z
-      // Sunday 11am. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T11:00:00Z,2023-01-16T09:00:00Z",
-      // Sunday 12:59pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T12:59:59Z,2023-01-16T09:00:00Z",
-      // Sunday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T13:00:00Z,2023-01-16T09:00:00Z",
-      // Sunday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-01T14:00:00Z,2023-01-16T09:00:00Z",
-      // Monday 11am. 10 working days later, so two weeks on Monday
-      "2023-01-02T11:00:00Z,2023-01-16T11:00:00Z",
-      // Monday 12:59pm. 10 working days later, so two weeks on Monday
-      "2023-01-02T12:59:59Z,2023-01-16T12:59:59Z",
-      // Monday 1pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-01-02T13:00:00Z,2023-01-17T09:00:00Z",
-      // Monday 2pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-01-02T14:00:00Z,2023-01-17T09:00:00Z",
-      // Thursday 2pm. 10 working days after 9am on the next working day (Friday), so two weeks on Friday
-      "2023-01-05T14:00:00Z,2023-01-20T09:00:00Z",
-      // Friday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-01-06T14:00:00Z,2023-01-23T09:00:00Z",
+      // Sunday 11am. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T11:00:00Z,2023-01-04T09:00:00Z",
+      // Sunday 12:59pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T12:59:59Z,2023-01-04T09:00:00Z",
+      // Sunday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T13:00:00Z,2023-01-04T09:00:00Z",
+      // Sunday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-01T14:00:00Z,2023-01-04T09:00:00Z",
+      // Monday 11am. 2 working days later (Wednesday)
+      "2023-01-02T11:00:00Z,2023-01-04T11:00:00Z",
+      // Monday 12:59pm. 2 working days later (Wednesday)
+      "2023-01-02T12:59:59Z,2023-01-04T12:59:59Z",
+      // Monday 1pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-01-02T13:00:00Z,2023-01-05T09:00:00Z",
+      // Monday 2pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-01-02T14:00:00Z,2023-01-05T09:00:00Z",
+      // Thursday 2pm. 2 working days after 9am on the next working day (Friday), so 9am Tuesday
+      "2023-01-05T14:00:00Z,2023-01-10T09:00:00Z",
+      // Friday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-01-06T14:00:00Z,2023-01-11T09:00:00Z",
 
       // Summer (BST/UTC+1), i.e. noon local time is at 11:00Z
-      // Sunday 11am. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T10:00:00Z,2023-06-19T08:00:00Z",
-      // Sunday 12:59pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T11:59:59Z,2023-06-19T08:00:00Z",
-      // Sunday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T12:00:00Z,2023-06-19T08:00:00Z",
-      // Sunday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-04T13:00:00Z,2023-06-19T08:00:00Z",
-      // Monday 11am. 10 working days later, so two weeks on Monday
-      "2023-06-05T10:00:00Z,2023-06-19T10:00:00Z",
-      // Monday 12:59pm. 10 working days later, so two weeks on Monday
-      "2023-06-05T11:59:59Z,2023-06-19T11:59:59Z",
-      // Monday 1pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-06-05T12:00:00Z,2023-06-20T08:00:00Z",
-      // Monday 2pm. 10 working days after 9am on the next working day (Tuesday), so two weeks on Tuesday
-      "2023-06-05T13:00:00Z,2023-06-20T08:00:00Z",
-      // Thursday 2pm. 10 working days after 9am on the next working day (Friday), so two weeks on Friday
-      "2023-06-08T13:00:00Z,2023-06-23T08:00:00Z",
-      // Friday 2pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-06-09T13:00:00Z,2023-06-26T08:00:00Z",
+      // Sunday 11am. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T10:00:00Z,2023-06-07T08:00:00Z",
+      // Sunday 12:59pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T11:59:59Z,2023-06-07T08:00:00Z",
+      // Sunday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T12:00:00Z,2023-06-07T08:00:00Z",
+      // Sunday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-04T13:00:00Z,2023-06-07T08:00:00Z",
+      // Monday 11am. 2 working days later (Wednesday)
+      "2023-06-05T10:00:00Z,2023-06-07T10:00:00Z",
+      // Monday 12:59pm. 2 working days later (Wednesday)
+      "2023-06-05T11:59:59Z,2023-06-07T11:59:59Z",
+      // Monday 1pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-06-05T12:00:00Z,2023-06-08T08:00:00Z",
+      // Monday 2pm. 2 working days after 9am on the next working day (Tuesday), so 9am Thursday
+      "2023-06-05T13:00:00Z,2023-06-08T08:00:00Z",
+      // Thursday 2pm. 2 working days after 9am on the next working day (Friday), so 9am Tuesday
+      "2023-06-08T13:00:00Z,2023-06-13T08:00:00Z",
+      // Friday 2pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-06-09T13:00:00Z,2023-06-14T08:00:00Z",
 
       // Multi-timezone drifting!!
-      // GMT -> BST: Friday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-03-24T13:00:00Z,2023-04-10T08:00:00Z",
-      // BST -> GMT: Friday 1pm. 10 working days after 9am on the next working day (Monday), so two weeks on Monday
-      "2023-10-27T12:00:00Z,2023-11-13T09:00:00Z",
+      // GMT -> BST: Friday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-03-24T13:00:00Z,2023-03-29T08:00:00Z",
+      // BST -> GMT: Friday 1pm. 2 working days after 9am on the next working day (Monday), so 9am Wednesday
+      "2023-10-27T12:00:00Z,2023-11-01T09:00:00Z",
     )
-    fun `getDeadline for an emergency placement application returns submitted date plus 10 working days, or 10 working days after 9am on the next working day if after 1pm or a non-working day`(
+    fun `getDeadline for an emergency placement application returns submitted date plus 2 working days, or 2 working days after 9am on the next working day if after 1pm or a non-working day`(
       submittedAt: OffsetDateTime,
       expectedDeadline: OffsetDateTime,
     ) {
