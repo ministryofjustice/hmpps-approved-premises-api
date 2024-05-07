@@ -44,6 +44,9 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         cast(withdrawl_event.data -> 'eventDetails' ->> 'withdrawnAt' as date) as applicationWithdrawalDate,
         withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
         pa.data -> 'request-a-placement' -> 'reason-for-placement' ->> 'reason' as placementRequestType,
+        cast(
+          pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as date
+        ) as paroleDecisionDate,
         (
           select count(*)
           from appeals
@@ -121,6 +124,7 @@ interface PlacementApplicationEntityReportRow {
   fun getApplicationWithdrawalDate(): Date?
   fun getApplicationWithdrawalReason(): String?
   fun getPlacementRequestType(): String?
+  fun getParoleDecisionDate(): Date?
   fun getAssessmentAppealCount(): Int?
   fun getLastAssessmentAppealedDecision(): String?
   fun getLastAssessmentAppealedDate(): Date?

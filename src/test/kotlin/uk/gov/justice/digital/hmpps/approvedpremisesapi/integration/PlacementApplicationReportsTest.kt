@@ -433,6 +433,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     }
 
     assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
+    assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
 
     if (expectedRow.hasAppeal) {
       val appeals = realAppealRepository.findAllByAssessmentId(assessment.id)

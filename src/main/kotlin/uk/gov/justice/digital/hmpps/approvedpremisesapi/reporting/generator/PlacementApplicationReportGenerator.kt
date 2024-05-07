@@ -42,6 +42,7 @@ class PlacementApplicationReportGenerator :
         applicationWithdrawalDate = this.getApplicationWithdrawalDate()?.toLocalDate(),
         applicationWithdrawalReason = this.getApplicationWithdrawalReason(),
         placementRequestType = this.getPlacementRequestType(),
+        paroleDecisionDate = this.getParoleDecisionDate()?.toLocalDate(),
         assessmentAppealCount = this.getAssessmentAppealCount(),
         lastAssessmentAppealedDecision = this.getLastAssessmentAppealedDecision(),
         lastAssessmentAppealedDate = this.getLastAssessmentAppealedDate()?.toLocalDate(),
