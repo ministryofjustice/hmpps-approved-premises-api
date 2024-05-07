@@ -1154,6 +1154,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withSubmittedAt(OffsetDateTime.now().minusDays(1))
             }
 
+            cas2AssessmentEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+            }
+
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
@@ -1169,7 +1173,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               Cas2Application::class.java,
             )
 
-            Assertions.assertThat(responseBody.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+            Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
 
             Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
               .isEqualTo(listOf("Application submitted"))
@@ -1250,6 +1254,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode(userEntity.activeCaseloadId!!)
               }
 
+              cas2AssessmentEntityFactory.produceAndPersist {
+                withApplication(applicationEntity)
+              }
+
               val rawResponseBody = webTestClient.get()
                 .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
@@ -1265,7 +1273,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 Cas2Application::class.java,
               )
 
-              Assertions.assertThat(responseBody.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+              Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
 
               Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
                 .isEqualTo(listOf("Application submitted"))

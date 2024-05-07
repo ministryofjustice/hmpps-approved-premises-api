@@ -6371,10 +6371,6 @@ components:
               format: date-time
             telephoneNumber:
               type: string
-            statusUpdates:
-              type: array
-              items:
-                $ref: '#/components/schemas/Cas2StatusUpdate'
             assessment:
               $ref: '#/components/schemas/Cas2Assessment'
             timelineEvents:
@@ -6409,10 +6405,6 @@ components:
         submittedAt:
           type: string
           format: date-time
-        statusUpdates:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2StatusUpdate'
         telephoneNumber:
           type: string
         timelineEvents:

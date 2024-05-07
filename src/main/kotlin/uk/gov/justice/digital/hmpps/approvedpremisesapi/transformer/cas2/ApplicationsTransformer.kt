@@ -36,7 +36,6 @@ class ApplicationsTransformer(
       status = getStatus(jpa),
       type = "CAS2",
       telephoneNumber = jpa.telephoneNumber,
-      statusUpdates = jpa.statusUpdates?.map { statusUpdate -> statusUpdateTransformer.transformJpaToApi(statusUpdate) },
       assessment = if (jpa.assessment != null) assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     )
