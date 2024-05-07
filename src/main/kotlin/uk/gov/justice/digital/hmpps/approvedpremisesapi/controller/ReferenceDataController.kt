@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
@@ -31,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PrisonRelease
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
@@ -187,9 +187,9 @@ class ReferenceDataController(
   override fun referenceDataReferralRejectionReasonsGet(
     xServiceName: ServiceName?,
   ): ResponseEntity<List<ReferralRejectionReason>> {
-    val referralRejectionReasons = when (xServiceName != null) {
+    val referralRejectionReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
       true -> referralRejectionReasonRepository.findAllByServiceScope(xServiceName.value)
-      else -> referralRejectionReasonRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"))
+      else -> throw ForbiddenProblem()
     }
 
     return ResponseEntity.ok(referralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi))
@@ -198,9 +198,9 @@ class ReferenceDataController(
   override fun referenceDataPrisonReleaseTypesGet(
     xServiceName: ServiceName?,
   ): ResponseEntity<List<PrisonReleaseType>> {
-    val prisonReleaseTypes = when (xServiceName != null) {
+    val prisonReleaseTypes = when (xServiceName == ServiceName.temporaryAccommodation) {
       true -> prisonReleaseTypeRepository.findAllByServiceScope(xServiceName.value)
-      else -> prisonReleaseTypeRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"))
+      else -> throw ForbiddenProblem()
     }
 
     return ResponseEntity.ok(prisonReleaseTypes.map(prisonReleaseTypeTransformer::transformJpaToApi))
