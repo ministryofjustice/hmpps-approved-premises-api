@@ -243,7 +243,7 @@ jobs:
           path: build/reports/tests
   cas1_e2e_tests:
     docker:
-      - image: cimg/base:stable
+      - image: mcr.microsoft.com/playwright:v1.41.2-focal
     parallelism: 4
     circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
     steps:
