@@ -186,7 +186,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             createPlacementRequest(application, isWithdrawn = true)
 
-            val placementApplication = createPlacementApplication(application, DatePeriod(nowPlusDays(50), duration = 6))
+            val placementApplication = createPlacementApplication(application, DateSpan(nowPlusDays(50), duration = 6))
             createPlacementRequest(application, placementApplication = placementApplication)
 
             val expected = Withdrawables(
@@ -247,15 +247,15 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val submittedPlacementApplication1 = createPlacementApplication(
               application,
-              datePeriods = listOf(
-                DatePeriod(nowPlusDays(1), duration = 5),
-                DatePeriod(nowPlusDays(10), duration = 10),
+              dateSpans = listOf(
+                DateSpan(nowPlusDays(1), duration = 5),
+                DateSpan(nowPlusDays(10), duration = 10),
               ),
             )
 
             val submittedPlacementApplication2 = createPlacementApplication(
               application,
-              DatePeriod(nowPlusDays(50), duration = 6),
+              DateSpan(nowPlusDays(50), duration = 6),
             )
 
             createPlacementApplication(
@@ -266,31 +266,31 @@ class WithdrawalTest : IntegrationTestBase() {
 
             createPlacementApplication(
               application,
-              DatePeriod(LocalDate.now(), duration = 2),
+              DateSpan(LocalDate.now(), duration = 2),
               reallocatedAt = OffsetDateTime.now(),
             )
 
             val applicationWithAcceptedDecision = createPlacementApplication(
               application,
-              DatePeriod(nowPlusDays(50), duration = 6),
+              DateSpan(nowPlusDays(50), duration = 6),
               decision = PlacementApplicationDecision.ACCEPTED,
             )
 
             createPlacementApplication(
               application,
-              DatePeriod(now(), duration = 2),
+              DateSpan(now(), duration = 2),
               decision = PlacementApplicationDecision.WITHDRAW,
             )
 
             createPlacementApplication(
               application,
-              DatePeriod(now(), duration = 2),
+              DateSpan(now(), duration = 2),
               decision = PlacementApplicationDecision.WITHDRAWN_BY_PP,
             )
 
             val applicationWithRejectedDecision = createPlacementApplication(
               application,
-              DatePeriod(nowPlusDays(50), duration = 6),
+              DateSpan(nowPlusDays(50), duration = 6),
               decision = PlacementApplicationDecision.REJECTED,
             )
 
@@ -353,7 +353,7 @@ class WithdrawalTest : IntegrationTestBase() {
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
               val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-              val placementApplication1 = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+              val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
               val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
               val booking1NoArrival = createBooking(
                 application = application,
@@ -368,7 +368,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
               val placementApplication2 = createPlacementApplication(
                 application,
-                DatePeriod(now(), duration = 2),
+                DateSpan(now(), duration = 2),
                 allocatedTo = requestForPlacementAssessor,
               )
 
@@ -461,7 +461,7 @@ class WithdrawalTest : IntegrationTestBase() {
           `Given an Offender` { offenderDetails, _ ->
             val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val placementApplication1 = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+            val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
             val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
             val booking1NoArrival = createBooking(
               application = application,
@@ -475,7 +475,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val placementApplication2 = createPlacementApplication(
               application,
-              DatePeriod(now(), duration = 2),
+              DateSpan(now(), duration = 2),
               allocatedTo = requestForPlacementAssessor,
             )
 
@@ -603,7 +603,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val placementApplication1 = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+            val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
             val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
             val booking1NoArrival = createBooking(
               application = application,
@@ -615,7 +615,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val placementApplication2NoBookingBeingAssessed = createPlacementApplication(
               application,
-              DatePeriod(nowPlusDays(2), duration = 2),
+              DateSpan(nowPlusDays(2), duration = 2),
               allocatedTo = requestForPlacementAssessor,
               decision = null,
             )
@@ -756,7 +756,7 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-          val placementApplication = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+          val placementApplication = createPlacementApplication(application, DateSpan(now(), duration = 2))
           val placementRequest = createPlacementRequest(application, placementApplication = placementApplication)
           val bookingWithArrival = createBooking(
             application = application,
@@ -805,7 +805,7 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-          val placementApplication1 = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+          val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
           val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
           val booking1NoArrival = createBooking(
             application = application,
@@ -824,7 +824,7 @@ class WithdrawalTest : IntegrationTestBase() {
           )
           addBookingToPlacementRequest(placementRequest2, booking2NoArrival)
 
-          val placementApplication2 = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+          val placementApplication2 = createPlacementApplication(application, DateSpan(now(), duration = 2))
           val placementRequest3 = createPlacementRequest(application, placementApplication = placementApplication2)
           val booking3NoArrival = createBooking(
             application = application,
@@ -905,7 +905,7 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-          val placementApplication1 = createPlacementApplication(application, DatePeriod(now(), duration = 2))
+          val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
           val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
           val booking1Adhoc = createBooking(
             application = application,
@@ -1346,12 +1346,12 @@ class WithdrawalTest : IntegrationTestBase() {
     return application
   }
 
-  data class DatePeriod(val start: LocalDate, val duration: Int)
+  private data class DateSpan(val start: LocalDate, val duration: Int)
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    datePeriod: DatePeriod? = null,
-    datePeriods: List<DatePeriod> = emptyList(),
+    dateSpan: DateSpan? = null,
+    dateSpans: List<DateSpan> = emptyList(),
     isSubmitted: Boolean = true,
     reallocatedAt: OffsetDateTime? = null,
     decision: PlacementApplicationDecision? = PlacementApplicationDecision.ACCEPTED,
@@ -1373,7 +1373,7 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     if (isSubmitted) {
-      val dates = (listOfNotNull(datePeriod) + datePeriods).map {
+      val dates = (listOfNotNull(dateSpan) + dateSpans).map {
         placementDateFactory.produceAndPersist {
           withPlacementApplication(placementApplication)
           withExpectedArrival(it.start)
