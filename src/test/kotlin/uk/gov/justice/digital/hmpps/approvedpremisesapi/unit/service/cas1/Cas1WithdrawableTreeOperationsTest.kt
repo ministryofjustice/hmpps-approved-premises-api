@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -301,13 +302,13 @@ class Cas1WithdrawableTreeOperationsTest {
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingWithdrawableButBlocking.id,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true),
+                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
                 ),
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
-                  status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = false),
+                  status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockingReason = null),
                 ),
               ),
             ),
@@ -323,13 +324,13 @@ class Cas1WithdrawableTreeOperationsTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawable.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = false),
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = null),
         ),
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawableButBlocked.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true),
+          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
         ),
       ),
     )

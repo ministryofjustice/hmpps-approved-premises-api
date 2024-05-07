@@ -136,6 +136,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -6928,7 +6929,7 @@ class BookingServiceTest {
 
       val result = bookingService.getWithdrawableState(booking, user)
 
-      assertThat(result.blockAncestorWithdrawals).isEqualTo(false)
+      assertThat(result.blockingReason).isNull()
     }
 
     @Test
@@ -6947,7 +6948,7 @@ class BookingServiceTest {
 
       val result = bookingService.getWithdrawableState(booking, user)
 
-      assertThat(result.blockAncestorWithdrawals).isEqualTo(true)
+      assertThat(result.blockingReason).isEqualTo(BlockingReason.ArrivalRecordedInCas1)
     }
   }
 

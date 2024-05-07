@@ -34,35 +34,38 @@ class Cas1WithdrawableService(
   fun allDirectlyWithdrawables(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-  ): Set<WithdrawableEntity> {
-    val rootNode = cas1WithdrawableTreeBuilder.treeForApp(application, user)
+  ): WithdrawableEntitiesWithNotes {
+    val tree = cas1WithdrawableTreeBuilder.treeForApp(application, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for application ${application.id} is $rootNode")
+      log.debug("Withdrawables tree for application ${application.id} is $tree")
     }
 
-    return toDirectlyWithdrawableEntities(rootNode)
+    return WithdrawableEntitiesWithNotes(
+      notes = tree.notes(),
+      withdrawables = toDirectlyWithdrawableEntities(tree.rootNode),
+    )
   }
 
   fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
-    val rootNode = cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
+    val tree = cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for placement request ${placementRequest.id} is $rootNode")
+      log.debug("Withdrawables tree for placement request ${placementRequest.id} is $tree")
     }
 
-    return toDirectlyWithdrawableEntities(rootNode)
+    return toDirectlyWithdrawableEntities(tree.rootNode)
       .any { it.type == WithdrawableEntityType.PlacementRequest && it.id == placementRequest.id }
   }
 
   fun isDirectlyWithdrawable(placementApplication: PlacementApplicationEntity, user: UserEntity): Boolean {
-    val rootNode = cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
+    val tree = cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for placement app ${placementApplication.id} is $rootNode")
+      log.debug("Withdrawables tree for placement app ${placementApplication.id} is $tree")
     }
 
-    return toDirectlyWithdrawableEntities(rootNode)
+    return toDirectlyWithdrawableEntities(tree.rootNode)
       .any { it.type == WithdrawableEntityType.PlacementApplication && it.id == placementApplication.id }
   }
 
@@ -85,7 +88,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForApp(application, user),
+      cas1WithdrawableTreeBuilder.treeForApp(application, user).rootNode,
       withdrawalContext,
     ) {
       applicationService.withdrawApprovedPremisesApplication(applicationId, user, withdrawalReason, otherReason)
@@ -108,7 +111,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user),
+      cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user).rootNode,
       withdrawalContext,
     ) {
       placementRequestService.withdrawPlacementRequest(placementRequestId, userProvidedReason, withdrawalContext)
@@ -131,7 +134,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user),
+      cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user).rootNode,
       withdrawalContext,
     ) {
       placementApplicationService.withdrawPlacementApplication(placementApplicationId, userProvidedReason, withdrawalContext)
@@ -154,7 +157,7 @@ class Cas1WithdrawableService(
     )
 
     return withdraw(
-      cas1WithdrawableTreeBuilder.treeForBooking(booking, user),
+      cas1WithdrawableTreeBuilder.treeForBooking(booking, user).rootNode,
       withdrawalContext,
     ) {
       bookingService.createCas1Cancellation(
@@ -234,6 +237,11 @@ data class WithdrawableEntity(
   val dates: List<WithdrawableDatePeriod>,
 )
 
+data class WithdrawableEntitiesWithNotes(
+  val notes: List<String>,
+  val withdrawables: Set<WithdrawableEntity>,
+)
+
 enum class WithdrawableEntityType(val label: String) {
   Application("Application"),
 
@@ -257,15 +265,19 @@ data class WithdrawableState(
    */
   val userMayDirectlyWithdraw: Boolean,
   /**
-   * If true, not only is this entity not withdrawable, but any ancestor
+   * If set, not only is this entity not withdrawable, but any ancestor
    * of this entity is also not withdrawable. For example, bookings with
    * arrivals will block the withdrawal of any associated request for
    * placement and application
    */
-  val blockAncestorWithdrawals: Boolean = false,
+  val blockingReason: BlockingReason? = null,
 )
 
 data class WithdrawableDatePeriod(
   val startDate: LocalDate,
   val endDate: LocalDate,
 )
+
+enum class BlockingReason {
+  ArrivalRecordedInCas1,
+}

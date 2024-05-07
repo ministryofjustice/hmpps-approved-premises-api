@@ -9,7 +9,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FliptFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 class FeatureFlagServiceTest {
@@ -20,7 +20,7 @@ class FeatureFlagServiceTest {
   @ParameterizedTest
   @CsvSource("true", "false")
   fun `getBooleanFlag if flipt is disabled then return default value`(default: Boolean) {
-    val service = FeatureFlagService(
+    val service = FliptFeatureFlagService(
       client = null,
       sentryService,
     )
@@ -40,7 +40,7 @@ class FeatureFlagServiceTest {
     every { evaluation.evaluateBoolean(any()) } returns booleanEvaluationResponse
     every { booleanEvaluationResponse.isEnabled } returns enabled
 
-    val service = FeatureFlagService(client, sentryService)
+    val service = FliptFeatureFlagService(client, sentryService)
 
     val result = service.getBooleanFlag("theKey", false)
 
@@ -54,7 +54,7 @@ class FeatureFlagServiceTest {
     every { client.evaluation() } throws exception
     every { sentryService.captureException(any()) } returns Unit
 
-    val service = FeatureFlagService(client, sentryService)
+    val service = FliptFeatureFlagService(client, sentryService)
 
     val result = service.getBooleanFlag("theKey", default)
 
