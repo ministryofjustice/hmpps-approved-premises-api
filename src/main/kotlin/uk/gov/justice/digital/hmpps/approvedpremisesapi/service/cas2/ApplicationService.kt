@@ -49,58 +49,29 @@ class ApplicationService(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
+  val repositoryUserFunctionMap = mapOf(
+    null to applicationSummaryRepository::findByUserId,
+    true to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
+    false to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNull,
+  )
+
+  val repositoryPrisonFunctionMap = mapOf(
+    null to applicationSummaryRepository::findByPrisonCode,
+    true to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNotNull,
+    false to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
+  )
+
   fun getApplications(
     prisonCode: String?,
     isSubmitted: Boolean?,
     user: NomisUserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    return when (prisonCode) {
-      null -> when (isSubmitted) {
-        true -> getSubmittedApplicationsForUser(user, pageCriteria)
-        false -> getUnsubmittedApplicationsForUser(user, pageCriteria)
-        null -> getAllApplicationsForUser(user, pageCriteria)
-      }
-      else -> when (isSubmitted) {
-        true -> getSubmittedApplicationsByPrison(prisonCode, pageCriteria)
-        false -> getUnsubmittedApplicationsByPrison(prisonCode, pageCriteria)
-        null -> getAllApplicationsByPrison(prisonCode, pageCriteria)
-      }
+    val response = if (prisonCode == null) {
+      repositoryUserFunctionMap.get(isSubmitted)!!(user.id.toString(), getPageableOrAllPages(pageCriteria))
+    } else {
+      repositoryPrisonFunctionMap.get(isSubmitted)!!(prisonCode, getPageableOrAllPages(pageCriteria))
     }
-  }
-
-  fun getAllApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = applicationSummaryRepository.findByUserId(user.id.toString(), getPageableOrAllPages(pageCriteria))
-    val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
-  }
-
-  fun getSubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = applicationSummaryRepository.findByUserIdAndSubmittedAtIsNotNull(user.id.toString(), getPageableOrAllPages(pageCriteria))
-    val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
-  }
-
-  fun getUnsubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = applicationSummaryRepository.findByUserIdAndSubmittedAtIsNull(user.id.toString(), getPageableOrAllPages(pageCriteria))
-    val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
-  }
-
-  fun getAllApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = applicationSummaryRepository.findByPrisonCode(prisonCode, getPageableOrAllPages(pageCriteria))
-    val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
-  }
-
-  fun getSubmittedApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = applicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(prisonCode, getPageableOrAllPages(pageCriteria))
-    val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
-  }
-
-  fun getUnsubmittedApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = applicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(prisonCode, getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
