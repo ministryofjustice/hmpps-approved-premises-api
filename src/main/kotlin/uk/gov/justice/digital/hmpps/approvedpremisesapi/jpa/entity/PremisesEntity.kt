@@ -60,6 +60,8 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
           LEFT JOIN p.localAuthorityArea la
         WHERE 
           pr.id = :regionId
+        AND 
+          (b.endDate IS NULL OR b.endDate > CURRENT_DATE)
         GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, la.name
       """,
   )

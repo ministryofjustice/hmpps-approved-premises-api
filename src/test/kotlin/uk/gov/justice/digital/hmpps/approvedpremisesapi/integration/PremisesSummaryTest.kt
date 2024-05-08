@@ -68,6 +68,112 @@ class PremisesSummaryTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all CAS3 Premises returns bedspace count as expected when there is an archived bedspace`() {
+    `Given a User` { user, jwt ->
+      val uuid = UUID.randomUUID()
+
+      val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(user.probationRegion)
+        withId(uuid)
+        withAddressLine1("221 Baker Street")
+        withAddressLine2("221B")
+        withPostcode("NW1 6XE")
+        withStatus(PropertyStatus.active)
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
+        withService("CAS3")
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { expectedCas3Premises }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(3) {
+        withYieldedRoom { room }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(1) {
+        withYieldedRoom { room }
+        withEndDate { LocalDate.now().minusWeeks(1) }
+      }
+
+      webTestClient.get()
+        .uri("/premises/summary")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(uuid.toString())
+        .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+        .jsonPath("$[0].addressLine2").isEqualTo("221B")
+        .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+        .jsonPath("$[0].status").isEqualTo("active")
+        .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
+        .jsonPath("$[0].bedCount").isEqualTo(3)
+        .jsonPath("$.length()").isEqualTo(1)
+    }
+  }
+
+  @Test
+  fun `Get all CAS3 Premises returns a bedspace count as expected when beds are active`() {
+    `Given a User` { user, jwt ->
+      val uuid = UUID.randomUUID()
+
+      val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(user.probationRegion)
+        withId(uuid)
+        withAddressLine1("221 Baker Street")
+        withAddressLine2("221B")
+        withPostcode("NW1 6XE")
+        withStatus(PropertyStatus.active)
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
+        withService("CAS3")
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { expectedCas3Premises }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(3) {
+        withYieldedRoom { room }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(1) {
+        withYieldedRoom { room }
+        withEndDate { LocalDate.now().plusWeeks(1) }
+      }
+
+      webTestClient.get()
+        .uri("/premises/summary")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(uuid.toString())
+        .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+        .jsonPath("$[0].addressLine2").isEqualTo("221B")
+        .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+        .jsonPath("$[0].status").isEqualTo("active")
+        .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
+        .jsonPath("$[0].bedCount").isEqualTo(4)
+        .jsonPath("$.length()").isEqualTo(1)
+    }
+  }
+
+  @Test
   fun `Get all Premises throws error with incorrect service name`() {
     `Given a User` { _, jwt ->
       webTestClient.get()
