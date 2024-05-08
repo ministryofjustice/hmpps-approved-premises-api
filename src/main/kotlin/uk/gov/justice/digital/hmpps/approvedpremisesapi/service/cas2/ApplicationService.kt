@@ -12,10 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -27,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -35,6 +36,7 @@ import javax.transaction.Transactional
 @Service("Cas2ApplicationService")
 class ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
+  private val applicationSummaryRepository: ApplicationSummaryRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val userAccessService: UserAccessService,
@@ -52,7 +54,7 @@ class ApplicationService(
     isSubmitted: Boolean?,
     user: NomisUserEntity,
     pageCriteria: PageCriteria<String>,
-  ): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
+  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     return when (prisonCode) {
       null -> when (isSubmitted) {
         true -> getSubmittedApplicationsForUser(user, pageCriteria)
@@ -67,46 +69,46 @@ class ApplicationService(
     }
   }
 
-  fun getAllApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val response = applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id, getPageable(pageCriteria))
+  fun getAllApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = applicationSummaryRepository.findByUserId(user.id.toString(), getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val response = applicationRepository.findSubmittedCas2ApplicationSummariesCreatedByUser(user.id, getPageable(pageCriteria))
+  fun getSubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = applicationSummaryRepository.findByUserIdAndSubmittedAtIsNotNull(user.id.toString(), getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getUnsubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val response = applicationRepository.findUnsubmittedCas2ApplicationSummariesCreatedByUser(user.id, getPageable(pageCriteria))
+  fun getUnsubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = applicationSummaryRepository.findByUserIdAndSubmittedAtIsNull(user.id.toString(), getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getAllApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val response = applicationRepository.findAllCas2ApplicationSummariesByPrison(prisonCode, getPageable(pageCriteria))
+  fun getAllApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = applicationSummaryRepository.findByPrisonCode(prisonCode, getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val response = applicationRepository.findSubmittedCas2ApplicationSummariesByPrison(prisonCode, getPageable(pageCriteria))
+  fun getSubmittedApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = applicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(prisonCode, getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getUnsubmittedApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val response = applicationRepository.findUnsubmittedCas2ApplicationSummariesByPrison(prisonCode, getPageable(pageCriteria))
+  fun getUnsubmittedApplicationsByPrison(prisonCode: String, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = applicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(prisonCode, getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
-    val pageable = getPageable(pageCriteria)
+  fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = applicationRepository.findAllSubmittedCas2ApplicationSummaries(pageable)
+    val response = applicationSummaryRepository.findBySubmittedAtIsNotNull(pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 

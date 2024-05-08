@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -50,7 +50,7 @@ class ApplicationsController(
 
     prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
 
-    val pageCriteria = PageCriteria("created_at", SortDirection.desc, page)
+    val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
     val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
 
@@ -137,14 +137,14 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>):
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>):
     List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
-    val crns = applicationSummaries.map { it.getCrn() }
+    val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      applicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.getCrn()]!!)
+      applicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
     }
   }
 

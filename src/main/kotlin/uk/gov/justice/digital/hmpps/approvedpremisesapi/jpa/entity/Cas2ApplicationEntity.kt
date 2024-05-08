@@ -2,14 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -22,198 +19,9 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
-const val SUBMITTED_APPLICATION_SUMMARY_FIELDS =
-  """
-    ,
-    a.hdc_eligibility_date as hdcEligibilityDate,
-    asu.label as latestStatusUpdateLabel,
-    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
-  """
-
-const val DEFAULT_APPLICATION_SUMMARY_FIELDS =
-  """
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    a.noms_number as nomsNumber,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    nu.name as createdByUserName,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt
-  """
-
-const val ALL_APPLICATION_SUMMARY_FIELDS =
-  DEFAULT_APPLICATION_SUMMARY_FIELDS + SUBMITTED_APPLICATION_SUMMARY_FIELDS
-
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
-
-  @Query(
-    """
-SELECT 
-    $ALL_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-LEFT JOIN
-    (SELECT DISTINCT ON (application_id) su.application_id, 
-      su.label, su.status_id
-    FROM cas_2_status_updates su
-    ORDER BY su.application_id, su.created_at DESC) as asu
-ON a.id = asu.application_id
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.created_by_user_id = :userId
-AND (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
-ORDER BY createdAt DESC
-""",
-    countQuery =
-    """
-    SELECT COUNT(*)
-      FROM cas_2_applications a
-    WHERE a.created_by_user_id = :userId
-    """,
-    nativeQuery = true,
-  )
-  fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    $ALL_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-    LEFT JOIN
-        (SELECT DISTINCT ON (application_id) su.application_id, 
-          su.label, su.status_id
-        FROM cas_2_status_updates su
-        ORDER BY su.application_id, su.created_at DESC) as asu
-ON a.id = asu.application_id
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.referring_prison_code = :prisonCode
-AND (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
-ORDER BY createdAt DESC
-""",
-    countQuery =
-    """
-    SELECT COUNT(*)
-      FROM cas_2_applications a
-    WHERE a.referring_prison_code = :prisonCode
-    """,
-    nativeQuery = true,
-  )
-  fun findAllCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    $ALL_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-LEFT JOIN
-    (SELECT DISTINCT ON (application_id) su.application_id, 
-      su.label, su.status_id
-    FROM cas_2_status_updates su
-    ORDER BY su.application_id, su.created_at DESC) as asu
-ON a.id = asu.application_id
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.created_by_user_id = :userId
-AND a.submitted_at IS NOT NULL
-AND a.conditional_release_date >= current_date
-ORDER BY createdAt DESC
-""",
-    countQuery =
-    """
-    SELECT COUNT(*)
-      FROM cas_2_applications a
-    WHERE a.created_by_user_id = :userId
-    AND a.submitted_at IS NOT NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    $ALL_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-LEFT JOIN
-    (SELECT DISTINCT ON (application_id) su.application_id, 
-      su.label, su.status_id
-    FROM cas_2_status_updates su
-    ORDER BY su.application_id, su.created_at DESC) as asu
-ON a.id = asu.application_id
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.referring_prison_code = :prisonCode
-AND a.submitted_at IS NOT NULL
-AND a.conditional_release_date >= current_date
-ORDER BY createdAt DESC
-""",
-    countQuery =
-    """
-    SELECT COUNT(*)
-      FROM cas_2_applications a
-    WHERE a.referring_prison_code = :prisonCode
-    AND a.submitted_at IS NOT NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findSubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    $DEFAULT_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.created_by_user_id = :userId
-AND a.submitted_at IS NULL
-ORDER BY createdAt DESC
-""",
-    nativeQuery = true,
-  )
-  fun findUnsubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    $DEFAULT_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.referring_prison_code = :prisonCode
-AND a.submitted_at IS NULL
-ORDER BY createdAt DESC
-""",
-    nativeQuery = true,
-  )
-  fun findUnsubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    $ALL_APPLICATION_SUMMARY_FIELDS
-FROM cas_2_applications a
-LEFT JOIN
-    (SELECT DISTINCT ON (application_id) su.application_id, 
-      su.label, su.status_id
-    FROM cas_2_status_updates su
-    ORDER BY su.application_id, su.created_at DESC) as asu
-ON a.id = asu.application_id
-JOIN nomis_users nu ON nu.id = a.created_by_user_id
-WHERE a.submitted_at IS NOT NULL
-""",
-    countQuery =
-    """
-    SELECT COUNT(*)
-      FROM cas_2_applications a
-      WHERE a.submitted_at IS NOT NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findAllSubmittedCas2ApplicationSummaries(pageable: Pageable?): Page<Cas2ApplicationSummary>
-
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
       "a.submittedAt IS NOT NULL",
@@ -282,18 +90,3 @@ data class Cas2ApplicationEntity(
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 }
-
-interface AppSummary {
-  fun getId(): UUID
-  fun getCrn(): String
-  fun getNomsNumber(): String
-  fun getCreatedByUserId(): UUID
-  fun getCreatedByUserName(): String
-  fun getCreatedAt(): Timestamp
-  fun getSubmittedAt(): Timestamp?
-  fun getHdcEligibilityDate(): LocalDate?
-  fun getLatestStatusUpdateLabel(): String?
-  fun getLatestStatusUpdateStatusId(): UUID?
-}
-
-interface Cas2ApplicationSummary : AppSummary

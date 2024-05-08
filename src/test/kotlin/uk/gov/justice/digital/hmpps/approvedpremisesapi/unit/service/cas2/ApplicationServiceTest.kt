@@ -26,10 +26,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -41,16 +42,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.sql.Timestamp
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockApplicationSummaryRepository = mockk<ApplicationSummaryRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserAccessService = mockk<UserAccessService>()
@@ -62,6 +62,7 @@ class ApplicationServiceTest {
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
     mockApplicationRepository,
+    mockApplicationSummaryRepository,
     mockJsonSchemaService,
     mockOffenderService,
     mockUserAccessService,
@@ -78,21 +79,22 @@ class ApplicationServiceTest {
   inner class GetAllSubmittedApplicationsForAssessor {
     @Test
     fun `returns Success result with entity from db`() {
-      val applicationSummary = object : Cas2ApplicationSummary {
-        override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-        override fun getCrn() = randomStringMultiCaseWithNumbers(6)
-        override fun getNomsNumber() = randomStringMultiCaseWithNumbers(6)
-        override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-        override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-        override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
-        override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
-        override fun getLatestStatusUpdateLabel(): String? = null
-        override fun getLatestStatusUpdateStatusId(): UUID? = null
-      }
+      val applicationSummary = Cas2ApplicationSummaryEntity(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = randomStringMultiCaseWithNumbers(6),
+        nomsNumber = randomStringMultiCaseWithNumbers(6),
+        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userName = "first last",
+        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+        latestStatusUpdateLabel = null,
+        latestStatusUpdateStatusId = null,
+        prisonCode = "BRI",
+      )
 
       PaginationConfig(defaultPageSize = 10).postInit()
-      val page = mockk<Page<Cas2ApplicationSummary>>()
+      val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
       val pageRequest = mockk<PageRequest>()
       val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
 
@@ -104,7 +106,7 @@ class ApplicationServiceTest {
       every { page.totalElements } returns 100
 
       every {
-        mockApplicationRepository.findAllSubmittedCas2ApplicationSummaries(
+        mockApplicationSummaryRepository.findBySubmittedAtIsNotNull(
           PageRequest.of(
             2,
             10,
@@ -125,22 +127,23 @@ class ApplicationServiceTest {
 
   @Nested
   inner class GetApplicationsWithPrisonCode {
-    val applicationSummary = object : Cas2ApplicationSummary {
-      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
-      override fun getNomsNumber() = randomStringMultiCaseWithNumbers(6)
-      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedByUserName() = "first last"
-      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
-      override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
-      override fun getLatestStatusUpdateLabel(): String? = null
-      override fun getLatestStatusUpdateStatusId(): UUID? = null
-    }
-    val page = mockk<Page<Cas2ApplicationSummary>>()
+    val applicationSummary = Cas2ApplicationSummaryEntity(
+      id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+      crn = randomStringMultiCaseWithNumbers(6),
+      nomsNumber = randomStringMultiCaseWithNumbers(6),
+      userId = "836a9460-b177-433a-a0d9-262509092c9f",
+      userName = "first last",
+      createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+      submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+      hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+      latestStatusUpdateLabel = null,
+      latestStatusUpdateStatusId = null,
+      prisonCode = "BRI",
+    )
+    val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
     val user = NomisUserEntityFactory().produce()
-    val prisonCode = "PRISONCODE"
+    val prisonCode = "BRI"
 
     fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
       every { page.content } returns listOf(applicationSummary)
@@ -157,9 +160,9 @@ class ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockApplicationRepository.findAllCas2ApplicationSummariesByPrison(
+        mockApplicationSummaryRepository.findByPrisonCode(
           prisonCode,
-          getPageable(pageCriteria),
+          getPageableOrAllPages(pageCriteria),
         )
       } returns page
 
@@ -171,9 +174,9 @@ class ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockApplicationRepository.findSubmittedCas2ApplicationSummariesByPrison(
+        mockApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(
           prisonCode,
-          getPageable(pageCriteria),
+          getPageableOrAllPages(pageCriteria),
         )
       } returns page
 
@@ -185,9 +188,9 @@ class ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockApplicationRepository.findUnsubmittedCas2ApplicationSummariesByPrison(
+        mockApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(
           prisonCode,
-          getPageable(pageCriteria),
+          getPageableOrAllPages(pageCriteria),
         )
       } returns page
 
