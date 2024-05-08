@@ -68,7 +68,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all CAS3 Premises returns a bedspace count of 3 when there are 3 bedspaces with no end date and one 1 with an end date in the past`() {
+  fun `Get all CAS3 Premises returns bedspace count as expected when there is an archived bedspace`() {
     `Given a User` { user, jwt ->
       val uuid = UUID.randomUUID()
 
@@ -121,7 +121,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all CAS3 Premises returns a bedspace count of 4 when there are 3 bedspaces with no end date and one 1 with an end date in the future`() {
+  fun `Get all CAS3 Premises returns a bedspace count as expected when beds are active`() {
     `Given a User` { user, jwt ->
       val uuid = UUID.randomUUID()
 
