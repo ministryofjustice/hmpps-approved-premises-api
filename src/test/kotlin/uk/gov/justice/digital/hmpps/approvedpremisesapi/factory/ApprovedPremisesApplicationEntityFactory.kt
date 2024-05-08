@@ -61,6 +61,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var caseManagerUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
   private var noticeType: Yielded<Cas1ApplicationTimelinessCategory?> = { null }
 
+  fun withDefaults() = apply {
+    withCreatedByUser(UserEntityFactory().withDefaults().produce())
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

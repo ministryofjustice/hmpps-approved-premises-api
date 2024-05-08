@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 
@@ -41,5 +42,9 @@ class ApDeliusContextApiClient(
   fun getUserAccessForCrns(deliusUsername: String, crns: List<String>) = getRequest<UserAccess> {
     path = "/users/access?username=$deliusUsername"
     body = crns
+  }
+
+  fun getReferralDetails(crn: String, bookingId: String) = getRequest<ReferralDetail> {
+    path = "/probation-case/$crn/referrals/$bookingId"
   }
 }

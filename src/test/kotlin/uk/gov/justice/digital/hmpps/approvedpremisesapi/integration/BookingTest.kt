@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -3135,6 +3136,12 @@ class BookingTest : IntegrationTestBase() {
               withServiceScope("*")
             }
 
+            APDeliusContext_mockSuccessfulGetReferralDetails(
+              crn = booking.crn,
+              bookingId = booking.id.toString(),
+              arrivedAt = null,
+            )
+
             webTestClient.post()
               .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
               .header("Authorization", "Bearer $jwt")
@@ -3166,43 +3173,6 @@ class BookingTest : IntegrationTestBase() {
             emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
           }
         }
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
-      role: UserRole,
-    ) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-        val booking = bookingEntityFactory.produceAndPersist {
-          withYieldedPremises {
-            approvedPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-              }
-            }
-          }
-          withServiceName(ServiceName.approvedPremises)
-        }
-
-        webTestClient.post()
-          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewConfirmation(
-              notes = null,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-          .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
-          .jsonPath("$.notes").isEqualTo(null)
-          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
       }
     }
   }
@@ -4126,6 +4096,43 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            }
+          }
+        }
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewConfirmation(
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+        .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
+        .jsonPath("$.notes").isEqualTo(null)
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
   }
 
   @Test

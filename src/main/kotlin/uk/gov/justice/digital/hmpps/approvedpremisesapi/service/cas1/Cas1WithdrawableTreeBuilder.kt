@@ -124,10 +124,15 @@ data class WithdrawableTree(
   val rootNode: WithdrawableTreeNode,
 ) {
   fun notes(): List<String> {
+    val blockedReasons = rootNode.blockedReasons()
     val notes = mutableListOf<String>()
 
-    if (rootNode.isBlocked()) {
+    if (blockedReasons.contains(BlockingReason.ArrivalRecordedInCas1)) {
       notes.add("1 or more placements cannot be withdrawn as they have an arrival")
+    }
+
+    if (blockedReasons.contains(BlockingReason.ArrivalRecordedInDelius)) {
+      notes.add("1 or more placements cannot be withdrawn as they have an arrival recorded in Delius")
     }
 
     return notes
@@ -166,6 +171,10 @@ data class WithdrawableTreeNode(
   private fun isBlockAncestorWithdrawals() = status.blockingReason != null
 
   fun isBlocked(): Boolean = isBlockAncestorWithdrawals() || children.any { it.isBlocked() }
+
+  fun blockedReasons(): Set<BlockingReason> {
+    return setOfNotNull(status.blockingReason) + children.flatMap { it.blockedReasons() }.toSet()
+  }
 
   override fun toString(): String {
     return "\n\n${render(0)}\n"
