@@ -73,7 +73,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApi(groupedDocuments, 12345),
+              documentTransformer.transformToApiUnfiltered(groupedDocuments),
             ),
           )
       }
@@ -128,7 +128,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApi(groupedDocuments, 12345),
+              documentTransformer.transformToApiUnfiltered(groupedDocuments),
             ),
           )
       }

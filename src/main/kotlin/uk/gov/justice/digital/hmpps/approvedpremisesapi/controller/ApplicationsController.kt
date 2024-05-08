@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -88,6 +89,7 @@ class ApplicationsController(
   private val placementRequestService: PlacementRequestService,
   private val requestForPlacementService: RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -424,19 +426,25 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val convictionId = when (application) {
-      is ApprovedPremisesApplicationEntity -> application.convictionId
-      is TemporaryAccommodationApplicationEntity -> application.convictionId
-      else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
-    }
-
     val documents = when (val documentsResult = offenderService.getDocuments(application.crn)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(application.crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> documentsResult.entity
     }
 
-    return ResponseEntity(documentTransformer.transformToApi(documents, convictionId), HttpStatus.OK)
+    val transformedDocuments = when (application) {
+      is ApprovedPremisesApplicationEntity -> {
+        if (featureFlagService.getBooleanFlag("cas1-remove-document-conviction-id-filters", default = false)) {
+          documentTransformer.transformToApiUnfiltered(documents)
+        } else {
+          documentTransformer.transformToApiFiltered(documents, application.convictionId)
+        }
+      }
+      is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApiFiltered(documents, application.convictionId)
+      else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
+    }
+
+    return ResponseEntity(transformedDocuments, HttpStatus.OK)
   }
 
   override fun applicationsApplicationIdAppealsAppealIdGet(
