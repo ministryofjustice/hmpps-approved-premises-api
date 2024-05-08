@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 object Constants {
   const val HDC_APPLICATION_TYPE = "Home Detention Curfew (HDC)"
@@ -61,6 +62,7 @@ class StatusUpdateService(
     return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
+  @Transactional
   @SuppressWarnings("ReturnCount")
   fun createForAssessment(
     assessmentId: UUID,
