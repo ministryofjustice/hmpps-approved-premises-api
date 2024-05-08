@@ -36,6 +36,7 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
+import javax.persistence.Version
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toKotlinDuration
 
@@ -308,6 +309,9 @@ abstract class ApplicationEntity(
   var assessments: MutableList<AssessmentEntity>,
 
   var nomsNumber: String?,
+
+  @Version
+  var version: Long = 1,
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
   abstract fun getRequiredQualifications(): List<UserQualification>

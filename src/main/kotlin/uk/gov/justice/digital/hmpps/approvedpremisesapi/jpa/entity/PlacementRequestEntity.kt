@@ -24,6 +24,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
+import javax.persistence.Version
 
 @Service
 @Suppress("FunctionNaming")
@@ -189,6 +190,9 @@ data class PlacementRequestEntity(
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 
   var dueAt: OffsetDateTime?,
+
+  @Version
+  var version: Long = 1,
 ) {
   fun isInWithdrawableState() = isActive()
 

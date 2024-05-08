@@ -28,6 +28,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
+import javax.persistence.Version
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
@@ -270,6 +271,9 @@ abstract class AssessmentEntity(
   var isWithdrawn: Boolean,
 
   var dueAt: OffsetDateTime?,
+
+  @Version
+  var version: Long = 1,
 )
 
 @EntityListeners(AssessmentListener::class)
