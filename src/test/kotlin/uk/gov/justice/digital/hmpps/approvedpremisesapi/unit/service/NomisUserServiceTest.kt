@@ -6,7 +6,6 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
@@ -65,7 +64,19 @@ class NomisUserServiceTest {
         )
         // setup repository
         every { mockUserRepository.findByNomisUsername(username) } returns oldUserData
-        verify(exactly = 0) { mockUserRepository.save(any()) }
+        verify(exactly = 0) {
+          mockUserRepository.saveOrUpdate(
+            id = any(),
+            name = any(),
+            nomisUsername = any(),
+            nomisStaffId = any(),
+            accountType = any(),
+            email = any(),
+            isEnabled = any(),
+            isActive = any(),
+            activeCaseloadId = any(),
+          )
+        }
 
         assertThat(userService.getUserForRequest()).matches {
           it.nomisUsername == username &&
@@ -141,7 +152,28 @@ class NomisUserServiceTest {
         )
         // setup repository
         every { mockUserRepository.findByNomisUsername(username) } returns null
-        every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
+        every {
+          mockUserRepository.saveOrUpdate(
+            id = any(),
+            name = any(),
+            nomisUsername = any(),
+            nomisStaffId = any(),
+            accountType = any(),
+            email = any(),
+            isEnabled = any(),
+            isActive = any(),
+            activeCaseloadId = any(),
+          )
+        } returns NomisUserEntityFactory()
+          .withNomisUsername(username)
+          .withName("Jim Jimmerson")
+          .withNomisStaffCode(5678)
+          .withAccountType("CLOSED")
+          .withEmail("example@example.com")
+          .withEnabled(false)
+          .withActive(false)
+          .withActiveCaseloadId("456")
+          .produce()
 
         assertThat(userService.getUserForRequest()).matches {
           it.nomisUsername == username &&

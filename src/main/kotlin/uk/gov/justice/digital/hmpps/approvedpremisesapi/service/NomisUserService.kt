@@ -44,18 +44,16 @@ class NomisUserService(
       return existingUser
     }
 
-    return userRepository.save(
-      NomisUserEntity(
-        id = UUID.randomUUID(),
-        name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-        nomisUsername = normalisedUsername,
-        nomisStaffId = nomisUserDetails.staffId,
-        accountType = nomisUserDetails.accountType,
-        email = nomisUserDetails.primaryEmail,
-        isEnabled = nomisUserDetails.enabled,
-        isActive = nomisUserDetails.active,
-        activeCaseloadId = nomisUserDetails.activeCaseloadId,
-      ),
+    return userRepository.saveOrUpdate(
+      id = UUID.randomUUID(),
+      name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
+      nomisUsername = normalisedUsername,
+      nomisStaffId = nomisUserDetails.staffId,
+      accountType = nomisUserDetails.accountType,
+      email = nomisUserDetails.primaryEmail,
+      isEnabled = nomisUserDetails.enabled,
+      isActive = nomisUserDetails.active,
+      activeCaseloadId = nomisUserDetails.activeCaseloadId,
     )
   }
 
