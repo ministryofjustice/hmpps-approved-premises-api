@@ -87,13 +87,13 @@ class SubmissionsController(
 
   @Transactional
   override fun submissionsPost(
-    submitApplication: SubmitCas2Application,
+    submitCas2Application: SubmitCas2Application,
   ): ResponseEntity<Unit> {
     val user = nomisUserService.getUserForRequest()
-    val submitResult = applicationService.submitApplication(submitApplication, user)
+    val submitResult = applicationService.submitApplication(submitCas2Application, user)
 
     val validationResult = when (submitResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(submitApplication.applicationId, "Application")
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(submitCas2Application.applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> submitResult.entity
     }
