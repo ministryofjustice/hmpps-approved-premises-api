@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.ConvictionDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import java.time.ZoneOffset
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Document as CommunityApiDocument
@@ -13,7 +14,16 @@ class DocumentTransformer {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun transformToApi(groupedDocuments: GroupedDocuments, convictionId: Long): List<Document> {
+  fun transformToApiFiltered(groupedDocuments: GroupedDocuments, convictionId: Long?) =
+    transformToApi(groupedDocuments) { it.convictionId == convictionId.toString() }
+
+  fun transformToApiUnfiltered(groupedDocuments: GroupedDocuments) =
+    transformToApi(groupedDocuments) { true }
+
+  fun transformToApi(
+    groupedDocuments: GroupedDocuments,
+    convictionDocFilter: (ConvictionDocuments) -> Boolean,
+  ): List<Document> {
     val offenderDocuments = documentsWithIdsAndNames(groupedDocuments.documents).map {
       Document(
         id = it.id!!,
@@ -26,23 +36,21 @@ class DocumentTransformer {
       )
     }
 
-    val documentsForConvictionId = groupedDocuments.convictions
-      .firstOrNull { it.convictionId == convictionId.toString() }
+    val filteredConvictionDocuments = groupedDocuments
+      .convictions
+      .filter(convictionDocFilter)
+      .flatMap { it.documents }
 
-    val convictionDocuments = if (documentsForConvictionId != null) {
-      documentsWithIdsAndNames(documentsForConvictionId.documents).map {
-        Document(
-          id = it.id!!,
-          level = DocumentLevel.conviction,
-          fileName = it.documentName!!,
-          createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
-          typeCode = it.type.code,
-          typeDescription = it.type.description,
-          description = it.extendedDescription,
-        )
-      }
-    } else {
-      emptyList()
+    val convictionDocuments = documentsWithIdsAndNames(filteredConvictionDocuments).map {
+      Document(
+        id = it.id!!,
+        level = DocumentLevel.conviction,
+        fileName = it.documentName!!,
+        createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
+        typeCode = it.type.code,
+        typeDescription = it.type.description,
+        description = it.extendedDescription,
+      )
     }
 
     return offenderDocuments + convictionDocuments
