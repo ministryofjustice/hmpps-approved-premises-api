@@ -11,7 +11,7 @@ data class GroupedDocuments(
 
 data class Document(
   val id: String?,
-  val documentName: String,
+  val documentName: String?,
   val author: String?,
   val type: DocumentType,
   val extendedDescription: String?,
