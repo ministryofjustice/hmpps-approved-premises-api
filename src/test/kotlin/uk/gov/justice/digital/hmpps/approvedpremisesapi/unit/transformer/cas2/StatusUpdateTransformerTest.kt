@@ -46,7 +46,7 @@ class StatusUpdateTransformerTest {
       label = jpaEntity.label,
       description = jpaEntity.description,
       updatedBy = mockExternalUserApi,
-      updatedAt = jpaEntity.createdAt?.toInstant(),
+      updatedAt = jpaEntity.createdAt.toInstant(),
       statusUpdateDetails = null,
     )
 

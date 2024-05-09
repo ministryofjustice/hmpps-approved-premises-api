@@ -247,11 +247,11 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
     assertThat(persistedRoom4).isNotNull
     assertThat(persistedRoom4!!.characteristics.map { it.propertyName }).contains("isArsonSuitable")
-    assertThat(persistedRoom4!!.beds.count()).isEqualTo(2)
+    assertThat(persistedRoom4.beds.count()).isEqualTo(2)
 
     assertThat(persistedRoom5).isNotNull
     assertThat(persistedRoom5!!.notes).isEqualTo("This room is very small")
-    assertThat(persistedRoom5!!.beds.count()).isEqualTo(1)
+    assertThat(persistedRoom5.beds.count()).isEqualTo(1)
 
     assertThat(bedRepository.findAll().map { it.code }.sortedBy { it })
       .isEqualTo(listOf("NEABC04", "NEABC05", "NEABC06"))
@@ -296,8 +296,8 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     val reloadedRoom = roomRepository.findByCode("NEABC-4")
 
     assertThat(reloadedRoom!!.characteristics.map { it.propertyName }).isEqualTo(listOf("isArsonSuitable"))
-    assertThat(reloadedRoom!!.notes).isEqualTo("This is small")
-    assertThat(reloadedRoom!!.beds.count()).isEqualTo(1)
+    assertThat(reloadedRoom.notes).isEqualTo("This is small")
+    assertThat(reloadedRoom.beds.count()).isEqualTo(1)
 
     // update the room with new notes, another characteristic, change the bed's name and add an additional bed
 
@@ -344,12 +344,12 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     assertThat(updatedRoom!!.notes).isEqualTo("This is large")
 
     assertThat(
-      updatedRoom!!.characteristics
+      updatedRoom.characteristics
         .map { it.propertyName }
         .sortedBy { it },
     ).isEqualTo(listOf("isArsonSuitable", "isGroundFloor"))
 
-    assertThat(updatedRoom!!.beds.count()).isEqualTo(2)
+    assertThat(updatedRoom.beds.count()).isEqualTo(2)
     assertThat(updatedRoom.beds.filter { it.name == "4 - 5" }.size).isEqualTo(1)
   }
 

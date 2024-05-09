@@ -24,11 +24,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
@@ -789,7 +785,7 @@ class BookingServiceTest {
         mockDomainEventService.savePersonDepartedEvent(
           emit = true,
           domainEvent = match {
-            val data = (it.data as PersonDepartedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
             it.applicationId == application.id &&
@@ -876,7 +872,7 @@ class BookingServiceTest {
         mockDomainEventService.savePersonDepartedEvent(
           emit = true,
           domainEvent = match {
-            val data = (it.data as PersonDepartedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
             it.applicationId == application.id &&
@@ -1477,7 +1473,7 @@ class BookingServiceTest {
         mockDomainEventService.savePersonArrivedEvent(
           emit = true,
           domainEvent = match {
-            val data = (it.data as PersonArrivedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val application = bookingEntity.application as ApprovedPremisesApplicationEntity
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
@@ -1561,7 +1557,7 @@ class BookingServiceTest {
         mockDomainEventService.savePersonArrivedEvent(
           emit = true,
           domainEvent = match {
-            val data = (it.data as PersonArrivedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val application = bookingEntity.offlineApplication as OfflineApplicationEntity
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
@@ -4644,7 +4640,7 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingMadeDomainEvent(
           match {
-            val data = (it.data as BookingMadeEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == existingApplication.id &&
               it.crn == crn &&
@@ -6727,7 +6723,7 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingMadeDomainEvent(
           match {
-            val data = (it.data as BookingMadeEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == placementRequest.application.id &&
               it.crn == application.crn &&
@@ -7600,7 +7596,7 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingChangedEvent(
           match {
-            val data = (it.data as BookingChangedEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == application.id &&
               it.crn == application.crn &&

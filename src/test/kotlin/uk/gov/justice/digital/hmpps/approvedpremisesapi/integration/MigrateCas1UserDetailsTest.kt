@@ -324,7 +324,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+      `Given an Offender` { _, _ ->
 
         val applications = approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(amount = 5) {
           withCreatedByUser(userEntity)

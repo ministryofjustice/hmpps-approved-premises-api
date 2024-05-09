@@ -298,7 +298,7 @@ abstract class IntegrationTestBase {
   lateinit var webTestClient: WebTestClient
 
   @Value("\${wiremock.port}")
-  lateinit var wiremockPort: Integer
+  lateinit var wiremockPort: Number
 
   @Value("\${preemptive-cache-key-prefix}")
   lateinit var preemptiveCacheKeyPrefix: String

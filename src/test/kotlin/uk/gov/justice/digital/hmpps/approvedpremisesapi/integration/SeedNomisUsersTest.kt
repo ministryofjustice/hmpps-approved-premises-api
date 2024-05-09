@@ -66,7 +66,7 @@ class SeedNomisUsersTest : SeedTestBase() {
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.name).isNotEqualTo("Roger New Smith")
-    assertThat(persistedUser!!.email).isNotEqualTo("roger.new.smith@example.com")
+    assertThat(persistedUser.email).isNotEqualTo("roger.new.smith@example.com")
   }
 
   private fun nomisUserSeedCsvRowsToCsv(rows: List<NomisUsersSeedUntypedEnumsCsvRow>):
