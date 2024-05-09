@@ -4,6 +4,7 @@ import com.amazonaws.services.sns.model.NotFoundException
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
@@ -11,10 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
@@ -44,6 +46,7 @@ object Constants {
 @Service("Cas2StatusUpdateService")
 class StatusUpdateService(
   private val applicationRepository: Cas2ApplicationRepository,
+  private val assessmentRepository: Cas2AssessmentRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: DomainEventService,
@@ -57,15 +60,16 @@ class StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
+  fun isValidStatus(statusUpdate: Cas2AssessmentStatusUpdate): Boolean {
     return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
   @SuppressWarnings("ReturnCount")
   @Transactional
+  @Deprecated("Use the new createForAssessment")
   fun create(
     applicationId: UUID,
-    statusUpdate: Cas2ApplicationStatusUpdate,
+    statusUpdate: Cas2AssessmentStatusUpdate,
     assessor: ExternalUserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
     val application = applicationRepository.findSubmittedApplicationById(applicationId)
@@ -97,6 +101,7 @@ class StatusUpdateService(
       Cas2StatusUpdateEntity(
         id = UUID.randomUUID(),
         application = application,
+        assessment = application.assessment,
         assessor = assessor,
         statusId = status.id,
         description = status.description,
@@ -117,6 +122,70 @@ class StatusUpdateService(
     }
 
     sendEmailStatusUpdated(application.createdByUser, application, createdStatusUpdate)
+
+    createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(createdStatusUpdate),
+    )
+  }
+
+  @SuppressWarnings("ReturnCount")
+  fun createForAssessment(
+    assessmentId: UUID,
+    statusUpdate: Cas2AssessmentStatusUpdate,
+    assessor: ExternalUserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
+    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val status = findActiveStatusByName(statusUpdate.newStatus)
+      ?: return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
+      )
+
+    val statusDetails = if (statusUpdate.newStatusDetails.isNullOrEmpty()) {
+      emptyList()
+    } else {
+      statusUpdate.newStatusDetails.map { detail ->
+        status.findStatusDetailOnStatus(detail)
+          ?: return AuthorisableActionResult.Success(
+            ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
+          )
+      }
+    }
+
+    if (ValidationErrors().any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors()),
+      )
+    }
+
+    val createdStatusUpdate = statusUpdateRepository.save(
+      Cas2StatusUpdateEntity(
+        id = UUID.randomUUID(),
+        assessment = assessment,
+        application = assessment.application,
+        assessor = assessor,
+        statusId = status.id,
+        description = status.description,
+        label = status.label,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    statusDetails.forEach { detail ->
+      statusUpdateDetailRepository.save(
+        Cas2StatusUpdateDetailEntity(
+          id = UUID.randomUUID(),
+          statusDetailId = detail.id,
+          statusUpdate = createdStatusUpdate,
+          label = detail.label,
+        ),
+      )
+    }
+
+    sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 

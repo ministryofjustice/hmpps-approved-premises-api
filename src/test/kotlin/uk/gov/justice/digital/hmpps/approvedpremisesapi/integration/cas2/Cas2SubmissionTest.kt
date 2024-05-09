@@ -404,18 +404,21 @@ class Cas2SubmissionTest(
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
+              withAssessment(assessmentEntity)
               withAssessor(assessor)
               withLabel("1st update")
             }
 
             val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
+              withAssessment(assessmentEntity)
               withAssessor(assessor)
               withLabel("2nd update")
             }
 
             val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
+              withAssessment(assessmentEntity)
               withAssessor(assessor)
               withStatusId(UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"))
               withLabel("3rd update")
@@ -473,6 +476,9 @@ class Cas2SubmissionTest(
             }
 
             Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })
+              .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
+
+            Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
             Assertions.assertThat(

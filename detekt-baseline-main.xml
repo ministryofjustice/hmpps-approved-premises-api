@@ -120,7 +120,7 @@
     <ID>EmptyClassBlock:Cas2Application.kt$Cas2Application${ }</ID>
     <ID>EmptyClassBlock:Cas2ApplicationAllOf.kt$Cas2ApplicationAllOf${ }</ID>
     <ID>EmptyClassBlock:Cas2ApplicationStatus.kt$Cas2ApplicationStatus${ }</ID>
-    <ID>EmptyClassBlock:Cas2ApplicationStatusUpdate.kt$Cas2ApplicationStatusUpdate${ }</ID>
+    <ID>EmptyClassBlock:Cas2AssessmentStatusUpdate.kt$Cas2ApplicationStatusUpdate${ }</ID>
     <ID>EmptyClassBlock:Cas2ApplicationStatusUpdatedEvent.kt$Cas2ApplicationStatusUpdatedEvent${ }</ID>
     <ID>EmptyClassBlock:Cas2ApplicationStatusUpdatedEventAllOf.kt$Cas2ApplicationStatusUpdatedEventAllOf${ }</ID>
     <ID>EmptyClassBlock:Cas2ApplicationStatusUpdatedEventDetails.kt$Cas2ApplicationStatusUpdatedEventDetails${ }</ID>

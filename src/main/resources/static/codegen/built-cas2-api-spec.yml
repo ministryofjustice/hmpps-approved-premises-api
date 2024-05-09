@@ -225,6 +225,41 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/status-updates:
+    post:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: Creates a status update on an assessment
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment whose status is to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information on the new status to be applied
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas2AssessmentStatusUpdate'
+        required: true
+      responses:
+        200:
+          description: successfully created the status update
+        400:
+          description: status update has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /submissions:
     get:
       tags:
@@ -330,7 +365,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Cas2ApplicationStatusUpdate'
+              $ref: '#/components/schemas/Cas2AssessmentStatusUpdate'
         required: true
       responses:
         200:
@@ -2266,6 +2301,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cas2StatusUpdate'
+            assessment:
+              $ref: '#/components/schemas/Cas2Assessment'
             timelineEvents:
               type: array
               items:
@@ -2554,7 +2591,7 @@ components:
         - id
         - name
         - label
-    Cas2ApplicationStatusUpdate:
+    Cas2AssessmentStatusUpdate:
       type: object
       properties:
         newStatus:
@@ -3135,6 +3172,10 @@ components:
           type: string
         assessorName:
           type: string
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdate'
       required:
         - id
     UpdateCas2Assessment:
@@ -4210,6 +4251,7 @@ components:
         - update_application_ap_areas
         - update_task_due_dates
         - update_cas2_applications_with_assessments
+        - update_cas2_status_updates_with_assessments
         - update_cas1_user_details
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
@@ -114,7 +114,7 @@ class SubmissionsController(
 
   override fun submissionsApplicationIdStatusUpdatesPost(
     applicationId: UUID,
-    statusUpdate: Cas2ApplicationStatusUpdate,
+    statusUpdate: Cas2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
     val result = statusUpdateService.create(
       applicationId = applicationId,

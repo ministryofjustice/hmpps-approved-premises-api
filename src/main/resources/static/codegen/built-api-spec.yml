@@ -6402,6 +6402,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cas2StatusUpdate'
+            assessment:
+              $ref: '#/components/schemas/Cas2Assessment'
             timelineEvents:
               type: array
               items:
@@ -6690,7 +6692,7 @@ components:
         - id
         - name
         - label
-    Cas2ApplicationStatusUpdate:
+    Cas2AssessmentStatusUpdate:
       type: object
       properties:
         newStatus:
@@ -7271,6 +7273,10 @@ components:
           type: string
         assessorName:
           type: string
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdate'
       required:
         - id
     UpdateCas2Assessment:
@@ -8346,6 +8352,7 @@ components:
         - update_application_ap_areas
         - update_task_due_dates
         - update_cas2_applications_with_assessments
+        - update_cas2_status_updates_with_assessments
         - update_cas1_user_details
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types

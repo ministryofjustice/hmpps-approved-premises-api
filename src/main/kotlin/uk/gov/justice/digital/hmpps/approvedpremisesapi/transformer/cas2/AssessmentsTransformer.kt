@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 
 @Component("Cas2AssessmentsTransformer")
-class AssessmentsTransformer {
+class AssessmentsTransformer(private val statusUpdateTransformer: StatusUpdateTransformer) {
   fun transformJpaToApiRepresentation(
     jpaAssessment: Cas2AssessmentEntity,
   ): Cas2Assessment {
@@ -13,6 +13,7 @@ class AssessmentsTransformer {
       jpaAssessment.id,
       jpaAssessment.nacroReferralId,
       jpaAssessment.assessorName,
+      jpaAssessment.statusUpdates?.map { update -> statusUpdateTransformer.transformJpaToApi(update) },
     )
   }
 }

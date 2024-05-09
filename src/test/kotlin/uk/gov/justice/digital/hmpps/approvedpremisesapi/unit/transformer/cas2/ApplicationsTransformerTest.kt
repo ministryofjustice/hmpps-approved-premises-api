@@ -11,17 +11,20 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import java.sql.Timestamp
@@ -35,6 +38,7 @@ class ApplicationsTransformerTest {
   private val mockNomisTransformer = mockk<NomisUserTransformer>()
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
   private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
+  private val mockAssessmentsTransformer = mockk<AssessmentsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -49,6 +53,7 @@ class ApplicationsTransformerTest {
       mockNomisTransformer,
       mockStatusUpdateTransformer,
       mockTimelineEventsTransformer,
+      mockAssessmentsTransformer,
     )
 
   private val user = NomisUserEntityFactory().produce()
@@ -97,6 +102,7 @@ class ApplicationsTransformerTest {
         "type",
         "telephoneNumber",
         "statusUpdates",
+        "assessment",
         "timelineEvents",
       )
 
@@ -108,13 +114,18 @@ class ApplicationsTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2 application correctly without status updates`() {
-      val application = submittedCas2ApplicationFactory.produce()
+      val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
+      every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
+
+      val application = submittedCas2ApplicationFactory
+        .withAssessment(Cas2AssessmentEntityFactory().produce()).produce()
 
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.telephoneNumber).isEqualTo(application.telephoneNumber)
+      assertThat(result.assessment!!.id).isEqualTo(assessment.id)
     }
 
     @Test

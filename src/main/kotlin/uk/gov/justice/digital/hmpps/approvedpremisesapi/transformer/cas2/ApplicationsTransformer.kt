@@ -17,6 +17,7 @@ class ApplicationsTransformer(
   private val nomisUserTransformer: NomisUserTransformer,
   private val statusUpdateTransformer: StatusUpdateTransformer,
   private val timelineEventsTransformer: TimelineEventsTransformer,
+  private val assessmentsTransformer: AssessmentsTransformer,
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult):
@@ -35,6 +36,7 @@ class ApplicationsTransformer(
       type = "CAS2",
       telephoneNumber = jpa.telephoneNumber,
       statusUpdates = jpa.statusUpdates?.map { statusUpdate -> statusUpdateTransformer.transformJpaToApi(statusUpdate) },
+      assessment = if (jpa.assessment != null) assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     )
   }
