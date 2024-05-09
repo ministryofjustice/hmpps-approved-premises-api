@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1ApAreaEmailAddressSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingAdhocPropertySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DomainEventReplaySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DuplicateApplicationSeedJob
@@ -72,6 +73,7 @@ class SeedService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
+  private val cas1AutoScript: Cas1AutoScript,
   private val cas2AutoScript: Cas2AutoScript,
 ) {
 
@@ -118,13 +120,22 @@ class SeedService(
       }
     }
 
-    if (seedConfig.autoScript.enabled) {
-      this.autoScript()
+    if (seedConfig.autoScript.cas1Enabled) {
+      autoScriptCas1()
+    }
+
+    if (seedConfig.autoScript.cas2Enabled) {
+      autoScriptCas2()
     }
   }
 
-  fun autoScript() {
-    seedLogger.info("**Auto-scripting**")
+  fun autoScriptCas1() {
+    seedLogger.info("**Auto-scripting CAS1**")
+    cas1AutoScript.script()
+  }
+
+  fun autoScriptCas2() {
+    seedLogger.info("**Auto-scripting CAS2**")
     cas2AutoScript.script()
   }
 

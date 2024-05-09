@@ -38,7 +38,8 @@ seed:
     enabled: true
     file-prefixes: classpath:db/seed/local+dev+test
   auto-script:
-    enabled: true
+    cas1-enabled: true
+    cas2-enabled: true
     noms: A1234AI
 
 assign-default-region-to-users-with-unknown-region: true
