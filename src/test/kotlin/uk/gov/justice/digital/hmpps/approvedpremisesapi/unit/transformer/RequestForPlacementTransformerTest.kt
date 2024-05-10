@@ -185,6 +185,25 @@ class RequestForPlacementTransformerTest {
     }
 
     @Test
+    fun `Derives the correct status for an accepted placement application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+    }
+
+    @Test
     fun `Derives the correct status for a submitted placement application`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
@@ -214,7 +233,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestUnsubmitted)
     }
 
     @ParameterizedTest

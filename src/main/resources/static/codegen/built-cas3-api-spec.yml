@@ -3974,6 +3974,7 @@ components:
     RequestForPlacementStatus:
       type: string
       enum:
+        - request_unsubmitted
         - request_rejected
         - request_submitted
         - awaiting_match
