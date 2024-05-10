@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import java.io.IOException
 import java.time.LocalDate
 
 @SuppressWarnings("MagicNumber", "MaxLineLength")
@@ -24,14 +26,15 @@ class Cas1AutoScript(
   private val offenderService: OffenderService,
 ) {
 
-  val crn = "X320741"
-
-  fun script() {
+  fun script(
+    deliusUserName: String = "JIMSNOWLDAP",
+    crn: String = "X320741",
+  ) {
     seedLogger.info("Auto-Scripting for CAS1")
-    autoCreateApplication()
+    autoCreateApplication(deliusUserName, crn)
   }
 
-  private fun autoCreateApplication() {
+  private fun autoCreateApplication(deliusUserName: String, crn: String) {
     if (applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
       seedLogger.info("Already have CAS1 application for $crn, not seeding new applications")
       return
@@ -56,7 +59,7 @@ class Cas1AutoScript(
         is PersonInfoResult.Success.Full -> personInfoResult
       }
 
-    val createdByUser = userService.getExistingUserOrCreate("JIMSNOWLDAP")
+    val createdByUser = userService.getExistingUserOrCreate(deliusUserName)
 
     val newApplicationEntity = extractEntityFromValidatableActionResult(
       applicationService.createApprovedPremisesApplication(
@@ -79,7 +82,7 @@ class Cas1AutoScript(
         apType = ApType.normal,
         releaseType = "licence",
         arrivalDate = LocalDate.of(2025, 12, 12),
-        data = applicationDataFor(crn),
+        data = applicationData(),
         isInapplicable = false,
         noticeType = Cas1ApplicationTimelinessCategory.standard,
       ),
@@ -95,16 +98,22 @@ class Cas1AutoScript(
     )
   }
 
-  private fun applicationDataFor(crn: String): String {
-    return dataFixtureFor(questionnaire = "application", crn = crn)
+  private fun applicationData(): String {
+    return dataFixtureFor(questionnaire = "application")
   }
 
-  private fun dataFixtureFor(questionnaire: String, crn: String): String {
-    return loadFixtureAsResource("${questionnaire}_data_$crn.json")
+  private fun dataFixtureFor(questionnaire: String): String {
+    return loadFixtureAsResource("${questionnaire}_data.json")
   }
 
   private fun loadFixtureAsResource(filename: String): String {
-    val path = "/db/seed/local+dev+test/approved_premises/$filename"
-    return this.javaClass::class.java.getResource(path)?.readText() ?: error("Resource not found: $path")
+    val path = "db/seed/local+dev+test/cas1_application_data/$filename"
+
+    try {
+      return DefaultResourceLoader().getResource(path).inputStream.bufferedReader().use { it.readText() }
+    } catch (e: IOException) {
+      seedLogger.warn("Failed to load seed fixture $path: " + e.message!!)
+      return "{}"
+    }
   }
 }
