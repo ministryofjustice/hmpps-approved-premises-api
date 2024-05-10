@@ -85,6 +85,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -112,6 +113,7 @@ class AssessmentServiceTest {
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
   private val assessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
+  private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -135,6 +137,7 @@ class AssessmentServiceTest {
     taskDeadlineServiceMock,
     assessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
+    cas1PlacementRequestEmailService,
   )
 
   @Test
@@ -2258,6 +2261,7 @@ class AssessmentServiceTest {
       taskDeadlineServiceMock,
       assessmentEmailServiceMock,
       cas1AssessmentDomainEventService,
+      cas1PlacementRequestEmailService,
     )
 
     private val user = UserEntityFactory()
