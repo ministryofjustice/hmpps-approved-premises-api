@@ -10,6 +10,7 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.Table
+import javax.persistence.Version
 
 @Repository
 interface AppealRepository : JpaRepository<AppealEntity, UUID> {
@@ -36,4 +37,6 @@ data class AppealEntity(
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdBy: UserEntity,
+  @Version
+  var version: Long = 1,
 )

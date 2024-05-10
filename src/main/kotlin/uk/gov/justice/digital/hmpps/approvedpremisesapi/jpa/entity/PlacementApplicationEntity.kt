@@ -20,6 +20,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
+import javax.persistence.Version
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 
 @Service
@@ -128,6 +129,9 @@ data class PlacementApplicationEntity(
 
   @Column(name = "placement_application_submission_group_id")
   var submissionGroupId: UUID?,
+
+  @Version
+  var version: Long = 1,
 ) {
   fun isReallocated() = reallocatedAt != null
 
