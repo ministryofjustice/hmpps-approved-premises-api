@@ -434,16 +434,9 @@ class AssessmentService(
     if (application is ApprovedPremisesApplicationEntity) {
       saveCas1ApplicationAssessedDomainEvent(application, assessment, offenderDetails, staffDetails, placementDates)
 
+      assessmentEmailService.assessmentAccepted(savedAssessment)
+
       application.createdByUser.email?.let { email ->
-        emailNotificationService.sendEmail(
-          recipientEmailAddress = email,
-          templateId = notifyConfig.templates.assessmentAccepted,
-          personalisation = mapOf(
-            "name" to application.createdByUser.name,
-            "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
-            "crn" to application.crn,
-          ),
-        )
 
         if (createPlacementRequest) {
           emailNotificationService.sendEmail(

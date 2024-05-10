@@ -2069,7 +2069,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, and emits domain events`() {
+    fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, emits domain event and emails`() {
       `Given a User`(
         staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
       ) { userEntity, jwt ->
@@ -2183,6 +2183,10 @@ class AssessmentTest : IntegrationTestBase() {
               assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
                 placementRequirements.essentialCriteria.map { it.toString() },
               )
+
+              emailAsserter.assertEmailsRequestedCount(2)
+              emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentAccepted)
+              emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.placementRequestSubmitted)
             }
           }
         }
@@ -2190,7 +2194,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits domain event`() {
+    fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements, emits domain event and emails`() {
       `Given a User`(
         staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
       ) { userEntity, jwt ->
@@ -2286,6 +2290,9 @@ class AssessmentTest : IntegrationTestBase() {
               assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
                 placementRequirements.essentialCriteria.map { it.toString() },
               )
+
+              emailAsserter.assertEmailsRequestedCount(1)
+              emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentAccepted)
             }
           }
         }

@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.SAME_DAY_EMERGENCY_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.STANDARD_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.ALLOCATED_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -30,7 +31,8 @@ import java.util.UUID
 class Cas1AssessmentEmailServiceTest {
 
   object Constants {
-    const val ALLOCATED_EMAIL = "applicant@test.com"
+    const val APPLICANT_EMAIL = "applicant@test.com"
+    const val ALLOCATED_EMAIL = "allocated@test.com"
     const val CRN = "CRN123"
   }
 
@@ -50,6 +52,80 @@ class Cas1AssessmentEmailServiceTest {
   @BeforeEach
   fun beforeEach() {
     mockEmailNotificationService.reset()
+  }
+
+  @Nested
+  inner class AssessmentAccepted {
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    @Test
+    fun `assessmentAccepted does not send an email to the application creator if they do not have an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(CRN)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAssessmentSchema(schema)
+        .withData("{\"test\": \"data\"}")
+        .withSubmittedAt(null)
+        .withReallocatedAt(null)
+        .withIsWithdrawn(false)
+        .produce()
+
+      service.assessmentAccepted(
+        assessment,
+      )
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
+
+    @Test
+    fun `assessmentAccepted sends an email to the application creator if they have an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .withName("The Applicant Name")
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(CRN)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAssessmentSchema(schema)
+        .withData("{\"test\": \"data\"}")
+        .withSubmittedAt(null)
+        .withReallocatedAt(null)
+        .withIsWithdrawn(false)
+        .produce()
+
+      service.assessmentAccepted(
+        assessment,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.assessmentAccepted,
+        mapOf(
+          "name" to "The Applicant Name",
+          "applicationUrl" to "http://frontend/application/${application.id}",
+          "crn" to CRN,
+        ),
+      )
+    }
   }
 
   @Nested
