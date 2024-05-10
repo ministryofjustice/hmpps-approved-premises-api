@@ -26,7 +26,7 @@ class RequestForPlacementService(
 
     check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
-    val placementApplications = placementApplicationService.getAllPlacementApplicationsForApplicationId(applicationId)
+    val placementApplications = placementApplicationService.getAllSubmittedNonReallocatedApplications(applicationId)
     val placementRequests = placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)
 
     val result =

@@ -1,14 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -40,6 +48,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
       }
     }
 
+    @Suppress("unused")
     @Test
     fun `Get all Requests for Placement for an application returns a 200 response with the expected value`() {
       `Given a User` { user, jwt ->
@@ -49,18 +58,40 @@ class RequestsForPlacementTest : IntegrationTestBase() {
         ) { assessment, application ->
           val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist()
 
-          val placementApplication = placementApplicationFactory.produceAndPersist {
+          val unsubmittedPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
             withSchemaVersion(schema)
             withCreatedByUser(user)
           }
 
-          val postCodeDistrict = postCodeDistrictFactory.produceAndPersist()
+          val submittedPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withApplication(application)
+            withSchemaVersion(schema)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          }
+
+          val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withApplication(application)
+            withSchemaVersion(schema)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now())
+            withReallocatedAt(OffsetDateTime.now())
+          }
+
+          val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withApplication(application)
+            withSchemaVersion(schema)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now())
+            withDecision(PlacementApplicationDecision.WITHDRAW)
+            withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
+          }
 
           val placementRequirements = placementRequirementsFactory.produceAndPersist {
             withApplication(application)
             withAssessment(assessment)
-            withPostcodeDistrict(postCodeDistrict)
+            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
             withEssentialCriteria(listOf())
             withDesirableCriteria(listOf())
           }
@@ -69,32 +100,50 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedAt(OffsetDateTime.now())
           }
 
-          webTestClient.get()
+          val withdrawnPlacementRequest = placementRequestFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPlacementRequirements(placementRequirements)
+            withCreatedAt(OffsetDateTime.now())
+            withIsWithdrawn(true)
+            withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
+          }
+
+          val reallocatedPlacementRequest = placementRequestFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPlacementRequirements(placementRequirements)
+            withCreatedAt(OffsetDateTime.now())
+            withReallocatedAt(OffsetDateTime.now())
+          }
+
+          val requestForPlacements = webTestClient.get()
             .uri("/applications/${application.id}/requests-for-placement")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  // user created the placement application, but it's not submitted, so they can't withdraw
-                  requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
-                    placementApplication,
-                    canBeDirectlyWithdrawn = false,
-                  ),
-                  // user created associated application, so they can withdraw the placement request
-                  requestForPlacementTransformer.transformPlacementRequestEntityToApi(
-                    placementRequest,
-                    canBeDirectlyWithdrawn = true,
-                  ),
-                ),
-              ),
-            )
+            .bodyAsListOfObjects<RequestForPlacement>()
+
+          assertThat(requestForPlacements).hasSize(4)
+          assertThat(requestForPlacements[0].id).isEqualTo(submittedPlacementApplication.id)
+          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+
+          assertThat(requestForPlacements[1].id).isEqualTo(withdrawnPlacementApplication.id)
+          assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+
+          assertThat(requestForPlacements[2].id).isEqualTo(placementRequest.id)
+          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+
+          assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
+          assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[3].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
         }
       }
     }

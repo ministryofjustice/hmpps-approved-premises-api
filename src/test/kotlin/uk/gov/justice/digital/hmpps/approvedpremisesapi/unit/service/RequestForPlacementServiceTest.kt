@@ -78,7 +78,7 @@ class RequestForPlacementServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       every {
-        placementApplicationService.getAllPlacementApplicationsForApplicationId(application.id)
+        placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
       } returns placementApplications
 
       placementApplications.forEach {
@@ -126,7 +126,7 @@ class RequestForPlacementServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       every {
-        placementApplicationService.getAllPlacementApplicationsForApplicationId(application.id)
+        placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
       } returns listOf()
 
       every {
@@ -150,6 +150,7 @@ class RequestForPlacementServiceTest {
 
   @Nested
   inner class GetRequestForPlacement {
+
     @Test
     fun `Returns NotFound result if neither a placement application nor a placement request with the specified ID was found`() {
       val application = ApprovedPremisesApplicationEntityFactory()

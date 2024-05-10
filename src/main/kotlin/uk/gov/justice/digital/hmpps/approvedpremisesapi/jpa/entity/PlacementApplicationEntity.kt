@@ -33,6 +33,15 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
       SELECT a from PlacementApplicationEntity a where a.application.id = :applicationId
       AND a.submittedAt is not null
       AND a.reallocatedAt is null
+    """,
+  )
+  fun findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
+
+  @Query(
+    """
+      SELECT a from PlacementApplicationEntity a where a.application.id = :applicationId
+      AND a.submittedAt is not null
+      AND a.reallocatedAt is null
       AND 
         (
             a.decision != uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
@@ -44,8 +53,6 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   fun findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
 
   fun findByApplication(application: ApplicationEntity): List<PlacementApplicationEntity>
-
-  fun findByApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
 
   @Query("SELECT p from PlacementApplicationEntity p WHERE p.dueAt IS NULL AND p.submittedAt IS NOT NULL")
   fun findAllWithNullDueAt(pageable: Pageable?): Slice<PlacementApplicationEntity>
