@@ -50,6 +50,35 @@ class Cas1PlacementRequestEmailServiceTest {
   )
 
   @Nested
+  inner class PlacementRequestCreated {
+
+    @Test
+    fun `placementRequestCreates doesnt send an email if not defined`() {
+      val application = createApplication(applicantEmail = null)
+
+      service.placementRequestSubmitted(application = application)
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `placementRequestCreates sends an email if address defined`() {
+      val application = createApplication(applicantEmail = APPLICANT_EMAIL)
+
+      service.placementRequestSubmitted(application = application)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestSubmitted,
+        mapOf(
+          "crn" to CRN,
+        ),
+      )
+    }
+  }
+
+  @Nested
   inner class PlacementRequestWithdrawn {
 
     private val withdrawingUser = UserEntityFactory()

@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -85,6 +86,7 @@ class AssessmentService(
   private val taskDeadlineService: TaskDeadlineService,
   private val assessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
+  private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -436,17 +438,8 @@ class AssessmentService(
 
       assessmentEmailService.assessmentAccepted(savedAssessment)
 
-      application.createdByUser.email?.let { email ->
-
-        if (createPlacementRequest) {
-          emailNotificationService.sendEmail(
-            recipientEmailAddress = email,
-            templateId = notifyConfig.templates.placementRequestSubmitted,
-            personalisation = mapOf(
-              "crn" to application.crn,
-            ),
-          )
-        }
+      if (createPlacementRequest) {
+        cas1PlacementRequestEmailService.placementRequestSubmitted(application)
       }
     }
 
