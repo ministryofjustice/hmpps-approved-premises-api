@@ -34,7 +34,7 @@ class SeedExternalUsersTest : SeedTestBase() {
 
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.name).isEqualTo("Chas Ash")
-    assertThat(persistedUser!!.email).isEqualTo("chas.ash@example.com")
+    assertThat(persistedUser.email).isEqualTo("chas.ash@example.com")
   }
 
   @Test

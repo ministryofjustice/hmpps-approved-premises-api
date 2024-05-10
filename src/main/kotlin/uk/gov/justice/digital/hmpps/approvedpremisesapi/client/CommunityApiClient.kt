@@ -14,10 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import java.io.OutputStream
 import java.time.Duration
 
@@ -40,12 +38,6 @@ class CommunityApiClient(
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
   )
 
-  fun getOffenderDetailSummaryWithWait(crn: String) = getRequest<OffenderDetailSummary> {
-    preemptiveCacheConfig = offenderDetailCacheConfig
-    preemptiveCacheKey = crn
-    preemptiveCacheTimeoutMs = 0
-  }
-
   fun getOffenderDetailSummaryWithCall(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
     isPreemptiveCall = true
@@ -54,15 +46,6 @@ class CommunityApiClient(
   }
 
   fun getOffenderDetailsCacheEntryStatus(crn: String) = checkPreemptiveCacheStatus(offenderDetailCacheConfig, crn)
-
-  @Cacheable(value = ["userAccessCache"], unless = IS_NOT_SUCCESSFUL)
-  fun getUserAccessForOffenderCrn(userDistinguishedName: String, crn: String) = getRequest<UserOffenderAccess> {
-    path = "/secure/offenders/crn/$crn/user/$userDistinguishedName/userAccess"
-  }
-
-  fun getRegistrationsForOffenderCrn(crn: String) = getRequest<Registrations> {
-    path = "/secure/offenders/crn/$crn/registrations?activeOnly=true"
-  }
 
   @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {

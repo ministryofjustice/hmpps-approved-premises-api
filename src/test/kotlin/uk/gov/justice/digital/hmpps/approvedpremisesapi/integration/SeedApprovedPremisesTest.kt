@@ -128,7 +128,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    val characteristic = characteristicEntityFactory.produceAndPersist {
+    characteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isCatered")
       withServiceScope("approved-premises")

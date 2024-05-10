@@ -86,7 +86,7 @@ class Cas2ApplicationNotesTest(
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       `Given a CAS2 POM User` { referrer, _ ->
-        `Given a CAS2 Assessor` { assessor, jwt ->
+        `Given a CAS2 Assessor` { _, jwt ->
           val applicationSchema =
             cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
               withAddedAt(OffsetDateTime.now())
@@ -238,7 +238,7 @@ class Cas2ApplicationNotesTest(
             fun `referrer cannot create note`() {
               val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-              `Given a CAS2 POM User` { referrer, jwt ->
+              `Given a CAS2 POM User` { _, jwt ->
                 val applicationSchema =
                   cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                     withAddedAt(OffsetDateTime.now())

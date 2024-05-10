@@ -18,8 +18,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Should not migrate CAS1 booking with 'cancelled' status and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val approvedPremises = ServiceName.approvedPremises
         val booking = createCAS1CancelledBooking(userEntity)
 
@@ -34,8 +34,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Should not migrate CAS3 booking with existing status 'arrived' with existing departure entity and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking = createTemporaryAccommodationBooking(userEntity, BookingStatus.arrived)
         booking.departures = departureEntityFactory.produceAndPersistMultiple(1) {
           withBooking(booking)
@@ -54,8 +54,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate CAS3 cancelled booking with 'cancelled' status and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking = createCAS3CancelledBooking(userEntity)
 
         assertBookingStatusIsNull(booking, ServiceName.temporaryAccommodation)
@@ -69,8 +69,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 cancelled booking with 'cancelled' status and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking1 = createCAS3CancelledBooking(userEntity)
         val booking2 = createCAS3CancelledBooking(userEntity)
 
@@ -87,8 +87,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 departure booking with 'departed' status and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking1 = createCAS3DepartedBooking(userEntity)
         val booking2 = createCAS3DepartedBooking(userEntity)
 
@@ -105,8 +105,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 provisional booking and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking1 = createTemporaryAccommodationBooking(userEntity, null)
         val booking2 = createTemporaryAccommodationBooking(userEntity, null)
 
@@ -123,8 +123,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 Arrived booking and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking1 = createCAS3ArrivedBooking(userEntity)
         val booking2 = createCAS3ArrivedBooking(userEntity)
 
@@ -141,8 +141,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 Confirmed booking and returns 202 response`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val booking1 = createCAS3ConfirmedBooking(userEntity)
         val booking2 = createCAS3ConfirmedBooking(userEntity)
 
@@ -159,8 +159,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate CAS3 only bookings with multiple state exists in the DB`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val departedBooking1 = createCAS3DepartedBooking(userEntity)
         val departedBooking2 = createCAS3DepartedBooking(userEntity)
         val arrivedBooking = createCAS3ArrivedBooking(userEntity)
@@ -186,8 +186,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate CAS3 bookings when multiple different booking exists in DB`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { _, _ ->
         val cancelledBooking = createCAS3CancelledBooking(userEntity)
         val provisionalBooking = createTemporaryAccommodationBooking(userEntity, null)
 
@@ -217,10 +217,10 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     booking: BookingEntity,
     serviceName: ServiceName,
   ) {
-    val booking = realBookingRepository.findById(booking.id)
-    assertThat(booking).isNotNull()
-    assertThat(booking.get().status).isNull()
-    assertThat(booking.get().service).isEqualTo(serviceName.value)
+    val updatedBooking = realBookingRepository.findById(booking.id)
+    assertThat(updatedBooking).isNotNull()
+    assertThat(updatedBooking.get().status).isNull()
+    assertThat(updatedBooking.get().service).isEqualTo(serviceName.value)
   }
 
   private fun createCAS3DepartedBooking(userEntity: UserEntity): BookingEntity {

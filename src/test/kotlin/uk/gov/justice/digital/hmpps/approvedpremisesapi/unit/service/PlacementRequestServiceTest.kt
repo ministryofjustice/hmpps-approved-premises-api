@@ -548,18 +548,18 @@ class PlacementRequestServiceTest {
       domainEventService.saveBookingNotMadeEvent(
         match {
           val data = it.data.eventDetails
-          val application = placementRequest.application
+          val placementRequestApplication = placementRequest.application
 
-          it.applicationId == application.id &&
-            it.crn == application.crn &&
+          it.applicationId == placementRequestApplication.id &&
+            it.crn == placementRequestApplication.crn &&
             it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-            data.applicationId == application.id &&
-            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.applicationId == placementRequestApplication.id &&
+            data.applicationUrl == "http://frontend/applications/${placementRequestApplication.id}" &&
             data.personReference == PersonReference(
             crn = offenderDetails.otherIds.crn,
             noms = offenderDetails.otherIds.nomsNumber!!,
           ) &&
-            data.deliusEventNumber == application.eventNumber &&
+            data.deliusEventNumber == placementRequestApplication.eventNumber &&
             data.failureDescription == "some notes"
         },
       )

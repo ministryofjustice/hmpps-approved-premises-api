@@ -18,7 +18,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -860,7 +859,7 @@ class ApplicationServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
           match {
-            val data = (it.data as Cas2ApplicationSubmittedEvent).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == application.id &&
               data.personReference.noms == application.nomsNumber &&

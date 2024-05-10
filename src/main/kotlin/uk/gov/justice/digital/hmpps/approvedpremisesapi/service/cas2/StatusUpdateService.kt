@@ -201,7 +201,7 @@ class StatusUpdateService(
 
   fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
     val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = statusUpdate.createdAt ?: OffsetDateTime.now()
+    val eventOccurredAt = statusUpdate.createdAt
     val application = statusUpdate.application
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
