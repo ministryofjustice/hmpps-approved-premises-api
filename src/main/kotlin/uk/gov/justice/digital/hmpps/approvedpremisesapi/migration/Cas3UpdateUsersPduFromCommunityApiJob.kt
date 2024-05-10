@@ -1,9 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
-class UpdateAllUsersPduFromCommunityApiJob(
+class Cas3UpdateUsersPduFromCommunityApiJob(
   private val userRepository: UserRepository,
   private val userService: UserService,
   private val migrationLogger: MigrationLogger,
@@ -12,7 +13,8 @@ class UpdateAllUsersPduFromCommunityApiJob(
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
   override fun process() {
-    userRepository.findAll().forEach {
+    val cas3Roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER, UserRole.CAS3_REPORTER)
+    userRepository.findActiveUsersWithRoles(cas3Roles).forEach {
       migrationLogger.info("Updating user PDU. User id ${it.id}")
       try {
         userService.updateUserPduFromCommunityApiById(it.id)

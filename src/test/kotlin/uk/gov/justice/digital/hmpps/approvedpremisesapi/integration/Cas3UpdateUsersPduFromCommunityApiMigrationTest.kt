@@ -8,11 +8,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 
-class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
+class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
-  fun `All users pdu are updated from Community API with a 500ms artificial delay`() {
+  fun `All CAS3 users pdu are updated from Community API with a 500ms artificial delay`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())
     }
@@ -37,10 +38,40 @@ class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userOne)
+      withRole(UserRole.CAS3_ASSESSOR)
+    }
+
     val userTwo = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER2")
       withProbationRegion(probationRegion)
       withProbationDeliveryUnit { probationDeliveryUnitTwo }
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userTwo)
+      withRole(UserRole.CAS3_REFERRER)
+    }
+
+    val userThree = userEntityFactory.produceAndPersist {
+      withDeliusUsername("USER3")
+      withProbationRegion(probationRegion)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userThree)
+      withRole(UserRole.CAS1_ASSESSOR)
+    }
+
+    val userFour = userEntityFactory.produceAndPersist {
+      withDeliusUsername("USER4")
+      withProbationRegion(probationRegion)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userFour)
+      withRole(UserRole.CAS3_REFERRER)
     }
 
     CommunityAPI_mockSuccessfulStaffUserDetailsCall(
@@ -77,17 +108,55 @@ class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+      StaffUserDetailsFactory()
+        .withUsername(userThree.deliusUsername)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().withBorough(
+              KeyValue(
+                code = "PDUCODE1",
+                description = "PDUDESCRIPTION1",
+              ),
+            )
+              .produce(),
+          ),
+        )
+        .produce(),
+    )
+
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+      StaffUserDetailsFactory()
+        .withUsername(userFour.deliusUsername)
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().withBorough(
+              KeyValue(
+                code = "PDUCODE2",
+                description = "PDUDESCRIPTION2",
+              ),
+            )
+              .produce(),
+          ),
+        )
+        .produce(),
+    )
+
     val startTime = System.currentTimeMillis()
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersPduFromCommunityApi, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.cas3UsersPduFromCommunityApi, 1)
     val endTime = System.currentTimeMillis()
 
     Assertions.assertThat(endTime - startTime).isGreaterThan(500 * 2)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
+    val userThreeAfterUpdate = userRepository.findByIdOrNull(userThree.id)!!
+    val userFourAfterUpdate = userRepository.findByIdOrNull(userFour.id)!!
 
     Assertions.assertThat(userOneAfterUpdate.probationDeliveryUnit?.deliusCode).isEqualTo("PDUCODE1")
     Assertions.assertThat(userTwoAfterUpdate.probationDeliveryUnit?.deliusCode).isEqualTo("PDUCODE3")
+    Assertions.assertThat(userThreeAfterUpdate.probationDeliveryUnit?.deliusCode).isNull()
+    Assertions.assertThat(userFourAfterUpdate.probationDeliveryUnit?.deliusCode).isEqualTo("PDUCODE2")
   }
 
   @Test
@@ -111,10 +180,20 @@ class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userOne)
+      withRole(UserRole.CAS3_ASSESSOR)
+    }
+
     val userTwo = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER2")
       withProbationRegion(probationRegion)
       withProbationDeliveryUnit { probationDeliveryUnitTwo }
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userTwo)
+      withRole(UserRole.CAS3_REFERRER)
     }
 
     CommunityAPI_mockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
@@ -136,7 +215,7 @@ class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersPduFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.cas3UsersPduFromCommunityApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
@@ -170,9 +249,19 @@ class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userOne)
+      withRole(UserRole.CAS3_REFERRER)
+    }
+
     val userTwo = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER2")
       withProbationRegion(probationRegion)
+    }
+
+    userRoleAssignmentEntityFactory.produceAndPersist {
+      withUser(userTwo)
+      withRole(UserRole.CAS3_REPORTER)
     }
 
     CommunityAPI_mockSuccessfulStaffUserDetailsCall(
@@ -209,7 +298,7 @@ class UpdateAllUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersPduFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.cas3UsersPduFromCommunityApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
