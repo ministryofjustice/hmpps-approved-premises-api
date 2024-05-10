@@ -28,13 +28,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
 import javax.persistence.EntityManager
@@ -134,7 +134,7 @@ class MigrationJobService(
           applicationContext.getBean(MigrationLogger::class.java),
         )
 
-        MigrationJobType.allUsersPduFromCommunityApi -> UpdateAllUsersPduFromCommunityApiJob(
+        MigrationJobType.cas3UsersPduFromCommunityApi -> Cas3UpdateUsersPduFromCommunityApiJob(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(MigrationLogger::class.java),
