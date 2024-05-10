@@ -92,7 +92,7 @@ class AcceptAssessmentTest {
   private val userAllocator = mockk<UserAllocator>()
   private val objectMapperMock = mockk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
-  private val assessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
+  private val csa1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
 
   private val assessmentService = AssessmentService(
@@ -115,7 +115,7 @@ class AcceptAssessmentTest {
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
-    assessmentEmailServiceMock,
+    csa1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
   )
 
@@ -363,6 +363,8 @@ class AcceptAssessmentTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+    every { csa1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
+
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -382,14 +384,7 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        any(),
-        "ddf87b15-8866-4bad-a87b-47eba69eb6db",
-        match {
-          it["name"] == assessment.application.createdByUser.name &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
-      )
+      csa1AssessmentEmailServiceMock.assessmentAccepted(assessment)
     }
   }
 
@@ -449,6 +444,8 @@ class AcceptAssessmentTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+    every { csa1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
+
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, placementDates, notes)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -475,15 +472,7 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        any(),
-        "ddf87b15-8866-4bad-a87b-47eba69eb6db",
-        match {
-          it["crn"] == assessment.application.crn &&
-            it["name"] == assessment.application.createdByUser.name &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
-      )
+      csa1AssessmentEmailServiceMock.assessmentAccepted(assessment)
     }
 
     verify(exactly = 1) {

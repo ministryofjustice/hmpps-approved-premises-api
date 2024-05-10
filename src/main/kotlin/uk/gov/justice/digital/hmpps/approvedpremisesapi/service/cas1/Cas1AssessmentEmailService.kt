@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -48,6 +49,21 @@ class Cas1AssessmentEmailService(
           "name" to deallocatedUserEntity.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
           "crn" to crn,
+        ),
+      )
+    }
+  }
+
+  fun assessmentAccepted(assessment: AssessmentEntity) {
+    val application = assessment.application
+    assessment.application.createdByUser.email?.let { email ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.assessmentAccepted,
+        personalisation = mapOf(
+          "name" to application.createdByUser.name,
+          "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+          "crn" to application.crn,
         ),
       )
     }
