@@ -22,9 +22,9 @@ class RequestForPlacementService(
 ) {
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity): AuthorisableActionResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
-    if (application == null) {
-      return AuthorisableActionResult.NotFound("Application", applicationId.toString())
-    }
+      ?: return AuthorisableActionResult.NotFound("Application", applicationId.toString())
+
+    check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
     val placementApplications = placementApplicationService.getAllPlacementApplicationsForApplicationId(applicationId)
     val placementRequests = placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)
