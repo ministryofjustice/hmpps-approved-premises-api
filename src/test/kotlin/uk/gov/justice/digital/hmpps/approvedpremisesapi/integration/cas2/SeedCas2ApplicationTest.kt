@@ -108,12 +108,14 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   }
 
   @Test
-  fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment AND first class fields`() {
+  fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment AND status updates AND first class fields`() {
     cas2ApplicationRepository.deleteAll()
 
     nomisUserEntityFactory.produceAndPersist {
       withNomisUsername("ROGER_SMITH_FAKE")
     }
+
+    externalUserEntityFactory.produceAndPersist()
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
@@ -131,7 +133,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
             .withCreatedAt(creationTimestamp)
             .withSubmittedAt(submissionTimestamp)
             .withState("SUBMITTED")
-            .withStatusUpdates("0")
+            .withStatusUpdates("1")
             .withLocation(null)
             .withReferringPrisonCode("EXAMPLE_CODE")
             .produce(),
@@ -147,7 +149,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
 
     assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
     assertThat(serializableToJsonNode(persistedApplication.document)).isNotEmpty()
-    assertThat(persistedApplication.assessment).isNotNull()
+    assertThat(persistedApplication.assessment!!.statusUpdates).isNotEmpty()
     assertThat(persistedApplication.referringPrisonCode).isEqualTo("EXAMPLE_CODE")
     assertThat(persistedApplication.preferredAreas).isEqualTo("Bristol | Newcastle")
     assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(LocalDate.now())
