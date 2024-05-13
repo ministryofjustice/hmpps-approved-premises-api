@@ -374,7 +374,7 @@ class PlacementRequestService(
    * Note: this is only an issue when the placement applications are withdrawn, so any incorrect
    * placement requests returned here will appear as withdrawn to the user
    *
-   * See [Cas1FixPlacementApplicationLinksJob] for more information.
+   * See [uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob] for more information.
    */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
     placementRequestRepository.findByApplication_id(applicationId)

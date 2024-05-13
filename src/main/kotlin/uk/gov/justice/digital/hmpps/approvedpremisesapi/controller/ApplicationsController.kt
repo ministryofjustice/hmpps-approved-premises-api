@@ -532,6 +532,7 @@ class ApplicationsController(
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
   }
 
+  @Deprecated("Should use RequestForPlacementController endpoints")
   override fun applicationsApplicationIdPlacementApplicationsGet(
     applicationId: UUID,
     xServiceName: ServiceName,

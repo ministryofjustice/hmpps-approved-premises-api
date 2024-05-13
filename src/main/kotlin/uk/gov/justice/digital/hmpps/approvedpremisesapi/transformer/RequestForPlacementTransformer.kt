@@ -33,6 +33,11 @@ class RequestForPlacementTransformer(
     status = placementApplicationEntity.deriveStatus(),
   )
 
+  /**
+   * This should only be used for placement requests for the application's arrival date.
+   *
+   * For more information, For more information, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+   */
   fun transformPlacementRequestEntityToApi(
     placementRequestEntity: PlacementRequestEntity,
     canBeDirectlyWithdrawn: Boolean,
