@@ -9,6 +9,7 @@ class PrisonReleaseTypeTransformer {
   fun transformJpaToApi(jpa: PrisonReleaseTypeEntity) = PrisonReleaseType(
     id = jpa.id,
     name = jpa.name,
+    abbreviation = jpa.abbreviation,
     isActive = jpa.isActive,
     serviceScope = jpa.serviceScope,
   )

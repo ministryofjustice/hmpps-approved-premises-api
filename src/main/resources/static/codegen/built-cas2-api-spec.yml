@@ -5037,6 +5037,9 @@ components:
         name:
           type: string
           example: Post sentence supervision (PSS)
+        abbreviation:
+          type: string
+          example: PSS
         serviceScope:
           type: string
         isActive:
