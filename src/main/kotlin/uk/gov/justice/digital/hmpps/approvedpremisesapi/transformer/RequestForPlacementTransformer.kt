@@ -36,30 +36,39 @@ class RequestForPlacementTransformer(
   /**
    * This should only be used for placement requests for the application's arrival date.
    *
+   * This will only exist once the application has been approved, as such, the potential
+   * status' for this entity are limited.
+   *
    * For more information, For more information, see [PlacementRequestEntity.isForApplicationsArrivalDate]
    */
   fun transformPlacementRequestEntityToApi(
     placementRequestEntity: PlacementRequestEntity,
     canBeDirectlyWithdrawn: Boolean,
-  ) = RequestForPlacement(
-    id = placementRequestEntity.id,
-    createdByUserId = placementRequestEntity.application.createdByUser.id,
-    createdAt = placementRequestEntity.createdAt.toInstant(),
-    isWithdrawn = placementRequestEntity.isWithdrawn,
-    type = RequestForPlacementType.automatic,
-    placementDates = listOf(
-      PlacementDates(
-        expectedArrival = placementRequestEntity.expectedArrival,
-        duration = placementRequestEntity.duration,
+  ): RequestForPlacement {
+    check(placementRequestEntity.isForApplicationsArrivalDate()) {
+      "Can only transform placement requests that are for the application's arrival date"
+    }
+
+    return RequestForPlacement(
+      id = placementRequestEntity.id,
+      createdByUserId = placementRequestEntity.application.createdByUser.id,
+      createdAt = placementRequestEntity.createdAt.toInstant(),
+      isWithdrawn = placementRequestEntity.isWithdrawn,
+      type = RequestForPlacementType.automatic,
+      placementDates = listOf(
+        PlacementDates(
+          expectedArrival = placementRequestEntity.expectedArrival,
+          duration = placementRequestEntity.duration,
+        ),
       ),
-    ),
-    submittedAt = placementRequestEntity.createdAt.toInstant(),
-    requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),
-    document = null,
-    canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
-    withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
-    status = placementRequestEntity.deriveStatus(),
-  )
+      submittedAt = placementRequestEntity.createdAt.toInstant(),
+      requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),
+      document = null,
+      canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
+      withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
+      status = placementRequestEntity.deriveStatus(),
+    )
+  }
 
   private fun PlacementDateEntity.toPlacementDates() = PlacementDates(
     expectedArrival = expectedArrival,
@@ -69,27 +78,16 @@ class RequestForPlacementTransformer(
   private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
     this.isWithdrawn() -> RequestForPlacementStatus.requestWithdrawn
     this.application.getLatestBooking() != null -> RequestForPlacementStatus.placementBooked
-
     this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
-
+    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch
     this.isSubmitted() -> RequestForPlacementStatus.requestSubmitted
-
-    else -> RequestForPlacementStatus.awaitingMatch
+    else -> RequestForPlacementStatus.requestUnsubmitted
   }
 
   private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus {
-    val placementApplication = this.placementApplication
-
     return when {
       this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
       this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
-
-      placementApplication != null && placementApplication.decision == PlacementApplicationDecision.REJECTED ->
-        RequestForPlacementStatus.requestRejected
-
-      placementApplication != null && placementApplication.isSubmitted() ->
-        RequestForPlacementStatus.requestSubmitted
-
       else -> RequestForPlacementStatus.awaitingMatch
     }
   }
