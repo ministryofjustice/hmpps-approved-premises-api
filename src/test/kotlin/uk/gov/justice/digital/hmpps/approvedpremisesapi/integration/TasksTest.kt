@@ -2427,16 +2427,16 @@ class TasksTest {
     }
 
     @Test
-    fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one`() {
+    fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one, sends emails`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { currentlyAllocatedUser, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { assigneeUser, _ ->
             `Given an Offender` { offenderDetails, _ ->
               `Given an Assessment for Approved Premises`(
-                allocatedToUser = user,
-                createdByUser = user,
+                allocatedToUser = currentlyAllocatedUser,
+                createdByUser = currentlyAllocatedUser,
                 crn = offenderDetails.otherIds.crn,
               ) { existingAssessment, application ->
 
@@ -2470,6 +2470,10 @@ class TasksTest {
                 assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
                 assertThat(assessments)
                   .anyMatch { it.application.id == application.id && it.allocatedToUser!!.id == assigneeUser.id }
+
+                emailAsserter.assertEmailsRequestedCount(2)
+                emailAsserter.assertEmailRequested(currentlyAllocatedUser.email!!, notifyConfig.templates.assessmentDeallocated)
+                emailAsserter.assertEmailRequested(assigneeUser.email!!, notifyConfig.templates.assessmentAllocated)
               }
             }
           }
@@ -2760,8 +2764,8 @@ class TasksTest {
             val assessment =
               temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
 
-            Assertions.assertThat(assessment.allocatedToUser).isNull()
-            Assertions.assertThat(assessment.allocatedAt).isNull()
+            assertThat(assessment.allocatedToUser).isNull()
+            assertThat(assessment.allocatedAt).isNull()
           }
         }
       }
