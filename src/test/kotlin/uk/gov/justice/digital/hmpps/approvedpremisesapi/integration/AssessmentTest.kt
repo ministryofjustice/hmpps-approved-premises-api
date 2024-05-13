@@ -2434,6 +2434,9 @@ class AssessmentTest : IntegrationTestBase() {
           SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
           SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
         )
+
+        emailAsserter.assertEmailsRequestedCount(1)
+        emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentRejected)
       }
     }
   }

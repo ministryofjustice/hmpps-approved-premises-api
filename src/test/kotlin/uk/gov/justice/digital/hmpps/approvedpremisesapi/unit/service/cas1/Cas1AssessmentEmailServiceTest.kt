@@ -129,6 +129,80 @@ class Cas1AssessmentEmailServiceTest {
   }
 
   @Nested
+  inner class AssessmentRejected {
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    @Test
+    fun `assessmentRejected does not send an email to the application creator if they do not have an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(CRN)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAssessmentSchema(schema)
+        .withData("{\"test\": \"data\"}")
+        .withSubmittedAt(null)
+        .withReallocatedAt(null)
+        .withIsWithdrawn(false)
+        .produce()
+
+      service.assessmentRejected(
+        assessment,
+      )
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
+
+    @Test
+    fun `assessmentRejected sends an email to the application creator if they have an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .withName("The Applicant Name")
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(CRN)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAssessmentSchema(schema)
+        .withData("{\"test\": \"data\"}")
+        .withSubmittedAt(null)
+        .withReallocatedAt(null)
+        .withIsWithdrawn(false)
+        .produce()
+
+      service.assessmentRejected(
+        assessment,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.assessmentRejected,
+        mapOf(
+          "name" to "The Applicant Name",
+          "applicationUrl" to "http://frontend/application/${application.id}",
+          "crn" to CRN,
+        ),
+      )
+    }
+  }
+
+  @Nested
   inner class AssessmentAllocated {
     private val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
