@@ -10,7 +10,8 @@ import java.util.UUID
 
 class PrisonReleaseTypeEntityFactory : Factory<PrisonReleaseTypeEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var abbreviation: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var isActive: Yielded<Boolean> = { true }
   private var serviceScope: Yielded<String> = { randomStringUpperCase(4) }
   private var sortOrder: Yielded<Int> = { randomInt(0, 1000) }
@@ -23,6 +24,9 @@ class PrisonReleaseTypeEntityFactory : Factory<PrisonReleaseTypeEntity> {
     this.name = { name }
   }
 
+  fun withAbbreviation(abbreviation: String) = apply {
+    this.abbreviation = { abbreviation }
+  }
   fun withIsActive(isActive: Boolean) = apply {
     this.isActive = { isActive }
   }
@@ -38,6 +42,7 @@ class PrisonReleaseTypeEntityFactory : Factory<PrisonReleaseTypeEntity> {
   override fun produce(): PrisonReleaseTypeEntity = PrisonReleaseTypeEntity(
     id = this.id(),
     name = this.name(),
+    abbreviation = this.abbreviation(),
     isActive = this.isActive(),
     serviceScope = this.serviceScope(),
     sortOrder = this.sortOrder(),

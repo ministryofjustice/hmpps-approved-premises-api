@@ -20,6 +20,7 @@ data class PrisonReleaseTypeEntity(
   @Id
   val id: UUID,
   val name: String,
+  val abbreviation: String?,
   val isActive: Boolean,
   val serviceScope: String,
   val sortOrder: Int,
