@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -29,11 +30,14 @@ class PeopleController(
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
+  private val nomisUserService: NomisUserService,
 ) : PeopleCas2Delegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun peopleSearchGet(nomsNumber: String): ResponseEntity<Person> {
-    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber)
+    val currentUser = nomisUserService.getUserForRequest()
+
+    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 
     when (probationOffenderResult) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")

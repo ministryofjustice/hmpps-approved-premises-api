@@ -67,12 +67,52 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized`() {
+      fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
         `Given a CAS2 POM User` { userEntity, jwt ->
           ProbationOffenderSearchAPI_mockForbiddenOffenderSearchCall()
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+
+      @Test
+      fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
+        `Given a CAS2 POM User` { userEntity, jwt ->
+
+          val offender = ProbationOffenderDetailFactory()
+            .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
+            .withFirstName("Jo")
+            .withSurname("AnotherPrison")
+            .withDateOfBirth(
+              LocalDate
+                .parse("1985-05-05"),
+            )
+            .withGender("Male")
+            .withOffenderProfile(OffenderProfile(nationality = "English"))
+            .produce()
+
+          val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS456")
+            .withCustodyStatus(InmateStatus.IN)
+            .withAssignedLivingUnit(
+              AssignedLivingUnit(
+                agencyId = "ANOTHER_PRISON",
+                locationId = 5,
+                description = "B-2F-004",
+                agencyName = "HMP Example",
+              ),
+            )
+            .produce()
+
+          ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
+          PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
+
+          webTestClient.get()
+            .uri("/cas2/people/search?nomsNumber=NOMS456")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -113,7 +153,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     inner class WhenSuccessful {
       @Test
       fun `Searching for a NOMIS ID returns OK with correct body`() {
-        `Given a CAS2 POM User` { userEntity, jwt ->
+        `Given a CAS2 POM User`(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { userEntity, jwt ->
           val offender = ProbationOffenderDetailFactory()
             .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
             .withFirstName("James")
