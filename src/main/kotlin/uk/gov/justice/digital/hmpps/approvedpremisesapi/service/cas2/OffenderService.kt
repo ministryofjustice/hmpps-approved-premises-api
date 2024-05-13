@@ -216,8 +216,15 @@ class OffenderService(
     val inmateDetail = when (inmateDetailResponse) {
       is ClientResult.Success -> inmateDetailResponse.body
       is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        HttpStatus.NOT_FOUND -> {
+          logFailedResponse(inmateDetailResponse)
+          return AuthorisableActionResult.NotFound()
+        }
+
+        HttpStatus.FORBIDDEN -> {
+          logFailedResponse(inmateDetailResponse)
+          return AuthorisableActionResult.Unauthorised()
+        }
         else -> {
           logFailedResponse(inmateDetailResponse)
           null
