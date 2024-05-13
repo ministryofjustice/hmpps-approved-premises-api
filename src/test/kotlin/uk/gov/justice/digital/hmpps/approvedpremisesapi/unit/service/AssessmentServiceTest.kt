@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.te
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -75,7 +74,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -106,12 +104,11 @@ class AssessmentServiceTest {
   private val cruServiceMock = mockk<CruService>()
   private val communityApiClientMock = mockk<CommunityApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
-  private val emailNotificationServiceMock = mockk<EmailNotificationService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
-  private val assessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
+  private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
 
@@ -128,14 +125,12 @@ class AssessmentServiceTest {
     communityApiClientMock,
     cruServiceMock,
     placementRequestServiceMock,
-    emailNotificationServiceMock,
-    NotifyConfig(),
     placementRequirementsServiceMock,
     userAllocatorMock,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
-    assessmentEmailServiceMock,
+    cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
   )
@@ -1374,8 +1369,6 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
-
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
@@ -1431,7 +1424,8 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+    every { cas1AssessmentEmailServiceMock.assessmentRejected(any()) } just Runs
+
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(assessment.application.crn)
       .produce()
@@ -1498,14 +1492,7 @@ class AssessmentServiceTest {
     }
 
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        any(),
-        "b3a98c60-8fe0-4450-8fd0-6430198ee43b",
-        match {
-          it["name"] == assessment.application.createdByUser.name &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
-      )
+      cas1AssessmentEmailServiceMock.assessmentRejected(assessment)
     }
   }
 
@@ -1967,9 +1954,9 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
 
-      every { assessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
@@ -1992,7 +1979,7 @@ class AssessmentServiceTest {
       verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
 
       verify(exactly = 1) {
-        assessmentEmailServiceMock.assessmentAllocated(
+        cas1AssessmentEmailServiceMock.assessmentAllocated(
           match { it.id == assigneeUser.id },
           any<UUID>(),
           application.crn,
@@ -2002,7 +1989,7 @@ class AssessmentServiceTest {
       }
 
       verify(exactly = 1) {
-        assessmentEmailServiceMock.assessmentDeallocated(
+        cas1AssessmentEmailServiceMock.assessmentDeallocated(
           match { it.id == previousAssessment.allocatedToUser!!.id },
           any<UUID>(),
           application.crn,
@@ -2233,7 +2220,6 @@ class AssessmentServiceTest {
     private val communityApiClientMock = mockk<CommunityApiClient>()
     private val cruServiceMock = mockk<CruService>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
-    private val emailNotificationServiceMock = mockk<EmailNotificationService>()
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
     private val objectMapperMock = spyk<ObjectMapper>()
@@ -2252,14 +2238,12 @@ class AssessmentServiceTest {
       communityApiClientMock,
       cruServiceMock,
       placementRequestServiceMock,
-      emailNotificationServiceMock,
-      NotifyConfig(),
       placementRequirementsServiceMock,
       userAllocatorMock,
       objectMapperMock,
       UrlTemplate("http://frontend/applications/#id"),
       taskDeadlineServiceMock,
-      assessmentEmailServiceMock,
+      cas1AssessmentEmailServiceMock,
       cas1AssessmentDomainEventService,
       cas1PlacementRequestEmailService,
     )
@@ -2539,9 +2523,9 @@ class AssessmentServiceTest {
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
       if (createdFromAppeal) {
-        every { assessmentEmailServiceMock.appealedAssessmentAllocated(any(), any(), any()) } just Runs
+        every { cas1AssessmentEmailServiceMock.appealedAssessmentAllocated(any(), any(), any()) } just Runs
       } else {
-        every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+        every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
       }
 
       every { userServiceMock.getUserForRequest() } returns actingUser
@@ -2554,7 +2538,7 @@ class AssessmentServiceTest {
 
       if (createdFromAppeal) {
         verify(exactly = 1) {
-          assessmentEmailServiceMock.appealedAssessmentAllocated(
+          cas1AssessmentEmailServiceMock.appealedAssessmentAllocated(
             match { it.id == userWithLeastAllocatedAssessments.id },
             any<UUID>(),
             application.crn,
@@ -2562,7 +2546,7 @@ class AssessmentServiceTest {
         }
       } else {
         verify(exactly = 1) {
-          assessmentEmailServiceMock.assessmentAllocated(
+          cas1AssessmentEmailServiceMock.assessmentAllocated(
             match { it.id == userWithLeastAllocatedAssessments.id },
             any<UUID>(),
             application.crn,
@@ -2605,7 +2589,7 @@ class AssessmentServiceTest {
 
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
 
       every { userServiceMock.getUserForRequest() } returns actingUser
 
@@ -2689,12 +2673,12 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
-        assessmentEmailServiceMock.assessmentWithdrawn(
+        cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = true,
           withdrawingUser = withdrawingUser,
@@ -2721,12 +2705,12 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
-        assessmentEmailServiceMock.assessmentWithdrawn(
+        cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = false,
           withdrawingUser = withdrawingUser,
@@ -2753,12 +2737,12 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
-        assessmentEmailServiceMock.assessmentWithdrawn(
+        cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = false,
           withdrawingUser = withdrawingUser,
@@ -2785,12 +2769,12 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
-        assessmentEmailServiceMock.assessmentWithdrawn(
+        cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = false,
           withdrawingUser = withdrawingUser,

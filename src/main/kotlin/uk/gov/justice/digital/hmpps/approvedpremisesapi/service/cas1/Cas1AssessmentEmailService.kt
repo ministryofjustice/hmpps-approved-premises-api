@@ -56,10 +56,25 @@ class Cas1AssessmentEmailService(
 
   fun assessmentAccepted(assessment: AssessmentEntity) {
     val application = assessment.application
-    assessment.application.createdByUser.email?.let { email ->
+    application.createdByUser.email?.let { email ->
       emailNotificationService.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentAccepted,
+        personalisation = mapOf(
+          "name" to application.createdByUser.name,
+          "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+          "crn" to application.crn,
+        ),
+      )
+    }
+  }
+
+  fun assessmentRejected(assessment: AssessmentEntity) {
+    val application = assessment.application
+    application.createdByUser.email?.let { email ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.assessmentRejected,
         personalisation = mapOf(
           "name" to application.createdByUser.name,
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
