@@ -1962,7 +1962,7 @@ class ApplicationTest : IntegrationTestBase() {
   inner class Cas1SubmitApplication {
 
     @Test
-    fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event`() {
+    fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event and email`() {
       `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
@@ -2124,6 +2124,10 @@ class ApplicationTest : IntegrationTestBase() {
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
+
+            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailRequested(createdAssessment.allocatedToUser!!.email!!, notifyConfig.templates.assessmentAllocated)
+            emailAsserter.assertEmailRequested(submittingUser.email!!, notifyConfig.templates.applicationSubmitted)
           }
         }
       }
