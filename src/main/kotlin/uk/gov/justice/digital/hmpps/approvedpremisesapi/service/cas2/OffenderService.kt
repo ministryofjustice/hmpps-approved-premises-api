@@ -69,10 +69,7 @@ class OffenderService(
       val probationOffenderDetail = probationOffenderDetailList[0]
 
       // check for restrictions or exclusions
-      val isLao = probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
-      if (isLao) {
-        return ProbationOffenderSearchResult.Forbidden(nomsNumber)
-      }
+      if (hasRestrictionOrExclusion(probationOffenderDetail)) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
 
       // check inmate details from Prison API
       val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
@@ -85,6 +82,10 @@ class OffenderService(
         ProbationOffenderSearchResult.Forbidden(nomsNumber)
       }
     }
+  }
+
+  private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean {
+    return probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
   }
 
   private fun isOffenderSamePrisonAsUser(inmateDetail: InmateDetail?, currentUser: NomisUserEntity): Boolean {
