@@ -36,7 +36,6 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
-import javax.persistence.Version
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toKotlinDuration
 
@@ -310,7 +309,8 @@ abstract class ApplicationEntity(
 
   var nomsNumber: String?,
 
-  @Version
+  // This is in place for optimistic locking (using @Version). We have temporarily disabled this
+  // functionality whilst we put protections in the CAS1 UI to reduce duplicate form submissions
   var version: Long = 1,
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
