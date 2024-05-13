@@ -87,7 +87,7 @@ class Cas2AutoScript(
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
       val appWithPromotedProperties = applyFirstClassProperties(application)
       applicationService.createCas2ApplicationSubmittedEvent(appWithPromotedProperties)
-      createAssessment((application))
+      createAssessment(application)
     }
 
     if (state == "IN_REVIEW") {
@@ -136,13 +136,14 @@ class Cas2AutoScript(
   private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()
     seedLogger.info("Auto-scripting assessment $id for application ${application.id}")
-    assessmentRepository.save(
+    val assessment = assessmentRepository.save(
       Cas2AssessmentEntity(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
       ),
     )
+    application.assessment = assessment
   }
 
   private fun randomDateTime(minDays: Int = LATEST_CREATION, maxDays: Int = EARLIEST_CREATION): OffsetDateTime {

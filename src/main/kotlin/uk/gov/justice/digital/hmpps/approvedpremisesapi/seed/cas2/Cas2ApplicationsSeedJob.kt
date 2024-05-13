@@ -84,13 +84,13 @@ class Cas2ApplicationsSeedJob(
         schemaUpToDate = true,
       ),
     )
-    if (row.statusUpdates != "0") {
-      repeat(row.statusUpdates.toInt()) { idx -> createStatusUpdate(idx, application) }
-    }
     if (row.submittedAt != null) {
       applyFirstClassFields(application, row)
 
       createAssessment(application)
+    }
+    if (row.statusUpdates != "0") {
+      repeat(row.statusUpdates.toInt()) { idx -> createStatusUpdate(idx, application) }
     }
   }
 
@@ -127,13 +127,14 @@ class Cas2ApplicationsSeedJob(
   private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()
     log.info("Seeding assessment $id for application ${application.id}")
-    assessmentRepository.save(
+    val assessment = assessmentRepository.save(
       Cas2AssessmentEntity(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
       ),
     )
+    application.assessment = assessment
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
