@@ -2348,6 +2348,10 @@ components:
               type: boolean
             isConcerningArsonBehaviour:
               type: boolean
+            prisonReleaseTypes:
+              type: array
+              items:
+                type: UUID
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
