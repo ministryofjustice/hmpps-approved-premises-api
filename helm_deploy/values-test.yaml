@@ -37,6 +37,7 @@ generic-service:
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
     SEED_AUTO-SCRIPT_CAS2-ENABLED: true
     SEED_AUTO-SCRIPT_NOMS: A5276DZ
+    SEED_AUTO-SCRIPT_PRISON-CODE: MDI
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId

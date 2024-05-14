@@ -79,6 +79,7 @@ class Cas2AutoScriptTest {
     }
 
     every { mockSeedConfig.autoScript.noms } answers { "NOMS123" }
+    every { mockSeedConfig.autoScript.prisonCode } answers { "PRI" }
     every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
     every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
 
@@ -116,10 +117,10 @@ class Cas2AutoScriptTest {
   }
 
   @Test
-  fun `uses the NOMS number supplied in AutoScriptConfig`() {
+  fun `uses the NOMS number and Prison Code supplied in AutoScriptConfig`() {
     autoScript.script()
 
-    verify(exactly = 3) { mockSeedConfig.autoScript.noms }
+    verify(exactly = 5) { mockSeedConfig.autoScript }
   }
 
   @Test
