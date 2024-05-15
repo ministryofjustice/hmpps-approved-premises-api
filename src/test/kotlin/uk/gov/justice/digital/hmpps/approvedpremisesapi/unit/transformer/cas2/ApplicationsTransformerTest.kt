@@ -21,14 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
-import java.sql.Timestamp
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -160,18 +158,19 @@ class ApplicationsTransformerTest {
     @Test
     fun `transforms an in progress CAS2 application correctly`
     () {
-      val application = object : Cas2ApplicationSummary {
-        override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-        override fun getCrn() = "CRNNUM"
-        override fun getNomsNumber() = "NOMNUM"
-        override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-        override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-        override fun getSubmittedAt() = null
-        override fun getHdcEligibilityDate() = null
-        override fun getLatestStatusUpdateLabel() = null
-        override fun getLatestStatusUpdateStatusId() = null
-      }
+      val application = Cas2ApplicationSummaryEntity(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = "CRNNUM",
+        nomsNumber = "NOMNUM",
+        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userName = "first last",
+        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = null,
+        hdcEligibilityDate = null,
+        latestStatusUpdateLabel = null,
+        latestStatusUpdateStatusId = null,
+        prisonCode = "BRI",
+      )
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
@@ -180,12 +179,12 @@ class ApplicationsTransformerTest {
         "firstName surname",
       )
 
-      assertThat(result.id).isEqualTo(application.getId())
-      assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
+      assertThat(result.id).isEqualTo(application.id)
+      assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
       assertThat(result.risks).isNull()
       assertThat(result.personName).isEqualTo("firstName surname")
-      assertThat(result.crn).isEqualTo(application.getCrn())
-      assertThat(result.nomsNumber).isEqualTo(application.getNomsNumber())
+      assertThat(result.crn).isEqualTo(application.crn)
+      assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
       assertThat(result.createdByUserName).isEqualTo("first last")
@@ -193,22 +192,23 @@ class ApplicationsTransformerTest {
 
     @Test
     fun `transforms a submitted CAS2 application correctly`() {
-      val application = object : Cas2ApplicationSummary {
-        override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-        override fun getCrn() = "CRNNUM"
-        override fun getNomsNumber() = "NOMNUM"
-        override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-        override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-        override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
-        override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
-        override fun getLatestStatusUpdateStatusId() = UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db")
-        override fun getLatestStatusUpdateLabel() = "my latest status update"
-      }
+      val application = Cas2ApplicationSummaryEntity(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = "CRNNUM",
+        nomsNumber = "NOMNUM",
+        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userName = "first last",
+        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+        latestStatusUpdateLabel = "my latest status update",
+        prisonCode = "BRI",
+      )
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
-        statusId = application.getLatestStatusUpdateStatusId(),
-        label = application.getLatestStatusUpdateLabel(),
+        statusId = UUID.fromString(application.latestStatusUpdateStatusId),
+        label = application.latestStatusUpdateLabel!!,
       )
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
@@ -216,12 +216,12 @@ class ApplicationsTransformerTest {
         "firstName surname",
       )
 
-      assertThat(result.id).isEqualTo(application.getId())
+      assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
       assertThat(result.personName).isEqualTo("firstName surname")
-      assertThat(result.crn).isEqualTo(application.getCrn())
-      assertThat(result.nomsNumber).isEqualTo(application.getNomsNumber())
+      assertThat(result.crn).isEqualTo(application.crn)
+      assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"))
       assertThat(result.createdByUserName).isEqualTo("first last")

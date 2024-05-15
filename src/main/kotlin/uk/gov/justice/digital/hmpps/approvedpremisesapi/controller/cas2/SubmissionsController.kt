@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -58,7 +58,7 @@ class SubmissionsController(
     }
 
     val sortDirection = SortDirection.asc
-    val sortBy = "submitted_at"
+    val sortBy = "submittedAt"
 
     val (applications, metadata) = applicationService.getAllSubmittedApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))
 
@@ -174,14 +174,14 @@ class SubmissionsController(
     nomisUserService.getUserForRequest()
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>):
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>):
     List<Cas2SubmittedApplicationSummary> {
-    val crns = applicationSummaries.map { it.getCrn() }
+    val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      submissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.getCrn()]!!)
+      submissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
     }
   }
 

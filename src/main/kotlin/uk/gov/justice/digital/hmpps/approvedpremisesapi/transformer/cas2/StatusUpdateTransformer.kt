@@ -4,10 +4,11 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExternalUserTransformer
+import java.util.UUID
 
 @Component("Cas2StatusUpdateTransformer")
 class StatusUpdateTransformer(
@@ -38,11 +39,11 @@ class StatusUpdateTransformer(
     )
   }
 
-  fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2ApplicationSummary): LatestCas2StatusUpdate? {
-    if (jpa.getLatestStatusUpdateStatusId() !== null) {
+  fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2ApplicationSummaryEntity): LatestCas2StatusUpdate? {
+    if (jpa.latestStatusUpdateStatusId !== null) {
       return LatestCas2StatusUpdate(
-        statusId = jpa.getLatestStatusUpdateStatusId()!!,
-        label = jpa.getLatestStatusUpdateLabel()!!,
+        statusId = UUID.fromString(jpa.latestStatusUpdateStatusId!!),
+        label = jpa.latestStatusUpdateLabel!!,
       )
     } else {
       return null

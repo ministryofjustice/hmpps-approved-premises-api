@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -120,18 +119,19 @@ class SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = object : Cas2ApplicationSummary {
-        override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-        override fun getCrn() = "CRN123"
-        override fun getNomsNumber() = "NOMS456"
-        override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-        override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-        override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
-        override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
-        override fun getLatestStatusUpdateLabel(): String? = null
-        override fun getLatestStatusUpdateStatusId(): UUID? = null
-      }
+      val applicationSummary = Cas2ApplicationSummaryEntity(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = "CRN123",
+        nomsNumber = "NOMS456",
+        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userName = "first last",
+        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+        latestStatusUpdateLabel = null,
+        latestStatusUpdateStatusId = null,
+        prisonCode = "BRI",
+      )
 
       val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),

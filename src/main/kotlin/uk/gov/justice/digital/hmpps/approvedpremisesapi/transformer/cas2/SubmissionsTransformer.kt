@@ -6,11 +6,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpda
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import java.util.UUID
 
 @Component("Cas2SubmittedApplicationTransformer")
 class SubmissionsTransformer(
@@ -46,17 +47,17 @@ class SubmissionsTransformer(
   }
 
   fun transformJpaSummaryToApiRepresentation(
-    jpaSummary: Cas2ApplicationSummary,
+    jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
   ): Cas2SubmittedApplicationSummary {
     return Cas2SubmittedApplicationSummary(
-      id = jpaSummary.getId(),
+      id = jpaSummary.id,
       personName = personName,
-      createdByUserId = jpaSummary.getCreatedByUserId(),
-      createdAt = jpaSummary.getCreatedAt().toInstant(),
-      submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
-      crn = jpaSummary.getCrn(),
-      nomsNumber = jpaSummary.getNomsNumber(),
+      createdByUserId = UUID.fromString(jpaSummary.userId),
+      createdAt = jpaSummary.createdAt.toInstant(),
+      submittedAt = jpaSummary.submittedAt?.toInstant(),
+      crn = jpaSummary.crn,
+      nomsNumber = jpaSummary.nomsNumber,
     )
   }
 
