@@ -91,6 +91,8 @@ data class DomainEventEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   val data: String,
   val service: String,
+  @Enumerated(value = EnumType.STRING)
+  val triggerSource: TriggerSourceType? = null,
   val triggeredByUserId: UUID?,
   val nomsNumber: String?,
   @ElementCollection
@@ -151,6 +153,7 @@ data class DomainEventEntity(
     )
   }
 }
+enum class TriggerSourceType { USER, SYSTEM }
 
 enum class MetaDataName {
   CAS1_APP_REASON_FOR_SHORT_NOTICE,

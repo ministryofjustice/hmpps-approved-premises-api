@@ -104,6 +104,7 @@ class DomainEventService(
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS2",
+        triggerSource = null,
         triggeredByUserId = null,
       ),
     )

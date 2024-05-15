@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestFo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
@@ -840,14 +841,15 @@ class DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
+      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent, TriggerSourceType.USER)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+          triggerSource = TriggerSourceType.USER,
         )
       }
     }

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -38,6 +39,12 @@ class Cas1AssessmentDomainEventService(
         is ClientResult.Success -> result.body
         is ClientResult.Failure -> result.throwException()
       }
+    }
+
+    val triggerSource = if (allocatingUser == null) {
+      TriggerSourceType.SYSTEM
+    } else {
+      TriggerSourceType.USER
     }
 
     val id = UUID.randomUUID()
@@ -72,6 +79,7 @@ class Cas1AssessmentDomainEventService(
           ),
         ),
       ),
+      triggerSource,
     )
   }
 
