@@ -28,7 +28,7 @@ class Cas1UserMappingService(
     DeliusTeamMapping("N43OWS", "SWSC"),
     DeliusTeamMapping("N41CRU", "NE"),
     DeliusTeamMapping("N41EFT", "NE"),
-    DeliusTeamMapping("N41EPT", "NE"),
+    DeliusTeamMapping("N41EP2", "NE"),
     DeliusTeamMapping("N41EXM", "NE"),
     DeliusTeamMapping("N41EP4", "NE"),
     DeliusTeamMapping("XXXNAT", "NE"),
