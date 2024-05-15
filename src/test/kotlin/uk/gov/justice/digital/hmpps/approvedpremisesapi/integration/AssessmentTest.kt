@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -2370,6 +2371,98 @@ class AssessmentTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Accept assessment with an outstanding clarification note sets the application status correctly`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+      ) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(null)
+          }.apply {
+            schemaUpToDate = true
+          }
+
+          assessmentClarificationNoteEntityFactory.produceAndPersist {
+            withAssessment(assessment)
+            withResponse(null)
+            withResponseReceivedOn(null)
+            withCreatedBy(userEntity)
+          }.apply {
+            assessment.clarificationNotes = mutableListOf(this)
+          }
+
+          var persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+
+          val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+          val essentialCriteria = listOf(
+            PlacementCriteria.hasEnSuite,
+            PlacementCriteria.isRecoveryFocussed,
+          )
+          val desirableCriteria = listOf(
+            PlacementCriteria.acceptsNonSexualChildOffenders,
+            PlacementCriteria.acceptsSexOffenders,
+          )
+
+          val placementDates = PlacementDates(
+            expectedArrival = LocalDate.now(),
+            duration = 12,
+          )
+
+          val placementRequirements = PlacementRequirements(
+            gender = Gender.male,
+            type = ApType.normal,
+            location = postcodeDistrict.outcode,
+            radius = 50,
+            essentialCriteria = essentialCriteria,
+            desirableCriteria = desirableCriteria,
+          )
+
+          webTestClient.post()
+            .uri("/assessments/${assessment.id}/acceptance")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              AssessmentAcceptance(
+                document = mapOf("document" to "value"),
+                requirements = placementRequirements,
+                placementDates = placementDates,
+                notes = "Some Notes",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        }
+      }
+    }
   }
 
   @Test
@@ -2437,6 +2530,92 @@ class AssessmentTest : IntegrationTestBase() {
 
         emailAsserter.assertEmailsRequestedCount(1)
         emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentRejected)
+      }
+    }
+  }
+
+  @Test
+  fun `Reject assessment with an outstanding clarification note sets the application status correctly`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+    ) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(null)
+        }.apply {
+          schemaUpToDate = true
+        }
+
+        assessmentClarificationNoteEntityFactory.produceAndPersist {
+          withAssessment(assessment)
+          withResponse(null)
+          withResponseReceivedOn(null)
+          withCreatedBy(userEntity)
+        }.apply {
+          assessment.clarificationNotes = mutableListOf(this)
+        }
+
+        val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+        val essentialCriteria = listOf(
+          PlacementCriteria.hasEnSuite,
+          PlacementCriteria.isRecoveryFocussed,
+        )
+        val desirableCriteria = listOf(
+          PlacementCriteria.acceptsNonSexualChildOffenders,
+          PlacementCriteria.acceptsSexOffenders,
+        )
+
+        val placementDates = PlacementDates(
+          expectedArrival = LocalDate.now(),
+          duration = 12,
+        )
+
+        val placementRequirements = PlacementRequirements(
+          gender = Gender.male,
+          type = ApType.normal,
+          location = postcodeDistrict.outcode,
+          radius = 50,
+          essentialCriteria = essentialCriteria,
+          desirableCriteria = desirableCriteria,
+        )
+
+        webTestClient.post()
+          .uri("/assessments/${assessment.id}/rejection")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            AssessmentRejection(
+              document = mapOf("document" to "value"),
+              rejectionRationale = "reasoning",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+        assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+          .isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
       }
     }
   }
@@ -2821,6 +3000,64 @@ class AssessmentTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isBadRequest
+      }
+    }
+  }
+
+  @Test
+  fun `Update assessment with an outstanding clarification note does not change the application status`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withDecision(null)
+        }.apply {
+          schemaUpToDate = true
+        }
+
+        assessmentClarificationNoteEntityFactory.produceAndPersist {
+          withAssessment(assessment)
+          withResponse(null)
+          withResponseReceivedOn(null)
+          withCreatedBy(userEntity)
+        }.apply {
+          assessment.clarificationNotes = mutableListOf(this)
+        }
+
+        webTestClient.put()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateAssessment(
+              data = mapOf("some text" to 5),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+        assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+          .isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
       }
     }
   }
