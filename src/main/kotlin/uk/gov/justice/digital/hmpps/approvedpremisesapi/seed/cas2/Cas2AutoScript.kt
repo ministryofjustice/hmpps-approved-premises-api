@@ -100,7 +100,7 @@ class Cas2AutoScript(
   private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity {
     return applicationRepository.saveAndFlush(
       application.apply {
-        referringPrisonCode = "BRI"
+        referringPrisonCode = seedConfig.autoScript.prisonCode
         preferredAreas = "Luton | Hertford"
         hdcEligibilityDate = LocalDate.now()
         conditionalReleaseDate = LocalDate.now().plusMonths(2)
