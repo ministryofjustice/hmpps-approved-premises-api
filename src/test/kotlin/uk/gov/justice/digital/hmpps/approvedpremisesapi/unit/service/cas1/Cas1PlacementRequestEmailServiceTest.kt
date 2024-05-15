@@ -74,6 +74,7 @@ class Cas1PlacementRequestEmailServiceTest {
         mapOf(
           "crn" to CRN,
         ),
+        application,
       )
     }
   }
@@ -131,6 +132,7 @@ class Cas1PlacementRequestEmailServiceTest {
           "endDate" to placementRequest.expectedDeparture().toString(),
           "withdrawnBy" to WITHDRAWING_USER_NAME,
         ),
+        application,
       )
     }
 
@@ -202,13 +204,14 @@ class Cas1PlacementRequestEmailServiceTest {
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to TestConstants.CRN,
+          "crn" to CRN,
           "applicationArea" to AREA_NAME,
           "startDate" to placementRequest.expectedArrival.toString(),
           "endDate" to placementRequest.expectedDeparture().toString(),
           "withdrawnBy" to WITHDRAWING_USER_NAME,
           "additionalDatesSet" to "no",
         ),
+        application,
       )
     }
 
@@ -238,13 +241,14 @@ class Cas1PlacementRequestEmailServiceTest {
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to TestConstants.CRN,
+          "crn" to CRN,
           "applicationArea" to AREA_NAME,
           "startDate" to placementRequest.expectedArrival.toString(),
           "endDate" to placementRequest.expectedDeparture().toString(),
           "withdrawnBy" to WITHDRAWING_USER_NAME,
           "additionalDatesSet" to "no",
         ),
+        application,
       )
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
@@ -252,13 +256,14 @@ class Cas1PlacementRequestEmailServiceTest {
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to TestConstants.CRN,
+          "crn" to CRN,
           "applicationArea" to AREA_NAME,
           "startDate" to placementRequest.expectedArrival.toString(),
           "endDate" to placementRequest.expectedDeparture().toString(),
           "withdrawnBy" to WITHDRAWING_USER_NAME,
           "additionalDatesSet" to "no",
         ),
+        application,
       )
     }
 
@@ -287,13 +292,14 @@ class Cas1PlacementRequestEmailServiceTest {
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to TestConstants.CRN,
+          "crn" to CRN,
           "applicationArea" to AREA_NAME,
           "startDate" to placementRequest.expectedArrival.toString(),
           "endDate" to placementRequest.expectedDeparture().toString(),
           "withdrawnBy" to "Application Support",
           "additionalDatesSet" to "no",
         ),
+        application,
       )
     }
   }
@@ -309,7 +315,7 @@ class Cas1PlacementRequestEmailServiceTest {
       .produce()
 
     return ApprovedPremisesApplicationEntityFactory()
-      .withCrn(TestConstants.CRN)
+      .withCrn(CRN)
       .withCreatedByUser(applicant)
       .withSubmittedAt(OffsetDateTime.now())
       .withApArea(

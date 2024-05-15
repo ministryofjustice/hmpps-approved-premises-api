@@ -329,9 +329,10 @@ class AcceptAssessmentTest {
   @Test
   fun `acceptAssessment CAS1 returns updated assessment, emits domain event, sends email, does not create placement request when no date information provided`() {
     val assessment = assessmentFactory.produce()
+    val application = assessment.application as ApprovedPremisesApplicationEntity
 
     val placementRequirementEntity = PlacementRequirementsEntityFactory()
-      .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
+      .withApplication(application)
       .withAssessment(assessment)
       .produce()
 
@@ -382,16 +383,17 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      cas1AssessmentEmailServiceMock.assessmentAccepted(assessment)
+      cas1AssessmentEmailServiceMock.assessmentAccepted(application)
     }
   }
 
   @Test
   fun `acceptAssessment CAS1 returns updated assessment, emits domain event, sends emails, creates placement request when requirements provided`() {
     val assessment = assessmentFactory.produce()
+    val application = assessment.application as ApprovedPremisesApplicationEntity
 
     val placementRequirementEntity = PlacementRequirementsEntityFactory()
-      .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
+      .withApplication(application)
       .withAssessment(assessment)
       .produce()
 
@@ -470,7 +472,7 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      cas1AssessmentEmailServiceMock.assessmentAccepted(assessment)
+      cas1AssessmentEmailServiceMock.assessmentAccepted(application)
     }
 
     verify(exactly = 1) {

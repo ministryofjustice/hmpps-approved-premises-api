@@ -57,6 +57,7 @@ class Cas1AppealEmailServiceTest {
         Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.appealSuccess,
         expectedPersonalisationForAppealSuccess(application),
+        application,
       )
     }
 
@@ -71,6 +72,7 @@ class Cas1AppealEmailServiceTest {
         Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
         notifyConfig.templates.appealSuccess,
         expectedPersonalisationForAppealSuccess(application),
+        application,
       )
     }
 
@@ -88,11 +90,13 @@ class Cas1AppealEmailServiceTest {
         Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.appealSuccess,
         expectedPersonalisationForAppealSuccess(application),
+        application,
       )
       mockEmailNotificationService.assertEmailRequested(
         Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
         notifyConfig.templates.appealSuccess,
         expectedPersonalisationForAppealSuccess(application),
+        application,
       )
     }
 
@@ -124,6 +128,7 @@ class Cas1AppealEmailServiceTest {
         Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.appealReject,
         expectedPersonalisationForAppealFailed(application),
+        application,
       )
     }
 

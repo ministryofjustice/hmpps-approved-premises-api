@@ -23,7 +23,7 @@ class Cas1BookingEmailService(
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
 ) {
 
-  fun bookingMade(application: ApplicationEntity, booking: BookingEntity) {
+  fun bookingMade(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
     val applicationSubmittedByUser = application.createdByUser
 
     val emailPersonalisation = buildCommonPersonalisation(
@@ -36,6 +36,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = applicationSubmittedByUser.email!!,
         templateId = notifyConfig.templates.bookingMade,
         personalisation = emailPersonalisation,
+        application = application,
       )
     }
 
@@ -44,6 +45,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = booking.premises.emailAddress!!,
         templateId = notifyConfig.templates.bookingMadePremises,
         personalisation = emailPersonalisation,
+        application = application,
       )
     }
   }
@@ -65,6 +67,7 @@ class Cas1BookingEmailService(
       recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
       templateId = template,
       personalisation = allPersonalisation,
+      application = application,
     )
 
     val premises = booking.premises
@@ -73,6 +76,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = email,
         templateId = template,
         personalisation = allPersonalisation,
+        application = application,
       )
     }
 
@@ -82,6 +86,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = cruEmail,
         templateId = template,
         personalisation = allPersonalisation,
+        application = application,
       )
     }
   }

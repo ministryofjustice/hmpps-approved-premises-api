@@ -230,9 +230,9 @@ class AssessmentService(
 
     if (allocatedUser != null) {
       if (createdFromAppeal) {
-        cas1AssessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application.crn)
+        cas1AssessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application)
       } else {
-        cas1AssessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
+        cas1AssessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       }
       cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, allocatingUser = null)
     }
@@ -434,7 +434,7 @@ class AssessmentService(
     if (application is ApprovedPremisesApplicationEntity) {
       saveCas1ApplicationAssessedDomainEvent(application, assessment, offenderDetails, staffDetails, placementDates)
 
-      cas1AssessmentEmailService.assessmentAccepted(savedAssessment)
+      cas1AssessmentEmailService.assessmentAccepted(application)
 
       if (createPlacementRequest) {
         cas1PlacementRequestEmailService.placementRequestSubmitted(application)
@@ -627,7 +627,7 @@ class AssessmentService(
         ),
       )
 
-      cas1AssessmentEmailService.assessmentRejected(savedAssessment)
+      cas1AssessmentEmailService.assessmentRejected(application)
     }
 
     return AuthorisableActionResult.Success(
@@ -763,10 +763,10 @@ class AssessmentService(
     assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application.crn, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
+      cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {
-        cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application.crn)
+        cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application)
       }
       cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, userService.getUserForRequest())
     }
@@ -935,6 +935,7 @@ class AssessmentService(
         assessment = assessment,
         isAssessmentPending = isPendingAssessment,
         withdrawingUser = withdrawingUser,
+        application = assessment.application as ApprovedPremisesApplicationEntity,
       )
     }
   }

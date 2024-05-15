@@ -106,6 +106,7 @@ class Cas1BookingEmailServiceTest {
           "lengthStay" to 2,
           "lengthStayUnit" to "weeks",
         ),
+        application,
       )
     }
 
@@ -144,12 +145,14 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingMade,
         personalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingMadePremises,
         personalisation,
+        application,
       )
     }
 
@@ -180,12 +183,14 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingMade,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingMadePremises,
         expectedPersonalisation,
+        application,
       )
     }
   }
@@ -226,24 +231,28 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         AP_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
     }
 
@@ -307,24 +316,28 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         AP_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
     }
   }

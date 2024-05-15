@@ -27,6 +27,7 @@ class Cas1ApplicationEmailService(
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
           "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
@@ -47,6 +48,7 @@ class Cas1ApplicationEmailService(
         "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
         "withdrawnBy" to withdrawingUser.name,
       ),
+      application = application,
     )
   }
 }

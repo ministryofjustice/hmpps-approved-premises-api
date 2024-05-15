@@ -1394,21 +1394,21 @@ class AssessmentServiceTest {
       schema = "{}",
     )
 
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withId(assessmentId)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
           .produce(),
       )
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(application)
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
       .withData("{\"test\": \"data\"}")
@@ -1492,7 +1492,7 @@ class AssessmentServiceTest {
     }
 
     verify(exactly = 1) {
-      cas1AssessmentEmailServiceMock.assessmentRejected(assessment)
+      cas1AssessmentEmailServiceMock.assessmentRejected(application)
     }
   }
 
@@ -1982,7 +1982,7 @@ class AssessmentServiceTest {
         cas1AssessmentEmailServiceMock.assessmentAllocated(
           match { it.id == assigneeUser.id },
           any<UUID>(),
-          application.crn,
+          application,
           dueAt,
           false,
         )
@@ -1992,7 +1992,7 @@ class AssessmentServiceTest {
         cas1AssessmentEmailServiceMock.assessmentDeallocated(
           match { it.id == previousAssessment.allocatedToUser!!.id },
           any<UUID>(),
-          application.crn,
+          application,
         )
       }
 
@@ -2541,7 +2541,7 @@ class AssessmentServiceTest {
           cas1AssessmentEmailServiceMock.appealedAssessmentAllocated(
             match { it.id == userWithLeastAllocatedAssessments.id },
             any<UUID>(),
-            application.crn,
+            application,
           )
         }
       } else {
@@ -2549,7 +2549,7 @@ class AssessmentServiceTest {
           cas1AssessmentEmailServiceMock.assessmentAllocated(
             match { it.id == userWithLeastAllocatedAssessments.id },
             any<UUID>(),
-            application.crn,
+            application,
             dueAt,
             timelinessCategory == Cas1ApplicationTimelinessCategory.emergency,
           )
@@ -2656,13 +2656,13 @@ class AssessmentServiceTest {
 
     @Test
     fun `updateCas1AssessmentWithdrawn triggers email with assessment pending if assessment active and allocated`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .produce()
+
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-            .produce(),
-        )
+        .withApplication(application)
         .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
         .withAllocatedToUser(allocatedUser)
@@ -2673,13 +2673,14 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
+          application,
           isAssessmentPending = true,
           withdrawingUser = withdrawingUser,
         )
@@ -2688,13 +2689,13 @@ class AssessmentServiceTest {
 
     @Test
     fun `updateCas1AssessmentWithdrawn triggers email with assessment not pending if assessment withdrawn`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .produce()
+
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-            .produce(),
-        )
+        .withApplication(application)
         .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
         .withAllocatedToUser(allocatedUser)
@@ -2705,13 +2706,14 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
+          application,
           isAssessmentPending = false,
           withdrawingUser = withdrawingUser,
         )
@@ -2720,13 +2722,13 @@ class AssessmentServiceTest {
 
     @Test
     fun `updateCas1AssessmentWithdrawn triggers email with assessment not pending if assessment submitted`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .produce()
+
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-            .produce(),
-        )
+        .withApplication(application)
         .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
         .withAllocatedToUser(allocatedUser)
@@ -2737,13 +2739,14 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
+          application,
           isAssessmentPending = false,
           withdrawingUser = withdrawingUser,
         )
@@ -2752,13 +2755,13 @@ class AssessmentServiceTest {
 
     @Test
     fun `updateCas1AssessmentWithdrawn triggers email with assessment not pending if assessment reallocated`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .produce()
+
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-            .produce(),
-        )
+        .withApplication(application)
         .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
         .withAllocatedToUser(allocatedUser)
@@ -2769,13 +2772,14 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         cas1AssessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
+          application,
           isAssessmentPending = false,
           withdrawingUser = withdrawingUser,
         )

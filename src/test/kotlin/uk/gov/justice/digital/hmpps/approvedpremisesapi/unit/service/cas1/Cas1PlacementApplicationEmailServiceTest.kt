@@ -116,6 +116,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         CREATOR_EMAIL,
         notifyConfig.templates.placementRequestSubmittedV2,
         personalisation,
+        application,
       )
     }
   }
@@ -193,6 +194,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         CREATOR_EMAIL,
         notifyConfig.templates.placementRequestAllocatedV2,
         personalisation,
+        application,
       )
     }
   }
@@ -270,6 +272,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         CREATOR_EMAIL,
         notifyConfig.templates.placementRequestDecisionAcceptedV2,
         personalisation,
+        application,
       )
     }
   }
@@ -342,6 +345,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         CREATOR_EMAIL,
         notifyConfig.templates.placementRequestDecisionRejectedV2,
         personalisation,
+        application,
       )
     }
   }
@@ -417,6 +421,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         CREATOR_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -462,6 +467,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -506,12 +512,14 @@ class Cas1PlacementApplicationEmailServiceTest {
         CREATOR_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -559,6 +567,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         ASSESSOR_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -604,6 +613,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         ASSESSOR_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -649,6 +659,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
+        application,
       )
     }
   }

@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1EmailNotificationService
 import java.util.UUID
@@ -23,6 +24,8 @@ class Cas1EmailNotificationServiceTest {
     )
   }
 
+  val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
   @Test
   fun `sendEmail delegates to EmailNotificationService`() {
     every { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION) } returns Unit
@@ -31,6 +34,7 @@ class Cas1EmailNotificationServiceTest {
       RECIPIENT_1,
       TEMPLATE_ID,
       PERSONALISATION,
+      application,
     )
 
     verify { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION) }
@@ -44,6 +48,7 @@ class Cas1EmailNotificationServiceTest {
       setOf(RECIPIENT_1, RECIPIENT_2),
       TEMPLATE_ID,
       PERSONALISATION,
+      application,
     )
 
     verify { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION) }

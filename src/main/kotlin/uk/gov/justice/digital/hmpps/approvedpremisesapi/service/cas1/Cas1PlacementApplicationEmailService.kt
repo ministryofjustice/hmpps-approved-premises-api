@@ -22,6 +22,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestSubmittedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -33,6 +34,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestAllocatedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -44,6 +46,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestDecisionAcceptedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -55,6 +58,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestDecisionRejectedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -74,6 +78,7 @@ class Cas1PlacementApplicationEmailService(
       recipientEmailAddresses = placementApplication.interestedPartiesEmailAddresses(),
       templateId = template,
       personalisation = personalisation,
+      application = placementApplication.application,
     )
 
     val assessorEmail = wasBeingAssessedBy?.email
@@ -82,6 +87,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = template,
         personalisation = personalisation,
+        application = placementApplication.application,
       )
     }
   }

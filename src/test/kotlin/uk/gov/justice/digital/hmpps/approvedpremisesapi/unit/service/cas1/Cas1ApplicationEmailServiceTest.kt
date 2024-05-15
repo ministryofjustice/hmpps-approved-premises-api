@@ -70,6 +70,7 @@ class Cas1ApplicationEmailServiceTest {
         TestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.applicationSubmitted,
         personalisation,
+        application,
       )
     }
   }
@@ -122,6 +123,7 @@ class Cas1ApplicationEmailServiceTest {
         TestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.applicationWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -146,11 +148,13 @@ class Cas1ApplicationEmailServiceTest {
         TestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.applicationWithdrawnV2,
         personalisation,
+        application,
       )
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.applicationWithdrawnV2,
         personalisation,
+        application,
       )
     }
   }

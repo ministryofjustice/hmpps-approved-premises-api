@@ -25,6 +25,7 @@ class Cas1PlacementRequestEmailService(
         personalisation = mapOf(
           "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
@@ -55,6 +56,7 @@ class Cas1PlacementRequestEmailService(
         recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
         templateId = notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation = personalisation,
+        application = application,
       )
     }
 
@@ -65,6 +67,7 @@ class Cas1PlacementRequestEmailService(
           recipientEmailAddress = cruEmail,
           templateId = notifyConfig.templates.matchRequestWithdrawnV2,
           personalisation = personalisation,
+          application = application,
         )
       }
     }
