@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthori
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonReleaseTypeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
@@ -60,9 +59,6 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var referralRejectionReasonTransformer: ReferralRejectionReasonTransformer
-
-  @Autowired
-  lateinit var prisonReleaseTypeTransformer: PrisonReleaseTypeTransformer
 
   @Test
   fun `Get Characteristics returns 200 with correct body`() {
@@ -799,33 +795,6 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Prison Release Type for only temporary accommodation returns 200 with correct body`() {
-    prisonReleaseTypeRepository.deleteAll()
-
-    prisonReleaseTypeEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedPrisonReleaseTypes = prisonReleaseTypeEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
-
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedPrisonReleaseTypes.map(prisonReleaseTypeTransformer::transformJpaToApi),
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/prison-release-types")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "temporary-accommodation")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
   fun `Get Referral Rejection Reason returns Forbidden when service name is not provided`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -862,17 +831,5 @@ class ReferenceDataTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .json(expectedJson)
-  }
-
-  @Test
-  fun `Get Prison Release Type returns Forbidden when service name is not provided`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/prison-release-types")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isForbidden()
   }
 }

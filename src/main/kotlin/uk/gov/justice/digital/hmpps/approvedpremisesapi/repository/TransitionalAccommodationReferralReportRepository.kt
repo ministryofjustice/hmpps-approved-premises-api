@@ -40,7 +40,8 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       taa.person_release_date as personReleaseDate,
       premises.town as town,
       premises.postcode as postCode,
-      taa.pdu as pdu
+      taa.pdu as pdu,
+      taa.prison_release_types as prisonReleaseTypes
     FROM temporary_accommodation_assessments aa
     JOIN assessments a on aa.assessment_id = a.id AND a.service='temporary-accommodation' AND a.reallocated_at IS NULL
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
@@ -95,4 +96,5 @@ interface TransitionalAccommodationReferralReportData {
   val personReleaseDate: LocalDate?
   val town: String?
   val postCode: String?
+  val prisonReleaseTypes: String?
 }

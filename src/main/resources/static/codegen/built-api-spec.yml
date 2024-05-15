@@ -2946,33 +2946,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /reference-data/prison-release-types:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all prison release types
-      parameters:
-        - name: X-Service-Name
-          in: header
-          required: false
-          description: If given, only prison release types for this service will be returned
-          schema:
-            $ref: '#/components/schemas/ServiceName'
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PrisonReleaseType'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /tasks:
     get:
       tags:
@@ -7053,7 +7026,7 @@ components:
               type: array
               items:
                 type: string
-                format: uuid
+                example: 'PSS'
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
@@ -9125,27 +9098,6 @@ components:
         name:
           type: string
           example: There was not enough time to place them
-        serviceScope:
-          type: string
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - serviceScope
-        - isActive
-    PrisonReleaseType:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: Post sentence supervision (PSS)
-        abbreviation:
-          type: string
-          example: PSS
         serviceScope:
           type: string
         isActive:

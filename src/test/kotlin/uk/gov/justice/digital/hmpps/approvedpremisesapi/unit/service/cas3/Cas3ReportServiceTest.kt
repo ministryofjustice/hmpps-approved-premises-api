@@ -316,6 +316,7 @@ class Cas3ReportServiceTest {
     town = null,
     postCode = null,
     pdu = null,
+    prisonReleaseTypes = null,
   )
 
   private fun createBookingReportData(crn: String) = TestBookingsReportData(
@@ -381,6 +382,7 @@ class Cas3ReportServiceTest {
     override val town: String?,
     override val postCode: String?,
     override val pdu: String?,
+    override val prisonReleaseTypes: String?,
   ) : TransitionalAccommodationReferralReportData
 
   @Suppress("LongParameterList")

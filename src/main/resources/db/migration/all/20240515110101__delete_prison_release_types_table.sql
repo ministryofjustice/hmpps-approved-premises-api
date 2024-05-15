@@ -1,0 +1,4 @@
+DROP TABLE temporary_accommodation_application_prison_release_types;
+DROP TABLE prison_release_types;
+
+ALTER TABLE temporary_accommodation_applications ADD COLUMN prison_release_types TEXT NULL;

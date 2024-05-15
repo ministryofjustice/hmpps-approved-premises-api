@@ -29,8 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PrisonReleaseTypeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PrisonReleaseTypeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -46,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -94,7 +91,6 @@ class ApplicationService(
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
-  private val prisonReleaseTypeRepository: PrisonReleaseTypeRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -481,7 +477,7 @@ class ApplicationService(
       isHistoryOfSexualOffence = null,
       isConcerningSexualBehaviour = null,
       isConcerningArsonBehaviour = null,
-      prisonReleaseTypes = mutableListOf(),
+      prisonReleaseTypes = null,
     )
   }
 
@@ -870,14 +866,6 @@ class ApplicationService(
       )
     }
 
-    val applicationPrisonReleaseTypes = mutableListOf<PrisonReleaseTypeEntity>()
-    submitApplication.prisonReleaseTypes?.forEach {
-      when (val prisonReleaseType = prisonReleaseTypeRepository.findByIdOrNull(it)) {
-        null -> throw NotFoundProblem(it, "PrisonReleaseType")
-        else -> applicationPrisonReleaseTypes.add(prisonReleaseType)
-      }
-    }
-
     application.apply {
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
@@ -896,7 +884,7 @@ class ApplicationService(
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
       personReleaseDate = submitApplication.personReleaseDate
       pdu = submitApplication.pdu
-      prisonReleaseTypes = applicationPrisonReleaseTypes
+      prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)
