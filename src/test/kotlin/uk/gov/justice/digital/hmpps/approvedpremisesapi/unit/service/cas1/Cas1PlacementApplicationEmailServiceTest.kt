@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.ASSESSOR_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.CREATOR_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -34,7 +34,7 @@ class Cas1PlacementApplicationEmailServiceTest {
   }
 
   private val notifyConfig = NotifyConfig()
-  private val mockEmailNotificationService = MockEmailNotificationService()
+  private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1PlacementApplicationEmailService(
     mockEmailNotificationService,

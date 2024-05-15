@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -17,7 +16,7 @@ import java.util.UUID
 
 @Service
 class Cas1AssessmentEmailService(
-  private val emailNotificationService: EmailNotifier,
+  private val emailNotifier: Cas1EmailNotifier,
   private val notifyConfig: NotifyConfig,
   private val workingDayService: WorkingDayService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
@@ -27,7 +26,7 @@ class Cas1AssessmentEmailService(
 
   fun assessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String, deadline: OffsetDateTime?, isEmergency: Boolean) {
     allocatedUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentAllocated,
         personalisation = mapOf(
@@ -42,7 +41,7 @@ class Cas1AssessmentEmailService(
 
   fun assessmentDeallocated(deallocatedUserEntity: UserEntity, assessmentId: UUID, crn: String) {
     deallocatedUserEntity.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentDeallocated,
         personalisation = mapOf(
@@ -57,7 +56,7 @@ class Cas1AssessmentEmailService(
   fun assessmentAccepted(assessment: AssessmentEntity) {
     val application = assessment.application
     application.createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentAccepted,
         personalisation = mapOf(
@@ -72,7 +71,7 @@ class Cas1AssessmentEmailService(
   fun assessmentRejected(assessment: AssessmentEntity) {
     val application = assessment.application
     application.createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentRejected,
         personalisation = mapOf(
@@ -86,7 +85,7 @@ class Cas1AssessmentEmailService(
 
   fun appealedAssessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String) {
     allocatedUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.appealedAssessmentAllocated,
         personalisation = mapOf(
@@ -105,7 +104,7 @@ class Cas1AssessmentEmailService(
   ) {
     if (isAssessmentPending) {
       assessment.allocatedToUser?.email?.let { email ->
-        emailNotificationService.sendEmail(
+        emailNotifier.sendEmail(
           recipientEmailAddress = email,
           templateId = notifyConfig.templates.assessmentWithdrawnV2,
           personalisation = mapOf(

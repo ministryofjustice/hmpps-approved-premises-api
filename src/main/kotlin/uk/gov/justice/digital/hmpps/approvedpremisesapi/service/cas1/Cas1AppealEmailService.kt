@@ -5,12 +5,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Service
 class Cas1AppealEmailService(
-  private val emailNotificationService: EmailNotifier,
+  private val emailNotifier: Cas1EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
@@ -22,7 +21,7 @@ class Cas1AppealEmailService(
 
   fun appealFailed(application: ApplicationEntity) {
     application.createdByUser.email?.let { emailAddress ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = emailAddress,
         templateId = notifyConfig.templates.appealReject,
         personalisation = mapOf(
@@ -34,7 +33,7 @@ class Cas1AppealEmailService(
   }
 
   private fun sendAppealSuccessEmailToEmailAddress(emailAddress: String, application: ApplicationEntity) {
-    emailNotificationService.sendEmail(
+    emailNotifier.sendEmail(
       recipientEmailAddress = emailAddress,
       templateId = notifyConfig.templates.appealSuccess,
       personalisation = mapOf(
