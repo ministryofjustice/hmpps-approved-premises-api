@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
+import javax.transaction.Transactional
 
 @SuppressWarnings("MagicNumber", "MaxLineLength")
 @Component
@@ -26,12 +27,18 @@ class Cas1AutoScript(
   private val offenderService: OffenderService,
 ) {
 
+  @SuppressWarnings("TooGenericExceptionCaught")
+  @Transactional
   fun script(
     deliusUserName: String = "JIMSNOWLDAP",
     crn: String = "X320741",
   ) {
     seedLogger.info("Auto-Scripting for CAS1")
-    autoCreateApplication(deliusUserName, crn)
+    try {
+      autoCreateApplication(deliusUserName, crn)
+    } catch (e: Exception) {
+      seedLogger.error("Creating application with crn $crn failed", e)
+    }
   }
 
   private fun autoCreateApplication(deliusUserName: String, crn: String) {
