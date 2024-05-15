@@ -484,7 +484,7 @@ class TemporaryAccommodationApplicationEntity(
   var name: String?,
   @ManyToMany
   @JoinTable(
-    name = "application_prison_release_types",
+    name = "temporary_accommodation_application_prison_release_types",
     joinColumns = [JoinColumn(name = "application_id")],
     inverseJoinColumns = [JoinColumn(name = "prison_release_type_id")],
   )
