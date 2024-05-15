@@ -30,7 +30,9 @@ import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
+import javax.persistence.JoinTable
 import javax.persistence.LockModeType
+import javax.persistence.ManyToMany
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
@@ -480,6 +482,13 @@ class TemporaryAccommodationApplicationEntity(
   var personReleaseDate: LocalDate?,
   var pdu: String?,
   var name: String?,
+  @ManyToMany
+  @JoinTable(
+    name = "temporary_accommodation_application_prison_release_types",
+    joinColumns = [JoinColumn(name = "application_id")],
+    inverseJoinColumns = [JoinColumn(name = "prison_release_type_id")],
+  )
+  var prisonReleaseTypes: MutableList<PrisonReleaseTypeEntity>,
 ) : ApplicationEntity(
   id,
   crn,

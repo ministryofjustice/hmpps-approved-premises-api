@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PrisonReleaseTypeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PrisonReleaseTypeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -120,6 +122,7 @@ class ApplicationServiceTest {
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
+  private val mockPrisonReleaseTypeRepository = mockk<PrisonReleaseTypeRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -142,6 +145,7 @@ class ApplicationServiceTest {
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
+    mockPrisonReleaseTypeRepository,
   )
 
   @Test
@@ -2160,6 +2164,10 @@ class ApplicationServiceTest {
       isHistoryOfSexualOffence = true,
       isConcerningSexualBehaviour = true,
       isConcerningArsonBehaviour = true,
+      prisonReleaseTypes = listOf(
+        UUID.fromString("a8364aab-49ec-402f-b118-a140ac2d924c"),
+        UUID.fromString("f0d93861-9347-4707-9159-1066f6a45c30"),
+      ),
     )
 
     @BeforeEach
@@ -2379,6 +2387,20 @@ class ApplicationServiceTest {
 
       every { mockCas3DomainEventService.saveReferralSubmittedEvent(any()) } just Runs
 
+      val prisonReleaseTypeOneId = UUID.fromString("a8364aab-49ec-402f-b118-a140ac2d924c")
+      every {
+        mockPrisonReleaseTypeRepository.findByIdOrNull(prisonReleaseTypeOneId)
+      } returns PrisonReleaseTypeEntityFactory()
+        .withId(prisonReleaseTypeOneId)
+        .produce()
+
+      val prisonReleaseTypeTwoId = UUID.fromString("f0d93861-9347-4707-9159-1066f6a45c30")
+      every {
+        mockPrisonReleaseTypeRepository.findByIdOrNull(prisonReleaseTypeTwoId)
+      } returns PrisonReleaseTypeEntityFactory()
+        .withId(prisonReleaseTypeTwoId)
+        .produce()
+
       val result = applicationService.submitTemporaryAccommodationApplication(
         applicationId,
         submitTemporaryAccommodationApplicationWithMiReportingData,
@@ -2412,6 +2434,9 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)
       assertThat(persistedApplication.isConcerningArsonBehaviour).isEqualTo(true)
       assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
+      assertThat(persistedApplication.prisonReleaseTypes.size).isEqualTo(2)
+      assertThat(persistedApplication.prisonReleaseTypes[0].id).isEqualTo(prisonReleaseTypeOneId)
+      assertThat(persistedApplication.prisonReleaseTypes[1].id).isEqualTo(prisonReleaseTypeTwoId)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) {
