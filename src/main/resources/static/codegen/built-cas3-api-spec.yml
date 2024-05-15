@@ -2442,7 +2442,8 @@ components:
             prisonReleaseTypes:
               type: array
               items:
-                type: UUID
+                type: string
+                format: uuid
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
