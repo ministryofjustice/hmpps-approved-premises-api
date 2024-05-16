@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -14,6 +15,21 @@ class Cas1PlacementRequestEmailService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
+
+  fun placementRequestSubmitted(
+    application: ApprovedPremisesApplicationEntity,
+  ) {
+    application.createdByUser.email?.let { email ->
+      emailNotifier.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.placementRequestSubmitted,
+        personalisation = mapOf(
+          "crn" to application.crn,
+        ),
+      )
+    }
+  }
+
   fun placementRequestWithdrawn(
     placementRequest: PlacementRequestEntity,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,

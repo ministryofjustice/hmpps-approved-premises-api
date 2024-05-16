@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -68,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
@@ -92,7 +92,8 @@ class AcceptAssessmentTest {
   private val userAllocator = mockk<UserAllocator>()
   private val objectMapperMock = mockk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
-  private val assessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
+  private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
+  private val cas1PlacementRequestEmailServiceMock = mockk<Cas1PlacementRequestEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
 
   private val assessmentService = AssessmentService(
@@ -108,15 +109,14 @@ class AcceptAssessmentTest {
     communityApiClientMock,
     cruServiceMock,
     placementRequestServiceMock,
-    emailNotificationServiceMock,
-    NotifyConfig(),
     placementRequirementsServiceMock,
     userAllocator,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
-    assessmentEmailServiceMock,
+    cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
+    cas1PlacementRequestEmailServiceMock,
   )
 
   lateinit var user: UserEntity
@@ -361,7 +361,7 @@ class AcceptAssessmentTest {
 
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.Success(placementRequirementEntity)
 
-    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+    every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
 
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
 
@@ -382,14 +382,7 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        any(),
-        "ddf87b15-8866-4bad-a87b-47eba69eb6db",
-        match {
-          it["name"] == assessment.application.createdByUser.name &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
-      )
+      cas1AssessmentEmailServiceMock.assessmentAccepted(assessment)
     }
   }
 
@@ -447,7 +440,9 @@ class AcceptAssessmentTest {
 
     every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
 
-    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+    every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
+
+    every { cas1PlacementRequestEmailServiceMock.placementRequestSubmitted(any()) } just Runs
 
     val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, placementDates, notes)
 
@@ -475,25 +470,11 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        any(),
-        "ddf87b15-8866-4bad-a87b-47eba69eb6db",
-        match {
-          it["crn"] == assessment.application.crn &&
-            it["name"] == assessment.application.createdByUser.name &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
-      )
+      cas1AssessmentEmailServiceMock.assessmentAccepted(assessment)
     }
 
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        any(),
-        "deb11bc6-d424-4370-bbe5-41f6a823d292",
-        match {
-          it["crn"] == assessment.application.crn
-        },
-      )
+      cas1PlacementRequestEmailServiceMock.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
     }
   }
 
