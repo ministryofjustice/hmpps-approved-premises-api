@@ -817,6 +817,104 @@ class Cas3ReportsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get CAS3 referral report successfully with single matching referral in the report with type of prison release`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withApplicationSchema(applicationSchema)
+            withArrivalDate(LocalDate.now().randomDateAfter(14))
+            withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
+            withCreatedAt(OffsetDateTime.now())
+            withDutyToReferLocalAuthorityAreaName("London")
+            withDutyToReferSubmissionDate(LocalDate.now())
+            withHasHistoryOfArson(false)
+            withIsConcerningArsonBehaviour(true)
+            withIsDutyToReferSubmitted(true)
+            withHasRegisteredSexOffender(null)
+            withHasHistoryOfSexualOffence(false)
+            withIsConcerningSexualBehaviour(true)
+            withNeedsAccessibleProperty(true)
+            withPrisonReleaseTypes(prisonReleaseTypes)
+            withRiskRatings {
+              withRoshRisks(
+                RiskWithStatus(
+                  value = RoshRisks(
+                    overallRisk = "High",
+                    riskToChildren = "Medium",
+                    riskToPublic = "Low",
+                    riskToKnownAdult = "High",
+                    riskToStaff = "High",
+                    lastUpdated = null,
+                  ),
+                ),
+              )
+            }
+            withPrisonNameAtReferral("HM Hounslow")
+            withPersonReleaseDate(LocalDate.now())
+            withPdu("Probation Delivery Unit Test")
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(REJECTED)
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
+            withRejectionRationale("some reason")
+          }
+
+          assessment.schemaUpToDate = true
+
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
+                .toList()
+
+              assertThat(actual.size).isEqualTo(1)
+              assertCorrectPersonDetail(caseSummary, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0])
+              assertThat(prisonReleaseTypes).isEqualTo(actual[0].prisonReleaseType)
+            }
+        }
+      }
+    }
   }
 
   @Nested

@@ -32,6 +32,7 @@ data class TransitionalAccommodationReferralReportRow(
   val rejectionReason: String?,
   val rejectionDate: LocalDate?,
   val sourceOfReferral: String?,
+  val prisonReleaseType: String?,
   val prisonAtReferral: String?,
   val releaseDate: LocalDate?,
   val accommodationRequiredDate: LocalDate?,

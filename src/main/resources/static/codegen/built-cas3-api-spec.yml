@@ -2443,7 +2443,7 @@ components:
               type: array
               items:
                 type: string
-                format: uuid
+                example: 'PSS'
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
@@ -4515,27 +4515,6 @@ components:
         name:
           type: string
           example: There was not enough time to place them
-        serviceScope:
-          type: string
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - serviceScope
-        - isActive
-    PrisonReleaseType:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: Post sentence supervision (PSS)
-        abbreviation:
-          type: string
-          example: PSS
         serviceScope:
           type: string
         isActive:

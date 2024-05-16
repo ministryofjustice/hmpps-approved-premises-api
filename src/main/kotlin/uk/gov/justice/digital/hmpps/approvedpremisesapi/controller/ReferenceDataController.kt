@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthority
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralRejectionReason
@@ -26,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PrisonReleaseTypeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
@@ -40,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthori
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonReleaseTypeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
@@ -70,10 +67,8 @@ class ReferenceDataController(
   private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
   private val referralRejectionReasonTransformer: ReferralRejectionReasonTransformer,
-  private val prisonReleaseTypeTransformer: PrisonReleaseTypeTransformer,
   private val apAreaRepository: ApAreaRepository,
   private val apAreaTransformer: ApAreaTransformer,
-  private val prisonReleaseTypeRepository: PrisonReleaseTypeRepository,
 ) : ReferenceDataApiDelegate {
 
   override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?, includeInactive: Boolean?): ResponseEntity<List<Characteristic>> {
@@ -193,16 +188,5 @@ class ReferenceDataController(
     }
 
     return ResponseEntity.ok(referralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi))
-  }
-
-  override fun referenceDataPrisonReleaseTypesGet(
-    xServiceName: ServiceName?,
-  ): ResponseEntity<List<PrisonReleaseType>> {
-    val prisonReleaseTypes = when (xServiceName == ServiceName.temporaryAccommodation) {
-      true -> prisonReleaseTypeRepository.findAllByServiceScope(xServiceName.value)
-      else -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(prisonReleaseTypes.map(prisonReleaseTypeTransformer::transformJpaToApi))
   }
 }

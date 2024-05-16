@@ -2528,9 +2528,6 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            val prisonReleaseTypeOneId = UUID.fromString("9ffa8a3a-bd8a-472b-9302-3e97c433eec7")
-            val prisonReleaseTypeTwoId = UUID.fromString("d8fa5a15-bddf-4f51-ac0f-4c8f7ed5dfd8")
-
             webTestClient.post()
               .uri("/applications/$applicationId/submission")
               .header("Authorization", "Bearer $jwt")
@@ -2551,8 +2548,8 @@ class ApplicationTest : IntegrationTestBase() {
                   isConcerningArsonBehaviour = true,
                   dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
                   prisonReleaseTypes = listOf(
-                    prisonReleaseTypeOneId,
-                    prisonReleaseTypeTwoId,
+                    "Parole",
+                    "CRD licence",
                   ),
                 ),
               )
@@ -2567,74 +2564,7 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
             assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
             assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
-            assertThat(persistedApplication.prisonReleaseTypes.size).isEqualTo(2)
-            assertThat(persistedApplication.prisonReleaseTypes.map { it.id }).isEqualTo(listOf(prisonReleaseTypeTwoId, prisonReleaseTypeOneId))
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Submit Temporary Accommodation application returns 404 when prison release type not exists`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
-        `Given a User` { _, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(schemaText())
-            }
-
-            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withId(applicationId)
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(submittingUser)
-              withProbationRegion(submittingUser.probationRegion)
-              withData(
-                """
-              {}
-            """,
-              )
-            }
-
-            val prisonReleaseTypeOneId = UUID.fromString("9ffa8a3a-bd8a-472b-9302-3e97c433eec7")
-            val prisonReleaseTypeTwoId = UUID.fromString("22bcd640-af61-45f0-b76c-0e86196cc4d7")
-
-            webTestClient.post()
-              .uri("/applications/$applicationId/submission")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .bodyValue(
-                SubmitTemporaryAccommodationApplication(
-                  translatedDocument = {},
-                  type = "CAS3",
-                  arrivalDate = LocalDate.now(),
-                  summaryData = object {
-                    val num = 50
-                    val text = "Hello world!"
-                  },
-                  prisonReleaseTypes = listOf(
-                    prisonReleaseTypeOneId,
-                    prisonReleaseTypeTwoId,
-                  ),
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isNotFound
-              .expectBody()
-              .jsonPath("$.detail").isEqualTo("No PrisonReleaseType with an ID of $prisonReleaseTypeTwoId could be found")
+            assertThat(persistedApplication.prisonReleaseTypes).isEqualTo("Parole,CRD licence")
           }
         }
       }

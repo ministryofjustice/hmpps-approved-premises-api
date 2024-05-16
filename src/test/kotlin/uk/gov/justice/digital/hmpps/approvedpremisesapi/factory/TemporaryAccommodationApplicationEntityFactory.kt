@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PrisonReleaseTypeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -54,7 +53,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
   private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
   private var dutyToReferOutcome: Yielded<String?> = { null }
-  private var prisonReleaseTypes: Yielded<MutableList<PrisonReleaseTypeEntity>> = { mutableListOf() }
+  private var prisonReleaseTypes: Yielded<String?> = { null }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -195,7 +194,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.dutyToReferOutcome = { dutyToReferOutcome }
   }
 
-  fun withPrisonReleaseTypes(prisonReleaseTypes: MutableList<PrisonReleaseTypeEntity>) = apply {
+  fun withPrisonReleaseTypes(prisonReleaseTypes: String?) = apply {
     this.prisonReleaseTypes = { prisonReleaseTypes }
   }
 
