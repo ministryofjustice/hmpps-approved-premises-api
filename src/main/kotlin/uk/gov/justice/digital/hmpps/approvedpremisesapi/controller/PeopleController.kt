@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
@@ -252,12 +254,16 @@ class PeopleController(
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
       is PersonInfoResult.Success -> {
-        val applicationsAndTimelineEvents = applicationService
+        val applicationTimelineModels = applicationService
           .getApplicationsForCrn(crn, ServiceName.approvedPremises)
-          .map { it as ApprovedPremisesApplicationEntity }
-          .associateWith { applicationService.getApplicationTimeline(it.id) }
+          .map {
+            val application = BoxedApplication.of(it as ApprovedPremisesApplicationEntity)
+            val timelineEvents = applicationService.getApplicationTimeline(it.id)
 
-        personalTimelineTransformer.transformApplicationsAndTimelineEvents(personInfo, applicationsAndTimelineEvents)
+            ApplicationTimelineModel(application, timelineEvents)
+          }
+
+        personalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
       }
     }
 
