@@ -220,6 +220,7 @@ class DomainEventService(
         service = "CAS1",
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
         nomsNumber = domainEvent.nomsNumber,
+        metadata = domainEvent.metadata,
       ),
     )
 

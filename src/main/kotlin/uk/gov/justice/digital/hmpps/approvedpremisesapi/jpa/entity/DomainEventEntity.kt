@@ -27,10 +27,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.persistence.CollectionTable
+import javax.persistence.Column
+import javax.persistence.ElementCollection
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.MapKeyColumn
+import javax.persistence.MapKeyEnumerated
 import javax.persistence.Table
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType as Cas2EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType as Cas3EventType
@@ -87,6 +93,12 @@ data class DomainEventEntity(
   val service: String,
   val triggeredByUserId: UUID?,
   val nomsNumber: String?,
+  @ElementCollection
+  @MapKeyColumn(name = "name")
+  @MapKeyEnumerated(EnumType.STRING)
+  @Column(name = "value")
+  @CollectionTable(name = "domain_events_metadata", joinColumns = [ JoinColumn(name = "domain_event_id") ])
+  val metadata: Map<MetaDataName, String?> = emptyMap(),
 ) {
   final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
     val data = when {
@@ -138,6 +150,11 @@ data class DomainEventEntity(
       data = data,
     )
   }
+}
+
+enum class MetaDataName {
+  CAS1_APP_REASON_FOR_SHORT_NOTICE,
+  CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER,
 }
 
 enum class DomainEventType(val typeName: String, val typeDescription: String, val timelineEventType: TimelineEventType?) {

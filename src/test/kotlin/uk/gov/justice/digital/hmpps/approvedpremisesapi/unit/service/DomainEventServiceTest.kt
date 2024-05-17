@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestFo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -186,6 +187,7 @@ class DomainEventServiceTest {
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
       val data = createDomainEventOfType(domainEventType)
+      val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to "value1")
 
       every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -197,6 +199,7 @@ class DomainEventServiceTest {
         occurredAt = occurredAt,
         data = data,
         bookingId = bookingId,
+        metadata = metadata,
       )
 
       every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
@@ -214,6 +217,7 @@ class DomainEventServiceTest {
             assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.metadata).isEqualTo(metadata)
           },
         )
       }
