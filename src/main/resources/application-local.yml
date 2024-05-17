@@ -68,3 +68,7 @@ user-allocations:
       enabled: true
     female-assessments:
       enabled: true
+
+feature-flags:
+  local-overrides:
+    cas1-email-use-cru-for-reply-to: true
