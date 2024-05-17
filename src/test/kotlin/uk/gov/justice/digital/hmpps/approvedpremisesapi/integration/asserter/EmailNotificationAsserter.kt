@@ -41,7 +41,7 @@ class EmailNotificationAsserter {
       toEmailAddress == it.email &&
         templateId == it.templateId &&
         it.personalisation.entries.containsAll(personalisation.entries) &&
-        it.replyToEmailId == replyToEmailId
+        (replyToEmailId == null || it.replyToEmailId == replyToEmailId)
     }
 
     assertThat(anyMatch)
