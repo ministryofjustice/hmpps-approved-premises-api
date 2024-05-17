@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
@@ -99,7 +98,6 @@ class ApplicationsTransformerTest {
         "status",
         "type",
         "telephoneNumber",
-        "statusUpdates",
         "assessment",
         "timelineEvents",
       )
@@ -128,27 +126,24 @@ class ApplicationsTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2 application correctly with status updates`() {
-      val statusUpdateEntity = Cas2StatusUpdateEntityFactory().withLabel("status update")
-        .withApplication(submittedCas2ApplicationFactory.produce()).produce()
-      val statusUpdateForApi = Cas2StatusUpdate(
-        id = statusUpdateEntity.id,
-        name = "statusUpdate",
-        label = "status update",
-        description = "status update",
+      val mockStatusUpdate = Cas2StatusUpdate(
+        id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
+        description = "On Waiting List",
+        label = "On Waiting List",
+        name = "onWaitingList",
       )
-      every { mockStatusUpdateTransformer.transformJpaToApi(statusUpdateEntity) } returns statusUpdateForApi
+      val mockAssessment = Cas2Assessment(
+        id = UUID.fromString("6e631a8c-a013-4bb4-812c-886c8fc25354"),
+        statusUpdates = listOf(mockStatusUpdate),
+      )
+      every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
 
-      val application = submittedCas2ApplicationFactory.withStatusUpdates(
-        mutableListOf(
-          statusUpdateEntity,
-        ),
-      )
-        .produce()
+      val application = submittedCas2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce()).produce()
 
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.statusUpdates).hasSize(1).containsExactly(statusUpdateForApi)
+      assertThat(result.assessment!!.statusUpdates).hasSize(1).containsExactly(mockStatusUpdate)
     }
   }
 

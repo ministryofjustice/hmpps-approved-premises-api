@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -73,7 +72,7 @@ class ApplicationsController(
     }
 
     if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+      return ResponseEntity.ok(getPersonDetailAndTransform(application))
     }
     throw NotFoundProblem(applicationId, "Application")
   }
@@ -134,7 +133,7 @@ class ApplicationsController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
   }
 
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>):
@@ -150,7 +149,6 @@ class ApplicationsController(
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-    user: NomisUserEntity,
   ): Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 

@@ -71,11 +71,11 @@ class AssessmentsController(
 
   override fun assessmentsAssessmentIdStatusUpdatesPost(
     assessmentId: UUID,
-    statusUpdate: Cas2AssessmentStatusUpdate,
+    cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
     val result = statusUpdateService.createForAssessment(
       assessmentId = assessmentId,
-      statusUpdate = statusUpdate,
+      statusUpdate = cas2AssessmentStatusUpdate,
       assessor = externalUserService.getUserForRequest(),
     )
 

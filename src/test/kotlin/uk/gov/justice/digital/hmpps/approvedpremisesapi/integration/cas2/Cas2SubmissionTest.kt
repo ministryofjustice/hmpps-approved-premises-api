@@ -312,17 +312,16 @@ class Cas2SubmissionTest(
   @Nested
   inner class GetToShow {
 
-    private fun createSubmittedApplicationWithAssessment(
+    private fun createInProgressApplication(
       newestJsonSchema: Cas2ApplicationJsonSchemaEntity,
       crn: String,
       user: NomisUserEntity,
-      submittedAt: OffsetDateTime?,
     ): Cas2ApplicationEntity {
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withApplicationSchema(newestJsonSchema)
         withCrn(crn)
         withCreatedByUser(user)
-        withSubmittedAt(submittedAt)
+        withSubmittedAt(null)
         withData(
           """
                               {
@@ -330,10 +329,6 @@ class Cas2SubmissionTest(
                               }
                               """,
         )
-      }
-
-      cas2AssessmentEntityFactory.produceAndPersist {
-        withApplication(applicationEntity)
       }
 
       return applicationEntity
@@ -475,14 +470,14 @@ class Cas2SubmissionTest(
                 assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
             }
 
-            Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })
+            Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
             Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
             Assertions.assertThat(
-              responseBody.statusUpdates!!.first().statusUpdateDetails!!
+              responseBody.assessment.statusUpdates!!.first().statusUpdateDetails!!
                 .map { detail -> detail.label },
             )
               .isEqualTo(listOf("Detail on 3rd update"))
@@ -509,11 +504,10 @@ class Cas2SubmissionTest(
                 )
               }
 
-            val applicationEntity = createSubmittedApplicationWithAssessment(
+            val applicationEntity = createInProgressApplication(
               newestJsonSchema,
               offenderDetails.otherIds.crn,
               user,
-              null,
             )
 
             val rawResponseBody = webTestClient.get()
@@ -545,27 +539,43 @@ class Cas2SubmissionTest(
                     )
                   }
 
-                val applicationEntity = createSubmittedApplicationWithAssessment(
-                  newestJsonSchema,
-                  offenderDetails.otherIds.crn,
-                  user,
-                  OffsetDateTime.parse("2022-09-21T12:45:00+01:00"),
-                )
+                val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(newestJsonSchema)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withCreatedByUser(user)
+                  withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                  withData(
+                    """
+                    {
+                        "thingId": 123
+                    }
+                  """,
+                  )
+                }
+
+                val assessmentEntity = cas2AssessmentEntityFactory.produceAndPersist {
+                  withApplication(applicationEntity)
+                  withNacroReferralId("OH123")
+                  withAssessorName("Assessor name")
+                }
 
                 val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withAssessor(assessor)
+                  withAssessment(assessmentEntity)
                   withLabel("1st update")
                 }
 
                 val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
+                  withAssessment(assessmentEntity)
                   withAssessor(assessor)
                   withLabel("2nd update")
                 }
 
                 val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
+                  withAssessment(assessmentEntity)
                   withAssessor(assessor)
                   withLabel("3rd update")
                 }
@@ -609,7 +619,7 @@ class Cas2SubmissionTest(
                     newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
                 }
 
-                Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })
+                Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
                   .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
                 Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
@@ -635,11 +645,10 @@ class Cas2SubmissionTest(
                   )
                 }
 
-              val applicationEntity = createSubmittedApplicationWithAssessment(
+              val applicationEntity = createInProgressApplication(
                 newestJsonSchema,
                 offenderDetails.otherIds.crn,
                 user,
-                null,
               )
 
               val rawResponseBody = webTestClient.get()

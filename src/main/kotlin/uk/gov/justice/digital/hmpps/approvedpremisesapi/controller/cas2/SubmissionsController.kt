@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service
 import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
@@ -15,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -28,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -46,7 +43,6 @@ class SubmissionsController(
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
   private val nomisUserService: NomisUserService,
-  private val statusUpdateService: StatusUpdateService,
 ) : SubmissionsCas2Delegate {
 
   override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
@@ -91,13 +87,13 @@ class SubmissionsController(
 
   @Transactional
   override fun submissionsPost(
-    submitApplication: SubmitCas2Application,
+    submitCas2Application: SubmitCas2Application,
   ): ResponseEntity<Unit> {
     val user = nomisUserService.getUserForRequest()
-    val submitResult = applicationService.submitApplication(submitApplication, user)
+    val submitResult = applicationService.submitApplication(submitCas2Application, user)
 
     val validationResult = when (submitResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(submitApplication.applicationId, "Application")
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(submitCas2Application.applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> submitResult.entity
     }
@@ -110,22 +106,6 @@ class SubmissionsController(
     }
 
     return ResponseEntity(HttpStatus.OK)
-  }
-
-  override fun submissionsApplicationIdStatusUpdatesPost(
-    applicationId: UUID,
-    statusUpdate: Cas2AssessmentStatusUpdate,
-  ): ResponseEntity<Unit> {
-    val result = statusUpdateService.create(
-      applicationId = applicationId,
-      statusUpdate = statusUpdate,
-      assessor = externalUserService.getUserForRequest(),
-    )
-
-    processAuthorisationFor(applicationId, result)
-      .run { processValidation(this as ValidatableActionResult<Cas2StatusUpdateEntity>) }
-
-    return ResponseEntity(HttpStatus.CREATED)
   }
 
   override fun submissionsApplicationIdNotesPost(applicationId: UUID, body: NewCas2ApplicationNote): ResponseEntity<Cas2ApplicationNote> {
