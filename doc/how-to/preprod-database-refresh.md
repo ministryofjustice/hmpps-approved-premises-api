@@ -25,22 +25,54 @@ preprod users back to the preprod database.
 
 ### Known Issues
 
-#### Pre-Prod users not being re-inserted if column mismatch
+#### Failure if tables/views exist pre-prod but not in prod
+
+We've observed errors occurring when tables with FKs or views exist in pre-prod that aren't in prod.
+
+The backup/restore errors because it's blocked when trying to remove a table that is referred to by an object not in prod
+
+In this case we've found that removing the 'deltas' from pre-prod and re-running the job can resolve the issue, although pre-prod specific users may be lost, see below for a remedy
+
+#### Pre-Prod users not being re-inserted if column mismatch on user tables
 
 If there are additional columns on the users, user_qualification_assignments or user_role_assignments tables in pre-prod (when compared to prod), the restore of pre-prod specific users/permissions will fail
 
+In this case seed jobs can be used to create the required users (see https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4889608208/Seed+CAS1+Pre-Prod+Team+Users and https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4461134218/Seed+user+roles)
+
+#### Refresh removes columns that are in pre-prod and not prod
+
+If pre-prod is on a newer version of code (with new migrations), you may see errors after running the job.
+
+You can force applying the latest migrations by restarting the API pods in pre-prod:
+
+```kubectl rollout restart deployment hmpps-approved-premises-api -n hmpps-community-accommodation-preprod```
+
 ## Run an adhoc database refresh
 
-If you need to run the database refresh outside the schedule, you can run the following
-command:
+Note! Due to the Known Issues mentioned above, it's strongly advised that you ensure the pre-prod database is on the same version of migrations as the prod database before running the job
+
+If you need to run the database refresh outside the schedule, you can run the following command:
 
 ```sh
 kubectl create job --from=cronjob/db-refresh-job db-refresh-job-adhoc --namespace hmpps-community-accommodation-prod
 ```
 
-The job creates a pod that runs to completion. You can review the command output by 
-using `kubectl` to show pod logs, e.g.
+The job creates a pod that runs to completion. You can review the command output by using `kubectl` to show pod logs
+
+First find out the container name:
 
 ```sh
-kubectl -n hmpps-community-accommodation-prod logs db-refresh-job-adhoc-{id} -f
+kubectl -n hmpps-community-accommodation-prod get pods | grep db-refresh
+```
+
+Then check the logs using the pod name:
+
+```sh
+kubectl -n hmpps-community-accommodation-prod logs -f {pod-name}
+```
+
+If the container is in an error state and you want to re-run, you may have to stop the job manually first:
+
+```sh
+kubectl -n hmpps-community-accommodation-prod delete job db-refresh-job-adhoc
 ```
