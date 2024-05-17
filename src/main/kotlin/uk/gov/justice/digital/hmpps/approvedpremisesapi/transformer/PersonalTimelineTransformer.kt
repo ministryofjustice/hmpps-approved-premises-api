@@ -28,6 +28,7 @@ class PersonalTimelineTransformer(
     id = application.id,
     createdAt = application.createdAt.toInstant(),
     status = application.status.apiValue,
+    isOfflineApplication = false,
     createdBy = userTransformer.transformJpaToApi(application.createdByUser, ServiceName.approvedPremises),
     timelineEvents = timelineEvents,
   )

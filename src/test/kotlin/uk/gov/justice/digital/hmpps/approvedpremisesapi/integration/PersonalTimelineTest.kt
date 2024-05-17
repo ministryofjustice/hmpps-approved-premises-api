@@ -149,6 +149,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                       id = application.id,
                       createdAt = application.createdAt.toInstant(),
                       status = ApprovedPremisesApplicationStatus.started,
+                      isOfflineApplication = false,
                       createdBy = ApprovedPremisesUser(
                         qualifications = emptyList(),
                         roles = emptyList(),
@@ -272,6 +273,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                       id = application.id,
                       createdAt = application.createdAt.toInstant(),
                       status = ApprovedPremisesApplicationStatus.started,
+                      isOfflineApplication = false,
                       createdBy = ApprovedPremisesUser(
                         qualifications = emptyList(),
                         roles = emptyList(),
