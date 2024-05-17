@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
@@ -219,10 +218,11 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    if (deliusUser.teams?.firstOrNull()?.borough?.code != null && user.probationDeliveryUnit?.deliusCode !== deliusUser.teams.firstOrNull()?.borough?.code) {
-      when (val probationDeliveryUnit = findProbationDeliveryUnit(deliusUser.teams)) {
+    val userLastBoroughCode = orderDeliusUserTeams(deliusUser)?.firstOrNull()?.borough?.code
+    if (userLastBoroughCode != null && user.probationDeliveryUnit?.deliusCode != userLastBoroughCode) {
+      when (val probationDeliveryUnit = probationDeliveryUnitRepository.findByDeliusCode(userLastBoroughCode)) {
         null -> {
-          throw Exception("Unable to find community API borough code ${deliusUser.teams.first().borough.code} in CAS")
+          throw Exception("Unable to find community API borough code $userLastBoroughCode in CAS")
         }
 
         else -> {
@@ -252,7 +252,8 @@ class UserService(
       }
     }
 
-    deliusUser.teams?.firstOrNull()?.let { team ->
+    val userTeams = orderDeliusUserTeams(deliusUser)
+    userTeams?.firstOrNull()?.let { team ->
       probationDeliveryUnitRepository.findByDeliusCode(team.borough.code)?.let { probationDeliveryUnit ->
         user.probationDeliveryUnit = probationDeliveryUnit
       }
@@ -319,7 +320,8 @@ class UserService(
       }
     }
 
-    val staffProbationDeliveryUnit = findProbationDeliveryUnit(staffUserDetails.teams)
+    val userLastBoroughCode = orderDeliusUserTeams(staffUserDetails)?.firstOrNull()?.borough?.code
+    val staffProbationDeliveryUnit = userLastBoroughCode?.let { probationDeliveryUnitRepository.findByDeliusCode(it) }
 
     val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
@@ -351,8 +353,8 @@ class UserService(
       .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
   }
 
-  private fun findProbationDeliveryUnit(teams: List<StaffUserTeamMembership>?): ProbationDeliveryUnitEntity? {
-    return teams?.firstOrNull()?.borough?.let { probationDeliveryUnitRepository.findByDeliusCode(it.code) }
+  private fun orderDeliusUserTeams(deliusUser: StaffUserDetails): List<StaffUserTeamMembership>? {
+    return deliusUser.teams?.sortedByDescending { it.startDate }
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
+import java.time.LocalDate
 
 class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
@@ -79,12 +80,23 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .withUsername(userOne.deliusUsername)
         .withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE1",
-                description = "PDUDESCRIPTION1",
-              ),
-            )
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE2",
+                  description = "PDUDESCRIPTION2",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2022-06-02"))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE1",
+                  description = "PDUDESCRIPTION1",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2024-02-05"))
               .produce(),
           ),
         )

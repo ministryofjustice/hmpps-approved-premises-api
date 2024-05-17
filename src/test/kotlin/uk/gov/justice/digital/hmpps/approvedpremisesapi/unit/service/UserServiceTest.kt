@@ -564,10 +564,11 @@ class UserServiceTest {
         .produce()
 
       var pduId: UUID? = null
-      if (deliusUser.teams?.firstOrNull()?.borough?.code != null) {
+      val userBoroughCode = deliusUser.teams?.maxByOrNull { it.startDate }?.borough?.code
+      if (userBoroughCode != null) {
         pduId = UUID.fromString("99bc8c9c-ce26-4f0e-b994-a3b566c57b61")
         every {
-          deliusUser.teams?.firstOrNull()?.borough?.code?.let { mockProbationDeliveryUnitRepository.findByDeliusCode(it) }
+          userBoroughCode.let { mockProbationDeliveryUnitRepository.findByDeliusCode(it) }
         } returns ProbationDeliveryUnitEntityFactory()
           .withId(pduId)
           .withDeliusCode(randomStringMultiCaseWithNumbers(8))
