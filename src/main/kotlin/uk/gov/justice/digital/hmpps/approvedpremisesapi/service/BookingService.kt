@@ -142,7 +142,6 @@ class BookingService(
   private val assessmentService: AssessmentService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
-  private val featureFlagService: FeatureFlagService,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -1141,10 +1140,7 @@ class BookingService(
       userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
       blockingReason = if (booking.hasArrivals()) {
         BlockingReason.ArrivalRecordedInCas1
-      } else if (
-        featureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", default = false) &&
-        deliusService.referralHasArrival(booking)
-      ) {
+      } else if (deliusService.referralHasArrival(booking)) {
         BlockingReason.ArrivalRecordedInDelius
       } else {
         null

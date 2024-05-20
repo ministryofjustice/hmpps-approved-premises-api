@@ -124,7 +124,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -182,7 +181,6 @@ class BookingServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockCas1BookingEmailService = mockk<Cas1BookingEmailService>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockDeliusService = mockk<DeliusService>()
 
   fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
@@ -223,7 +221,6 @@ class BookingServiceTest {
       userAccessService = mockUserAccessService,
       assessmentService = mockAssessmentService,
       cas1BookingEmailService = mockCas1BookingEmailService,
-      featureFlagService = mockFeatureFlagService,
       deliusService = mockDeliusService,
     )
   }
@@ -6870,7 +6867,6 @@ class BookingServiceTest {
       )
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
 
       val result = bookingService.getWithdrawableState(booking, user)
 
@@ -6888,7 +6884,6 @@ class BookingServiceTest {
       )
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
       every { mockDeliusService.referralHasArrival(booking) } returns false
 
       val result = bookingService.getWithdrawableState(booking, user)
@@ -6903,7 +6898,6 @@ class BookingServiceTest {
         .produce()
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
       every { mockDeliusService.referralHasArrival(booking) } returns false
 
       val result = bookingService.getWithdrawableState(booking, user)
@@ -6919,7 +6913,6 @@ class BookingServiceTest {
         .produce()
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns canWithdraw
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
       every { mockDeliusService.referralHasArrival(booking) } returns false
 
       val result = bookingService.getWithdrawableState(booking, user)
@@ -6935,7 +6928,6 @@ class BookingServiceTest {
         .produce()
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
       every { mockDeliusService.referralHasArrival(booking) } returns false
 
       val result = bookingService.getWithdrawableState(booking, user)
@@ -6956,7 +6948,6 @@ class BookingServiceTest {
       )
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
 
       val result = bookingService.getWithdrawableState(booking, user)
 
@@ -6970,28 +6961,11 @@ class BookingServiceTest {
         .produce()
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns true
       every { mockDeliusService.referralHasArrival(booking) } returns true
 
       val result = bookingService.getWithdrawableState(booking, user)
 
       assertThat(result.blockingReason).isEqualTo(BlockingReason.ArrivalRecordedInDelius)
-    }
-
-    @Test
-    fun `getWithdrawableState doesn't check delius status if feature flag disabled`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockFeatureFlagService.getBooleanFlag("cas1-check-delius-arrival-status-on-withdrawal", false) } returns false
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.blockingReason).isNull()
-
-      verify { mockDeliusService wasNot Called }
     }
   }
 
