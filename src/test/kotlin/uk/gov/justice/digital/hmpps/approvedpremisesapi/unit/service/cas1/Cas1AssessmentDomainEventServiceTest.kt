@@ -143,7 +143,7 @@ class Cas1AssessmentDomainEventServiceTest {
     }
 
     @Test
-    fun `assessmentAllocated allocating user is optional`() {
+    fun `assessmentAllocated allocating user is system`() {
       val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
       every { communityApiClient.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -159,7 +159,7 @@ class Cas1AssessmentDomainEventServiceTest {
           withArg {
             Assertions.assertThat(it.data.eventDetails.allocatedBy).isNull()
           },
-          any(),
+          TriggerSourceType.SYSTEM,
         )
       }
     }

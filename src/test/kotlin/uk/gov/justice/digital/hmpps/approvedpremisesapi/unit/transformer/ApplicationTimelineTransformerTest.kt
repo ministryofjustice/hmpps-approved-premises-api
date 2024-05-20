@@ -82,6 +82,7 @@ class ApplicationTimelineTransformerTest {
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
     assertThat(result.createdBy).isEqualTo(userApi)
+    assertThat(result.triggerSource).isEqualTo(null)
   }
 
   @Test
@@ -344,6 +345,31 @@ class ApplicationTimelineTransformerTest {
         ),
         content = "Some event",
       ),
+    )
+  }
+
+  @ParameterizedTest
+  @EnumSource(TriggerSourceType::class)
+  fun `transformDomainEventSummaryToTimelineEvent correctly maps triggerSource`(triggerSource: TriggerSourceType) {
+    val assessmentId = UUID.randomUUID()
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+      occurredAt = OffsetDateTime.now(),
+      bookingId = null,
+      applicationId = null,
+      assessmentId = assessmentId,
+      premisesId = null,
+      appealId = null,
+      triggerSource = triggerSource,
+      triggeredByUser = null,
+    )
+
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
+    Assertions.assertThat(
+      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
+        .triggerSource?.name.equals(triggerSource.name, true),
     )
   }
 }

@@ -54,6 +54,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
         d.applicationId as applicationId,
         d.assessmentId as assessmentId,
         d.bookingId as bookingId,
+        d.triggerSource as triggerSource,
         b.premises.id as premisesId,
         a.id as appealId,
         u as triggeredByUser
