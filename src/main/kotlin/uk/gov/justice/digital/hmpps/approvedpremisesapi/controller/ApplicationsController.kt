@@ -47,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -89,7 +88,6 @@ class ApplicationsController(
   private val placementRequestService: PlacementRequestService,
   private val requestForPlacementService: RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
-  private val featureFlagService: FeatureFlagService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -433,13 +431,7 @@ class ApplicationsController(
     }
 
     val transformedDocuments = when (application) {
-      is ApprovedPremisesApplicationEntity -> {
-        if (featureFlagService.getBooleanFlag("cas1-remove-document-conviction-id-filters", default = false)) {
-          documentTransformer.transformToApiUnfiltered(documents)
-        } else {
-          documentTransformer.transformToApiFiltered(documents, application.convictionId)
-        }
-      }
+      is ApprovedPremisesApplicationEntity -> documentTransformer.transformToApiUnfiltered(documents)
       is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApiFiltered(documents, application.convictionId)
       else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
