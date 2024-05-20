@@ -225,6 +225,11 @@ object Cas2ApplicationStatusSeeding {
             name = "createdInError",
             label = "Created in error",
           ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("f38f55c0-fda6-44f8-a3b1-a7c0a990bc51"),
+            name = "hdcNotEligible",
+            label = "HDC not eligible",
+          ),
         ),
       ),
       Cas2PersistedApplicationStatus(
