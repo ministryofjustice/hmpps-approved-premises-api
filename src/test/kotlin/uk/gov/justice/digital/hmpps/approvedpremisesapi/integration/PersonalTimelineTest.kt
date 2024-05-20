@@ -331,4 +331,78 @@ class PersonalTimelineTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Getting a personal timeline for a CRN with an offline application returns OK with correct body`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val personInfoResult = PersonInfoResult.Success.Full(
+          crn = offenderDetails.otherIds.crn,
+          offenderDetailSummary = offenderDetails,
+          inmateDetail = inmateDetails,
+        )
+
+        val offlineApplication = offlineApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+        }
+
+        val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
+          withCrn(offenderDetails.otherIds.crn)
+          withApplicationId(offlineApplication.id)
+        }
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              PersonalTimeline(
+                person = personTransformer.transformModelToPersonApi(personInfoResult),
+                applications = listOf(
+                  ApplicationTimeline(
+                    id = offlineApplication.id,
+                    createdAt = offlineApplication.createdAt.toInstant(),
+                    status = null,
+                    isOfflineApplication = true,
+                    createdBy = null,
+                    timelineEvents = listOf(
+                      TimelineEvent(
+                        type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                        id = domainEvents[0].id.toString(),
+                        occurredAt = domainEvents[0].occurredAt.toInstant(),
+                        content = "The application was submitted",
+                        createdBy = null,
+                        associatedUrls = listOf(
+                          TimelineEventAssociatedUrl(
+                            type = TimelineEventUrlType.application,
+                            url = "http://frontend/applications/${offlineApplication.id}",
+                          ),
+                        ),
+                      ),
+                      TimelineEvent(
+                        type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                        id = domainEvents[1].id.toString(),
+                        occurredAt = domainEvents[1].occurredAt.toInstant(),
+                        content = "The application was submitted",
+                        createdBy = null,
+                        associatedUrls = listOf(
+                          TimelineEventAssociatedUrl(
+                            type = TimelineEventUrlType.application,
+                            url = "http://frontend/applications/${offlineApplication.id}",
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+      }
+    }
+  }
 }

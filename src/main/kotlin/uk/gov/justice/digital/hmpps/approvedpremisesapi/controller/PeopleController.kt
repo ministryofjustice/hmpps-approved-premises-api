@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonalTimeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -56,6 +58,7 @@ class PeopleController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -254,11 +257,30 @@ class PeopleController(
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
       is PersonInfoResult.Success -> {
-        val applicationTimelineModels = applicationService
+        val regularApplications = applicationService
           .getApplicationsForCrn(crn, ServiceName.approvedPremises)
-          .map {
-            val application = BoxedApplication.of(it as ApprovedPremisesApplicationEntity)
-            val timelineEvents = applicationService.getApplicationTimeline(it.id)
+          .map { BoxedApplication.of(it as ApprovedPremisesApplicationEntity) }
+
+        val useOfflineApplications = featureFlagService.getBooleanFlag("cas1-provide-offline-application-events-in-personal-timeline", default = false)
+        val offlineApplications = when (useOfflineApplications) {
+          true ->
+            applicationService
+              .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+              .map { BoxedApplication.of(it) }
+
+          false -> listOf()
+        }
+
+        val allApplications = regularApplications + offlineApplications
+
+        val applicationTimelineModels = allApplications
+          .map { application ->
+            val applicationId = application.map(
+              ApprovedPremisesApplicationEntity::id,
+              OfflineApplicationEntity::id,
+            )
+
+            val timelineEvents = applicationService.getApplicationTimeline(applicationId)
 
             ApplicationTimelineModel(application, timelineEvents)
           }
