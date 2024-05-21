@@ -2083,6 +2083,8 @@ class ApplicationTest : IntegrationTestBase() {
                     "cmEmail",
                     "cmTelephone",
                   ),
+                  reasonForShortNotice = "reasonForShort",
+                  reasonForShortNoticeOther = "reasonForShortOther",
                 ),
               )
               .exchange()

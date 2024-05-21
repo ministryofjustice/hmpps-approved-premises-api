@@ -6943,6 +6943,10 @@ components:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
             noticeType:
               $ref: '#/components/schemas/Cas1ApplicationTimelinessCategory'
+            reasonForShortNotice:
+              type: string
+            reasonForShortNoticeOther:
+              type: string
           required:
             - targetLocation
             - releaseType
