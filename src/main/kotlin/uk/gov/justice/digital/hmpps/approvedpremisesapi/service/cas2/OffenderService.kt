@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
@@ -39,7 +40,7 @@ class OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomsNumber(nomsNumber: String): ProbationOffenderSearchResult {
+  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity): ProbationOffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) =
       log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
 
@@ -66,15 +67,29 @@ class OffenderService(
       return ProbationOffenderSearchResult.NotFound(nomsNumber)
     } else {
       val probationOffenderDetail = probationOffenderDetailList[0]
-      val isLao = probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
-      if (isLao) {
-        return ProbationOffenderSearchResult.Forbidden(nomsNumber)
-      }
 
+      // check for restrictions or exclusions
+      if (hasRestrictionOrExclusion(probationOffenderDetail)) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
+
+      // check inmate details from Prison API
       val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
+        ?: return ProbationOffenderSearchResult.NotFound(nomsNumber)
 
-      return ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetails)
+      // check if same prison
+      return if (isOffenderSamePrisonAsUser(inmateDetails, currentUser)) {
+        ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetails)
+      } else {
+        ProbationOffenderSearchResult.Forbidden(nomsNumber)
+      }
     }
+  }
+
+  private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean {
+    return probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
+  }
+
+  private fun isOffenderSamePrisonAsUser(inmateDetail: InmateDetail?, currentUser: NomisUserEntity): Boolean {
+    return currentUser.activeCaseloadId == inmateDetail?.assignedLivingUnit?.agencyId
   }
 
   private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? {
@@ -202,8 +217,15 @@ class OffenderService(
     val inmateDetail = when (inmateDetailResponse) {
       is ClientResult.Success -> inmateDetailResponse.body
       is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        HttpStatus.NOT_FOUND -> {
+          logFailedResponse(inmateDetailResponse)
+          return AuthorisableActionResult.NotFound()
+        }
+
+        HttpStatus.FORBIDDEN -> {
+          logFailedResponse(inmateDetailResponse)
+          return AuthorisableActionResult.Unauthorised()
+        }
         else -> {
           logFailedResponse(inmateDetailResponse)
           null
