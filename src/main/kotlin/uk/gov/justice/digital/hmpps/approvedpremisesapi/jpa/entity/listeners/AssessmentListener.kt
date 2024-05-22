@@ -23,16 +23,16 @@ class AssessmentListener {
 
   @PreUpdate
   fun preUpdate(assessment: ApprovedPremisesAssessmentEntity) {
-    if ((assessment.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION) {
+    val application = assessment.application as ApprovedPremisesApplicationEntity
+
+    if (application.status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION && assessment.decision == null) {
       return
     } else if (assessment.decision == null && assessment.data != null) {
-      (assessment.application as ApprovedPremisesApplicationEntity).status =
-        ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
+      application.status = ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
     } else if (assessment.decision == AssessmentDecision.ACCEPTED) {
-      val application = (assessment.application as ApprovedPremisesApplicationEntity)
       application.status = applicationGetStatusFromArrivalDate(application)
     } else if (assessment.decision == AssessmentDecision.REJECTED) {
-      (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.REJECTED
+      application.status = ApprovedPremisesApplicationStatus.REJECTED
     }
   }
 

@@ -44,7 +44,7 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     this.response = { response }
   }
 
-  fun withResponseReceivedOn(responseReceivedOn: LocalDate) = apply {
+  fun withResponseReceivedOn(responseReceivedOn: LocalDate?) = apply {
     this.responseReceivedOn = { responseReceivedOn }
   }
 
