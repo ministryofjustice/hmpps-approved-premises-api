@@ -19,6 +19,8 @@ fun transformUserRoles(approvedPremisesUserRole: ApprovedPremisesUserRole): User
   ApprovedPremisesUserRole.assessor -> UserRole.CAS1_ASSESSOR
   ApprovedPremisesUserRole.matcher -> UserRole.CAS1_MATCHER
   ApprovedPremisesUserRole.manager -> UserRole.CAS1_MANAGER
+  ApprovedPremisesUserRole.legacyManager -> UserRole.CAS1_LEGACY_MANAGER
+  ApprovedPremisesUserRole.futureManager -> UserRole.CAS1_FUTURE_MANAGER
   ApprovedPremisesUserRole.workflowManager -> UserRole.CAS1_WORKFLOW_MANAGER
   ApprovedPremisesUserRole.applicant -> UserRole.CAS1_APPLICANT
   ApprovedPremisesUserRole.roleAdmin -> UserRole.CAS1_ADMIN
