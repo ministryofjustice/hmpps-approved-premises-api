@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.time.LocalDate
 import java.util.UUID
@@ -30,6 +31,7 @@ import java.util.UUID
 @Service
 class ReportsController(
   private val reportService: ReportService,
+  private val cas1ReportService: Cas1ReportService,
   private val cas3ReportService: Cas3ReportService,
   private val userAccessService: UserAccessService,
   private val userService: UserService,
@@ -221,7 +223,7 @@ class ReportsController(
     val properties = Cas1PlacementMatchingOutcomesReportProperties(year, month)
 
     return generateXlsxStreamingResponse { outputStream ->
-      reportService.createCas1PlacementMatchingOutcomesReport(properties, outputStream)
+      cas1ReportService.createPlacementMatchingOutcomesReport(properties, outputStream)
     }
   }
 
