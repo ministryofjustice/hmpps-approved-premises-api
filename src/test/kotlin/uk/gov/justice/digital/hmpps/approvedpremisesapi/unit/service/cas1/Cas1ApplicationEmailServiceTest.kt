@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
 
@@ -24,7 +24,7 @@ class Cas1ApplicationEmailServiceTest {
   }
 
   private val notifyConfig = NotifyConfig()
-  private val mockEmailNotificationService = MockEmailNotificationService()
+  private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1ApplicationEmailService(
     emailNotifier = mockEmailNotificationService,
@@ -70,6 +70,7 @@ class Cas1ApplicationEmailServiceTest {
         TestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.applicationSubmitted,
         personalisation,
+        application,
       )
     }
   }
@@ -122,6 +123,7 @@ class Cas1ApplicationEmailServiceTest {
         TestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.applicationWithdrawnV2,
         personalisation,
+        application,
       )
     }
 
@@ -146,11 +148,13 @@ class Cas1ApplicationEmailServiceTest {
         TestConstants.APPLICANT_EMAIL,
         notifyConfig.templates.applicationWithdrawnV2,
         personalisation,
+        application,
       )
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.applicationWithdrawnV2,
         personalisation,
+        application,
       )
     }
   }

@@ -2091,14 +2091,13 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            val persistedApplication =
-              approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+            val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-            assertThat(persistedApplication?.isWomensApplication).isTrue
-            assertThat(persistedApplication?.isPipeApplication).isTrue
-            assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
-            assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-            assertThat(persistedApplication?.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
+            assertThat(persistedApplication.isWomensApplication).isTrue
+            assertThat(persistedApplication.isPipeApplication).isTrue
+            assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
+            assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+            assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
 
             val createdAssessment =
               approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2128,8 +2127,16 @@ class ApplicationTest : IntegrationTestBase() {
             )
 
             emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(createdAssessment.allocatedToUser!!.email!!, notifyConfig.templates.assessmentAllocated)
-            emailAsserter.assertEmailRequested(submittingUser.email!!, notifyConfig.templates.applicationSubmitted)
+            emailAsserter.assertEmailRequested(
+              toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
+              templateId = notifyConfig.templates.assessmentAllocated,
+              replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
+            )
+            emailAsserter.assertEmailRequested(
+              toEmailAddress = submittingUser.email!!,
+              templateId = notifyConfig.templates.applicationSubmitted,
+              replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
+            )
           }
         }
       }

@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.REGION_NAME
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -45,7 +45,7 @@ class Cas1BookingEmailServiceTest {
   }
 
   private val notifyConfig = NotifyConfig()
-  private val mockEmailNotificationService = MockEmailNotificationService()
+  private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1BookingEmailService(
     mockEmailNotificationService,
@@ -106,6 +106,7 @@ class Cas1BookingEmailServiceTest {
           "lengthStay" to 2,
           "lengthStayUnit" to "weeks",
         ),
+        application,
       )
     }
 
@@ -144,12 +145,14 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingMade,
         personalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingMadePremises,
         personalisation,
+        application,
       )
     }
 
@@ -180,12 +183,14 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingMade,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingMadePremises,
         expectedPersonalisation,
+        application,
       )
     }
   }
@@ -226,24 +231,28 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         AP_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
     }
 
@@ -307,24 +316,28 @@ class Cas1BookingEmailServiceTest {
         APPLICANT_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         AP_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
+        application,
       )
     }
   }

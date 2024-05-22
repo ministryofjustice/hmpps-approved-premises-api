@@ -41,6 +41,17 @@ You can then pass that boolean value to wherever it is required in your code.
 NOTE: By default, Flipt is disabled in local development environments, and `getBooleanFlag`
 will always return true
 
+## Step 4: Override for local deployments and/or integration tests
+
+If you'd like to override the default featre flag value in local deployments and/or integration
+tests an override can be added into application-local.yml and/or application-test.yml:
+
+```
+feature-flags:
+  local-overrides:
+    cas1-email-use-cru-for-reply-to: true
+```
+
 ## Step 5: Enable/disable the flag in the appropriate environment
 
 Once your code is deployed, you can then enable/disable the flag in the appropriate

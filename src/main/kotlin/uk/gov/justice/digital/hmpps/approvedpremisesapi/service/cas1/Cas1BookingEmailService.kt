@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
@@ -17,14 +16,14 @@ object Constants {
 
 @Service
 class Cas1BookingEmailService(
-  private val emailNotifier: EmailNotifier,
+  private val emailNotifier: Cas1EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
 ) {
 
-  fun bookingMade(application: ApplicationEntity, booking: BookingEntity) {
+  fun bookingMade(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
     val applicationSubmittedByUser = application.createdByUser
 
     val emailPersonalisation = buildCommonPersonalisation(
@@ -37,6 +36,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = applicationSubmittedByUser.email!!,
         templateId = notifyConfig.templates.bookingMade,
         personalisation = emailPersonalisation,
+        application = application,
       )
     }
 
@@ -45,6 +45,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = booking.premises.emailAddress!!,
         templateId = notifyConfig.templates.bookingMadePremises,
         personalisation = emailPersonalisation,
+        application = application,
       )
     }
   }
@@ -66,6 +67,7 @@ class Cas1BookingEmailService(
       recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
       templateId = template,
       personalisation = allPersonalisation,
+      application = application,
     )
 
     val premises = booking.premises
@@ -74,6 +76,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = email,
         templateId = template,
         personalisation = allPersonalisation,
+        application = application,
       )
     }
 
@@ -83,6 +86,7 @@ class Cas1BookingEmailService(
         recipientEmailAddress = cruEmail,
         templateId = template,
         personalisation = allPersonalisation,
+        application = application,
       )
     }
   }

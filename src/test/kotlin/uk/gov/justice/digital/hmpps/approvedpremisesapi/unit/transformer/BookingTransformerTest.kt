@@ -116,6 +116,7 @@ class BookingTransformerTest {
         name = "Ap Area",
         probationRegions = mutableListOf(),
         emailAddress = "email@test.com",
+        notifyReplyToEmailId = "1234",
       ),
     ).apply { apArea.probationRegions.add(this) },
     localAuthorityArea = LocalAuthorityAreaEntity(

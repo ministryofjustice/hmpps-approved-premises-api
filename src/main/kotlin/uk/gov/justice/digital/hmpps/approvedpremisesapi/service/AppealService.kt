@@ -88,7 +88,7 @@ class AppealService(
             cas1AppealEmailService.appealSuccess(application, appeal)
           }
           AppealDecision.rejected -> {
-            cas1AppealEmailService.appealFailed(application)
+            cas1AppealEmailService.appealFailed(application as ApprovedPremisesApplicationEntity)
           }
         }
 

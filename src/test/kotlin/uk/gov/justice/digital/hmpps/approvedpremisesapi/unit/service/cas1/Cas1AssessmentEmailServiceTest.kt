@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -21,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.ALLOCATED_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.CRN
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOfDay
@@ -37,7 +38,7 @@ class Cas1AssessmentEmailServiceTest {
   }
 
   private val notifyConfig = NotifyConfig()
-  private val mockEmailNotificationService = MockEmailNotificationService()
+  private val mockEmailNotificationService = MockCas1EmailNotificationService()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
   val service = Cas1AssessmentEmailService(
@@ -74,18 +75,7 @@ class Cas1AssessmentEmailServiceTest {
         .withCreatedByUser(applicant)
         .produce()
 
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAssessmentSchema(schema)
-        .withData("{\"test\": \"data\"}")
-        .withSubmittedAt(null)
-        .withReallocatedAt(null)
-        .withIsWithdrawn(false)
-        .produce()
-
-      service.assessmentAccepted(
-        assessment,
-      )
+      service.assessmentAccepted(application)
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
 
@@ -102,18 +92,7 @@ class Cas1AssessmentEmailServiceTest {
         .withCreatedByUser(applicant)
         .produce()
 
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAssessmentSchema(schema)
-        .withData("{\"test\": \"data\"}")
-        .withSubmittedAt(null)
-        .withReallocatedAt(null)
-        .withIsWithdrawn(false)
-        .produce()
-
-      service.assessmentAccepted(
-        assessment,
-      )
+      service.assessmentAccepted(application)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -124,6 +103,7 @@ class Cas1AssessmentEmailServiceTest {
           "applicationUrl" to "http://frontend/application/${application.id}",
           "crn" to CRN,
         ),
+        application,
       )
     }
   }
@@ -148,18 +128,7 @@ class Cas1AssessmentEmailServiceTest {
         .withCreatedByUser(applicant)
         .produce()
 
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAssessmentSchema(schema)
-        .withData("{\"test\": \"data\"}")
-        .withSubmittedAt(null)
-        .withReallocatedAt(null)
-        .withIsWithdrawn(false)
-        .produce()
-
-      service.assessmentRejected(
-        assessment,
-      )
+      service.assessmentRejected(application)
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
 
@@ -176,18 +145,7 @@ class Cas1AssessmentEmailServiceTest {
         .withCreatedByUser(applicant)
         .produce()
 
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAssessmentSchema(schema)
-        .withData("{\"test\": \"data\"}")
-        .withSubmittedAt(null)
-        .withReallocatedAt(null)
-        .withIsWithdrawn(false)
-        .produce()
-
-      service.assessmentRejected(
-        assessment,
-      )
+      service.assessmentRejected(application)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -198,6 +156,7 @@ class Cas1AssessmentEmailServiceTest {
           "applicationUrl" to "http://frontend/application/${application.id}",
           "crn" to CRN,
         ),
+        application,
       )
     }
   }
@@ -208,11 +167,17 @@ class Cas1AssessmentEmailServiceTest {
       .withUnitTestControlProbationRegion()
       .withEmail(ALLOCATED_EMAIL)
       .produce()
+
+    private val application = ApprovedPremisesApplicationEntityFactory()
+      .withDefaults()
+      .withCrn(CRN)
+      .produce()
+
     private val assessmentID = UUID.randomUUID()
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and no deadline`() {
-      service.assessmentAllocated(applicant, assessmentID, CRN, null, false)
+      service.assessmentAllocated(applicant, assessmentID, application, null, false)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -224,13 +189,14 @@ class Cas1AssessmentEmailServiceTest {
           assessmentID,
           DEFAULT_DEADLINE_COPY,
         ),
+        application,
       )
     }
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of today`() {
       val deadline = OffsetDateTime.now().minusHours(2)
-      service.assessmentAllocated(applicant, assessmentID, CRN, deadline, true)
+      service.assessmentAllocated(applicant, assessmentID, application, deadline, true)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -242,6 +208,7 @@ class Cas1AssessmentEmailServiceTest {
           assessmentID,
           SAME_DAY_EMERGENCY_DEADLINE_COPY,
         ),
+        application,
       )
     }
 
@@ -250,7 +217,7 @@ class Cas1AssessmentEmailServiceTest {
       every { mockWorkingDayService.getCompleteWorkingDaysFromNowUntil(any()) } returns 2
       val deadline = OffsetDateTime.now().plusDays(2)
 
-      service.assessmentAllocated(applicant, assessmentID, CRN, deadline, true)
+      service.assessmentAllocated(applicant, assessmentID, application, deadline, true)
 
       val expectedDeadlineCopy = NEXT_WORKING_DAY_EMERGENCY_DEADLINE_COPY.format(deadline.toUiFormattedHourOfDay(), deadline.toLocalDate().toUiFormat())
 
@@ -264,6 +231,7 @@ class Cas1AssessmentEmailServiceTest {
           assessmentID,
           expectedDeadlineCopy,
         ),
+        application,
       )
     }
 
@@ -272,7 +240,7 @@ class Cas1AssessmentEmailServiceTest {
       every { mockWorkingDayService.getCompleteWorkingDaysFromNowUntil(any()) } returns 10
       val deadline = OffsetDateTime.now().plusDays(10)
 
-      service.assessmentAllocated(applicant, assessmentID, CRN, deadline, false)
+      service.assessmentAllocated(applicant, assessmentID, application, deadline, false)
 
       val expectedDeadlineCopy = STANDARD_DEADLINE_COPY.format("10")
 
@@ -286,6 +254,7 @@ class Cas1AssessmentEmailServiceTest {
           assessmentID,
           expectedDeadlineCopy,
         ),
+        application,
       )
     }
 
@@ -300,7 +269,7 @@ class Cas1AssessmentEmailServiceTest {
       service.assessmentAllocated(
         applicant,
         assessmentID,
-        CRN,
+        application,
         OffsetDateTime.now(),
         false,
       )
@@ -323,9 +292,15 @@ class Cas1AssessmentEmailServiceTest {
         .withUnitTestControlProbationRegion()
         .withEmail(ALLOCATED_EMAIL)
         .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withCrn(CRN)
+        .produce()
+
       val assessmentID = UUID.randomUUID()
 
-      service.assessmentDeallocated(applicant, assessmentID, CRN)
+      service.assessmentDeallocated(applicant, assessmentID, application)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -336,6 +311,7 @@ class Cas1AssessmentEmailServiceTest {
           "crn" to CRN,
           "assessmentUrl" to "http://frontend/assessments/$assessmentID",
         ),
+        application,
       )
     }
 
@@ -345,9 +321,15 @@ class Cas1AssessmentEmailServiceTest {
         .withUnitTestControlProbationRegion()
         .withEmail(null)
         .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withCrn(CRN)
+        .produce()
+
       val assessmentID = UUID.randomUUID()
 
-      service.assessmentDeallocated(applicant, assessmentID, CRN)
+      service.assessmentDeallocated(applicant, assessmentID, application)
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
   }
@@ -360,9 +342,15 @@ class Cas1AssessmentEmailServiceTest {
         .withUnitTestControlProbationRegion()
         .withEmail(ALLOCATED_EMAIL)
         .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withCrn(CRN)
+        .produce()
+
       val assessmentID = UUID.randomUUID()
 
-      service.appealedAssessmentAllocated(applicant, assessmentID, CRN)
+      service.appealedAssessmentAllocated(applicant, assessmentID, application)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -373,6 +361,7 @@ class Cas1AssessmentEmailServiceTest {
           "crn" to CRN,
           "assessmentUrl" to "http://frontend/assessments/$assessmentID",
         ),
+        application,
       )
     }
 
@@ -382,9 +371,15 @@ class Cas1AssessmentEmailServiceTest {
         .withUnitTestControlProbationRegion()
         .withEmail(null)
         .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withCrn(CRN)
+        .produce()
+
       val assessmentID = UUID.randomUUID()
 
-      service.appealedAssessmentAllocated(applicant, assessmentID, CRN)
+      service.appealedAssessmentAllocated(applicant, assessmentID, application)
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
   }
@@ -400,9 +395,11 @@ class Cas1AssessmentEmailServiceTest {
     @Test
     fun `assessmentWithdrawn sends email when the user has an email address and assessment is pending`() {
       val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
+      val application = assessment.application as ApprovedPremisesApplicationEntity
 
       service.assessmentWithdrawn(
         assessment = assessment,
+        application = application,
         isAssessmentPending = true,
         withdrawingUser = withdrawingUser,
       )
@@ -417,15 +414,18 @@ class Cas1AssessmentEmailServiceTest {
           "applicationTimelineUrl" to "http://frontend/application/${assessment.application.id}?tab=timeline",
           "withdrawnBy" to "mr withdrawer",
         ),
+        application,
       )
     }
 
     @Test
     fun `assessmentWithdrawn does not send an email to a user if they do not have an email address and assessment is pending`() {
       val assessment = createAssessment(allocatedUserEmail = null)
+      val application = assessment.application as ApprovedPremisesApplicationEntity
 
       service.assessmentWithdrawn(
         assessment = assessment,
+        application = application,
         isAssessmentPending = true,
         withdrawingUser = withdrawingUser,
       )
@@ -436,9 +436,11 @@ class Cas1AssessmentEmailServiceTest {
     @Test
     fun `assessmentWithdrawn does not send an email to a user if they do have an email address but assessment is not pending`() {
       val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
+      val application = assessment.application as ApprovedPremisesApplicationEntity
 
       service.assessmentWithdrawn(
         assessment = assessment,
+        application = application,
         isAssessmentPending = false,
         withdrawingUser = withdrawingUser,
       )

@@ -37,7 +37,7 @@ class EmailNotificationService(
 
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
-        log.info("Email sending is disabled - would have sent template $templateId to user $recipientEmailAddress")
+        log.info("Email sending is disabled - would have sent template $templateId to user $recipientEmailAddress with replyToId $replyToEmailId")
         return
       }
 

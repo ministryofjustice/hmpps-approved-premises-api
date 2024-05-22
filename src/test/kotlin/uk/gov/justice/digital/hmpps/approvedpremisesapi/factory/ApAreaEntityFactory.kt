@@ -12,6 +12,7 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var identifier: Yielded<String> = { randomStringUpperCase(3) }
   private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
+  private var notifyReplyToEmailId: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -29,11 +30,16 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
     this.emailAddress = { emailAddress }
   }
 
+  fun withNotifyReplyToEmailId(notifyReplyToEmailId: String) = apply {
+    this.notifyReplyToEmailId = { notifyReplyToEmailId }
+  }
+
   override fun produce(): ApAreaEntity = ApAreaEntity(
     id = this.id(),
     name = this.name(),
     identifier = this.identifier(),
     probationRegions = mutableListOf(),
     emailAddress = this.emailAddress(),
+    notifyReplyToEmailId = this.notifyReplyToEmailId(),
   )
 }

@@ -5,12 +5,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Service
 class Cas1PlacementApplicationEmailService(
-  private val emailNotifier: EmailNotifier,
+  private val emailNotifier: Cas1EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
@@ -23,6 +22,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestSubmittedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -34,6 +34,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestAllocatedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -45,6 +46,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestDecisionAcceptedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -56,6 +58,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestDecisionRejectedV2,
         personalisation = getCommonPersonalisation(placementApplication),
+        application = placementApplication.application,
       )
     }
   }
@@ -75,6 +78,7 @@ class Cas1PlacementApplicationEmailService(
       recipientEmailAddresses = placementApplication.interestedPartiesEmailAddresses(),
       templateId = template,
       personalisation = personalisation,
+      application = placementApplication.application,
     )
 
     val assessorEmail = wasBeingAssessedBy?.email
@@ -83,6 +87,7 @@ class Cas1PlacementApplicationEmailService(
         recipientEmailAddress = email,
         templateId = template,
         personalisation = personalisation,
+        application = placementApplication.application,
       )
     }
   }

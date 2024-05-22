@@ -5,12 +5,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Service
 class Cas1PlacementRequestEmailService(
-  private val emailNotifier: EmailNotifier,
+  private val emailNotifier: Cas1EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
@@ -26,6 +25,7 @@ class Cas1PlacementRequestEmailService(
         personalisation = mapOf(
           "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
@@ -56,6 +56,7 @@ class Cas1PlacementRequestEmailService(
         recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
         templateId = notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation = personalisation,
+        application = application,
       )
     }
 
@@ -66,6 +67,7 @@ class Cas1PlacementRequestEmailService(
           recipientEmailAddress = cruEmail,
           templateId = notifyConfig.templates.matchRequestWithdrawnV2,
           personalisation = personalisation,
+          application = application,
         )
       }
     }

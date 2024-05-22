@@ -207,3 +207,7 @@ user-allocations:
 notify:
   emailaddresses:
     cas2assessors: "assessors@example.com"
+
+feature-flags:
+  local-overrides:
+    cas1-email-use-cru-for-reply-to: true

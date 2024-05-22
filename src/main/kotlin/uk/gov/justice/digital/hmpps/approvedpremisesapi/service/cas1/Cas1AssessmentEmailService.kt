@@ -3,10 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -17,7 +16,7 @@ import java.util.UUID
 
 @Service
 class Cas1AssessmentEmailService(
-  private val emailNotificationService: EmailNotifier,
+  private val emailNotifier: Cas1EmailNotifier,
   private val notifyConfig: NotifyConfig,
   private val workingDayService: WorkingDayService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
@@ -25,39 +24,50 @@ class Cas1AssessmentEmailService(
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
 
-  fun assessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String, deadline: OffsetDateTime?, isEmergency: Boolean) {
+  fun assessmentAllocated(
+    allocatedUser: UserEntity,
+    assessmentId: UUID,
+    application: ApprovedPremisesApplicationEntity,
+    deadline: OffsetDateTime?,
+    isEmergency: Boolean,
+  ) {
     allocatedUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentAllocated,
         personalisation = mapOf(
           "name" to allocatedUser.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
-          "crn" to crn,
+          "crn" to application.crn,
           "deadlineCopy" to deadlineCopy(deadline, isEmergency),
         ),
+        application = application,
       )
     }
   }
 
-  fun assessmentDeallocated(deallocatedUserEntity: UserEntity, assessmentId: UUID, crn: String) {
+  fun assessmentDeallocated(
+    deallocatedUserEntity: UserEntity,
+    assessmentId: UUID,
+    application: ApprovedPremisesApplicationEntity,
+  ) {
     deallocatedUserEntity.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentDeallocated,
         personalisation = mapOf(
           "name" to deallocatedUserEntity.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
-          "crn" to crn,
+          "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
 
-  fun assessmentAccepted(assessment: AssessmentEntity) {
-    val application = assessment.application
+  fun assessmentAccepted(application: ApprovedPremisesApplicationEntity) {
     application.createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentAccepted,
         personalisation = mapOf(
@@ -65,14 +75,14 @@ class Cas1AssessmentEmailService(
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
           "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
 
-  fun assessmentRejected(assessment: AssessmentEntity) {
-    val application = assessment.application
+  fun assessmentRejected(application: ApprovedPremisesApplicationEntity) {
     application.createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.assessmentRejected,
         personalisation = mapOf(
@@ -80,40 +90,44 @@ class Cas1AssessmentEmailService(
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
           "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
 
-  fun appealedAssessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String) {
+  fun appealedAssessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, application: ApprovedPremisesApplicationEntity) {
     allocatedUser.email?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.appealedAssessmentAllocated,
         personalisation = mapOf(
           "name" to allocatedUser.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
-          "crn" to crn,
+          "crn" to application.crn,
         ),
+        application = application,
       )
     }
   }
 
   fun assessmentWithdrawn(
     assessment: ApprovedPremisesAssessmentEntity,
+    application: ApprovedPremisesApplicationEntity,
     isAssessmentPending: Boolean,
     withdrawingUser: UserEntity,
   ) {
     if (isAssessmentPending) {
       assessment.allocatedToUser?.email?.let { email ->
-        emailNotificationService.sendEmail(
+        emailNotifier.sendEmail(
           recipientEmailAddress = email,
           templateId = notifyConfig.templates.assessmentWithdrawnV2,
           personalisation = mapOf(
             "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
             "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", assessment.application.id.toString()),
-            "crn" to assessment.application.crn,
+            "crn" to application.crn,
             "withdrawnBy" to withdrawingUser.name,
           ),
+          application = application,
         )
       }
     }

@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import io.flipt.api.FliptClient
 import io.flipt.api.evaluation.models.EvaluationRequest
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
@@ -10,10 +12,17 @@ interface FeatureFlagService {
   fun getBooleanFlag(key: String, default: Boolean): Boolean
 }
 
+@Component
+@ConfigurationProperties(prefix = "feature-flags")
+data class FeatureFlagsLocalOverrideConfig(
+  var localOverrides: Map<String, Boolean> = mapOf(),
+)
+
 @Service
 class FliptFeatureFlagService(
   private val client: FliptClient?,
   private val sentryService: SentryService,
+  private val localOverridesConfig: FeatureFlagsLocalOverrideConfig,
 ) : FeatureFlagService {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -30,7 +39,7 @@ class FliptFeatureFlagService(
   @SuppressWarnings("TooGenericExceptionCaught")
   override fun getBooleanFlag(key: String, default: Boolean) = try {
     if (client == null) {
-      default
+      localOverridesConfig.localOverrides.getOrDefault(key, default)
     } else {
       client.evaluation()
         .evaluateBoolean(EvaluationRequest.builder().namespaceKey("community-accommodation").flagKey(key).build())
