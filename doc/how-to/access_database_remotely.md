@@ -31,6 +31,21 @@ Where $ENVIRONMENT is the environment you want to connect to.
 
 When you're finished, type the `.quit` command to end the session.
 
+By default this will set the session to be **read-only**. You can check this by
+running:
+
+```sql
+SELECT setting FROM pg_settings WHERE name =
+'default_transaction_read_only';`
+```
+
+Should you need write access in an
+exceptional situation, you can set this back to false from within the session:
+
+```sql
+SET default_transaction_read_only = FALSE;
+```
+
 ## The hard(er) way
 
 This is more suitable if you need access to the bash shell, as well as
