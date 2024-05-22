@@ -92,6 +92,15 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
             StaffUserTeamMembershipFactory()
               .withBorough(
                 KeyValue(
+                  code = "PDUCODENotExistInCas",
+                  description = "PDUDESCRIPTIONNotExistInCas",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2024-02-05"))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
                   code = "PDUCODE1",
                   description = "PDUDESCRIPTION1",
                 ),
