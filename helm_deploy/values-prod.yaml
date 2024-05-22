@@ -25,7 +25,7 @@ generic-service:
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://api.prison.service.justice.gov.uk
-    SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user.aks-live-1.studio-hosting.service.justice.gov.uk
+    SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api.hmpps.service.justice.gov.uk
     SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search.hmpps.service.justice.gov.uk
     SERVICES_CASE-NOTES_BASE-URL: https://offender-case-notes.service.justice.gov.uk
