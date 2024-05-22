@@ -2,7 +2,8 @@
 
 **Important** - Accessing a live console is very risky and should only be
 done as a last resort. This should ideally only be done in pairs, and
-mutating any live data is STRONGLY discouraged.
+mutating any live data is STRONGLY discouraged. When data needs to be modified
+create a tested [data migration job](/doc/how-to/run_migration_job_remotely.md).
 
 Both methods detailed below use [Jaqy](https://teradata.github.io/jaqy/), which
 is a Java-native universal database client. As well as carrying out simple 
