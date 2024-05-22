@@ -6,9 +6,12 @@ mutating any live data is STRONGLY discouraged. When data needs to be modified
 create a tested [data migration job](/doc/how-to/run_migration_job_remotely.md).
 
 Both methods detailed below use [Jaqy](https://teradata.github.io/jaqy/), which
-is a Java-native universal database client. As well as carrying out simple 
-queries, you can also do exports of data (enabling, for example, one off reporting), 
-and other useful bits and pieces. For full details, check the [documentation](https://teradata.github.io/jaqy/).
+is a Java-native universal database client. As well as carrying out simple
+queries, you can also do exports of data (enabling, for example, one off reporting),
+and other useful bits and pieces. For full details, check the
+[documentation](https://teradata.github.io/jaqy/).
+The Jaqy library is managed by a third party so we validate the checksum to
+ensure the contents aren't unexpectedly modified.
 
 There are two ways to do this:
 
