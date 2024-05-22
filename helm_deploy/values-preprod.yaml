@@ -16,7 +16,7 @@ generic-service:
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-preprod.hmpps.service.justice.gov.uk
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs-preprod.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-preprod.hmpps.service.justice.gov.uk
-    SERVICES_PRISONS-API_BASE-URL: https://api-preprod.prison.service.justice.gov.uk
+    SERVICES_PRISONS-API_BASE-URL: https://prison-api-preprod.prison.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api-preprod.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api-preprod.hmpps.service.justice.gov.uk
     SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-preprod.hmpps.service.justice.gov.uk
