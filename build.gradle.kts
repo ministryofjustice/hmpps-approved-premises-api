@@ -93,6 +93,10 @@ java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
+// The `buildDir` built-in property has been deprecated in favour of `layout.buildDirectory`
+// This is used in multiple places, so for convenience `buildDir` is redefined here.
+val buildDir = layout.buildDirectory.asFile.get()
+
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
@@ -175,6 +179,26 @@ tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
 
     !(currentTask is Test && System.getProperty("idea.active") !== null)
   }
+}
+
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas1Namespace") {
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-cas1-api-spec.yml")
+  outputDir.set("$buildDir/generated")
+  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1")
+  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
+  configOptions.apply {
+    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+    put("delegatePattern", "true")
+    put("gradleBuildFile", "false")
+    put("exceptionHandler", "false")
+    put("useBeanValidation", "false")
+    put("apiSuffix", "Cas1")
+    put("dateLibrary", "custom")
+    put("useTags", "true")
+  }
+  typeMappings.put("DateTime", "Instant")
+  importMappings.put("Instant", "java.time.Instant")
 }
 
 tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2Namespace") {
@@ -311,7 +335,7 @@ tasks.register("openApiPreCompilation") {
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
 
-  listOf("api", "cas2-api", "cas3-api").forEach {
+  listOf("api", "cas1-api", "cas2-api", "cas3-api").forEach {
     buildSpecWithSharedComponentsAppended(it)
       .run(::rewriteRefsForLocalComponents)
   }
@@ -322,6 +346,7 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateCas3DomainEvents",
   "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
+  "openApiGenerateCas1Namespace",
   "openApiGenerateCas2Namespace",
   "openApiGenerateCas3Namespace"
 )
