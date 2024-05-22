@@ -3507,6 +3507,8 @@ components:
         createdAt:
           type: string
           format: date-time
+        isOfflineApplication:
+          type: boolean
         status:
           $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
         createdBy:
@@ -3518,8 +3520,7 @@ components:
       required:
         - id
         - createdAt
-        - status
-        - createdBy
+        - isOfflineApplication
         - timelineEvents
     TimelineEvent:
       type: object
