@@ -28,6 +28,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
+  private var abandonedAt: Yielded<OffsetDateTime?> = { null }
   private var statusUpdates: Yielded<MutableList<Cas2StatusUpdateEntity>> = { mutableListOf() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
@@ -82,6 +83,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.submittedAt = { submittedAt }
   }
 
+  fun withAbandonedAt(abandonedAt: OffsetDateTime?) = apply {
+    this.abandonedAt = { abandonedAt }
+  }
+
   fun withStatusUpdates(statusUpdates: MutableList<Cas2StatusUpdateEntity>) = apply {
     this.statusUpdates = { statusUpdates }
   }
@@ -119,6 +124,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
+    abandonedAt = this.abandonedAt(),
     statusUpdates = this.statusUpdates(),
     schemaUpToDate = false,
     nomsNumber = this.nomsNumber(),

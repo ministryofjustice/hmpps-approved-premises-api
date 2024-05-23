@@ -478,6 +478,40 @@ class ApplicationServiceTest {
     }
 
     @Test
+    fun `returns GeneralValidationError when application has been abandoned`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withAbandonedAt(OffsetDateTime.now())
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.updateApplication(
+        applicationId = applicationId,
+        data = "{}",
+        user = user,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has been abandoned")
+    }
+
+    @Test
     fun `returns GeneralValidationError when application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 

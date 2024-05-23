@@ -159,15 +159,21 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
-    }
-
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    if (application.abandonedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has been abandoned"),
+      )
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
       )
     }
 
