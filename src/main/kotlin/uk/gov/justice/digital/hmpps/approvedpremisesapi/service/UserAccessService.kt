@@ -124,14 +124,6 @@ class UserAccessService(
       else -> false
     }
 
-  fun getApprovedPremisesApplicationAccessLevelForCurrentUser(): ApprovedPremisesApplicationAccessLevel =
-    getApprovedPremisesApplicationAccessLevelForUser(userService.getUserForRequest())
-
-  fun getApprovedPremisesApplicationAccessLevelForUser(user: UserEntity): ApprovedPremisesApplicationAccessLevel = when {
-    user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER) -> ApprovedPremisesApplicationAccessLevel.ALL
-    else -> ApprovedPremisesApplicationAccessLevel.TEAM
-  }
-
   fun getTemporaryAccommodationApplicationAccessLevelForCurrentUser(): TemporaryAccommodationApplicationAccessLevel =
     getTemporaryAccommodationApplicationAccessLevelForUser(userService.getUserForRequest())
 
