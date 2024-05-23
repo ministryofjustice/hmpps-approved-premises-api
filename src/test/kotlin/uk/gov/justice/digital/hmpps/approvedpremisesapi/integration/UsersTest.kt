@@ -302,7 +302,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER"])
     fun `GET to users with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.get()

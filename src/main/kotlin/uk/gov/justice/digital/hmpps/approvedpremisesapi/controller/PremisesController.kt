@@ -716,7 +716,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
       throw ForbiddenProblem()
     }
 
