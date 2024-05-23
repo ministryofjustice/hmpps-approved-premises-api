@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Check if Docker is running
+docker info > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "Docker is not running. Please start Docker and try again."
+    exit 1
+fi
+
+# Grab the container ID of the database provisioned by Docker Compose or the AP
+# tools repository
+databaseContainerId=$(docker ps -q --filter "name=approved-premises-postgres-dev")
+
+docker exec -it $databaseContainerId \
+  bash -c "psql -U localdev -d approved_premises_localdev"
