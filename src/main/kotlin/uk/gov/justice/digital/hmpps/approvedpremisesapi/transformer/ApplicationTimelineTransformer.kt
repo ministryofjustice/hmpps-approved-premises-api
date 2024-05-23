@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -31,6 +32,11 @@ class ApplicationTimelineTransformer(
       associatedUrls = associatedUrls,
       content = domainEventDescriber.getDescription(domainEventSummary),
       createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+      triggerSource = when (domainEventSummary.triggerSource) {
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.USER -> TriggerSourceType.user
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.SYSTEM -> TriggerSourceType.system
+        null -> null
+      },
     )
   }
 

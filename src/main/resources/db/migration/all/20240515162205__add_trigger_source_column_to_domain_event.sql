@@ -1,0 +1,1 @@
+ALTER TABLE domain_events ADD trigger_source TEXT null;

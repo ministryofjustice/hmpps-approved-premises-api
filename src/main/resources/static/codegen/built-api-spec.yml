@@ -8214,6 +8214,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TimelineEventAssociatedUrl'
+        triggerSource:
+          type: string
+          $ref: '#/components/schemas/TriggerSourceType'
     TimelineEventAssociatedUrl:
       type: object
       properties:
@@ -8250,6 +8253,11 @@ components:
         - cas2_application_submitted
         - cas2_note
         - cas2_status_update
+    TriggerSourceType:
+      type: string
+      enum:
+        - user
+        - system
     TimelineEventUrlType:
       type: string
       enum:

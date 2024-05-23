@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -98,7 +99,7 @@ class Cas1AssessmentDomainEventServiceTest {
         allocatingUserStaffDetails,
       )
 
-      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
+      every { domainEventService.saveAssessmentAllocatedEvent(any(), any()) } just Runs
 
       service.assessmentAllocated(assessment, assigneeUser, allocatingUser)
 
@@ -133,19 +134,23 @@ class Cas1AssessmentDomainEventServiceTest {
 
             rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
           },
+          match {
+            val triggerSource = it
+            triggerSource == TriggerSourceType.USER
+          },
         )
       }
     }
 
     @Test
-    fun `assessmentAllocated allocating user is optional`() {
+    fun `assessmentAllocated allocating user is system`() {
       val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
       every { communityApiClient.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
 
-      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
+      every { domainEventService.saveAssessmentAllocatedEvent(any(), any()) } just Runs
 
       service.assessmentAllocated(assessment, assigneeUser, allocatingUser = null)
 
@@ -154,6 +159,7 @@ class Cas1AssessmentDomainEventServiceTest {
           withArg {
             Assertions.assertThat(it.data.eventDetails.allocatedBy).isNull()
           },
+          TriggerSourceType.SYSTEM,
         )
       }
     }

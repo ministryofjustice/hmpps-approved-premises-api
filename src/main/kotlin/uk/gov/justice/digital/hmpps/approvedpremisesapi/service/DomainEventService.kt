@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -183,10 +184,11 @@ class DomainEventService(
     )
 
   @Transactional
-  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>) =
+  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>, triggerSource: TriggerSourceType) =
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      triggerSource = triggerSource,
     )
 
   @Transactional
@@ -205,6 +207,7 @@ class DomainEventService(
     domainEvent: DomainEvent<*>,
     eventType: DomainEventType,
     emit: Boolean = true,
+    triggerSource: TriggerSourceType? = null,
   ) {
     val domainEventEntity = domainEventRepository.save(
       DomainEventEntity(
@@ -218,6 +221,7 @@ class DomainEventService(
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
+        triggerSource = triggerSource,
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
         nomsNumber = domainEvent.nomsNumber,
         metadata = domainEvent.metadata,

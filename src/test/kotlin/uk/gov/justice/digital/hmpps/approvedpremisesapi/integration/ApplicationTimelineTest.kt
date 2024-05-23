@@ -136,6 +136,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
               null,
               null,
               null,
+              it.triggerSource,
               user,
             ),
           )
@@ -169,6 +170,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
       withApplicationId(applicationEntity.id)
       withData(data)
       withTriggeredByUserId(userEntity.id)
+      withTriggerSourceSystem()
     }
   }
 

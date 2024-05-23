@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
@@ -47,6 +48,7 @@ class ApplicationTimelineTransformerTest {
     override val bookingId: UUID?,
     override val premisesId: UUID?,
     override val appealId: UUID?,
+    override val triggerSource: TriggerSourceType?,
     override val triggeredByUser: UserEntity?,
   ) : DomainEventSummary
 
@@ -64,6 +66,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = userJpa,
     )
 
@@ -79,6 +82,7 @@ class ApplicationTimelineTransformerTest {
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
     assertThat(result.createdBy).isEqualTo(userApi)
+    assertThat(result.triggerSource).isEqualTo(null)
   }
 
   @Test
@@ -93,6 +97,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = userJpa,
     )
 
@@ -114,6 +119,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -146,6 +152,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = appealId,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -183,6 +190,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = premisesId,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -213,6 +221,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -245,6 +254,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -277,6 +287,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -316,6 +327,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = premisesId,
       appealId = appealId,
+      triggerSource = null,
       triggeredByUser = null,
     )
 
@@ -333,6 +345,31 @@ class ApplicationTimelineTransformerTest {
         ),
         content = "Some event",
       ),
+    )
+  }
+
+  @ParameterizedTest
+  @EnumSource(TriggerSourceType::class)
+  fun `transformDomainEventSummaryToTimelineEvent correctly maps triggerSource`(triggerSource: TriggerSourceType) {
+    val assessmentId = UUID.randomUUID()
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+      occurredAt = OffsetDateTime.now(),
+      bookingId = null,
+      applicationId = null,
+      assessmentId = assessmentId,
+      premisesId = null,
+      appealId = null,
+      triggerSource = triggerSource,
+      triggeredByUser = null,
+    )
+
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
+    Assertions.assertThat(
+      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
+        .triggerSource?.name.equals(triggerSource.name, true),
     )
   }
 }

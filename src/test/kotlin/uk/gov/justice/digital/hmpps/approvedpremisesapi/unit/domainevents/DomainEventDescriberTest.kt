@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -615,6 +616,7 @@ data class DomainEventSummaryImpl(
   override val bookingId: UUID?,
   override val premisesId: UUID?,
   override val appealId: UUID?,
+  override val triggerSource: TriggerSourceType?,
   override val triggeredByUser: UserEntity?,
 ) : DomainEventSummary {
   companion object {
@@ -627,6 +629,7 @@ data class DomainEventSummaryImpl(
       bookingId = null,
       premisesId = null,
       appealId = null,
+      triggerSource = null,
       triggeredByUser = null,
     )
   }
