@@ -31,6 +31,7 @@ domain-events:
     async-save-enabled: false
 
 log-client-credentials-jwt-info: true
+log-request-response: true
 
 seed:
   file-prefix: "./seed"
