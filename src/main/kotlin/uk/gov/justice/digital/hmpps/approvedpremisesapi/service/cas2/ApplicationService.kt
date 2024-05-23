@@ -155,12 +155,6 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (application !is Cas2ApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
-      )
-    }
-
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -202,12 +196,6 @@ class ApplicationService(
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
-    }
-
-    if (application !is Cas2ApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
-      )
     }
 
     if (application.submittedAt != null) {
