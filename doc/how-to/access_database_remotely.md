@@ -2,12 +2,16 @@
 
 **Important** - Accessing a live console is very risky and should only be
 done as a last resort. This should ideally only be done in pairs, and
-mutating any live data is STRONGLY discouraged.
+mutating any live data is STRONGLY discouraged. When data needs to be modified
+create a tested [data migration job](/doc/how-to/run_migration_job_remotely.md).
 
 Both methods detailed below use [Jaqy](https://teradata.github.io/jaqy/), which
-is a Java-native universal database client. As well as carrying out simple 
-queries, you can also do exports of data (enabling, for example, one off reporting), 
-and other useful bits and pieces. For full details, check the [documentation](https://teradata.github.io/jaqy/).
+is a Java-native universal database client. As well as carrying out simple
+queries, you can also do exports of data (enabling, for example, one off reporting),
+and other useful bits and pieces. For full details, check the
+[documentation](https://teradata.github.io/jaqy/).
+The Jaqy library is managed by a third party so we validate the checksum to
+ensure the contents aren't unexpectedly modified.
 
 There are two ways to do this:
 
@@ -26,6 +30,21 @@ script/remote_db $ENVIRONMENT
 Where $ENVIRONMENT is the environment you want to connect to.
 
 When you're finished, type the `.quit` command to end the session.
+
+By default this will set the session to be **read-only**. You can check this by
+running:
+
+```sql
+SELECT setting FROM pg_settings WHERE name =
+'default_transaction_read_only';`
+```
+
+Should you need write access in an
+exceptional situation, you can set this back to false from within the session:
+
+```sql
+SET default_transaction_read_only = FALSE;
+```
 
 ## The hard(er) way
 
