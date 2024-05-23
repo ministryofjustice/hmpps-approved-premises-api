@@ -2445,7 +2445,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `Get all offline applications where Probation Officer exists returns empty list for user without any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+  fun `Get all offline applications where Probation Officer exists returns empty list for user without any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, LEGACY_MANAGER, MANAGER`() {
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
     val userEntity = UserEntityFactory()
