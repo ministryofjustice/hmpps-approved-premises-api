@@ -45,6 +45,8 @@ data class Cas2ApplicationSummaryEntity(
   val createdAt: OffsetDateTime,
   @Column(name = "submitted_at")
   var submittedAt: OffsetDateTime?,
+  @Column(name = "abandoned_at")
+  var abandonedAt: OffsetDateTime? = null,
   @Column(name = "hdc_eligibility_date")
   var hdcEligibilityDate: LocalDate? = null,
   @Column(name = "label")
