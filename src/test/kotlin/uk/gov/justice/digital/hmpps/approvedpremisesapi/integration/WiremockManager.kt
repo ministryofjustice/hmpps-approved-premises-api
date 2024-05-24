@@ -4,25 +4,28 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.ServerSocket
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
-object WiremockPortHolder {
-  private val possiblePorts = (57830..57880).shuffled()
+object WiremockPortManager {
 
-  private var port: Int? = null
   private var channel: FileChannel? = null
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPort(): Int {
+  fun reserveFreePort(): Int {
     synchronized(this) {
-      if (port != null) {
-        return port!!
-      }
+      var port: Int? = null
+      var attempts = 0
+      while (port == null) {
+        if (attempts > 100) {
+          error("After 100 attempts, i can't find a free port for wiremock")
+        }
 
-      possiblePorts.forEach { portToTry ->
+        val portToTry = ServerSocket(0).localPort
+
         log.info("Trying Wiremock port: $portToTry")
         val lockFilePath = Paths.get("${System.getProperty("java.io.tmpdir")}${System.getProperty("file.separator")}ap-int-port-lock-$portToTry.lock")
 
@@ -34,18 +37,17 @@ object WiremockPortHolder {
             log.info("Port $portToTry is in use")
             channel!!.close()
             channel = null
-            return@forEach
+            attempts += 1
+            continue
           }
 
           log.info("Using Wiremock port: $portToTry")
           port = portToTry
-
-          return portToTry
         } catch (_: Exception) {
         }
       }
 
-      error("Could not lock any potential Wiremock ports")
+      return port
     }
   }
 
@@ -55,17 +57,22 @@ object WiremockPortHolder {
 @Component
 class WiremockManager {
 
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   lateinit var wiremockServer: WireMockServer
 
   @Value("\${wiremock.port}")
   lateinit var wiremockPort: Number
 
   fun setupTests() {
-    wiremockServer = WireMockServer(wiremockPort.toInt())
-    wiremockServer.start()
+    if (!this::wiremockServer.isInitialized || !wiremockServer.isRunning) {
+      log.info("Starting wiremock on port $wiremockPort")
+      wiremockServer = WireMockServer(wiremockPort.toInt())
+      wiremockServer.start()
+    }
   }
 
   fun teardownTests() {
-    wiremockServer.stop()
+    wiremockServer.resetAll()
   }
 }
