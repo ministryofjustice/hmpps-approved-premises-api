@@ -1,0 +1,1 @@
+DELETE from confirmations WHERE id='5ddb1e72-6f50-44ee-9677-bf626bb3cb7d';
