@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -233,56 +232,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DbExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.TestPropertiesInitializer
-import java.nio.channels.FileChannel
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
-
-object WiremockPortHolder {
-  private val possiblePorts = (57830..57880).shuffled()
-
-  private var port: Int? = null
-  private var channel: FileChannel? = null
-
-  private val log = LoggerFactory.getLogger(this::class.java)
-
-  fun getPort(): Int {
-    synchronized(this) {
-      if (port != null) {
-        return port!!
-      }
-
-      possiblePorts.forEach { portToTry ->
-        log.info("Trying Wiremock port: $portToTry")
-        val lockFilePath = Paths.get("${System.getProperty("java.io.tmpdir")}${System.getProperty("file.separator")}ap-int-port-lock-$portToTry.lock")
-
-        try {
-          channel = FileChannel.open(lockFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-          channel!!.position(0)
-
-          if (channel!!.tryLock() == null) {
-            log.info("Port $portToTry is in use")
-            channel!!.close()
-            channel = null
-            return@forEach
-          }
-
-          log.info("Using Wiremock port: $portToTry")
-          port = portToTry
-
-          return portToTry
-        } catch (_: Exception) {
-        }
-      }
-
-      throw RuntimeException("Could not lock any potential Wiremock ports")
-    }
-  }
-
-  fun releasePort() = channel?.close()
-}
 
 @ExtendWith(DbExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -294,13 +246,15 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var webTestClient: WebTestClient
 
-  @Value("\${wiremock.port}")
-  lateinit var wiremockPort: Number
-
   @Value("\${preemptive-cache-key-prefix}")
   lateinit var preemptiveCacheKeyPrefix: String
 
-  lateinit var wiremockServer: WireMockServer
+  @Autowired
+  lateinit var wiremockManager: WiremockManager
+
+  val wiremockServer: WireMockServer by lazy {
+    wiremockManager.wiremockServer
+  }
 
   @Autowired
   private lateinit var jdbcTemplate: JdbcTemplate
@@ -618,8 +572,7 @@ abstract class IntegrationTestBase {
       .responseTimeout(Duration.ofMinutes(20))
       .build()
 
-    wiremockServer = WireMockServer(wiremockPort.toInt())
-    wiremockServer.start()
+    wiremockManager.setupTests()
 
     cacheManager.cacheNames.forEach {
       cacheManager.getCache(it)!!.clear()
@@ -630,7 +583,7 @@ abstract class IntegrationTestBase {
   }
 
   fun teardownTests() {
-    wiremockServer.stop()
+    wiremockManager.teardownTests()
   }
 
   fun setupFactories() {
