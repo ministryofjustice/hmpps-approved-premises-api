@@ -1403,6 +1403,7 @@ class BookingService(
     return success(cancellationEntity)
   }
 
+  @Transactional
   fun createConfirmation(
     booking: BookingEntity,
     dateTime: OffsetDateTime,
