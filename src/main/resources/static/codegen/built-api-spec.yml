@@ -7056,6 +7056,7 @@ components:
         - residencyManagement
         - bailAssessment
         - bailSentence
+        - awaitingSentence
     Cas1ApplicationTimelinessCategory:
       type: string
       enum:
