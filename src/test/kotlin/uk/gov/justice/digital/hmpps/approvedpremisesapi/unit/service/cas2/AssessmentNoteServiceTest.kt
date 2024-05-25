@@ -38,7 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHo
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ApplicationNoteServiceTest {
+class AssessmentNoteServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
@@ -49,7 +49,7 @@ class ApplicationNoteServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
-  private val applicationNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationNoteService(
+  private val assessmentNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentNoteService(
     mockApplicationRepository,
     mockAssessmentRepository,
     mockApplicationNoteRepository,
@@ -78,7 +78,7 @@ class ApplicationNoteServiceTest {
           }
 
         Assertions.assertThat(
-          applicationNoteService.createApplicationNote(
+          assessmentNoteService.createApplicationNote(
             applicationId = UUID.randomUUID(),
             note = NewCas2ApplicationNote(note = "note for missing app"),
           ) is AuthorisableActionResult.NotFound,
@@ -103,7 +103,7 @@ class ApplicationNoteServiceTest {
 
         every { mockUserService.getUserForRequest() } returns referrer
 
-        val result = applicationNoteService.createApplicationNote(
+        val result = assessmentNoteService.createApplicationNote(
           applicationId = applicationNotSubmitted.id,
           note = NewCas2ApplicationNote(note = "note for in progress app"),
         )
@@ -178,7 +178,7 @@ class ApplicationNoteServiceTest {
             )
           } just Runs
 
-          val result = applicationNoteService.createApplicationNote(
+          val result = assessmentNoteService.createApplicationNote(
             applicationId = applicationId,
             NewCas2ApplicationNote(note = "new note"),
           )
@@ -231,7 +231,7 @@ class ApplicationNoteServiceTest {
               )
             } just Runs
 
-            val result = applicationNoteService.createApplicationNote(
+            val result = assessmentNoteService.createApplicationNote(
               applicationId = applicationId,
               NewCas2ApplicationNote(note = "new note"),
             )
@@ -270,7 +270,7 @@ class ApplicationNoteServiceTest {
             } returns false
 
             Assertions.assertThat(
-              applicationNoteService.createApplicationNote(
+              assessmentNoteService.createApplicationNote(
                 applicationId = applicationCreatedByOtherUser.id,
                 note = NewCas2ApplicationNote(note = "note for unauthorised app"),
               ) is AuthorisableActionResult.Unauthorised,
@@ -307,7 +307,7 @@ class ApplicationNoteServiceTest {
               )
             } just Runs
 
-            val result = applicationNoteService.createApplicationNote(
+            val result = assessmentNoteService.createApplicationNote(
               applicationId = applicationCreatedByOtherUser.id,
               NewCas2ApplicationNote(note = "new note"),
             )
@@ -384,7 +384,7 @@ class ApplicationNoteServiceTest {
           )
         } just Runs
 
-        val result = applicationNoteService.createApplicationNote(
+        val result = assessmentNoteService.createApplicationNote(
           applicationId = applicationId,
           NewCas2ApplicationNote(note = "new note"),
         )
@@ -428,7 +428,7 @@ class ApplicationNoteServiceTest {
           )
         } returns SentryId.EMPTY_ID
 
-        applicationNoteService.createApplicationNote(
+        assessmentNoteService.createApplicationNote(
           applicationId = applicationId,
           NewCas2ApplicationNote(note = "new note"),
         )
@@ -455,7 +455,7 @@ class ApplicationNoteServiceTest {
         every { mockApplicationRepository.findByIdOrNull(any()) } returns null
 
         Assertions.assertThat(
-          applicationNoteService.createAssessmentNote(
+          assessmentNoteService.createAssessmentNote(
             assessmentId = UUID.randomUUID(),
             note = NewCas2ApplicationNote(note = "note for missing app"),
           ) is AuthorisableActionResult.NotFound,
@@ -470,7 +470,7 @@ class ApplicationNoteServiceTest {
         every { mockAssessmentRepository.findByIdOrNull(any()) } returns null
 
         Assertions.assertThat(
-          applicationNoteService.createAssessmentNote(
+          assessmentNoteService.createAssessmentNote(
             assessmentId = UUID.randomUUID(),
             note = NewCas2ApplicationNote(note = "note for missing app"),
           ) is AuthorisableActionResult.NotFound,
@@ -496,7 +496,7 @@ class ApplicationNoteServiceTest {
 
         every { mockUserService.getUserForRequest() } returns referrer
 
-        val result = applicationNoteService.createAssessmentNote(
+        val result = assessmentNoteService.createAssessmentNote(
           assessmentId = applicationNotSubmitted.id,
           note = NewCas2ApplicationNote(note = "note for in progress app"),
         )
@@ -570,7 +570,7 @@ class ApplicationNoteServiceTest {
             )
           } just Runs
 
-          val result = applicationNoteService.createAssessmentNote(
+          val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment!!.id,
             NewCas2ApplicationNote(note = "new note"),
           )
@@ -623,7 +623,7 @@ class ApplicationNoteServiceTest {
               )
             } just Runs
 
-            val result = applicationNoteService.createAssessmentNote(
+            val result = assessmentNoteService.createAssessmentNote(
               assessmentId = assessment.id,
               NewCas2ApplicationNote(note = "new note"),
             )
@@ -659,7 +659,7 @@ class ApplicationNoteServiceTest {
             } returns false
 
             Assertions.assertThat(
-              applicationNoteService.createAssessmentNote(
+              assessmentNoteService.createAssessmentNote(
                 assessmentId = assessment.id,
                 note = NewCas2ApplicationNote(note = "note for unauthorised app"),
               ) is AuthorisableActionResult.Unauthorised,
@@ -693,7 +693,7 @@ class ApplicationNoteServiceTest {
               )
             } just Runs
 
-            val result = applicationNoteService.createAssessmentNote(
+            val result = assessmentNoteService.createAssessmentNote(
               assessmentId = assessment.id,
               NewCas2ApplicationNote(note = "new note"),
             )
@@ -771,7 +771,7 @@ class ApplicationNoteServiceTest {
           )
         } just Runs
 
-        val result = applicationNoteService.createAssessmentNote(
+        val result = assessmentNoteService.createAssessmentNote(
           assessmentId = assessment.id,
           NewCas2ApplicationNote(note = "new note"),
         )
@@ -818,7 +818,7 @@ class ApplicationNoteServiceTest {
           )
         } returns SentryId.EMPTY_ID
 
-        applicationNoteService.createAssessmentNote(
+        assessmentNoteService.createAssessmentNote(
           assessmentId = assessment.id,
           NewCas2ApplicationNote(note = "new note"),
         )

@@ -28,7 +28,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service("Cas2ApplicationNoteService")
-class ApplicationNoteService(
+class AssessmentNoteService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
