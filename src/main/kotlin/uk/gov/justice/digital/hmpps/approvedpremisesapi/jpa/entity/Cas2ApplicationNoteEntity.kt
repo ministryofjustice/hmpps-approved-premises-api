@@ -29,6 +29,10 @@ data class Cas2ApplicationNoteEntity(
   val createdAt: OffsetDateTime,
 
   var body: String,
+
+  @ManyToOne
+  @JoinColumn(name = "assessment_id")
+  val assessment: Cas2AssessmentEntity? = null,
 ) {
 
   @ManyToOne
