@@ -108,6 +108,7 @@ class SubmissionsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  @Deprecated("Superseded by assessmentsAssessmentIdNotesPost() in AssessmentsController.")
   override fun submissionsApplicationIdNotesPost(applicationId: UUID, body: NewCas2ApplicationNote): ResponseEntity<Cas2ApplicationNote> {
     val noteResult = assessmentNoteService.createApplicationNote(applicationId, body)
 
