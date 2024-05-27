@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesReportTest.Constants.DATE_FORMAT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesReportTest.Constants.REPORT_YEAR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
@@ -22,9 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1PlacementMatchingOutcomesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUtcOffsetDateTime
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
@@ -32,6 +33,8 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
   object Constants {
     const val REPORT_MONTH = 1
     const val REPORT_YEAR = 2020
+
+    val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/uuuu")
   }
 
   @Test
@@ -92,16 +95,17 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           assertThat(rows).hasSize(1)
 
           val row1 = rows[0]
+
           assertThat(row1.crn).isEqualTo(placementRequest.application.crn)
           assertThat(row1.applicationId).isEqualTo(placementRequest.application.id.toString())
           assertThat(row1.requestForPlacementId).isEqualTo("placement_request:${placementRequest.id}")
           assertThat(row1.matchRequestId).isEqualTo(placementRequest.id.toString())
           assertThat(row1.requestForPlacementType).isEqualTo("STANDARD")
-          assertThat(row1.requestedArrivalDate).isEqualTo(LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1))
+          assertThat(row1.requestedArrivalDate).isEqualTo("01/0$REPORT_MONTH/$REPORT_YEAR")
           assertThat(row1.requestedDurationDays).isEqualTo(52)
-          assertThat(row1.requestForPlacementSubmittedAt).isEqualTo(LocalDate.of(2019, 10, 11))
+          assertThat(row1.requestForPlacementSubmittedAt).isEqualTo("11/10/2019")
           assertThat(row1.requestForPlacementWithdrawalReason).isNull()
-          assertThat(row1.requestForPlacementAssessedDate).isEqualTo(LocalDate.of(2019, 11, 12))
+          assertThat(row1.requestForPlacementAssessedDate).isEqualTo("12/11/2019")
           assertThat(row1.placementId).isNull()
           assertThat(row1.placementCancellationReason).isNull()
         }
@@ -252,11 +256,11 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
               PlacementType.ADDITIONAL_PLACEMENT -> "ADDITIONAL_PLACEMENT"
             },
           )
-          assertThat(row1.requestedArrivalDate).isEqualTo(expectedArrival)
+          assertThat(row1.requestedArrivalDate).isEqualTo(expectedArrival.format(DATE_FORMAT))
           assertThat(row1.requestedDurationDays).isEqualTo(duration)
-          assertThat(row1.requestForPlacementSubmittedAt).isEqualTo(LocalDate.of(2019, 8, 9))
+          assertThat(row1.requestForPlacementSubmittedAt).isEqualTo("09/08/2019")
           assertThat(row1.requestForPlacementWithdrawalReason).isNull()
-          assertThat(row1.requestForPlacementAssessedDate).isEqualTo(LocalDate.of(2019, 10, 11))
+          assertThat(row1.requestForPlacementAssessedDate).isEqualTo("11/10/2019")
           assertThat(row1.placementId).isNull()
           assertThat(row1.placementCancellationReason).isNull()
         }
@@ -339,21 +343,21 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           assertThat(row1.crn).isEqualTo(placementRequest1.application.crn)
           assertThat(row1.requestForPlacementId).isEqualTo("placement_application:${placementApplication.id}")
           assertThat(row1.matchRequestId).isEqualTo(placementRequest1.id.toString())
-          assertThat(row1.requestedArrivalDate).isEqualTo(expectedArrival1)
+          assertThat(row1.requestedArrivalDate).isEqualTo(expectedArrival1.format(DATE_FORMAT))
           assertThat(row1.requestedDurationDays).isEqualTo(duration1)
 
           val row2 = rows[1]
           assertThat(row2.crn).isEqualTo(placementRequest2.application.crn)
           assertThat(row2.requestForPlacementId).isEqualTo("placement_application:${placementApplication.id}")
           assertThat(row2.matchRequestId).isEqualTo(placementRequest2.id.toString())
-          assertThat(row2.requestedArrivalDate).isEqualTo(expectedArrival2)
+          assertThat(row2.requestedArrivalDate).isEqualTo(expectedArrival2.format(DATE_FORMAT))
           assertThat(row2.requestedDurationDays).isEqualTo(duration2)
 
           val row3 = rows[2]
           assertThat(row3.crn).isEqualTo(placementRequest3.application.crn)
           assertThat(row3.requestForPlacementId).isEqualTo("placement_application:${placementApplication.id}")
           assertThat(row3.matchRequestId).isEqualTo(placementRequest3.id.toString())
-          assertThat(row3.requestedArrivalDate).isEqualTo(expectedArrival3)
+          assertThat(row3.requestedArrivalDate).isEqualTo(expectedArrival3.format(DATE_FORMAT))
           assertThat(row3.requestedDurationDays).isEqualTo(duration3)
         }
       }
@@ -436,7 +440,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
     }
   }
 
-  private fun getReport(jwt: String, inlineAssertion: (input: List<Cas1PlacementMatchingOutcomesReportRow>) -> Unit) {
+  private fun getReport(jwt: String, inlineAssertion: (input: List<ExpectedRows>) -> Unit) {
     webTestClient.get()
       .uri("/reports/placement-matching-outcomes?year=$REPORT_YEAR&month=$REPORT_MONTH")
       .header("Authorization", "Bearer $jwt")
@@ -448,12 +452,28 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
       .consumeWith {
         val actualRows = DataFrame
           .readExcel(it.responseBody!!.inputStream())
-          .convertTo<Cas1PlacementMatchingOutcomesReportRow>(ExcessiveColumns.Remove)
+          .convertTo<ExpectedRows>(ExcessiveColumns.Remove)
           .toList()
 
         inlineAssertion.invoke(actualRows)
       }
   }
+
+  data class ExpectedRows(
+    val crn: String?,
+    val tier: String?,
+    val applicationId: String?,
+    val requestForPlacementId: String?,
+    val matchRequestId: String?,
+    val requestForPlacementType: String?,
+    val requestedArrivalDate: String?,
+    val requestedDurationDays: Int?,
+    val requestForPlacementSubmittedAt: String?,
+    val requestForPlacementWithdrawalReason: String?,
+    val requestForPlacementAssessedDate: String?,
+    val placementId: String?,
+    val placementCancellationReason: String?,
+  )
 
   private fun premises() = approvedPremisesEntityFactory.produceAndPersist {
     withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

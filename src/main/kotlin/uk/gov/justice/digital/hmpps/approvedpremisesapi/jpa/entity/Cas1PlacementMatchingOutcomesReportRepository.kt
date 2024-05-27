@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import java.sql.Date
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.JdbcReportConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ReportJdbcTemplate
 
 @Repository
-interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<PlacementApplicationEntity, UUID> {
+class Cas1PlacementMatchingOutcomesReportRepository(
+  val reportJdbcTemplate: ReportJdbcTemplate,
+) {
 
   companion object {
     /**
@@ -23,17 +23,17 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
       SELECT 
         a.crn as crn,
         apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-        CAST(a.id as TEXT) as applicationId,
-        CONCAT('placement_request:',pr.id) AS requestForPlacementId,
-        CAST(pr.id as TEXT) AS matchRequestId,
-        'STANDARD' AS requestForPlacementType, 
-        pr.expected_arrival as requestedArrivalDate,
-        pr.duration as requestedDurationDays,
-        CAST(a.submitted_at as date) as requestForPlacementSubmittedAt,
-        pr.withdrawal_reason as requestForPlacementWithdrawalReason,
-        CAST(assess.submitted_at as date) as requestForPlacementAssessedDate,
-        CAST(b.id as TEXT) as placementId,
-        cr.name as placementCancellationReason
+        CAST(a.id as TEXT) as application_id,
+        CONCAT('placement_request:',pr.id) AS request_for_placement_id,
+        CAST(pr.id as TEXT) AS match_request_id,
+        'STANDARD' AS request_for_placement_type, 
+        TO_CHAR(pr.expected_arrival,'dd/mm/yyyy') as requested_arrival_date,
+        pr.duration as requested_duration_days,
+        TO_CHAR(a.submitted_at,'dd/mm/yyyy') as request_for_placement_submitted_at,
+        pr.withdrawal_reason as request_for_placement_withdrawal_reason,
+        TO_CHAR(assess.submitted_at,'dd/mm/yyyy') as request_for_placement_assessed_date,
+        CAST(b.id as TEXT) as placement_id,
+        cr.name as placement_cancellation_reason
         FROM placement_requests pr
         INNER JOIN applications a ON pr.application_id = a.id
         INNER JOIN approved_premises_applications apa ON a.id = apa.id
@@ -62,22 +62,22 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
       SELECT 
       a.crn as crn,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-      CAST(a.id as TEXT) as applicationId,
-      CONCAT('placement_application:',pa.id) AS requestForPlacementId,
-      CAST(pr.id as TEXT) AS matchRequestId,
+      CAST(a.id as TEXT) as application_id,
+      CONCAT('placement_application:',pa.id) AS request_for_placement_id,
+      CAST(pr.id as TEXT) AS match_request_id,
       CASE
         WHEN pa.placement_type = '0' THEN 'ROTL'
         WHEN pa.placement_type = '1' THEN 'RELEASE_FOLLOWING_DECISION'
         WHEN pa.placement_type = '2' THEN 'ADDITIONAL_PLACEMENT'
         ELSE ''
-      END AS requestForPlacementType, 
-      pr.expected_arrival as requestedArrivalDate,
-      pr.duration as requestedDurationDays,
-      CAST(pa.submitted_at as date) as requestForPlacementSubmittedAt,
-      pa.withdrawal_reason as requestForPlacementWithdrawalReason,
-      CAST(pa.decision_made_at as date) as requestForPlacementAssessedDate,
-      CAST(b.id as TEXT) as placementId,
-      cr.name as placementCancellationReason
+      END AS request_for_placement_type,
+      TO_CHAR(pr.expected_arrival,'dd/mm/yyyy') as requested_arrival_date,
+      pr.duration as requested_duration_days,
+      TO_CHAR(pa.submitted_at,'dd/mm/yyyy') as request_for_placement_submitted_at,
+      pa.withdrawal_reason as request_for_placement_withdrawal_reason,
+      TO_CHAR(pa.decision_made_at,'dd/mm/yyyy') as request_for_placement_assessed_date,
+      CAST(b.id as TEXT) as placement_id,
+      cr.name as placement_cancellation_reason
       from
       (
 	      SELECT
@@ -111,27 +111,18 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
       $INITIAL_REQUEST_FOR_PLACEMENT_QUERY
       UNION ALL
       $OTHER_REQUEST_FOR_PLACEMENT_QUERY
-      ORDER BY requestedArrivalDate ASC
+      ORDER BY requested_arrival_date ASC
     """
   }
 
-  @Query(value = QUERY, nativeQuery = true)
-  fun generateReportRowsForExpectedArrivalMonth(month: Int, year: Int): List<PlacementMatchingOutcomesEntityReportRow>
-}
-
-@SuppressWarnings("TooManyFunctions")
-interface PlacementMatchingOutcomesEntityReportRow {
-  fun getCrn(): String?
-  fun getTier(): String?
-  fun getApplicationId(): String?
-  fun getRequestForPlacementId(): String?
-  fun getMatchRequestId(): String?
-  fun getRequestForPlacementType(): String?
-  fun getRequestedArrivalDate(): Date?
-  fun getRequestedDurationDays(): Int?
-  fun getRequestForPlacementSubmittedAt(): Date?
-  fun getRequestForPlacementWithdrawalReason(): String?
-  fun getRequestForPlacementAssessedDate(): Date?
-  fun getPlacementId(): String?
-  fun getPlacementCancellationReason(): String?
+  fun generateReportRowsForExpectedArrivalMonth(
+    month: Int,
+    year: Int,
+    jdbcReportConsumer: JdbcReportConsumer,
+  ) =
+    reportJdbcTemplate.query(
+      QUERY,
+      mapOf<String, Any>("month" to month, "year" to year),
+      jdbcReportConsumer,
+    )
 }
