@@ -161,6 +161,7 @@ hmpps:
     url: http://localhost:9091/auth
 
 log-client-credentials-jwt-info: false
+log-request-response: false
 
 prison-case-notes:
   lookback-days: 365
