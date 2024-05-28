@@ -87,7 +87,7 @@ class LostBedsController(
 
     val user = usersService.getUserForRequest()
 
-    if (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
+    if (!user.hasAnyRole(UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
       throw ForbiddenProblem()
     }
 
