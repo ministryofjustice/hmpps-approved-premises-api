@@ -204,6 +204,12 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
+    if (application.abandonedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been abandoned"),
+      )
+    }
+
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This application has already been submitted"),

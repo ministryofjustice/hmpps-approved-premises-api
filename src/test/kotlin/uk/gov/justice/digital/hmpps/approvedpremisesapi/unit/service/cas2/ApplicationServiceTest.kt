@@ -778,6 +778,35 @@ class ApplicationServiceTest {
     }
 
     @Test
+    fun `returns GeneralValidationError when application has already been abandoned`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withAbandonedAt(OffsetDateTime.now())
+        .produce()
+
+      every {
+        mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
+      } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitApplication(submitCas2Application, user)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
+
+      assertEmailAndAssessmentsWereNotCreated()
+    }
+
+    @Test
     fun `throws a validation error if InmateDetails (for prison code) are not available`() {
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
