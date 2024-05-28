@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -11,7 +14,22 @@ import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
-interface Cas2ApplicationNoteRepository : JpaRepository<Cas2ApplicationNoteEntity, UUID>
+interface Cas2ApplicationNoteRepository : JpaRepository<Cas2ApplicationNoteEntity, UUID> {
+  @Query(
+    "SELECT n FROM Cas2ApplicationNoteEntity n WHERE n.assessment IS NULL",
+  )
+  fun findAllNotesWithoutAssessment(of: PageRequest): Slice<Cas2ApplicationNoteEntity>
+
+  @Query(
+    "SELECT COUNT(*) FROM Cas2ApplicationNoteEntity n WHERE n.assessment IS NULL",
+  )
+  fun countAllNotesWithoutAssessment(): Int
+
+  @Query(
+    "SELECT COUNT(*) FROM Cas2ApplicationNoteEntity n WHERE n.assessment IS NOT NULL",
+  )
+  fun countAllNotesWithAssessment(): Int
+}
 
 @Entity
 @Table(name = "cas_2_application_notes")
@@ -32,7 +50,7 @@ data class Cas2ApplicationNoteEntity(
 
   @ManyToOne
   @JoinColumn(name = "assessment_id")
-  val assessment: Cas2AssessmentEntity? = null,
+  var assessment: Cas2AssessmentEntity? = null,
 ) {
 
   @ManyToOne

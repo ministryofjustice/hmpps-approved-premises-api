@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1BackfillUs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateUsersPduFromCommunityApiJob
@@ -93,6 +95,12 @@ class MigrationJobService(
 
         MigrationJobType.cas2StatusUpdatesWithAssessments -> Cas2StatusUpdateMigrationJob(
           applicationContext.getBean(Cas2StatusUpdateRepository::class.java),
+          transactionTemplate,
+          pageSize,
+        )
+
+        MigrationJobType.cas2NotesWithAssessments -> Cas2NoteMigrationJob(
+          applicationContext.getBean(Cas2ApplicationNoteRepository::class.java),
           transactionTemplate,
           pageSize,
         )
