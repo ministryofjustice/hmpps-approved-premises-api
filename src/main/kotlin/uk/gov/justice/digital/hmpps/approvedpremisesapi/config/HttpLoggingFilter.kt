@@ -10,6 +10,8 @@ import org.springframework.web.util.ContentCachingResponseWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.IOException
 import javax.annotation.PostConstruct
+import javax.servlet.AsyncEvent
+import javax.servlet.AsyncListener
 import javax.servlet.FilterChain
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -47,6 +49,29 @@ class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter
     } else {
       log.info("Response not logged as content type is $contentType")
     }
-    responseWrapper.copyBodyToResponse()
+
+    if (requestWrapper.isAsyncStarted) {
+      requestWrapper.asyncContext.addListener(
+        object : AsyncListener {
+          override fun onComplete(p0: AsyncEvent?) {
+            responseWrapper.copyBodyToResponse()
+          }
+
+          override fun onTimeout(p0: AsyncEvent?) {
+            // deliberately empty
+          }
+
+          override fun onError(p0: AsyncEvent?) {
+            // deliberately empty
+          }
+
+          override fun onStartAsync(p0: AsyncEvent?) {
+            // deliberately empty
+          }
+        },
+      )
+    } else {
+      responseWrapper.copyBodyToResponse()
+    }
   }
 }
