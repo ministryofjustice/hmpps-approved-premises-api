@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Component
 @ConditionalOnProperty(name = ["log-request-response"])
-class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter() {
+class RequestResponseLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter() {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
