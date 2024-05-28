@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -34,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -180,6 +184,112 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class GetToIndex {
 
     @Test
+    fun `return unexpired applications when applications GET is requested`() {
+      val unexpiredSubset = setOf(
+        Pair("More information requested", UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")),
+        Pair("Awaiting decision", UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")),
+        Pair("On waiting list", UUID.fromString("a919097d-b324-471c-9834-756f255e87ea")),
+        Pair("Place offered", UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2")),
+        Pair("Offer accepted", UUID.fromString("fe254d88-ce1d-4cd8-8bd6-88de88f39019")),
+        Pair("Could not be placed", UUID.fromString("758eee61-2a6d-46b9-8bdd-869536d77f1b")),
+        Pair("Incomplete", UUID.fromString("4ad9bbfa-e5b0-456f-b746-146f7fd511dd")),
+        Pair("Offer declined or withdrawn", UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de")),
+      )
+
+      val expiredSubset = setOf(
+        Pair("Referral withdrawn", UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d")),
+        Pair("Referral cancelled", UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9")),
+        Pair("Awaiting arrival", UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")),
+      )
+
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      fun createApplication(userEntity: NomisUserEntity, offenderDetails: OffenderDetailSummary): Cas2ApplicationEntity {
+        return cas2ApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(applicationSchema)
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedAt(OffsetDateTime.now().minusDays(28))
+          withConditionalReleaseDate(LocalDate.now().plusDays(1))
+        }
+      }
+
+      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity) {
+        val status = cas2StatusUpdateEntityFactory.produceAndPersist {
+          withLabel(status.first)
+          withStatusId(status.second)
+          withApplication(application)
+          withAssessor(externalUserEntityFactory.produceAndPersist())
+        }
+      }
+
+      fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore()
+      fun expiredDateTime() = unexpiredDateTime().minusDays(14)
+
+      val unexpiredDateTimesAllStatuses = List(unexpiredSubset.union(expiredSubset).size) { unexpiredDateTime() }
+      val unexpiredDateTimesUnexpiredSubset = List(unexpiredSubset.size) { unexpiredDateTime() }
+      val expiredDateTimesExpiredSubset = List(expiredSubset.size) { expiredDateTime() }
+
+      val unexpiredApplicationIds = mutableSetOf<UUID>()
+      val expiredApplicationIds = mutableSetOf<UUID>()
+
+      `Given a CAS2 POM User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          repeat(2) {
+            unexpiredApplicationIds.add(createApplication(userEntity, offenderDetails).id)
+          }
+
+          mockkStatic(OffsetDateTime::class)
+
+          unexpiredSubset.union(expiredSubset).forEachIndexed { index, status ->
+            val application = createApplication(userEntity, offenderDetails)
+            every { OffsetDateTime.now() } returns unexpiredDateTimesAllStatuses[index]
+            createStatusUpdate(status, application)
+            unexpiredApplicationIds.add(application.id)
+          }
+
+          unexpiredSubset.forEachIndexed { index, status ->
+            val application = createApplication(userEntity, offenderDetails)
+            every { OffsetDateTime.now() } returns unexpiredDateTimesUnexpiredSubset[index]
+            createStatusUpdate(status, application)
+            unexpiredApplicationIds.add(application.id)
+          }
+
+          expiredSubset.forEachIndexed { index, status ->
+            val application = createApplication(userEntity, offenderDetails)
+            every { OffsetDateTime.now() } returns expiredDateTimesExpiredSubset[index]
+            createStatusUpdate(status, application)
+            expiredApplicationIds.add(application.id)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+          val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+          Assertions.assertThat(returnedApplicationIds.equals(unexpiredApplicationIds)).isTrue()
+
+          unmockkAll()
+        }
+      }
+    }
+
+    @Test
     fun `Get all applications returns 200 with correct body`() {
       `Given a CAS2 POM User` { userEntity, jwt ->
         `Given a CAS2 POM User` { otherUser, _ ->
@@ -224,7 +334,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
-              withLabel("a status update")
+              withLabel("More information requested")
               withApplication(secondApplicationEntity)
               withAssessor(externalUserEntityFactory.produceAndPersist())
             }
@@ -518,7 +628,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 otherPrisonApplication.id == it.id
               }
 
-              Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+              Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
               Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
             }
           }
@@ -624,7 +734,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
               Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
-              Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+              Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
               Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
             }
           }
@@ -822,14 +932,14 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   private fun addStatusUpdates(applicationId: UUID, assessor: ExternalUserEntity) {
     cas2StatusUpdateEntityFactory.produceAndPersist {
-      withLabel("older status update")
+      withLabel("More information requested")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
       withAssessor(assessor)
     }
     // this is the one that should be returned as latestStatusUpdate
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
-      withLabel("more recent status update")
+      withLabel("Awaiting decision")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
       withAssessor(assessor)
     }
@@ -983,7 +1093,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
-      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
       Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
     }
 
@@ -1005,7 +1115,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
-      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
       Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
     }
 
