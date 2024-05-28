@@ -26,7 +26,7 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
         CAST(a.id as TEXT) as applicationId,
         CONCAT('placement_request:',pr.id) AS requestForPlacementId,
         CAST(pr.id as TEXT) AS matchRequestId,
-        'INITIAL' AS requestForPlacementType, 
+        'STANDARD' AS requestForPlacementType, 
         pr.expected_arrival as requestedArrivalDate,
         pr.duration as requestedDurationDays,
         CAST(a.submitted_at as date) as requestForPlacementSubmittedAt,
