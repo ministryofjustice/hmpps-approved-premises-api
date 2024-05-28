@@ -10,6 +10,8 @@ import org.springframework.web.util.ContentCachingResponseWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.IOException
 import javax.annotation.PostConstruct
+import javax.servlet.AsyncEvent
+import javax.servlet.AsyncListener
 import javax.servlet.FilterChain
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -17,7 +19,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Component
 @ConditionalOnProperty(name = ["log-request-response"])
-class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter() {
+class RequestResponseLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter() {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -28,6 +30,10 @@ class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter
 
   @Throws(ServletException::class, IOException::class)
   override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
+    if (request.requestURI.contains("health")) {
+      return filterChain.doFilter(request, response)
+    }
+
     val requestWrapper = ContentCachingRequestWrapper(request)
     val responseWrapper = ContentCachingResponseWrapper(response)
 
@@ -43,10 +49,33 @@ class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter
     log.info("Request {}", String(requestWrapper.contentAsByteArray))
     val contentType = responseWrapper.contentType
     if (contentType == "application/json") {
-      log.info("Response {}", String(responseWrapper.contentAsByteArray))
+      log.info("Response Body {}", String(responseWrapper.contentAsByteArray))
     } else {
-      log.info("Response not logged as content type is $contentType")
+      log.info("Response Body not logged as content type is $contentType")
     }
-    responseWrapper.copyBodyToResponse()
+
+    if (requestWrapper.isAsyncStarted) {
+      requestWrapper.asyncContext.addListener(
+        object : AsyncListener {
+          override fun onComplete(p0: AsyncEvent?) {
+            responseWrapper.copyBodyToResponse()
+          }
+
+          override fun onTimeout(p0: AsyncEvent?) {
+            // deliberately empty
+          }
+
+          override fun onError(p0: AsyncEvent?) {
+            // deliberately empty
+          }
+
+          override fun onStartAsync(p0: AsyncEvent?) {
+            // deliberately empty
+          }
+        },
+      )
+    } else {
+      responseWrapper.copyBodyToResponse()
+    }
   }
 }
