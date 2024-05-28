@@ -8,14 +8,14 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortHolder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortManager
 import javax.annotation.PreDestroy
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
   private var postgresPort = System.getenv("POSTGRES_PORT") ?: "5433"
 
   override fun initialize(applicationContext: ConfigurableApplicationContext?) {
-    val wiremockPort = WiremockPortHolder.getPort()
+    val wiremockPort = WiremockPortManager.reserveFreePort()
 
     val databaseName = setupDatabase()
 
@@ -69,5 +69,5 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
 @Component
 class TestPropertiesDestructor {
   @PreDestroy
-  fun destroy() = WiremockPortHolder.releasePort()
+  fun destroy() = WiremockPortManager.releasePort()
 }
