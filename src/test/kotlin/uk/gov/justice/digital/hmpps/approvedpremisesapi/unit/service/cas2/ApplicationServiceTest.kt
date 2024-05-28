@@ -283,6 +283,23 @@ class ApplicationServiceTest {
     }
 
     @Test
+    fun `where application is abandoned returns NotFound result`() {
+      val user = NomisUserEntityFactory().produce()
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      every { mockApplicationRepository.findByIdOrNull(any()) } returns
+        Cas2ApplicationEntityFactory()
+          .withCreatedByUser(
+            NomisUserEntityFactory()
+              .produce(),
+          )
+          .withAbandonedAt(OffsetDateTime.now())
+          .produce()
+
+      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
     fun `where user cannot access the application returns Unauthorised result`() {
       val user = NomisUserEntityFactory()
         .produce()

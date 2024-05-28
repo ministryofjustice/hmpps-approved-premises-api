@@ -100,6 +100,10 @@ class ApplicationService(
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
+    if (applicationEntity.abandonedAt != null) {
+      return AuthorisableActionResult.NotFound()
+    }
+
     val canAccess = userAccessService.userCanViewApplication(user, applicationEntity)
 
     return if (canAccess) {
