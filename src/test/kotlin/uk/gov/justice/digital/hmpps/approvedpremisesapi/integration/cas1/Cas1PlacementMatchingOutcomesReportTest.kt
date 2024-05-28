@@ -96,7 +96,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           assertThat(row1.applicationId).isEqualTo(placementRequest.application.id.toString())
           assertThat(row1.requestForPlacementId).isEqualTo("placement_request:${placementRequest.id}")
           assertThat(row1.matchRequestId).isEqualTo(placementRequest.id.toString())
-          assertThat(row1.requestForPlacementType).isEqualTo("INITIAL")
+          assertThat(row1.requestForPlacementType).isEqualTo("STANDARD")
           assertThat(row1.requestedArrivalDate).isEqualTo(LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1))
           assertThat(row1.requestedDurationDays).isEqualTo(52)
           assertThat(row1.requestForPlacementSubmittedAt).isEqualTo(LocalDate.of(2019, 10, 11))
