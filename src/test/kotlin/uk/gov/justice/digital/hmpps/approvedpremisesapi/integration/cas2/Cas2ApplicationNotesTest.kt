@@ -252,12 +252,16 @@ class Cas2ApplicationNotesTest(
                   withActiveCaseloadId("another-prison")
                 }
 
-                cas2ApplicationEntityFactory.produceAndPersist {
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
                   withCreatedByUser(otherUser)
                   withApplicationSchema(applicationSchema)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
+                }
+
+                cas2AssessmentEntityFactory.produceAndPersist() {
+                  withApplication(application)
                 }
 
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
@@ -449,12 +453,16 @@ class Cas2ApplicationNotesTest(
                   withActiveCaseloadId("another-prison")
                 }
 
-                cas2ApplicationEntityFactory.produceAndPersist {
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
                   withCreatedByUser(otherUser)
                   withApplicationSchema(applicationSchema)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
+                }
+
+                val assessment = cas2AssessmentEntityFactory.produceAndPersist {
+                  withApplication(application)
                 }
 
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)

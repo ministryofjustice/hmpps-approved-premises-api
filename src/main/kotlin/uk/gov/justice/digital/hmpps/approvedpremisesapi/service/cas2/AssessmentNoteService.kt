@@ -45,8 +45,12 @@ class AssessmentNoteService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Deprecated("Superseded by createAssessmentNote().")
+  @SuppressWarnings("ReturnCount")
   fun createApplicationNote(applicationId: UUID, note: NewCas2ApplicationNote):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
+    val assessment = assessmentRepository.findFirstByApplicationId(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -63,7 +67,7 @@ class AssessmentNoteService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val savedNote = saveNote(application, note.note, user)
+    val savedNote = saveNote(application, assessment, note.note, user)
 
     sendEmail(isExternalUser, application, savedNote)
 
@@ -96,7 +100,7 @@ class AssessmentNoteService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val savedNote = saveNote(application, note.note, user)
+    val savedNote = saveNote(application, assessment, note.note, user)
 
     sendEmail(isExternalUser, application, savedNote)
 
@@ -202,13 +206,14 @@ class AssessmentNoteService(
     }
   }
 
-  private fun saveNote(application: Cas2ApplicationEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {
+  private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {
     val newNote = Cas2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = application,
       body = body,
       createdAt = OffsetDateTime.now(),
       createdByUser = user,
+      assessment = assessment,
     )
 
     return applicationNoteRepository.save(newNote)

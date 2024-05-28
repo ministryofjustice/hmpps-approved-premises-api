@@ -50,7 +50,7 @@ data class Cas2ApplicationNoteEntity(
 
   @ManyToOne
   @JoinColumn(name = "assessment_id")
-  var assessment: Cas2AssessmentEntity? = null,
+  var assessment: Cas2AssessmentEntity?,
 ) {
 
   @ManyToOne

@@ -69,9 +69,25 @@ class AssessmentNoteServiceTest {
     private val referrer = NomisUserEntityFactory().withActiveCaseloadId("my-prison").produce()
 
     @Nested
+    inner class WhenAssessmentIsNotFound {
+      @Test
+      fun `returns Not Found`() {
+        every { mockAssessmentRepository.findFirstByApplicationId(any()) } returns null
+
+        Assertions.assertThat(
+          assessmentNoteService.createApplicationNote(
+            applicationId = UUID.randomUUID(),
+            note = NewCas2ApplicationNote(note = "note for missing app"),
+          ) is AuthorisableActionResult.NotFound,
+        ).isTrue
+      }
+    }
+
+    @Nested
     inner class WhenApplicationIsNotFound {
       @Test
       fun `returns Not Found`() {
+        every { mockAssessmentRepository.findFirstByApplicationId(any()) } returns Cas2AssessmentEntityFactory().produce()
         every { mockApplicationRepository.findByIdOrNull(any()) } answers
           {
             null
@@ -95,6 +111,8 @@ class AssessmentNoteServiceTest {
           .withCrn("CRN123")
           .withNomsNumber("NOMSABC")
           .produce()
+
+        every { mockAssessmentRepository.findFirstByApplicationId(any()) } returns Cas2AssessmentEntityFactory().produce()
 
         every { mockApplicationRepository.findByIdOrNull(any()) } answers
           {
@@ -134,15 +152,15 @@ class AssessmentNoteServiceTest {
           }
       }
 
+      private val assessment = Cas2AssessmentEntityFactory()
+        .withAssessorName("Anne Assessor").withNacroReferralId("OH123").produce()
+
       private val submittedApplication = Cas2ApplicationEntityFactory()
         .withCreatedByUser(referrer)
         .withCrn("CRN123")
         .withNomsNumber("NOMSABC")
         .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
-        .withAssessment(
-          Cas2AssessmentEntityFactory()
-            .withAssessorName("Anne Assessor").withNacroReferralId("OH123").produce(),
-        )
+        .withAssessment(assessment)
         .produce()
       private val applicationId = submittedApplication.id
       private val noteEntity = Cas2ApplicationNoteEntity(
@@ -151,12 +169,14 @@ class AssessmentNoteServiceTest {
         application = submittedApplication,
         body = "new note",
         createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+        assessment = assessment,
       )
 
       @Nested
       inner class WhenApplicationCreatedByUser {
         @Test
         fun `returns Success result with entity from db`() {
+          every { mockAssessmentRepository.findFirstByApplicationId(applicationId) } returns assessment
           every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
             {
               submittedApplication
@@ -207,6 +227,9 @@ class AssessmentNoteServiceTest {
               .withAssessment(Cas2AssessmentEntityFactory().produce())
               .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
               .produce()
+
+            every { mockAssessmentRepository.findFirstByApplicationId(applicationId) } returns
+              submittedApplicationWithoutAssessorDetails.assessment
 
             every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
               {
@@ -260,6 +283,7 @@ class AssessmentNoteServiceTest {
         inner class WhenDifferentPrison {
           @Test
           fun `returns Not Authorised`() {
+            every { mockAssessmentRepository.findFirstByApplicationId(applicationCreatedByOtherUser.id) } returns applicationCreatedByOtherUser.assessment
             every { mockApplicationRepository.findByIdOrNull(applicationCreatedByOtherUser.id) } answers
               {
                 applicationCreatedByOtherUser
@@ -282,6 +306,7 @@ class AssessmentNoteServiceTest {
         inner class WhenSamePrison {
           @Test
           fun `returns Success result with entity from db`() {
+            every { mockAssessmentRepository.findFirstByApplicationId(applicationCreatedByOtherUser.id) } returns applicationCreatedByOtherUser.assessment
             every { mockApplicationRepository.findByIdOrNull(applicationCreatedByOtherUser.id) } answers
               {
                 applicationCreatedByOtherUser
@@ -360,10 +385,12 @@ class AssessmentNoteServiceTest {
         application = submittedApplication,
         body = "new note",
         createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+        assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
       @Test
       fun `returns Success result with entity from db`() {
+        every { mockAssessmentRepository.findFirstByApplicationId(applicationId) } returns noteEntity.assessment
         every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
           {
             submittedApplication
@@ -411,6 +438,7 @@ class AssessmentNoteServiceTest {
           .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
           .produce()
 
+        every { mockAssessmentRepository.findFirstByApplicationId(applicationId) } returns Cas2AssessmentEntityFactory().produce()
         every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
           {
             submittedApplicationWithNoReferrerEmail
@@ -545,6 +573,7 @@ class AssessmentNoteServiceTest {
         application = submittedApplication,
         body = "new note",
         createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+        assessment = assessment,
       )
 
       @Nested
@@ -749,6 +778,7 @@ class AssessmentNoteServiceTest {
         application = submittedApplication,
         body = "new note",
         createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+        assessment = assessment,
       )
 
       @Test

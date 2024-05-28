@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -34,6 +35,7 @@ class ApplicationNoteTransformerTest {
         application = submittedApplication,
         body = "new note",
         createdAt = createdAt,
+        assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
       val expectedRepresentation = Cas2ApplicationNote(
@@ -62,6 +64,7 @@ class ApplicationNoteTransformerTest {
         application = submittedApplication,
         body = "new note",
         createdAt = createdAt,
+        assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
       val expectedRepresentation = Cas2ApplicationNote(
