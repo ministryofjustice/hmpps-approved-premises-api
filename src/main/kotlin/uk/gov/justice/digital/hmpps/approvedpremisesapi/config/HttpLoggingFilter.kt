@@ -30,6 +30,10 @@ class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter
 
   @Throws(ServletException::class, IOException::class)
   override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
+    if (request.requestURI.contains("health")) {
+      return filterChain.doFilter(request, response)
+    }
+
     val requestWrapper = ContentCachingRequestWrapper(request)
     val responseWrapper = ContentCachingResponseWrapper(response)
 
@@ -45,9 +49,9 @@ class HttpLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter
     log.info("Request {}", String(requestWrapper.contentAsByteArray))
     val contentType = responseWrapper.contentType
     if (contentType == "application/json") {
-      log.info("Response {}", String(responseWrapper.contentAsByteArray))
+      log.info("Response Body {}", String(responseWrapper.contentAsByteArray))
     } else {
-      log.info("Response not logged as content type is $contentType")
+      log.info("Response Body not logged as content type is $contentType")
     }
 
     if (requestWrapper.isAsyncStarted) {
