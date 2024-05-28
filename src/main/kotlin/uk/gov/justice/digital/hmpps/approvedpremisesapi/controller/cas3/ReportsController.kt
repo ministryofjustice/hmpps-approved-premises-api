@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
-import org.springframework.core.io.InputStreamResource
-import org.springframework.core.io.Resource
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ReportsCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
@@ -11,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Boo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
-import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -37,7 +36,7 @@ class ReportsController(
     year: Int,
     month: Int,
     probationRegionId: UUID?,
-  ): ResponseEntity<Resource> {
+  ): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
     }
@@ -46,16 +45,15 @@ class ReportsController(
     val startDate = LocalDate.of(year, month, 1)
     val endDate = LocalDate.of(year, month, startDate.month.length(startDate.isLeapYear))
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
-    val outputStream = ByteArrayOutputStream()
 
-    when (xServiceName) {
+    return when (xServiceName) {
       ServiceName.temporaryAccommodation -> {
-        cas3ReportService.createCas3ApplicationReferralsReport(properties, outputStream)
+        generateXlsxStreamingResponse { outputStream ->
+          cas3ReportService.createCas3ApplicationReferralsReport(properties, outputStream)
+        }
       }
       else -> throw UnsupportedOperationException("Only supported for CAS3")
     }
-
-    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
 
   override fun reportsReportNameGet(
@@ -63,53 +61,63 @@ class ReportsController(
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID?,
-  ): ResponseEntity<Resource> {
+  ): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
     }
     validateRequestParameters(probationRegionId, startDate, endDate)
-    val outputStream = ByteArrayOutputStream()
 
-    when (reportName) {
-      referral -> cas3ReportService.createCas3ApplicationReferralsReport(
-        TransitionalAccommodationReferralReportProperties(
-          startDate = startDate,
-          endDate = endDate,
-          probationRegionId = probationRegionId,
-        ),
-        outputStream,
-      )
+    return when (reportName) {
+      referral ->
+        generateXlsxStreamingResponse { outputStream ->
+          cas3ReportService.createCas3ApplicationReferralsReport(
+            TransitionalAccommodationReferralReportProperties(
+              startDate = startDate,
+              endDate = endDate,
+              probationRegionId = probationRegionId,
+            ),
+            outputStream,
+          )
+        }
 
-      booking -> cas3ReportService.createBookingsReport(
-        BookingsReportProperties(
-          ServiceName.temporaryAccommodation,
-          startDate = startDate,
-          endDate = endDate,
-          probationRegionId = probationRegionId,
-        ),
-        outputStream,
-      )
-      bedUsage -> cas3ReportService.createBedUsageReport(
-        BedUsageReportProperties(
-          ServiceName.temporaryAccommodation,
-          startDate = startDate,
-          endDate = endDate,
-          probationRegionId = probationRegionId,
-        ),
-        outputStream,
-      )
+      booking ->
+        generateXlsxStreamingResponse { outputStream ->
+          cas3ReportService.createBookingsReport(
+            BookingsReportProperties(
+              ServiceName.temporaryAccommodation,
+              startDate = startDate,
+              endDate = endDate,
+              probationRegionId = probationRegionId,
+            ),
+            outputStream,
+          )
+        }
 
-      bedOccupancy -> cas3ReportService.createBedUtilisationReport(
-        BedUtilisationReportProperties(
-          ServiceName.temporaryAccommodation,
-          startDate = startDate,
-          endDate = endDate,
-          probationRegionId = probationRegionId,
-        ),
-        outputStream,
-      )
+      bedUsage ->
+        generateXlsxStreamingResponse { outputStream ->
+          cas3ReportService.createBedUsageReport(
+            BedUsageReportProperties(
+              ServiceName.temporaryAccommodation,
+              startDate = startDate,
+              endDate = endDate,
+              probationRegionId = probationRegionId,
+            ),
+            outputStream,
+          )
+        }
+
+      bedOccupancy -> generateXlsxStreamingResponse { outputStream ->
+        cas3ReportService.createBedUtilisationReport(
+          BedUtilisationReportProperties(
+            ServiceName.temporaryAccommodation,
+            startDate = startDate,
+            endDate = endDate,
+            probationRegionId = probationRegionId,
+          ),
+          outputStream,
+        )
+      }
     }
-    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
 
   private fun validateParameters(probationRegionId: UUID?, month: Int) {

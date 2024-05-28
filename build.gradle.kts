@@ -165,6 +165,7 @@ openApiGenerate {
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
+  templateDir.set("$rootDir/openapi")
 }
 
 // Skip OpenAPI generation for test tasks run inside IntelliJ
@@ -193,6 +194,7 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
+  templateDir.set("$rootDir/openapi")
 }
 
 tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateDomainEvents") {
@@ -268,6 +270,7 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
+  templateDir.set("$rootDir/openapi")
 }
 
 tasks.register("openApiPreCompilation") {
@@ -324,14 +327,6 @@ tasks.get("openApiGenerate").dependsOn(
 )
 
 tasks.get("openApiGenerate").doLast {
-  // This is a workaround to allow us to have the `/documents/{crn}/{documentId}` endpoint specified in api.yml but not use
-  // OpenAPI Generate for the scaffolding.  This is because we need to properly stream the files
-  // (rather than loading whole file into memory first) which the OpenAPI generated controller does not support.
-
-  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/DocumentsApi.kt").delete()
-  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/DocumentsApiController.kt").delete()
-  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/DocumentsApiDelegate.kt").delete()
-
   // This is a workaround for an issue where we end up with duplicate keys in output JSON because we declare properties both in the discriminator
   // and as a regular property in the OpenAPI spec.  The Typescript generator does not support just the discriminator so there is no alternative.
   File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk()
