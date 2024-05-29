@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
@@ -37,7 +37,7 @@ import javax.transaction.Transactional
 class SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val applicationNoteService: ApplicationNoteService,
+  private val assessmentNoteService: AssessmentNoteService,
   private val submissionsTransformer: SubmissionsTransformer,
   private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val offenderService: OffenderService,
@@ -108,8 +108,9 @@ class SubmissionsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  @Deprecated("Superseded by assessmentsAssessmentIdNotesPost() in AssessmentsController.")
   override fun submissionsApplicationIdNotesPost(applicationId: UUID, body: NewCas2ApplicationNote): ResponseEntity<Cas2ApplicationNote> {
-    val noteResult = applicationNoteService.createApplicationNote(applicationId, body)
+    val noteResult = assessmentNoteService.createApplicationNote(applicationId, body)
 
     val validationResult = processAuthorisationFor(applicationId, noteResult) as ValidatableActionResult<Cas2ApplicationNote>
 

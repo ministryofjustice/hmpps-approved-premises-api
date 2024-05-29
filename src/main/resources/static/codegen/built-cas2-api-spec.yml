@@ -260,6 +260,46 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes:
+    post:
+      tags:
+        - Operations on CAS2 assessments
+      summary: Add a note to an assessment
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: the note to add
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCas2ApplicationNote'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2ApplicationNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid assessmentId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /submissions:
     get:
       tags:
@@ -4228,6 +4268,7 @@ components:
         - update_task_due_dates
         - update_cas2_applications_with_assessments
         - update_cas2_status_updates_with_assessments
+        - update_cas2_notes_with_assessments
         - update_cas1_user_details
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types

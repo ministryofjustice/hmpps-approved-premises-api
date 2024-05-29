@@ -5,9 +5,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.AssessmentsCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -16,15 +19,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
+import java.net.URI
 import java.util.UUID
 
 @Service("Cas2AssessmentsController")
 class AssessmentsController(
   private val assessmentService: AssessmentService,
+  private val assessmentNoteService: AssessmentNoteService,
   private val assessmentsTransformer: AssessmentsTransformer,
+  private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val statusUpdateService: StatusUpdateService,
   private val externalUserService: ExternalUserService,
 ) : AssessmentsCas2Delegate {
@@ -83,6 +91,23 @@ class AssessmentsController(
       .run { processValidation(this as ValidatableActionResult<Cas2StatusUpdateEntity>) }
 
     return ResponseEntity(HttpStatus.CREATED)
+  }
+
+  override fun assessmentsAssessmentIdNotesPost(
+    assessmentId: UUID,
+    body: NewCas2ApplicationNote,
+  ): ResponseEntity<Cas2ApplicationNote> {
+    val noteResult = assessmentNoteService.createAssessmentNote(assessmentId, body)
+
+    val validationResult = processAuthorisationFor(assessmentId, noteResult) as ValidatableActionResult<Cas2ApplicationNote>
+
+    val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
+
+    return ResponseEntity
+      .created(URI.create("/cas2/assessments/$assessmentId/notes/${note.id}"))
+      .body(
+        applicationNotesTransformer.transformJpaToApi(note),
+      )
   }
 
   private fun <EntityType> processAuthorisationFor(

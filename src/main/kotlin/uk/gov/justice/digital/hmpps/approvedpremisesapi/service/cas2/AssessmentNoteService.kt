@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -27,8 +28,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service("Cas2ApplicationNoteService")
-class ApplicationNoteService(
+class AssessmentNoteService(
   private val applicationRepository: Cas2ApplicationRepository,
+  private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
   private val userService: NomisUserService,
   private val externalUserService: ExternalUserService,
@@ -41,8 +43,14 @@ class ApplicationNoteService(
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  @Deprecated("Superseded by createAssessmentNote().")
+  @SuppressWarnings("ReturnCount")
   fun createApplicationNote(applicationId: UUID, note: NewCas2ApplicationNote):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
+    val assessment = assessmentRepository.findFirstByApplicationId(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -59,7 +67,40 @@ class ApplicationNoteService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val savedNote = saveNote(application, note.note, user)
+    val savedNote = saveNote(application, assessment, note.note, user)
+
+    sendEmail(isExternalUser, application, savedNote)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(
+        savedNote,
+      ),
+    )
+  }
+
+  @Suppress("ReturnCount")
+  fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote):
+    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
+    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    val application = applicationRepository.findByIdOrNull(assessment.application.id)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application.submittedAt == null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has not been submitted"),
+      )
+    }
+
+    val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
+    val user = getCas2User(isExternalUser)
+
+    if (!isExternalUser && !nomisUserCanAddNote(application, user as NomisUserEntity)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val savedNote = saveNote(application, assessment, note.note, user)
 
     sendEmail(isExternalUser, application, savedNote)
 
@@ -165,13 +206,14 @@ class ApplicationNoteService(
     }
   }
 
-  private fun saveNote(application: Cas2ApplicationEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {
+  private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {
     val newNote = Cas2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = application,
       body = body,
       createdAt = OffsetDateTime.now(),
       createdByUser = user,
+      assessment = assessment,
     )
 
     return applicationNoteRepository.save(newNote)
