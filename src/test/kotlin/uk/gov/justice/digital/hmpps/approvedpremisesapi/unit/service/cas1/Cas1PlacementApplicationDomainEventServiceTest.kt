@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -193,6 +194,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
+            assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, placementApplication.id.toString())
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
