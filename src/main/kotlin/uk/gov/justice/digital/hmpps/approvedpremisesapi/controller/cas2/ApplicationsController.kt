@@ -136,6 +136,26 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
   }
 
+  @Transactional
+  override fun applicationsApplicationIdAbandonPut(applicationId: UUID): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val validationResult = when (val applicationResult = applicationService.abandonApplication(applicationId, user)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> applicationResult.entity
+    }
+
+    when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    return ResponseEntity.ok(Unit)
+  }
+
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>):
     List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
