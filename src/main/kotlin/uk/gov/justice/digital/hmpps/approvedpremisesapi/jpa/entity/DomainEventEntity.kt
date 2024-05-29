@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
@@ -74,6 +75,18 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllCreatedInMonth(month: Int, year: Int): List<DomainEventEntity>
+
+  fun findByApplicationId(applicationId: UUID): List<DomainEventEntity>
+
+  @Modifying
+  @Query(
+    """
+    UPDATE DomainEventEntity d set 
+    d.data = :updatedData
+    where d.id = :id
+    """,
+  )
+  fun updateData(id: UUID, updatedData: String)
 }
 
 @Entity

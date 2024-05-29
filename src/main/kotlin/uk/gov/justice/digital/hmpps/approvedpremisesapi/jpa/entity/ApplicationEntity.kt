@@ -242,6 +242,18 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
     type: Class<T>,
     pageable: Pageable?,
   ): Slice<TemporaryAccommodationApplicationEntity>
+
+  @Modifying
+  @Query(
+    """
+    UPDATE ApprovedPremisesApplicationEntity ap set 
+    ap.eventNumber = :eventNumber,
+    ap.offenceId = :offenceId,
+    ap.convictionId = :convictionId
+    where ap.id = :applicationId
+    """,
+  )
+  fun updateEventNumber(applicationId: UUID, eventNumber: String, offenceId: String, convictionId: Long)
 }
 
 @Entity
