@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -129,6 +130,9 @@ class Cas1PlacementApplicationDomainEventService(
           timestamp = eventOccurredAt,
           eventType = EventType.placementApplicationWithdrawn,
           eventDetails = eventDetails,
+        ),
+        metadata = mapOf(
+          MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to placementApplication.id.toString(),
         ),
       ),
     )

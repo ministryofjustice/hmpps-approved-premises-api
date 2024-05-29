@@ -159,6 +159,7 @@ enum class TriggerSourceType { USER, SYSTEM }
 enum class MetaDataName {
   CAS1_APP_REASON_FOR_SHORT_NOTICE,
   CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER,
+  CAS1_PLACEMENT_APPLICATION_ID,
 }
 
 enum class DomainEventType(val typeName: String, val typeDescription: String, val timelineEventType: TimelineEventType?) {
