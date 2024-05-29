@@ -210,7 +210,6 @@ notify:
 
 feature-flags:
   local-overrides:
-    cas1-email-use-cru-for-reply-to: true
     cas1-provide-offline-application-events-in-personal-timeline: true
 
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug

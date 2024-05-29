@@ -7,16 +7,14 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1EmailNotificationService
 import java.util.UUID
 
 class Cas1EmailNotificationServiceTest {
 
   private val emailNotificationService = mockk<EmailNotificationService>()
-  private val featureFlagService = mockk<FeatureFlagService>()
 
-  private val service = Cas1EmailNotificationService(emailNotificationService, featureFlagService)
+  private val service = Cas1EmailNotificationService(emailNotificationService)
 
   companion object {
     const val RECIPIENT_1 = "recipient1@somewhere.com"
@@ -38,23 +36,7 @@ class Cas1EmailNotificationServiceTest {
     .produce()
 
   @Test
-  fun `sendEmail delegates to EmailNotificationService use-cru-for-reply-to disabled`() {
-    every { featureFlagService.getBooleanFlag("cas1-email-use-cru-for-reply-to", default = false) } returns false
-    every { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = null) } returns Unit
-
-    service.sendEmail(
-      RECIPIENT_1,
-      TEMPLATE_ID,
-      PERSONALISATION,
-      application,
-    )
-
-    verify { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = null) }
-  }
-
-  @Test
-  fun `sendEmail delegates to EmailNotificationService use-cru-for-reply-to enabled`() {
-    every { featureFlagService.getBooleanFlag("cas1-email-use-cru-for-reply-to", default = false) } returns true
+  fun `sendEmail delegates to EmailNotificationService and uses CRU email for reply-to`() {
     every { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID) } returns Unit
 
     service.sendEmail(
@@ -68,23 +50,7 @@ class Cas1EmailNotificationServiceTest {
   }
 
   @Test
-  fun `sendEmails delegates to EmailNotificationService use-cru-for-reply-to disabled`() {
-    every { featureFlagService.getBooleanFlag("cas1-email-use-cru-for-reply-to", default = false) } returns false
-    every { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = null) } returns Unit
-
-    service.sendEmails(
-      setOf(RECIPIENT_1, RECIPIENT_2),
-      TEMPLATE_ID,
-      PERSONALISATION,
-      application,
-    )
-
-    verify { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = null) }
-  }
-
-  @Test
-  fun `sendEmails delegates to EmailNotificationService use-cru-for-reply-to enabled`() {
-    every { featureFlagService.getBooleanFlag("cas1-email-use-cru-for-reply-to", default = false) } returns true
+  fun `sendEmails delegates to EmailNotificationService and uses CRU email for reply-to`() {
     every { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID) } returns Unit
 
     service.sendEmails(
