@@ -193,6 +193,40 @@ class ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
+  fun abandonApplication(applicationId: UUID, user: NomisUserEntity):
+    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.ConflictError(applicationId, "This application has already been submitted"),
+      )
+    }
+
+    if (application.abandonedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.Success(application),
+      )
+    }
+
+    application.apply {
+      this.abandonedAt = OffsetDateTime.now()
+      this.data = null
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  @SuppressWarnings("ReturnCount")
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,
