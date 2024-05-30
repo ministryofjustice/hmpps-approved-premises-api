@@ -43,8 +43,8 @@ class CapacityTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Get Capacity with no bookings or lost beds on Approved Premises returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+  fun `Get Capacity with no bookings or lost beds on Approved Premises returns OK with empty list body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -71,8 +71,8 @@ class CapacityTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Get Capacity for Approved Premises with booking in past returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+  fun `Get Capacity for Approved Premises with booking in past returns OK with empty list body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

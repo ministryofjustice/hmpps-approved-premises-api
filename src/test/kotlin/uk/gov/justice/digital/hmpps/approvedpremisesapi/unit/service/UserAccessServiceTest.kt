@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommodationApplicationAccessLevel
@@ -818,32 +817,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanViewPremisesStaff(temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
-  fun `getApprovedPremisesApplicationAccessLevelForUser returns ALL if the user has one of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, or CAS1_MANAGER roles`(role: UserRole) {
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)).isEqualTo(ApprovedPremisesApplicationAccessLevel.ALL)
-  }
-
-  @Test
-  fun `getApprovedPremisesApplicationAccessLevelForUser returns TEAM if the user has no suitable role`() {
-    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForUser(user)).isEqualTo(ApprovedPremisesApplicationAccessLevel.TEAM)
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"])
-  fun `getApprovedPremisesApplicationAccessLevelForCurrentUser returns ALL if the user has one of the CAS1_WORKFLOW_MANAGER, CAS1_ASSESSOR, CAS1_MATCHER, or CAS1_MANAGER roles`(role: UserRole) {
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForCurrentUser()).isEqualTo(ApprovedPremisesApplicationAccessLevel.ALL)
-  }
-
-  @Test
-  fun `getApprovedPremisesApplicationAccessLevelForCurrentUser returns TEAM if the user has no suitable role`() {
-    assertThat(userAccessService.getApprovedPremisesApplicationAccessLevelForCurrentUser()).isEqualTo(ApprovedPremisesApplicationAccessLevel.TEAM)
   }
 
   @Test

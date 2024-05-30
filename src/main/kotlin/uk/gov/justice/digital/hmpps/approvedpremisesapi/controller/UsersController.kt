@@ -147,6 +147,8 @@ class UsersController(
     ApprovedPremisesUserRole.applicant -> JpaUserRole.CAS1_APPLICANT
     ApprovedPremisesUserRole.assessor -> JpaUserRole.CAS1_ASSESSOR
     ApprovedPremisesUserRole.manager -> JpaUserRole.CAS1_MANAGER
+    ApprovedPremisesUserRole.legacyManager -> JpaUserRole.CAS1_LEGACY_MANAGER
+    ApprovedPremisesUserRole.futureManager -> JpaUserRole.CAS1_FUTURE_MANAGER
     ApprovedPremisesUserRole.matcher -> JpaUserRole.CAS1_MATCHER
     ApprovedPremisesUserRole.workflowManager -> JpaUserRole.CAS1_WORKFLOW_MANAGER
     ApprovedPremisesUserRole.reportViewer -> JpaUserRole.CAS1_REPORT_VIEWER

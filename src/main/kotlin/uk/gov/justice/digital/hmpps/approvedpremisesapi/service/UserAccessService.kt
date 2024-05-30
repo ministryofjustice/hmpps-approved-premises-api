@@ -71,7 +71,7 @@ class UserAccessService(
   }
 
   fun userCanManagePremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER, UserRole.CAS1_WORKFLOW_MANAGER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER, UserRole.CAS1_WORKFLOW_MANAGER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
@@ -91,7 +91,7 @@ class UserAccessService(
     userCanManagePremisesLostBeds(userService.getUserForRequest(), premises)
 
   fun userCanManagePremisesLostBeds(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
@@ -100,7 +100,7 @@ class UserAccessService(
     userCanViewPremisesCapacity(userService.getUserForRequest(), premises)
 
   fun userCanViewPremisesCapacity(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
@@ -109,7 +109,7 @@ class UserAccessService(
     userCanViewPremisesStaff(userService.getUserForRequest(), premises)
 
   fun userCanViewPremisesStaff(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
@@ -123,14 +123,6 @@ class UserAccessService(
       ServiceName.approvedPremises -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ADMIN)
       else -> false
     }
-
-  fun getApprovedPremisesApplicationAccessLevelForCurrentUser(): ApprovedPremisesApplicationAccessLevel =
-    getApprovedPremisesApplicationAccessLevelForUser(userService.getUserForRequest())
-
-  fun getApprovedPremisesApplicationAccessLevelForUser(user: UserEntity): ApprovedPremisesApplicationAccessLevel = when {
-    user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER) -> ApprovedPremisesApplicationAccessLevel.ALL
-    else -> ApprovedPremisesApplicationAccessLevel.TEAM
-  }
 
   fun getTemporaryAccommodationApplicationAccessLevelForCurrentUser(): TemporaryAccommodationApplicationAccessLevel =
     getTemporaryAccommodationApplicationAccessLevelForUser(userService.getUserForRequest())

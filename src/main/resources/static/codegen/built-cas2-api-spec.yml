@@ -3639,6 +3639,8 @@ components:
         - assessor
         - matcher
         - manager
+        - legacy_manager
+        - future_manager
         - workflow_manager
         - applicant
         - role_admin

@@ -57,8 +57,8 @@ class LostBedsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get All Lost Beds returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+    fun `Get All Lost Beds returns OK with correct body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -156,7 +156,7 @@ class LostBedsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+    @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get Lost Bed for non-existent lost bed returns 404`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -176,8 +176,8 @@ class LostBedsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get Lost Bed returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+    fun `Get Lost Bed returns OK with correct body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -289,8 +289,8 @@ class LostBedsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Create Lost Beds returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+    fun `Create Lost Beds returns OK with correct body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -681,8 +681,8 @@ class LostBedsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Update Lost Beds returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+    fun `Update Lost Beds returns OK with correct body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1111,8 +1111,8 @@ class LostBedsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Cancel Lost Bed returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+    fun `Cancel Lost Bed returns OK with correct body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

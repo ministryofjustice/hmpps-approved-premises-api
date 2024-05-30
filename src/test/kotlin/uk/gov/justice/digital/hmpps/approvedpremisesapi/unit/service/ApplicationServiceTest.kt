@@ -79,7 +79,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
@@ -193,7 +192,6 @@ class ApplicationServiceTest {
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-    every { mockUserAccessService.getApprovedPremisesApplicationAccessLevelForUser(userEntity) } returns ApprovedPremisesApplicationAccessLevel.TEAM
     every { mockApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(userId) } returns applicationSummaries
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
@@ -2445,7 +2443,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `Get all offline applications where Probation Officer exists returns empty list for user without any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+  fun `Get all offline applications where Probation Officer exists returns empty list for user without any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, LEGACY_MANAGER, MANAGER`() {
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
     val userEntity = UserEntityFactory()

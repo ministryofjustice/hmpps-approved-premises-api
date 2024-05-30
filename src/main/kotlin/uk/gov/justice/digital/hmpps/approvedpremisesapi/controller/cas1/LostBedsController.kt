@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancell
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -19,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LostBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import java.time.LocalDate
@@ -27,7 +25,6 @@ import java.util.UUID
 
 @Service
 class LostBedsController(
-  private val usersService: UserService,
   private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
   private val bookingService: BookingService,
@@ -84,12 +81,6 @@ class LostBedsController(
 
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId }
       ?: throw NotFoundProblem(lostBedId, "LostBed")
-
-    val user = usersService.getUserForRequest()
-
-    if (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
-      throw ForbiddenProblem()
-    }
 
     return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
   }
