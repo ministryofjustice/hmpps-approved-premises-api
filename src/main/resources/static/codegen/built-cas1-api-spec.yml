@@ -3874,6 +3874,7 @@ components:
         - approved_premises_withdraw_placement_request
         - approved_premises_replay_domain_events
         - approved_premises_duplicate_application
+        - approved_premises_update_event_number
     MigrationJobRequest:
       type: object
       properties:

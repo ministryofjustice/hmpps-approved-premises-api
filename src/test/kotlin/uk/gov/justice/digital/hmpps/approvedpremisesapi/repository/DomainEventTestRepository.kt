@@ -8,4 +8,5 @@ import java.util.UUID
 @Repository
 interface DomainEventTestRepository : JpaRepository<DomainEventEntity, UUID> {
   fun findFirstByOrderByCreatedAtDesc(): DomainEventEntity?
+  fun findByApplicationId(applicationId: UUID): List<DomainEventEntity>
 }
