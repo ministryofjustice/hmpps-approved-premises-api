@@ -44,40 +44,6 @@ class AssessmentNoteService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Deprecated("Superseded by createAssessmentNote().")
-  @SuppressWarnings("ReturnCount")
-  fun createApplicationNote(applicationId: UUID, note: NewCas2ApplicationNote):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
-    val assessment = assessmentRepository.findFirstByApplicationId(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
-
-    val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
-
-    if (application.submittedAt == null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has not been submitted"),
-      )
-    }
-
-    val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
-    val user = getCas2User(isExternalUser)
-
-    if (!isExternalUser && !nomisUserCanAddNote(application, user as NomisUserEntity)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    val savedNote = saveNote(application, assessment, note.note, user)
-
-    sendEmail(isExternalUser, application, savedNote)
-
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        savedNote,
-      ),
-    )
-  }
-
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
