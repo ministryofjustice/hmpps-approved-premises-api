@@ -9,6 +9,7 @@ import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
@@ -33,4 +34,6 @@ data class Cas1OutOfServiceBedEntity(
   val endDate: LocalDate,
   val referenceNumber: String?,
   val notes: String?,
+  @OneToOne(mappedBy = "outOfServiceBed")
+  var cancellation: Cas1OutOfServiceBedCancellationEntity?,
 )
