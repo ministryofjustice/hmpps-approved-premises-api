@@ -1,0 +1,22 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
+import java.util.UUID
+import javax.persistence.Entity
+import javax.persistence.Id
+import javax.persistence.Table
+
+@Repository
+interface Cas1OutOfServiceBedReasonRepository : JpaRepository<Cas1OutOfServiceBedReasonEntity, UUID>
+
+@Entity
+@Table(name = "cas1_out_of_service_bed_reasons")
+data class Cas1OutOfServiceBedReasonEntity(
+  @Id
+  val id: UUID,
+  val createdAt: OffsetDateTime,
+  val name: String,
+  val isActive: Boolean,
+)

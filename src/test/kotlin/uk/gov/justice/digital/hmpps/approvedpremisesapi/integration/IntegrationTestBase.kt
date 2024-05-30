@@ -51,6 +51,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
@@ -120,6 +122,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -197,6 +201,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedReasonTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationJsonSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2StatusUpdateTestRepository
@@ -482,6 +488,12 @@ abstract class IntegrationTestBase {
   lateinit var referralRejectionReasonRepository: ReferralRejectionReasonRepository
 
   @Autowired
+  lateinit var cas1OutOfServiceBedTestRepository: Cas1OutOfServiceBedTestRepository
+
+  @Autowired
+  lateinit var cas1OutOfServiceBedReasonTestRepository: Cas1OutOfServiceBedReasonTestRepository
+
+  @Autowired
   lateinit var emailAsserter: EmailNotificationAsserter
 
   @Autowired
@@ -555,6 +567,8 @@ abstract class IntegrationTestBase {
   lateinit var appealEntityFactory: PersistedFactory<AppealEntity, UUID, AppealEntityFactory>
   lateinit var cas1ApplicationUserDetailsEntityFactory: PersistedFactory<Cas1ApplicationUserDetailsEntity, UUID, Cas1ApplicationUserDetailsEntityFactory>
   lateinit var referralRejectionReasonEntityFactory: PersistedFactory<ReferralRejectionReasonEntity, UUID, ReferralRejectionReasonEntityFactory>
+  lateinit var cas1OutOfServiceBedEntityFactory: PersistedFactory<Cas1OutOfServiceBedEntity, UUID, Cas1OutOfServiceBedEntityFactory>
+  lateinit var cas1OutOfServiceBedReasonEntityFactory: PersistedFactory<Cas1OutOfServiceBedReasonEntity, UUID, Cas1OutOfServiceBedReasonEntityFactory>
 
   private var clientCredentialsCallMocked = false
 
@@ -656,6 +670,8 @@ abstract class IntegrationTestBase {
     appealEntityFactory = PersistedFactory({ AppealEntityFactory() }, appealTestRepository)
     cas1ApplicationUserDetailsEntityFactory = PersistedFactory({ Cas1ApplicationUserDetailsEntityFactory() }, cas1ApplicationUserDetailsRepository)
     referralRejectionReasonEntityFactory = PersistedFactory({ ReferralRejectionReasonEntityFactory() }, referralRejectionReasonRepository)
+    cas1OutOfServiceBedEntityFactory = PersistedFactory({ Cas1OutOfServiceBedEntityFactory() }, cas1OutOfServiceBedTestRepository)
+    cas1OutOfServiceBedReasonEntityFactory = PersistedFactory({ Cas1OutOfServiceBedReasonEntityFactory() }, cas1OutOfServiceBedReasonTestRepository)
   }
 
   fun mockClientCredentialsJwtRequest(
