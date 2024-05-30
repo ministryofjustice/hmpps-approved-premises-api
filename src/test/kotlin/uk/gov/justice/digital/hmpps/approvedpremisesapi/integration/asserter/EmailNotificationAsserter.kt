@@ -36,18 +36,21 @@ class EmailNotificationAsserter {
     templateId: String,
     personalisation: Map<String, Any> = emptyMap(),
     replyToEmailId: String? = null,
-  ) {
-    val anyMatch = requestedEmails.any {
+  ): EmailRequest {
+    val match = requestedEmails.firstOrNull {
       toEmailAddress == it.email &&
         templateId == it.templateId &&
         it.personalisation.entries.containsAll(personalisation.entries) &&
         (replyToEmailId == null || it.replyToEmailId == replyToEmailId)
     }
 
-    assertThat(anyMatch)
+    assertThat(match)
       .withFailMessage {
         "Could not find email request for template $templateId to $toEmailAddress with personalisation $personalisation. Provided email requests are ${formatRequestedEmails()}"
-      }.isTrue
+      }
+      .isNotNull
+
+    return match!!
   }
 
   fun formatRequestedEmails() = "\n" + requestedEmails.map { "\n $it" }
