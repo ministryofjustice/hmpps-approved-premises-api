@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.JdbcReportConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.JdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ReportJdbcTemplate
 
 @Repository
@@ -118,11 +118,11 @@ class Cas1PlacementMatchingOutcomesReportRepository(
   fun generateReportRowsForExpectedArrivalMonth(
     month: Int,
     year: Int,
-    jdbcReportConsumer: JdbcReportConsumer,
+    jbdcResultSetConsumer: JdbcResultSetConsumer,
   ) =
     reportJdbcTemplate.query(
       QUERY,
       mapOf<String, Any>("month" to month, "year" to year),
-      jdbcReportConsumer,
+      jbdcResultSetConsumer,
     )
 }
