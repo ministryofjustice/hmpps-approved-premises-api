@@ -47,6 +47,7 @@ class Cas1UserMappingServiceTest {
 
     @ParameterizedTest
     @CsvSource(
+      "N43, N07CEU, LON",
       "N43, N43CP1, NE",
       "N43, N43CP1, NE",
       "N43, N43CP2, NE",
@@ -68,6 +69,7 @@ class Cas1UserMappingServiceTest {
       "N43, N41EP4, NE",
       "N43, XXXNAT, NE",
       "N43, XXXNAT, NE",
+      "N41, N07CEU, LON",
       "N41, N43CP1, NE",
       "N41, N43CP1, NE",
       "N41, N43CP2, NE",
@@ -89,6 +91,7 @@ class Cas1UserMappingServiceTest {
       "N41, N41EP4, NE",
       "N41, XXXNAT, NE",
       "N41, XXXNAT, NE",
+      "XXX, N07CEU, LON",
       "XXX, N43CP1, NE",
       "XXX, N43CP1, NE",
       "XXX, N43CP2, NE",
