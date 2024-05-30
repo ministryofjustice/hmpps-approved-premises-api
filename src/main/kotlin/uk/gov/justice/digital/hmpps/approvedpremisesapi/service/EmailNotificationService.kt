@@ -100,6 +100,11 @@ interface EmailNotifier {
   fun sendCas2Email(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>)
 }
 
-data class EmailRequest(val email: String, val templateId: String, val personalisation: Map<String, *>, val replyToEmailId: String? = null)
+data class EmailRequest(
+  val email: String,
+  val templateId: String,
+  val personalisation: Map<String, *>,
+  val replyToEmailId: String? = null,
+)
 
 data class SendEmailRequestedEvent(val request: EmailRequest)
