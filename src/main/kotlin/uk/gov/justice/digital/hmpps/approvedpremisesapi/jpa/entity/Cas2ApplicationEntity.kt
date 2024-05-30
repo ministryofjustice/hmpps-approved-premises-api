@@ -65,6 +65,7 @@ data class Cas2ApplicationEntity(
   var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
+  var abandonedAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "application")
   @OrderBy(clause = "createdAt DESC")

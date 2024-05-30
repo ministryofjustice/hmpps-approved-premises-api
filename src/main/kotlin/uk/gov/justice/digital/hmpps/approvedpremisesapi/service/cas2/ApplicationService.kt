@@ -100,6 +100,10 @@ class ApplicationService(
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
+    if (applicationEntity.abandonedAt != null) {
+      return AuthorisableActionResult.NotFound()
+    }
+
     val canAccess = userAccessService.userCanViewApplication(user, applicationEntity)
 
     return if (canAccess) {
@@ -155,20 +159,8 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (application !is Cas2ApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
-      )
-    }
-
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
-    }
-
-    if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
     }
 
     if (application.submittedAt != null) {
@@ -177,8 +169,54 @@ class ApplicationService(
       )
     }
 
+    if (application.abandonedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has been abandoned"),
+      )
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
     application.apply {
       this.data = removeXssCharacters(data)
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  @SuppressWarnings("ReturnCount")
+  fun abandonApplication(applicationId: UUID, user: NomisUserEntity):
+    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (application.submittedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.ConflictError(applicationId, "This application has already been submitted"),
+      )
+    }
+
+    if (application.abandonedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.Success(application),
+      )
+    }
+
+    application.apply {
+      this.abandonedAt = OffsetDateTime.now()
+      this.data = null
     }
 
     val savedApplication = applicationRepository.save(application)
@@ -204,9 +242,9 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    if (application !is Cas2ApplicationEntity) {
+    if (application.abandonedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
+        ValidatableActionResult.GeneralValidationError("This application has already been abandoned"),
       )
     }
 

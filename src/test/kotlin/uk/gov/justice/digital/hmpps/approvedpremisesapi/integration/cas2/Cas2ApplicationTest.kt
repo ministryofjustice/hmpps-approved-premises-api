@@ -301,6 +301,16 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
+            // abandoned application
+            val abandonedApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withAbandonedAt(OffsetDateTime.now())
+            }
+
             // unsubmitted application
             val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
@@ -379,6 +389,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             Assertions.assertThat(responseBody).noneMatch {
               otherCas2ApplicationEntity.id == it.id
+            }
+
+            Assertions.assertThat(responseBody).noneMatch {
+              abandonedApplicationEntity.id == it.id
             }
 
             Assertions.assertThat(responseBody[0].createdAt)

@@ -283,6 +283,23 @@ class ApplicationServiceTest {
     }
 
     @Test
+    fun `where application is abandoned returns NotFound result`() {
+      val user = NomisUserEntityFactory().produce()
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      every { mockApplicationRepository.findByIdOrNull(any()) } returns
+        Cas2ApplicationEntityFactory()
+          .withCreatedByUser(
+            NomisUserEntityFactory()
+              .produce(),
+          )
+          .withAbandonedAt(OffsetDateTime.now())
+          .produce()
+
+      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
     fun `where user cannot access the application returns Unauthorised result`() {
       val user = NomisUserEntityFactory()
         .produce()
@@ -445,39 +462,6 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `returns GeneralValidationError when application schema is outdated`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-
-      val application = Cas2ApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = false
-        }
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-        application
-
-      val result = applicationService.updateApplication(
-        applicationId = applicationId,
-        data = "{}",
-        user = user,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-    }
-
-    @Test
     fun `returns GeneralValidationError when application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
@@ -511,6 +495,71 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `returns GeneralValidationError when application has been abandoned`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withAbandonedAt(OffsetDateTime.now())
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.updateApplication(
+        applicationId = applicationId,
+        data = "{}",
+        user = user,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has been abandoned")
+    }
+
+    @Test
+    fun `returns GeneralValidationError when application schema is outdated`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      val application = Cas2ApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = false
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.updateApplication(
+        applicationId = applicationId,
+        data = "{}",
+        user = user,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
     }
 
     @ParameterizedTest
@@ -628,6 +677,155 @@ class ApplicationServiceTest {
   }
 
   @Nested
+  inner class AbandonApplication {
+    val user = NomisUserEntityFactory().produce()
+
+    @Test
+    fun `returns NotFound when application doesn't exist`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+      assertThat(
+        applicationService.abandonApplication(
+          applicationId = applicationId,
+          user = user,
+        ) is AuthorisableActionResult.NotFound,
+      ).isTrue
+    }
+
+    @Test
+    fun `returns Unauthorised when application doesn't belong to request user`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      val application = Cas2ApplicationEntityFactory()
+        .withId(applicationId)
+        .withYieldedCreatedByUser {
+          NomisUserEntityFactory()
+            .produce()
+        }
+        .produce()
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        application
+
+      assertThat(
+        applicationService.abandonApplication(
+          applicationId = applicationId,
+          user = user,
+        ) is AuthorisableActionResult.Unauthorised,
+      ).isTrue
+    }
+
+    @Test
+    fun `returns Conflict Error when application has already been submitted`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        application
+
+      val result = applicationService.abandonApplication(
+        applicationId = applicationId,
+        user = user,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.ConflictError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `returns Success when application has already been abandoned`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withAbandonedAt(OffsetDateTime.now())
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        application
+
+      val result = applicationService.abandonApplication(
+        applicationId = applicationId,
+        user = user,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+    }
+
+    @Test
+    fun `returns Success and deletes the application data`() {
+      val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
+
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+      val data = """
+            {
+              "aProperty": "value"
+            }
+      """
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withData(data)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        application
+
+      every { mockApplicationRepository.save(any()) } answers {
+        it.invocation.args[0] as Cas2ApplicationEntity
+      }
+
+      val result = applicationService.abandonApplication(
+        applicationId = applicationId,
+        user = user,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+      val cas2Application = validatableActionResult.entity
+
+      assertThat(cas2Application.data).isNull()
+    }
+  }
+
+  @Nested
   inner class SubmitApplication {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
@@ -739,6 +937,35 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+
+      assertEmailAndAssessmentsWereNotCreated()
+    }
+
+    @Test
+    fun `returns GeneralValidationError when application has already been abandoned`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withAbandonedAt(OffsetDateTime.now())
+        .produce()
+
+      every {
+        mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
+      } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitApplication(submitCas2Application, user)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
 
       assertEmailAndAssessmentsWereNotCreated()
     }

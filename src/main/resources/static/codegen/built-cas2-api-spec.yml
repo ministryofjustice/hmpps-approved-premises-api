@@ -155,6 +155,32 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/abandon:
+    put:
+      tags:
+        - Operations on CAS2 applications
+      summary: Abandons an in progress CAS2 application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+        401:
+          $ref: '#/components/responses/401Response'
+        409:
+          description: The application has been submitted
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /assessments/{assessmentId}:
     put:
       tags:
