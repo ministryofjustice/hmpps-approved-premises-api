@@ -62,7 +62,6 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.PUT, "/cas2/assessments/**", hasRole("CAS2_ASSESSOR"))
         authorize(HttpMethod.GET, "/cas2/assessments/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
         authorize(HttpMethod.POST, "/cas2/assessments/*/status-updates", hasRole("CAS2_ASSESSOR"))
-        authorize(HttpMethod.POST, "/cas2/submissions/*/notes", hasAnyRole("LICENCE_CA", "POM", "CAS2_ASSESSOR"))
         authorize(HttpMethod.POST, "/cas2/assessments/*/notes", hasAnyRole("LICENCE_CA", "POM", "CAS2_ASSESSOR"))
         authorize(HttpMethod.GET, "/cas2/submissions/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
         authorize(HttpMethod.POST, "/cas2/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
