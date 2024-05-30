@@ -3,16 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -24,12 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -37,9 +30,7 @@ import javax.transaction.Transactional
 class SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val assessmentNoteService: AssessmentNoteService,
   private val submissionsTransformer: SubmissionsTransformer,
-  private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
   private val nomisUserService: NomisUserService,
@@ -106,45 +97,6 @@ class SubmissionsController(
     }
 
     return ResponseEntity(HttpStatus.OK)
-  }
-
-  @Deprecated("Superseded by assessmentsAssessmentIdNotesPost() in AssessmentsController.")
-  override fun submissionsApplicationIdNotesPost(applicationId: UUID, body: NewCas2ApplicationNote): ResponseEntity<Cas2ApplicationNote> {
-    val noteResult = assessmentNoteService.createApplicationNote(applicationId, body)
-
-    val validationResult = processAuthorisationFor(applicationId, noteResult) as ValidatableActionResult<Cas2ApplicationNote>
-
-    val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
-
-    return ResponseEntity
-      .created(URI.create("/cas2/applications/$applicationId/notes/${note.id}"))
-      .body(
-        applicationNotesTransformer.transformJpaToApi(note),
-      )
-  }
-
-  private fun <EntityType> processAuthorisationFor(
-    applicationId: UUID,
-    result: AuthorisableActionResult<ValidatableActionResult<EntityType>>,
-  ): Any {
-    return when (result) {
-      is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(applicationId, "Cas2Application"))
-      is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
-      is AuthorisableActionResult.Success -> result.entity
-    }
-  }
-
-  private fun <EntityType : Any> processValidation(validationResult: ValidatableActionResult<EntityType>): Any {
-    return when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
-      is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages))
-      is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-  }
-
-  private fun throwProblem(problem: AbstractThrowableProblem) {
-    throw problem
   }
 
   private fun ensureExternalUserPersisted() {
