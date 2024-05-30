@@ -175,8 +175,6 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 
-  fun findAllByApplicationId(applicationId: UUID): List<AssessmentEntity>
-
   @Query(
     """
     SELECT

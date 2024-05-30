@@ -123,17 +123,6 @@ AND (
   @Query(
     "SELECT * FROM approved_premises_applications apa " +
       "LEFT JOIN applications a ON a.id = apa.id " +
-      "WHERE apa.name IS NULL",
-    nativeQuery = true,
-  )
-  fun <T : ApplicationEntity> findAllForServiceAndNameNull(
-    type: Class<T>,
-    pageable: Pageable?,
-  ): Slice<ApprovedPremisesApplicationEntity>
-
-  @Query(
-    "SELECT * FROM approved_premises_applications apa " +
-      "LEFT JOIN applications a ON a.id = apa.id " +
       "WHERE apa.status IS NULL",
     nativeQuery = true,
   )
@@ -152,21 +141,8 @@ AND (
     year: Int,
   ): List<ApprovedPremisesApplicationMetricsSummary>
 
-  @Query(
-    "SELECT a FROM ApplicationEntity a " +
-      "LEFT JOIN ApplicationTeamCodeEntity atc ON a = atc.application " +
-      "WHERE TYPE(a) = :type AND atc.teamCode IN (:managingTeamCodes)",
-  )
-  fun <T : ApplicationEntity> findAllByManagingTeam(
-    managingTeamCodes: List<String>,
-    type: Class<T>,
-  ): List<ApplicationEntity>
-
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
-
-  @Query("SELECT a.assessments FROM ApplicationEntity a WHERE a.id = :applicationId")
-  fun findAllAssessmentsById(applicationId: UUID): MutableList<AssessmentEntity>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -252,13 +228,6 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 
   @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL and ap.applicantUserDetails IS NULL")
   fun getSubmittedApprovedPremisesApplicationsWithoutApplicantUserDetails(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
-
-  @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL AND ap.inmateInOutStatusOnSubmission IS NULL")
-  fun getSubmittedApprovedPremisesApplicationsWithoutInOutStatus(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
-
-  @Modifying
-  @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.inmateInOutStatusOnSubmission = :inOutStatus where ap.id = :applicationId")
-  fun updateInOutStatus(applicationId: UUID, inOutStatus: String)
 
   @Query("SELECT taa FROM TemporaryAccommodationApplicationEntity taa WHERE taa.id = :id")
   fun findTemporaryAccommodationApplicationById(id: UUID): TemporaryAccommodationApplicationEntity?
