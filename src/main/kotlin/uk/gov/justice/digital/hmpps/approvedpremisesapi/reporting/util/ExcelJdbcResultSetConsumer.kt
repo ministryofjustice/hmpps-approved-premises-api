@@ -4,12 +4,12 @@ import com.google.common.base.CaseFormat
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
-import org.springframework.jdbc.core.RowCallbackHandler
 import java.io.OutputStream
+import java.sql.ResultSet
 import java.sql.Types
 
 /**
- * An implementation of [JdbcReportConsumer] that streams the result to an XSLX document.
+ * An implementation of [JdbcResultSetConsumer] that streams the result to an XSLX document.
  *
  * This can be used as a memory-efficient alternative to the [DataFrame] approach that uses
  * data classes, noting that:
@@ -23,18 +23,30 @@ import java.sql.Types
  * Given (2), it's recommended that the SQL is written to format any non string types as required
  * (e.g. format date/timestamps as they should appear in the XLSX)
  */
-class ExcelJdbcReportConsumer : JdbcReportConsumer, AutoCloseable {
+class ExcelJdbcResultSetConsumer : JdbcResultSetConsumer, AutoCloseable {
   private val workbook = WorkbookFactory.create(true)
   private val sheet = workbook.createSheet("sheet0")
   private var currentRow = 1
   private var columnCount = 0
 
-  fun write(outputStream: OutputStream) {
+  fun writeBufferedWorkbook(outputStream: OutputStream) {
     workbook.write(outputStream)
   }
 
-  override fun getHeadersCallbackHandler(): (List<String>) -> Unit = {
-      headers ->
+  override fun consume(resultSet: ResultSet) {
+    resultSet.use {
+      addHeaders(resultSet)
+      while (resultSet.next()) {
+        addRow(resultSet)
+      }
+    }
+  }
+
+  private fun addHeaders(resultSet: ResultSet) {
+    val headers = 1.rangeTo(resultSet.metaData.columnCount).map { col ->
+      resultSet.metaData.getColumnName(col)
+    }
+
     val headerRow = sheet.createRow(0)
     headers.forEachIndexed { index, header ->
       headerRow
@@ -45,20 +57,20 @@ class ExcelJdbcReportConsumer : JdbcReportConsumer, AutoCloseable {
     columnCount = headers.size
   }
 
-  override fun getRowCallbackHandler() = RowCallbackHandler { rs ->
+  private fun addRow(resultSet: ResultSet) {
     val row = sheet.createRow(currentRow)
 
     for (col in 1.rangeTo(columnCount)) {
-      when (rs.metaData.getColumnType(col)) {
+      when (resultSet.metaData.getColumnType(col)) {
         Types.INTEGER -> {
-          val value = rs.getInt(col)
-          if (!rs.wasNull()) {
+          val value = resultSet.getInt(col)
+          if (!resultSet.wasNull()) {
             row.createCell(col - 1).setCellValue(value.toDouble())
           }
         }
         else -> {
-          val value = rs.getString(col)
-          if (!rs.wasNull()) {
+          val value = resultSet.getString(col)
+          if (!resultSet.wasNull()) {
             row.createCell(col - 1).setCellValue(value)
           }
         }
