@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApTypeCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
@@ -18,9 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
@@ -30,7 +25,6 @@ import java.util.UUID
 
 @Service
 class ReportsController(
-  private val reportService: ReportService,
   private val cas1ReportService: Cas1ReportService,
   private val cas3ReportService: Cas3ReportService,
   private val userAccessService: UserAccessService,
@@ -119,22 +113,6 @@ class ReportsController(
     }
   }
 
-  override fun reportsReferralsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    val user = userService.getUserForRequest()
-
-    validateParameters(null, month)
-
-    val properties = ApplicationReportProperties(xServiceName, year, month, user.deliusUsername)
-
-    return generateXlsxStreamingResponse { outputStream ->
-      reportService.createCas1ApplicationReferralsReport(properties, outputStream)
-    }
-  }
-
   override fun reportsDailyMetricsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
@@ -151,34 +129,6 @@ class ReportsController(
       fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
     ) { outputStream ->
       cas1ReportService.createDailyMetricsReport(properties, outputStream)
-    }
-  }
-
-  override fun reportsReferralsByTierGet(
-    xServiceName: ServiceName,
-    year: Int,
-    month: Int,
-  ) = getReferralReport(xServiceName, year, month, TierCategory.entries)
-
-  override fun reportsReferralsByApTypeGet(
-    xServiceName: ServiceName,
-    year: Int,
-    month: Int,
-  ) = getReferralReport(xServiceName, year, month, ApTypeCategory.entries)
-
-  override fun reportsPlacementMetricsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    if (xServiceName !== ServiceName.approvedPremises) {
-      throw NotAllowedProblem("This endpoint only supports CAS1")
-    }
-
-    val properties = PlacementMetricsReportProperties(year, month)
-
-    return generateXlsxStreamingResponse { outputStream ->
-      reportService.createPlacementMetricsReport(properties, outputStream)
     }
   }
 
@@ -200,22 +150,6 @@ class ReportsController(
       fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
     ) { outputStream ->
       cas1ReportService.createPlacementApplicationReport(properties, outputStream)
-    }
-  }
-
-  private fun <T : Any> getReferralReport(xServiceName: ServiceName, year: Int, month: Int, categories: List<T>): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    if (xServiceName !== ServiceName.approvedPremises) {
-      throw NotAllowedProblem("This endpoint only supports CAS1")
-    }
-
-    val properties = ReferralsMetricsProperties(year, month)
-
-    return generateXlsxStreamingResponse { outputStream ->
-      reportService.createReferralsMetricsReport(properties, outputStream, categories)
     }
   }
 
