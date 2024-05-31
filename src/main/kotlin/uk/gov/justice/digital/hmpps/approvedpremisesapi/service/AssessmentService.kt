@@ -44,8 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -56,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -432,8 +429,7 @@ class AssessmentService(
     }
 
     if (application is ApprovedPremisesApplicationEntity) {
-      saveCas1ApplicationAssessedDomainEvent(application, assessment, offenderDetails, staffDetails, placementDates)
-
+      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, staffDetails, placementDates)
       cas1AssessmentEmailService.assessmentAccepted(application)
 
       if (createPlacementRequest) {
@@ -443,57 +439,6 @@ class AssessmentService(
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
-    )
-  }
-
-  private fun saveCas1ApplicationAssessedDomainEvent(
-    application: ApprovedPremisesApplicationEntity,
-    assessment: AssessmentEntity,
-    offenderDetails: OffenderDetailSummary,
-    staffDetails: StaffUserDetails,
-    placementDates: PlacementDates?,
-  ) {
-    val domainEventId = UUID.randomUUID()
-    val acceptedAt = assessment.submittedAt!!
-
-    domainEventService.saveApplicationAssessedDomainEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = application.id,
-        assessmentId = assessment.id,
-        crn = application.crn,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-        occurredAt = acceptedAt.toInstant(),
-        data = ApplicationAssessedEnvelope(
-          id = domainEventId,
-          timestamp = acceptedAt.toInstant(),
-          eventType = EventType.applicationAssessed,
-          eventDetails = ApplicationAssessed(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate
-              .resolve("id", application.id.toString()),
-            personReference = PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            assessedAt = acceptedAt.toInstant(),
-            assessedBy = ApplicationAssessedAssessedBy(
-              staffMember = staffDetails.toStaffMember(),
-              probationArea = ProbationArea(
-                code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description,
-              ),
-              cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
-              ),
-            ),
-            decision = assessment.decision.toString(),
-            decisionRationale = assessment.rejectionRationale,
-            arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
-          ),
-        ),
-      ),
     )
   }
 

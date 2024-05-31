@@ -14,19 +14,26 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -34,9 +41,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -44,10 +53,12 @@ class Cas1AssessmentDomainEventServiceTest {
 
   private val domainEventService = mockk<DomainEventService>()
   private val communityApiClient = mockk<CommunityApiClient>()
+  private val cruService = mockk<CruService>()
 
   val service = Cas1AssessmentDomainEventService(
     domainEventService,
     communityApiClient,
+    cruService,
     UrlTemplate("http://frontend/applications/#id"),
     UrlTemplate("http://frontend/assessments/#id"),
   )
@@ -166,6 +177,100 @@ class Cas1AssessmentDomainEventServiceTest {
   }
 
   @Nested
+  inner class AssessmentAccepted {
+
+    @Test
+    fun `assessmentAccepted raises domain event`() {
+
+      val user = UserEntityFactory().withYieldedProbationRegion {
+        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+      }.produce()
+
+      val assessmentId = UUID.randomUUID()
+
+      val assessmentSchema = ApprovedPremisesAssessmentJsonSchemaEntity(
+        id = UUID.randomUUID(),
+        addedAt = OffsetDateTime.now(),
+        schema = "{}",
+      )
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withId(assessmentId)
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce(),
+            )
+            .produce(),
+        )
+        .withAllocatedToUser(user)
+        .withAssessmentSchema(assessmentSchema)
+        .withData("{\"test\": \"data\"}")
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val application = assessment.application as ApprovedPremisesApplicationEntity
+      val offenderDetails = OffenderDetailsSummaryFactory().produce()
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withProbationAreaCode("N26")
+        .produce()
+      val placementDates = PlacementDates(
+        expectedArrival = LocalDate.now(),
+        duration = 12,
+      )
+
+      every { cruService.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+      every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
+
+      service.assessmentAccepted(application, assessment, offenderDetails, staffUserDetails, placementDates)
+
+      verify(exactly = 1) {
+        domainEventService.saveApplicationAssessedDomainEvent(
+          match {
+            val data = it.data.eventDetails
+            val expectedPersonReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            )
+            val expectedAssessor = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffUserDetails.staffCode,
+                staffIdentifier = staffUserDetails.staffIdentifier,
+                forenames = staffUserDetails.staff.forenames,
+                surname = staffUserDetails.staff.surname,
+                username = staffUserDetails.username,
+              ),
+              probationArea = ProbationArea(
+                code = staffUserDetails.probationArea.code,
+                name = staffUserDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = "South West & South Central",
+              ),
+            )
+
+            it.applicationId == assessment.application.id &&
+              it.crn == assessment.application.crn &&
+              data.applicationId == assessment.application.id &&
+              data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
+              data.personReference == expectedPersonReference  &&
+              data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
+              data.assessedBy == expectedAssessor &&
+              data.decision == "ACCEPTED" &&
+              data.decisionRationale == null
+          },
+        )
+      }
+    }
+  }
+
+  @Nested
   inner class FurtherInformationRequested {
     @BeforeEach
     fun setup() {
@@ -268,7 +373,6 @@ class Cas1AssessmentDomainEventServiceTest {
       .withAssessmentSchema(schema)
       .withData("{\"test\": \"data\"}")
       .withAllocatedToUser(allocatedUser)
-      .withSubmittedAt(null)
       .withReallocatedAt(null)
       .withIsWithdrawn(false)
       .produce()

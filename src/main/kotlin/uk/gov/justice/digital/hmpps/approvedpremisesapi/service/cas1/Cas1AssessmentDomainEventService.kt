@@ -2,21 +2,32 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequested
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
 import java.util.UUID
 
@@ -24,6 +35,7 @@ import java.util.UUID
 class Cas1AssessmentDomainEventService(
   private val domainEventService: DomainEventService,
   private val communityApiClient: CommunityApiClient,
+  private val cruService: CruService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
@@ -128,5 +140,56 @@ class Cas1AssessmentDomainEventService(
     )
 
     domainEventService.saveFurtherInformationRequestedEvent(domainEvent, emit)
+  }
+
+  fun assessmentAccepted(
+    application: ApprovedPremisesApplicationEntity,
+    assessment: AssessmentEntity,
+    offenderDetails: OffenderDetailSummary,
+    staffDetails: StaffUserDetails,
+    placementDates: PlacementDates?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val acceptedAt = assessment.submittedAt!!
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        assessmentId = assessment.id,
+        crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        occurredAt = acceptedAt.toInstant(),
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = acceptedAt.toInstant(),
+          eventType = EventType.applicationAssessed,
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .resolve("id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = application.eventNumber,
+            assessedAt = acceptedAt.toInstant(),
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = staffDetails.toStaffMember(),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale,
+            arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
+          ),
+        ),
+      ),
+    )
   }
 }
