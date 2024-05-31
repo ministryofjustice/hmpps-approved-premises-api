@@ -114,6 +114,7 @@ class Cas1ApplicationDomainEventService(
         metadata = mapOf(
           MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE to submitApplication.reasonForShortNotice,
           MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to submitApplication.reasonForShortNoticeOther,
+          MetaDataName.CAS1_REQUESTED_AP_TYPE to application.apType.name,
         ),
       ),
     )
