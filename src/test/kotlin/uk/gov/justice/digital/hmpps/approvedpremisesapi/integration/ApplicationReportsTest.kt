@@ -235,13 +235,18 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get application report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+      val now = LocalDate.now()
+      val year = now.year.toString()
+      val month = now.monthValue.toString()
+
       webTestClient.get()
-        .uri("/reports/applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
+        .uri("/reports/applications?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
+        .expectHeader().valueEquals("content-disposition", "attachment; filename=\"applications-$year-${month.padStart(2, '0')}.xlsx\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame

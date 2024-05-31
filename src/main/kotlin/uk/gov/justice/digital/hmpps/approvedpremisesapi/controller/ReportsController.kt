@@ -92,7 +92,10 @@ class ReportsController(
 
     val properties = LostBedReportProperties(xServiceName, probationRegionId, year, month)
 
-    return generateXlsxStreamingResponse { outputStream ->
+    return generateStreamingResponse(
+      contentType = ContentType.XLSX,
+      fileName = createCas1ReportName("lost-beds", year, month, ContentType.XLSX),
+    ) { outputStream ->
       reportService.createLostBedReport(properties, outputStream)
     }
   }
@@ -108,7 +111,10 @@ class ReportsController(
 
     val properties = ApplicationReportProperties(xServiceName, year, month, user.deliusUsername)
 
-    return generateXlsxStreamingResponse { outputStream ->
+    return generateStreamingResponse(
+      contentType = ContentType.XLSX,
+      fileName = createCas1ReportName("applications", year, month, ContentType.XLSX),
+    ) { outputStream ->
       reportService.createCas1ApplicationPerformanceReport(properties, outputStream)
     }
   }
@@ -140,7 +146,10 @@ class ReportsController(
 
     val properties = DailyMetricReportProperties(xServiceName, year, month)
 
-    return generateXlsxStreamingResponse { outputStream ->
+    return generateStreamingResponse(
+      contentType = ContentType.XLSX,
+      fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
+    ) { outputStream ->
       reportService.createDailyMetricsReport(properties, outputStream)
     }
   }
@@ -186,7 +195,10 @@ class ReportsController(
 
     val properties = PlacementApplicationReportProperties(year, month)
 
-    return generateXlsxStreamingResponse { outputStream ->
+    return generateStreamingResponse(
+      contentType = ContentType.XLSX,
+      fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
+    ) { outputStream ->
       reportService.createCas1PlacementApplicationReport(properties, outputStream)
     }
   }
@@ -222,10 +234,16 @@ class ReportsController(
 
     val properties = Cas1PlacementMatchingOutcomesReportProperties(year, month)
 
-    return generateXlsxStreamingResponse { outputStream ->
+    return generateStreamingResponse(
+      contentType = ContentType.XLSX,
+      fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.XLSX),
+    ) { outputStream ->
       cas1ReportService.createPlacementMatchingOutcomesReport(properties, outputStream)
     }
   }
+
+  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType) =
+    "$name-$year-${month.toString().padStart(2, '0')}.${contentType.extension}"
 
   private fun validateParameters(probationRegionId: UUID?, month: Int) {
     when {

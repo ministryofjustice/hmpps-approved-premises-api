@@ -243,6 +243,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
+        .expectHeader().valueEquals("content-disposition", "attachment; filename=\"daily-metrics-$year-${month.toString().padStart(2, '0')}.xlsx\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame

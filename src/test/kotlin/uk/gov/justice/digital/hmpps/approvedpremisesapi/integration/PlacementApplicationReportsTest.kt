@@ -309,13 +309,18 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         }
       }
 
+      val now = LocalDate.now()
+      val year = now.year.toString()
+      val month = now.monthValue.toString()
+
       webTestClient.get()
-        .uri("/reports/placement-applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
+        .uri("/reports/placement-applications?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
+        .expectHeader().valueEquals("content-disposition", "attachment; filename=\"placement-applications-$year-${month.padStart(2, '0')}.xlsx\"")
         .expectBody()
         .consumeWith {
           val actualRows = DataFrame
