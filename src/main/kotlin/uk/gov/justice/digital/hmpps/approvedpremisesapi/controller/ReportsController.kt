@@ -96,7 +96,7 @@ class ReportsController(
       contentType = ContentType.XLSX,
       fileName = createCas1ReportName("lost-beds", year, month, ContentType.XLSX),
     ) { outputStream ->
-      reportService.createLostBedReport(properties, outputStream)
+      cas1ReportService.createLostBedReport(properties, outputStream)
     }
   }
 
@@ -115,7 +115,7 @@ class ReportsController(
       contentType = ContentType.XLSX,
       fileName = createCas1ReportName("applications", year, month, ContentType.XLSX),
     ) { outputStream ->
-      reportService.createCas1ApplicationPerformanceReport(properties, outputStream)
+      cas1ReportService.createApplicationReport(properties, outputStream)
     }
   }
 
@@ -150,7 +150,7 @@ class ReportsController(
       contentType = ContentType.XLSX,
       fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
     ) { outputStream ->
-      reportService.createDailyMetricsReport(properties, outputStream)
+      cas1ReportService.createDailyMetricsReport(properties, outputStream)
     }
   }
 
@@ -199,7 +199,7 @@ class ReportsController(
       contentType = ContentType.XLSX,
       fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
     ) { outputStream ->
-      reportService.createCas1PlacementApplicationReport(properties, outputStream)
+      cas1ReportService.createPlacementApplicationReport(properties, outputStream)
     }
   }
 
