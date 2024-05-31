@@ -23,6 +23,7 @@ class PreemptiveCacheRefresher(
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
   @Value("\${preemptive-cache-lock-duration-ms}") private val lockDurationMs: Int,
+  @Value("\${preemptive-cache-enabled:true}") private val enabled: Boolean,
   redLock: RedLock,
 ) : DisposableBean {
   protected val log = LoggerFactory.getLogger(this::class.java)
@@ -32,35 +33,38 @@ class PreemptiveCacheRefresher(
   var shuttingDown = false
 
   init {
-    Thread {
-      while (!haveFlywayMigrationsFinished()) {
-        if (shuttingDown) return@Thread
-        interruptableSleep(100)
-      }
 
-      preemptiveCacheThreads += OffenderDetailsCacheRefreshWorker(
-        applicationRepository,
-        bookingRepository,
-        communityApiClient,
-        loggingEnabled,
-        delayMs,
-        redLock,
-        lockDurationMs,
-      )
+    if(enabled) {
+      Thread {
+        while (!haveFlywayMigrationsFinished()) {
+          if (shuttingDown) return@Thread
+          interruptableSleep(100)
+        }
 
-      preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
-        applicationRepository,
-        bookingRepository,
-        prisonsApiClient,
-        loggingEnabled,
-        delayMs,
-        redLock,
-        lockDurationMs,
-      )
+        preemptiveCacheThreads += OffenderDetailsCacheRefreshWorker(
+          applicationRepository,
+          bookingRepository,
+          communityApiClient,
+          loggingEnabled,
+          delayMs,
+          redLock,
+          lockDurationMs,
+        )
 
-      log.info("Starting preemptive cache refresh threads")
-      preemptiveCacheThreads.forEach(CacheRefreshWorker::start)
-    }.start()
+        preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
+          applicationRepository,
+          bookingRepository,
+          prisonsApiClient,
+          loggingEnabled,
+          delayMs,
+          redLock,
+          lockDurationMs,
+        )
+
+        log.info("Starting preemptive cache refresh threads")
+        preemptiveCacheThreads.forEach(CacheRefreshWorker::start)
+      }.start()
+    }
   }
 
   override fun destroy() {

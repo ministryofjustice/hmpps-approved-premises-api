@@ -164,8 +164,9 @@ url-templates:
       application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
 
-preemptive-cache-delay-ms: 250
-preemptive-cache-lock-duration-ms: 10000
+preemptive-cache-enabled: false
+#preemptive-cache-delay-ms: 250
+#preemptive-cache-lock-duration-ms: 10000
 
 arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
