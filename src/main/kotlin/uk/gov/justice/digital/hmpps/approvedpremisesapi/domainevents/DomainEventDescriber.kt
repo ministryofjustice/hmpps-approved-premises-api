@@ -176,7 +176,9 @@ class DomainEventDescriber(
       "A request for placement was withdrawn" +
         if (dates.isNotEmpty()) {
           " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
-        } else { "" } +
+        } else {
+          ""
+        } +
         ". The reason was: '$reasonDescription'"
     }
   }

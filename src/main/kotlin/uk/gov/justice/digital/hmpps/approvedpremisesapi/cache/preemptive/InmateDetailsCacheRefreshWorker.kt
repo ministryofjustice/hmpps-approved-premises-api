@@ -28,7 +28,9 @@ class InmateDetailsCacheRefreshWorker(
 
     logConspicuously("${distinctNomsNumbers.count()} cache fields to update")
 
-    if (loggingEnabled) { log.info("Got $distinctNomsNumbers to refresh for Inmate Details") }
+    if (loggingEnabled) {
+      log.info("Got $distinctNomsNumbers to refresh for Inmate Details")
+    }
 
     distinctNomsNumbers.forEach {
       logConspicuously("Current NOMS number: $it")

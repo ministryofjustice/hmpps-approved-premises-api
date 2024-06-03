@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbc
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneOffset
 import java.time.temporal.TemporalAdjusters
 
 @Service
@@ -84,7 +85,7 @@ class Cas1ReportService(
   fun createDailyMetricsReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
-        it.getCreatedAt().toLocalDateTime().toLocalDate(),
+        it.getCreatedAt().atZone(ZoneOffset.UTC).toLocalDate(),
         it.getCreatedByUserId(),
       )
     }

@@ -255,7 +255,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   private fun createCAS3ConfirmedBooking(userEntity: UserEntity): BookingEntity {
     val booking = createTemporaryAccommodationBooking(userEntity, null)
-    booking.confirmation = confirmationEntityFactory.produceAndPersist() {
+    booking.confirmation = confirmationEntityFactory.produceAndPersist {
       withBooking(booking)
     }
 
@@ -273,14 +273,14 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   }
 
   private fun createTemporaryAccommodationBooking(userEntity: UserEntity, bookingStatus: BookingStatus?): BookingEntity {
-    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
     }
 
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {
@@ -297,14 +297,14 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   }
 
   private fun createApprovedAccommodationBooking(userEntity: UserEntity): BookingEntity {
-    val premises = approvedPremisesEntityFactory.produceAndPersist() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
     }
 
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {

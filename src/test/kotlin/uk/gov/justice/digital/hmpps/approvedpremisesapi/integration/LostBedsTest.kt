@@ -78,7 +78,7 @@ class LostBedsTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val cancelledLostBed = lostBedsEntityFactory.produceAndPersist() {
+      val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
@@ -86,7 +86,7 @@ class LostBedsTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      lostBedCancellationEntityFactory.produceAndPersist() {
+      lostBedCancellationEntityFactory.produceAndPersist {
         withLostBed(cancelledLostBed)
       }
 

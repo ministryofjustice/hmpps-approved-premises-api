@@ -4,6 +4,7 @@ import io.gatling.javaapi.core.ChainBuilder
 import io.gatling.javaapi.core.CoreDsl.exec
 import io.gatling.javaapi.core.Simulation
 import io.gatling.javaapi.http.HttpDsl.http
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
@@ -66,7 +67,7 @@ private fun getJwt(): String {
 
 private fun ClientResponse.printIfError(name: String) {
   if (this.statusCode().isError) {
-    println("Could not call '$name' endpoint: ${this.statusCode().value()} ${this.statusCode().reasonPhrase}")
+    println("Could not call '$name' endpoint: ${this.statusCode().value()} ${(this.statusCode() as HttpStatus).reasonPhrase}")
     println()
     println(this.bodyToMono<String>().block())
   }

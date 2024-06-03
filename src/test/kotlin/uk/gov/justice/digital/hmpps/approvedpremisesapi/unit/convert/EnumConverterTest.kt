@@ -9,12 +9,10 @@ class EnumConverterTest {
   private enum class OpenApiLike(val value: String) {
     OPTION_ONE("the-first-option"),
     OPTION_TWO("the-second-option"),
-    ;
   }
   private enum class Standard {
     OPTION_ONE,
     OPTION_TWO,
-    ;
   }
 
   @Test

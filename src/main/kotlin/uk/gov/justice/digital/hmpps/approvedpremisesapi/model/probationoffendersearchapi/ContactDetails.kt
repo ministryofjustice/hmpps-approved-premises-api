@@ -15,7 +15,8 @@ data class PhoneNumber(
 ) {
 
   enum class PhoneTypes {
-    TELEPHONE, MOBILE
+    TELEPHONE,
+    MOBILE,
   }
 }
 

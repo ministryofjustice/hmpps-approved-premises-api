@@ -138,7 +138,7 @@ class MoveBookingTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(updatedBookingEntity.bed!!.id).isEqualTo(newBed.id)
 
-      val createdBedMoveEntity = bedMoveRepository.findByBooking_IdOrNull(booking.id)!!
+      val createdBedMoveEntity = bedMoveRepository.findByBookingIdOrNull(booking.id)!!
 
       assertThat(createdBedMoveEntity.booking.id).isEqualTo(booking.id)
       assertThat(createdBedMoveEntity.previousBed!!.id).isEqualTo(previousBed.id)
@@ -180,7 +180,7 @@ class MoveBookingTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(updatedBookingEntity.bed!!.id).isEqualTo(newBed.id)
 
-      val createdBedMoveEntity = bedMoveRepository.findByBooking_IdOrNull(existingBooking.id)!!
+      val createdBedMoveEntity = bedMoveRepository.findByBookingIdOrNull(existingBooking.id)!!
 
       assertThat(createdBedMoveEntity.booking.id).isEqualTo(existingBooking.id)
       assertThat(createdBedMoveEntity.previousBed).isNull()

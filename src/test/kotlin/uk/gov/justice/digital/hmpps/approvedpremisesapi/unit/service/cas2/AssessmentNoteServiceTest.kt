@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import software.amazon.awssdk.services.sns.model.NotFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig

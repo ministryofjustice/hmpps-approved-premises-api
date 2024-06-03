@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
@@ -24,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
-import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
 
 @Service(
@@ -58,8 +58,7 @@ class ApplicationsController(
     ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
-  override fun applicationsApplicationIdGet(applicationId: UUID):
-    ResponseEntity<Application> {
+  override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val application = when (
@@ -78,8 +77,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication):
-    ResponseEntity<Application> {
+  override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
     val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
@@ -106,8 +104,7 @@ class ApplicationsController(
   @Transactional
   override fun applicationsApplicationIdPut(
     applicationId: UUID,
-    body:
-      UpdateApplication,
+    body: UpdateApplication,
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
@@ -156,8 +153,7 @@ class ApplicationsController(
     return ResponseEntity.ok(Unit)
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>):
-    List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)

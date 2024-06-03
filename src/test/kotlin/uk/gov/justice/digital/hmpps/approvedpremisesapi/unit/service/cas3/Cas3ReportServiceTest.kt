@@ -25,9 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.ByteArrayOutputStream
-import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class Cas3ReportServiceTest {
@@ -296,7 +295,7 @@ class Cas3ReportServiceTest {
   }
   private fun createDBReferralReportData(crn: String) = TestTransitionalAccommodationReferralReportData(
     UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-    LocalDate.now(), crn, LocalDate.now(), "riskOfSeriousHarm",
+    Instant.now(), crn, Instant.now(), "riskOfSeriousHarm",
     registeredSexOffender = false,
     historyOfSexualOffence = false,
     concerningSexualBehaviour = true,
@@ -311,10 +310,10 @@ class Cas3ReportServiceTest {
     assessmentDecision = null,
     referralRejectionReason = null,
     referralRejectionReasonDetail = null,
-    assessmentSubmittedDate = LocalDate.now(),
+    assessmentSubmittedDate = Instant.now(),
     referralEligibleForCas3 = true,
     referralEligibilityReason = "reason",
-    accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now()),
+    accommodationRequiredDate = Instant.now(),
     prisonNameOnCreation = null,
     personReleaseDate = null,
     town = null,
@@ -361,9 +360,9 @@ class Cas3ReportServiceTest {
     override val assessmentId: String,
     override val referralId: String,
     override val bookingId: String?,
-    override val referralCreatedDate: LocalDate,
+    override val referralCreatedDate: Instant,
     override val crn: String,
-    override val referralSubmittedDate: LocalDate?,
+    override val referralSubmittedDate: Instant?,
     override val riskOfSeriousHarm: String?,
     override val registeredSexOffender: Boolean?,
     override val historyOfSexualOffence: Boolean?,
@@ -379,10 +378,10 @@ class Cas3ReportServiceTest {
     override val assessmentDecision: String?,
     override val referralRejectionReason: String?,
     override val referralRejectionReasonDetail: String?,
-    override val assessmentSubmittedDate: LocalDate?,
+    override val assessmentSubmittedDate: Instant?,
     override val referralEligibleForCas3: Boolean?,
     override val referralEligibilityReason: String?,
-    override val accommodationRequiredDate: Timestamp?,
+    override val accommodationRequiredDate: Instant?,
     override val prisonNameOnCreation: String?,
     override val personReleaseDate: LocalDate?,
     override val town: String?,
@@ -417,7 +416,7 @@ class Cas3ReportServiceTest {
     override val cancellationReason: String?,
     override val startDate: LocalDate?,
     override val endDate: LocalDate?,
-    override val actualEndDate: Timestamp?,
+    override val actualEndDate: Instant?,
     override val accommodationOutcome: String?,
     override val dutyToReferLocalAuthorityAreaName: String?,
     override val pdu: String?,

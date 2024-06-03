@@ -7,10 +7,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
+import java.time.ZoneOffset
 
 class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
   TransitionalAccommodationReferralReportDataAndPersonInfo,
-  TransitionalAccommodationReferralReportRow, TransitionalAccommodationReferralReportProperties,
+  TransitionalAccommodationReferralReportRow,
+  TransitionalAccommodationReferralReportProperties,
   >(
   TransitionalAccommodationReferralReportRow::class,
 ) {
@@ -23,7 +25,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
       listOf(
         TransitionalAccommodationReferralReportRow(
           referralId = referralData.referralId,
-          referralDate = referralData.referralCreatedDate,
+          referralDate = referralData.referralCreatedDate.atZone(ZoneOffset.UTC).toLocalDate(),
           personName = personInfo.tryGetDetails {
             val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
             nameParts.joinToString(" ")
@@ -52,17 +54,17 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
           postCode = referralData.postCode,
           probationRegion = referralData.probationRegionName,
           pdu = referralData.pdu,
-          referralSubmittedDate = referralData.referralSubmittedDate,
+          referralSubmittedDate = referralData.referralSubmittedDate?.atZone(ZoneOffset.UTC)?.toLocalDate(),
           referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
           rejectionReason = referralData.referralRejectionReason,
           rejectionReasonExplained = referralData.referralRejectionReasonDetail,
-          rejectionDate = if (AssessmentDecision.REJECTED.name == referralData.assessmentDecision) referralData.assessmentSubmittedDate else null,
+          rejectionDate = if (AssessmentDecision.REJECTED.name == referralData.assessmentDecision) referralData.assessmentSubmittedDate?.atZone(ZoneOffset.UTC)?.toLocalDate() else null,
           sourceOfReferral = referralData.referralEligibilityReason,
           prisonReleaseType = referralData.prisonReleaseTypes,
           prisonAtReferral = referralData.prisonNameOnCreation,
           releaseDate = referralData.personReleaseDate,
           updatedReleaseDate = referralData.updatedReleaseDate,
-          accommodationRequiredDate = referralData.accommodationRequiredDate?.toLocalDateTime()?.toLocalDate(),
+          accommodationRequiredDate = referralData.accommodationRequiredDate?.atZone(ZoneOffset.UTC)?.toLocalDate(),
           updatedAccommodationRequiredFromDate = referralData.updatedAccommodationRequiredFromDate,
           bookingOffered = (referralData.bookingId != null).toYesNo(),
         ),

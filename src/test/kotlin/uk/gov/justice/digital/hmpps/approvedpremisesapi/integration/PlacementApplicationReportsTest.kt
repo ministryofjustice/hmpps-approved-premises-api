@@ -597,7 +597,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
 
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
 
     return acceptAssessment(assessment)
   }
@@ -637,7 +637,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
 
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
 
     assessment.data = "{}"
     assessment.allocatedToUser = assessorEntity

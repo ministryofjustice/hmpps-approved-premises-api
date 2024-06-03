@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import java.time.Instant
 import java.util.UUID
 
-data class DomainEvent<T> (
+data class DomainEvent<T>(
   val id: UUID,
   val applicationId: UUID? = null,
   val assessmentId: UUID? = null,

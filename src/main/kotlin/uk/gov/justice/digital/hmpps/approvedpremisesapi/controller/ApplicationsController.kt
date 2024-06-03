@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -65,7 +66,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
-import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.Companion as DomainApprovedPremisesApplicationStatus
 
@@ -182,8 +182,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?):
-    ResponseEntity<Application> {
+  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -343,8 +342,7 @@ class ApplicationsController(
     )
   }
 
-  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName):
-    ResponseEntity<List<TimelineEvent>> {
+  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName): ResponseEntity<List<TimelineEvent>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }
@@ -555,7 +553,9 @@ class ApplicationsController(
       placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId).map {
         placementApplicationTransformer.transformPlacementRequestJpaToApi(it)
       }
-    } else { emptyList() }
+    } else {
+      emptyList()
+    }
 
     val placementApplicationEntities =
       placementApplicationService.getAllActivePlacementApplicationsForApplicationId(applicationId)

@@ -134,7 +134,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
         cancellationEntityFactory.produceAndPersist {
           withBooking(booking)
           withYieldedReason {
-            cancellationReasonEntityFactory.produceAndPersist() {
+            cancellationReasonEntityFactory.produceAndPersist {
               withName("the cancellation reason!")
             }
           }

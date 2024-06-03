@@ -7,5 +7,5 @@ import java.util.UUID
 
 @Repository
 interface AppealTestRepository : JpaRepository<AppealEntity, UUID> {
-  fun findByApplication_Id(applicationId: UUID): AppealEntity?
+  fun findByApplicationId(applicationId: UUID): AppealEntity?
 }
