@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import jakarta.annotation.PostConstruct
 import org.apache.commons.io.FileUtils
 import org.springframework.context.ApplicationContext
 import org.springframework.core.io.ClassPathResource
@@ -64,7 +65,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
 import java.nio.file.Path
-import javax.annotation.PostConstruct
 import kotlin.io.path.absolutePathString
 
 @Service

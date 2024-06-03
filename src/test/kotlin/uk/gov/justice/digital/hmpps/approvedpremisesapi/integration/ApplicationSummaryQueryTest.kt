@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -16,9 +16,9 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findNonWithdrawnApprovedPremisesSummariesForUser query works as described`() {
-    `Given a User` { user, _ ->
-      `Given a User` { differentUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
+    givenAUser { user, _ ->
+      givenAUser { differentUser, _ ->
+        givenAnOffender { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -84,16 +84,16 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           results.first { it.getId() == nonSubmittedApplication.id }.let {
             assertThat(it.getCrn()).isEqualTo(nonSubmittedApplication.crn)
             assertThat(it.getCreatedByUserId()).isEqualTo(nonSubmittedApplication.createdByUser.id)
-            assertThat(it.getCreatedAt().toInstant()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
-            assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
+            assertThat(it.getCreatedAt()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
+            assertThat(it.getSubmittedAt()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
             assertThat(it.getStatus()).isEqualTo("STARTED")
           }
 
           results.first { it.getId() == submittedApplication.id }.let {
             assertThat(it.getCrn()).isEqualTo(submittedApplication.crn)
             assertThat(it.getCreatedByUserId()).isEqualTo(submittedApplication.createdByUser.id)
-            assertThat(it.getCreatedAt().toInstant()).isEqualTo(submittedApplication.createdAt.toInstant())
-            assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(submittedApplication.submittedAt?.toInstant())
+            assertThat(it.getCreatedAt()).isEqualTo(submittedApplication.createdAt.toInstant())
+            assertThat(it.getSubmittedAt()).isEqualTo(submittedApplication.submittedAt?.toInstant())
             assertThat(it.getStatus()).isEqualTo("SUBMITTED")
           }
 
@@ -111,8 +111,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findAllTemporaryAccommodationSummariesCreatedByUser query works as described`() {
-    `Given a User` { user, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { user, _ ->
+      givenAnOffender { offenderDetails, _ ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -178,8 +178,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         results.first { it.getId() == nonSubmittedApplication.id }.let {
           assertThat(it.getCrn()).isEqualTo(nonSubmittedApplication.crn)
           assertThat(it.getCreatedByUserId()).isEqualTo(nonSubmittedApplication.createdByUser.id)
-          assertThat(it.getCreatedAt().toInstant()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
-          assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
+          assertThat(it.getCreatedAt()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
+          assertThat(it.getSubmittedAt()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
           assertThat(it.getLatestAssessmentSubmittedAt()).isNull()
           assertThat(it.getLatestAssessmentDecision()).isNull()
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(false)
@@ -190,9 +190,9 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         results.first { it.getId() == submittedApplication.id }.let {
           assertThat(it.getCrn()).isEqualTo(submittedApplication.crn)
           assertThat(it.getCreatedByUserId()).isEqualTo(submittedApplication.createdByUser.id)
-          assertThat(it.getCreatedAt().toInstant()).isEqualTo(submittedApplication.createdAt.toInstant())
-          assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(submittedApplication.submittedAt?.toInstant())
-          assertThat(it.getLatestAssessmentSubmittedAt()?.toInstant()).isEqualTo(assessmentForSubmittedApplication.submittedAt?.toInstant())
+          assertThat(it.getCreatedAt()).isEqualTo(submittedApplication.createdAt.toInstant())
+          assertThat(it.getSubmittedAt()).isEqualTo(submittedApplication.submittedAt?.toInstant())
+          assertThat(it.getLatestAssessmentSubmittedAt()).isEqualTo(assessmentForSubmittedApplication.submittedAt?.toInstant())
           assertThat(it.getLatestAssessmentDecision()).isEqualTo(assessmentForSubmittedApplication.decision)
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(true)
           assertThat(it.getHasBooking()).isEqualTo(true)

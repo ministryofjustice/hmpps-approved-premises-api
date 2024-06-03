@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import software.amazon.awssdk.services.sns.model.NotFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -420,7 +420,9 @@ class ApplicationNoteServiceTest {
             RuntimeException(
               "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
                 "Unable to send email for Note ${noteEntity.id} on Application ${submittedApplicationWithNoReferrerEmail.id}",
-              NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
+              NotFoundException.builder()
+                .message("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}")
+                .build(),
             ),
           )
         } returns SentryId.EMPTY_ID

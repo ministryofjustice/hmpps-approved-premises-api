@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -37,7 +37,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    val userArgs = `Given a User`()
+    val userArgs = givenAUser()
 
     user = userArgs.first
 
@@ -91,7 +91,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application timeline returns 501 not implemented when not approved premises service`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
       webTestClient.get()
         .uri("/applications/${application.id}/timeline")
         .header("Authorization", "Bearer $jwt")
@@ -104,7 +104,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application timeline returns all expected items`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       val rawResponseBody = webTestClient.get()
         .uri("/applications/${application.id}/timeline")
         .header("Authorization", "Bearer $jwt")

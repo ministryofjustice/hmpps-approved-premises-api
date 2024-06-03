@@ -29,7 +29,7 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    private lateinit var INITIAL_DB_STATE: Map<TableData, TableResults>
+    private lateinit var initialDbState: Map<TableData, TableResults>
   }
 
   override fun beforeAll(context: ExtensionContext?) {
@@ -92,7 +92,7 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
       dataSource.connection.use { connection ->
         connection.autoCommit = false
         val tablesToCapture = getTableData(connection)
-        INITIAL_DB_STATE = getDatabaseState(tablesToCapture, connection)
+        initialDbState = getDatabaseState(tablesToCapture, connection)
         connection.commit()
       }
     } catch (e: SQLException) {
@@ -105,14 +105,14 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
     try {
       dataSource.connection.use { connection ->
         connection.autoCommit = false
-        INITIAL_DB_STATE.keys.forEach { table ->
+        initialDbState.keys.forEach { table ->
           table.foreignKeys.forEach { fk ->
             connection.prepareStatement("ALTER TABLE ${table.fullyQualifiedTableName} ALTER CONSTRAINT $fk DEFERRABLE INITIALLY IMMEDIATE;")
               .execute()
           }
         }
         connection.prepareStatement("SET CONSTRAINTS ALL DEFERRED;").execute()
-        INITIAL_DB_STATE.values.forEach {
+        initialDbState.values.forEach {
           if (it.results.isNotEmpty()) {
             it.insert(connection)
           }

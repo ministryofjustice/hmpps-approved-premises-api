@@ -1,12 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
-import com.amazonaws.services.sns.model.MessageAttributeValue
-import com.amazonaws.services.sns.model.PublishRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
+import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
@@ -25,7 +26,6 @@ import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import javax.transaction.Transactional
 import kotlin.reflect.KClass
 
 @Service(
@@ -129,11 +129,17 @@ class DomainEventService(
       )
 
       val publishResult = domainTopic.snsClient.publish(
-        PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
-          .withMessageAttributes(mapOf("eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType))),
-      )
+        PublishRequest.builder()
+          .topicArn(domainTopic.arn)
+          .message(objectMapper.writeValueAsString(snsEvent))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),
+            ),
+          ).build(),
+      ).get()
 
-      log.info("Emitted SNS event (Message Id: ${publishResult.messageId}, Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")
+      log.info("Emitted SNS event (Message Id: ${publishResult.messageId()}, Sequence Id: ${publishResult.sequenceNumber()}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")
     } else {
       log.info("Not emitting SNS event for domain event because domain-events.cas2.emit-enabled is not enabled")
     }

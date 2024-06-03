@@ -16,8 +16,7 @@ class StatusUpdateTransformer(
 
   fun transformJpaToApi(
     jpa: Cas2StatusUpdateEntity,
-  ):
-    Cas2StatusUpdate {
+  ): Cas2StatusUpdate {
     return Cas2StatusUpdate(
       id = jpa.id,
       name = jpa.status().name,
@@ -29,8 +28,7 @@ class StatusUpdateTransformer(
     )
   }
 
-  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity):
-    Cas2StatusUpdateDetail {
+  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity): Cas2StatusUpdateDetail {
     return Cas2StatusUpdateDetail(
       id = jpa.id,
       name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,

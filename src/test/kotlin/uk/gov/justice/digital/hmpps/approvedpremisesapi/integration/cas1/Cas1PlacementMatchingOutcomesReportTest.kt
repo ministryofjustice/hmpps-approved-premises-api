@@ -14,9 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesReportTest.Constants.REPORT_YEAR
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -36,7 +36,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
   @Test
   fun `Get placement matching outcomes report returns 403 Forbidden if user does not have correct role`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       webTestClient.get()
         .uri("/reports/placement-applications?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -49,7 +49,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
   @Test
   fun `Get placement matching outcomes report returns 400 if month is provided and not within 1-12`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/placement-applications?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -64,7 +64,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
   @Test
   fun `Get placement matching outcomes report if no data return no rows`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       getReport(jwt) { rows ->
         assertThat(rows).isEmpty()
       }
@@ -76,8 +76,8 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement matching outcomes report maps all fields for initial request without placement`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
-        val (placementRequest, _) = `Given a Placement Request`(
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+        val (placementRequest, _) = givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -110,8 +110,8 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement matching outcomes report maps all fields for initial request with withdrawn request and cancelled placement`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
-        val (placementRequest, _) = `Given a Placement Request`(
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+        val (placementRequest, _) = givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -130,7 +130,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
         cancellationEntityFactory.produceAndPersist {
           withBooking(booking)
           withYieldedReason {
-            cancellationReasonEntityFactory.produceAndPersist() {
+            cancellationReasonEntityFactory.produceAndPersist {
               withName("the cancellation reason!")
             }
           }
@@ -156,29 +156,29 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement matching outcomes report ignores initial requests outside of date range or reallocated`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
-        val toInclude = `Given a Placement Request`(
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+        val toInclude = givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
           expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1),
         ).first
 
-        `Given a Placement Request`(
+        givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
           expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1).minusMonths(1),
         )
 
-        `Given a Placement Request`(
+        givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
           expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1).plusMonths(1),
         )
 
-        `Given a Placement Request`(
+        givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -205,8 +205,8 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
       val expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1)
       val duration = 52
 
-      `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
-        val placementApplication = `Given a Placement Application`(
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+        val placementApplication = givenAPlacementApplication(
           createdByUser = user,
           placementType = placementType,
           submittedAt = LocalDate.of(2019, 8, 9).toUtcOffsetDateTime(),
@@ -223,7 +223,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           withDuration(duration)
         }
 
-        val (placementRequest, _) = `Given a Placement Request`(
+        val (placementRequest, _) = givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -274,8 +274,8 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
       val expectedArrival3 = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15)
       val duration3 = 4
 
-      `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
-        val placementApplication = `Given a Placement Application`(
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+        val placementApplication = givenAPlacementApplication(
           createdByUser = user,
           placementType = PlacementType.ROTL,
           submittedAt = LocalDate.of(2019, 8, 9).toUtcOffsetDateTime(),
@@ -305,7 +305,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
         }
 
         fun createPlacementRequest(arrival: LocalDate, duration: Int): PlacementRequestEntity =
-          `Given a Placement Request`(
+          givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -361,7 +361,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement matching outcomes report ignores other requests outside of date range`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
 
         fun createValidRequestForGivenExpectedArrival(
           expectedArrival: LocalDate,
@@ -369,7 +369,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
         ): PlacementRequestEntity {
           val duration = 52
 
-          val placementApplication = `Given a Placement Application`(
+          val placementApplication = givenAPlacementApplication(
             createdByUser = user,
             placementType = PlacementType.ADDITIONAL_PLACEMENT,
             submittedAt = LocalDate.of(2019, 8, 9).toUtcOffsetDateTime(),
@@ -386,7 +386,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
             withDuration(duration)
           }
 
-          val (placementRequest) = `Given a Placement Request`(
+          val (placementRequest) = givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,

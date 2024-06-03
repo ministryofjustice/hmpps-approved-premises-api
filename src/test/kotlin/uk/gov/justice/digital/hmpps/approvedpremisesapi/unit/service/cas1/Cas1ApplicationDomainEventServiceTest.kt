@@ -8,7 +8,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -194,29 +193,29 @@ class Cas1ApplicationDomainEventServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
               data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
               data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
-              staffMember = domainEventStaffMember,
-              probationArea = domainEventProbationArea,
-              team = Team(
-                code = caseDetails.case.manager.team.code,
-                name = caseDetails.case.manager.team.name,
-              ),
-              ldu = Ldu(
-                code = caseDetails.case.manager.team.ldu.code,
-                name = caseDetails.case.manager.team.ldu.name,
-              ),
-              region = Region(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
-            ) &&
+                staffMember = domainEventStaffMember,
+                probationArea = domainEventProbationArea,
+                team = Team(
+                  code = caseDetails.case.manager.team.code,
+                  name = caseDetails.case.manager.team.name,
+                ),
+                ldu = Ldu(
+                  code = caseDetails.case.manager.team.ldu.code,
+                  name = caseDetails.case.manager.team.ldu.name,
+                ),
+                region = Region(
+                  code = staffUserDetails.probationArea.code,
+                  name = staffUserDetails.probationArea.description,
+                ),
+              ) &&
               data.mappa == risks.mappa.value!!.level &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId
@@ -278,9 +277,9 @@ class Cas1ApplicationDomainEventServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
+                crn = application.crn,
+                noms = application.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
               data.otherWithdrawalReason == "the other reason"

@@ -1468,26 +1468,26 @@ class AssessmentServiceTest {
             data.applicationId == assessment.application.id &&
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
             data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
             data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
             data.assessedBy == ApplicationAssessedAssessedBy(
-            staffMember = StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username,
-            ),
-            probationArea = ProbationArea(
-              code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description,
-            ),
-            cru = Cru(
-              name = "South West & South Central",
-            ),
-          ) &&
+              staffMember = StaffMember(
+                staffCode = staffUserDetails.staffCode,
+                staffIdentifier = staffUserDetails.staffIdentifier,
+                forenames = staffUserDetails.staff.forenames,
+                surname = staffUserDetails.staff.surname,
+                username = staffUserDetails.username,
+              ),
+              probationArea = ProbationArea(
+                code = staffUserDetails.probationArea.code,
+                name = staffUserDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = "South West & South Central",
+              ),
+            ) &&
             data.decision == "REJECTED" &&
             data.decisionRationale == "reasoning"
         },

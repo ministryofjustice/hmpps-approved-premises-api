@@ -283,6 +283,10 @@ class ReferralsMetricsReportGeneratorTest {
     assessmentSubmittedAt = assessmentSubmittedAt,
     rejectionRationale = rejectionReason,
     releaseType = releaseType,
-    clarificationNoteCount = if (hasInformationRequests) { randomInt(1, 10) } else { 0 },
+    clarificationNoteCount = if (hasInformationRequests) {
+      randomInt(1, 10)
+    } else {
+      0
+    },
   )
 }

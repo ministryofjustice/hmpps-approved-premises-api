@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AlertFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAlertsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockSuccessfulAlertsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 
 class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
@@ -54,10 +54,10 @@ class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting ACCT alerts for a CRN that does not exist returns 404`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      communityApiMockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -71,15 +71,15 @@ class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting ACCT alerts for a CRN returns OK with correct body`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val alerts = listOf(
           AlertFactory().produce(),
           AlertFactory().produce(),
           AlertFactory().produce(),
         )
 
-        PrisonAPI_mockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
+        prisonApiMockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
@@ -99,8 +99,8 @@ class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting ACCT alerts for a CRN without a NOMS number returns 404`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender`(
+    givenAUser { _, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },

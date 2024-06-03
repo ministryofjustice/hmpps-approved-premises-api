@@ -6,7 +6,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.MigrationJobTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 
 class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
@@ -19,7 +19,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
       withApArea(apArea)
     }
 
-    `Given a User`(
+    givenAUser(
       probationRegion = probationRegion,
       staffUserDetailsConfigBlock = {
         this.withTeams(
@@ -50,7 +50,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
       withApArea(apArea)
     }
 
-    `Given a User`(
+    givenAUser(
       probationRegion = probationRegion,
       staffUserDetailsConfigBlock = {
         this.withTeams(

@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -18,8 +18,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Should not migrate CAS1 booking with 'cancelled' status and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val approvedPremises = ServiceName.approvedPremises
         val booking = createCAS1CancelledBooking(userEntity)
 
@@ -34,8 +34,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Should not migrate CAS3 booking with existing status 'arrived' with existing departure entity and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking = createTemporaryAccommodationBooking(userEntity, BookingStatus.arrived)
         booking.departures = departureEntityFactory.produceAndPersistMultiple(1) {
           withBooking(booking)
@@ -54,8 +54,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate CAS3 cancelled booking with 'cancelled' status and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking = createCAS3CancelledBooking(userEntity)
 
         assertBookingStatusIsNull(booking, ServiceName.temporaryAccommodation)
@@ -69,8 +69,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 cancelled booking with 'cancelled' status and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking1 = createCAS3CancelledBooking(userEntity)
         val booking2 = createCAS3CancelledBooking(userEntity)
 
@@ -87,8 +87,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 departure booking with 'departed' status and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking1 = createCAS3DepartedBooking(userEntity)
         val booking2 = createCAS3DepartedBooking(userEntity)
 
@@ -105,8 +105,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 provisional booking and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking1 = createTemporaryAccommodationBooking(userEntity, null)
         val booking2 = createTemporaryAccommodationBooking(userEntity, null)
 
@@ -123,8 +123,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 Arrived booking and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking1 = createCAS3ArrivedBooking(userEntity)
         val booking2 = createCAS3ArrivedBooking(userEntity)
 
@@ -141,8 +141,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate multiple CAS3 Confirmed booking and returns 202 response`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val booking1 = createCAS3ConfirmedBooking(userEntity)
         val booking2 = createCAS3ConfirmedBooking(userEntity)
 
@@ -159,8 +159,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate CAS3 only bookings with multiple state exists in the DB`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val departedBooking1 = createCAS3DepartedBooking(userEntity)
         val departedBooking2 = createCAS3DepartedBooking(userEntity)
         val arrivedBooking = createCAS3ArrivedBooking(userEntity)
@@ -186,8 +186,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully migrate CAS3 bookings when multiple different booking exists in DB`() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { _, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { _, _ ->
         val cancelledBooking = createCAS3CancelledBooking(userEntity)
         val provisionalBooking = createTemporaryAccommodationBooking(userEntity, null)
 
@@ -255,7 +255,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   private fun createCAS3ConfirmedBooking(userEntity: UserEntity): BookingEntity {
     val booking = createTemporaryAccommodationBooking(userEntity, null)
-    booking.confirmation = confirmationEntityFactory.produceAndPersist() {
+    booking.confirmation = confirmationEntityFactory.produceAndPersist {
       withBooking(booking)
     }
 
@@ -273,14 +273,14 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   }
 
   private fun createTemporaryAccommodationBooking(userEntity: UserEntity, bookingStatus: BookingStatus?): BookingEntity {
-    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
     }
 
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {
@@ -297,14 +297,14 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   }
 
   private fun createApprovedAccommodationBooking(userEntity: UserEntity): BookingEntity {
-    val premises = approvedPremisesEntityFactory.produceAndPersist() {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
     }
 
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {

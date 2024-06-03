@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 
@@ -16,9 +16,9 @@ class ReallocationAtomicTest : IntegrationTestBase() {
 
   @Test
   fun `Database exception after setting reallocated on original Assessment results in that change being rolled back`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { requestUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { otherUser, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { assigneeUser, _ ->
+    givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { otherUser, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assigneeUser, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 

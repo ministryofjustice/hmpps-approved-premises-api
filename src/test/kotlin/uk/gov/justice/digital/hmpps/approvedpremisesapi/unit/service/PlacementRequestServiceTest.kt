@@ -556,9 +556,9 @@ class PlacementRequestServiceTest {
             data.applicationId == placementRequestApplication.id &&
             data.applicationUrl == "http://frontend/applications/${placementRequestApplication.id}" &&
             data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
             data.deliusEventNumber == placementRequestApplication.eventNumber &&
             data.failureDescription == "some notes"
         },
@@ -1019,7 +1019,7 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.value) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
@@ -1045,7 +1045,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched, pageable = pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.value, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
@@ -1074,7 +1074,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched, pageable = pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.value, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(

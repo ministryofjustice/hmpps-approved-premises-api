@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -158,15 +157,14 @@ class ApplicationsTransformerTest {
   inner class TransformJpaSummaryToSummary {
 
     @Test
-    fun `transforms an in progress CAS2 application correctly`
-    () {
+    fun `transforms an in progress CAS2 application correctly`() {
       val application = object : Cas2ApplicationSummary {
         override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
         override fun getCrn() = "CRNNUM"
         override fun getNomsNumber() = "NOMNUM"
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+        override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
         override fun getSubmittedAt() = null
         override fun getHdcEligibilityDate() = null
         override fun getLatestStatusUpdateLabel() = null
@@ -199,8 +197,8 @@ class ApplicationsTransformerTest {
         override fun getNomsNumber() = "NOMNUM"
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-        override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+        override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+        override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:30+01:00")
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
         override fun getLatestStatusUpdateStatusId() = UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db")
         override fun getLatestStatusUpdateLabel() = "my latest status update"

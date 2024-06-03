@@ -6,8 +6,8 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1FurtherInfoBugFixSeedCsvRow
@@ -63,8 +63,8 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
   fun removeLineBreaks(input: String) = input.replace(Regex("""(\r\n)|\n"""), "")
 
   private fun createAssessment(data: String?): AssessmentEntity {
-    val (user) = `Given a User`()
-    val (offenderDetails) = `Given an Offender`()
+    val (user) = givenAUser()
+    val (offenderDetails) = givenAnOffender()
 
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()

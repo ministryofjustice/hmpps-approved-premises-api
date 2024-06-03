@@ -9,37 +9,37 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) =
+fun IntegrationTestBase.communityApiMockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/staff/username/${staffUserDetails.username}",
     responseBody = staffUserDetails,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockNotFoundStaffUserDetailsCall(username: String) =
+fun IntegrationTestBase.communityApiMockNotFoundStaffUserDetailsCall(username: String) =
   mockUnsuccessfulGetCall(
     url = "/secure/staff/username/$username",
     responseStatus = 404,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails: OffenderDetailSummary) =
+fun IntegrationTestBase.communityApiMockSuccessfulOffenderDetailsCall(offenderDetails: OffenderDetailSummary) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/${offenderDetails.otherIds.crn}",
     responseBody = offenderDetails,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockServerErrorOffenderDetailsCall(crn: String) =
+fun IntegrationTestBase.communityApiMockServerErrorOffenderDetailsCall(crn: String) =
   mockUnsuccessfulGetCall(
     url = "/secure/offenders/crn/$crn",
     responseStatus = 500,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentsCall(crn: String, groupedDocuments: GroupedDocuments) =
+fun IntegrationTestBase.communityApiMockSuccessfulDocumentsCall(crn: String, groupedDocuments: GroupedDocuments) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/documents/grouped",
     responseBody = groupedDocuments,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentDownloadCall(crn: String, documentId: String, fileContents: ByteArray) =
+fun IntegrationTestBase.communityApiMockSuccessfulDocumentDownloadCall(crn: String, documentId: String, fileContents: ByteArray) =
   mockOAuth2ClientCredentialsCallIfRequired {
     wiremockServer.stubFor(
       WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn/documents/$documentId"))
@@ -52,25 +52,25 @@ fun IntegrationTestBase.CommunityAPI_mockSuccessfulDocumentDownloadCall(crn: Str
     )
   }
 
-fun IntegrationTestBase.CommunityAPI_mockNotFoundOffenderDetailsCall(crn: String) =
+fun IntegrationTestBase.communityApiMockNotFoundOffenderDetailsCall(crn: String) =
   mockUnsuccessfulGetCall(
     url = "/secure/offenders/crn/$crn",
     responseStatus = 404,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulConvictionsCall(crn: String, response: List<Conviction>) =
+fun IntegrationTestBase.communityApiMockSuccessfulConvictionsCall(crn: String, response: List<Conviction>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/convictions",
     responseBody = response,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulRegistrationsCall(crn: String, response: Registrations) =
+fun IntegrationTestBase.communityApiMockSuccessfulRegistrationsCall(crn: String, response: Registrations) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/$crn/registrations?activeOnly=true",
     responseBody = response,
   )
 
-fun IntegrationTestBase.CommunityAPI_mockOffenderUserAccessCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) =
+fun IntegrationTestBase.communityApiMockOffenderUserAccessCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) =
   mockOAuth2ClientCredentialsCallIfRequired {
     if (!inclusion && !exclusion) {
       wiremockServer.stubFor(

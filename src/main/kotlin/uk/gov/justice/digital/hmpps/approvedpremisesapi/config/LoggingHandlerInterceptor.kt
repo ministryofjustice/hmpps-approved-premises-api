@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -7,8 +9,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.servlet.handler.MappedInterceptor
 import java.lang.Exception
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 @Configuration
 class InterceptorConfig {

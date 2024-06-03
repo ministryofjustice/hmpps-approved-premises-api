@@ -1,5 +1,24 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.Convert
+import jakarta.persistence.DiscriminatorColumn
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.Inheritance
+import jakarta.persistence.InheritanceType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.PrimaryKeyJoinColumn
+import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -14,29 +33,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import java.sql.Timestamp
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Convert
-import javax.persistence.DiscriminatorColumn
-import javax.persistence.DiscriminatorValue
-import javax.persistence.Entity
-import javax.persistence.EntityListeners
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.Inheritance
-import javax.persistence.InheritanceType
-import javax.persistence.JoinColumn
-import javax.persistence.LockModeType
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OneToOne
-import javax.persistence.PrimaryKeyJoinColumn
-import javax.persistence.Table
-import javax.persistence.Version
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toKotlinDuration
 
@@ -119,7 +120,7 @@ AND (
   ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
-  fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
+  fun <T : ApplicationEntity> findAllByCreatedByUserId(id: UUID, type: Class<T>): List<ApplicationEntity>
 
   @Query(
     "SELECT * FROM approved_premises_applications apa " +
@@ -290,10 +291,10 @@ abstract class ApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: UserEntity,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var data: String?,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var document: String?,
 
   @ManyToOne
@@ -346,7 +347,7 @@ class ApprovedPremisesApplicationEntity(
   val eventNumber: String,
   val offenceId: String,
   nomsNumber: String?,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
   @OneToMany(mappedBy = "application")
@@ -457,7 +458,7 @@ class TemporaryAccommodationApplicationEntity(
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
   @ManyToOne
@@ -500,8 +501,8 @@ interface ApplicationSummary {
   fun getId(): UUID
   fun getCrn(): String
   fun getCreatedByUserId(): UUID
-  fun getCreatedAt(): Timestamp
-  fun getSubmittedAt(): Timestamp?
+  fun getCreatedAt(): Instant
+  fun getSubmittedAt(): Instant?
   fun getRiskRatings(): String?
 }
 
@@ -510,7 +511,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getIsPipeApplication(): Boolean?
   fun getIsEmergencyApplication(): Boolean?
   fun getIsEsapApplication(): Boolean?
-  fun getArrivalDate(): Timestamp?
+  fun getArrivalDate(): Instant?
   fun getTier(): String?
   fun getStatus(): String
   fun getIsWithdrawn(): Boolean
@@ -519,13 +520,13 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
-  fun getLatestAssessmentSubmittedAt(): Timestamp?
+  fun getLatestAssessmentSubmittedAt(): Instant?
   fun getLatestAssessmentDecision(): AssessmentDecision?
   fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean
   fun getHasBooking(): Boolean
 }
 
 interface ApprovedPremisesApplicationMetricsSummary {
-  fun getCreatedAt(): Timestamp
+  fun getCreatedAt(): Instant
   fun getCreatedByUserId(): String
 }

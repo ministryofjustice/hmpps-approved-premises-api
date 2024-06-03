@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisT
 import java.time.OffsetDateTime
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a Placement Application`(
+fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
   schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
@@ -52,7 +52,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     withApArea(userApArea)
   }
 
-  val (_, application) = `Given an Assessment for Approved Premises`(
+  val (_, application) = givenAnAssessmentForApprovedPremises(
     decision = assessmentDecision,
     submittedAt = OffsetDateTime.now(),
     crn = crn,
@@ -80,7 +80,8 @@ fun IntegrationTestBase.`Given a Placement Application`(
   }
 }
 
-fun IntegrationTestBase.`Given a Placement Application`(
+@Suppress("LongParameterList")
+fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
   schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
@@ -93,7 +94,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
 ): PlacementApplicationEntity {
-  val placementApplication = `Given a Placement Application`(
+  val placementApplication = givenAPlacementApplication(
     assessmentDecision = assessmentDecision,
     createdByUser = createdByUser,
     schema = schema,

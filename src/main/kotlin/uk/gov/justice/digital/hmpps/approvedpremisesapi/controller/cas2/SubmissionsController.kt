@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
+import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -34,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Submiss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
-import javax.transaction.Transactional
 
 @Service("Cas2SubmissionsController")
 class SubmissionsController(
@@ -174,8 +174,7 @@ class SubmissionsController(
     nomisUserService.getUserForRequest()
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>):
-    List<Cas2SubmittedApplicationSummary> {
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>): List<Cas2SubmittedApplicationSummary> {
     val crns = applicationSummaries.map { it.getCrn() }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)

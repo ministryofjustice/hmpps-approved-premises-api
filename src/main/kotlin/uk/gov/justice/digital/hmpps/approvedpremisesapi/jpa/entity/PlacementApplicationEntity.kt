@@ -1,5 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -11,16 +22,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.Table
-import javax.persistence.Version
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 
 @Service
@@ -88,10 +89,10 @@ data class PlacementApplicationEntity(
   @Transient
   var schemaUpToDate: Boolean,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var data: String?,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var document: String?,
 
   val createdAt: OffsetDateTime,

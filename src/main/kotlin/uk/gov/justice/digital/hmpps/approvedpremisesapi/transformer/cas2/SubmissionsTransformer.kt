@@ -24,11 +24,9 @@ class SubmissionsTransformer(
 
   fun transformJpaToApiRepresentation(
     jpa: Cas2ApplicationEntity,
-    personInfo:
-      PersonInfoResult
+    personInfo: PersonInfoResult
       .Success,
-  ):
-    Cas2SubmittedApplication {
+  ): Cas2SubmittedApplication {
     return Cas2SubmittedApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
@@ -53,8 +51,8 @@ class SubmissionsTransformer(
       id = jpaSummary.getId(),
       personName = personName,
       createdByUserId = jpaSummary.getCreatedByUserId(),
-      createdAt = jpaSummary.getCreatedAt().toInstant(),
-      submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
+      createdAt = jpaSummary.getCreatedAt(),
+      submittedAt = jpaSummary.getSubmittedAt(),
       crn = jpaSummary.getCrn(),
       nomsNumber = jpaSummary.getNomsNumber(),
     )

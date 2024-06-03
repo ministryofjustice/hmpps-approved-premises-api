@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import java.time.LocalDate
 import java.util.UUID
 class PremisesSummaryTest : IntegrationTestBase() {
   @Test
   fun `Get all CAS3 Premises returns OK with correct body`() {
-    `Given a User` { user, jwt ->
+    givenAUser { user, jwt ->
       val uuid = UUID.randomUUID()
 
       val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -69,7 +69,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS3 Premises returns bedspace count as expected when there is an archived bedspace`() {
-    `Given a User` { user, jwt ->
+    givenAUser { user, jwt ->
       val uuid = UUID.randomUUID()
 
       val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -122,7 +122,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS3 Premises returns a bedspace count as expected when beds are active`() {
-    `Given a User` { user, jwt ->
+    givenAUser { user, jwt ->
       val uuid = UUID.randomUUID()
 
       val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -175,7 +175,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Premises throws error with incorrect service name`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       webTestClient.get()
         .uri("/premises/summary")
         .header("Authorization", "Bearer $jwt")
@@ -188,7 +188,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS1 Premises returns OK with correct body`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       val uuid = UUID.randomUUID()
       val apArea = apAreaEntityFactory.produceAndPersist()
       val probationRegion = probationRegionEntityFactory.produceAndPersist {
@@ -256,7 +256,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS1 Premises filters by probation region`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       val region1 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       val region2 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
 
@@ -285,7 +285,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS1 Premises filters by AP Area`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       val apArea = apAreaEntityFactory.produceAndPersist()
       val region1 = probationRegionEntityFactory.produceAndPersist { withApArea(apArea) }
       val region2 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }

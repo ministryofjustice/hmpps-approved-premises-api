@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -7,10 +11,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
 
 @Repository
 interface TaskRepository : JpaRepository<Task, UUID> {
@@ -42,7 +42,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
 
     private const val ASSESSMENT_QUERY = """
        SELECT
-        cast(assessment.id as TEXT) AS id,
+        assessment.id AS id,
         assessment.created_at AS created_at,
         assessment.due_at AS due_at,
         'ASSESSMENT' AS type,
@@ -84,7 +84,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
 
     private const val PLACEMENT_APPLICATION_QUERY = """
        SELECT
-        cast(placement_application.id as TEXT) AS id,
+        placement_application.id AS id,
         placement_application.created_at AS created_at,
         placement_application.due_at AS due_at,
         'PLACEMENT_APPLICATION' AS type,
@@ -126,7 +126,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
 
     private const val PLACEMENT_REQUEST_QUERY = """
       SELECT
-        cast(placement_request.id as TEXT) AS id,
+        placement_request.id AS id,
         placement_request.created_at AS created_at,
         placement_request.due_at AS due_at,
         'PLACEMENT_REQUEST' AS type,

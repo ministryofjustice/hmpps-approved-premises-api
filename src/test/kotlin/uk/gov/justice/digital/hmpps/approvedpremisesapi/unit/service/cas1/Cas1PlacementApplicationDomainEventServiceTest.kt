@@ -350,21 +350,21 @@ class Cas1PlacementApplicationDomainEventServiceTest {
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.placementApplicationId == placementApplication.id &&
               data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
+                crn = application.crn,
+                noms = application.nomsNumber!!,
+              ) &&
               data.allocatedBy == allocatedBy &&
               data.allocatedTo == allocatedTo &&
               data.placementDates == listOf(
-              DatePeriod(
-                LocalDate.of(2024, 5, 3),
-                LocalDate.of(2024, 5, 10),
-              ),
-              DatePeriod(
-                LocalDate.of(2025, 2, 2),
-                LocalDate.of(2025, 2, 16),
-              ),
-            )
+                DatePeriod(
+                  LocalDate.of(2024, 5, 3),
+                  LocalDate.of(2024, 5, 10),
+                ),
+                DatePeriod(
+                  LocalDate.of(2025, 2, 2),
+                  LocalDate.of(2025, 2, 16),
+                ),
+              )
           },
         )
       }

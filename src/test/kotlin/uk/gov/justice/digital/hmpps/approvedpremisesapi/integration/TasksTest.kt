@@ -28,15 +28,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
@@ -69,7 +69,7 @@ class TasksTest {
 
     @BeforeEach
     fun stubBankHolidaysApi() {
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
     }
 
     @Test
@@ -83,7 +83,7 @@ class TasksTest {
 
     @Test
     fun `Get all tasks without workflow manager or matcher permissions returns 403`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/tasks")
           .header("Authorization", "Bearer $jwt")
@@ -96,11 +96,11 @@ class TasksTest {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
     fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER OR CAS1_MATCHER roles`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
 
-            val task = `Given a Placement Application`(
+            val task = givenAPlacementApplication(
               createdByUser = otherUser,
               allocatedToUser = otherUser,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -136,7 +136,7 @@ class TasksTest {
 
     @Test
     fun `Get all tasks with taskType BookingAppeal returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         webTestClient.get()
           .uri("/tasks?type=BookingAppeal")
           .header("Authorization", "Bearer $jwt")
@@ -148,30 +148,30 @@ class TasksTest {
 
     @Test
     fun `Get all tasks returns 200 when no type retains original sort order`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val (task1, _) = `Given a Placement Request`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val (task1, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task2, _) = `Given an Assessment for Approved Premises`(
+            val (task2, _) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task3, _) = `Given a Placement Request`(
+            val (task3, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val task4 = `Given a Placement Application`(
+            val task4 = givenAPlacementApplication(
               createdByUser = user,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -181,7 +181,7 @@ class TasksTest {
               submittedAt = OffsetDateTime.now(),
             )
 
-            val (task5) = `Given an Assessment for Approved Premises`(
+            val (task5) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -251,37 +251,37 @@ class TasksTest {
 
     @BeforeAll
     fun stubBankHolidaysApi() {
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
     }
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
 
-            val (task1, _) = `Given a Placement Request`(
+            val (task1, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task2, _) = `Given an Assessment for Approved Premises`(
+            val (task2, _) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task3, _) = `Given a Placement Request`(
+            val (task3, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val task4 = `Given a Placement Application`(
+            val task4 = givenAPlacementApplication(
               createdByUser = user,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -291,7 +291,7 @@ class TasksTest {
               submittedAt = OffsetDateTime.now(),
             )
 
-            val (task5) = `Given an Assessment for Approved Premises`(
+            val (task5) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -438,29 +438,29 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
 
-            apArea = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
+            apArea = givenAnApArea()
+            val apArea2 = givenAnApArea()
 
-            val (assessment) = `Given an Assessment for Approved Premises`(
+            val (assessment) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
               apArea = apArea,
             )
 
-            `Given an Assessment for Approved Premises`(
+            givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
               apArea = apArea2,
             )
 
-            val placementApplication = `Given a Placement Application`(
+            val placementApplication = givenAPlacementApplication(
               createdByUser = user,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -471,7 +471,7 @@ class TasksTest {
               apArea = apArea,
             )
 
-            `Given a Placement Application`(
+            givenAPlacementApplication(
               createdByUser = user,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -482,7 +482,7 @@ class TasksTest {
               apArea = apArea2,
             )
 
-            val (placementRequest) = `Given a Placement Request`(
+            val (placementRequest) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -490,7 +490,7 @@ class TasksTest {
               apArea = apArea,
             )
 
-            `Given a Placement Request`(
+            givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -584,25 +584,25 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
             this.user = user
 
-            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
+            val (allocatableAssessment) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = user,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             )
 
-            `Given an Assessment for Approved Premises`(
+            givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val allocatablePlacementApplication = `Given a Placement Application`(
+            val allocatablePlacementApplication = givenAPlacementApplication(
               createdByUser = user,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -612,7 +612,7 @@ class TasksTest {
               submittedAt = OffsetDateTime.now(),
             )
 
-            `Given a Placement Application`(
+            givenAPlacementApplication(
               createdByUser = user,
               allocatedToUser = otherUser,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -622,14 +622,14 @@ class TasksTest {
               submittedAt = OffsetDateTime.now(),
             )
 
-            `Given a Placement Request`(
+            givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (allocatablePlacementRequest) = `Given a Placement Request`(
+            val (allocatablePlacementRequest) = givenAPlacementRequest(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -721,9 +721,9 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
 
             counts = mapOf(
@@ -741,13 +741,13 @@ class TasksTest {
               ),
             )
 
-            `Given an Assessment for Temporary Accommodation`(
+            givenAnAssessmentForTemporaryAccommodation(
               createdByUser = otherUser,
               allocatedToUser = null,
             )
 
             repeat(counts[TaskType.assessment]!!["allocated"]!!) {
-              `Given an Assessment for Approved Premises`(
+              givenAnAssessmentForApprovedPremises(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
@@ -755,7 +755,7 @@ class TasksTest {
             }
 
             repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
-              `Given an Assessment for Approved Premises`(
+              givenAnAssessmentForApprovedPremises(
                 null,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
@@ -763,7 +763,7 @@ class TasksTest {
             }
 
             repeat(counts[TaskType.placementRequest]!!["allocated"]!!) {
-              `Given a Placement Request`(
+              givenAPlacementRequest(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
@@ -772,7 +772,7 @@ class TasksTest {
             }
 
             repeat(counts[TaskType.placementRequest]!!["unallocated"]!!) {
-              `Given a Placement Request`(
+              givenAPlacementRequest(
                 null,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
@@ -781,7 +781,7 @@ class TasksTest {
             }
 
             repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
-              `Given a Placement Application`(
+              givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -793,7 +793,7 @@ class TasksTest {
             }
 
             repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
-              `Given a Placement Application`(
+              givenAPlacementApplication(
                 createdByUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                   withPermissiveSchema()
@@ -881,9 +881,9 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
 
             val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
@@ -891,7 +891,7 @@ class TasksTest {
             val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
 
             fun createAssessmentTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
-              val (assessment) = `Given an Assessment for Approved Premises`(
+              val (assessment) = givenAnAssessmentForApprovedPremises(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
@@ -906,7 +906,7 @@ class TasksTest {
             }
 
             fun createPlacementRequestTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
-              val (placementRequest, _) = `Given a Placement Request`(
+              val (placementRequest, _) = givenAPlacementRequest(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
@@ -922,7 +922,7 @@ class TasksTest {
             }
 
             fun createPlacementApplicationTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
-              val placementApplication = `Given a Placement Application`(
+              val placementApplication = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1060,28 +1060,28 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails1, _ ->
-            `Given an Offender` { offenderDetails2, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails1, _ ->
+            givenAnOffender { offenderDetails2, _ ->
               this.jwt = jwt
               this.crn = offenderDetails2.otherIds.crn
 
-              val (assessment1, _) = `Given an Assessment for Approved Premises`(
+              val (assessment1, _) = givenAnAssessmentForApprovedPremises(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails1.otherIds.crn,
                 name = "SOMEONE",
               )
 
-              val (assessment2, _) = `Given an Assessment for Approved Premises`(
+              val (assessment2, _) = givenAnAssessmentForApprovedPremises(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails2.otherIds.crn,
                 name = "ANOTHER",
               )
 
-              val (placementRequest1, _) = `Given a Placement Request`(
+              val (placementRequest1, _) = givenAPlacementRequest(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
@@ -1089,7 +1089,7 @@ class TasksTest {
                 name = "SOMEONE",
               )
 
-              val (placementRequest2, _) = `Given a Placement Request`(
+              val (placementRequest2, _) = givenAPlacementRequest(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
@@ -1097,7 +1097,7 @@ class TasksTest {
                 name = "ANOTHER",
               )
 
-              val placementApplication1 = `Given a Placement Application`(
+              val placementApplication1 = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1108,7 +1108,7 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now(),
               )
 
-              val placementApplication2 = `Given a Placement Application`(
+              val placementApplication2 = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1252,34 +1252,34 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
             this.crn = offenderDetails.otherIds.crn
 
-            val (assessment1, _) = `Given an Assessment for Approved Premises`(
+            val (assessment1, _) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
               createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS),
             )
 
-            val (assessment2, _) = `Given an Assessment for Approved Premises`(
+            val (assessment2, _) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
               submittedAt = OffsetDateTime.now(),
             )
 
-            val (placementRequest1, _) = `Given a Placement Request`(
+            val (placementRequest1, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (placementRequest2, _) = `Given a Placement Request`(
+            val (placementRequest2, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -1296,7 +1296,7 @@ class TasksTest {
               },
             )
 
-            val (placementRequest3, _) = `Given a Placement Request`(
+            val (placementRequest3, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -1309,7 +1309,7 @@ class TasksTest {
               },
             )
 
-            val placementApplication1 = `Given a Placement Application`(
+            val placementApplication1 = givenAPlacementApplication(
               createdByUser = otherUser,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1319,7 +1319,7 @@ class TasksTest {
               submittedAt = OffsetDateTime.now(),
             )
 
-            val placementApplication2 = `Given a Placement Application`(
+            val placementApplication2 = givenAPlacementApplication(
               createdByUser = otherUser,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1450,13 +1450,13 @@ class TasksTest {
 
     @BeforeAll
     fun setup() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
             this.jwt = jwt
             this.crn = offenderDetails.otherIds.crn
 
-            val (assessment1, _) = `Given an Assessment for Approved Premises`(
+            val (assessment1, _) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1465,7 +1465,7 @@ class TasksTest {
               dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
             )
 
-            val (assessment2, _) = `Given an Assessment for Approved Premises`(
+            val (assessment2, _) = givenAnAssessmentForApprovedPremises(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1474,7 +1474,7 @@ class TasksTest {
               dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
             )
 
-            val (placementRequest1, _) = `Given a Placement Request`(
+            val (placementRequest1, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -1491,7 +1491,7 @@ class TasksTest {
               },
             )
 
-            val (placementRequest2, _) = `Given a Placement Request`(
+            val (placementRequest2, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -1509,7 +1509,7 @@ class TasksTest {
               },
             )
 
-            val (placementRequest3, _) = `Given a Placement Request`(
+            val (placementRequest3, _) = givenAPlacementRequest(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -1523,7 +1523,7 @@ class TasksTest {
               },
             )
 
-            val placementApplication1 = `Given a Placement Application`(
+            val placementApplication1 = givenAPlacementApplication(
               createdByUser = otherUser,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1535,7 +1535,7 @@ class TasksTest {
               decision = REJECTED,
             )
 
-            val placementApplication2 = `Given a Placement Application`(
+            val placementApplication2 = givenAPlacementApplication(
               createdByUser = otherUser,
               allocatedToUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1942,9 +1942,9 @@ class TasksTest {
 
     @Test
     fun `Get an unknown task type for an application returns 404`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          `Given an Assessment for Approved Premises`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAnAssessmentForApprovedPremises(
             allocatedToUser = user,
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,
@@ -1962,17 +1962,17 @@ class TasksTest {
 
     @Test
     fun `Get an assessment task for an application returns 200 with correct body`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { user, _ ->
-          `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser { user, _ ->
+          givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { allocatableUser, _ ->
-            `Given a User`(
+            givenAUser(
               roles = listOf(UserRole.CAS1_MATCHER),
               isActive = false,
             ) { _, _ ->
-              `Given an Offender` { offenderDetails, inmateDetails ->
-                `Given an Assessment for Approved Premises`(
+              givenAnOffender { offenderDetails, inmateDetails ->
+                givenAnAssessmentForApprovedPremises(
                   allocatedToUser = user,
                   createdByUser = user,
                   crn = offenderDetails.otherIds.crn,
@@ -2015,15 +2015,15 @@ class TasksTest {
 
     @Test
     fun `Get a Placement Request Task for an application returns 200`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(
           roles = listOf(UserRole.CAS1_ASSESSOR),
         ) { user, _ ->
-          `Given a User`(
+          givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given a Placement Request`(
+            givenAnOffender { offenderDetails, inmateDetails ->
+              givenAPlacementRequest(
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = user,
                 createdByUser = user,
@@ -2062,15 +2062,15 @@ class TasksTest {
 
     @Test
     fun `Get a Placement Application Task for an application returns 200`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(
           roles = listOf(UserRole.CAS1_ADMIN),
         ) { user, _ ->
-          `Given a User`(
+          givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given a Placement Application`(
+            givenAnOffender { offenderDetails, inmateDetails ->
+              givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2111,15 +2111,15 @@ class TasksTest {
 
     @Test
     fun `Get a Placement Application Task for an application returns 2 users with correct roles`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(
           roles = listOf(UserRole.CAS1_MATCHER),
         ) { user, _ ->
-          `Given a User`(
+          givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given a Placement Application`(
+            givenAnOffender { offenderDetails, inmateDetails ->
+              givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2164,17 +2164,17 @@ class TasksTest {
 
     @Test
     fun `Get a PlacementApplication Task for an application gets UserWithWorkload, ignores inactive users and returns 200`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { user, _ ->
-          `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser { user, _ ->
+          givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
-            `Given a User`(
+            givenAUser(
               roles = listOf(UserRole.CAS1_MATCHER),
               isActive = false,
             ) { _, _ ->
-              `Given an Offender` { offenderDetails, inmateDetails ->
-                `Given a Placement Application`(
+              givenAnOffender { offenderDetails, inmateDetails ->
+                givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
                   schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2295,9 +2295,9 @@ class TasksTest {
 
     @Test
     fun `Get an non-implemented task type for an application returns 405`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          `Given an Assessment for Approved Premises`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAnAssessmentForApprovedPremises(
             allocatedToUser = user,
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,
@@ -2320,7 +2320,7 @@ class TasksTest {
       crn: String,
       isWithdrawn: Boolean = false,
     ) {
-      `Given an Assessment for Approved Premises`(
+      givenAnAssessmentForApprovedPremises(
         allocatedToUser = allocatedUser,
         createdByUser = createdByUser,
         crn = crn,
@@ -2351,7 +2351,7 @@ class TasksTest {
         null
       }
 
-      `Given a Placement Request`(
+      givenAPlacementRequest(
         placementRequestAllocatedTo = allocatedUser,
         assessmentAllocatedTo = createdByUser,
         createdByUser = createdByUser,
@@ -2368,7 +2368,7 @@ class TasksTest {
       crn: String,
       decision: PlacementApplicationDecision? = null,
     ) {
-      `Given a Placement Application`(
+      givenAPlacementApplication(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
         schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2391,7 +2391,7 @@ class TasksTest {
 
     @BeforeEach
     fun stubBankHolidaysApi() {
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
     }
 
     @Test
@@ -2410,7 +2410,7 @@ class TasksTest {
 
     @Test
     fun `Reallocate application to different assessor without WORKFLOW_MANAGER role returns 403`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.post()
           .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
           .header("Authorization", "Bearer $jwt")
@@ -2428,13 +2428,13 @@ class TasksTest {
 
     @Test
     fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
-          `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
+          givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { assigneeUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              `Given an Assessment for Approved Premises`(
+            givenAnOffender { offenderDetails, _ ->
+              givenAnAssessmentForApprovedPremises(
                 allocatedToUser = user,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
@@ -2479,13 +2479,13 @@ class TasksTest {
 
     @Test
     fun `Reallocate assessment to different assessor returns an error if the assessment has already been allocated`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
-          `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
+          givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { assigneeUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              `Given an Assessment for Approved Premises`(
+            givenAnOffender { offenderDetails, _ ->
+              givenAnAssessmentForApprovedPremises(
                 allocatedToUser = user,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
@@ -2518,12 +2518,12 @@ class TasksTest {
 
     @Test
     fun `Reallocating a placement request to different assessor returns 201, creates new placement request, deallocates old one`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(
           roles = listOf(UserRole.CAS1_MATCHER),
         ) { assigneeUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            `Given a Placement Request`(
+          givenAnOffender { offenderDetails, _ ->
+            givenAPlacementRequest(
               createdByUser = user,
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = user,
@@ -2577,13 +2577,13 @@ class TasksTest {
 
     @Test
     fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { user, _ ->
-          `Given a User`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser { user, _ ->
+          givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { assigneeUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              `Given a Placement Application`(
+            givenAnOffender { offenderDetails, _ ->
+              givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2642,9 +2642,9 @@ class TasksTest {
 
     @Test
     fun `Reallocating a booking appeal returns a NotAllowedProblem`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { userToReallocate, _ ->
-          `Given an Application`(createdByUser = user) { application ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser { userToReallocate, _ ->
+          givenAnApplication(createdByUser = user) { application ->
             webTestClient.post()
               .uri("/tasks/booking-appeal/${application.id}/allocations")
               .header("Authorization", "Bearer $jwt")
@@ -2664,10 +2664,10 @@ class TasksTest {
 
     @Test
     fun `Reallocating a Temporary Accommodation assessment does not require a request body`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { originalUser, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { expectedUser, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
-            `Given an Assessment for Temporary Accommodation`(
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { originalUser, _ ->
+        givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { expectedUser, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            givenAnAssessmentForTemporaryAccommodation(
               allocatedToUser = originalUser,
               createdByUser = originalUser,
               crn = offenderDetails.otherIds.crn,
@@ -2705,7 +2705,7 @@ class TasksTest {
 
     @Test
     fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.delete()
           .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
           .header("Authorization", "Bearer $jwt")
@@ -2718,10 +2718,10 @@ class TasksTest {
 
     @Test
     fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          `Given a User` { _, _ ->
-            `Given an Assessment for Approved Premises`(
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAUser { _, _ ->
+            givenAnAssessmentForApprovedPremises(
               allocatedToUser = user,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
@@ -2741,9 +2741,9 @@ class TasksTest {
 
     @Test
     fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          `Given an Assessment for Temporary Accommodation`(
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAnAssessmentForTemporaryAccommodation(
             allocatedToUser = user,
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,

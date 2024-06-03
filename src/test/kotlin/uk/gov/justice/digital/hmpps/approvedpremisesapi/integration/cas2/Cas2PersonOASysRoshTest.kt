@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoSHSummaryCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulRoshCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRoshCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class Cas2PersonOASysRoshTest : IntegrationTestBase() {
@@ -59,10 +59,10 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Rosh for a CRN that does not exist returns 404`() {
-    `Given a CAS2 POM User` { userEntity, jwt ->
+    givenACas2PomUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      communityApiMockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -76,13 +76,13 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting RoSH for a CRN returns OK with correct body`() {
-    `Given a CAS2 POM User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenACas2PomUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val rosh = RoshSummaryFactory().produce()
-        APOASysContext_mockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
+        apOASysContextMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")
@@ -105,10 +105,10 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting RoSH when upstream times out returns 404`() {
-    `Given a CAS2 POM User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenACas2PomUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
-        APOASysContext_mockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
+        apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")

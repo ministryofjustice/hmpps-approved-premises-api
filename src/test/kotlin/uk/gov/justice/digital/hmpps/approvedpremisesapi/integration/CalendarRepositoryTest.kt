@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBedInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBookingInfo
@@ -201,8 +201,8 @@ class CalendarRepositoryTest : IntegrationTestBase() {
 
   @Test
   fun `Results are correct for a Premises with non-double-booked Bookings & Lost Bed`() {
-    `Given an Offender` { offenderDetailsOne, _ ->
-      `Given an Offender` { offenderDetailsTwo, _ ->
+    givenAnOffender { offenderDetailsOne, _ ->
+      givenAnOffender { offenderDetailsTwo, _ ->
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
           withYieldedRoom {
@@ -275,7 +275,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
 
   @Test
   fun `Results are correct for a Premises with a Booking and Lost Bed that finishes on the start date`() {
-    `Given an Offender` { offenderDetailsOne, _ ->
+    givenAnOffender { offenderDetailsOne, _ ->
       val bed = bedEntityFactory.produceAndPersist {
         withName("test-bed")
         withYieldedRoom {
@@ -331,8 +331,8 @@ class CalendarRepositoryTest : IntegrationTestBase() {
 
   @Test
   fun `Results are correct for a Premises with double-booked Bookings & Lost Bed`() {
-    `Given an Offender` { offenderDetailsOne, _ ->
-      `Given an Offender` { offenderDetailsTwo, _ ->
+    givenAnOffender { offenderDetailsOne, _ ->
+      givenAnOffender { offenderDetailsTwo, _ ->
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
           withYieldedRoom {

@@ -1,9 +1,9 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.14.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.22"
-  id("org.openapi.generator") version "5.4.0"
+  id("org.openapi.generator") version "7.5.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.10.3.2"
   id("io.gitlab.arturbosch.detekt") version "1.23.4"
@@ -21,7 +21,6 @@ configurations.matching { it.name == "detekt" }.all {
   }
 }
 
-val springDocVersion = "1.7.0"
 val sentryVersion = "7.3.0"
 
 dependencies {
@@ -29,23 +28,26 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  implementation("com.vladmihalcea:hibernate-types-55:2.21.1")
+  implementation("org.springframework.integration:spring-integration-jms")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
   implementation("org.locationtech.jts:jts-core:1.19.0")
-  implementation("org.hibernate:hibernate-spatial")
+  implementation("org.hibernate:hibernate-spatial:6.4.4.Final")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.0.0-jre")
 
-  runtimeOnly("org.postgresql:postgresql:42.7.1")
+  implementation("org.postgresql:postgresql:42.7.3")
 
-  implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
-  implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
-  implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
-  implementation("org.springdoc:springdoc-openapi-data-rest:$springDocVersion")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-starter-common:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-ui:1.8.0")
+  implementation("org.springdoc:springdoc-openapi-kotlin:1.8.0")
+  implementation("org.springdoc:springdoc-openapi-data-rest:1.8.0")
 
-  implementation("org.zalando:problem-spring-web-starter:0.27.0")
+  implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -82,7 +84,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.3.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.3")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.0.0-RELEASE")
 
@@ -90,13 +92,13 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "17"
+      jvmTarget = "21"
     }
 
     kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
@@ -120,7 +122,7 @@ tasks.register("bootRunLocal") {
 }
 
 tasks.withType<Test> {
-  jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
 
   afterEvaluate {
     if (environment["CI"] != null) {
@@ -162,6 +164,8 @@ openApiGenerate {
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
     put("dateLibrary", "custom")
+    put("useSpringBoot3", "true")
+    put("enumPropertyNaming", "camelCase")
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
@@ -190,6 +194,8 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("useBeanValidation", "false")
     put("apiSuffix", "Cas2")
     put("dateLibrary", "custom")
+    put("useSpringBoot3", "true")
+    put("enumPropertyNaming", "camelCase")
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
@@ -208,6 +214,8 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
     put("dateLibrary", "custom")
+    put("useSpringBoot3", "true")
+    put("enumPropertyNaming", "camelCase")
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
@@ -227,6 +235,8 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("useBeanValidation", "false")
     put("dateLibrary", "custom")
     put("useTags", "true")
+    put("useSpringBoot3", "true")
+    put("enumPropertyNaming", "camelCase")
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
@@ -246,6 +256,8 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("useBeanValidation", "false")
     put("dateLibrary", "custom")
     put("useTags", "true")
+    put("useSpringBoot3", "true")
+    put("enumPropertyNaming", "camelCase")
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
@@ -265,6 +277,8 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
     put("useBeanValidation", "false")
     put("apiSuffix", "Cas3")
     put("dateLibrary", "custom")
+    put("useSpringBoot3", "true")
+    put("enumPropertyNaming", "camelCase")
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
@@ -281,13 +295,13 @@ tasks.register("openApiPreCompilation") {
 
   val sharedComponents = FileUtils.readFileToString(
     File("$rootDir/src/main/resources/static/_shared.yml"),
-    "UTF-8"
+    "UTF-8",
   )
 
   fun buildSpecWithSharedComponentsAppended(specName: String): File {
     val spec = FileUtils.readFileToString(
       File("$rootDir/src/main/resources/static/$specName.yml"),
-      "UTF-8"
+      "UTF-8",
     )
     val compiledSpecFile = File("$rootDir/src/main/resources/static/codegen/built-$specName-spec.yml")
     val notice = "# DO NOT EDIT.\n# This is a build artefact for use in code generation.\n"
@@ -295,7 +309,7 @@ tasks.register("openApiPreCompilation") {
     FileUtils.writeStringToFile(
       compiledSpecFile,
       (notice + spec + sharedComponents),
-      "UTF-8"
+      "UTF-8",
     )
 
     return compiledSpecFile
@@ -320,7 +334,7 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
   "openApiGenerateCas2Namespace",
-  "openApiGenerateCas3Namespace"
+  "openApiGenerateCas3Namespace",
 )
 
 tasks.get("openApiGenerate").doLast {
@@ -351,7 +365,7 @@ ktlint {
 }
 
 allOpen {
-  annotations("javax.persistence.Entity")
+  annotations("jakarta.persistence.Entity")
 }
 
 tasks {

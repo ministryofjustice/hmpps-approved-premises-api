@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulStaffUserDetailsCall
 
 class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
@@ -27,14 +27,14 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userOne.deliusUsername)
         .withStaffCode("STAFFCODE1")
         .produce(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withStaffCode("STAFFCODE2")
@@ -72,9 +72,9 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
+    communityApiMockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withStaffCode("STAFFCODE2")

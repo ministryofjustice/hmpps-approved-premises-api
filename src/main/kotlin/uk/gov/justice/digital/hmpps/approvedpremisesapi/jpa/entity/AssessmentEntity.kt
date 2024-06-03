@@ -1,5 +1,21 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.DiscriminatorColumn
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.Inheritance
+import jakarta.persistence.InheritanceType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.PrimaryKeyJoinColumn
+import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -11,24 +27,10 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.DiscriminatorColumn
-import javax.persistence.DiscriminatorValue
-import javax.persistence.Entity
-import javax.persistence.EntityListeners
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.Inheritance
-import javax.persistence.InheritanceType
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.PrimaryKeyJoinColumn
-import javax.persistence.Table
-import javax.persistence.Version
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
@@ -174,7 +176,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     page: Pageable? = null,
   ): Page<DomainAssessmentSummary>
 
-  fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
+  fun findByApplicationIdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 
   fun findAllByApplicationId(applicationId: UUID): List<AssessmentEntity>
 
@@ -235,10 +237,10 @@ abstract class AssessmentEntity(
   @JoinColumn(name = "application_id")
   val application: ApplicationEntity,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var data: String?,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var document: String?,
 
   @ManyToOne
@@ -343,7 +345,7 @@ class TemporaryAccommodationAssessmentEntity(
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
   var completedAt: OffsetDateTime?,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var summaryData: String,
   isWithdrawn: Boolean,
   @ManyToOne
@@ -375,15 +377,15 @@ interface DomainAssessmentSummary {
   val type: String
   val id: UUID
   val applicationId: UUID
-  val createdAt: Timestamp
+  val createdAt: Instant
   val riskRatings: String?
-  val arrivalDate: Timestamp?
+  val arrivalDate: Instant?
   val completed: Boolean
   val allocated: Boolean
   val decision: String?
   val crn: String
   val status: DomainAssessmentSummaryStatus?
-  val dueAt: Timestamp?
+  val dueAt: Instant?
 }
 
 enum class DomainAssessmentSummaryStatus {

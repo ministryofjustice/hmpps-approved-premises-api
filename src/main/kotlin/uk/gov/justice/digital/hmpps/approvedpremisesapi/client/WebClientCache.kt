@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.PropertyAccessor
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -75,7 +77,7 @@ class WebClientCache(
     }
 
     val cacheEntry = PreemptiveCacheMetadata(
-      httpStatus = exception.statusCode,
+      httpStatus = exception.statusCode as HttpStatus,
       refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
       method = method,
       path = requestBuilder.path ?: "",
@@ -98,7 +100,7 @@ class WebClientCache(
     val cacheKeySet = getCacheKeySet(requestBuilder, cacheConfig)
 
     val cacheEntry = PreemptiveCacheMetadata(
-      httpStatus = result.statusCode,
+      httpStatus = result.statusCode as HttpStatus,
       refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
       method = null,
       path = null,
@@ -142,7 +144,9 @@ class WebClientCache(
 
   private fun writeToRedis(cacheKeySet: CacheKeySet, cacheEntry: PreemptiveCacheMetadata, body: String?, hardTtlSeconds: Long) {
     redisTemplate.boundValueOps(cacheKeySet.metadataKey).set(
-      objectMapper.writeValueAsString(cacheEntry),
+      objectMapper
+        .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+        .writeValueAsString(cacheEntry),
       Duration.ofSeconds(hardTtlSeconds),
     )
 

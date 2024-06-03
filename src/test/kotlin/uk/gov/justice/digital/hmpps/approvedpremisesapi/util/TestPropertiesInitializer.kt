@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import jakarta.annotation.PreDestroy
 import org.springframework.boot.env.OriginTrackedMapPropertySource
 import org.springframework.boot.origin.OriginTrackedValue
 import org.springframework.boot.test.util.TestPropertyValues
@@ -9,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortHolder
-import javax.annotation.PreDestroy
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
   private var postgresPort = System.getenv("POSTGRES_PORT") ?: "5433"

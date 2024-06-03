@@ -20,8 +20,7 @@ class ApplicationsTransformer(
   private val assessmentsTransformer: AssessmentsTransformer,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult):
-    Cas2Application {
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
@@ -50,8 +49,8 @@ class ApplicationsTransformer(
         id = jpaSummary.getId(),
         createdByUserId = jpaSummary.getCreatedByUserId(),
         createdByUserName = jpaSummary.getCreatedByUserName(),
-        createdAt = jpaSummary.getCreatedAt().toInstant(),
-        submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
+        createdAt = jpaSummary.getCreatedAt(),
+        submittedAt = jpaSummary.getSubmittedAt(),
         status = getStatusFromSummary(jpaSummary),
         latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
         type = "CAS2",

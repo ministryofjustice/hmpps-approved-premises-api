@@ -43,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -84,8 +83,8 @@ class ApplicationServiceTest {
         override fun getNomsNumber() = randomStringMultiCaseWithNumbers(6)
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedByUserName() = "first last"
-        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-        override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+        override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+        override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:30+01:00")
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
         override fun getLatestStatusUpdateLabel(): String? = null
         override fun getLatestStatusUpdateStatusId(): UUID? = null
@@ -131,8 +130,8 @@ class ApplicationServiceTest {
       override fun getNomsNumber() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
       override fun getCreatedByUserName() = "first last"
-      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:30+01:00")
       override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
       override fun getLatestStatusUpdateLabel(): String? = null
       override fun getLatestStatusUpdateStatusId(): UUID? = null

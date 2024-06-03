@@ -48,7 +48,7 @@ class BookingSearchService(
     }
     val findBookings = bookingRepository.findBookings(
       serviceName.value,
-      status,
+      status?.toString(),
       probationRegionId,
       crn,
       buildPage(sortOrder, sortField, page, pageSize),
@@ -98,7 +98,7 @@ class BookingSearchService(
           rs.getBookingStatus(),
           rs.getBookingStartDate(),
           rs.getBookingEndDate(),
-          OffsetDateTime.ofInstant(rs.getBookingCreatedAt().toInstant(), ZoneOffset.UTC),
+          OffsetDateTime.ofInstant(rs.getBookingCreatedAt(), ZoneOffset.UTC),
           rs.getPremisesId(),
           rs.getPremisesName(),
           rs.getPremisesAddressLine1(),

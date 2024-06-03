@@ -8,10 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
@@ -29,8 +29,8 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
 
   @Test
   fun `Duplicate application and adds note`() {
-    `Given a User` { applicant, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { applicant, _ ->
+      givenAnOffender { offenderDetails, _ ->
 
         val sourceApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
@@ -47,14 +47,14 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           withReleaseType("licence")
         }
 
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+        apDeliusContextMockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1"),
           ),
         )
 
-        APOASysContext_mockSuccessfulNeedsDetailsCall(
+        apOASysContextMockSuccessfulNeedsDetailsCall(
           offenderDetails.otherIds.crn,
           NeedsDetailsFactory().produce(),
         )

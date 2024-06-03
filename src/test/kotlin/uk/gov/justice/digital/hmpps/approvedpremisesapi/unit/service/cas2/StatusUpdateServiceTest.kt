@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import software.amazon.awssdk.services.sns.model.NotFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
@@ -206,21 +206,21 @@ class StatusUpdateServiceTest {
                 it.data.eventDetails.applicationId == applicationId &&
                 it.data.eventDetails.applicationUrl == "http://example.com/application-status-updated/#eventId" &&
                 it.data.eventDetails.updatedBy == ExternalUser(
-                username = "JOHN_SMITH_NACRO",
-                name = "John Smith",
-                email = "john@nacro.example.com",
-                origin = "NACRO",
-              ) &&
+                  username = "JOHN_SMITH_NACRO",
+                  name = "John Smith",
+                  email = "john@nacro.example.com",
+                  origin = "NACRO",
+                ) &&
                 it.data.eventDetails.personReference == PersonReference(
-                crn = "CRN123",
-                noms = "NOMSABC",
-              ) &&
+                  crn = "CRN123",
+                  noms = "NOMSABC",
+                ) &&
                 it.data.eventDetails.newStatus == Cas2Status(
-                name = "moreInfoRequested",
-                label = "More information requested",
-                description = "The prison offender manager (POM) must provide information requested for the application to progress.",
-                statusDetails = emptyList(),
-              )
+                  name = "moreInfoRequested",
+                  label = "More information requested",
+                  description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+                  statusDetails = emptyList(),
+                )
             },
           )
         }
@@ -355,23 +355,23 @@ class StatusUpdateServiceTest {
                   it.data.eventDetails.applicationId == applicationId &&
                   it.data.eventDetails.applicationUrl == "http://example.com/application-status-updated/#eventId" &&
                   it.data.eventDetails.updatedBy == ExternalUser(
-                  username = "JOHN_SMITH_NACRO",
-                  name = "John Smith",
-                  email = "john@nacro.example.com",
-                  origin = "NACRO",
-                ) &&
+                    username = "JOHN_SMITH_NACRO",
+                    name = "John Smith",
+                    email = "john@nacro.example.com",
+                    origin = "NACRO",
+                  ) &&
                   it.data.eventDetails.personReference == PersonReference(
-                  crn = "CRN123",
-                  noms = "NOMSABC",
-                ) &&
+                    crn = "CRN123",
+                    noms = "NOMSABC",
+                  ) &&
                   it.data.eventDetails.newStatus == Cas2Status(
-                  name = "offerDeclined",
-                  label = "Offer declined or withdrawn",
-                  description = "The accommodation offered has been declined or withdrawn.",
-                  statusDetails = listOf(
-                    Cas2StatusDetail("exampleStatusDetail", ""),
-                  ),
-                )
+                    name = "offerDeclined",
+                    label = "Offer declined or withdrawn",
+                    description = "The accommodation offered has been declined or withdrawn.",
+                    statusDetails = listOf(
+                      Cas2StatusDetail("exampleStatusDetail", ""),
+                    ),
+                  )
               },
             )
           }
@@ -398,7 +398,9 @@ class StatusUpdateServiceTest {
               RuntimeException(
                 "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
                   "Unable to send email when updating status of Application ${submittedApplicationWithNoReferrerEmail.id}",
-                NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
+                NotFoundException.builder()
+                  .message("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}")
+                  .build(),
               ),
             )
           } returns SentryId.EMPTY_ID
@@ -507,21 +509,21 @@ class StatusUpdateServiceTest {
                 it.data.eventDetails.applicationId == applicationId &&
                 it.data.eventDetails.applicationUrl == "http://example.com/application-status-updated/#eventId" &&
                 it.data.eventDetails.updatedBy == ExternalUser(
-                username = "JOHN_SMITH_NACRO",
-                name = "John Smith",
-                email = "john@nacro.example.com",
-                origin = "NACRO",
-              ) &&
+                  username = "JOHN_SMITH_NACRO",
+                  name = "John Smith",
+                  email = "john@nacro.example.com",
+                  origin = "NACRO",
+                ) &&
                 it.data.eventDetails.personReference == PersonReference(
-                crn = "CRN123",
-                noms = "NOMSABC",
-              ) &&
+                  crn = "CRN123",
+                  noms = "NOMSABC",
+                ) &&
                 it.data.eventDetails.newStatus == Cas2Status(
-                name = "moreInfoRequested",
-                label = "More information requested",
-                description = "The prison offender manager (POM) must provide information requested for the application to progress.",
-                statusDetails = emptyList(),
-              )
+                  name = "moreInfoRequested",
+                  label = "More information requested",
+                  description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+                  statusDetails = emptyList(),
+                )
             },
           )
         }
@@ -657,23 +659,23 @@ class StatusUpdateServiceTest {
                   it.data.eventDetails.applicationId == applicationId &&
                   it.data.eventDetails.applicationUrl == "http://example.com/application-status-updated/#eventId" &&
                   it.data.eventDetails.updatedBy == ExternalUser(
-                  username = "JOHN_SMITH_NACRO",
-                  name = "John Smith",
-                  email = "john@nacro.example.com",
-                  origin = "NACRO",
-                ) &&
+                    username = "JOHN_SMITH_NACRO",
+                    name = "John Smith",
+                    email = "john@nacro.example.com",
+                    origin = "NACRO",
+                  ) &&
                   it.data.eventDetails.personReference == PersonReference(
-                  crn = "CRN123",
-                  noms = "NOMSABC",
-                ) &&
+                    crn = "CRN123",
+                    noms = "NOMSABC",
+                  ) &&
                   it.data.eventDetails.newStatus == Cas2Status(
-                  name = "offerDeclined",
-                  label = "Offer declined or withdrawn",
-                  description = "The accommodation offered has been declined or withdrawn.",
-                  statusDetails = listOf(
-                    Cas2StatusDetail("exampleStatusDetail", ""),
-                  ),
-                )
+                    name = "offerDeclined",
+                    label = "Offer declined or withdrawn",
+                    description = "The accommodation offered has been declined or withdrawn.",
+                    statusDetails = listOf(
+                      Cas2StatusDetail("exampleStatusDetail", ""),
+                    ),
+                  )
               },
             )
           }
@@ -703,7 +705,9 @@ class StatusUpdateServiceTest {
               RuntimeException(
                 "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
                   "Unable to send email when updating status of Application ${submittedApplicationWithNoReferrerEmail.id}",
-                NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
+                NotFoundException.builder()
+                  .message("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}")
+                  .build(),
               ),
             )
           } returns SentryId.EMPTY_ID

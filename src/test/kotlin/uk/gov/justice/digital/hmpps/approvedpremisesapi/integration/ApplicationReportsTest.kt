@@ -41,11 +41,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -131,12 +131,12 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
     referrerTeam = StaffUserTeamMembershipFactory().produce()
     referrerProbationArea = "Referrer probation area"
 
-    referrerDetails = `Given a User`(staffUserDetailsConfigBlock = {
+    referrerDetails = givenAUser(staffUserDetailsConfigBlock = {
       withTeams(
         listOf(
           referrerTeam,
@@ -145,14 +145,14 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       withProbationAreaDescription(
         referrerProbationArea,
       )
-    },)
-    assessorDetails = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), staffUserDetailsConfigBlock = {
+    })
+    assessorDetails = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR), staffUserDetailsConfigBlock = {
       withProbationAreaCode("N03")
-    },)
-    managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
-    workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
-    matcherDetails = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))
-    appealManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
+    })
+    managerDetails = givenAUser(roles = listOf(UserRole.CAS1_MANAGER))
+    workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+    matcherDetails = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
+    appealManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -206,7 +206,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns 403 Forbidden if user does not have all regions access`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       webTestClient.get()
         .uri("/reports/applications?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -219,7 +219,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns 400 if month is provided and not within 1-12`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/applications?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -234,7 +234,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with correct applications`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       webTestClient.get()
         .uri("/reports/applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -266,7 +266,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get referrals report returns OK with correct applications`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       webTestClient.get()
         .uri("/reports/referrals?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -431,11 +431,11 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
-    val (offenderDetails, _) = `Given an Offender`(
+    val (offenderDetails, _) = givenAnOffender(
       offenderDetailsConfigBlock = { withCrn(crn) },
     )
 
-    CommunityAPI_mockSuccessfulRegistrationsCall(
+    communityApiMockSuccessfulRegistrationsCall(
       offenderDetails.otherIds.crn,
       Registrations(
         registrations = listOf(
@@ -449,7 +449,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       ),
     )
 
-    APDeliusContext_mockSuccessfulCaseDetailCall(
+    apDeliusContextMockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,
       CaseDetailFactory()
         .from(offenderDetails.asCaseDetail())
@@ -476,7 +476,9 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
                 "reason" to "theReasonForShortNoticeReason",
                 "other" to "theReasonForShortNoticeOther",
               )
-            } else { null },
+            } else {
+              null
+            },
           ).toMap(),
       )
 
@@ -543,7 +545,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity, shortNotice: Boolean = false): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     assessment.data = if (shortNotice) {
@@ -597,7 +599,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
 
     assessment.data = "{}"
     assessment.allocatedToUser = assessorEntity
@@ -659,7 +661,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
     val (_, jwt) = workflowManagerDetails
-    val (assigneeUser, _) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR))
+    val (assigneeUser, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
 
     val existingAssessment = application.getLatestAssessment()!!
 
@@ -750,7 +752,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     val (_, jwt) = appealManagerDetails
 
     webTestClient.post()
-      .uri("/applications/${assessment.application.id}/appeals/")
+      .uri("/applications/${assessment.application.id}/appeals")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewAppeal(
@@ -771,7 +773,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     val (_, jwt) = appealManagerDetails
 
     webTestClient.post()
-      .uri("/applications/${assessment.application.id}/appeals/")
+      .uri("/applications/${assessment.application.id}/appeals")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewAppeal(

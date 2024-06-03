@@ -184,9 +184,9 @@ class Cas1PlacementRequestDomainEventServiceTest {
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.matchRequestId == placementRequest.id &&
               data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
+                crn = application.crn,
+                noms = application.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.withdrawnBy == withdrawnBy
             data.withdrawalReason == "DUPLICATE_PLACEMENT_REQUEST" &&

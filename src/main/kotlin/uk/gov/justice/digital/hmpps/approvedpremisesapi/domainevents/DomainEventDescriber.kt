@@ -17,7 +17,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import javax.xml.datatype.DatatypeConstants.DAYS
 
 @SuppressWarnings("TooManyFunctions")
 @Component
@@ -148,7 +147,9 @@ class DomainEventDescriber(
       "A request for placement was withdrawn" +
         if (dates.isNotEmpty()) {
           " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
-        } else { "" } +
+        } else {
+          ""
+        } +
         ". The reason was: '$reasonDescription'"
     }
   }

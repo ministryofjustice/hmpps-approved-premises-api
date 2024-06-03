@@ -19,11 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
@@ -76,15 +76,15 @@ class BookingTest : IntegrationTestBase() {
     fun `Get a booking returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
       role: UserRole,
     ) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -128,8 +128,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking belonging to another premises returns not found`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
-        `Given an Offender`(
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+        givenAnOffender(
           offenderDetailsConfigBlock = {
             withNomsNumber(null)
           },
@@ -140,7 +140,7 @@ class BookingTest : IntegrationTestBase() {
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -165,15 +165,15 @@ class BookingTest : IntegrationTestBase() {
     fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
       role: UserRole,
     ) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -204,14 +204,14 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -241,8 +241,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for an Approved Premises returns OK with the correct body when the NOMS number is null`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
-        `Given an Offender`(
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+        givenAnOffender(
           offenderDetailsConfigBlock = {
             withNomsNumber(null)
           },
@@ -253,7 +253,7 @@ class BookingTest : IntegrationTestBase() {
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -285,8 +285,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
@@ -331,8 +331,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for a Temporary Accommodation Premises not in the user's region returns 403 Forbidden`() {
-      `Given a User` { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
@@ -400,7 +400,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
@@ -420,8 +420,8 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Get all Bookings returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -430,7 +430,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
@@ -488,7 +488,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings returns OK with correct body when person details for a booking could not be found`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -497,7 +497,7 @@ class BookingTest : IntegrationTestBase() {
       }
 
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
@@ -529,8 +529,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings returns OK with correct body when inmate details for a booking could not be found`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
-      `Given an Offender`(mockServerErrorForPrisonApi = true) { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+      givenAnOffender(mockServerErrorForPrisonApi = true) { offenderDetails, inmateDetails ->
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -540,7 +540,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -577,8 +577,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -661,9 +661,9 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create Approved Premises Booking returns OK with correct body emits domain event and sends emails`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
-        `Given a User` { applicant, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
+        givenAUser { applicant, _ ->
+          givenAnOffender { offenderDetails, _ ->
             val premises = approvedPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
               withYieldedProbationRegion {
@@ -746,8 +746,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create Approved Premises Booking returns OK with correct body when NOMS number is null`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
-        `Given an Offender`(
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+        givenAnOffender(
           offenderDetailsConfigBlock = {
             withNomsNumber(null)
           },
@@ -814,8 +814,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -855,7 +855,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -898,8 +898,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is before the arrival date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -943,7 +943,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -972,8 +972,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is exactly on the arrival date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -1017,7 +1017,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1046,8 +1046,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is before departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -1091,7 +1091,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1120,8 +1120,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK response when bed archived date is exactly on departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -1165,7 +1165,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1208,8 +1208,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK response when bed archived date is in future compare the departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -1253,7 +1253,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1296,8 +1296,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when overlapping booking is a non-arrival`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1336,7 +1336,7 @@ class BookingTest : IntegrationTestBase() {
           withAssessmentSchema(assessmentSchema)
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         val conflictingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1396,8 +1396,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when assessment ID is null`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1415,7 +1415,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1458,8 +1458,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when NOMS number is null`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-      `Given an Offender`(
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },
@@ -1481,7 +1481,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1522,8 +1522,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 400 when bed does not exist on the premises`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1531,7 +1531,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1557,8 +1557,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking returns 400 when the departure date is before the arrival date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1576,7 +1576,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1602,8 +1602,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed overlaps`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1630,7 +1630,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1658,8 +1658,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed has a turnaround that overlaps with the desired dates`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1694,7 +1694,7 @@ class BookingTest : IntegrationTestBase() {
 
         existingBooking.turnarounds += existingTurnarounds
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1722,8 +1722,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1756,7 +1756,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
         }.toMutableList()
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1797,8 +1797,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1824,7 +1824,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1852,8 +1852,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps with the turnaround time`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1880,7 +1880,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1909,8 +1909,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1943,7 +1943,7 @@ class BookingTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1984,8 +1984,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2046,8 +2046,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when another booking for the same bed overlaps with the arrival and expected departure dates`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2083,7 +2083,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
@@ -2111,8 +2111,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when a lost bed for the same bed overlaps with the arrival and expected departure dates`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2176,9 +2176,9 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -2231,9 +2231,9 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when over-booking`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -2293,9 +2293,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when a bed is not present`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -2343,10 +2343,10 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival updates arrival and departure date for an Approved Premises booking`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withQCode("QCODE")
@@ -2409,8 +2409,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2472,8 +2472,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival and departure date for a Temporary Accommodation booking and emit arrival domain event for new arrival`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2542,8 +2542,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival updates arrival for a Temporary Accommodation booking with existing arrival and updated domain event send`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2614,8 +2614,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Arrival for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2669,9 +2669,9 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Departure on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -2725,10 +2725,10 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure updates departure date for an Approved Premises booking`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withQCode("QCODE")
@@ -2801,9 +2801,9 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Departure on Approved Premises Booking when a departure already exists returns 400 Bad Request`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -2860,8 +2860,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withYieldedPremises {
@@ -2921,8 +2921,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure on Temporary Accommodation Booking when a departure already exists returns OK with correct body`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withYieldedPremises {
@@ -2983,8 +2983,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Departure for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withYieldedPremises {
@@ -3052,9 +3052,9 @@ class BookingTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
-        `Given a User`(roles = listOf(role)) { applicant, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        givenAUser(roles = listOf(role)) { applicant, _ ->
+          givenAnOffender { offenderDetails, _ ->
             val apArea = apAreaEntityFactory.produceAndPersist {
               withEmailAddress("apAreaEmail@test.com")
             }
@@ -3104,9 +3104,9 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles WORKFLOW_MANAGER`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { applicant, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser { applicant, _ ->
+          givenAnOffender { offenderDetails, _ ->
             val apArea = apAreaEntityFactory.produceAndPersist {
               withEmailAddress("apAreaEmail@test.com")
             }
@@ -3136,7 +3136,7 @@ class BookingTest : IntegrationTestBase() {
               withServiceScope("*")
             }
 
-            APDeliusContext_mockSuccessfulGetReferralDetails(
+            apDeliusContextMockSuccessfulGetReferralDetails(
               crn = booking.crn,
               bookingId = booking.id.toString(),
               arrivedAt = null,
@@ -3179,7 +3179,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on CAS3 Booking on a premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3217,7 +3217,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on CAS3 Booking when a cancellation already exists returns OK with correct body and send cancelled-updated event`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3271,7 +3271,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on CAS3 Booking when a no cancellation exists returns OK with correct body and send cancelled event`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3319,8 +3319,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body and move assessment to ready-to-place state`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
@@ -3396,8 +3396,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking returns OK and make move assessment to ready-to-place state when accept assessment fail with forbidden exception`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
@@ -3487,8 +3487,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3524,7 +3524,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3549,8 +3549,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3594,7 +3594,7 @@ class BookingTest : IntegrationTestBase() {
 
         booking.turnarounds += turnarounds
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3619,8 +3619,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the new departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3655,7 +3655,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3680,8 +3680,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3724,7 +3724,7 @@ class BookingTest : IntegrationTestBase() {
 
         booking.turnarounds += turnarounds
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3752,9 +3752,9 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3786,9 +3786,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Extension on Approved Premises Booking returns OK when a booking has no bed`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3811,9 +3811,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3854,9 +3854,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3899,9 +3899,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3943,7 +3943,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Extension on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withDepartureDate(LocalDate.parse("2022-08-20"))
         withYieldedPremises {
@@ -3992,7 +3992,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create AP Date Change without MANAGER or MATCHER role returns 403`() {
-    `Given a User`(roles = emptyList()) { userEntity, jwt ->
+    givenAUser(roles = emptyList()) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -4033,9 +4033,9 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create AP Date Change with MANAGER or MATCHER role returns 200, persists date change`(role: UserRole) {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -4103,7 +4103,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           approvedPremisesEntityFactory.produceAndPersist {
@@ -4137,7 +4137,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking returns OK with correct body`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -4171,8 +4171,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking returns OK with correct body and close associated referral`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -4236,9 +4236,9 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -4279,7 +4279,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -4312,8 +4312,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Successfully send updated departure date events when create date-change is invoked for existing booking with departure detail`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val now = LocalDateTime.now()
         val notes = "Some notes about the departure"
         val premises = createTemporaryAccommodationPremises(userEntity)
@@ -4352,8 +4352,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Successfully send departed events when create departure is invoked for existing booking without departure detail`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val now = LocalDateTime.now()
         val notes = "Some notes about the departure"
         val premises = createTemporaryAccommodationPremises(userEntity)
@@ -4419,7 +4419,7 @@ class BookingTest : IntegrationTestBase() {
   )
 
   private fun createTemporaryAccommodationPremises(userEntity: UserEntity) =
-    temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+    temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
@@ -4430,7 +4430,7 @@ class BookingTest : IntegrationTestBase() {
     premises: TemporaryAccommodationPremisesEntity,
     offenderDetails: OffenderDetailSummary,
   ): BookingEntity {
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {
@@ -4446,7 +4446,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   private fun creatingNewExtensionReturnsCorrectly(booking: BookingEntity, jwt: String, newDate: String) {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")

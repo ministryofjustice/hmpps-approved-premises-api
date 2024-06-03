@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
@@ -53,7 +54,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         cancellationReason = booking.cancellationReason,
         startDate = booking.startDate,
         endDate = booking.endDate,
-        actualEndDate = booking.actualEndDate?.toLocalDateTime()?.toLocalDate(),
+        actualEndDate = booking.actualEndDate?.atZone(ZoneOffset.UTC)?.toLocalDate(),
         currentNightsStayed = if (booking.actualEndDate != null) {
           null
         } else {
@@ -62,7 +63,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         actualNightsStayed = if (booking.startDate == null) {
           null
         } else {
-          booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.toLocalDateTime()).toInt() }
+          booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.atZone(ZoneOffset.UTC)).toInt() }
         },
         accommodationOutcome = booking.accommodationOutcome,
       ),
@@ -73,7 +74,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
     true
   }
 
-  private fun<V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
+  private fun <V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
     return when (this) {
       is PersonSummaryInfoResult.Success.Full -> value(this.summary)
       else -> null

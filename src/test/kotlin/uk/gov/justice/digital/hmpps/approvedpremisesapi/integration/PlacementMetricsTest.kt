@@ -11,8 +11,8 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelinessEntityRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -37,7 +37,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
 
   @Test
   fun `It returns 403 Forbidden if a user does not have the correct role`() {
-    `Given a User` { user, jwt ->
+    givenAUser { user, jwt ->
       webTestClient.get()
         .uri("/reports/placement-metrics?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -51,7 +51,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(ServiceName::class, names = ["approvedPremises"], mode = EnumSource.Mode.EXCLUDE)
   fun `Get daily metrics report for returns not allowed if the service is not Approved Premises`(serviceName: ServiceName) {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/placement-metrics?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -64,7 +64,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
 
   @Test
   fun `it returns placement metrics`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
       }
@@ -111,7 +111,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
 
       val timelinessEntities = applicationTimelinessEntityRepository.findAllForMonthAndYear(month, year)
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
       val expectedDataFrame = PlacementMetricsReportGenerator(timelinessEntities, realWorkingDayService)
         .createReport(TierCategory.entries, PlacementMetricsReportProperties(month, year))

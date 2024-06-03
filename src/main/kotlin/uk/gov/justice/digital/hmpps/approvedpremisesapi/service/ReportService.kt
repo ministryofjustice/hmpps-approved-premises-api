@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Pla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import java.io.OutputStream
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.temporal.TemporalAdjusters
 
 @Service
@@ -75,7 +76,7 @@ class ReportService(
   fun createDailyMetricsReport(properties: DailyMetricReportProperties, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
-        it.getCreatedAt().toLocalDateTime().toLocalDate(),
+        it.getCreatedAt().atZone(ZoneOffset.UTC).toLocalDate(),
         it.getCreatedByUserId(),
       )
     }

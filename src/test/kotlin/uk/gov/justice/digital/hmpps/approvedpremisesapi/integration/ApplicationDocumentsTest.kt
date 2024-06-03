@@ -7,10 +7,10 @@ import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulDocumentDownloadCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
@@ -29,8 +29,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application documents returns 200`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -62,7 +62,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -82,8 +82,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application documents for Temporary Accommodation returns 200`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -116,7 +116,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -137,8 +137,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Download document returns 404 when not found in documents meta data`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -170,7 +170,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/documents/${application.crn}/ace0baaf-d7ee-4ea0-9010-da588387c880")
@@ -184,8 +184,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Download document returns 200 with correct body and headers`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -217,11 +217,11 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         val fileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
 
-        CommunityAPI_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
+        communityApiMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
 
         val result = webTestClient.get()
           .uri("/documents/${application.crn}/457af8a5-82b1-449a-ad03-032b39435865")

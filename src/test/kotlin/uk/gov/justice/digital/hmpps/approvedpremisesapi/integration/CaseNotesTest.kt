@@ -4,9 +4,9 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CaseNotesAPI_mockSuccessfulCaseNotesCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.caseNotesAPIMockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
@@ -56,7 +56,7 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val crn = "CRN345"
 
       wiremockServer.stubFor(
@@ -80,8 +80,8 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes for a CRN without a NOMS number returns 404`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender`(
+    givenAUser { _, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },
@@ -99,8 +99,8 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val caseNotes = listOf(
           CaseNoteFactory().produce(),
           CaseNoteFactory().produce(),
@@ -108,7 +108,7 @@ class CaseNotesTest : IntegrationTestBase() {
           CaseNoteFactory().produce(),
         )
 
-        CaseNotesAPI_mockSuccessfulCaseNotesCall(
+        caseNotesAPIMockSuccessfulCaseNotesCall(
           0,
           LocalDate.now().minusDays(365),
           offenderDetails.otherIds.nomsNumber!!,

@@ -1,5 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -10,22 +21,11 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
-import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.EntityListeners
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OneToOne
-import javax.persistence.Table
-import javax.persistence.Version
 
 @Repository
 interface BookingRepository : JpaRepository<BookingEntity, UUID> {
@@ -101,14 +101,14 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findByBedIds(bedIds: List<UUID>): List<BookingEntity>
 
   /*
-  * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
-  *
-  * AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
+   * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
+   *
+   * AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
 
-  * * https://hibernate.atlassian.net/browse/HHH-4795
+   * * https://hibernate.atlassian.net/browse/HHH-4795
 
-  * * https://stackoverflow.com/questions/52839973/hql-to-check-for-null-in-onetoone-relation
-  * */
+   * * https://stackoverflow.com/questions/52839973/hql-to-check-for-null-in-onetoone-relation
+   * */
   @Query(
     "SELECT b FROM BookingEntity b " +
       "WHERE b.bed.id = :bedId " +
@@ -167,7 +167,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
       WHERE b.service = :serviceName
-      AND (:status is null or b.status = :#{#status?.toString()})
+      AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
       AND (:crn is null OR b.crn = :crn)
     """,
@@ -175,7 +175,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   )
   fun findBookings(
     serviceName: String,
-    status: BookingStatus?,
+    status: String?,
     probationRegionId: UUID?,
     crn: String?,
     pageable: Pageable?,
@@ -318,7 +318,7 @@ interface BookingSearchResult {
   fun getBookingId(): UUID
   fun getBookingStartDate(): LocalDate
   fun getBookingEndDate(): LocalDate
-  fun getBookingCreatedAt(): Timestamp
+  fun getBookingCreatedAt(): Instant
   fun getPremisesId(): UUID
   fun getPremisesName(): String
   fun getPremisesAddressLine1(): String

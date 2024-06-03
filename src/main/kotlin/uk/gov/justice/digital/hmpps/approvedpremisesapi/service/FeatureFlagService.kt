@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import io.flipt.api.FliptClient
 import io.flipt.api.evaluation.models.EvaluationRequest
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 interface FeatureFlagService {
   fun getBooleanFlag(key: String, default: Boolean): Boolean

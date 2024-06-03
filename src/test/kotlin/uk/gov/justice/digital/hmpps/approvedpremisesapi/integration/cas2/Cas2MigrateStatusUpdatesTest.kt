@@ -7,8 +7,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.MigrationJobTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -30,8 +30,8 @@ class Cas2MigrateStatusUpdatesTest : MigrationJobTestBase() {
 
   @Test
   fun `Should add assessments for CAS2 Status Updates that don't have one and returns 202 response`() {
-    `Given a CAS2 POM User` { userEntity, _ ->
-      `Given a CAS2 Assessor` { assessor, _ ->
+    givenACas2PomUser { userEntity, _ ->
+      givenACas2Assessor { assessor, _ ->
         val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
           withId(UUID.randomUUID())

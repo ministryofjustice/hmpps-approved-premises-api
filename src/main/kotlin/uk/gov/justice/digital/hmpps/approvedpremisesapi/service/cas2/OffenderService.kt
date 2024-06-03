@@ -168,16 +168,14 @@ class OffenderService(
     )
   }
 
-  fun getInfoForPersonOrThrowInternalServerError(crn: String):
-    PersonInfoResult.Success {
+  fun getInfoForPersonOrThrowInternalServerError(crn: String): PersonInfoResult.Success {
     val personInfo = getInfoForPerson(crn)
     if (personInfo is PersonInfoResult.NotFound) throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
 
     return personInfo as PersonInfoResult.Success
   }
 
-  fun getFullInfoForPersonOrThrow(crn: String):
-    PersonInfoResult.Success.Full {
+  fun getFullInfoForPersonOrThrow(crn: String): PersonInfoResult.Success.Full {
     val personInfo = getInfoForPerson(crn)
     when (personInfo) {
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")

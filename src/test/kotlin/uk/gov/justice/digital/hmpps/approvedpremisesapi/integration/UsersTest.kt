@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
@@ -290,7 +290,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users")
           .header("Authorization", "Bearer $jwt")
@@ -304,7 +304,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `GET to users with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users")
           .header("Authorization", "Bearer $jwt")
@@ -317,7 +317,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/users")
           .header("Authorization", "Bearer $jwt")
@@ -331,10 +331,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns full list ordered by name`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
-          `Given a User` { userWithNoRole, _ ->
-            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          givenAUser { userWithNoRole, _ ->
+            givenAUser(roles = listOf(role)) { requestUser, jwt ->
               webTestClient.get()
                 .uri("/users")
                 .header("Authorization", "Bearer $jwt")
@@ -363,10 +363,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns list filtered by region`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
-          `Given a User` { userWithNoRole, _ ->
-            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          givenAUser { userWithNoRole, _ ->
+            givenAUser(roles = listOf(role)) { requestUser, jwt ->
               val apArea = apAreaEntityFactory.produceAndPersist()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
                 withApArea(apArea)
@@ -410,10 +410,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns list filtered by user's AP area`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
-          `Given a User` { userWithNoRole, _ ->
-            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          givenAUser { userWithNoRole, _ ->
+            givenAUser(roles = listOf(role)) { requestUser, jwt ->
               val apArea = apAreaEntityFactory.produceAndPersist()
 
               val probationRegionApArea = apAreaEntityFactory.produceAndPersist()
@@ -459,10 +459,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns paginated list ordered by name`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
-          `Given a User` { userWithNoRole, _ ->
-            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          givenAUser { userWithNoRole, _ ->
+            givenAUser(roles = listOf(role)) { requestUser, jwt ->
               webTestClient.get()
                 .uri("/users?page=1")
                 .header("Authorization", "Bearer $jwt")
@@ -491,10 +491,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by roles`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER)) { manager, _ ->
-          `Given a User` { _, _ ->
-            `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_MATCHER)) { matcher, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER)) { manager, _ ->
+          givenAUser { _, _ ->
+            givenAUser(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
                 .uri("/users?roles=matcher,manager")
                 .header("Authorization", "Bearer $jwt")
@@ -519,10 +519,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by qualifications`(role: UserRole) {
-      `Given a User`(qualifications = listOf(UserQualification.WOMENS)) { womensUser, _ ->
-        `Given a User`(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
-          `Given a User` { _, _ ->
-            `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(qualifications = listOf(UserQualification.WOMENS)) { womensUser, _ ->
+        givenAUser(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
+          givenAUser { _, _ ->
+            givenAUser(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
                 .uri("/users?qualifications=womens")
                 .header("Authorization", "Bearer $jwt")
@@ -549,17 +549,17 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by role and qualifications`(
       role: UserRole,
     ) {
-      `Given a User`(
+      givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = listOf(UserQualification.WOMENS),
       ) { womensAssessor1, _ ->
-        `Given a User`(
+        givenAUser(
           roles = listOf(UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.WOMENS),
         ) { womensAssessor2, _ ->
-          `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
-            `Given a User` { _, _ ->
-              `Given a User`(roles = listOf(role)) { _, jwt ->
+          givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
+            givenAUser { _, _ ->
+              givenAUser(roles = listOf(role)) { _, jwt ->
                 webTestClient.get()
                   .uri("/users?roles=assessor&qualifications=womens")
                   .header("Authorization", "Bearer $jwt")
@@ -588,7 +588,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to user search with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/search?name=som")
           .header("Authorization", "Bearer $jwt")
@@ -602,7 +602,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `GET to user search with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/search?name=some")
           .header("Authorization", "Bearer $jwt")
@@ -615,7 +615,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `GET to user search with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/users/search?name=some")
           .header("Authorization", "Bearer $jwt")
@@ -629,17 +629,17 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to search users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns a user`(role: UserRole) {
-      `Given a User`(
+      givenAUser(
         staffUserDetailsConfigBlock = {
           withForenames("SomeUserName")
         },
       ) { user, _ ->
-        `Given a User`(
+        givenAUser(
           staffUserDetailsConfigBlock = {
             withForenames("fail")
           },
         ) { _, _ ->
-          `Given a User`(roles = listOf(role)) { _, jwt ->
+          givenAUser(roles = listOf(role)) { _, jwt ->
             webTestClient.get()
               .uri("/users/search?name=some")
               .header("Authorization", "Bearer $jwt")
@@ -666,7 +666,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to user search delius username with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=som")
           .header("Authorization", "Bearer $jwt")
@@ -680,7 +680,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `GET to user search delius username with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=some")
           .header("Authorization", "Bearer $jwt")
@@ -693,7 +693,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `GET to user search delius username with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=some")
           .header("Authorization", "Bearer $jwt")
@@ -707,17 +707,17 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to search users delius username with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns a user`(role: UserRole) {
-      `Given a User`(
+      givenAUser(
         staffUserDetailsConfigBlock = {
           withUsername("SOME")
         },
       ) { user, _ ->
-        `Given a User`(
+        givenAUser(
           staffUserDetailsConfigBlock = {
             withForenames("fail")
           },
         ) { _, _ ->
-          `Given a User`(roles = listOf(role)) { _, jwt ->
+          givenAUser(roles = listOf(role)) { _, jwt ->
             webTestClient.get()
               .uri("/users/delius?name=some")
               .header("Authorization", "Bearer $jwt")
@@ -741,7 +741,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     fun `GET to search for a delius username that does not exist with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns 404`(
       role: UserRole,
     ) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=noone")
           .header("Authorization", "Bearer $jwt")
@@ -763,7 +763,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `Updating a user update with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.put()
           .uri("/users/$id")
@@ -785,7 +785,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `Updating a user update with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.put()
           .uri("/users/$id")
@@ -806,7 +806,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Updating a users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      givenAUser { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.put()
           .uri("/users/$id")
@@ -847,7 +847,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
       }
 
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.put()
           .uri("/users/$id")
           .header("Authorization", "Bearer $jwt")
@@ -880,7 +880,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `Deleting a user with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/users/$id")
@@ -896,7 +896,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `Deleting a user with a role other than ROLE_ADMIN or WORKFLOW_MANAGER is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/users/$id")
@@ -911,7 +911,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Deleting a user with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      givenAUser { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/users/$id")
@@ -926,7 +926,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `Deleting a user with no X-Service-Name is forbidden`() {
-      `Given a User`() { _, jwt ->
+      givenAUser { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/users/$id")
@@ -969,7 +969,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.delete()
           .uri("/users/$id")
           .header("Authorization", "Bearer $jwt")

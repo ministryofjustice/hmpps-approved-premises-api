@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.sentry.Sentry
+import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.sns.model.NotFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
@@ -37,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.transaction.Transactional
 
 object Constants {
   const val HDC_APPLICATION_TYPE = "Home Detention Curfew (HDC)"
@@ -262,7 +262,7 @@ class StatusUpdateService(
       Sentry.captureException(
         RuntimeException(
           "Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}",
-          NotFoundException("Email not found for User ${application.createdByUser.id}"),
+          NotFoundException.builder().message("Email not found for User ${application.createdByUser.id}").build(),
         ),
       )
     }

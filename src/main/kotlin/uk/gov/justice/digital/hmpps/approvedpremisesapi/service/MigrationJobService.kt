@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import io.sentry.Sentry
+import jakarta.persistence.EntityManager
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
@@ -37,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.TaskDueMigrati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
-import javax.persistence.EntityManager
 
 @Service
 class MigrationJobService(

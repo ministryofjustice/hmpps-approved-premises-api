@@ -12,12 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Pla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
-import java.sql.Timestamp
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class PlacementMetricsReportGeneratorTest {
   private val mockWorkingDayService = mockk<WorkingDayService>()
@@ -137,8 +137,12 @@ class PlacementMetricsReportGeneratorTest {
   private fun createTimelinessEntity(tier: String, applicationSubmittedAt: LocalDateTime?, bookingMadeAt: LocalDateTime?, overallTimeliness: Int?, placementMatchingTimeliness: Int?) =
     ApplicationTimelinessEntityFactory()
       .withTier(tier)
-      .withApplicationSubmittedAt(if (applicationSubmittedAt != null) { Timestamp.valueOf(applicationSubmittedAt) } else { null })
-      .withBookingMadeAt(if (bookingMadeAt != null) { Timestamp.valueOf(bookingMadeAt) } else { null })
+      .withApplicationSubmittedAt(
+        applicationSubmittedAt?.atZone(ZoneOffset.UTC)?.toInstant(),
+      )
+      .withBookingMadeAt(
+        bookingMadeAt?.atZone(ZoneOffset.UTC)?.toInstant(),
+      )
       .withOverallTimeliness(overallTimeliness)
       .withPlacementMatchingTimeliness(placementMatchingTimeliness)
       .produce()

@@ -1,5 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.DiscriminatorColumn
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.Inheritance
+import jakarta.persistence.InheritanceType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.PrimaryKeyJoinColumn
+import jakarta.persistence.Table
 import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -8,21 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import java.time.LocalDate
 import java.util.UUID
-import javax.persistence.DiscriminatorColumn
-import javax.persistence.DiscriminatorValue
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.Inheritance
-import javax.persistence.InheritanceType
-import javax.persistence.JoinColumn
-import javax.persistence.JoinTable
-import javax.persistence.ManyToMany
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.PrimaryKeyJoinColumn
-import javax.persistence.Table
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
@@ -114,7 +114,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query("SELECT p FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByName(name: String, type: Class<T>): PremisesEntity?
 
-  @Query("SELECT p FROM PremisesEntity p WHERE ap_code = :apCode AND TYPE(p) = :type")
+  @Query("SELECT p FROM ApprovedPremisesEntity p WHERE apCode = :apCode AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByApCode(apCode: String, type: Class<T>): PremisesEntity?
 
   @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
@@ -203,6 +203,7 @@ abstract class PremisesEntity(
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises")
 @PrimaryKeyJoinColumn(name = "premises_id")
+@Suppress("LongParameterList")
 class ApprovedPremisesEntity(
   id: UUID,
   name: String,
@@ -223,7 +224,8 @@ class ApprovedPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
-  var point: Point?, // TODO: Make not-null once Premises have had point added in all environments
+  // TODO: Make not-null once Premises have had point added in all environments
+  var point: Point?,
 ) : PremisesEntity(
   id,
   name,

@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderSearchNomsRequest
 
-fun IntegrationTestBase.ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall(nomsNumber: String, response: List<ProbationOffenderDetail?>) =
+fun IntegrationTestBase.probationOffenderSearchApiMockSuccessfulOffenderSearchCall(nomsNumber: String, response: List<ProbationOffenderDetail?>) =
   mockSuccessfulPostCallWithJsonResponse(
     url = "/search",
     requestBody = WireMock.equalToJson(
@@ -18,19 +18,19 @@ fun IntegrationTestBase.ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchC
     responseBody = response,
   )
 
-fun IntegrationTestBase.ProbationOffenderSearchAPI_mockForbiddenOffenderSearchCall() =
+fun IntegrationTestBase.probationOffenderSearchApiMockForbiddenOffenderSearchCall() =
   mockUnsuccessfulPostCall(
     url = "/search",
     responseStatus = 403,
   )
 
-fun IntegrationTestBase.ProbationOffenderSearchAPI_mockServerErrorSearchCall() =
+fun IntegrationTestBase.probationOffenderSearchApiMockServerErrorSearchCall() =
   mockUnsuccessfulPostCall(
     url = "/search",
     responseStatus = 500,
   )
 
-fun IntegrationTestBase.ProbationOffenderSearchAPI_mockNotFoundSearchCall() =
+fun IntegrationTestBase.probationOffenderSearchApiMockNotFoundSearchCall() =
   mockUnsuccessfulPostCall(
     url = "/search",
     responseStatus = 404,

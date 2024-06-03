@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Placemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import java.time.ZoneOffset
 
 class PlacementMetricsReportGenerator(
   applicationRows: List<ApplicationTimelinessEntity>,
@@ -18,8 +19,8 @@ class PlacementMetricsReportGenerator(
       ApplicationTimelinessDto(
         id = it.getId(),
         tier = it.getTier(),
-        applicationSubmittedAt = it.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
-        bookingMadeAt = it.getBookingMadeAt()?.toLocalDateTime()?.toLocalDate(),
+        applicationSubmittedAt = it.getApplicationSubmittedAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
+        bookingMadeAt = it.getBookingMadeAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
         overallTimeliness = it.getOverallTimeliness(),
         placementMatchingTimeliness = it.getPlacementMatchingTimeliness(),
         overallTimelinessInWorkingDays = null,

@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class SeedUsersTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a non existent user logs an error`() {
-    CommunityAPI_mockNotFoundOffenderDetailsCall("INVALID-USER")
+    communityApiMockNotFoundOffenderDetailsCall("INVALID-USER")
 
     withCsv(
       "invalid-user",
@@ -56,7 +56,7 @@ class SeedUsersTest : SeedTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
@@ -320,7 +320,7 @@ class SeedUsersTest : SeedTestBase() {
     )
 
     seedInfos.forEach {
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+      communityApiMockSuccessfulStaffUserDetailsCall(
         it.staffUserDetails,
       )
     }
@@ -401,7 +401,7 @@ class SeedUsersTest : SeedTestBase() {
     )
 
     seedInfos.forEach {
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+      communityApiMockSuccessfulStaffUserDetailsCall(
         it.staffUserDetails,
       )
     }

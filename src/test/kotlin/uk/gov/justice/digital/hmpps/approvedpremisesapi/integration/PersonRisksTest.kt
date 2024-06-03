@@ -14,13 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoshRatingsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.HMPPSTier_mockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
@@ -76,10 +76,10 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting risks for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      communityApiMockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -93,9 +93,9 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting risks for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        APOASysContext_mockSuccessfulRoshRatingsCall(
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
+        apOASysContextMockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {
             withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
@@ -107,7 +107,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
           }.produce(),
         )
 
-        HMPPSTier_mockSuccessfulTierCall(
+        hmppsTierMockSuccessfulTierCall(
           offenderDetails.otherIds.crn,
           Tier(
             tierScore = "M2",
@@ -116,7 +116,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
           ),
         )
 
-        CommunityAPI_mockSuccessfulRegistrationsCall(
+        communityApiMockSuccessfulRegistrationsCall(
           offenderDetails.otherIds.crn,
           Registrations(
             registrations = listOf(
@@ -133,7 +133,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
           ),
         )
 
-        APDeliusContext_mockSuccessfulCaseDetailCall(
+        apDeliusContextMockSuccessfulCaseDetailCall(
           offenderDetails.otherIds.crn,
           CaseDetailFactory()
             .from(offenderDetails.asCaseDetail())

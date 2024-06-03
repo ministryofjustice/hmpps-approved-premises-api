@@ -1,5 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
 import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
@@ -9,18 +18,10 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.LockModeType
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OneToOne
-import javax.persistence.Table
 
 const val SUBMITTED_APPLICATION_SUMMARY_FIELDS =
   """
@@ -72,8 +73,7 @@ ORDER BY createdAt DESC
     """,
     nativeQuery = true,
   )
-  fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
+  fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -99,8 +99,7 @@ ORDER BY createdAt DESC
     """,
     nativeQuery = true,
   )
-  fun findAllCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
+  fun findAllCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -128,8 +127,7 @@ ORDER BY createdAt DESC
     """,
     nativeQuery = true,
   )
-  fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
+  fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -157,8 +155,7 @@ ORDER BY createdAt DESC
     """,
     nativeQuery = true,
   )
-  fun findSubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
+  fun findSubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -172,8 +169,7 @@ ORDER BY createdAt DESC
 """,
     nativeQuery = true,
   )
-  fun findUnsubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
+  fun findUnsubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -187,8 +183,7 @@ ORDER BY createdAt DESC
 """,
     nativeQuery = true,
   )
-  fun findUnsubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):
-    Page<Cas2ApplicationSummary>
+  fun findUnsubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -221,7 +216,7 @@ WHERE a.submitted_at IS NOT NULL
   fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
 
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
-  fun findAllByCreatedByUser_Id(id: UUID): List<Cas2ApplicationEntity>
+  fun findAllByCreatedByUserId(id: UUID): List<Cas2ApplicationEntity>
 
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -229,7 +224,7 @@ WHERE a.submitted_at IS NOT NULL
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
-      "AND a.id NOT IN (SELECT application FROM Cas2AssessmentEntity)",
+      "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
 }
@@ -246,10 +241,10 @@ data class Cas2ApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: NomisUserEntity,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var data: String?,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var document: String?,
 
   @ManyToOne
@@ -289,8 +284,8 @@ interface AppSummary {
   fun getNomsNumber(): String
   fun getCreatedByUserId(): UUID
   fun getCreatedByUserName(): String
-  fun getCreatedAt(): Timestamp
-  fun getSubmittedAt(): Timestamp?
+  fun getCreatedAt(): Instant
+  fun getSubmittedAt(): Instant?
   fun getHdcEligibilityDate(): LocalDate?
   fun getLatestStatusUpdateLabel(): String?
   fun getLatestStatusUpdateStatusId(): UUID?

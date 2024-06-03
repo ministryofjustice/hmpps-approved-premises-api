@@ -6,8 +6,8 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 
@@ -74,7 +74,7 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REFERRER)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userOne.deliusUsername)
         .withTeams(
@@ -91,7 +91,7 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withTeams(
@@ -108,7 +108,7 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userThree.deliusUsername)
         .withTeams(
@@ -125,7 +125,7 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userFour.deliusUsername)
         .withTeams(
@@ -196,9 +196,9 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REFERRER)
     }
 
-    CommunityAPI_mockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
+    communityApiMockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withTeams(
@@ -264,7 +264,7 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REPORTER)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userOne.deliusUsername)
         .withTeams(
@@ -281,7 +281,7 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    communityApiMockSuccessfulStaffUserDetailsCall(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withTeams(

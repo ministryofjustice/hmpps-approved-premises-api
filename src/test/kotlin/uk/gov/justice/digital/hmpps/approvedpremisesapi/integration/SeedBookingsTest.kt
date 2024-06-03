@@ -11,11 +11,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises Bed`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -31,7 +31,7 @@ class SeedBookingsTest : SeedTestBase() {
   fun `Creating a Booking for a CRN which does not have a NOMS number in Community API logs an error`() {
     val crn = "CRN123"
 
-    CommunityAPI_mockSuccessfulOffenderDetailsCall(
+    communityApiMockSuccessfulOffenderDetailsCall(
       OffenderDetailsSummaryFactory()
         .withCrn(crn)
         .withNomsNumber(null)
@@ -63,7 +63,7 @@ class SeedBookingsTest : SeedTestBase() {
   fun `Creating a Booking for a non-existent Bed logs an error`() {
     val crn = "CRN123"
 
-    CommunityAPI_mockSuccessfulOffenderDetailsCall(
+    communityApiMockSuccessfulOffenderDetailsCall(
       OffenderDetailsSummaryFactory()
         .withCrn(crn)
         .produce(),
@@ -93,17 +93,17 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Key Worker logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
       val keyWorkerUsername = "USERNAME"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
       )
 
-      CommunityAPI_mockNotFoundStaffUserDetailsCall(keyWorkerUsername)
+      communityApiMockNotFoundStaffUserDetailsCall(keyWorkerUsername)
 
       withCsv(
         "non-existent-key-worker",
@@ -131,10 +131,10 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Departure Reason logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
@@ -166,10 +166,10 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Departure Destination Provider logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
@@ -201,10 +201,10 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Move on Category logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
@@ -236,10 +236,10 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Destination Provider logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
@@ -271,10 +271,10 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Non Arrival Reason logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
@@ -306,10 +306,10 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Booking with a non-existent Cancellation Reason logs an error`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val crn = "CRN123"
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         OffenderDetailsSummaryFactory()
           .withCrn(crn)
           .produce(),
@@ -341,7 +341,7 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a future Booking (without Arrival, Departure, NonArrival or Cancellation) succeeds`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val bookingToCreateRow = ApprovedPremisesBookingSeedCsvRowFactory()
         .withBedCode(bed.code!!)
         .produce()
@@ -355,7 +355,7 @@ class SeedBookingsTest : SeedTestBase() {
         .withCrn(bookingToCreateRow.crn)
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         offenderDetails,
       )
 
@@ -385,15 +385,15 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating an ongoing Booking (with Arrival without Departure, NonArrival or Cancellation) succeeds`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val keyWorkerStaffUserDetails = StaffUserDetailsFactory()
         .produce()
       val staffMember = ContextStaffMemberFactory()
         .withStaffCode(keyWorkerStaffUserDetails.staffCode)
         .produce()
 
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(keyWorkerStaffUserDetails)
-      APDeliusContext_mockSuccessfulStaffMembersCall(staffMember, (bed.room.premises as ApprovedPremisesEntity).qCode)
+      communityApiMockSuccessfulStaffUserDetailsCall(keyWorkerStaffUserDetails)
+      apDeliusContextMockSuccessfulStaffMembersCall(staffMember, (bed.room.premises as ApprovedPremisesEntity).qCode)
 
       val bookingToCreateRow = ApprovedPremisesBookingSeedCsvRowFactory()
         .withBedCode(bed.code!!)
@@ -413,7 +413,7 @@ class SeedBookingsTest : SeedTestBase() {
         .withCrn(bookingToCreateRow.crn)
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         offenderDetails,
       )
 
@@ -446,15 +446,15 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a departed Booking (with Arrival, Departure without NonArrival or Cancellation) succeeds`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val keyWorkerStaffUserDetails = StaffUserDetailsFactory()
         .produce()
       val staffMember = ContextStaffMemberFactory()
         .withStaffCode(keyWorkerStaffUserDetails.staffCode)
         .produce()
 
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(keyWorkerStaffUserDetails)
-      APDeliusContext_mockSuccessfulStaffMembersCall(staffMember, (bed.room.premises as ApprovedPremisesEntity).qCode)
+      communityApiMockSuccessfulStaffUserDetailsCall(keyWorkerStaffUserDetails)
+      apDeliusContextMockSuccessfulStaffMembersCall(staffMember, (bed.room.premises as ApprovedPremisesEntity).qCode)
 
       val departureReason = departureReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.approvedPremises.value)
@@ -487,7 +487,7 @@ class SeedBookingsTest : SeedTestBase() {
         .withCrn(bookingToCreateRow.crn)
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         offenderDetails,
       )
 
@@ -526,7 +526,7 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Non Arrived Booking (with NonArrival without Arrival, Departure, Cancellation) succeeds`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
 
       val bookingToCreateRow = ApprovedPremisesBookingSeedCsvRowFactory()
@@ -547,7 +547,7 @@ class SeedBookingsTest : SeedTestBase() {
         .withCrn(bookingToCreateRow.crn)
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         offenderDetails,
       )
 
@@ -580,7 +580,7 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Creating a Cancelled Booking (with Cancellation without Arrival, Non Arrival, Departure) succeeds`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.approvedPremises.value)
       }
@@ -603,7 +603,7 @@ class SeedBookingsTest : SeedTestBase() {
         .withCrn(bookingToCreateRow.crn)
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         offenderDetails,
       )
 
@@ -637,7 +637,7 @@ class SeedBookingsTest : SeedTestBase() {
 
   @Test
   fun `Including a row for an existing Booking does nothing`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val existingBookingRow = ApprovedPremisesBookingSeedCsvRowFactory()
         .withBedCode(bed.code!!)
         .produce()
@@ -657,7 +657,7 @@ class SeedBookingsTest : SeedTestBase() {
         .withCrn(existingBookingRow.crn)
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(
+      communityApiMockSuccessfulOffenderDetailsCall(
         offenderDetails,
       )
 

@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
@@ -21,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import java.sql.Timestamp
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -43,9 +41,9 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
 
   @BeforeAll
   fun setup() {
-    `Given a User` { userEntity, _ ->
-      `Given an Offender` { offenderDetails, _ ->
-        `Given an Offender` { offenderDetails2, _ ->
+    givenAUser { userEntity, _ ->
+      givenAnOffender { offenderDetails, _ ->
+        givenAnOffender { offenderDetails2, _ ->
           crn1 = offenderDetails.otherIds.crn
           crn2 = offenderDetails2.otherIds.crn
 
@@ -459,13 +457,13 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
       (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
       (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
       (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
-      (this.getArrivalDate() == Timestamp(Instant.parse(applicationEntity.arrivalDate.toString()).toEpochMilli())) &&
+      (this.getArrivalDate() == applicationEntity.arrivalDate?.toInstant()) &&
       (this.getRiskRatings() == objectMapper.writeValueAsString(applicationEntity.riskRatings)) &&
       (this.getId() == applicationEntity.id) &&
       (this.getCrn() == applicationEntity.crn) &&
       (this.getCreatedByUserId() == applicationEntity.createdByUser.id) &&
-      (this.getCreatedAt() == Timestamp(Instant.parse(applicationEntity.createdAt.toString()).toEpochMilli())) &&
-      (this.getSubmittedAt() == Timestamp(Instant.parse(applicationEntity.submittedAt.toString()).toEpochMilli())) &&
+      (this.getCreatedAt() == applicationEntity.createdAt.toInstant()) &&
+      (this.getSubmittedAt() == applicationEntity.submittedAt?.toInstant()) &&
       this.getTier() == applicationEntity.riskRatings?.tier?.value.toString() &&
       this.getStatus() == applicationEntity.status.toString() &&
       this.getIsWithdrawn() == applicationEntity.isWithdrawn &&

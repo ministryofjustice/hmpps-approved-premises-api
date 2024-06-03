@@ -28,10 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
@@ -61,7 +61,7 @@ class PremisesTest {
 
     @BeforeAll
     fun setup() {
-      val userArgs = `Given a User`()
+      val userArgs = givenAUser()
 
       user = userArgs.first
       jwt = userArgs.second
@@ -444,7 +444,8 @@ class PremisesTest {
             town = "Somewhere",
             postcode = "AB456CD",
             notes = "some arbitrary notes",
-            localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+            // not in db
+            localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
             status = PropertyStatus.active,
@@ -499,7 +500,8 @@ class PremisesTest {
             postcode = "AB456CD",
             notes = "some arbitrary notes",
             localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-            probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
+            // not in db
+            probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"),
             characteristicIds = mutableListOf(),
             status = PropertyStatus.active,
           ),
@@ -607,7 +609,7 @@ class PremisesTest {
   inner class UpdatePremises : IntegrationTestBase() {
     @Test
     fun `When an Approved Premises is updated then all field data is persisted`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -641,8 +643,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
             ),
@@ -669,7 +673,7 @@ class PremisesTest {
 
     @Test
     fun `When a Temporary Accommodation Premises is updated then all field data is persisted`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
@@ -711,7 +715,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -744,7 +749,7 @@ class PremisesTest {
 
     @Test
     fun `When a Temporary Accommodation Premises is updated with online status then respective bedspace enddate is not updated`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
@@ -786,7 +791,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.active,
@@ -825,7 +831,7 @@ class PremisesTest {
 
     @Test
     fun `When a Temporary Accommodation Premises is updated with a legacy PDU name then all field data is persisted`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
@@ -852,7 +858,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -883,7 +890,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-      `Given a User` { user, jwt ->
+      givenAUser { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
@@ -916,8 +923,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               probationDeliveryUnitId = probationDeliveryUnit.id,
@@ -931,7 +940,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a premises with an invalid local authority area id returns 400`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -951,7 +960,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+              // not in db
+              localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
               probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.active,
@@ -968,7 +978,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update an Approved Premises with no local authority area id returns 400`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1003,7 +1013,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a premises with an invalid probation region id returns 400`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1024,7 +1034,8 @@ class PremisesTest {
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-              probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
+              // not in db
+              probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.active,
             ),
@@ -1040,7 +1051,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a Temporary Accommodation Premises without a PDU returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1060,8 +1071,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = null,
@@ -1080,7 +1093,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a Temporary Accommodation Premises with an invalid PDU name returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1100,8 +1113,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = "Non-existent PDU",
@@ -1120,7 +1135,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1140,8 +1155,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = null,
@@ -1160,7 +1177,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update the name of an Approved Premises has no effect`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1179,8 +1196,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               name = "new-premises-name",
@@ -1207,7 +1226,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation premises does not change the name when it's not provided`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
@@ -1235,7 +1254,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -1268,7 +1288,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation premises changes the name when it's provided`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
@@ -1296,7 +1316,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -1363,7 +1384,7 @@ class PremisesTest {
 
     @BeforeAll
     fun setup() {
-      val userArgs = `Given a User`()
+      val userArgs = givenAUser()
 
       user = userArgs.first
       jwt = userArgs.second
@@ -1541,7 +1562,7 @@ class PremisesTest {
 
     @Test
     fun `Get Premises by ID returns OK with correct body`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1568,7 +1589,7 @@ class PremisesTest {
 
     @Test
     fun `Get Premises by ID returns OK with correct body when capacity is used`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1581,7 +1602,7 @@ class PremisesTest {
 
         val keyWorker = ContextStaffMemberFactory().produce()
         premises.forEach {
-          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, it.qCode)
+          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, it.qCode)
         }
 
         bookingEntityFactory.produceAndPersist {
@@ -1626,7 +1647,7 @@ class PremisesTest {
 
     @Test
     fun `Get Temporary Accommodation Premises by ID for a premises not in the user's region returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1648,8 +1669,8 @@ class PremisesTest {
 
     @Test
     fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -1688,7 +1709,7 @@ class PremisesTest {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
         val qCode = "NOTFOUND"
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1721,7 +1742,7 @@ class PremisesTest {
 
     @Test
     fun `Get Premises Staff for Temporary Accommodation Premises returns 501`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withProbationRegion(user.probationRegion)
@@ -1738,7 +1759,7 @@ class PremisesTest {
 
     @Test
     fun `Get Premises Staff for Temporary Accommodation Premises not in the user's region returns 403 Forbidden`() {
-      `Given a User` { user, jwt ->
+      givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1764,7 +1785,7 @@ class PremisesTest {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get Approved Premises Staff for Approved Premises returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
         val qCode = "FOUND"
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1818,7 +1839,7 @@ class PremisesTest {
     @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
     @Disabled
     fun `Get Approved Premises Staff caches response when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
         val qCode = "FOUND"
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1888,7 +1909,7 @@ class PremisesTest {
 
     @BeforeAll
     fun setup() {
-      premises = approvedPremisesEntityFactory.produceAndPersist() {
+      premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -1998,7 +2019,7 @@ class PremisesTest {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER" ])
     fun `Get Premises Summary by ID that does not exist returns 404`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.get()
           .uri("/premises/$id/summary")
@@ -2012,14 +2033,14 @@ class PremisesTest {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
     fun `Get Premises Summary by ID returns OK with correct body`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         bookings.forEach {
-          ApDeliusContext_addCaseSummaryToBulkResponse(
+          apDeliusContextAddCaseSummaryToBulkResponse(
             CaseSummaryFactory()
               .withCrn(it.crn)
               .produce(),
           )
-          ApDeliusContext_addResponseToUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(it.crn)
               .produce(),
@@ -2072,14 +2093,14 @@ class PremisesTest {
 
     @Test
     fun `Get Premises Summary by ID returns the correct capacity data`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         bookings.forEach {
-          ApDeliusContext_addCaseSummaryToBulkResponse(
+          apDeliusContextAddCaseSummaryToBulkResponse(
             CaseSummaryFactory()
               .withCrn(it.crn)
               .produce(),
           )
-          ApDeliusContext_addResponseToUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(it.crn)
               .produce(),
@@ -2140,8 +2161,8 @@ class PremisesTest {
 
     @Test
     fun `Get all Rooms for Premises returns OK with correct body`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -2170,7 +2191,7 @@ class PremisesTest {
 
     @Test
     fun `Get all Rooms for a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2202,8 +2223,8 @@ class PremisesTest {
 
     @Test
     fun `Get all Rooms for Premises returns OK with correct body with end-date`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -2247,7 +2268,7 @@ class PremisesTest {
   inner class CreateRoomForPremises : IntegrationTestBase() {
     @Test
     fun `Create new Room for Premises returns 201 Created with correct body when given valid data`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2286,7 +2307,7 @@ class PremisesTest {
 
     @Test
     fun `When a new room is created with no notes then it defaults to empty`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2314,7 +2335,7 @@ class PremisesTest {
 
     @Test
     fun `Create new Room with end date for temporary accommodation Premises returns 201 Created with correct body when given valid data`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2355,7 +2376,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room without a name returns 400`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2384,7 +2405,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room with an unknown characteristic returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2413,7 +2434,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room with a characteristic of the wrong service scope returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2447,7 +2468,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room with a characteristic of the wrong model scope returns 400`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2481,7 +2502,7 @@ class PremisesTest {
 
     @Test
     fun `Create new Room for Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2520,7 +2541,7 @@ class PremisesTest {
   inner class UpdateRoom : IntegrationTestBase() {
     @Test
     fun `Updating a Room returns OK with correct body when given valid data`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2563,7 +2584,7 @@ class PremisesTest {
 
     @Test
     fun `When a room is updated with no notes then it defaults to empty`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2595,7 +2616,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room that does not exist returns 404`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2626,7 +2647,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with an unknown characteristic returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2659,7 +2680,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with a characteristic of the wrong service scope returns 400`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2697,7 +2718,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with a characteristic of the wrong model scope returns 400`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2735,7 +2756,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Room on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2775,7 +2796,7 @@ class PremisesTest {
 
     @Test
     fun `Trying to update the name of an Approved Premises Room has no effect`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2819,7 +2840,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room does not change the name when it's not provided`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2863,7 +2884,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room changes the name when it's provided`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2907,7 +2928,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedpace end-date when it's provided and no booking exists for the room`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -2957,7 +2978,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking's arrival and departure date overlap with bedspace end-date`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3011,7 +3032,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking starts in the future date compare to bedpace end-date`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3065,7 +3086,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking exists with departure date is equal to bedspace end-date`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3119,7 +3140,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking exists with arrival date is equal to bedspace end-date`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3173,7 +3194,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists but ended before bedspace end-date `() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3231,7 +3252,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when active booking exists for different room`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3298,7 +3319,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists for given bed but its been cancelled`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3362,7 +3383,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists but non-arrival`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3426,7 +3447,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace is not successful when end-date is already exists for the given bed`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3472,7 +3493,7 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedpace end-date is before bed created date is throws bad request error`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3527,7 +3548,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID returns OK with correct body`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3588,7 +3609,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID returns Not Found with correct body when Room does not exist`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3614,7 +3635,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID for a room on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3643,7 +3664,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID for temporary accommodation returns OK with correct body`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3675,7 +3696,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID for temporary accommodation returns OK with correct body with end date`() {
-      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
