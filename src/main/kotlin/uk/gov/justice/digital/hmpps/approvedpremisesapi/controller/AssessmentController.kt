@@ -162,6 +162,7 @@ class AssessmentController(
       document = serializedData,
       placementRequirements = assessmentAcceptance.requirements,
       placementDates = assessmentAcceptance.placementDates,
+      apType = assessmentAcceptance.apType,
       notes = assessmentAcceptance.notes,
     )
 

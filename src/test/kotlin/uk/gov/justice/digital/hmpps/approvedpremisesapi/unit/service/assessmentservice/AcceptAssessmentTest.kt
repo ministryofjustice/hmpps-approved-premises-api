@@ -13,11 +13,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -49,8 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -94,7 +87,7 @@ class AcceptAssessmentTest {
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1PlacementRequestEmailServiceMock = mockk<Cas1PlacementRequestEmailService>()
-  private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
+  private val cas1AssessmentDomainEventServiceMock = mockk<Cas1AssessmentDomainEventService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -115,7 +108,7 @@ class AcceptAssessmentTest {
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
-    cas1AssessmentDomainEventService,
+    cas1AssessmentDomainEventServiceMock,
     cas1PlacementRequestEmailServiceMock,
   )
 
@@ -187,7 +180,7 @@ class AcceptAssessmentTest {
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -206,7 +199,7 @@ class AcceptAssessmentTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -234,7 +227,7 @@ class AcceptAssessmentTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -261,7 +254,7 @@ class AcceptAssessmentTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -292,7 +285,7 @@ class AcceptAssessmentTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -321,7 +314,7 @@ class AcceptAssessmentTest {
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -358,13 +351,13 @@ class AcceptAssessmentTest {
 
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
-
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.Success(placementRequirementEntity)
+
+    every { cas1AssessmentDomainEventServiceMock.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
 
     every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -376,12 +369,13 @@ class AcceptAssessmentTest {
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
 
-    verifyDomainEventSent(offenderDetails, staffUserDetails, assessment)
-
     verify(exactly = 0) {
       placementRequestServiceMock.createPlacementRequest(any(), any(), any(), any(), false, null)
     }
 
+    verify(exactly = 1) {
+      cas1AssessmentDomainEventServiceMock.assessmentAccepted(application, any(), any(), any(), any(), any())
+    }
     verify(exactly = 1) {
       cas1AssessmentEmailServiceMock.assessmentAccepted(application)
     }
@@ -444,9 +438,11 @@ class AcceptAssessmentTest {
 
     every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
 
+    every { cas1AssessmentDomainEventServiceMock.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
+
     every { cas1PlacementRequestEmailServiceMock.placementRequestSubmitted(any()) } just Runs
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, placementDates, notes)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, placementDates, null, notes)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -457,8 +453,6 @@ class AcceptAssessmentTest {
     assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
-
-    verifyDomainEventSent(offenderDetails, staffUserDetails, assessment)
 
     verify(exactly = 1) {
       placementRequestServiceMock.createPlacementRequest(
@@ -473,6 +467,10 @@ class AcceptAssessmentTest {
 
     verify(exactly = 1) {
       cas1AssessmentEmailServiceMock.assessmentAccepted(application)
+    }
+
+    verify(exactly = 1) {
+      cas1AssessmentDomainEventServiceMock.assessmentAccepted(application, any(), any(), any(), any(), any())
     }
 
     verify(exactly = 1) {
@@ -500,7 +498,7 @@ class AcceptAssessmentTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -564,14 +562,14 @@ class AcceptAssessmentTest {
 
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
+    every { cas1AssessmentDomainEventServiceMock.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
     every { userServiceMock.getUserForRequest() } returns user
     every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", null, null, null)
+    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", null, null, null, null)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
@@ -584,45 +582,5 @@ class AcceptAssessmentTest {
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
     assertThat(updatedAssessment.completedAt).isNull()
     assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.READY_TO_PLACE)
-  }
-
-  private fun verifyDomainEventSent(offenderDetails: OffenderDetailSummary, staffUserDetails: StaffUserDetails, assessment: AssessmentEntity) {
-    verify(exactly = 1) {
-      domainEventServiceMock.saveApplicationAssessedDomainEvent(
-        match {
-          val data = it.data.eventDetails
-          val expectedPersonReference = PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          )
-          val expectedAssessor = ApplicationAssessedAssessedBy(
-            staffMember = StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username,
-            ),
-            probationArea = ProbationArea(
-              code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description,
-            ),
-            cru = Cru(
-              name = "South West & South Central",
-            ),
-          )
-
-          it.applicationId == assessment.application.id &&
-            it.crn == assessment.application.crn &&
-            data.applicationId == assessment.application.id &&
-            data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
-            data.personReference == expectedPersonReference &&
-            data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
-            data.assessedBy == expectedAssessor &&
-            data.decision == "ACCEPTED" &&
-            data.decisionRationale == null
-        },
-      )
-    }
   }
 }
