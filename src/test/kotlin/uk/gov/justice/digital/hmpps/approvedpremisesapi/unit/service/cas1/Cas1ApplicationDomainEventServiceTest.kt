@@ -8,12 +8,12 @@ import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -36,9 +36,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Probation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -86,6 +89,8 @@ class Cas1ApplicationDomainEventServiceTest {
     @Test
     fun `applicationSubmitted success`() {
       val situation = SituationOption.bailSentence
+      val reasonForShortNotice = "reason for short notice"
+      val reasonForShortNoticeOther = "reason for short notice other"
 
       val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
@@ -100,6 +105,8 @@ class Cas1ApplicationDomainEventServiceTest {
         situation = situation,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
+        reasonForShortNotice = reasonForShortNotice,
+        reasonForShortNoticeOther = reasonForShortNoticeOther,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -219,7 +226,10 @@ class Cas1ApplicationDomainEventServiceTest {
             ) &&
               data.mappa == risks.mappa.value!!.level &&
               data.sentenceLengthInMonths == null &&
-              data.offenceId == application.offenceId
+              data.offenceId == application.offenceId &&
+              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals(reasonForShortNotice) &&
+              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals(reasonForShortNoticeOther) &&
+              enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType().toString().equals(ApType.normal.value)
           },
         )
       }

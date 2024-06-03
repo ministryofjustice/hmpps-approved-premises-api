@@ -3317,6 +3317,8 @@ components:
           $ref: '#/components/schemas/PlacementRequirements'
         placementDates:
           $ref: '#/components/schemas/PlacementDates'
+        apType:
+          $ref: '#/components/schemas/ApType'
         notes:
           type: string
       required:

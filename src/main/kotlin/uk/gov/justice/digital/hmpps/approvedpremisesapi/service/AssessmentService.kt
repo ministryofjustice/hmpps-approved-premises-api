@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -326,6 +327,7 @@ class AssessmentService(
     document: String?,
     placementRequirements: PlacementRequirements?,
     placementDates: PlacementDates?,
+    apType: ApType?,
     notes: String?,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val acceptedAt = OffsetDateTime.now()
@@ -429,7 +431,7 @@ class AssessmentService(
     }
 
     if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, staffDetails, placementDates)
+      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, staffDetails, placementDates, apType)
       cas1AssessmentEmailService.assessmentAccepted(application)
 
       if (createPlacementRequest) {

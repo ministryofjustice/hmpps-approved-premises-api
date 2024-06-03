@@ -1880,6 +1880,7 @@ class BookingService(
           applicationEntity.document,
           null,
           null,
+          null,
           "Automatically moved to ready-to-place after booking is cancelled",
         ),
       )

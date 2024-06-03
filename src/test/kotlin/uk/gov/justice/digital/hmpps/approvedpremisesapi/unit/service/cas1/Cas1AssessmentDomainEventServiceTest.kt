@@ -7,6 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -36,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -181,7 +184,6 @@ class Cas1AssessmentDomainEventServiceTest {
 
     @Test
     fun `assessmentAccepted raises domain event`() {
-
       val user = UserEntityFactory().withYieldedProbationRegion {
         ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
       }.produce()
@@ -224,11 +226,12 @@ class Cas1AssessmentDomainEventServiceTest {
         expectedArrival = LocalDate.now(),
         duration = 12,
       )
+      val apType = ApType.normal
 
       every { cruService.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
       every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
 
-      service.assessmentAccepted(application, assessment, offenderDetails, staffUserDetails, placementDates)
+      service.assessmentAccepted(application, assessment, offenderDetails, staffUserDetails, placementDates, apType)
 
       verify(exactly = 1) {
         domainEventService.saveApplicationAssessedDomainEvent(
@@ -259,11 +262,12 @@ class Cas1AssessmentDomainEventServiceTest {
               it.crn == assessment.application.crn &&
               data.applicationId == assessment.application.id &&
               data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
-              data.personReference == expectedPersonReference  &&
+              data.personReference == expectedPersonReference &&
               data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
               data.assessedBy == expectedAssessor &&
               data.decision == "ACCEPTED" &&
-              data.decisionRationale == null
+              data.decisionRationale == null &&
+              it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].equals(ApType.normal.value)
           },
         )
       }
