@@ -224,6 +224,223 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /premises/{premisesId}/out-of-service-beds:
+    post:
+      tags:
+        - out-of-service beds
+      summary: Posts an out-of-service bed to a specified approved premises
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the out-of-service bed is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the out-of-service bed
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCas1OutOfServiceBed'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1OutOfServiceBed'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+    get:
+      tags:
+        - out-of-service beds
+      summary: Lists all Out-Of-Service Beds entries for the Premises
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to show out-of-service beds for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1OutOfServiceBed'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}:
+    get:
+      tags:
+        - out-of-service beds
+      summary: Returns a specific out-of-service bed for a premises
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the out-of-service bed is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: outOfServiceBedId
+          in: path
+          description: ID of the out-of-service bed
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1OutOfServiceBed'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises or out-of-service bed ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - out-of-service beds
+      summary: Updates an out-of-service bed for a premises
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the out-of-service bed is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: outOfServiceBedId
+          in: path
+          description: ID of the out-of-service bed
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the out-of-service bed
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdateCas1OutOfServiceBed'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1OutOfServiceBed'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+  /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations:
+    post:
+      tags:
+        - out-of-service beds
+      summary: Posts a cancellation to a specified out-of-service bed
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the cancellation is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: outOfServiceBedId
+          in: path
+          description: ID of the out-of-service bed
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the cancellation
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCas1OutOfServiceBedCancellation'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1OutOfServiceBedCancellation'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or out-of-service bed ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
 components:
   responses:
     401Response:
@@ -4957,3 +5174,130 @@ components:
         - submitted-applications
         - application-status-updates
         - unsubmitted-applications
+    Cas1OutOfServiceBed:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        bedId:
+          type: string
+          format: uuid
+        bedName:
+          type: string
+        roomName:
+          type: string
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        status:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedStatus'
+        cancellation:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Cas1OutOfServiceBedCancellation'
+      required:
+        - id
+        - createdAt
+        - startDate
+        - endDate
+        - bedId
+        - bedName
+        - roomName
+        - reason
+        - status
+    NewCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        bedId:
+          type: string
+          format: uuid
+      required:
+        - startDate
+        - endDate
+        - reason
+        - bedId
+    UpdateCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+      required:
+        - startDate
+        - endDate
+        - reason
+    Cas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - id
+        - createdAt
+    NewCas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        notes:
+          type: string
+    Cas1OutOfServiceBedStatus:
+      type: string
+      enum:
+        - active
+        - cancelled
+    Cas1OutOfServiceBedReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive

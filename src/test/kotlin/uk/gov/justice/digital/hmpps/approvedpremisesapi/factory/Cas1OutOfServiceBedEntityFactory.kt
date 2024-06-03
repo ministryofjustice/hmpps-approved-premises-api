@@ -76,6 +76,7 @@ class Cas1OutOfServiceBedEntityFactory : Factory<Cas1OutOfServiceBedEntity> {
       endDate = this.endDate(),
       referenceNumber = this.referenceNumber(),
       notes = this.notes(),
+      cancellation = null,
     )
   }
 }

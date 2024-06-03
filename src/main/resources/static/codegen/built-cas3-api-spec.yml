@@ -4822,3 +4822,130 @@ components:
         - submitted-applications
         - application-status-updates
         - unsubmitted-applications
+    Cas1OutOfServiceBed:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        bedId:
+          type: string
+          format: uuid
+        bedName:
+          type: string
+        roomName:
+          type: string
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        status:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedStatus'
+        cancellation:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Cas1OutOfServiceBedCancellation'
+      required:
+        - id
+        - createdAt
+        - startDate
+        - endDate
+        - bedId
+        - bedName
+        - roomName
+        - reason
+        - status
+    NewCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        bedId:
+          type: string
+          format: uuid
+      required:
+        - startDate
+        - endDate
+        - reason
+        - bedId
+    UpdateCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+      required:
+        - startDate
+        - endDate
+        - reason
+    Cas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - id
+        - createdAt
+    NewCas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        notes:
+          type: string
+    Cas1OutOfServiceBedStatus:
+      type: string
+      enum:
+        - active
+        - cancelled
+    Cas1OutOfServiceBedReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive

@@ -87,6 +87,18 @@ class UserAccessService(
     else -> false
   }
 
+  /**
+   * Currently delegates to the lost bed logic. May depend on different roles in the future.
+   */
+  fun currentUserCanManagePremisesOutOfServiceBed(premises: PremisesEntity) =
+    userCanManagePremisesOutOfServiceBed(userService.getUserForRequest(), premises)
+
+  /**
+   * Currently delegates to the lost bed logic. May depend on different roles in the future.
+   */
+  fun userCanManagePremisesOutOfServiceBed(user: UserEntity, premises: PremisesEntity) =
+    userCanManagePremisesLostBeds(user, premises)
+
   fun currentUserCanManagePremisesLostBeds(premises: PremisesEntity) =
     userCanManagePremisesLostBeds(userService.getUserForRequest(), premises)
 

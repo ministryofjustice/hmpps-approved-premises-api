@@ -84,6 +84,10 @@ class BedEntityFactory : Factory<BedEntity> {
     this.room = { room }
   }
 
+  fun withRoom(configuration: RoomEntityFactory.() -> Unit) = apply {
+    this.room = { RoomEntityFactory().apply(configuration).produce() }
+  }
+
   fun withYieldedRoom(room: Yielded<RoomEntity>) = apply {
     this.room = room
   }
