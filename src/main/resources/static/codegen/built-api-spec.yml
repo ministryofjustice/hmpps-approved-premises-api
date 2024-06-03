@@ -5168,6 +5168,7 @@ components:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Departure'
+              type: object
             departures:
               description: The full history of the departure
               type: array
@@ -5182,6 +5183,7 @@ components:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Cancellation'
+              type: object
             cancellations:
               description: The full history of the cancellation
               type: array
@@ -5196,6 +5198,7 @@ components:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Turnaround'
+              type: object
             turnarounds:
               description: The full history of turnarounds
               type: array
@@ -6810,7 +6813,6 @@ components:
           CAS2: '#/components/schemas/SubmitCas2Application'
       required:
         - type
-        - translatedDocument
     SubmitApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'

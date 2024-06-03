@@ -71,14 +71,14 @@ abstract class BaseHMPPSClient(
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
       }
 
-      return ClientResult.Success(result.statusCode, deserialized, false)
+      return ClientResult.Success(result.statusCode as HttpStatus, deserialized, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, attempt.get(), method)
       }
 
       if (!exception.statusCode.is2xxSuccessful) {
-        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode as HttpStatus, exception.responseBodyAsString, false)
       } else {
         throw exception
       }
@@ -180,12 +180,18 @@ class CacheKeySet(
   private val key: String,
 ) {
   val metadataKey: String
-    get() { return "$prefix-$cacheName-$key-metadata" }
+    get() {
+      return "$prefix-$cacheName-$key-metadata"
+    }
 
   val dataKey: String
-    get() { return "$prefix-$cacheName-$key-data" }
+    get() {
+      return "$prefix-$cacheName-$key-data"
+    }
 }
 
 enum class PreemptiveCacheEntryStatus {
-  MISS, REQUIRES_REFRESH, EXISTS
+  MISS,
+  REQUIRES_REFRESH,
+  EXISTS,
 }

@@ -6,8 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 
 @Service("Cas2UserAccessService")
 class UserAccessService() {
-  fun userCanViewApplication(user: NomisUserEntity, application: Cas2ApplicationEntity):
-    Boolean {
+  fun userCanViewApplication(user: NomisUserEntity, application: Cas2ApplicationEntity): Boolean {
     return if (user.id == application.createdByUser.id) {
       true
     } else if (application.submittedAt == null) {

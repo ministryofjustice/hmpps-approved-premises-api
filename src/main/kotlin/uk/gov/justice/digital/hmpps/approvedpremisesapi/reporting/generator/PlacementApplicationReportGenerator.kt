@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
+import java.time.ZoneOffset
 
 class PlacementApplicationReportGenerator :
   ReportGenerator<PlacementApplicationEntityReportRow, PlacementApplicationReportRow, PlacementApplicationReportProperties>(PlacementApplicationReportRow::class) {
@@ -17,12 +18,12 @@ class PlacementApplicationReportGenerator :
         placementRequestId = this.getId(),
         crn = this.getCrn(),
         tier = this.getTier(),
-        placementRequestSubmittedAt = this.getPlacementApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
+        placementRequestSubmittedAt = this.getPlacementApplicationSubmittedAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
         requestedArrivalDate = this.getRequestedArrivalDate()?.toLocalDate(),
         requestedDurationDays = this.getRequestedDurationDays(),
         decision = this.getDecision(),
-        decisionMadeAt = this.getDecisionMadeAt()?.toLocalDateTime()?.toLocalDate(),
-        applicationSubmittedAt = this.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
+        decisionMadeAt = this.getDecisionMadeAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
+        applicationSubmittedAt = this.getApplicationSubmittedAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.deriveAssessmentDecision(),

@@ -145,7 +145,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       withProbationAreaDescription(
         referrerProbationArea,
       )
-    },)
+    })
     assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR),
       probationRegion = probationRegionEntityFactory.produceAndPersist {
@@ -458,7 +458,9 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
                 "reason" to "theReasonForShortNoticeReason",
                 "other" to "theReasonForShortNoticeOther",
               )
-            } else { null },
+            } else {
+              null
+            },
           ).toMap(),
       )
 
@@ -525,7 +527,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity, shortNotice: Boolean = false): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     assessment.data = if (shortNotice) {
@@ -579,7 +581,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
 
     assessment.data = "{}"
     assessment.allocatedToUser = assessorEntity

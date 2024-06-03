@@ -47,8 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -370,7 +368,7 @@ class AssessmentTransformerTest {
         type = "temporary-accommodation",
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
-        createdAt = OffsetDateTime.now().toTimestamp(),
+        createdAt = OffsetDateTime.now().toInstant(),
         riskRatings = null,
         arrivalDate = null,
         completed = false,
@@ -388,7 +386,7 @@ class AssessmentTransformerTest {
       apiSummary as TemporaryAccommodationAssessmentSummary
       assertThat(apiSummary.id).isEqualTo(domainSummary.id)
       assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
-      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
+      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
       assertThat(apiSummary.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
       assertThat(apiSummary.decision).isNull()
       assertThat(apiSummary.risks).isNull()
@@ -406,15 +404,15 @@ class AssessmentTransformerTest {
         type = "approved-premises",
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
-        createdAt = OffsetDateTime.now().toTimestamp(),
+        createdAt = OffsetDateTime.now().toInstant(),
         riskRatings = objectMapper.writeValueAsString(personRisks),
-        arrivalDate = OffsetDateTime.now().randomDateTimeBefore().toTimestamp(),
+        arrivalDate = OffsetDateTime.now().randomDateTimeBefore().toInstant(),
         completed = false,
         decision = "ACCEPTED",
         crn = randomStringMultiCaseWithNumbers(6),
         allocated = true,
         status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
-        dueAt = Timestamp.from(Instant.now()),
+        dueAt = Instant.now(),
       )
 
       every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -424,8 +422,8 @@ class AssessmentTransformerTest {
       apiSummary as ApprovedPremisesAssessmentSummary
       assertThat(apiSummary.id).isEqualTo(domainSummary.id)
       assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
-      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt.toInstant())
-      assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate?.toInstant())
+      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
+      assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate)
       assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
       assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
       assertThat(apiSummary.person).isNotNull
@@ -437,14 +435,14 @@ class AssessmentTransformerTest {
     override val type: String,
     override val id: UUID,
     override val applicationId: UUID,
-    override val createdAt: Timestamp,
+    override val createdAt: Instant,
     override val riskRatings: String?,
-    override val arrivalDate: Timestamp?,
+    override val arrivalDate: Instant?,
     override val completed: Boolean,
     override val allocated: Boolean,
     override val decision: String?,
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
-    override val dueAt: Timestamp?,
+    override val dueAt: Instant?,
   ) : DomainAssessmentSummary
 }

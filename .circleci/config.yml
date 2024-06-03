@@ -21,16 +21,16 @@ executors:
   integration-test-gradle:
     resource_class: medium+
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
       - image: "postgis/postgis"
         environment:
           - POSTGRES_USER=integration_test
           - POSTGRES_PASSWORD=integration_test_password
           - POSTGRES_DB=approved_premises_integration_test
-      - image: "bitnami/redis:7.0.11"
+      - image: "bitnami/redis:7.2.5"
         environment:
           - ALLOW_EMPTY_PASSWORD=yes
-      - image: localstack/localstack:1.3.1
+      - image: localstack/localstack:3.4.0
         environment:
           - SERVICES=sns,sqs
           - DEBUG=${DEBUG- }
@@ -41,13 +41,13 @@ executors:
   unit-test-gradle:
     resource_class: medium+
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
 
 jobs:
   generate_trivyignore:
     # Needed to get Trivy to respect the .trivyignore file, as it doesn't use the one that's inside the Docker image.
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     resource_class: small
     steps:
       - checkout
@@ -127,7 +127,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     steps:
       - checkout
       - restore_cache:
@@ -153,7 +153,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     steps:
       - attach_workspace:
           at: ~/
@@ -165,7 +165,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     steps:
       - attach_workspace:
           at: ~/
@@ -212,7 +212,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx1g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
       POSTGRES_PORT: 5432
-      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PORT: 6379
     executor:
       name: integration-test-gradle
     steps:

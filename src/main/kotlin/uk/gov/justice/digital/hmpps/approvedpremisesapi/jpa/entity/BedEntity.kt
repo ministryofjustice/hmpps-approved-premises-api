@@ -1,5 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.ColumnResult
+import jakarta.persistence.ConstructorResult
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.NamedNativeQuery
+import jakarta.persistence.SqlResultSetMapping
+import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -7,15 +16,6 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.ColumnResult
-import javax.persistence.ConstructorResult
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.NamedNativeQuery
-import javax.persistence.SqlResultSetMapping
-import javax.persistence.Table
 
 @Repository
 interface BedRepository : JpaRepository<BedEntity, UUID> {
@@ -38,9 +38,9 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   fun findArchivedBedByBedIdAndDate(bedId: UUID, endDate: LocalDate): BedEntity?
 }
 
-const val bedSummaryQuery =
+const val BED_SUMMARY_QUERY =
   """
-    select cast(b.id as text) as id,
+    select b.id as id,
       cast(b.name as text) as name,
       cast(r.name as text) as roomName,
       r.id as roomId,
@@ -75,7 +75,7 @@ const val bedSummaryQuery =
   name = "BedEntity.findAllBedsForPremises",
   query =
   """
-    $bedSummaryQuery
+    $BED_SUMMARY_QUERY
     where r.premises_id = cast(?1 as UUID) and (b.end_date is null or b.end_date > CURRENT_DATE)
   """,
   resultSetMapping = "DomainBedSummaryMapping",
@@ -84,7 +84,7 @@ const val bedSummaryQuery =
   name = "BedEntity.getDetailById",
   query =
   """
-    $bedSummaryQuery
+    $BED_SUMMARY_QUERY
     where b.id = cast(?1 as UUID)
   """,
   resultSetMapping = "DomainBedSummaryMapping",

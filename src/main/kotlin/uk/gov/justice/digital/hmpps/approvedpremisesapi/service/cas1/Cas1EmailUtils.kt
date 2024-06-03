@@ -6,7 +6,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 fun ApprovedPremisesApplicationEntity.interestedPartiesEmailAddresses(): Set<String> {
   return setOfNotNull(
     createdByUser.email,
-    if (caseManagerIsNotApplicant == true) { caseManagerUserDetails?.email } else { null },
+    if (caseManagerIsNotApplicant == true) {
+      caseManagerUserDetails?.email
+    } else {
+      null
+    },
   )
 }
 
@@ -14,6 +18,10 @@ fun PlacementApplicationEntity.interestedPartiesEmailAddresses(): Set<String> {
   return setOfNotNull(
     application.createdByUser.email,
     createdByUser.email,
-    if (application.caseManagerIsNotApplicant == true) { application.caseManagerUserDetails?.email } else { null },
+    if (application.caseManagerIsNotApplicant == true) {
+      application.caseManagerUserDetails?.email
+    } else {
+      null
+    },
   )
 }

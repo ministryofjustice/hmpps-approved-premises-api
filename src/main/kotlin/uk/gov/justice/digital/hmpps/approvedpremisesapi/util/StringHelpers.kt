@@ -7,7 +7,6 @@ fun String.kebabCaseToPascalCase(): String {
   return replace(pattern) { it.value.last().uppercase() }.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 }
 
-fun String.javaConstantNameToSentence():
-  String = replace("_", " ")
+fun String.javaConstantNameToSentence(): String = replace("_", " ")
   .lowercase()
   .replaceFirstChar { it.uppercase() }

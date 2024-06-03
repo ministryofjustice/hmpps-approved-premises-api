@@ -33,11 +33,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    properties:
-      hibernate:
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
-  redis:
+  data.redis:
     database: 5
     timeout: 60000
     ssl: false
@@ -87,6 +84,12 @@ spring:
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
+  data:
+    redis:
+      database: 5
+      timeout: 60000
+      ssl:
+        enabled: false
 
 springdoc:
   swagger-ui:

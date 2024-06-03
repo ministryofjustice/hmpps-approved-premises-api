@@ -792,23 +792,23 @@ class BookingServiceTest {
             data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.departedAt == dateTime.toInstant() &&
               data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
               data.destination.destinationProvider == DestinationProvider(
-              description = destinationProviderEntity.name,
-              id = destinationProviderEntity.id,
-            ) &&
+                description = destinationProviderEntity.name,
+                id = destinationProviderEntity.id,
+              ) &&
               data.reason == reasonEntity.name
           },
         )
@@ -878,23 +878,23 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.departedAt == dateTime.toInstant() &&
               data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
               data.destination.destinationProvider == DestinationProvider(
-              description = destinationProviderEntity.name,
-              id = destinationProviderEntity.id,
-            ) &&
+                description = destinationProviderEntity.name,
+                id = destinationProviderEntity.id,
+              ) &&
               data.reason == reasonEntity.name
           },
         )
@@ -970,23 +970,23 @@ class BookingServiceTest {
             data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.departedAt == dateTime.toInstant() &&
               data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode &&
               data.destination.destinationProvider == DestinationProvider(
-              description = destinationProviderEntity.name,
-              id = destinationProviderEntity.id,
-            ) &&
+                description = destinationProviderEntity.name,
+                id = destinationProviderEntity.id,
+              ) &&
               data.reason == reasonEntity.name
           },
         )
@@ -1482,17 +1482,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.applicationSubmittedOn == LocalDate.parse("2023-02-15") &&
               data.arrivedAt == arrivalDateTime
           },
@@ -1565,17 +1565,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.applicationSubmittedOn == application.createdAt.toLocalDate() &&
               data.arrivedAt == arrivalDateTime
           },
@@ -1660,17 +1660,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.applicationSubmittedOn == LocalDate.parse("2023-02-15") &&
               data.arrivedAt == arrivalDateTime
           },
@@ -2041,25 +2041,25 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
               data.recordedBy == StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username,
-            ) &&
+                staffCode = staffUserDetails.staffCode,
+                staffIdentifier = staffUserDetails.staffIdentifier,
+                forenames = staffUserDetails.staff.forenames,
+                surname = staffUserDetails.staff.surname,
+                username = staffUserDetails.username,
+              ) &&
               data.reason == reasonEntity.name &&
               data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
           },
@@ -2133,25 +2133,25 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
               data.recordedBy == StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username,
-            ) &&
+                staffCode = staffUserDetails.staffCode,
+                staffIdentifier = staffUserDetails.staffIdentifier,
+                forenames = staffUserDetails.staff.forenames,
+                surname = staffUserDetails.staff.surname,
+                username = staffUserDetails.username,
+              ) &&
               data.reason == reasonEntity.name &&
               data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
           },
@@ -2232,25 +2232,25 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
               data.recordedBy == StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username,
-            ) &&
+                staffCode = staffUserDetails.staffCode,
+                staffIdentifier = staffUserDetails.staffIdentifier,
+                forenames = staffUserDetails.staff.forenames,
+                surname = staffUserDetails.staff.surname,
+                username = staffUserDetails.username,
+              ) &&
               data.reason == reasonEntity.name &&
               data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
           },
@@ -2550,17 +2550,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
+                id = premises.id,
+                name = premises.name,
+                apCode = premises.apCode,
+                legacyApCode = premises.qCode,
+                localAuthorityAreaName = premises.localAuthorityArea!!.name,
+              ) &&
               data.cancelledAt == Instant.parse("2022-08-25T00:00:00.00Z") &&
               data.cancellationReason == reason.name &&
               data.bookingId == bookingEntity.id
@@ -2690,17 +2690,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
+                id = premises.id,
+                name = premises.name,
+                apCode = premises.apCode,
+                legacyApCode = premises.qCode,
+                localAuthorityAreaName = premises.localAuthorityArea!!.name,
+              ) &&
               data.cancelledAt == Instant.parse("2022-08-25T00:00:00.00Z") &&
               data.cancellationReason == reason.name
           },
@@ -3803,17 +3803,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == bookingEntity.arrivalDate &&
               data.departureOn == newDepartureDate
           },
@@ -3878,17 +3878,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == bookingEntity.arrivalDate &&
               data.departureOn == newDepartureDate
           },
@@ -4051,7 +4051,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, any())
     }
     verify(exactly = 0) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(any())
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(any())
     }
   }
 
@@ -4072,7 +4072,7 @@ class BookingServiceTest {
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
-    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+    every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
     every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
     mockkStatic(Sentry::class)
 
@@ -4100,7 +4100,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, assessment.id)
     }
     verify(exactly = 1) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
     verify(exactly = 0) {
       Sentry.captureException(any())
@@ -4118,7 +4118,7 @@ class BookingServiceTest {
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
-    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
+    every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
 
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
@@ -4141,7 +4141,7 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
     verify(exactly = 1) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
     verify(exactly = 0) {
       mockAssessmentService.closeAssessment(user, any())
@@ -4164,7 +4164,7 @@ class BookingServiceTest {
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
-    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+    every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
     every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Unauthorised()
     mockkStatic(Sentry::class)
     every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
@@ -4193,7 +4193,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, assessment.id)
     }
     verify(exactly = 1) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
     verify(exactly = 1) {
       Sentry.captureException(any())
@@ -4235,7 +4235,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, any())
     }
     verify(exactly = 0) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
   }
 
@@ -4523,17 +4523,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
+                id = premises.id,
+                name = premises.name,
+                apCode = premises.apCode,
+                legacyApCode = premises.qCode,
+                localAuthorityAreaName = premises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == arrivalDate
           },
         )
@@ -4586,17 +4586,17 @@ class BookingServiceTest {
               data.applicationId == existingApplication.id &&
               data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == existingApplication.eventNumber &&
               data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
+                id = premises.id,
+                name = premises.name,
+                apCode = premises.apCode,
+                legacyApCode = premises.qCode,
+                localAuthorityAreaName = premises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == arrivalDate
           },
         )
@@ -4649,17 +4649,17 @@ class BookingServiceTest {
               data.applicationId == existingApplication.id &&
               data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == existingApplication.eventNumber &&
               data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
+                id = premises.id,
+                name = premises.name,
+                apCode = premises.apCode,
+                legacyApCode = premises.qCode,
+                localAuthorityAreaName = premises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == arrivalDate
           },
         )
@@ -6731,17 +6731,17 @@ class BookingServiceTest {
               data.applicationId == placementRequest.application.id &&
               data.applicationUrl == "http://frontend/applications/${placementRequest.application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == placementRequest.application.eventNumber &&
               data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
+                id = premises.id,
+                name = premises.name,
+                apCode = premises.apCode,
+                legacyApCode = premises.qCode,
+                localAuthorityAreaName = premises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == arrivalDate &&
               data.applicationSubmittedOn == application.submittedAt!!.toInstant() &&
               data.releaseType == application.releaseType &&
@@ -7537,17 +7537,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == newArrivalDate &&
               data.departureOn == newDepartureDate
           },
@@ -7615,17 +7615,17 @@ class BookingServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
+                crn = offenderDetails.otherIds.crn,
+                noms = offenderDetails.otherIds.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
+                id = approvedPremises.id,
+                name = approvedPremises.name,
+                apCode = approvedPremises.apCode,
+                legacyApCode = approvedPremises.qCode,
+                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+              ) &&
               data.arrivalOn == newArrivalDate &&
               data.departureOn == newDepartureDate
           },

@@ -1,5 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
@@ -11,14 +20,6 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.LockModeType
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OneToOne
-import javax.persistence.Table
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -30,11 +31,11 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
 
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
-  fun findAllByCreatedByUser_Id(id: UUID): List<Cas2ApplicationEntity>
+  fun findAllByCreatedByUserId(id: UUID): List<Cas2ApplicationEntity>
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
-      "AND a.id NOT IN (SELECT application FROM Cas2AssessmentEntity)",
+      "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
 }
@@ -58,10 +59,10 @@ data class Cas2ApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: NomisUserEntity,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var data: String?,
 
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   var document: String?,
 
   @ManyToOne

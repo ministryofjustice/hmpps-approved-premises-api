@@ -429,7 +429,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isCreated
 
-          val appeal = appealTestRepository.findByApplication_Id(application.id)!!
+          val appeal = appealTestRepository.findByApplicationId(application.id)!!
 
           val timelineResult = webTestClient.get()
             .uri("/applications/${application.id}/timeline")
@@ -445,8 +445,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           assertThat(timeline).anyMatch {
             it.type == TimelineEventType.approvedPremisesAssessmentAppealed &&
               it.associatedUrls?.contains(
-              TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
-            ) == true
+                TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
+              ) == true
           }
         }
       }

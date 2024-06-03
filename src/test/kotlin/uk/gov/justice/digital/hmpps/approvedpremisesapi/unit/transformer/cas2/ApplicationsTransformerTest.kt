@@ -151,8 +151,7 @@ class ApplicationsTransformerTest {
   inner class TransformJpaSummaryToSummary {
 
     @Test
-    fun `transforms an in progress CAS2 application correctly`
-    () {
+    fun `transforms an in progress CAS2 application correctly`() {
       val application = Cas2ApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",

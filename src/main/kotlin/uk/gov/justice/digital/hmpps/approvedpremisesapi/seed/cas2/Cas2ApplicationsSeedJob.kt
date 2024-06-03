@@ -184,7 +184,8 @@ data class Cas2ApplicationSeedCsvRow(
   val id: UUID,
   val nomsNumber: String,
   val crn: String,
-  val state: String, // NOT_STARTED | IN-PROGRESS | SUBMITTED | IN_REVIEW
+  // NOT_STARTED | IN-PROGRESS | SUBMITTED | IN_REVIEW
+  val state: String,
   val createdBy: String,
   val createdAt: OffsetDateTime,
   val submittedAt: OffsetDateTime?,

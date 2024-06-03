@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.sns.model.NotFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
@@ -45,8 +45,7 @@ class AssessmentNoteService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("ReturnCount")
-  fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
+  fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -107,7 +106,7 @@ class AssessmentNoteService(
       Sentry.captureException(
         RuntimeException(
           "Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}",
-          NotFoundException("Email not found for User ${application.createdByUser.id}"),
+          NotFoundException.builder().message("Email not found for User ${application.createdByUser.id}").build(),
         ),
       )
     }
@@ -163,8 +162,7 @@ class AssessmentNoteService(
     }
   }
 
-  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity):
-    Boolean {
+  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean {
     return if (user.id == application.createdByUser.id) {
       true
     } else {

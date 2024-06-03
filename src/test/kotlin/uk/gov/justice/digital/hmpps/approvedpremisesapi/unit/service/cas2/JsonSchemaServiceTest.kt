@@ -91,7 +91,7 @@ class JsonSchemaServiceTest {
     val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
     every { mockJsonSchemaRepository.getSchemasForType(Cas2ApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId) } returns
+    every { mockApplicationRepository.findAllByCreatedByUserId(userId) } returns
       applicationEntities
     every { mockApplicationRepository.save(any()) } answers {
       it.invocation.args[0] as

@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.sql.Date
-import java.sql.Timestamp
+import java.time.Instant
 import java.util.UUID
 
 @Repository
@@ -95,7 +95,7 @@ interface ApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
   fun getTier(): String?
-  fun getLastAllocatedToAssessorDate(): Timestamp?
+  fun getLastAllocatedToAssessorDate(): Instant?
   fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?
