@@ -4833,25 +4833,30 @@ components:
         createdAt:
           type: string
           format: date-time
-        startDate:
+        outOfServiceFrom:
           type: string
           format: date
-        endDate:
+        outOfServiceTo:
           type: string
           format: date
-        bedId:
-          type: string
-          format: uuid
-        bedName:
-          type: string
-        roomName:
-          type: string
+        bed:
+          $ref: '#/components/schemas/NamedId'
+        room:
+          $ref: '#/components/schemas/NamedId'
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        apArea:
+          $ref: '#/components/schemas/NamedId'
         reason:
           $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
         referenceNumber:
           type: string
         notes:
           type: string
+        daysLostCount:
+          type: integer
+        temporality:
+          $ref: '#/components/schemas/Temporality'
         status:
           $ref: '#/components/schemas/Cas1OutOfServiceBedStatus'
         cancellation:
@@ -4861,12 +4866,15 @@ components:
       required:
         - id
         - createdAt
-        - startDate
-        - endDate
-        - bedId
-        - bedName
-        - roomName
+        - outOfServiceFrom
+        - outOfServiceTo
+        - bed
+        - room
+        - premises
+        - apArea
         - reason
+        - daysLostCount
+        - temporality
         - status
     NewCas1OutOfServiceBed:
       type: object
@@ -4951,3 +4959,21 @@ components:
         - id
         - name
         - isActive
+    NamedId:
+      type: object
+      description: A generic stub for an object with a name and an ID.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
+    Temporality:
+      type: string
+      enum:
+        - past
+        - current
+        - future
