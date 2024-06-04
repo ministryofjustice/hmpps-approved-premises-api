@@ -21,6 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service
@@ -30,6 +32,10 @@ class ReportsController(
   private val userAccessService: UserAccessService,
   private val userService: UserService,
 ) : ReportsApiDelegate {
+
+  companion object {
+    val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMdd_HHmm")
+  }
 
   override fun reportsBookingsGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
@@ -177,7 +183,7 @@ class ReportsController(
   }
 
   private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType) =
-    "$name-$year-${month.toString().padStart(2, '0')}.${contentType.extension}"
+    "$name-$year-${month.toString().padStart(2, '0')}-${LocalDateTime.now().format(TIMESTAMP_FORMAT)}.${contentType.extension}"
 
   private fun validateParameters(probationRegionId: UUID?, month: Int) {
     when {

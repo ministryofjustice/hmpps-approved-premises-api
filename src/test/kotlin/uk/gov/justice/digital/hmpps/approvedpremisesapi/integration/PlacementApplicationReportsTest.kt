@@ -320,7 +320,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valueEquals("content-disposition", "attachment; filename=\"placement-applications-$year-${month.padStart(2, '0')}.xlsx\"")
+        .expectHeader().valuesMatch(
+          "content-disposition",
+          "attachment; filename=\"placement-applications-$year-${month.padStart(2, '0')}-[0-9_]+.xlsx\"",
+        )
         .expectBody()
         .consumeWith {
           val actualRows = DataFrame
