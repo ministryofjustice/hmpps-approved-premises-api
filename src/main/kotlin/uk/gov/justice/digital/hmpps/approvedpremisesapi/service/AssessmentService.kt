@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -82,6 +83,7 @@ class AssessmentService(
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
+  private val assessmentListener: AssessmentListener,
 ) {
 
   fun getVisibleAssessmentSummariesForUserCAS1(
@@ -224,6 +226,7 @@ class AssessmentService(
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
     assessment.allocatedToUser = allocatedUser
 
+    prePersistAssessment(assessment)
     assessment = assessmentRepository.save(assessment)
 
     if (allocatedUser != null) {
@@ -314,6 +317,7 @@ class AssessmentService(
 
     assessment.data = data
 
+    preUpdateAssessment(assessment)
     val savedAssessment = assessmentRepository.save(assessment)
 
     return AuthorisableActionResult.Success(
@@ -387,6 +391,7 @@ class AssessmentService(
       assessment.completedAt = null
     }
 
+    preUpdateAssessment(assessment)
     val savedAssessment = assessmentRepository.save(assessment)
 
     if (savedAssessment is TemporaryAccommodationAssessmentEntity) {
@@ -513,6 +518,7 @@ class AssessmentService(
       assessment.isWithdrawn = isWithdrawn!!
     }
 
+    preUpdateAssessment(assessment)
     val savedAssessment = assessmentRepository.save(assessment)
 
     if (savedAssessment is TemporaryAccommodationAssessmentEntity) {
@@ -679,6 +685,8 @@ class AssessmentService(
     }
 
     currentAssessment.reallocatedAt = OffsetDateTime.now()
+
+    preUpdateAssessment(currentAssessment)
     assessmentRepository.save(currentAssessment)
 
     val dateTimeNow = OffsetDateTime.now()
@@ -707,6 +715,7 @@ class AssessmentService(
 
     newAssessment.dueAt = taskDeadlineService.getDeadline(newAssessment)
 
+    prePersistAssessment(newAssessment)
     assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
@@ -839,7 +848,10 @@ class AssessmentService(
 
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
     // We need to save the assessment here to update the Application's status
-    assessmentRepository.save(clarificationNoteEntity.assessment)
+
+    val assessmentToUpdate = clarificationNoteEntity.assessment
+    preUpdateAssessment(assessmentToUpdate)
+    assessmentRepository.save(assessmentToUpdate)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedNote),
@@ -876,6 +888,8 @@ class AssessmentService(
       val isPendingAssessment = assessment.isPendingAssessment()
 
       assessment.isWithdrawn = true
+
+      preUpdateAssessment(assessment)
       assessmentRepository.save(assessment)
 
       cas1AssessmentEmailService.assessmentWithdrawn(
@@ -898,5 +912,17 @@ class AssessmentService(
         type = type,
       ),
     )
+  }
+
+  private fun prePersistAssessment(assessment: AssessmentEntity) {
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      assessmentListener.prePersist(assessment)
+    }
+  }
+
+  private fun preUpdateAssessment(assessment: AssessmentEntity) {
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      assessmentListener.preUpdate(assessment)
+    }
   }
 }

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -62,6 +63,13 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
       else -> { }
     }
     withNoticeType(noticeType)
+    withStatus(
+      when (decision) {
+        AssessmentDecision.ACCEPTED -> ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+        AssessmentDecision.REJECTED -> ApprovedPremisesApplicationStatus.REJECTED
+        null -> ApprovedPremisesApplicationStatus.STARTED
+      },
+    )
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

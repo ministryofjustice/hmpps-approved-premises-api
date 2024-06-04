@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -274,7 +273,6 @@ abstract class AssessmentEntity(
   var version: Long = 1,
 )
 
-@EntityListeners(AssessmentListener::class)
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_assessments")

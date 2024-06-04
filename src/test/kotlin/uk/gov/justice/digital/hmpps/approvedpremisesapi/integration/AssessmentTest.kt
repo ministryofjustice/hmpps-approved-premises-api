@@ -2393,6 +2393,7 @@ class AssessmentTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withApplicationSchema(applicationSchema)
+            withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -3023,6 +3024,7 @@ class AssessmentTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
+          withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
         }
 
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

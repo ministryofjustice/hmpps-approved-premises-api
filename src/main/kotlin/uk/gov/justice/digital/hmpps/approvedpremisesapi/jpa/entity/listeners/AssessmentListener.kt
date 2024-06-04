@@ -5,12 +5,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import javax.persistence.PrePersist
-import javax.persistence.PreUpdate
 
 @Component
 class AssessmentListener {
-  @PrePersist
   fun prePersist(assessment: ApprovedPremisesAssessmentEntity) {
     if (assessment.allocatedToUser == null) {
       (assessment.application as ApprovedPremisesApplicationEntity).status =
@@ -21,7 +18,6 @@ class AssessmentListener {
     }
   }
 
-  @PreUpdate
   fun preUpdate(assessment: ApprovedPremisesAssessmentEntity) {
     val application = assessment.application as ApprovedPremisesApplicationEntity
 

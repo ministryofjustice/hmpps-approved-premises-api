@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -88,6 +89,7 @@ class AcceptAssessmentTest {
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1PlacementRequestEmailServiceMock = mockk<Cas1PlacementRequestEmailService>()
   private val cas1AssessmentDomainEventServiceMock = mockk<Cas1AssessmentDomainEventService>()
+  private val assessmentListener = mockk<AssessmentListener>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -110,6 +112,7 @@ class AcceptAssessmentTest {
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventServiceMock,
     cas1PlacementRequestEmailServiceMock,
+    assessmentListener,
   )
 
   lateinit var user: UserEntity
@@ -337,6 +340,7 @@ class AcceptAssessmentTest {
 
     every { jsonSchemaServiceMock.validate(assessmentSchema, "{\"test\": \"data\"}") } returns true
 
+    every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
     val offenderDetails = OffenderDetailsSummaryFactory().produce()
@@ -406,6 +410,7 @@ class AcceptAssessmentTest {
 
     every { jsonSchemaServiceMock.validate(assessmentSchema, "{\"test\": \"data\"}") } returns true
 
+    every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.Success(placementRequirementEntity)
@@ -490,6 +495,7 @@ class AcceptAssessmentTest {
 
     every { jsonSchemaServiceMock.validate(assessmentSchema, "{\"test\": \"data\"}") } returns true
 
+    every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.GeneralValidationError("Couldn't create Placement Requirements")
