@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -16,7 +15,6 @@ import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
-import javax.persistence.EntityListeners
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
@@ -205,7 +203,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun updateBookingAdhocStatus(bookingId: UUID, adhoc: Boolean): Int
 }
 
-@EntityListeners(BookingListener::class)
 @Entity
 @Table(name = "bookings")
 data class BookingEntity(
