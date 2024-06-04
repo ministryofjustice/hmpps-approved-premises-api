@@ -50,7 +50,22 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query(
     """
         SELECT
-          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, CAST(COUNT(b) as int), la.name)
+          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(
+            p.id, 
+            p.name, 
+            p.addressLine1, 
+            p.addressLine2, 
+            p.postcode, 
+            pdu.name, 
+            p.status,
+            CAST(COALESCE((SELECT count(beds.id)
+             FROM TemporaryAccommodationPremisesEntity tap
+             INNER JOIN tap.rooms room 
+             INNER JOIN room.beds beds 
+             WHERE tap.id = p.id AND (beds.endDate IS NULL OR beds.endDate > CURRENT_DATE)
+             GROUP BY tap.id
+            ),0) as int),   
+            la.name)
         FROM
           TemporaryAccommodationPremisesEntity p
           LEFT JOIN p.rooms r 
@@ -58,10 +73,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
           LEFT JOIN p.probationRegion pr
           LEFT JOIN p.probationDeliveryUnit pdu
           LEFT JOIN p.localAuthorityArea la
-        WHERE 
-          pr.id = :regionId
-        AND 
-          (b.endDate IS NULL OR b.endDate > CURRENT_DATE)
+        WHERE pr.id = :regionId
         GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, la.name
       """,
   )

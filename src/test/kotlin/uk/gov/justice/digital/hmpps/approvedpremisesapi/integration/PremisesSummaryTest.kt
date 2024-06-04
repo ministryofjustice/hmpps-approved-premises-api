@@ -68,6 +68,103 @@ class PremisesSummaryTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all CAS3 Premises returns premises with all bedspaces are archived`() {
+    `Given a User` { user, jwt ->
+      val uuidPremises = UUID.randomUUID()
+      val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(user.probationRegion)
+        withId(uuidPremises)
+        withAddressLine1("8 Knox Street")
+        withAddressLine2("Flat 1")
+        withPostcode("W1H 1FY")
+        withStatus(PropertyStatus.archived)
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
+        withService("CAS3")
+      }
+
+      var roomPremises1 = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { expectedCas3Premises }
+      }
+
+      bedEntityFactory.produceAndPersist {
+        withYieldedRoom { roomPremises1 }
+        withEndDate { LocalDate.now() }
+      }
+
+      var roomPremises2 = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { expectedCas3Premises }
+      }
+
+      bedEntityFactory.produceAndPersist {
+        withYieldedRoom { roomPremises2 }
+        withEndDate { LocalDate.parse("2024-01-13") }
+      }
+
+      webTestClient.get()
+        .uri("/premises/summary")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].addressLine1").isEqualTo("8 Knox Street")
+        .jsonPath("$[0].addressLine2").isEqualTo("Flat 1")
+        .jsonPath("$[0].postcode").isEqualTo("W1H 1FY")
+        .jsonPath("$[0].status").isEqualTo("archived")
+        .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
+        .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedCas3Premises.localAuthorityArea!!.name)
+        .jsonPath("$[0].bedCount").isEqualTo(0)
+        .jsonPath("$.length()").isEqualTo(1)
+    }
+  }
+
+  @Test
+  fun `Get all CAS3 Premises returns premises without bedspaces`() {
+    `Given a User` { user, jwt ->
+      val uuidPremises = UUID.randomUUID()
+      val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(user.probationRegion)
+        withId(uuidPremises)
+        withAddressLine1("221 Baker Street")
+        withAddressLine2("221B")
+        withPostcode("NW1 6XE")
+        withStatus(PropertyStatus.active)
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
+        withService("CAS3")
+      }
+
+      webTestClient.get()
+        .uri("/premises/summary")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(uuidPremises.toString())
+        .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+        .jsonPath("$[0].addressLine2").isEqualTo("221B")
+        .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+        .jsonPath("$[0].status").isEqualTo("active")
+        .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
+        .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedCas3Premises.localAuthorityArea!!.name)
+        .jsonPath("$[0].bedCount").isEqualTo(0)
+        .jsonPath("$.length()").isEqualTo(1)
+    }
+  }
+
+  @Test
   fun `Get all CAS3 Premises returns bedspace count as expected when there is an archived bedspace`() {
     `Given a User` { user, jwt ->
       val uuid = UUID.randomUUID()
