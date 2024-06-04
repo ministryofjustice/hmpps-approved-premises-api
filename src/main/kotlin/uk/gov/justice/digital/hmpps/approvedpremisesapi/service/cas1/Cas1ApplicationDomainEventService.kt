@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -43,6 +44,7 @@ class Cas1ApplicationDomainEventService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  private val clock: Clock,
 ) {
 
   @SuppressWarnings("ThrowsCount", "TooGenericExceptionThrown")
@@ -193,7 +195,7 @@ class Cas1ApplicationDomainEventService(
         else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
       },
       targetLocation = submitApplication.targetLocation,
-      submittedAt = Instant.now(),
+      submittedAt = Instant.now(clock),
       submittedBy = getApplicationSubmittedSubmittedBy(staffDetails, caseDetail),
       sentenceLengthInMonths = null,
     )

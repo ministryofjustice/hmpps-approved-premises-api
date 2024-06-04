@@ -18,6 +18,8 @@ spring:
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
+  main:
+    allow-bean-definition-overriding: true
   redis:
     host: localhost
     port: 6377

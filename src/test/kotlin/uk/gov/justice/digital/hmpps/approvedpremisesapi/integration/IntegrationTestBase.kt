@@ -511,6 +511,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var domainEventAsserter: DomainEventAsserter
 
+  @Autowired
+  lateinit var clock: MutableClockConfiguration.MutableClock
+
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>

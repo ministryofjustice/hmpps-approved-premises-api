@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -96,6 +97,7 @@ class ApplicationService(
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val placementApplicationAutomaticRepository: PlacementApplicationAutomaticRepository,
   private val applicationListener: ApplicationListener,
+  private val clock: Clock,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -771,11 +773,13 @@ class ApplicationService(
       }
     }
 
+    val now = OffsetDateTime.now(clock)
+
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
       this.isEmergencyApplication = isEmergencyApplication
       this.apType = apType
-      submittedAt = OffsetDateTime.now()
+      submittedAt = now
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
       targetLocation = submitApplication.targetLocation
