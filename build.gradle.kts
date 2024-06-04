@@ -199,6 +199,7 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("ope
   }
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
+  templateDir.set("$rootDir/openapi")
 }
 
 tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2Namespace") {

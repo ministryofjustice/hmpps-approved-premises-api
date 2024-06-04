@@ -4811,6 +4811,14 @@ components:
           type: string
       required:
         - name
+    Cas1ReportName:
+      type: string
+      enum:
+        - applications
+        - dailyMetrics
+        - lostBeds
+        - placementApplications
+        - placementMatchingOutcomes
     Cas3ReportType:
       type: string
       enum:
