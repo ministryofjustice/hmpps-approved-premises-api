@@ -23,6 +23,8 @@ class AssessmentListener {
 
     if (application.status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION && assessment.decision == null) {
       return
+    } else if (assessment.isWithdrawn) {
+      return
     } else if (assessment.decision == null && assessment.data != null) {
       application.status = ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
     } else if (assessment.decision == AssessmentDecision.ACCEPTED) {
