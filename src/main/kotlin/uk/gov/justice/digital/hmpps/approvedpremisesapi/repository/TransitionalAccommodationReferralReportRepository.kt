@@ -28,7 +28,6 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       taa.duty_to_refer_outcome AS dutyToReferOutcome,
       probation_region.name AS probationRegionName,
       a.decision AS assessmentDecision,
-      a.rejection_rationale AS assessmentRejectionReason,
       rrr.name AS referralRejectionReason,
       a.submitted_at AS assessmentSubmittedDate,
       CAST(b.id AS text) AS bookingId,
@@ -86,7 +85,6 @@ interface TransitionalAccommodationReferralReportData {
   val dutyToReferLocalAuthorityAreaName: String?
   val dutyToReferOutcome: String?
   val assessmentDecision: String?
-  val assessmentRejectionReason: String?
   val referralRejectionReason: String?
   val assessmentSubmittedDate: LocalDate?
   val referralEligibleForCas3: Boolean?
