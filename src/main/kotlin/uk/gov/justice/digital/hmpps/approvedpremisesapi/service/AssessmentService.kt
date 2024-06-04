@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -84,6 +85,7 @@ class AssessmentService(
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val assessmentListener: AssessmentListener,
+  private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
 ) {
 
   fun getVisibleAssessmentSummariesForUserCAS1(
@@ -797,17 +799,17 @@ class AssessmentService(
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
     }
 
-    val clarificationNoteEntity = assessmentClarificationNoteRepository.save(
-      AssessmentClarificationNoteEntity(
-        id = UUID.randomUUID(),
-        assessment = assessment,
-        createdByUser = user,
-        createdAt = OffsetDateTime.now(),
-        query = text,
-        response = null,
-        responseReceivedOn = null,
-      ),
+    val clarificationNoteToSave = AssessmentClarificationNoteEntity(
+      id = UUID.randomUUID(),
+      assessment = assessment,
+      createdByUser = user,
+      createdAt = OffsetDateTime.now(),
+      query = text,
+      response = null,
+      responseReceivedOn = null,
     )
+    prePersistClarificationNote(clarificationNoteToSave)
+    val clarificationNoteEntity = assessmentClarificationNoteRepository.save(clarificationNoteToSave)
 
     cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
 
@@ -846,6 +848,7 @@ class AssessmentService(
     clarificationNoteEntity.response = response
     clarificationNoteEntity.responseReceivedOn = responseReceivedOn
 
+    preUpdateClarificationNote(clarificationNoteEntity)
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
     // We need to save the assessment here to update the Application's status
 
@@ -912,6 +915,14 @@ class AssessmentService(
         type = type,
       ),
     )
+  }
+
+  private fun prePersistClarificationNote(note: AssessmentClarificationNoteEntity) {
+    assessmentClarificationNoteListener.prePersist(note)
+  }
+
+  private fun preUpdateClarificationNote(note: AssessmentClarificationNoteEntity) {
+    assessmentClarificationNoteListener.preUpdate(note)
   }
 
   private fun prePersistAssessment(assessment: AssessmentEntity) {

@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -90,6 +91,7 @@ class AcceptAssessmentTest {
   private val cas1PlacementRequestEmailServiceMock = mockk<Cas1PlacementRequestEmailService>()
   private val cas1AssessmentDomainEventServiceMock = mockk<Cas1AssessmentDomainEventService>()
   private val assessmentListener = mockk<AssessmentListener>()
+  private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -113,6 +115,7 @@ class AcceptAssessmentTest {
     cas1AssessmentDomainEventServiceMock,
     cas1PlacementRequestEmailServiceMock,
     assessmentListener,
+    assessmentClarificationNoteListener,
   )
 
   lateinit var user: UserEntity
