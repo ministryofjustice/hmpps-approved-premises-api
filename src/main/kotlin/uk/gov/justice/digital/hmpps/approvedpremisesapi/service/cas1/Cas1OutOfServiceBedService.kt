@@ -128,6 +128,8 @@ class Cas1OutOfServiceBedService(
     return success(cancellationEntity)
   }
 
+  fun getOutOfServiceBeds(): List<Cas1OutOfServiceBedEntity> = outOfServiceBedRepository.findOutOfServiceBeds()
+
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 
   fun getOutOfServiceBedWithConflictingDates(

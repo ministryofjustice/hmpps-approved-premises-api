@@ -15,6 +15,9 @@ import javax.persistence.Table
 
 @Repository
 interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntity, UUID> {
+  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb WHERE oosb.endDate >= CURRENT_DATE ORDER BY oosb.startDate ASC")
+  fun findOutOfServiceBeds(): List<Cas1OutOfServiceBedEntity>
+
   @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
   fun findAllActiveForPremisesId(premisesId: UUID): List<Cas1OutOfServiceBedEntity>
 

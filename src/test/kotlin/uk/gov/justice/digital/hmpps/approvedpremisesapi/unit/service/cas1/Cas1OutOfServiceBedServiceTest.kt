@@ -239,6 +239,20 @@ class Cas1OutOfServiceBedServiceTest {
   }
 
   @Nested
+  inner class GetOutOfServiceBeds {
+    @Test
+    fun `Delegates to repository method`() {
+      val expectedList = mockk<List<Cas1OutOfServiceBedEntity>>()
+      every { outOfServiceBedRepository.findOutOfServiceBeds() } returns expectedList
+
+      val result = outOfServiceBedService.getOutOfServiceBeds()
+
+      assertThat(result).isEqualTo(expectedList)
+      verify(exactly = 1) { outOfServiceBedRepository.findOutOfServiceBeds() }
+    }
+  }
+
+  @Nested
   inner class GetActiveOutOfServiceBedsForPremisesId {
     @Test
     fun `Delegates to repository method`() {
