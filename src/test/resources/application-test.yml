@@ -35,7 +35,7 @@ spring:
             provider: hmpps-auth
             client-id: approved-premises-api
             client-secret: clientsecret
-            client-authentication-method: client_secret_jwt
+            client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
   data:
     redis:
