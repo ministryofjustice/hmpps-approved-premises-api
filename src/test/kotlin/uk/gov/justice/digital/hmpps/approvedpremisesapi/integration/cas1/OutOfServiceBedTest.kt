@@ -32,6 +32,78 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class GetAllOutOfServiceBeds {
     @Test
     fun `Get All Out-Of-Service Beds without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/out-of-service-beds")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ])
+    fun `Get All Out-Of-Service Beds returns OK with correct body when user has the role WORKFLOW_MANAGER`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(2))
+          withEndDate(LocalDate.now().plusDays(4))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val cancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(3))
+          withEndDate(LocalDate.now().plusDays(5))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withOutOfServiceBed(cancelledOutOfServiceBed)
+        }
+
+        cancelledOutOfServiceBed.cancellation = cancellation
+
+        val expectedJson = objectMapper.writeValueAsString(
+          listOf(
+            outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
+            outOfServiceBedTransformer.transformJpaToApi(cancelledOutOfServiceBed),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetAllOutOfServiceBedsOnPremises {
+    @Test
+    fun `Get All Out-Of-Service Beds On Premises without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -60,7 +132,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get All Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
