@@ -77,6 +77,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -142,6 +143,7 @@ class BookingService(
   private val assessmentService: AssessmentService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
+  private val bookingListener: BookingListener,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -295,6 +297,8 @@ class BookingService(
       )
 
       placementRequest.booking = booking
+
+      bookingListener.prePersist(booking)
       placementRequestRepository.save(placementRequest)
 
       val application = placementRequest.application
@@ -421,35 +425,36 @@ class BookingService(
 
       val bookingCreatedAt = OffsetDateTime.now()
 
-      val booking = bookingRepository.save(
-        BookingEntity(
-          id = bookingId,
-          crn = crn,
-          arrivalDate = arrivalDate,
-          departureDate = departureDate,
-          keyWorkerStaffCode = null,
-          arrivals = mutableListOf(),
-          departures = mutableListOf(),
-          nonArrival = null,
-          cancellations = mutableListOf(),
-          confirmation = null,
-          extensions = mutableListOf(),
-          premises = premises,
-          bed = bed,
-          service = ServiceName.approvedPremises.value,
-          originalArrivalDate = arrivalDate,
-          originalDepartureDate = departureDate,
-          createdAt = bookingCreatedAt,
-          application = onlineApplication,
-          offlineApplication = offlineApplication,
-          turnarounds = mutableListOf(),
-          dateChanges = mutableListOf(),
-          nomsNumber = nomsNumber,
-          placementRequest = null,
-          status = BookingStatus.confirmed,
-          adhoc = true,
-        ),
+      val bookingPrePersist = BookingEntity(
+        id = bookingId,
+        crn = crn,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+        keyWorkerStaffCode = null,
+        arrivals = mutableListOf(),
+        departures = mutableListOf(),
+        nonArrival = null,
+        cancellations = mutableListOf(),
+        confirmation = null,
+        extensions = mutableListOf(),
+        premises = premises,
+        bed = bed,
+        service = ServiceName.approvedPremises.value,
+        originalArrivalDate = arrivalDate,
+        originalDepartureDate = departureDate,
+        createdAt = bookingCreatedAt,
+        application = onlineApplication,
+        offlineApplication = offlineApplication,
+        turnarounds = mutableListOf(),
+        dateChanges = mutableListOf(),
+        nomsNumber = nomsNumber,
+        placementRequest = null,
+        status = BookingStatus.confirmed,
+        adhoc = true,
       )
+
+      bookingListener.prePersist(bookingPrePersist)
+      val booking = bookingRepository.save(bookingPrePersist)
 
       if (!isCalledFromSeeder) {
         createApprovedPremisesAdHocBookingDomainEvent(onlineApplication, offlineApplication, eventNumber, booking, user!!, bookingCreatedAt)

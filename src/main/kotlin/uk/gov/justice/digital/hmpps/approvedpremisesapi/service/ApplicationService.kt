@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -91,6 +92,7 @@ class ApplicationService(
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
+  private val applicationListener: ApplicationListener,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -550,6 +552,7 @@ class ApplicationService(
       this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
     }
 
+    applicationListener.preUpdate(application)
     val savedApplication = applicationRepository.save(application)
 
     return AuthorisableActionResult.Success(
@@ -608,22 +611,23 @@ class ApplicationService(
       return CasResult.Success(Unit)
     }
 
-    applicationRepository.save(
-      application.apply {
-        this.isWithdrawn = true
-        this.withdrawalReason = withdrawalReason
-        this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
-          otherReason
-        } else {
-          null
-        }
-      },
-    )
+    val updatedApplication = application.apply {
+      this.isWithdrawn = true
+      this.withdrawalReason = withdrawalReason
+      this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
+        otherReason
+      } else {
+        null
+      }
+    }
+    applicationListener.preUpdate(updatedApplication)
 
-    cas1ApplicationDomainEventService.applicationWithdrawn(application, withdrawingUser = user)
-    cas1ApplicationEmailService.applicationWithdrawn(application, user)
+    applicationRepository.save(updatedApplication)
 
-    application.assessments.map {
+    cas1ApplicationDomainEventService.applicationWithdrawn(updatedApplication, withdrawingUser = user)
+    cas1ApplicationEmailService.applicationWithdrawn(updatedApplication, user)
+
+    updatedApplication.assessments.map {
       assessmentService.updateCas1AssessmentWithdrawn(it.id, user)
     }
 
@@ -789,6 +793,7 @@ class ApplicationService(
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username)
     assessmentService.createApprovedPremisesAssessment(application)
 
+    applicationListener.preUpdate(application)
     application = applicationRepository.save(application)
 
     cas1ApplicationEmailService.applicationSubmitted(application)

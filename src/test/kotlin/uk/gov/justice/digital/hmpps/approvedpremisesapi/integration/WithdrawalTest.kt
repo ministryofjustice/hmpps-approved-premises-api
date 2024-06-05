@@ -1460,11 +1460,13 @@ class WithdrawalTest : IntegrationTestBase() {
   private fun assertApplicationNotWithdrawn(application: ApprovedPremisesApplicationEntity) {
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
     assertThat(updatedApplication.isWithdrawn).isFalse
+    assertThat(updatedApplication.status).isNotEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
   }
 
   private fun assertApplicationWithdrawn(application: ApprovedPremisesApplicationEntity) {
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
     assertThat(updatedApplication.isWithdrawn).isTrue
+    assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
   }
 
   private fun assertPlacementRequestWithdrawn(placementRequest: PlacementRequestEntity, reason: PlacementRequestWithdrawalReason) {

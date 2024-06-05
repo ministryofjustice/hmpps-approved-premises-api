@@ -110,6 +110,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -182,6 +183,7 @@ class BookingServiceTest {
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockCas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val mockDeliusService = mockk<DeliusService>()
+  private val mockBookingListener = mockk<BookingListener>()
 
   fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
     return BookingService(
@@ -222,6 +224,7 @@ class BookingServiceTest {
       assessmentService = mockAssessmentService,
       cas1BookingEmailService = mockCas1BookingEmailService,
       deliusService = mockDeliusService,
+      bookingListener = mockBookingListener,
     )
   }
 
@@ -4319,11 +4322,13 @@ class BookingServiceTest {
       .produce()
 
     @BeforeEach
-    public fun setup() {
+    fun setup() {
       every { mockPlacementRequestRepository.save(any()) } answers { callOriginal() }
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
       every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(application)
       every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
+      every { mockBookingListener.prePersist(bookingEntity) } returns Unit
+      every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { bookingEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
@@ -4482,6 +4487,7 @@ class BookingServiceTest {
     fun `createApprovedPremisesAdHocBooking succeeds when creating a double Booking`() {
       user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
 
+      every { mockBookingListener.prePersist(bookingEntity) } returns Unit
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf(
         BookingEntityFactory()
           .withPremises(premises)
@@ -4490,6 +4496,7 @@ class BookingServiceTest {
           .withDepartureDate(LocalDate.parse("2023-02-22"))
           .produce(),
       )
+
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, premises, bed.id, "eventNumber")
@@ -4613,6 +4620,7 @@ class BookingServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
+      every { mockBookingListener.prePersist(bookingEntity) } returns Unit
       every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
       every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -6451,6 +6459,7 @@ class BookingServiceTest {
         .withUsername(user.deliusUsername)
         .produce()
 
+      every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
@@ -6506,6 +6515,7 @@ class BookingServiceTest {
         .withUsername(user.deliusUsername)
         .produce()
 
+      every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
@@ -6586,6 +6596,7 @@ class BookingServiceTest {
         .withUsername(user.deliusUsername)
         .produce()
 
+      every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
@@ -6652,6 +6663,7 @@ class BookingServiceTest {
         .withUsername(user.deliusUsername)
         .produce()
 
+      every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, workflowManager.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)

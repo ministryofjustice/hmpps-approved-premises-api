@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -119,6 +120,7 @@ class ApplicationServiceTest {
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
+  private val mockApplicationListener = mockk<ApplicationListener>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -141,6 +143,7 @@ class ApplicationServiceTest {
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
+    mockApplicationListener,
   )
 
   @Test
@@ -1240,6 +1243,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
       every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     }
   }
@@ -2088,6 +2092,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),
@@ -2732,6 +2737,7 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
@@ -2772,6 +2778,7 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
@@ -2809,6 +2816,7 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } returns Unit
       every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs

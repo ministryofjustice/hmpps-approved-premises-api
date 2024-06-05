@@ -68,6 +68,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -111,6 +113,8 @@ class AssessmentServiceTest {
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
+  private val assessmentListener = mockk<AssessmentListener>()
+  private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -133,6 +137,8 @@ class AssessmentServiceTest {
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
+    assessmentListener,
+    assessmentClarificationNoteListener,
   )
 
   @Test
@@ -577,6 +583,7 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
+      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
         it.invocation.args[0] as AssessmentClarificationNoteEntity
       }
@@ -595,6 +602,7 @@ class AssessmentServiceTest {
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
 
+      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       verify(exactly = 1) {
         assessmentClarificationNoteRepositoryMock.save(
           match {
@@ -641,6 +649,7 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
+      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
         it.invocation.args[0] as AssessmentClarificationNoteEntity
       }
@@ -659,6 +668,7 @@ class AssessmentServiceTest {
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
 
+      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       verify(exactly = 1) {
         assessmentClarificationNoteRepositoryMock.save(
           match {
@@ -1040,6 +1050,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
 
+    every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
@@ -1422,6 +1433,7 @@ class AssessmentServiceTest {
 
     every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
 
+    every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { cas1AssessmentEmailServiceMock.assessmentRejected(any()) } just Runs
@@ -1952,6 +1964,8 @@ class AssessmentServiceTest {
         schema = "{}",
       )
 
+      every { assessmentListener.prePersist(any()) } returns Unit
+      every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
@@ -2246,6 +2260,8 @@ class AssessmentServiceTest {
       cas1AssessmentEmailServiceMock,
       cas1AssessmentDomainEventService,
       cas1PlacementRequestEmailService,
+      assessmentListener,
+      assessmentClarificationNoteListener,
     )
 
     private val user = UserEntityFactory()
@@ -2312,7 +2328,10 @@ class AssessmentServiceTest {
         )
       } returns assessmentClarificationNoteEntity
 
+      every { assessmentClarificationNoteListener.preUpdate(any()) } returns Unit
       every { assessmentClarificationNoteRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentClarificationNoteEntity }
+
+      every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
@@ -2516,6 +2535,7 @@ class AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
+      every { assessmentListener.prePersist(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
@@ -2583,6 +2603,7 @@ class AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
+      every { assessmentListener.prePersist(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns null
@@ -2672,6 +2693,7 @@ class AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
@@ -2705,6 +2727,7 @@ class AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
@@ -2738,6 +2761,7 @@ class AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
@@ -2771,6 +2795,7 @@ class AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+      every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
