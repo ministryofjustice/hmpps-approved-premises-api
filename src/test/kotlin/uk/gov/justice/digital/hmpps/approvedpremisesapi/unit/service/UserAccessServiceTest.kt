@@ -734,6 +734,40 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ])
+  fun `userCanViewOutOfServiceBeds returns true if the user has the WORKFLOW_MANAGER user role`(role: UserRole) {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(role)
+
+    assertThat(userAccessService.userCanViewOutOfServiceBeds(user)).isTrue
+  }
+
+  @Test
+  fun `userCanViewOutOfServiceBeds returns false if the user has no suitable role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.userCanViewOutOfServiceBeds(user)).isFalse
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ])
+  fun `currentUserCanViewOutOfServiceBeds returns true if the current user has the WORKFLOW_MANAGER user role`(role: UserRole) {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(role)
+
+    assertThat(userAccessService.currentUserCanViewOutOfServiceBeds()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanViewOutOfServiceBeds returns false if the current user has no suitable role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.currentUserCanViewOutOfServiceBeds()).isFalse
+  }
+
+  @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `userCanViewPremisesCapacity returns true if the given premises is an Approved Premises and the user has either the MANAGER or MATCHER user role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
