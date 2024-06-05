@@ -117,12 +117,32 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .withUsername(userTwo.deliusUsername)
         .withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE3",
-                description = "PDUDESCRIPTION3",
-              ),
-            )
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE2",
+                  description = "PDUDESCRIPTION2",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2020-05-19"))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODENotExistInCas",
+                  description = "PDUDESCRIPTIONNotExistInCas",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2024-02-05"))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE3",
+                  description = "PDUDESCRIPTION3",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2022-09-12"))
               .produce(),
           ),
         )
@@ -134,12 +154,13 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .withUsername(userThree.deliusUsername)
         .withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE1",
-                description = "PDUDESCRIPTION1",
-              ),
-            )
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE1",
+                  description = "PDUDESCRIPTION1",
+                ),
+              )
               .produce(),
           ),
         )
@@ -151,12 +172,24 @@ class Cas3UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .withUsername(userFour.deliusUsername)
         .withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE2",
-                description = "PDUDESCRIPTION2",
-              ),
-            )
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE1",
+                  description = "PDUDESCRIPTION1",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2020-02-05"))
+              .withEndDate(LocalDate.parse("2022-03-05"))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE2",
+                  description = "PDUDESCRIPTION2",
+                ),
+              )
+              .withStartDate(LocalDate.parse("2023-08-07"))
               .produce(),
           ),
         )

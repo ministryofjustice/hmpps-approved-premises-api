@@ -220,7 +220,7 @@ class UserService(
 
     when (val probationDeliveryUnit = findDeliusUserLastPdu(deliusUser)) {
       null -> {
-        val userLastBoroughCode = deliusUser.teams?.maxByOrNull { it.startDate }?.borough?.code
+        val userLastBoroughCode = deliusUser.teams?.filter { it.endDate == null }?.maxByOrNull { it.startDate }?.borough?.code
         throw Exception("Unable to find community API borough code $userLastBoroughCode in CAS")
       }
 
@@ -350,14 +350,10 @@ class UserService(
   }
 
   private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): ProbationDeliveryUnitEntity? {
-    val lastTeamDate = deliusUser.teams?.maxOfOrNull { t -> t.startDate }
-
-    if (lastTeamDate != null) {
-      deliusUser.teams.filter { it.startDate == lastTeamDate }.forEach {
-        val probationDeliveryUnit = probationDeliveryUnitRepository.findByDeliusCode(it.borough.code)
-        if (probationDeliveryUnit != null) {
-          return probationDeliveryUnit
-        }
+    deliusUser.teams?.filter { t -> t.endDate == null }?.sortedByDescending { t -> t.startDate }?.forEach {
+      val probationDeliveryUnit = probationDeliveryUnitRepository.findByDeliusCode(it.borough.code)
+      if (probationDeliveryUnit != null) {
+        return probationDeliveryUnit
       }
     }
 
