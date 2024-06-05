@@ -441,7 +441,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(1)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0], "No")
             }
         }
       }
@@ -516,14 +516,17 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertCorrectReferralDetails(
                 assessmentInReview,
                 actual.find { it.referralId == assessmentInReview.application.id.toString() }!!,
+                "No",
               )
               assertCorrectReferralDetails(
                 assessmentUnAllocated,
                 actual.find { it.referralId == assessmentUnAllocated.application.id.toString() }!!,
+                "No",
               )
               assertCorrectReferralDetails(
                 assessmentReadyToPlace,
                 actual.find { it.referralId == assessmentReadyToPlace.application.id.toString() }!!,
+                "No",
               )
             }
         }
@@ -810,7 +813,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(1)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0], "Yes")
             }
 
           assertThat(referralRejectionReason).isNotNull()
@@ -909,7 +912,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(1)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0], "No")
               assertThat(prisonReleaseTypes).isEqualTo(actual[0].prisonReleaseType)
             }
         }
@@ -1050,7 +1053,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(1)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0], "No")
             }
         }
       }
@@ -1125,14 +1128,17 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertCorrectReferralDetails(
                 assessmentInReview,
                 actual.find { it.referralId == assessmentInReview.application.id.toString() }!!,
+                "No",
               )
               assertCorrectReferralDetails(
                 assessmentUnAllocated,
                 actual.find { it.referralId == assessmentUnAllocated.application.id.toString() }!!,
+                "No",
               )
               assertCorrectReferralDetails(
                 assessmentReadyToPlace,
                 actual.find { it.referralId == assessmentReadyToPlace.application.id.toString() }!!,
+                "No",
               )
             }
         }
@@ -2318,13 +2324,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
   private fun assertCorrectReferralDetails(
     expectedAssessment: TemporaryAccommodationAssessmentEntity,
     actualReferralReportRow: TransitionalAccommodationReferralReportRow,
+    expectedReferralRejected: String,
   ) {
     val application = expectedAssessment.application as TemporaryAccommodationApplicationEntity
     val isAssessmentRejected = REJECTED.name == expectedAssessment.decision?.name
     val rejectedDate = if (isAssessmentRejected) expectedAssessment.submittedAt else null
-    val isReferralRejected =
-      expectedAssessment.referralRejectionReason?.name == "They have no recourse to public funds (NRPF)" ||
-        expectedAssessment.referralRejectionReason?.name == "They’re not eligible (not because of NRPF)"
+
     assertThat(actualReferralReportRow.referralId).isEqualTo(expectedAssessment.application.id.toString())
     assertThat(actualReferralReportRow.crn).isEqualTo(expectedAssessment.application.crn)
     assertThat(actualReferralReportRow.dutyToReferMade).isEqualTo(application.isDutyToReferSubmitted.toYesNo())
@@ -2338,7 +2343,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.registeredSexOffender).isEqualTo(application.isRegisteredSexOffender.toYesNo())
     assertThat(actualReferralReportRow.historyOfSexualOffence).isEqualTo(application.isHistoryOfSexualOffence.toYesNo())
     assertThat(actualReferralReportRow.concerningSexualBehaviour).isEqualTo(application.isConcerningSexualBehaviour.toYesNo())
-    assertThat(actualReferralReportRow.referralRejected).isEqualTo(isReferralRejected.toYesNo())
+    assertThat(actualReferralReportRow.referralRejected).isEqualTo(expectedReferralRejected)
     assertThat(actualReferralReportRow.rejectionDate).isEqualTo(rejectedDate?.toLocalDate())
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.referralRejectionReason?.name)
     assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())

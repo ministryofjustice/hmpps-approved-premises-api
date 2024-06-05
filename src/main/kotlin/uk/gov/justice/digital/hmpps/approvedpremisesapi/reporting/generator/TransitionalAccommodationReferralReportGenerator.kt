@@ -53,7 +53,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
           probationRegion = referralData.probationRegionName,
           pdu = referralData.pdu,
           referralSubmittedDate = referralData.referralSubmittedDate,
-          referralRejected = isReferralRejected(referralData.referralRejectionReason).toYesNo(),
+          referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
           rejectionReason = referralData.referralRejectionReason,
           rejectionDate = if (AssessmentDecision.REJECTED.name == referralData.assessmentDecision) referralData.assessmentSubmittedDate else null,
           sourceOfReferral = referralData.referralEligibilityReason,
@@ -75,13 +75,6 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
     return when (this) {
       is PersonSummaryInfoResult.Success.Full -> value(this.summary)
       else -> null
-    }
-  }
-
-  private fun isReferralRejected(referralRejectionReason: String?): Boolean {
-    return when (referralRejectionReason) {
-      "They have no recourse to public funds (NRPF)", "They’re not eligible (not because of NRPF)" -> true
-      else -> false
     }
   }
 }
