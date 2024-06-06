@@ -82,7 +82,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     }
   }
 
-  fun withTriggeredByUserId(userId: UUID) = apply {
+  fun withTriggeredByUserId(userId: UUID?) = apply {
     this.triggeredByUserId = { userId }
   }
 
