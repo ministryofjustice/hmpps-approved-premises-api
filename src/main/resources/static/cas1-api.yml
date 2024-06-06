@@ -439,6 +439,44 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /reports/{reportName}:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Validates user for this service has access to the report
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+        - name: reportName
+          in: path
+          description: Name of the report to download
+          required: true
+          schema:
+            $ref: '_shared.yml#/components/schemas/Cas1ReportName'
+        - name: year
+          in: query
+          required: true
+          description: The report content will reflect that specified by the given year.
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          description: The report content will reflect that specified by the given month.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
   /out-of-service-beds:
     get:
       tags:

@@ -9,6 +9,7 @@ import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -1205,6 +1206,8 @@ class ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class GetLostBedsReport {
+    private val lostBedsEndpoint = "/cas1/reports/${Cas1ReportName.lostBeds.value}"
+
     @Test
     fun `Get lost beds report returns OK with correct body`() {
       `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
@@ -1279,7 +1282,7 @@ class ReportsTest : IntegrationTestBase() {
             )
 
           webTestClient.get()
-            .uri("/reports/lost-beds?year=2023&month=4")
+            .uri("$lostBedsEndpoint?year=2023&month=4")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()

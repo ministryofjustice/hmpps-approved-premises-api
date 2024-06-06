@@ -4382,9 +4382,10 @@ paths:
                 format: binary
   /reports/lost-beds:
     get:
+      deprecated: true
       tags:
         - Reports
-      summary: Returns a spreadsheet listing all of the lost beds for the month
+      summary: Returns a spreadsheet listing all of the lost beds for the month.  Deprecated - use CAS1 Report endpoint, with Cas1ReportName.lostBeds reportName.
       parameters:
         - name: X-Service-Name
           in: header
@@ -4421,9 +4422,10 @@ paths:
                 format: binary
   /reports/applications:
     get:
+      deprecated: true
       tags:
         - Reports
-      summary: Returns a spreadsheet listing all of the submitted applications for the month
+      summary: Returns a spreadsheet listing all of the submitted applications for the month.  Deprecated - use CAS1 Report endpoint, with Cas1ReportName.applications reportName.
       parameters:
         - name: X-Service-Name
           in: header
@@ -4549,9 +4551,10 @@ paths:
                 format: binary
   /reports/daily-metrics:
     get:
+      deprecated: true
       tags:
         - Reports
-      summary: Returns a spreadsheet of daily metrics for a given month/year.
+      summary: Returns a spreadsheet of daily metrics for a given month/year.  Deprecated - use CAS1 Report endpoint, with Cas1ReportName.dailyMetrics reportName.
       parameters:
         - name: X-Service-Name
           in: header
@@ -4613,9 +4616,10 @@ paths:
                 format: binary
   /reports/placement-applications:
     get:
+      deprecated: true
       tags:
         - Reports
-      summary: Returns a spreadsheet of placement applications for a given month/year.
+      summary: Returns a spreadsheet of placement applications for a given month/year.  Deprecated - use CAS1 Report endpoint, with Cas1ReportName.placementApplications reportName.
       parameters:
         - name: X-Service-Name
           in: header
@@ -4645,9 +4649,10 @@ paths:
                 format: binary
   /reports/placement-matching-outcomes:
     get:
+      deprecated: true
       tags:
         - Reports
-      summary: Returns a spreadsheet of placement applications for a given expected arrival month/year.
+      summary: Returns a spreadsheet of placement applications for a given expected arrival month/year.  Deprecated - use CAS1 Report endpoint, with Cas1ReportName.placementMatchingOutcomes reportName.
       parameters:
         - name: X-Service-Name
           in: header
@@ -9394,6 +9399,14 @@ components:
           type: string
       required:
         - name
+    Cas1ReportName:
+      type: string
+      enum:
+        - applications
+        - dailyMetrics
+        - lostBeds
+        - placementApplications
+        - placementMatchingOutcomes
     Cas3ReportType:
       type: string
       enum:
