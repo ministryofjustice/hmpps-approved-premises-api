@@ -83,6 +83,7 @@ class ReportsController(
     }
   }
 
+  @Deprecated("Use Cas1ReportsController")
   override fun reportsLostBedsGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
@@ -100,6 +101,7 @@ class ReportsController(
     }
   }
 
+  @Deprecated("Use Cas1ReportsController")
   override fun reportsApplicationsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
@@ -119,6 +121,7 @@ class ReportsController(
     }
   }
 
+  @Deprecated("Use Cas1ReportsController")
   override fun reportsDailyMetricsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
@@ -138,6 +141,7 @@ class ReportsController(
     }
   }
 
+  @Deprecated("Use Cas1ReportsController")
   override fun reportsPlacementApplicationsGet(
     xServiceName: ServiceName,
     year: Int,
@@ -159,6 +163,7 @@ class ReportsController(
     }
   }
 
+  @Deprecated("Use Cas1ReportsController")
   override fun reportsPlacementMatchingOutcomesGet(
     xServiceName: ServiceName,
     year: Int,
