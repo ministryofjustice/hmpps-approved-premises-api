@@ -25,11 +25,13 @@ import org.zalando.problem.ThrowableProblem
 import org.zalando.problem.spring.web.advice.ProblemHandling
 import org.zalando.problem.spring.web.advice.io.MessageNotReadableAdviceTrait
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationValidationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @ControllerAdvice
 class ExceptionHandling(
   private val objectMapper: ObjectMapper,
   private val deserializationValidationService: DeserializationValidationService,
+  private val sentryService: SentryService,
 ) : ProblemHandling, MessageNotReadableAdviceTrait {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -63,6 +65,8 @@ class ExceptionHandling(
     }
 
     log.error("Unhandled exception type, returning generic 500 response", throwable)
+
+    sentryService.captureException(throwable)
 
     return InternalServerErrorProblem(
       detail = "There was an unexpected problem",
