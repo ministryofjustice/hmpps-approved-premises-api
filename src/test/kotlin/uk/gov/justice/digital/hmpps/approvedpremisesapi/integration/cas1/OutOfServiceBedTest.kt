@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -31,6 +32,78 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class GetAllOutOfServiceBeds {
     @Test
     fun `Get All Out-Of-Service Beds without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/out-of-service-beds")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ])
+    fun `Get All Out-Of-Service Beds returns OK with correct body when user has the role WORKFLOW_MANAGER`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(2))
+          withEndDate(LocalDate.now().plusDays(4))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val cancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(3))
+          withEndDate(LocalDate.now().plusDays(5))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withOutOfServiceBed(cancelledOutOfServiceBed)
+        }
+
+        cancelledOutOfServiceBed.cancellation = cancellation
+
+        val expectedJson = objectMapper.writeValueAsString(
+          listOf(
+            outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
+            outOfServiceBedTransformer.transformJpaToApi(cancelledOutOfServiceBed),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetAllOutOfServiceBedsOnPremises {
+    @Test
+    fun `Get All Out-Of-Service Beds On Premises without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -59,7 +132,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get All Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -327,12 +400,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath(".startDate").isEqualTo("2022-08-17")
-          .jsonPath(".endDate").isEqualTo("2022-08-18")
-          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath(".outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath(".bed.id").isEqualTo(bed.id.toString())
+          .jsonPath(".bed.name").isEqualTo(bed.name)
+          .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
+          .jsonPath(".room.name").isEqualTo(bed.room.name)
+          .jsonPath(".premises.id").isEqualTo(premises.id.toString())
+          .jsonPath(".premises.name").isEqualTo(premises.name)
+          .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+          .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
           .jsonPath(".reason.id").isEqualTo(reason.id.toString())
           .jsonPath(".reason.name").isEqualTo(reason.name)
           .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".daysLostCount").isEqualTo(2)
+          .jsonPath(".temporality").isEqualTo(Temporality.past.value)
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
@@ -388,12 +470,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath(".startDate").isEqualTo("2022-08-17")
-          .jsonPath(".endDate").isEqualTo("2022-08-18")
-          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath(".outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath(".bed.id").isEqualTo(bed.id.toString())
+          .jsonPath(".bed.name").isEqualTo(bed.name)
+          .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
+          .jsonPath(".room.name").isEqualTo(bed.room.name)
+          .jsonPath(".premises.id").isEqualTo(premises.id.toString())
+          .jsonPath(".premises.name").isEqualTo(premises.name)
+          .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+          .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
           .jsonPath(".reason.id").isEqualTo(reason.id.toString())
           .jsonPath(".reason.name").isEqualTo(reason.name)
           .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".daysLostCount").isEqualTo(2)
+          .jsonPath(".temporality").isEqualTo(Temporality.past.value)
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
@@ -551,12 +642,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath(".startDate").isEqualTo("2022-08-01")
-            .jsonPath(".endDate").isEqualTo("2022-08-30")
-            .jsonPath(".bedId").isEqualTo(bed.id.toString())
+            .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath(".outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath(".bed.id").isEqualTo(bed.id.toString())
+            .jsonPath(".bed.name").isEqualTo(bed.name)
+            .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
+            .jsonPath(".room.name").isEqualTo(bed.room.name)
+            .jsonPath(".premises.id").isEqualTo(premises.id.toString())
+            .jsonPath(".premises.name").isEqualTo(premises.name)
+            .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+            .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
             .jsonPath(".reason.id").isEqualTo(reason.id.toString())
             .jsonPath(".reason.name").isEqualTo(reason.name)
             .jsonPath(".reason.isActive").isEqualTo(true)
+            .jsonPath(".daysLostCount").isEqualTo(30)
+            .jsonPath(".temporality").isEqualTo(Temporality.past.value)
             .jsonPath(".referenceNumber").isEqualTo("REF-123")
             .jsonPath(".notes").isEqualTo("notes")
             .jsonPath(".status").isEqualTo("active")
@@ -713,12 +813,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath(".startDate").isEqualTo("2022-08-17")
-          .jsonPath(".endDate").isEqualTo("2022-08-18")
-          .jsonPath(".bedId").isEqualTo(bed.id.toString())
+          .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath(".outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath(".bed.id").isEqualTo(bed.id.toString())
+          .jsonPath(".bed.name").isEqualTo(bed.name)
+          .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
+          .jsonPath(".room.name").isEqualTo(bed.room.name)
+          .jsonPath(".premises.id").isEqualTo(premises.id.toString())
+          .jsonPath(".premises.name").isEqualTo(premises.name)
+          .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+          .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
           .jsonPath(".reason.id").isEqualTo(reason.id.toString())
           .jsonPath(".reason.name").isEqualTo(reason.name)
           .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath(".daysLostCount").isEqualTo(2)
+          .jsonPath(".temporality").isEqualTo(Temporality.past.value)
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
@@ -853,12 +962,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath(".startDate").isEqualTo("2022-08-01")
-            .jsonPath(".endDate").isEqualTo("2022-08-30")
-            .jsonPath(".bedId").isEqualTo(bed.id.toString())
+            .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath(".outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath(".bed.id").isEqualTo(bed.id.toString())
+            .jsonPath(".bed.name").isEqualTo(bed.name)
+            .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
+            .jsonPath(".room.name").isEqualTo(bed.room.name)
+            .jsonPath(".premises.id").isEqualTo(premises.id.toString())
+            .jsonPath(".premises.name").isEqualTo(premises.name)
+            .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+            .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
             .jsonPath(".reason.id").isEqualTo(reason.id.toString())
             .jsonPath(".reason.name").isEqualTo(reason.name)
             .jsonPath(".reason.isActive").isEqualTo(true)
+            .jsonPath(".daysLostCount").isEqualTo(30)
+            .jsonPath(".temporality").isEqualTo(Temporality.past.value)
             .jsonPath(".referenceNumber").isEqualTo("REF-123")
             .jsonPath(".notes").isEqualTo("notes")
             .jsonPath(".status").isEqualTo("active")
@@ -983,12 +1101,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath(".startDate").isEqualTo("2022-08-01")
-            .jsonPath(".endDate").isEqualTo("2022-08-30")
-            .jsonPath(".bedId").isEqualTo(bed.id.toString())
+            .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath(".outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath(".bed.id").isEqualTo(bed.id.toString())
+            .jsonPath(".bed.name").isEqualTo(bed.name)
+            .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
+            .jsonPath(".room.name").isEqualTo(bed.room.name)
+            .jsonPath(".premises.id").isEqualTo(premises.id.toString())
+            .jsonPath(".premises.name").isEqualTo(premises.name)
+            .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+            .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
             .jsonPath(".reason.id").isEqualTo(reason.id.toString())
             .jsonPath(".reason.name").isEqualTo(reason.name)
             .jsonPath(".reason.isActive").isEqualTo(true)
+            .jsonPath(".daysLostCount").isEqualTo(30)
+            .jsonPath(".temporality").isEqualTo(Temporality.past.value)
             .jsonPath(".referenceNumber").isEqualTo("REF-123")
             .jsonPath(".notes").isEqualTo("notes")
             .jsonPath(".status").isEqualTo("active")

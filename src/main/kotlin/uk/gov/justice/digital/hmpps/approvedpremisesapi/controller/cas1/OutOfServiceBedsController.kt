@@ -34,6 +34,16 @@ class OutOfServiceBedsController(
   private val outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer,
   private val outOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,
 ) : OutOfServiceBedsCas1Delegate {
+  override fun outOfServiceBedsGet(): ResponseEntity<List<Cas1OutOfServiceBed>> {
+    if (!userAccessService.currentUserCanViewOutOfServiceBeds()) {
+      throw ForbiddenProblem()
+    }
+
+    val outOfServiceBeds = outOfServiceBedService.getOutOfServiceBeds()
+
+    return ResponseEntity.ok(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
+  }
+
   override fun premisesPremisesIdOutOfServiceBedsGet(premisesId: UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {
     val premises = tryGetApprovedPremises(premisesId)
 
