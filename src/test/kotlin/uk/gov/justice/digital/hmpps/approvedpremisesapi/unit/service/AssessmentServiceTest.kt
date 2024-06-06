@@ -88,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -136,6 +137,7 @@ class AssessmentServiceTest {
     cas1PlacementRequestEmailService,
     assessmentListener,
     assessmentClarificationNoteListener,
+    Clock.systemDefaultZone(),
   )
 
   @Test
@@ -955,7 +957,7 @@ class AssessmentServiceTest {
     val validationResult = (result as AuthorisableActionResult.Success).entity
     assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
     val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The application has been reallocated, this assessment is read only")
+    assertThat(generalValidationError.message).isEqualTo("The assessment has been reallocated, this assessment is read only")
   }
 
   @Test
@@ -2258,6 +2260,7 @@ class AssessmentServiceTest {
       cas1PlacementRequestEmailService,
       assessmentListener,
       assessmentClarificationNoteListener,
+      Clock.systemDefaultZone(),
     )
 
     private val user = UserEntityFactory()

@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -113,6 +114,7 @@ class AcceptAssessmentTest {
     cas1PlacementRequestEmailServiceMock,
     assessmentListener,
     assessmentClarificationNoteListener,
+    Clock.systemDefaultZone(),
   )
 
   lateinit var user: UserEntity

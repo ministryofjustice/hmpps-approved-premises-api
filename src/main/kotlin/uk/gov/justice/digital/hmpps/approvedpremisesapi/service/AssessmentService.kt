@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -85,6 +86,7 @@ class AssessmentService(
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
+  private val clock: Clock,
 ) {
 
   fun getVisibleAssessmentSummariesForUserCAS1(
@@ -199,7 +201,7 @@ class AssessmentService(
   }
 
   fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity, createdFromAppeal: Boolean = false): ApprovedPremisesAssessmentEntity {
-    val dateTimeNow = OffsetDateTime.now()
+    val dateTimeNow = OffsetDateTime.now(clock)
 
     var assessment = ApprovedPremisesAssessmentEntity(
       id = UUID.randomUUID(),
@@ -312,7 +314,7 @@ class AssessmentService(
 
     if (assessment.reallocatedAt != null) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
+        ValidatableActionResult.GeneralValidationError("The assessment has been reallocated, this assessment is read only"),
       )
     }
 
@@ -335,7 +337,7 @@ class AssessmentService(
     apType: ApType?,
     notes: String?,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val acceptedAt = OffsetDateTime.now()
+    val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
     val assessmentResult = getAssessmentForUser(user, assessmentId)
@@ -454,7 +456,7 @@ class AssessmentService(
     isWithdrawn: Boolean? = null,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
-    val rejectedAt = OffsetDateTime.now()
+    val rejectedAt = OffsetDateTime.now(clock)
 
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
@@ -679,12 +681,11 @@ class AssessmentService(
       )
     }
 
-    currentAssessment.reallocatedAt = OffsetDateTime.now()
+    val dateTimeNow = OffsetDateTime.now(clock)
+    currentAssessment.reallocatedAt = dateTimeNow
 
     preUpdateAssessment(currentAssessment)
     assessmentRepository.save(currentAssessment)
-
-    val dateTimeNow = OffsetDateTime.now()
 
     val newAssessment =
       ApprovedPremisesAssessmentEntity(
@@ -796,7 +797,7 @@ class AssessmentService(
       id = UUID.randomUUID(),
       assessment = assessment,
       createdByUser = user,
-      createdAt = OffsetDateTime.now(),
+      createdAt = OffsetDateTime.now(clock),
       query = text,
       response = null,
       responseReceivedOn = null,

@@ -128,7 +128,7 @@ class Cas1ApplicationDomainEventService(
     withdrawingUser: UserEntity,
   ) {
     val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = Instant.now()
+    val eventOccurredAt = Instant.now(clock)
 
     domainEventService.saveApplicationWithdrawnEvent(
       DomainEvent(
