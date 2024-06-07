@@ -172,39 +172,6 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 
-  @Query(
-    """
-    SELECT
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-      (apa.ap_type = 'ESAP') as isEsapApplication,
-      (apa.ap_type = 'PIPE') as isPipeApplication,
-      assessment.decision as decision,
-      application.submitted_at as applicationSubmittedAt,
-      assessment.submitted_at as assessmentSubmittedAt,
-      assessment.rejection_rationale as rejectionRationale,
-      apa.release_type as releaseType,
-      (
-        SELECT
-          count(id)
-        from
-          assessment_clarification_notes
-        where
-          assessment_id = assessment_id
-      ) as clarificationNoteCount
-    FROM
-      assessments assessment
-      left join applications application on application.id = assessment.application_id
-      left join approved_premises_applications apa on apa.id = application.id
-    WHERE
-      date_part('month', assessment.created_at) = :month
-      AND date_part('year', assessment.created_at) = :year
-      AND assessment.reallocated_at is null
-      AND assessment.service = 'approved-premises'
-    """,
-    nativeQuery = true,
-  )
-  fun findAllReferralsDataForMonthAndYear(month: Int, year: Int): List<ReferralsDataResult>
-
   @Query("SELECT a from ApprovedPremisesAssessmentEntity a WHERE a.dueAt IS NULL")
   fun findAllWithNullDueAt(pageable: Pageable?): Slice<ApprovedPremisesAssessmentEntity>
 

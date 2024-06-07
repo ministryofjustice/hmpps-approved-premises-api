@@ -448,6 +448,10 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+      .expectHeader().valuesMatch(
+        "content-disposition",
+        "attachment; filename=\"placement-matching-outcomes-2020-01-[0-9_]+.xlsx\"",
+      )
       .expectBody()
       .consumeWith {
         val actualRows = DataFrame
