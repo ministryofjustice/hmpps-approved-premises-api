@@ -95,14 +95,15 @@ class ReportService(
   }
 
   fun <T : Any> createReferralsMetricsReport(properties: ReferralsMetricsProperties, outputStream: OutputStream, categories: List<T>) {
-    val referrals = assessmentRepository.findAllReferralsDataForMonthAndYear(properties.month, properties.year).map {
+    val referrals1 = assessmentRepository.findAllReferralsDataForMonthAndYear(properties.month, properties.year)
+    val referrals = referrals1.map {
       ReferralsDataDto(
         it.getTier(),
         it.getIsEsapApplication(),
         it.getIsPipeApplication(),
         it.getDecision(),
-        it.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
-        it.getAssessmentSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
+        it.getApplicationSubmittedAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
+        it.getAssessmentSubmittedAt()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
         it.getRejectionRationale(),
         it.getReleaseType(),
         it.getClarificationNoteCount(),

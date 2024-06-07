@@ -26,7 +26,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -501,8 +500,8 @@ interface ReferralsDataResult {
   fun getIsEsapApplication(): Boolean?
   fun getIsPipeApplication(): Boolean?
   fun getDecision(): String?
-  fun getApplicationSubmittedAt(): Timestamp?
-  fun getAssessmentSubmittedAt(): Timestamp?
+  fun getApplicationSubmittedAt(): Instant?
+  fun getAssessmentSubmittedAt(): Instant?
   fun getRejectionRationale(): String?
   fun getReleaseType(): String?
   fun getClarificationNoteCount(): Int
