@@ -56,6 +56,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -120,6 +122,7 @@ class ApplicationServiceTest {
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
+  private val mockPlacementApplicationAutomaticRepository = mockk<PlacementApplicationAutomaticRepository>()
   private val mockApplicationListener = mockk<ApplicationListener>()
 
   private val applicationService = ApplicationService(
@@ -143,6 +146,7 @@ class ApplicationServiceTest {
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
+    mockPlacementApplicationAutomaticRepository,
     mockApplicationListener,
   )
 
@@ -1767,6 +1771,7 @@ class ApplicationServiceTest {
       }
 
       verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
+      verify(exactly = 0) { mockPlacementApplicationAutomaticRepository.save(any()) }
     }
 
     @ParameterizedTest
@@ -1856,6 +1861,7 @@ class ApplicationServiceTest {
       }
 
       verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
+      verify(exactly = 1) { mockPlacementApplicationAutomaticRepository.save(any()) }
     }
 
     @ParameterizedTest
@@ -2114,6 +2120,9 @@ class ApplicationServiceTest {
       } returns Unit
 
       every { mockCas1ApplicationEmailService.applicationSubmitted(any()) } just Runs
+      every {
+        mockPlacementApplicationAutomaticRepository.save(any())
+      } answers { it.invocation.args[0] as PlacementApplicationAutomaticEntity }
     }
   }
 

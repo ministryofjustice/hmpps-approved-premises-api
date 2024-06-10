@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -92,6 +94,7 @@ class ApplicationService(
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
+  private val placementApplicationAutomaticRepository: PlacementApplicationAutomaticRepository,
   private val applicationListener: ApplicationListener,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
@@ -797,6 +800,17 @@ class ApplicationService(
     application = applicationRepository.save(application)
 
     cas1ApplicationEmailService.applicationSubmitted(application)
+
+    if (application.arrivalDate != null) {
+      placementApplicationAutomaticRepository.save(
+        PlacementApplicationAutomaticEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          submittedAt = application.submittedAt!!,
+          expectedArrivalDate = application.arrivalDate!!,
+        ),
+      )
+    }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
