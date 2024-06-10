@@ -5467,6 +5467,16 @@ components:
         - id
         - name
         - isActive
+    Cas1OutOfServiceBedSortField:
+      type: string
+      enum:
+        - premisesName
+        - roomName
+        - bedName
+        - outOfServiceFrom
+        - outOfServiceTo
+        - reason
+        - daysLost
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
