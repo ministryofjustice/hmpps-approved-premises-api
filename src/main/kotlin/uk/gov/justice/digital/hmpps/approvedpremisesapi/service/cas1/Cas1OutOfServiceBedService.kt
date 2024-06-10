@@ -2,15 +2,21 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -128,7 +134,37 @@ class Cas1OutOfServiceBedService(
     return success(cancellationEntity)
   }
 
-  fun getOutOfServiceBeds(): List<Cas1OutOfServiceBedEntity> = outOfServiceBedRepository.findOutOfServiceBeds()
+  fun getOutOfServiceBeds(
+    temporality: Set<Temporality>,
+    premisesId: UUID?,
+    apAreaId: UUID?,
+    pageCriteria: PageCriteria<Cas1OutOfServiceBedSortField>,
+  ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> {
+    val sortFieldString = when (pageCriteria.sortBy) {
+      Cas1OutOfServiceBedSortField.premisesName -> "premises.name"
+      Cas1OutOfServiceBedSortField.roomName -> "bed.room.name"
+      Cas1OutOfServiceBedSortField.bedName -> "bed.name"
+      Cas1OutOfServiceBedSortField.outOfServiceFrom -> "startDate"
+      Cas1OutOfServiceBedSortField.outOfServiceTo -> "endDate"
+      Cas1OutOfServiceBedSortField.reason -> "reason.name"
+      Cas1OutOfServiceBedSortField.daysLost -> "(oosb.endDate - oosb.startDate)"
+    }
+
+    val excludePast = !temporality.contains(Temporality.past)
+    val excludeCurrent = !temporality.contains(Temporality.current)
+    val excludeFuture = !temporality.contains(Temporality.future)
+
+    val page = outOfServiceBedRepository.findOutOfServiceBeds(
+      premisesId,
+      apAreaId,
+      excludePast,
+      excludeCurrent,
+      excludeFuture,
+      getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString), unsafe = true),
+    )
+
+    return Pair(page.content, getMetadata(page, pageCriteria))
+  }
 
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 

@@ -5,8 +5,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OutOfServiceBedsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBedCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.LocalDate
 import java.util.UUID
 
@@ -34,14 +38,35 @@ class OutOfServiceBedsController(
   private val outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer,
   private val outOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,
 ) : OutOfServiceBedsCas1Delegate {
-  override fun outOfServiceBedsGet(): ResponseEntity<List<Cas1OutOfServiceBed>> {
+  override fun outOfServiceBedsGet(
+    temporality: List<Temporality>?,
+    premisesId: UUID?,
+    apAreaId: UUID?,
+    sortDirection: SortDirection?,
+    sortBy: Cas1OutOfServiceBedSortField?,
+    page: Int?,
+    perPage: Int?,
+  ): ResponseEntity<List<Cas1OutOfServiceBed>> {
     if (!userAccessService.currentUserCanViewOutOfServiceBeds()) {
       throw ForbiddenProblem()
     }
 
-    val outOfServiceBeds = outOfServiceBedService.getOutOfServiceBeds()
+    val (outOfServiceBeds, pageMetadata) = outOfServiceBedService.getOutOfServiceBeds(
+      temporality?.toSet() ?: setOf(Temporality.current, Temporality.future),
+      premisesId,
+      apAreaId,
+      PageCriteria(
+        sortBy ?: Cas1OutOfServiceBedSortField.outOfServiceFrom,
+        sortDirection ?: SortDirection.asc,
+        page,
+        perPage,
+      ),
+    )
 
-    return ResponseEntity.ok(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
+    return ResponseEntity
+      .ok()
+      .headers(pageMetadata?.toHeaders())
+      .body(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
   }
 
   override fun premisesPremisesIdOutOfServiceBedsGet(premisesId: UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {

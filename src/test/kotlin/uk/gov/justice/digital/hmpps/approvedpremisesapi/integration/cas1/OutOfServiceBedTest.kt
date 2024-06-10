@@ -3,11 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -15,18 +20,72 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.time.Duration
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.stream.Stream
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer
+
+  companion object {
+    @JvmStatic
+    fun temporalityArgs(): Stream<Arguments> {
+      return Stream.of(
+        Arguments.of(
+          emptyList<Temporality>(),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.current,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.future,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.current,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.future,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.current,
+            Temporality.future,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.current,
+            Temporality.future,
+          ),
+        ),
+      )
+    }
+  }
 
   @Nested
   inner class GetAllOutOfServiceBeds {
@@ -94,6 +153,360 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .exchange()
           .expectStatus()
           .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @Test
+    fun `Get All Out-Of-Service Beds filters by premises ID correctly`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val otherBed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { otherPremises }
+            }
+          }
+        }
+
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(2))
+          withEndDate(LocalDate.now().plusDays(4))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        // otherPremisesOutOfServiceBed
+        cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(3))
+          withEndDate(LocalDate.now().plusDays(5))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(otherBed)
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          listOf(
+            outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds?premisesId=${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @Test
+    fun `Get All Out-Of-Service Beds filters by AP area ID correctly`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val otherBed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { otherPremises }
+            }
+          }
+        }
+
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(2))
+          withEndDate(LocalDate.now().plusDays(4))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        // otherPremisesOutOfServiceBed
+        cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(3))
+          withEndDate(LocalDate.now().plusDays(5))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(otherBed)
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          listOf(
+            outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds?apAreaId=${premises.probationRegion.apArea.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.OutOfServiceBedTest#temporalityArgs")
+    @ParameterizedTest
+    fun `Get All Out-Of-Service Beds filters by temporality correctly`(temporality: List<Temporality>) {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val pastOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().minusDays(4))
+          withEndDate(LocalDate.now().minusDays(2))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val currentOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().minusDays(1))
+          withEndDate(LocalDate.now().plusDays(1))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val futureOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(2))
+          withEndDate(LocalDate.now().plusDays(4))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val expectedOutOfServiceBeds = mutableListOf<Cas1OutOfServiceBedEntity>()
+
+        if (temporality.contains(Temporality.past)) {
+          expectedOutOfServiceBeds += pastOutOfServiceBed
+        }
+        if (temporality.contains(Temporality.current)) {
+          expectedOutOfServiceBeds += currentOutOfServiceBed
+        }
+        if (temporality.contains(Temporality.future)) {
+          expectedOutOfServiceBeds += futureOutOfServiceBed
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          expectedOutOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds?temporality=${temporality.joinToString(",")}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @CsvSource(
+      "'premisesName','asc'",
+      "'roomName','asc'",
+      "'bedName','asc'",
+      "'outOfServiceFrom','asc'",
+      "'outOfServiceTo','asc'",
+      "'reason','asc'",
+      "'daysLost','asc'",
+
+      "'premisesName','desc'",
+      "'roomName','desc'",
+      "'bedName','desc'",
+      "'outOfServiceFrom','desc'",
+      "'outOfServiceTo','desc'",
+      "'reason','desc'",
+      "'daysLost','desc'",
+    )
+    @ParameterizedTest
+    @Suppress("detekt:CyclomaticComplexMethod")
+    fun `Get All Out-Of-Service Beds sorts correctly`(sortField: Cas1OutOfServiceBedSortField, sortDirection: SortDirection) {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val otherBed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { otherPremises }
+            }
+          }
+        }
+
+        val expectedOutOfServiceBeds = cas1OutOfServiceBedEntityFactory.produceAndPersistMultipleIndexed(4) {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(it.toLong()))
+          withEndDate(LocalDate.now().plusDays(it.toLong() * 2))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+
+          when {
+            it % 2 == 0 -> withBed(bed)
+            else -> withBed(otherBed)
+          }
+        }
+
+        val sortedOutOfServiceBeds = when (sortDirection) {
+          SortDirection.asc -> when (sortField) {
+            Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
+            Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
+            Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
+            Cas1OutOfServiceBedSortField.outOfServiceFrom -> expectedOutOfServiceBeds.sortedBy { it.startDate }
+            Cas1OutOfServiceBedSortField.outOfServiceTo -> expectedOutOfServiceBeds.sortedBy { it.endDate }
+            Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
+            Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
+          }
+          SortDirection.desc -> when (sortField) {
+            Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
+            Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
+            Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
+            Cas1OutOfServiceBedSortField.outOfServiceFrom -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
+            Cas1OutOfServiceBedSortField.outOfServiceTo -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
+            Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
+            Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
+          }
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          sortedOutOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds?sortBy=$sortField&sortDirection=$sortDirection")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @Test
+    fun `Get All Out-Of-Service Beds paginates correctly`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val outOfServiceBeds = cas1OutOfServiceBedEntityFactory.produceAndPersistMultipleIndexed(15) {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withStartDate(LocalDate.now().plusDays(it.toLong()))
+          withEndDate(LocalDate.now().plusDays(it.toLong() + 2))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          withBed(bed)
+        }
+
+        val expectedOutOfServiceBeds = outOfServiceBeds.slice(5..9)
+
+        val expectedJson = objectMapper.writeValueAsString(
+          expectedOutOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds?page=2&perPage=5")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader()
+          .valueEquals("X-Pagination-CurrentPage", "2")
+          .expectHeader()
+          .valueEquals("X-Pagination-TotalPages", "3")
+          .expectHeader()
+          .valueEquals("X-Pagination-TotalResults", "15")
+          .expectHeader()
+          .valueEquals("X-Pagination-PageSize", "5")
           .expectBody()
           .json(expectedJson)
       }
