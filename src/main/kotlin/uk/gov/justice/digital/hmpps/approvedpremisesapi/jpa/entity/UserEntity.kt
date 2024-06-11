@@ -308,6 +308,7 @@ enum class UserRole(val service: ServiceName) {
   CAS1_LEGACY_MANAGER(ServiceName.approvedPremises),
   CAS1_FUTURE_MANAGER(ServiceName.approvedPremises),
   CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises),
+  CAS1_CRU_MEMBER(ServiceName.approvedPremises),
   CAS1_APPLICANT(ServiceName.approvedPremises),
   CAS1_ADMIN(ServiceName.approvedPremises),
   CAS1_REPORT_VIEWER(ServiceName.approvedPremises),

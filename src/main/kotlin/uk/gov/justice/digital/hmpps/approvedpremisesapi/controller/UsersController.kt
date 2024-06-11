@@ -142,6 +142,7 @@ class UsersController(
     return ResponseEntity.ok(userTransformed)
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   private fun transformApiRole(apiRole: ApprovedPremisesUserRole): JpaUserRole = when (apiRole) {
     ApprovedPremisesUserRole.roleAdmin -> JpaUserRole.CAS1_ADMIN
     ApprovedPremisesUserRole.applicant -> JpaUserRole.CAS1_APPLICANT
@@ -151,6 +152,7 @@ class UsersController(
     ApprovedPremisesUserRole.futureManager -> JpaUserRole.CAS1_FUTURE_MANAGER
     ApprovedPremisesUserRole.matcher -> JpaUserRole.CAS1_MATCHER
     ApprovedPremisesUserRole.workflowManager -> JpaUserRole.CAS1_WORKFLOW_MANAGER
+    ApprovedPremisesUserRole.cruMember -> JpaUserRole.CAS1_CRU_MEMBER
     ApprovedPremisesUserRole.reportViewer -> JpaUserRole.CAS1_REPORT_VIEWER
     ApprovedPremisesUserRole.excludedFromAssessAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION
     ApprovedPremisesUserRole.excludedFromMatchAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION
