@@ -90,7 +90,7 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 // The `buildDir` built-in property has been deprecated in favour of `layout.buildDirectory`
@@ -100,7 +100,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "17"
+      jvmTarget = "21"
     }
 
     kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
