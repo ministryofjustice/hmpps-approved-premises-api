@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -171,7 +170,7 @@ class Cas1AssessmentDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.saveAssessmentAllocatedEvent(
           withArg {
-            Assertions.assertThat(it.data.eventDetails.allocatedBy).isNull()
+            assertThat(it.data.eventDetails.allocatedBy).isNull()
           },
           TriggerSourceType.SYSTEM,
         )
@@ -267,7 +266,7 @@ class Cas1AssessmentDomainEventServiceTest {
               data.assessedBy == expectedAssessor &&
               data.decision == "ACCEPTED" &&
               data.decisionRationale == null &&
-              it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].equals(ApType.normal.value)
+              it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].equals("NORMAL")
           },
         )
       }
