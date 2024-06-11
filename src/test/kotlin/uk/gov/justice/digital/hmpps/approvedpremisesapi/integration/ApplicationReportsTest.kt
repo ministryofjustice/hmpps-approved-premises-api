@@ -146,9 +146,16 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
         referrerProbationArea,
       )
     },)
-    assessorDetails = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), staffUserDetailsConfigBlock = {
-      withProbationAreaCode("N03")
-    },)
+    assessorDetails = `Given a User`(
+      roles = listOf(UserRole.CAS1_ASSESSOR),
+      probationRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist {
+            withName("Wales")
+          }
+        }
+      },
+    )
     managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
     workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
     matcherDetails = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))

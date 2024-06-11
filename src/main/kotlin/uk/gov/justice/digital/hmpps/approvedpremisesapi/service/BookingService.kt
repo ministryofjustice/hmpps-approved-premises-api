@@ -111,7 +111,6 @@ class BookingService(
   private val offenderService: OffenderService,
   private val domainEventService: DomainEventService,
   private val cas3DomainEventService: Cas3DomainEventService,
-  private val cruService: CruService,
   private val applicationService: ApplicationService,
   private val workingDayService: WorkingDayService,
   private val placementRequestService: PlacementRequestService,
@@ -588,7 +587,7 @@ class BookingService(
             bookedBy = BookingMadeBookedBy(
               staffMember = staffDetails.toStaffMember(),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+                name = user.apArea?.name ?: "Unknown CRU",
               ),
             ),
             premises = Premises(

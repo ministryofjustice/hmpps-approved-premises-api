@@ -74,7 +74,6 @@ class AssessmentService(
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
-  private val cruService: CruService,
   private val placementRequestService: PlacementRequestService,
   private val placementRequirementsService: PlacementRequirementsService,
   private val userAllocator: UserAllocator,
@@ -431,14 +430,8 @@ class AssessmentService(
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
       }
 
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
     if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, staffDetails, placementDates, apType)
+      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, userService.getUserForRequest())
       cas1AssessmentEmailService.assessmentAccepted(application)
 
       if (createPlacementRequest) {
@@ -571,7 +564,7 @@ class AssessmentService(
                   name = staffDetails.probationArea.description,
                 ),
                 cru = Cru(
-                  name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+                  name = user.apArea?.name ?: "Unknown CRU",
                 ),
               ),
               decision = assessment.decision.toString(),

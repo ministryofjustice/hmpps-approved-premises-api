@@ -43,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -55,12 +54,10 @@ class Cas1AssessmentDomainEventServiceTest {
 
   private val domainEventService = mockk<DomainEventService>()
   private val communityApiClient = mockk<CommunityApiClient>()
-  private val cruService = mockk<CruService>()
 
   val service = Cas1AssessmentDomainEventService(
     domainEventService,
     communityApiClient,
-    cruService,
     UrlTemplate("http://frontend/applications/#id"),
     UrlTemplate("http://frontend/assessments/#id"),
   )
@@ -185,6 +182,9 @@ class Cas1AssessmentDomainEventServiceTest {
     fun `assessmentAccepted raises domain event`() {
       val user = UserEntityFactory().withYieldedProbationRegion {
         ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+      }.withYieldedApArea {
+        ApAreaEntityFactory()
+          .withName("South West & South Central").produce()
       }.produce()
 
       val assessmentId = UUID.randomUUID()
@@ -227,10 +227,14 @@ class Cas1AssessmentDomainEventServiceTest {
       )
       val apType = ApType.normal
 
-      every { cruService.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
+      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
 
-      service.assessmentAccepted(application, assessment, offenderDetails, staffUserDetails, placementDates, apType)
+      service.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, user)
+
+      verify(exactly = 1) {
+        communityApiClient.getStaffUserDetails(user.deliusUsername)
+      }
 
       verify(exactly = 1) {
         domainEventService.saveApplicationAssessedDomainEvent(

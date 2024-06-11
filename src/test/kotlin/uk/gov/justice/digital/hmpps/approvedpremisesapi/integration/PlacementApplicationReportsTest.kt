@@ -131,6 +131,13 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     )
     assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR),
+      probationRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist {
+            withName("Wales")
+          }
+        }
+      },
       staffUserDetailsConfigBlock = {
         withProbationAreaCode("N03")
       },

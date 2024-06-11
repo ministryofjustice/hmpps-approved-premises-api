@@ -65,7 +65,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -90,7 +89,6 @@ class PlacementRequestServiceTest {
   private val domainEventService = mockk<DomainEventService>()
   private val offenderService = mockk<OffenderService>()
   private val communityApiClient = mockk<CommunityApiClient>()
-  private val cruService = mockk<CruService>()
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
@@ -107,7 +105,6 @@ class PlacementRequestServiceTest {
     domainEventService,
     offenderService,
     communityApiClient,
-    cruService,
     placementRequirementsRepository,
     placementDateRepository,
     cancellationRepository,
@@ -532,8 +529,6 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
     every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
-
-    every { cruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
 
     val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, "some notes")
     assertThat(result is AuthorisableActionResult.Success).isTrue

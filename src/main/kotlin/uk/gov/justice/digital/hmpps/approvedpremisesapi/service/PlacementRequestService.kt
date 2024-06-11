@@ -65,7 +65,6 @@ class PlacementRequestService(
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
-  private val cruService: CruService,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
   private val placementDateRepository: PlacementDateRepository,
   private val cancellationRepository: CancellationRepository,
@@ -458,7 +457,7 @@ class PlacementRequestService(
             attemptedBy = BookingMadeBookedBy(
               staffMember = staffDetails.toStaffMember(),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+                name = user.apArea?.name ?: "Unknown CRU",
               ),
             ),
             failureDescription = notes,

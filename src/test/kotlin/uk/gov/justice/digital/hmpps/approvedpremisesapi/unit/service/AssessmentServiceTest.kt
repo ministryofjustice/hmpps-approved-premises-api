@@ -74,7 +74,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -103,7 +102,6 @@ class AssessmentServiceTest {
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
-  private val cruServiceMock = mockk<CruService>()
   private val communityApiClientMock = mockk<CommunityApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
@@ -127,7 +125,6 @@ class AssessmentServiceTest {
     domainEventServiceMock,
     offenderServiceMock,
     communityApiClientMock,
-    cruServiceMock,
     placementRequestServiceMock,
     placementRequirementsServiceMock,
     userAllocatorMock,
@@ -1397,6 +1394,11 @@ class AssessmentServiceTest {
           .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
+      .withYieldedApArea {
+        ApAreaEntityFactory()
+          .withName("South West & South Central")
+          .produce()
+      }
       .produce()
 
     val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -1447,8 +1449,6 @@ class AssessmentServiceTest {
     val staffUserDetails = StaffUserDetailsFactory()
       .withProbationAreaCode("N26")
       .produce()
-
-    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
 
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
@@ -1569,8 +1569,6 @@ class AssessmentServiceTest {
     val staffUserDetails = StaffUserDetailsFactory()
       .withProbationAreaCode("N26")
       .produce()
-
-    every { cruServiceMock.cruNameFromProbationAreaCode("N26") } returns "South West & South Central"
 
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
@@ -2232,7 +2230,6 @@ class AssessmentServiceTest {
     private val domainEventServiceMock = mockk<DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
     private val communityApiClientMock = mockk<CommunityApiClient>()
-    private val cruServiceMock = mockk<CruService>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
@@ -2250,7 +2247,6 @@ class AssessmentServiceTest {
       domainEventServiceMock,
       offenderServiceMock,
       communityApiClientMock,
-      cruServiceMock,
       placementRequestServiceMock,
       placementRequirementsServiceMock,
       userAllocatorMock,
