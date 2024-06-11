@@ -103,7 +103,7 @@ class UserAccessService(
     userCanViewOutOfServiceBeds(userService.getUserForRequest())
 
   fun userCanViewOutOfServiceBeds(user: UserEntity) =
-    user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
+    user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_CRU_MEMBER)
 
   fun currentUserCanManagePremisesLostBeds(premises: PremisesEntity) =
     userCanManagePremisesLostBeds(userService.getUserForRequest(), premises)
