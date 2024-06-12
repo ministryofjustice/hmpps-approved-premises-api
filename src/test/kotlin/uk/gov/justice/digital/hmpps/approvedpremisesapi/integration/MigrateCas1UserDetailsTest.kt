@@ -3,16 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import java.time.OffsetDateTime
 
 class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Ignore unsubmitted application`() {
-    givenAUser { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -33,7 +33,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Populate applicant details, no caseManagementResponsibility field defined`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -41,7 +41,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
@@ -75,7 +75,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Populate applicant details, no case manager`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -83,7 +83,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
@@ -118,7 +118,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Populate overridden applicant details, no case manager`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -126,7 +126,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
@@ -169,7 +169,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Populate some overridden applicant details, no case manager defined`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -177,7 +177,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
@@ -219,7 +219,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Overridden values defined but not mentioned in details to update - take from user entity`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -227,7 +227,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
@@ -266,7 +266,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Populate case manager when defined`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -274,7 +274,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
@@ -316,7 +316,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
 
   @Test
   fun `Use paging`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = {
         withForenames("user entity")
         withSurname("name")
@@ -324,7 +324,7 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
         withTelephoneNumber("user entity phone")
       },
     ) { userEntity, _ ->
-      givenAnOffender { _, _ ->
+      `Given an Offender` { _, _ ->
 
         val applications = approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(amount = 5) {
           withCreatedByUser(userEntity)

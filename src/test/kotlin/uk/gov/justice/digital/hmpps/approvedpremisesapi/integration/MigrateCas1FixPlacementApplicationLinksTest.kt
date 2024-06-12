@@ -4,9 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -18,9 +18,9 @@ class MigrateCas1FixPlacementApplicationLinksTest : MigrationJobTestBase() {
 
     @Test
     fun `Repo query only returns relevant applications`() {
-      givenAUser { user, _ ->
+      `Given a User` { user, _ ->
 
-        givenAPlacementApplication(
+        `Given a Placement Application`(
           crn = "placementAppWithoutDecision",
           createdByUser = user,
           decision = null,
@@ -29,7 +29,7 @@ class MigrateCas1FixPlacementApplicationLinksTest : MigrationJobTestBase() {
           },
         )
 
-        val placementAppAlreadyLinkedToPlacementRequest = givenAPlacementApplication(
+        val placementAppAlreadyLinkedToPlacementRequest = `Given a Placement Application`(
           crn = "placementAppAlreadyLinkedToPlacementRequest",
           createdByUser = user,
           decision = PlacementApplicationDecision.ACCEPTED,
@@ -37,7 +37,7 @@ class MigrateCas1FixPlacementApplicationLinksTest : MigrationJobTestBase() {
             withPermissiveSchema()
           },
         )
-        givenAPlacementRequest(
+        `Given a Placement Request`(
           crn = placementAppAlreadyLinkedToPlacementRequest.application.crn,
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -45,7 +45,7 @@ class MigrateCas1FixPlacementApplicationLinksTest : MigrationJobTestBase() {
           placementApplication = placementAppAlreadyLinkedToPlacementRequest,
         )
 
-        val placementAppNotLinkedToPlacementRequest = givenAPlacementApplication(
+        val placementAppNotLinkedToPlacementRequest = `Given a Placement Application`(
           crn = "placementAppNotLinkedToPlacementRequest",
           createdByUser = user,
           decision = PlacementApplicationDecision.ACCEPTED,
@@ -68,8 +68,8 @@ class MigrateCas1FixPlacementApplicationLinksTest : MigrationJobTestBase() {
 
     @Test
     fun `Backfill adds placement request to placement application link`() {
-      givenAUser { user, _ ->
-        val (_, application) = givenAPlacementRequest(
+      `Given a User` { user, _ ->
+        val (_, application) = `Given a Placement Request`(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,

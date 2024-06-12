@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
@@ -29,8 +29,8 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
 
   @Test
   fun `Duplicate application and adds note`() {
-    givenAUser { applicant, _ ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { applicant, _ ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val sourceApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)

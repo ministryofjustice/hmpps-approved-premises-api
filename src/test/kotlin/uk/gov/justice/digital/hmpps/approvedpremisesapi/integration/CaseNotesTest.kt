@@ -4,8 +4,8 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.caseNotesAPIMockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
@@ -56,7 +56,7 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val crn = "CRN345"
 
       wiremockServer.stubFor(
@@ -80,8 +80,8 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes for a CRN without a NOMS number returns 404`() {
-    givenAUser { _, jwt ->
-      givenAnOffender(
+    `Given a User` { _, jwt ->
+      `Given an Offender`(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },
@@ -99,8 +99,8 @@ class CaseNotesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting case notes returns OK with correct body`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val caseNotes = listOf(
           CaseNoteFactory().produce(),
           CaseNoteFactory().produce(),

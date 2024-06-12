@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
@@ -59,8 +59,8 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeEach
   fun setup() {
-    val (offenderDetails) = givenAnOffender()
-    val (user, jwt) = givenAUser(
+    val (offenderDetails) = `Given an Offender`()
+    val (user, jwt) = `Given a User`(
       roles = listOf(
         UserRole.CAS1_ASSESSOR,
         UserRole.CAS1_MATCHER,

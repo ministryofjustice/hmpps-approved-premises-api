@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 
-fun IntegrationTestBase.givenAnApplication(
+fun IntegrationTestBase.`Given an Application`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   submittedAt: OffsetDateTime? = null,
@@ -26,12 +26,12 @@ fun IntegrationTestBase.givenAnApplication(
   block(application)
 }
 
-fun IntegrationTestBase.givenASubmittedApplication(
+fun IntegrationTestBase.`Given a Submitted Application`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   block: (application: ApplicationEntity) -> Unit,
 ) {
-  givenAnApplication(
+  `Given an Application`(
     createdByUser,
     crn,
     OffsetDateTime.now(),

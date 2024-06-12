@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
@@ -41,9 +41,9 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
 
   @BeforeAll
   fun setup() {
-    givenAUser { userEntity, _ ->
-      givenAnOffender { offenderDetails, _ ->
-        givenAnOffender { offenderDetails2, _ ->
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Offender` { offenderDetails2, _ ->
           crn1 = offenderDetails.otherIds.crn
           crn2 = offenderDetails2.otherIds.crn
 

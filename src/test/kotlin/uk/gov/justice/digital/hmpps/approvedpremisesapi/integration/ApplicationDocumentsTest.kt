@@ -7,8 +7,8 @@ import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulDocumentDownloadCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
@@ -29,8 +29,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application documents returns 200`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -82,8 +82,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application documents for Temporary Accommodation returns 200`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -137,8 +137,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Download document returns 404 when not found in documents meta data`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -184,8 +184,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Download document returns 200 with correct body and headers`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)

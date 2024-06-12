@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
@@ -76,7 +76,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting risks for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
       communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -93,8 +93,8 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting risks for a CRN returns OK with correct body`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         apOASysContextMockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {

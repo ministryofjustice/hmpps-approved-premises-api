@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.givenAUser(
+fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
   staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
   roles: List<UserRole> = emptyList(),
@@ -79,7 +79,7 @@ fun IntegrationTestBase.givenAUser(
 }
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.givenAUser(
+fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
   staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
   roles: List<UserRole> = emptyList(),
@@ -89,7 +89,7 @@ fun IntegrationTestBase.givenAUser(
   mockStaffUserDetailsCall: Boolean = true,
   block: (userEntity: UserEntity, jwt: String) -> Unit,
 ) {
-  val (user, jwt) = givenAUser(
+  val (user, jwt) = `Given a User`(
     id,
     staffUserDetailsConfigBlock,
     roles,
@@ -102,7 +102,7 @@ fun IntegrationTestBase.givenAUser(
   return block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2PomUser(
+fun IntegrationTestBase.`Given a CAS2 POM User`(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
@@ -130,7 +130,7 @@ fun IntegrationTestBase.givenACas2PomUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
+fun IntegrationTestBase.`Given a CAS2 Licence Case Admin User`(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
@@ -158,7 +158,7 @@ fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2Assessor(
+fun IntegrationTestBase.`Given a CAS2 Assessor`(
   id: UUID = UUID.randomUUID(),
   block: (externalUserEntity: ExternalUserEntity, jwt: String) -> Unit,
 ) {
@@ -172,7 +172,7 @@ fun IntegrationTestBase.givenACas2Assessor(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2Admin(
+fun IntegrationTestBase.`Given a CAS2 Admin`(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,

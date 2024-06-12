@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import java.time.LocalDate
 import java.util.UUID
@@ -39,7 +39,7 @@ class BedSummaryTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting beds for a premises that does not exist returns 404`() {
-    givenAUser { _, jwt ->
+    `Given a User` { _, jwt ->
       webTestClient.get()
         .uri("/premises/${UUID.randomUUID()}/beds")
         .header("Authorization", "Bearer $jwt")
@@ -52,7 +52,7 @@ class BedSummaryTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting beds for a premises returns a list of beds`() {
-    givenAUser { _, jwt ->
+    `Given a User` { _, jwt ->
       val bedWithoutBooking = bedEntityFactory.produceAndPersist {
         withRoom(
           roomEntityFactory.produceAndPersist {

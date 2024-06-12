@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
@@ -12,7 +12,7 @@ import java.util.UUID
 class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Create Turnaround returns 404 Not Found if the premises was not found`() {
-    givenAUser { _, jwt ->
+    `Given a User` { _, jwt ->
       govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
@@ -31,7 +31,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 404 Not Found if the booking was not found on the premises`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -57,7 +57,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 400 Bad Request if the number of working days is not a positive integer`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -99,7 +99,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing booking`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -151,7 +151,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing lost bed`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -206,7 +206,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 200 OK with the created turnaround`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {

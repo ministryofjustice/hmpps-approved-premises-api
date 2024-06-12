@@ -13,9 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Licence Case Admin User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
@@ -85,8 +85,8 @@ class Cas2ApplicationNotesTest(
     fun `assessors create note returns 201`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2PomUser { referrer, _ ->
-        givenACas2Assessor { _, jwt ->
+      `Given a CAS2 POM User` { referrer, _ ->
+        `Given a CAS2 Assessor` { _, jwt ->
           val applicationSchema =
             cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
               withAddedAt(OffsetDateTime.now())
@@ -164,7 +164,7 @@ class Cas2ApplicationNotesTest(
           @Test
           fun `referrer create note returns 201`() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-            givenACas2PomUser { referrer, jwt ->
+            `Given a CAS2 POM User` { referrer, jwt ->
               val applicationSchema =
                 cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                   withAddedAt(OffsetDateTime.now())
@@ -238,7 +238,7 @@ class Cas2ApplicationNotesTest(
             fun `referrer cannot create note`() {
               val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-              givenACas2PomUser { _, jwt ->
+              `Given a CAS2 POM User` { _, jwt ->
                 val applicationSchema =
                   cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                     withAddedAt(OffsetDateTime.now())
@@ -283,7 +283,7 @@ class Cas2ApplicationNotesTest(
 
             @Test
             fun `referrer can create a note for an application they did not create`() {
-              givenACas2PomUser { referrer, jwt ->
+              `Given a CAS2 POM User` { referrer, jwt ->
                 val applicationSchema =
                   cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                     withAddedAt(OffsetDateTime.now())
@@ -361,7 +361,7 @@ class Cas2ApplicationNotesTest(
           @Test
           fun `referrer create note returns 201`() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-            givenACas2LicenceCaseAdminUser { referrer, jwt ->
+            `Given a CAS2 Licence Case Admin User` { referrer, jwt ->
               val applicationSchema =
                 cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                   withAddedAt(OffsetDateTime.now())
@@ -435,7 +435,7 @@ class Cas2ApplicationNotesTest(
             fun `referrer cannot create note`() {
               val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-              givenACas2LicenceCaseAdminUser { _, jwt ->
+              `Given a CAS2 Licence Case Admin User` { _, jwt ->
                 val applicationSchema =
                   cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                     withAddedAt(OffsetDateTime.now())
@@ -480,7 +480,7 @@ class Cas2ApplicationNotesTest(
 
             @Test
             fun `referrer can create a note for an application they did not create`() {
-              givenACas2PomUser { referrer, jwt ->
+              `Given a CAS2 POM User` { referrer, jwt ->
                 val applicationSchema =
                   cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
                     withAddedAt(OffsetDateTime.now())

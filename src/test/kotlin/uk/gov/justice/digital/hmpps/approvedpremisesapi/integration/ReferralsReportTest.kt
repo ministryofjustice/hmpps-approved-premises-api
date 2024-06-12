@@ -11,9 +11,9 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -36,7 +36,7 @@ class ReferralsReportTest : IntegrationTestBase() {
 
   @Test
   fun `Get referrals report returns 403 Forbidden if user does not have access`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/referrals-by-tier?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -50,7 +50,7 @@ class ReferralsReportTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(ServiceName::class, names = ["approvedPremises"], mode = EnumSource.Mode.EXCLUDE)
   fun `Get referrals report report returns not allowed if the service is not Approved Premises`(serviceName: ServiceName) {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/referrals-by-tier?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -64,53 +64,53 @@ class ReferralsReportTest : IntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["referrals-by-tier", "referrals-by-ap-type"])
   fun `Get referrals report returns the correct data`(reportType: String) {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
       govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
       val month = 4
       val year = 2023
 
-      givenAnAssessmentForApprovedPremises(
+      `Given an Assessment for Approved Premises`(
         allocatedToUser = user,
         createdByUser = user,
         createdAt = OffsetDateTime.of(LocalDate.of(year, 12, 4), LocalTime.MIDNIGHT, ZoneOffset.UTC),
       )
 
-      givenAnAssessmentForApprovedPremises(
+      `Given an Assessment for Approved Premises`(
         allocatedToUser = user,
         createdByUser = user,
         createdAt = OffsetDateTime.of(LocalDate.of(year, month, 4), LocalTime.MIDNIGHT, ZoneOffset.UTC),
         reallocated = true,
       )
 
-      givenAnAssessmentForTemporaryAccommodation(
+      `Given an Assessment for Temporary Accommodation`(
         allocatedToUser = user,
         createdByUser = user,
         createdAt = OffsetDateTime.of(LocalDate.of(year, month, 4), LocalTime.MIDNIGHT, ZoneOffset.UTC),
       )
 
       val assessments = listOf(
-        givenAnAssessmentForApprovedPremises(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           createdAt = OffsetDateTime.of(LocalDate.of(year, month, 4), LocalTime.MIDNIGHT, ZoneOffset.UTC),
         ),
-        givenAnAssessmentForApprovedPremises(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           createdAt = OffsetDateTime.of(LocalDate.of(year, month, 15), LocalTime.MIDNIGHT, ZoneOffset.UTC),
         ),
-        givenAnAssessmentForApprovedPremises(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           createdAt = OffsetDateTime.of(LocalDate.of(year, month, 12), LocalTime.MIDNIGHT, ZoneOffset.UTC),
         ),
-        givenAnAssessmentForApprovedPremises(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           createdAt = OffsetDateTime.of(LocalDate.of(year, month, 3), LocalTime.MIDNIGHT, ZoneOffset.UTC),
         ),
-        givenAnAssessmentForApprovedPremises(
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = user,
           createdByUser = user,
           createdAt = OffsetDateTime.of(LocalDate.of(year, month, 6), LocalTime.MIDNIGHT, ZoneOffset.UTC),

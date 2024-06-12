@@ -55,10 +55,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
@@ -133,14 +133,14 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
       ) { userEntity, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnOffender { otherOffenderDetails, _ ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given an Offender` { otherOffenderDetails, _ ->
               approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
               val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -275,13 +275,13 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns 200 - when user is CAS3_ASSESSOR then returns submitted applications in region`() {
-      givenAProbationRegion { probationRegion ->
-        givenAUser(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
-          givenAUser(
+      `Given a Probation Region` { probationRegion ->
+        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+          `Given a User`(
             roles = listOf(UserRole.CAS3_ASSESSOR),
             probationRegion = probationRegion,
           ) { assessorUser, jwt ->
-            givenAnOffender { offenderDetails, _ ->
+            `Given an Offender` { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
               val applicationSchema = createApplicationSchema()
@@ -378,13 +378,13 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns 200 for TA - when user is CAS3_REFERRER then returns all applications for user`() {
-      givenAProbationRegion { probationRegion ->
-        givenAUser(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
-          givenAUser(
+      `Given a Probation Region` { probationRegion ->
+        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+          `Given a User`(
             roles = listOf(UserRole.CAS3_REFERRER),
             probationRegion = probationRegion,
           ) { referrerUser, jwt ->
-            givenAnOffender { offenderDetails, _ ->
+            `Given an Offender` { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
               val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -441,7 +441,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns limited information when a person cannot be found`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
@@ -505,12 +505,12 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns successfully when a person has no NOMS number`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
       ) { userEntity, jwt ->
-        givenAnOffender(
+        `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
@@ -553,14 +553,14 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns successfully when the person cannot be fetched from the prisons API`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
       ) { userEntity, jwt ->
         val crn = "X1234"
 
-        givenAnOffender(
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCrn(crn)
             withNomsNumber("ABC123")
@@ -612,8 +612,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns 200 with correct body`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
           val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -684,13 +684,13 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns 403 when caller not in a managing team and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
         },
       ) { userEntity, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val crn = "X1234"
 
             val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
@@ -715,12 +715,12 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns successfully when a person has no NOMS number`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
       ) { userEntity, jwt ->
-        givenAnOffender(
+        `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
@@ -760,14 +760,14 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
       ) { userEntity, jwt ->
         val crn = "X1234"
 
-        givenAnOffender(
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCrn(crn)
             withNomsNumber("ABC123")
@@ -804,8 +804,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single online application returns 200 non-upgradable outdated application marked as such`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
           approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -890,8 +890,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns 200 with correct body for Temporary Accommodation when requesting user created application`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
           val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -948,9 +948,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns 200 with correct body for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1009,9 +1009,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAUser { createdByUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given a User` { createdByUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1055,9 +1055,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
-      givenAUser { userEntity, jwt ->
-        givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1105,9 +1105,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement applications returns 403 Forbidden if incorrect XServiceName`() {
-      givenAUser { user, jwt ->
+      `Given a User` { user, jwt ->
 
-        givenAPlacementApplication(
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1129,9 +1129,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement applications without JWT returns 401`() {
-      givenAUser { user, _ ->
+      `Given a User` { user, _ ->
 
-        givenAPlacementApplication(
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1153,8 +1153,8 @@ class ApplicationTest : IntegrationTestBase() {
     @NullSource
     @EnumSource(value = PlacementApplicationDecision::class, names = ["WITHDRAWN_BY_PP"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get placement applications returns the transformed objects`(decision: PlacementApplicationDecision?) {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1162,7 +1162,7 @@ class ApplicationTest : IntegrationTestBase() {
           decision = decision,
           submittedAt = OffsetDateTime.now(),
         ) { _ ->
-          givenAPlacementApplication(
+          `Given a Placement Application`(
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
@@ -1171,7 +1171,7 @@ class ApplicationTest : IntegrationTestBase() {
             decision = decision,
             submittedAt = OffsetDateTime.now(),
           ) { _ ->
-            givenAPlacementApplication(
+            `Given a Placement Application`(
               createdByUser = user,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
@@ -1212,8 +1212,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement applications returns initial request for placement alongside other placement apps if requested, even if withdrawn`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1272,8 +1272,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement applications does not return initial request for placement alongside other placement apps if not requested()`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1328,8 +1328,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement applications does not return withdrawn placement applications`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1357,8 +1357,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get placement applications does not return unsubmitted placement applications`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1387,8 +1387,8 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single offline application returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
         val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
         }
@@ -1434,7 +1434,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns 404 when a person cannot be found`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         val crn = "X1234"
 
         communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -1463,8 +1463,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
-      givenAUser { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           apDeliusContextMockSuccessfulTeamsManagingCaseCall(
             offenderDetails.otherIds.crn,
@@ -1497,8 +1497,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns 201 with correct body and Location header`() {
-      givenAUser { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
             withId(UUID.randomUUID())
@@ -1546,8 +1546,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application without risks returns 201 with correct body and Location header`() {
-      givenAUser { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
             withId(UUID.randomUUID())
@@ -1595,8 +1595,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns successfully when a person has no NOMS number`() {
-      givenAUser { _, jwt ->
-        givenAnOffender(
+      `Given a User` { _, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
           apDeliusContextMockSuccessfulTeamsManagingCaseCall(
@@ -1640,8 +1640,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender(
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withNomsNumber("ABC123")
           },
@@ -1685,8 +1685,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application for Temporary Accommodation returns 403 when user isn't  CAS3_REFERRER role`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           webTestClient.post()
             .uri("/applications")
             .header("Authorization", "Bearer $jwt")
@@ -1708,8 +1708,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application for Temporary Accommodation returns 201 with correct body and Location header`() {
-      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
             withId(UUID.randomUUID())
@@ -1749,8 +1749,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Should get 403 forbidden error when create new application for Temporary Accommodation with user CAS3_REPORTER`() {
-      givenAUser(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           webTestClient.post()
             .uri("/applications")
@@ -1773,8 +1773,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application for Temporary Accommodation returns successfully when a person has no NOMS number`() {
-      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
-        givenAnOffender(
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1816,9 +1816,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application for Temporary Accommodation returns 201 with correct body and store prison-name in DB`() {
-      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
         val agencyName = "HMP Bristol"
-        givenAnOffender(
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCrn("CRN")
             withDateOfBirth(LocalDate.parse("1985-05-05"))
@@ -1893,12 +1893,12 @@ class ApplicationTest : IntegrationTestBase() {
   inner class Cas1UpdateApplicationCas {
     @Test
     fun `Update existing AP application returns 200 with correct body`() {
-      givenAUser { submittingUser, jwt ->
-        givenAUser(
+      `Given a User` { submittingUser, jwt ->
+        `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.PIPE),
         ) { _, _ ->
-          givenAnOffender { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1963,7 +1963,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -1972,11 +1972,11 @@ class ApplicationTest : IntegrationTestBase() {
           )
         },
       ) { submittingUser, jwt ->
-        givenAUser(
+        `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
         ) { assessorUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2131,7 +2131,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit application returns 200, creates and allocates an assessment, has given probation region id`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -2140,11 +2140,11 @@ class ApplicationTest : IntegrationTestBase() {
           )
         },
       ) { submittingUser, jwt ->
-        givenAUser(
+        `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
         ) { assessorUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2269,7 +2269,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400 without persisting domain events`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -2278,11 +2278,11 @@ class ApplicationTest : IntegrationTestBase() {
           )
         },
       ) { submittingUser, jwt ->
-        givenAUser(
+        `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
         ) { _, _ ->
-          givenAnOffender { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2422,7 +2422,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit Temporary Accommodation application returns 200`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -2431,8 +2431,8 @@ class ApplicationTest : IntegrationTestBase() {
           )
         },
       ) { submittingUser, jwt ->
-        givenAUser { _, _ ->
-          givenAnOffender { offenderDetails, _ ->
+        `Given a User` { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
             val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
 
@@ -2487,7 +2487,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit Temporary Accommodation application returns 200 with optionl elements in the request`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -2496,8 +2496,8 @@ class ApplicationTest : IntegrationTestBase() {
           )
         },
       ) { submittingUser, jwt ->
-        givenAUser { _, _ ->
-          givenAnOffender { offenderDetails, _ ->
+        `Given a User` { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2579,9 +2579,9 @@ class ApplicationTest : IntegrationTestBase() {
   inner class GetAssessmentForApplication {
     @Test
     fun `Get assessment for application returns an application's assessment when the requesting user is the allocated user`() {
-      givenAUser { applicant, _ ->
-        givenAUser { user, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { applicant, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
             val (application, assessment) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
 
             webTestClient.get()
@@ -2606,10 +2606,10 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get assessment for application returns an application's assessment when the requesting user is a workflow manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { applicant, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assignee, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { applicant, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { assignee, _ ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
               val (application, assessment) = produceAndPersistApplicationAndAssessment(
                 applicant,
                 assignee,
@@ -2639,10 +2639,10 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get assessment for an application returns 403 if the user does not have permission`() {
-      givenAUser { applicant, _ ->
-        givenAUser { assignee, _ ->
-          givenAUser { _, jwt ->
-            givenAnOffender { offenderDetails, _ ->
+      `Given a User` { applicant, _ ->
+        `Given a User` { assignee, _ ->
+          `Given a User` { _, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
 
               val (application, _) = produceAndPersistApplicationAndAssessment(applicant, assignee, offenderDetails)
 
@@ -2672,7 +2672,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `post ApplicationTimelineNote with JWT returns 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val applicationId = UUID.randomUUID()
 
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2722,7 +2722,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Withdraw Application 200 withdraws application and sends an email to application creator`() {
-      givenAUser { user, jwt ->
+      `Given a User` { user, jwt ->
         val application = produceAndPersistBasicApplication(
           crn = "ABC123",
           userEntity = user,
@@ -2769,8 +2769,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Withdraw Application 200 withdraws application and sends an email to assessor if assessment is pending`() {
-      givenAUser { applicant, jwt ->
-        givenAUser { assessor, _ ->
+      `Given a User` { applicant, jwt ->
+        `Given a User` { assessor, _ ->
           val application = produceAndPersistBasicApplication(
             crn = "ABC123",
             userEntity = applicant,
@@ -2828,7 +2828,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all not approved premises service returns 403 forbidden`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/applications/all")
           .header("Authorization", "Bearer $jwt")
@@ -2841,8 +2841,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 and correct body`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           approvedPremisesApplicationJsonSchemaRepository.deleteAll()
           val applicationId1 = UUID.randomUUID()
           val applicationId2 = UUID.randomUUID()
@@ -2925,8 +2925,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns twelve items if no page parameter passed`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
@@ -2953,8 +2953,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns ten items if page parameter passed is one`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
@@ -2985,8 +2985,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns twelve items if crn parameter passed and no page`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           createTwelveApplications(crn, userEntity)
 
@@ -3014,9 +3014,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns twelve items if crn parameter passed and two crns in db no page`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAnOffender { offenderDetails2, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
 
             val crn1 = offenderDetails.otherIds.crn
             createTwelveApplications(crn1, userEntity)
@@ -3049,9 +3049,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns two items if crn parameter passed and two crns in db and page one`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAnOffender { offenderDetails2, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
 
             val crn1 = offenderDetails.otherIds.crn
             createTwelveApplications(crn1, userEntity)
@@ -3088,8 +3088,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page one and sorted by createdAt desc`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
@@ -3149,8 +3149,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page one and sorted by createdAt asc`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
@@ -3210,8 +3210,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page one and sorted by arrivalDate desc`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
@@ -3271,8 +3271,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page one and sorted by arrivalDate asc`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
@@ -3332,8 +3332,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page one and sorted by tier asc`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
@@ -3430,8 +3430,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page one and sorted by tier desc`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
@@ -3528,8 +3528,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body and page two and query by status`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -3578,9 +3578,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get applications all returns 200 correct body for a given name`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAnOffender { offenderDetails2, _ ->
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
 
             val crn1 = offenderDetails.otherIds.crn
 

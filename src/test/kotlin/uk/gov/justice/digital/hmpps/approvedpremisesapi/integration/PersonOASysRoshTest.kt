@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRoshCallWithDelay
@@ -89,7 +89,7 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting Rosh for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
       communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -106,8 +106,8 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting RoSH for a CRN returns OK with correct body`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
@@ -135,8 +135,8 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting RoSH when upstream times out returns 404`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
         apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
 

@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -28,12 +28,12 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `Approved Premises assessment summary query works as described when not restricted to user`() {
-    givenAUser { user1, _ ->
-      givenAnAssessmentForApprovedPremises(user1, user1, reallocated = true) { _, _ -> }
-      givenAnAssessmentForApprovedPremises(user1, user1) { apAssessment, _ ->
-        givenAnAssessmentForApprovedPremises(user1, user1, data = null) { notStartedApAssessment, _ ->
-          givenAnAssessmentForTemporaryAccommodation(user1, user1) { taAssessment, _ ->
-            givenAUser { user2, _ ->
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+        `Given an Assessment for Approved Premises`(user1, user1, data = null) { notStartedApAssessment, _ ->
+          `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+            `Given a User` { user2, _ ->
 
               val u2Assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
                 val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -70,12 +70,12 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `Approved Premises assessment summary query works as described when restricted to one user`() {
-    givenAUser { user1, _ ->
-      givenAUser { user2, _ ->
-        givenAnAssessmentForApprovedPremises(user2, user2) { _, _ -> }
-        givenAnAssessmentForApprovedPremises(user1, user1, reallocated = true) { _, _ -> }
-        givenAnAssessmentForApprovedPremises(user1, user1) { apAssessment, _ ->
-          givenAnAssessmentForTemporaryAccommodation(user2, user2) { taAssessment, _ ->
+    `Given a User` { user1, _ ->
+      `Given a User` { user2, _ ->
+        `Given an Assessment for Approved Premises`(user2, user2) { _, _ -> }
+        `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
+        `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+          `Given an Assessment for Temporary Accommodation`(user2, user2) { taAssessment, _ ->
             earliestUnansweredClarificationNote(taAssessment, user2)
 
             val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user1.id.toString()).toList()
@@ -90,12 +90,12 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `Temporary Accommodation assessment summary query returns assessments in the region`() {
-    givenAUser { user1, _ ->
-      givenAnAssessmentForTemporaryAccommodation(user1, user1, reallocated = true) { _, _ -> }
-      givenAnAssessmentForTemporaryAccommodation(user1, user1) { taAssessment, _ ->
-        givenAnAssessmentForTemporaryAccommodation(user1, user1, data = null) { notStartedTaAssessment, _ ->
-          givenAnAssessmentForApprovedPremises(user1, user1) { apAssessment, _ ->
-            givenAUser(probationRegion = user1.probationRegion) { user2, _ ->
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Temporary Accommodation`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+        `Given an Assessment for Temporary Accommodation`(user1, user1, data = null) { notStartedTaAssessment, _ ->
+          `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+            `Given a User`(probationRegion = user1.probationRegion) { user2, _ ->
 
               val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -134,12 +134,12 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `Temporary Accommodation assessment summary query returns assessments in the region with specific crn`() {
-    givenAUser { user1, _ ->
-      givenAnAssessmentForTemporaryAccommodation(user1, user1, reallocated = true) { _, _ -> }
-      givenAnAssessmentForTemporaryAccommodation(user1, user1) { taAssessment, _ ->
-        givenAnAssessmentForTemporaryAccommodation(user1, user1, data = null) { notStartedTaAssessment, _ ->
-          givenAnAssessmentForApprovedPremises(user1, user1) { apAssessment, _ ->
-            givenAUser(probationRegion = user1.probationRegion) { user2, _ ->
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Temporary Accommodation`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+        `Given an Assessment for Temporary Accommodation`(user1, user1, data = null) { notStartedTaAssessment, _ ->
+          `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+            `Given a User`(probationRegion = user1.probationRegion) { user2, _ ->
 
               val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -177,12 +177,12 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `Temporary Accommodation assessment summary query returns no assessments when searched for specific status which doesn't exists`() {
-    givenAUser { user1, _ ->
-      givenAnAssessmentForTemporaryAccommodation(user1, user1, reallocated = true) { _, _ -> }
-      givenAnAssessmentForTemporaryAccommodation(user1, user1) { taAssessment, _ ->
-        givenAnAssessmentForTemporaryAccommodation(user1, user1, data = null) { notStartedTaAssessment, _ ->
-          givenAnAssessmentForApprovedPremises(user1, user1) { apAssessment, _ ->
-            givenAUser(probationRegion = user1.probationRegion) { user2, _ ->
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Temporary Accommodation`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+        `Given an Assessment for Temporary Accommodation`(user1, user1, data = null) { notStartedTaAssessment, _ ->
+          `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+            `Given a User`(probationRegion = user1.probationRegion) { user2, _ ->
 
               val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {

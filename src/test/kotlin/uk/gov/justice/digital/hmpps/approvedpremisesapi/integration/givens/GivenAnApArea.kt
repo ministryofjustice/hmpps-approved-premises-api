@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import java.util.UUID
 
-fun IntegrationTestBase.givenAnApArea(
+fun IntegrationTestBase.`Given an AP Area`(
   id: UUID = UUID.randomUUID(),
 ): ApAreaEntity {
   val probationRegion = apAreaEntityFactory.produceAndPersist {

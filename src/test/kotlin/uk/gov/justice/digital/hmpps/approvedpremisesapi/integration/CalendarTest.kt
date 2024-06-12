@@ -6,9 +6,9 @@ import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedOccupancyBookingEntry
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedOccupancyEntryType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedOccupancyRange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises Bed`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 
@@ -24,8 +24,8 @@ class CalendarTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Requesting Calendar for CAS1 Premises without CAS1_MATCHER or CAS1_MANAGER role returns 403`() {
-    givenAUser { _, jwt ->
-      givenAnApprovedPremisesBed { bed ->
+    `Given a User` { _, jwt ->
+      `Given an Approved Premises Bed` { bed ->
         webTestClient.get()
           .uri("/premises/${bed.room.premises.id}/calendar?startDate=2023-06-08&endDate=2023-07-10")
           .header("Authorization", "Bearer $jwt")
@@ -39,11 +39,11 @@ class CalendarTest : InitialiseDatabasePerClassTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Requesting Calendar for CAS1 Premises with CAS1_MATCHER or CAS1_MANAGER returns 200 with correct body`(role: UserRole) {
-    givenAUser(
+    `Given a User`(
       roles = listOf(role),
     ) { _, jwt ->
-      givenAnApprovedPremisesBed { bed ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given an Approved Premises Bed` { bed ->
+        `Given an Offender` { offenderDetails, _ ->
           val booking = bookingEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(bed.room.premises)

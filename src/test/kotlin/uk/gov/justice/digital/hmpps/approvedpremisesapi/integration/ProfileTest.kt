@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
@@ -40,7 +40,7 @@ class ProfileTest : IntegrationTestBase() {
 
   @Test
   fun `Getting own profile with no X-Service-Name header returns 400`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       webTestClient.get()
         .uri("/profile")
         .header("Authorization", "Bearer $jwt")
@@ -64,7 +64,7 @@ class ProfileTest : IntegrationTestBase() {
       withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
     }
 
-    givenAUser(
+    `Given a User`(
       id = id,
       roles = listOf(UserRole.CAS1_ASSESSOR),
       qualifications = listOf(UserQualification.PIPE),

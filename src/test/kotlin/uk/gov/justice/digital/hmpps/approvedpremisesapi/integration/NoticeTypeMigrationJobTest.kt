@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.MigrationJobService
 import java.time.OffsetDateTime
@@ -57,8 +57,8 @@ class NoticeTypeMigrationJobTest : IntegrationTestBase() {
   }
 
   private fun createApplication(isEmergencyApplication: Boolean?, createdAt: OffsetDateTime, arrivalDate: OffsetDateTime?): ApprovedPremisesApplicationEntity {
-    val (applicant, _) = givenAUser()
-    val (offenderDetails, _) = givenAnOffender()
+    val (applicant, _) = `Given a User`()
+    val (offenderDetails, _) = `Given an Offender`()
 
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())

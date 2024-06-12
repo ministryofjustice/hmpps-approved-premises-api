@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
@@ -78,8 +78,8 @@ class Cas2StatusUpdateTest(
     fun `Create status update returns 201 and creates StatusUpdate when given status is valid`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+      `Given a CAS2 Assessor` { _, jwt ->
+        `Given a CAS2 POM User` { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withId(applicationId)
@@ -131,7 +131,7 @@ class Cas2StatusUpdateTest(
 
     @Test
     fun `Create status update returns 404 when application not found`() {
-      givenACas2Assessor { _, jwt ->
+      `Given a CAS2 Assessor` { _, jwt ->
         webTestClient.post()
           .uri("/cas2/submissions/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
@@ -146,8 +146,8 @@ class Cas2StatusUpdateTest(
 
     @Test
     fun `Create status update returns 400 when new status NOT valid`() {
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+      `Given a CAS2 Assessor` { _, jwt ->
+        `Given a CAS2 POM User` { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
@@ -177,8 +177,8 @@ class Cas2StatusUpdateTest(
         val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
         val submittedAt = OffsetDateTime.now()
 
-        givenACas2Assessor { _, jwt ->
-          givenACas2PomUser { applicant, _ ->
+        `Given a CAS2 Assessor` { _, jwt ->
+          `Given a CAS2 POM User` { applicant, _ ->
             val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
             val application = cas2ApplicationEntityFactory.produceAndPersist {
               withId(applicationId)
@@ -302,8 +302,8 @@ class Cas2StatusUpdateTest(
       fun `Create status update returns 201 and creates StatusUpdate when given status is valid`() {
         val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-        givenACas2Assessor { _, jwt ->
-          givenACas2PomUser { applicant, _ ->
+        `Given a CAS2 Assessor` { _, jwt ->
+          `Given a CAS2 POM User` { applicant, _ ->
             val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
             val application = cas2ApplicationEntityFactory.produceAndPersist {
               withCreatedByUser(applicant)
@@ -356,7 +356,7 @@ class Cas2StatusUpdateTest(
 
       @Test
       fun `Create status update returns 404 when assessment not found`() {
-        givenACas2Assessor { _, jwt ->
+        `Given a CAS2 Assessor` { _, jwt ->
           webTestClient.post()
             .uri("/cas2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
             .header("Authorization", "Bearer $jwt")
@@ -371,8 +371,8 @@ class Cas2StatusUpdateTest(
 
       @Test
       fun `Create status update returns 400 when new status NOT valid`() {
-        givenACas2Assessor { _, jwt ->
-          givenACas2PomUser { applicant, _ ->
+        `Given a CAS2 Assessor` { _, jwt ->
+          `Given a CAS2 POM User` { applicant, _ ->
             val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
             val application = cas2ApplicationEntityFactory.produceAndPersist {
               withCreatedByUser(applicant)
@@ -406,8 +406,8 @@ class Cas2StatusUpdateTest(
           val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
           val submittedAt = OffsetDateTime.now()
 
-          givenACas2Assessor { _, jwt ->
-            givenACas2PomUser { applicant, _ ->
+          `Given a CAS2 Assessor` { _, jwt ->
+            `Given a CAS2 POM User` { applicant, _ ->
               val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(applicant)

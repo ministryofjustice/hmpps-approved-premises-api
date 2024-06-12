@@ -23,11 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulOffenderDetailsCall
@@ -73,7 +73,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `creating a placement application when the application does not exist returns 404`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.post()
           .uri("/placement-applications")
           .header("Authorization", "Bearer $jwt")
@@ -90,9 +90,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `creating a placement application when the application does not belong to the user returns 401`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenASubmittedApplication(createdByUser = otherUser) { application ->
+      `Given a User` { _, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given a Submitted Application`(createdByUser = otherUser) { application ->
             webTestClient.post()
               .uri("/placement-applications")
               .header("Authorization", "Bearer $jwt")
@@ -111,8 +111,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `creating a placement application when the application does not have an assessment returns an error`() {
-      givenAUser { user, jwt ->
-        givenASubmittedApplication(createdByUser = user) { application ->
+      `Given a User` { user, jwt ->
+        `Given a Submitted Application`(createdByUser = user) { application ->
           webTestClient.post()
             .uri("/placement-applications")
             .header("Authorization", "Bearer $jwt")
@@ -130,8 +130,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `creating a placement application when the assessment has been rejected returns an error`() {
-      givenAUser { user, jwt ->
-        givenAnAssessmentForApprovedPremises(decision = AssessmentDecision.REJECTED, allocatedToUser = user, createdByUser = user) { _, application ->
+      `Given a User` { user, jwt ->
+        `Given an Assessment for Approved Premises`(decision = AssessmentDecision.REJECTED, allocatedToUser = user, createdByUser = user) { _, application ->
           approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -153,8 +153,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `creating a placement application when the application belongs to the user returns successfully`() {
-      givenAUser { user, jwt ->
-        givenAnAssessmentForApprovedPremises(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
+      `Given a User` { user, jwt ->
+        `Given an Assessment for Approved Premises`(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
           val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -190,8 +190,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   inner class GetPlacementApplicationTest {
     @Test
     fun `getting a placement request application JWT returns 401`() {
-      givenAUser { user, _ ->
-        givenAPlacementApplication(
+      `Given a User` { user, _ ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -208,7 +208,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `getting a nonexistent placement request application returns 404`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/placement-applications/${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -220,13 +220,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `getting a placement application where the Offender is LAO but user does not pass LAO check or have LAO qualification returns 403`() {
-      givenAUser { user, jwt ->
-        givenAnOffender(
+      `Given a User` { user, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
           },
         ) { offenderDetails, _ ->
-          givenAPlacementApplication(
+          `Given a Placement Application`(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -253,13 +253,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `getting a placement application where the Offender is LAO, does not have LAO qualification but does pass LAO check or returns 200`() {
-      givenAUser { user, jwt ->
-        givenAnOffender(
+      `Given a User` { user, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
           },
         ) { offenderDetails, _ ->
-          givenAPlacementApplication(
+          `Given a Placement Application`(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -305,13 +305,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `getting a placement application where the Offender is LAO, does not pass LAO check but does have LAO qualification returns 200`() {
-      givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
-        givenAnOffender(
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
           },
         ) { offenderDetails, _ ->
-          givenAPlacementApplication(
+          `Given a Placement Application`(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -350,8 +350,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `getting a placement application returns the transformed object`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -398,8 +398,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `updating a submitted placement request application returns an error`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -423,8 +423,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `updating a placement request application created by a different user returns an error`() {
-      givenAUser { _, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { _, jwt ->
+        `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
             withYieldedProbationRegion {
               probationRegionEntityFactory.produceAndPersist {
@@ -454,8 +454,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `updating a placement request application with an outdated schema returns an error`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -483,8 +483,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `updating an in-progress placement request application returns successfully and updates the application`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -553,8 +553,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting an already submitted placement request application returns an error`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -585,8 +585,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement request application created by a different user returns an error`() {
-      givenAUser { _, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { _, jwt ->
+        `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
             withYieldedProbationRegion {
               probationRegionEntityFactory.produceAndPersist {
@@ -623,8 +623,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement request application with an outdated schema returns an error`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -659,15 +659,15 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement application with a single date returns successfully, sends emails, raises domain event and updates the application`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
-        givenAUser { user, jwt ->
-          givenAPlacementApplication(
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
+        `Given a User` { user, jwt ->
+          `Given a Placement Application`(
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            givenAnOffender(
+            `Given an Offender`(
               offenderDetailsConfigBlock = {
                 withCrn(placementApplicationEntity.application.crn)
               },
@@ -749,15 +749,15 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement application with multiple dates returns successfully and produces multiple placment apps`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
-        givenAUser { user, jwt ->
-          givenAPlacementApplication(
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
+        `Given a User` { user, jwt ->
+          `Given a Placement Application`(
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            givenAnOffender(
+            `Given an Offender`(
               offenderDetailsConfigBlock = {
                 withCrn(placementApplicationEntity.application.crn)
               },
@@ -870,7 +870,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement application decision when the placement application does not exist returns 404`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.post()
           .uri("/placement-applications/${UUID.randomUUID()}/decision")
           .header("Authorization", "Bearer $jwt")
@@ -889,8 +889,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement request application decision with a decision already set returns an error`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           `Given a submitted Placement Application`(
             allocatedToUser = user,
             offenderDetails = offenderDetails,
@@ -916,9 +916,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement request application that is not assigned to me returns an error`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
+      `Given a User` { _, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
             `Given a submitted Placement Application`(
               allocatedToUser = otherUser,
               offenderDetails = offenderDetails,
@@ -945,8 +945,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
             webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/decision")
@@ -973,8 +973,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `submitting a placement application decision when the placement dates do not exist returns 404 and does not update the decision`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
             `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { _ ->
               webTestClient.post()
@@ -1004,10 +1004,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @ParameterizedTest
     @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
     fun `accepting a placement application decision records the decision, creates and assigns a placement request and sends an email`(placementType: JpaPlacementType, isParole: Boolean) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
-          givenAUser { user, jwt ->
-            givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+          `Given a User` { user, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
               `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
                 `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
                   `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
@@ -1063,10 +1063,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @ParameterizedTest
     @CsvSource("ROTL", "ADDITIONAL_PLACEMENT", "RELEASE_FOLLOWING_DECISION")
     fun `rejecting a placement application decision records the decision and sends an email`(placementType: JpaPlacementType) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
-          givenAUser { user, jwt ->
-            givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+          `Given a User` { user, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
               `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
                 `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
                   `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
@@ -1115,7 +1115,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       placementType: JpaPlacementType? = JpaPlacementType.ADDITIONAL_PLACEMENT,
       block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
     ) {
-      val placementApplication = givenAPlacementApplication(
+      val placementApplication = `Given a Placement Application`(
         allocatedToUser = allocatedToUser,
         createdByUser = userEntityFactory.produceAndPersist {
           withYieldedProbationRegion {
@@ -1187,7 +1187,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `withdrawing a placement application decision when the placement application does not exist returns 404`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.post()
           .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
@@ -1202,8 +1202,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `withdrawing a placement application created by a different user returns an error`() {
-      givenAUser { _, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { _, jwt ->
+        `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
             withYieldedProbationRegion {
               probationRegionEntityFactory.produceAndPersist {
@@ -1232,8 +1232,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `withdrawing an in-progress placement application returns successfully and updates decision field`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
           createdByUser = user,
           submittedAt = OffsetDateTime.now(),
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1281,10 +1281,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `withdrawing a submitted placement application as the applicant sends emails, raises a domain event and returns successfully`() {
-      givenAUser { applicant, jwt ->
+      `Given a User` { applicant, jwt ->
 
-        givenAUser { assessor, _ ->
-          givenAPlacementApplication(
+        `Given a User` { assessor, _ ->
+          `Given a Placement Application`(
             createdByUser = applicant,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
@@ -1348,10 +1348,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `withdrawing a submitted placement application as a workflow manager sends emails, raises a domain event and returns successfully`() {
-      givenAUser { applicant, _ ->
-        givenAUser { assessor, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-            givenAPlacementApplication(
+      `Given a User` { applicant, _ ->
+        `Given a User` { assessor, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+            `Given a Placement Application`(
               createdByUser = applicant,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()

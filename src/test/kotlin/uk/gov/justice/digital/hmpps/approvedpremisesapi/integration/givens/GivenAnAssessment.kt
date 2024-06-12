@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
 @Suppress(
   "LongParameterList",
 )
-fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
+fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
@@ -91,7 +91,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
 @Suppress(
   "LongParameterList",
 )
-fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
+fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
@@ -102,7 +102,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   dueAt: OffsetDateTime? = null,
   block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
 ) {
-  val (assessment, application) = givenAnAssessmentForApprovedPremises(
+  val (assessment, application) = `Given an Assessment for Approved Premises`(
     allocatedToUser,
     createdByUser,
     crn,
@@ -116,7 +116,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   block(assessment, application)
 }
 
-fun IntegrationTestBase.givenAnAssessmentForTemporaryAccommodation(
+fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),

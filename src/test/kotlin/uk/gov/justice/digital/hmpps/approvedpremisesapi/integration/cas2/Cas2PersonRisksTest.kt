@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
@@ -61,7 +61,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
 
   @Test
   fun `Getting risks for a CRN that does not exist returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
       val crn = "CRN123"
 
       communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -78,8 +78,8 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
 
   @Test
   fun `Getting risks for a CRN returns OK with correct body`() {
-    givenACas2PomUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         apOASysContextMockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {

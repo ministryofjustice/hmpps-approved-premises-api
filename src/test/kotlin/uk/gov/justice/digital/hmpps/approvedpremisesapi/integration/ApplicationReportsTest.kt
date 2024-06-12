@@ -41,8 +41,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
@@ -136,7 +136,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     referrerTeam = StaffUserTeamMembershipFactory().produce()
     referrerProbationArea = "Referrer probation area"
 
-    referrerDetails = givenAUser(staffUserDetailsConfigBlock = {
+    referrerDetails = `Given a User`(staffUserDetailsConfigBlock = {
       withTeams(
         listOf(
           referrerTeam,
@@ -146,13 +146,13 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
         referrerProbationArea,
       )
     })
-    assessorDetails = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR), staffUserDetailsConfigBlock = {
+    assessorDetails = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), staffUserDetailsConfigBlock = {
       withProbationAreaCode("N03")
     })
-    managerDetails = givenAUser(roles = listOf(UserRole.CAS1_MANAGER))
-    workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
-    matcherDetails = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
-    appealManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
+    managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
+    workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+    matcherDetails = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))
+    appealManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -206,7 +206,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns 403 Forbidden if user does not have all regions access`() {
-    givenAUser { _, jwt ->
+    `Given a User` { _, jwt ->
       webTestClient.get()
         .uri("/reports/applications?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -219,7 +219,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns 400 if month is provided and not within 1-12`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/reports/applications?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -234,7 +234,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with correct applications`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       webTestClient.get()
         .uri("/reports/applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -266,7 +266,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get referrals report returns OK with correct applications`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       webTestClient.get()
         .uri("/reports/referrals?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -431,7 +431,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
-    val (offenderDetails, _) = givenAnOffender(
+    val (offenderDetails, _) = `Given an Offender`(
       offenderDetailsConfigBlock = { withCrn(crn) },
     )
 
@@ -661,7 +661,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
     val (_, jwt) = workflowManagerDetails
-    val (assigneeUser, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
+    val (assigneeUser, _) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR))
 
     val existingAssessment = application.getLatestAssessment()!!
 

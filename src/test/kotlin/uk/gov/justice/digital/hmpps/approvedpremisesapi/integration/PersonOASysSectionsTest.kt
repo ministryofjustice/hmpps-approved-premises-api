@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
@@ -63,7 +63,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
       communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -80,8 +80,8 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections for a CRN returns OK with correct body`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
@@ -128,8 +128,8 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections when upstream times out returns 404`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val needsDetails = NeedsDetailsFactory().apply {
           withAssessmentId(34853487)
           withAccommodationIssuesDetails("Accommodation", true, false)

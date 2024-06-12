@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
@@ -30,7 +30,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get all Requests for Placement for an application that could not be found returns a 404 response`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/applications/${UUID.randomUUID()}/requests-for-placement")
           .header("Authorization", "Bearer $jwt")
@@ -42,8 +42,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get all Requests for Placement for an application returns a 200 response with the expected value`() {
-      givenAUser { user, jwt ->
-        givenAnAssessmentForApprovedPremises(
+      `Given a User` { user, jwt ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = null,
           createdByUser = user,
         ) { assessment, application ->
@@ -113,7 +113,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get a Request for Placement for an application that could not be found returns a 404 response`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/applications/${UUID.randomUUID()}/requests-for-placement/${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -125,8 +125,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get a Request for Placement that does not exist returns a 404 response`() {
-      givenAUser { user, jwt ->
-        givenAnApplication(user) { wrongApplication ->
+      `Given a User` { user, jwt ->
+        `Given an Application`(user) { wrongApplication ->
           webTestClient.get()
             .uri("/applications/${wrongApplication.id}/requests-for-placement/${UUID.randomUUID()}")
             .header("Authorization", "Bearer $jwt")
@@ -139,9 +139,9 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get a Request for Placement for an application that is not the application it belongs to returns a 404 response`() {
-      givenAUser { user, jwt ->
-        givenAnApplication(user) { wrongApplication ->
-          givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given an Application`(user) { wrongApplication ->
+          `Given a Placement Request`(
             placementRequestAllocatedTo = null,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -159,8 +159,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get a Request for Placement for an application returns a 200 response with the expected placement request`() {
-      givenAUser { user, jwt ->
-        givenAnAssessmentForApprovedPremises(
+      `Given a User` { user, jwt ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = null,
           createdByUser = user,
         ) { assessment, application ->
@@ -203,10 +203,10 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Test
     fun `Get a Request for Placement for an application returns a 200 response with the expected placement application`() {
-      givenAUser { user, jwt ->
+      `Given a User` { user, jwt ->
         val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist()
 
-        givenAPlacementApplication(
+        `Given a Placement Application`(
           createdByUser = user,
           schema = schema,
           submittedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),

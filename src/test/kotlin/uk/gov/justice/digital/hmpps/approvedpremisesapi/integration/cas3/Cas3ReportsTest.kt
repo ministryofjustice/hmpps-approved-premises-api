@@ -27,8 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -89,7 +89,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02")
         .header("Authorization", "Bearer $jwt")
@@ -103,7 +103,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report for a region returns 403 Forbidden if user cannot access the specified region`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02&probationRegionId=${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
@@ -119,7 +119,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   fun `Get bookings report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`(
     reportType: Cas3ReportType,
   ) {
-    givenAUser { user, jwt ->
+    `Given a User` { user, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02&probationRegionId=${user.probationRegion.id}")
         .header("Authorization", "Bearer $jwt")
@@ -133,7 +133,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if dates provided is more than or equal to 3 months`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
       val endDate = "2023-08-02"
       webTestClient.get()
@@ -148,7 +148,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
     }
 
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
       val endDate = "2023-07-01"
       webTestClient.get()
@@ -167,7 +167,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if start date is later than end date`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-08-03"
       val endDate = "2023-08-02"
       webTestClient.get()
@@ -186,7 +186,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if start date is the same as end date`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-08-02"
       val endDate = "2023-08-02"
       webTestClient.get()
@@ -205,7 +205,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if end date is in the future`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val today = LocalDate.now()
       val startDate = "2023-08-02"
       val endDate = today.plusDays(1)
@@ -225,7 +225,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if mandatory dates are not provided`(reportType: Cas3ReportType) {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?probationRegionId=${user.probationRegion.id}")
         .header("Authorization", "Bearer $jwt")
@@ -240,7 +240,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
   @Test
   fun `Get report returns 400 when requested for invalid report type`() {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-08-01"
       val endDate = "2023-08-02"
       val actualBody = webTestClient.get()
@@ -258,7 +258,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetReferralReport {
     @Test
     fun `Get CAS3 referral report returns 403 Forbidden if user does not have CAS3 role`() {
-      givenAUser { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2023&month=4")
           .header("Authorization", "Bearer $jwt")
@@ -271,7 +271,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns 403 Forbidden if user role is CAS3_ASSESSOR role and the region is not allowed region`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -284,7 +284,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report OK response if user role is CAS3_ASSESSOR and requested regionId is allowed region`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
@@ -297,7 +297,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER and allow access to all region when no region is requested `() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { _, jwt ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { _, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2024&month=1")
           .header("Authorization", "Bearer $jwt")
@@ -310,7 +310,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER the request region not matched to user region`() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { user, jwt ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { user, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -323,7 +323,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns 403 Forbidden if a user does not have the CAS3_ASSESSOR role`() {
-      givenAUser { user, jwt ->
+      `Given a User` { user, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
@@ -336,7 +336,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns 400 if month is provided and not within 1-12`() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { _, jwt ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { _, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referrals?year=2023&month=-1")
           .header("Authorization", "Bearer $jwt")
@@ -355,8 +355,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get CAS3 referral report successfully with single matching referral in the report with different 'assessmentDecision'`(
       assessmentDecision: AssessmentDecision?,
     ) {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -452,8 +452,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get CAS3 referral successfully with multiple referrals in the report and filter by start and endDate period`(
       userRole: UserRole,
     ) {
-      givenAUser(roles = listOf(userRole)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(userRole)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val assessmentInReview = createTemporaryAccommodationAssessmentForStatus(
             user,
             offenderDetails,
@@ -532,8 +532,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral successfully with referral has been offered with booking`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val (premises, application) = createReferralAndAssessment(user, offenderDetails)
 
@@ -584,8 +584,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report successfully with multiple assessment for single referral`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val (premises, application) = createReferralAndAssessment(user, offenderDetails)
 
@@ -645,8 +645,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get empty CAS3 referral report when no matching application found in DB`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           createTemporaryAccommodationAssessmentForStatus(
             user,
             offenderDetails,
@@ -720,8 +720,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get CAS3 referral report successfully with single matching referral in the report with different Referral Rejection Reasons`(
       referralRejectionReasonId: UUID,
     ) {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -823,7 +823,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetReferralReportNew {
     @Test
     fun `Get CAS3 referral report OK response if user role is CAS3_ASSESSOR and requested regionId is allowed region`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referral?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
@@ -836,7 +836,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER and allow access to all region when no region is requested `() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { _, jwt ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { _, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referral?startDate=2024-01-01&endDate=2024-01-30")
           .header("Authorization", "Bearer $jwt")
@@ -849,7 +849,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER the request region not matched to user region`() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { user, jwt ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { user, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/referral?startDate=2024-01-01&endDate=2024-01-30&probationRegionId=${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -866,8 +866,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get CAS3 referral report successfully with single matching referral in the report with different 'assessmentDecision'`(
       assessmentDecision: AssessmentDecision?,
     ) {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -963,8 +963,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get CAS3 referral successfully with multiple referrals in the report and filter by start and endDate period`(
       userRole: UserRole,
     ) {
-      givenAUser(roles = listOf(userRole)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(userRole)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val assessmentInReview = createTemporaryAccommodationAssessmentForStatus(
             user,
             offenderDetails,
@@ -1043,8 +1043,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral successfully with referral has been offered with booking`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val (premises, application) = createReferralAndAssessment(user, offenderDetails)
 
@@ -1095,8 +1095,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report successfully with multiple assessment for single referral`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
           val (premises, application) = createReferralAndAssessment(user, offenderDetails)
 
@@ -1156,8 +1156,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get empty CAS3 referral report when no matching application found in DB`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           createTemporaryAccommodationAssessmentForStatus(
             user,
             offenderDetails,
@@ -1218,8 +1218,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get CAS3 referral report successfully when offender gender identity is Prefer to self-describe`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender(
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             OffenderDetailsSummaryFactory()
               .withGenderIdentity("Prefer to self-describe")
@@ -1289,8 +1289,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetBookingReport {
     @Test
     fun `Get bookings report returns OK with correct body`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1373,8 +1373,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK with latest departure and arrivals when booking has updated with multiple departures and arrivals`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1477,8 +1477,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK for CAS3_REPORTER`() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1561,8 +1561,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK for CAS3_REPORTER for all region`() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val pdu = probationDeliveryUnitFactory.produceAndPersist {
@@ -1649,7 +1649,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns 403 Forbidden for CAS3_REPORTER with service-name as approved-premises`() {
-      givenAUser(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
+      `Given a User`(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
 
         webTestClient.get()
           .uri("/cas3/reports/booking?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
@@ -1663,8 +1663,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK with only Bookings with at least one day in month when year and month are specified`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1770,8 +1770,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK with only bookings from the specified probation region`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1874,8 +1874,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK with correct body and correct duty to refer local authority area name`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1942,8 +1942,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetBedUsageReport {
     @Test
     fun `Get bed usage report returns OK with correct body`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2001,8 +2001,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bed usage report returns OK with correct body with pdu and local authority`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -2069,8 +2069,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetBedUtilizationReport {
     @Test
     fun `Get bed utilisation report returns OK with correct body`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2130,8 +2130,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bed utilisation report returns OK with correct body with pdu and local authority`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()

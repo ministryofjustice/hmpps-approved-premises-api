@@ -27,7 +27,7 @@ import java.time.OffsetDateTime
 @Suppress(
   "LongParameterList",
 )
-fun IntegrationTestBase.givenAPlacementRequest(
+fun IntegrationTestBase.`Given a Placement Request`(
   placementRequestAllocatedTo: UserEntity?,
   assessmentAllocatedTo: UserEntity,
   createdByUser: UserEntity,
@@ -162,7 +162,7 @@ private fun ApprovedPremisesApplicationEntityFactory.applyQualification(required
 @Suppress(
   "LongParameterList",
 )
-fun IntegrationTestBase.givenAPlacementRequest(
+fun IntegrationTestBase.`Given a Placement Request`(
   placementRequestAllocatedTo: UserEntity?,
   assessmentAllocatedTo: UserEntity,
   createdByUser: UserEntity,
@@ -179,7 +179,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
-  val result = givenAPlacementRequest(
+  val result = `Given a Placement Request`(
     placementRequestAllocatedTo,
     assessmentAllocatedTo,
     createdByUser,

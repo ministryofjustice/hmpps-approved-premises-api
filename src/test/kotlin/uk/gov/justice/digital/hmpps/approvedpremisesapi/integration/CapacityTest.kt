@@ -7,7 +7,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
@@ -45,7 +45,7 @@ class CapacityTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Capacity with no bookings or lost beds on Approved Premises returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -73,7 +73,7 @@ class CapacityTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Capacity for Approved Premises with booking in past returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -108,7 +108,7 @@ class CapacityTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
   fun `Get Capacity for Approved Premises with booking in future returns OK with list entry for each day until the booking ends when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -151,7 +151,7 @@ class CapacityTest : IntegrationTestBase() {
 
   @Test
   fun `Get Capacity on a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {

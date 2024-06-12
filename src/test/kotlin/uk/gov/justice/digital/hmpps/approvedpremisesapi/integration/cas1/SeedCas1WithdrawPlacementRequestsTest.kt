@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
@@ -31,8 +31,8 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   @Test
   fun `Errors if placement request not linked to placement application`() {
-    givenAUser { applicant, _ ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { applicant, _ ->
+      `Given an Offender` { offenderDetails, _ ->
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
         val placementRequest = createPlacementRequest(application)
@@ -62,8 +62,8 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   @Test
   fun `Withdraws requested placement request, leaving others unmodified`() {
-    givenAUser { applicant, _ ->
-      givenAnOffender { offenderDetails, _ ->
+    `Given a User` { applicant, _ ->
+      `Given an Offender` { offenderDetails, _ ->
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
         val placementApplication = createPlacementApplication(application, listOf(LocalDate.now() to 2))

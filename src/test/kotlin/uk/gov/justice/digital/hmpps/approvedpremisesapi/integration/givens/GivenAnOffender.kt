@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 
-fun IntegrationTestBase.givenAnOffender(
+fun IntegrationTestBase.`Given an Offender`(
   offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
   mockServerErrorForCommunityApi: Boolean = false,
@@ -75,7 +75,7 @@ fun IntegrationTestBase.givenAnOffender(
 }
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.givenAnOffender(
+fun IntegrationTestBase.`Given an Offender`(
   offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
   mockServerErrorForCommunityApi: Boolean = false,
@@ -83,7 +83,7 @@ fun IntegrationTestBase.givenAnOffender(
   mockNotFoundErrorForPrisonApi: Boolean = false,
   block: (offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit,
 ) {
-  val (offenderDetails, inmateDetails) = givenAnOffender(
+  val (offenderDetails, inmateDetails) = `Given an Offender`(
     offenderDetailsConfigBlock,
     inmateDetailsConfigBlock,
     mockServerErrorForCommunityApi,
@@ -94,7 +94,7 @@ fun IntegrationTestBase.givenAnOffender(
   block(offenderDetails, inmateDetails)
 }
 
-fun IntegrationTestBase.givenSomeOffenders(
+fun IntegrationTestBase.`Given Some Offenders`(
   offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
   block: (offenderSequence: Sequence<Pair<OffenderDetailSummary, InmateDetail>>) -> Unit,

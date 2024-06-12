@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 
 class PlacementDatesQueryTest : IntegrationTestBase() {
@@ -12,7 +12,7 @@ class PlacementDatesQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findAllByPlacementApplication only returns dates for placementApplication provided`() {
-    givenAUser { user, _ ->
+    `Given a User` { user, _ ->
       val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
       }

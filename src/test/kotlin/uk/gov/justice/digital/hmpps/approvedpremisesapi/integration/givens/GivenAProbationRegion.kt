@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import java.util.UUID
 
-fun IntegrationTestBase.givenAProbationRegion(
+fun IntegrationTestBase.`Given a Probation Region`(
   id: UUID = UUID.randomUUID(),
   name: String? = null,
   apArea: ApAreaEntity? = null,

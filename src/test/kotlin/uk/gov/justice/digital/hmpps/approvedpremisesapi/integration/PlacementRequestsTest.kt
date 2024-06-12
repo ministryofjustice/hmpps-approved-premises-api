@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -63,9 +63,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns all the placement requests for a user`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails1, inmateDetails1 ->
-          givenAnOffender { offenderDetails2, _ ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails1, inmateDetails1 ->
+          `Given an Offender` { offenderDetails2, _ ->
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             }
@@ -170,7 +170,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get dashboard without for non-manager returns 401`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/placement-requests/dashboard")
           .header("Authorization", "Bearer $jwt")
@@ -182,9 +182,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns the unmatched placement requests by default when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
-          givenAPlacementRequest(
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unmatchedOffender, unmatchedInmate ->
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -214,9 +214,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns the unmatched placement requests and withdrawn placement requests when the user is a manager and status is not defined`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
-          givenAPlacementRequest(
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unmatchedOffender, unmatchedInmate ->
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -252,9 +252,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns the unmatched placement requests and ignores the withdrawn placement requests when the user is a manager and status is notMatched`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
-          givenAPlacementRequest(
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unmatchedOffender, unmatchedInmate ->
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -286,8 +286,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns the matched placement requests and ignores the withdrawn placement requests when the user is a manager and status is matched`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { matchedOffender, matchedInmate ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { matchedOffender, matchedInmate ->
 
           fun matchPlacementRequest(placementRequest: PlacementRequestEntity) {
             val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -317,7 +317,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             realPlacementRequestRepository.save(placementRequest)
           }
 
-          givenAPlacementRequest(
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -327,7 +327,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             matchPlacementRequest(placementRequest)
           }
 
-          givenAPlacementRequest(
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -359,10 +359,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns the unable to match placement requests and ignores the withdrawn placement requests when the user is a manager and status is unableToMatch`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unableToMatchOffender, unableToMatchInmate ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unableToMatchOffender, unableToMatchInmate ->
 
-          givenAPlacementRequest(
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -376,7 +376,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             )
           }
 
-          givenAPlacementRequest(
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -416,8 +416,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It returns paginated placement requests when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val placementRequest = createPlacementRequest(offenderDetails, user)
 
           webTestClient.get()
@@ -447,14 +447,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by name via crnOrName when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender(
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withFirstName("JOHN")
             withLastName("SMITH")
           },
         ) { offenderDetails, inmateDetails ->
-          givenAnOffender { otherOffenderDetails, _ ->
+          `Given an Offender` { otherOffenderDetails, _ ->
             val placementRequest = createPlacementRequest(offenderDetails, user)
             createPlacementRequest(otherOffenderDetails, user)
 
@@ -482,9 +482,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by crn via crnOrName when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { otherOffenderDetails, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { otherOffenderDetails, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
             val placementRequest = createPlacementRequest(offenderDetails, user)
             createPlacementRequest(otherOffenderDetails, user)
 
@@ -512,8 +512,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by arrivalDateStart where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
           val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
           val placementRequest10thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
@@ -545,8 +545,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by arrivalDateEnd where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val placementRequest1stJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
           val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
           createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
@@ -578,8 +578,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by tier where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
           val placementRequestA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
           createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a2)
@@ -607,11 +607,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by AP Area ID where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
-          val apArea1 = givenAnApArea()
-          val apArea2 = givenAnApArea()
+          val apArea1 = `Given an AP Area`()
+          val apArea2 = `Given an AP Area`()
 
           createPlacementRequest(offenderDetails, user, apArea = apArea1)
           val placementRequestA1 = createPlacementRequest(offenderDetails, user, apArea = apArea2)
@@ -640,8 +640,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by requestType where type is standardRelease`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, isParole = true)
           val standardRelease = createPlacementRequest(offenderDetails, user, isParole = false)
 
@@ -668,8 +668,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by requestType where type is parole`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, isParole = false)
           val parole = createPlacementRequest(offenderDetails, user, isParole = true)
 
@@ -696,12 +696,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It searches using multiple criteria where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offender1Details, inmate1Details ->
-          givenAnOffender { offender2Details, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offender1Details, inmate1Details ->
+          `Given an Offender` { offender2Details, _ ->
 
-            val apArea1 = givenAnApArea()
-            val apArea2 = givenAnApArea()
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
 
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
@@ -736,8 +736,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by duration when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val placementRequestWithOneDayDuration = createPlacementRequest(offenderDetails, user, duration = 1)
           val placementRequestWithFiveDayDuration = createPlacementRequest(offenderDetails, user, duration = 5)
           val placementRequestWithTwelveDayDuration = createPlacementRequest(offenderDetails, user, duration = 12)
@@ -769,8 +769,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by expectedArrival when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails, user)
           val placementRequestWithExpectedArrivalInTwelveDays =
             createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(12))
@@ -804,8 +804,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by requestType when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val placementRequest1WithStatusParole = createPlacementRequest(offenderDetails, user, isParole = true)
           val placementRequest2WithStatusStandard = createPlacementRequest(offenderDetails, user, isParole = false)
 
@@ -834,23 +834,23 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by personName when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
 
-        val (offenderJohnSmithDetails, _) = givenAnOffender(
+        val (offenderJohnSmithDetails, _) = `Given an Offender`(
           offenderDetailsConfigBlock = {
             withFirstName("JOHN")
             withLastName("SMITH")
           },
         )
 
-        val (offenderZackeryZoikesDetails, _) = givenAnOffender(
+        val (offenderZackeryZoikesDetails, _) = `Given an Offender`(
           offenderDetailsConfigBlock = {
             withFirstName("ZAKERY")
             withLastName("ZOIKES")
           },
         )
 
-        val (offenderHarryHarrisonDetails, _) = givenAnOffender(
+        val (offenderHarryHarrisonDetails, _) = `Given an Offender`(
           offenderDetailsConfigBlock = {
             withFirstName("HARRY")
             withLastName("HARRISON")
@@ -887,8 +887,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by personRisksTier when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.b1)
           val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
           val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
@@ -920,8 +920,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by createdAt when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val placementRequestCreatedToday = createPlacementRequest(offenderDetails, user)
           val placementRequestCreatedFiveDaysAgo =
             createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(5))
@@ -955,8 +955,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by applicationSubmittedAt when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
           val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails, user)
           val placementRequestWithApplicationCreatedTwelveDaysAgo =
             createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(12))
@@ -1090,11 +1090,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Get single Placement Request that is not allocated to calling User and without WORKFLOW_MANAGER role returns 403`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
@@ -1115,10 +1115,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Get single Placement Request that is allocated to calling User returns 200`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
@@ -1148,14 +1148,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Get single Placement Request that is allocated to calling User where Offender is LAO but user does not pass LAO check, does not have LAO qualification returns 200 with restricted person info`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender`(
             offenderDetailsConfigBlock = {
               withCurrentExclusion(true)
             },
           ) { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
+            `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
@@ -1185,14 +1185,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Get single Placement Request that is allocated to calling User where Offender is LAO, user does not have LAO qualification but does pass LAO check returns 200`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender`(
             offenderDetailsConfigBlock = {
               withCurrentExclusion(true)
             },
           ) { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
+            `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
@@ -1236,14 +1236,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Get single Placement Request that is allocated to calling User where Offender is LAO, user does not pass LAO check but does have LAO qualification returns 200`() {
-      givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender(
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender`(
             offenderDetailsConfigBlock = {
               withCurrentExclusion(true)
             },
           ) { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
+            `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
@@ -1283,10 +1283,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Get single Placement Request that is allocated to calling User returns 200 with cancellations when they exist`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
@@ -1367,11 +1367,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Creating a Booking from a Placement Request that is not allocated to the User returns a 403`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
@@ -1399,11 +1399,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Creating a Booking from a Placement Request that is allocated to the User returns a 200 and sends email`() {
-      givenAUser { user, jwt ->
-        givenAUser { applicant, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = applicant) {
-              givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given a User` { applicant, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given an Application`(createdByUser = applicant) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = applicant,
                 createdByUser = applicant,
@@ -1456,11 +1456,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Creating a Booking from a Placement Request that is allocated to the User and a premisesId is specified returns a 200`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
+      `Given a User` { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
@@ -1496,11 +1496,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Creating a Booking from a Placement Request that is not allocated to the User and the user is a Workflow Manager returns a 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
@@ -1553,11 +1553,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Create a Booking Not Made from a Placement Request returns 200`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
+      `Given a User` { _, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = otherUser) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
@@ -1601,11 +1601,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
-      givenAUser { creator, _ ->
-        givenAUser { user, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAnApplication(createdByUser = user) {
-              givenAPlacementRequest(
+      `Given a User` { creator, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = user) {
+              `Given a Placement Request`(
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = user,
                 createdByUser = creator,
@@ -1632,9 +1632,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @SuppressWarnings("MaxLineLength")
     @Test
     fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and Applicant if it represents dates included on application on submission`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAPlacementRequest(
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,

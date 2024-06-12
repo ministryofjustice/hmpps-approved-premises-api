@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -42,7 +42,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get appeal returns 404 when application could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
       webTestClient.get()
         .uri("/applications/${UUID.randomUUID()}/appeals/${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
@@ -54,9 +54,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get appeal returns 403 when application is not accessible to user`() {
-    givenAUser { createdByUser, _ ->
-      givenAnAssessmentForApprovedPremises(createdByUser, createdByUser) { _, application ->
-        givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
+    `Given a User` { createdByUser, _ ->
+      `Given an Assessment for Approved Premises`(createdByUser, createdByUser) { _, application ->
+        `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
           webTestClient.get()
             .uri("/applications/${application.id}/appeals/${UUID.randomUUID()}")
             .header("Authorization", "Bearer $jwt")
@@ -70,8 +70,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get appeal returns 404 when appeal could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnApplication(userEntity) { application ->
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Application`(userEntity) { application ->
         webTestClient.get()
           .uri("/applications/${application.id}/appeals/${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -84,8 +84,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get appeal returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnAssessmentForApprovedPremises(userEntity, userEntity) { assessment, application ->
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
         val appeal = appealEntityFactory.produceAndPersist {
           withApplication(application)
           withAssessment(assessment as ApprovedPremisesAssessmentEntity)
@@ -132,7 +132,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal returns 404 when application could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
       webTestClient.post()
         .uri("/applications/${UUID.randomUUID()}/appeals")
         .bodyValue(
@@ -152,9 +152,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal returns 403 when application is not accessible to user`() {
-    givenAUser { createdByUser, _ ->
-      givenAnAssessmentForApprovedPremises(createdByUser, createdByUser) { _, application ->
-        givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
+    `Given a User` { createdByUser, _ ->
+      `Given an Assessment for Approved Premises`(createdByUser, createdByUser) { _, application ->
+        `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
           webTestClient.post()
             .uri("/applications/${application.id}/appeals")
             .bodyValue(
@@ -176,8 +176,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal returns 403 when user does not have CAS1_APPEALS_MANAGER role`() {
-    givenAUser { userEntity, jwt ->
-      givenAnAssessmentForApprovedPremises(userEntity, userEntity) { _, application ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { _, application ->
         webTestClient.post()
           .uri("/applications/${application.id}/appeals")
           .bodyValue(
@@ -198,8 +198,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal returns 400 when invalid data is provided`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnAssessmentForApprovedPremises(userEntity, userEntity) { _, application ->
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { _, application ->
         webTestClient.post()
           .uri("/applications/${application.id}/appeals")
           .bodyValue(
@@ -220,8 +220,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal returns 409 when no assessment exists on the application`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnApplication(userEntity) { application ->
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Application`(userEntity) { application ->
         webTestClient.post()
           .uri("/applications/${application.id}/appeals")
           .bodyValue(
@@ -244,9 +244,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal returns 201 with correct body and Location header`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        givenAnAssessmentForApprovedPremises(
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = userEntity,
           createdByUser = userEntity,
           crn = offenderDetails.otherIds.crn,
@@ -286,9 +286,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal does not create a new assessment and sends the correct notification email if the appeal was rejected`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        givenAnAssessmentForApprovedPremises(
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = userEntity,
           createdByUser = userEntity,
           crn = offenderDetails.otherIds.crn,
@@ -340,9 +340,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal creates a new assessment, updates the application status and sends notification emails if the appeal was accepted`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        givenAnAssessmentForApprovedPremises(
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = userEntity,
           createdByUser = userEntity,
           crn = offenderDetails.otherIds.crn,
@@ -403,9 +403,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create new appeal adds an event to the application timeline`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        givenAnAssessmentForApprovedPremises(
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = userEntity,
           createdByUser = userEntity,
           crn = offenderDetails.otherIds.crn,
@@ -455,9 +455,9 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Creating multiple appeals creates the correct number of events in the application timeline`() {
-    givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        givenAnAssessmentForApprovedPremises(
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
           allocatedToUser = userEntity,
           createdByUser = userEntity,
           crn = offenderDetails.otherIds.crn,

@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
@@ -56,7 +56,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
       communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -73,8 +73,8 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications alerts for a CRN without a NOMS number returns 404`() {
-    givenAUser { _, jwt ->
-      givenAnOffender(
+    `Given a User` { _, jwt ->
+      `Given an Offender`(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },
@@ -92,8 +92,8 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications for a CRN returns OK with correct body`() {
-    givenAUser { _, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { _, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val adjudicationsResponse = AdjudicationsPageFactory()
           .withResults(
             listOf(

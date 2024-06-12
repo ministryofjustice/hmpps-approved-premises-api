@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 
@@ -17,7 +17,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Test
   fun `all applications offender name are updated from Community API`() {
-    givenAnOffender(
+    `Given an Offender`(
       offenderDetailsConfigBlock = {
         withNomsNumber(null)
       },
@@ -69,7 +69,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Test
   fun `all applications offender name are updated from Community API when delius name is empty`() {
-    givenAnOffender(
+    `Given an Offender`(
       offenderDetailsConfigBlock = {
         withNomsNumber(null)
       },
@@ -123,7 +123,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Test
   fun `when offender is not found in Community Api throws an exception`() {
-    givenAnOffender(
+    `Given an Offender`(
       offenderDetailsConfigBlock = {
         withNomsNumber(null)
       },

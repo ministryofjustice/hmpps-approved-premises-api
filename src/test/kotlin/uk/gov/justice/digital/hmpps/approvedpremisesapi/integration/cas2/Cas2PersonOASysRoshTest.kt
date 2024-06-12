@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRoshCallWithDelay
@@ -59,7 +59,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Rosh for a CRN that does not exist returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
       val crn = "CRN123"
 
       communityApiMockNotFoundOffenderDetailsCall(crn)
@@ -76,8 +76,8 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting RoSH for a CRN returns OK with correct body`() {
-    givenACas2PomUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
@@ -105,8 +105,8 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting RoSH when upstream times out returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
         apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
 

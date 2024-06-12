@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -16,7 +16,7 @@ import java.util.UUID
 class CacheClearTest : IntegrationTestBase() {
   @Test
   fun `Clearing a regular cache results in upstream calls being made again`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val premisesId = UUID.fromString("d687f947-ff80-431e-9c72-75f704730978")
       val qCode = "FOUND"
 

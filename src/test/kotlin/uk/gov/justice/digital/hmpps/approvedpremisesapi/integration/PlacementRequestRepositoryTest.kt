@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import java.time.LocalDate
@@ -270,7 +270,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     return List(count) {
-      givenAPlacementRequest(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier).first
+      `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier).first
     }
   }
 }

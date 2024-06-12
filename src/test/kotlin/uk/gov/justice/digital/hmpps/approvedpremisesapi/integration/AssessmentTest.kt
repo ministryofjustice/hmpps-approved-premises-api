@@ -45,11 +45,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
@@ -104,8 +104,8 @@ class AssessmentTest : IntegrationTestBase() {
     @EnumSource
     @NullSource
     fun `Get all assessments returns 200 with correct body`(assessmentDecision: AssessmentDecision?) {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -173,7 +173,7 @@ class AssessmentTest : IntegrationTestBase() {
     fun `Get all assessments returns successfully when an inmate details cache failure occurs`(serviceName: ServiceName) {
       val givenAnAssessment = when (serviceName) {
         ServiceName.approvedPremises -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
-          givenAnAssessmentForApprovedPremises(
+          `Given an Assessment for Approved Premises`(
             createdByUser = user,
             allocatedToUser = user,
             crn = crn,
@@ -182,7 +182,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         ServiceName.temporaryAccommodation -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
-          givenAnAssessmentForTemporaryAccommodation(
+          `Given an Assessment for Temporary Accommodation`(
             createdByUser = user,
             allocatedToUser = user,
             crn = crn,
@@ -193,8 +193,8 @@ class AssessmentTest : IntegrationTestBase() {
         else -> throw RuntimeException()
       }
 
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           givenAnAssessment(
             user,
             offenderDetails.otherIds.crn,
@@ -224,8 +224,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when status is not defined`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val inProgress1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           val awaitingResponse1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -260,8 +260,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when status is cas1NotStarted`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -289,8 +289,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when status is cas1InProgress`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val inProgress1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -318,8 +318,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when status is cas1AwaitingResponse`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           val awaitingResponse1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -347,8 +347,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when status is cas1Completed`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -376,8 +376,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when status is cas1Reallocated (none returned)`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -401,8 +401,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly for multiple statuses`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
@@ -437,8 +437,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises filters correctly when 'page' query parameter is provided`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val veryOld = createApprovedPremisesAssessmentForStatus(
             user,
@@ -532,8 +532,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is createdAt`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val new = createApprovedPremisesAssessmentForStatus(
             user,
@@ -598,8 +598,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is status`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val inProgress = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
           val completed = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
@@ -627,26 +627,26 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is personName`() {
-      givenAUser { user, jwt ->
-        val (offender1, inmate1) = givenAnOffender({
+      `Given a User` { user, jwt ->
+        val (offender1, inmate1) = `Given an Offender`({
           withFirstName("Zendaya")
           withLastName("")
         })
         val assessZendaya = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
 
-        val (offender2, inmate2) = givenAnOffender({
+        val (offender2, inmate2) = `Given an Offender`({
           withFirstName("Arthur")
           withLastName("")
         })
         val assessArthur = createApprovedPremisesAssessmentForStatus(user, offender2, cas1InProgress)
 
-        val (offender3, inmate3) = givenAnOffender({
+        val (offender3, inmate3) = `Given an Offender`({
           withFirstName("Agatha")
           withLastName("")
         })
         val assessAgatha = createApprovedPremisesAssessmentForStatus(user, offender3, cas1InProgress)
 
-        val (offender4, inmate4) = givenAnOffender({
+        val (offender4, inmate4) = `Given an Offender`({
           withFirstName("Bagatha")
           withLastName("")
         })
@@ -669,17 +669,17 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is personCrn`() {
-      givenAUser { user, jwt ->
-        val (offender1, inmate1) = givenAnOffender({ withCrn("CRN1") })
+      `Given a User` { user, jwt ->
+        val (offender1, inmate1) = `Given an Offender`({ withCrn("CRN1") })
         val assessCrn1 = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
 
-        val (offender2, inmate2) = givenAnOffender({ withCrn("CRN4") })
+        val (offender2, inmate2) = `Given an Offender`({ withCrn("CRN4") })
         val assessCrn4 = createApprovedPremisesAssessmentForStatus(user, offender2, cas1InProgress)
 
-        val (offender3, inmate3) = givenAnOffender({ withCrn("CRN2") })
+        val (offender3, inmate3) = `Given an Offender`({ withCrn("CRN2") })
         val assessCrn2 = createApprovedPremisesAssessmentForStatus(user, offender3, cas1InProgress)
 
-        val (offender4, inmate4) = givenAnOffender({ withCrn("CRN3") })
+        val (offender4, inmate4) = `Given an Offender`({ withCrn("CRN3") })
         val assessCrn3 = createApprovedPremisesAssessmentForStatus(user, offender4, cas1InProgress)
 
         assertAssessmentsReturnedGivenStatus(
@@ -699,8 +699,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is arrivalDate`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val veryOld = createApprovedPremisesAssessmentForStatus(
             user,
@@ -748,8 +748,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is dueAt`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val dueMuchLater = createApprovedPremisesAssessmentForStatus(
             user,
@@ -797,8 +797,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is not defined`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val allAssessments = arrayOf(
             createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated),
@@ -826,8 +826,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Unallocated`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val unallocated1 =
             createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
@@ -855,8 +855,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3InReview`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
           val inReview1 =
@@ -884,8 +884,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Closed`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
@@ -913,8 +913,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when multiple status cas3Closed, cas3Rejected are requested`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
@@ -944,8 +944,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when multiple status cas3Closed, cas3Rejected with pagination`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
@@ -998,8 +998,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Rejected`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
@@ -1027,8 +1027,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3ReadyToPlace`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
           createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
@@ -1211,8 +1211,8 @@ class AssessmentTest : IntegrationTestBase() {
     fun `Get all assessments for Temporary Accommodation sorts correctly when 'sortDirection' and 'sortBy' query parameters are provided`(
       sortBy: AssessmentSortField,
     ) {
-      givenAUser { user, jwt ->
-        givenSomeOffenders { offenderSequence ->
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
 
           data class AssessmentParams(
@@ -1285,7 +1285,7 @@ class AssessmentTest : IntegrationTestBase() {
               // that status.
               Assumptions.assumeThat(true).isFalse
               // Allow the compiler to ignore this branch without defining a dummy value.
-              return@givenSomeOffenders
+              return@`Given Some Offenders`
             }
 
             AssessmentSortField.assessmentCreatedAt -> {
@@ -1313,8 +1313,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accomodation filters correctly when 'page' query parameter is provided`() {
-      givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
 
           val assessment1 =
             createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
@@ -1369,8 +1369,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation sorts by closest arrival date first by default`() {
-      givenAUser { user, jwt ->
-        givenSomeOffenders { offenderSequence ->
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
 
           data class AssessmentParams(
@@ -1424,8 +1424,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when 'crn' query parameter is provided`() {
-      givenAUser { user, jwt ->
-        givenSomeOffenders { offenderSequence ->
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -1482,8 +1482,8 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Get all assessments returns restricted person information for LAO`() {
       var offenderIndex = 0
-      givenAUser { user, jwt ->
-        givenSomeOffenders(
+      `Given a User` { user, jwt ->
+        `Given Some Offenders`(
           offenderDetailsConfigBlock = {
             withCurrentExclusion(offenderIndex != 0)
             withCurrentRestriction(offenderIndex != 0)
@@ -1550,8 +1550,8 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Get all assessments returns full person information for LAO offenders when user has LAO permissions in CAS1`() {
-      givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
-        givenAnOffender(
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
+        `Given an Offender`(
           offenderDetailsConfigBlock = {
             withCurrentExclusion(true)
             withCurrentRestriction(true)
@@ -1685,9 +1685,9 @@ class AssessmentTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class)
   fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
-    givenAUser(roles = listOf(role)) { _, jwt ->
-      givenAUser { userEntity, _ ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User` { userEntity, _ ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -1733,8 +1733,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender(
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCurrentExclusion(true)
         },
@@ -1781,8 +1781,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender(
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCurrentExclusion(true)
         },
@@ -1847,8 +1847,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
-    givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
-      givenAnOffender(
+    `Given a User`(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+      `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCurrentRestriction(true)
         },
@@ -1904,8 +1904,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Get Temporary Accommodation assessment by ID returns 200 with notes transformed correctly`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2004,8 +2004,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Get Temporary Accommodation assessment by ID returns 200 with summary data transformed correctly`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2080,12 +2080,12 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, and emits domain events`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
       ) { userEntity, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
               govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
 
               val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2201,12 +2201,12 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits domain event`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
       ) { userEntity, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
               val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               }
@@ -2304,12 +2304,12 @@ class AssessmentTest : IntegrationTestBase() {
 
     @Test
     fun `Accept assessment returns an error if the postcode cannot be found`() {
-      givenAUser(
+      `Given a User`(
         staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
       ) { userEntity, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
               val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               }
@@ -2387,10 +2387,10 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
-    givenAUser(
+    `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2443,8 +2443,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Reject Temporary Accommodation assessment returns 200 and persists decision`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2507,8 +2507,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Reject Temporary Accommodation assessment returns 200 and persists decision when a referral rejection reason exists for the assessment`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2577,8 +2577,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Reject Temporary Accommodation assessment returns 404 when the referral rejection reason not exists`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2638,8 +2638,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Close assessment returns 200 OK, persists closure timestamp`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2681,8 +2681,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Create clarification note returns 200 with correct body and creates and emits a domain event`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2738,8 +2738,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Update clarification note returns 201 with correct body`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2786,8 +2786,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Update does not let withdrawn assessments be updated`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2827,8 +2827,8 @@ class AssessmentTest : IntegrationTestBase() {
 
   @Test
   fun `Create referral history user note returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
