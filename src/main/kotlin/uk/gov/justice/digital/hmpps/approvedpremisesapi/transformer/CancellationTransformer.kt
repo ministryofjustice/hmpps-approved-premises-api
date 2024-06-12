@@ -15,6 +15,7 @@ class CancellationTransformer(private val cancellationReasonTransformer: Cancell
       notes = jpa.notes,
       createdAt = jpa.createdAt.toInstant(),
       premisesName = jpa.booking.premises.name,
+      otherReason = jpa.otherReason,
     )
   }
 }
