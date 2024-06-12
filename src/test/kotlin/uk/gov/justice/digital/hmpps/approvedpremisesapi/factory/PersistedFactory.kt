@@ -33,4 +33,12 @@ class PersistedFactory<EntityType : Any, PrimaryKeyType : Any, FactoryType : Fac
       repository.saveAndFlush(factory.produce())
     }
   }
+
+  fun produceAndPersistMultipleIndexed(amount: Int, configuration: FactoryType.(Int) -> Unit): List<EntityType> {
+    val factory = factoryProducer()
+    return (1..amount).map {
+      configuration(factory, it)
+      repository.saveAndFlush(factory.produce())
+    }
+  }
 }

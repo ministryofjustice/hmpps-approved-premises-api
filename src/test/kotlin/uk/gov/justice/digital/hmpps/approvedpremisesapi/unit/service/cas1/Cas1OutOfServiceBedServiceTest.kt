@@ -7,7 +7,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
@@ -21,8 +29,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.util.UUID
+import java.util.stream.Stream
 
 class Cas1OutOfServiceBedServiceTest {
   private val outOfServiceBedRepository = mockk<Cas1OutOfServiceBedRepository>()
@@ -37,6 +48,57 @@ class Cas1OutOfServiceBedServiceTest {
     outOfServiceBedReasonRepository,
     outOfServiceBedCancellationRepository,
   )
+
+  companion object {
+    @JvmStatic
+    fun temporalityArgs(): Stream<Arguments> {
+      return Stream.of(
+        Arguments.of(
+          emptyList<Temporality>(),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.current,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.future,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.current,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.future,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.current,
+            Temporality.future,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.current,
+            Temporality.future,
+          ),
+        ),
+      )
+    }
+  }
 
   @Nested
   inner class CreateOutOfServiceBeds {
@@ -240,15 +302,162 @@ class Cas1OutOfServiceBedServiceTest {
 
   @Nested
   inner class GetOutOfServiceBeds {
+    @CsvSource(
+      // Ascending
+      "'premisesName','asc','premises.name'",
+      "'roomName','asc','bed.room.name'",
+      "'bedName','asc','bed.name'",
+      "'outOfServiceFrom','asc','startDate'",
+      "'outOfServiceTo','asc','endDate'",
+      "'reason','asc','reason.name'",
+      "'daysLost','asc','(oosb.endDate - oosb.startDate)'",
+
+      // Descending
+      "'premisesName','desc','premises.name'",
+      "'roomName','desc','bed.room.name'",
+      "'bedName','desc','bed.name'",
+      "'outOfServiceFrom','desc','startDate'",
+      "'outOfServiceTo','desc','endDate'",
+      "'reason','desc','reason.name'",
+      "'daysLost','desc','(oosb.endDate - oosb.startDate)'",
+    )
+    @ParameterizedTest
+    fun `Sorts correctly according to the sort field and direction`(
+      sortField: Cas1OutOfServiceBedSortField,
+      sortDirection: SortDirection,
+      expectedSortFieldString: String,
+    ) {
+      val expectedPageable = getPageableOrAllPages(expectedSortFieldString, sortDirection, page = null, pageSize = null, unsafe = true)
+
+      every {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = any(),
+          apAreaId = any(),
+          excludePast = any(),
+          excludeCurrent = any(),
+          excludeFuture = any(),
+          pageable = any(),
+        )
+      } returns Page.empty()
+
+      outOfServiceBedService.getOutOfServiceBeds(
+        Temporality.entries.toSet(),
+        premisesId = null,
+        apAreaId = null,
+        pageCriteria = PageCriteria(sortField, sortDirection, page = null, perPage = null),
+      )
+
+      verify(exactly = 1) {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = null,
+          apAreaId = null,
+          excludePast = false,
+          excludeCurrent = false,
+          excludeFuture = false,
+          pageable = expectedPageable,
+        )
+      }
+    }
+
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1OutOfServiceBedServiceTest#temporalityArgs")
+    @ParameterizedTest
+    fun `Filters correctly according to the temporality`(temporality: List<Temporality>) {
+      every {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = any(),
+          apAreaId = any(),
+          excludePast = any(),
+          excludeCurrent = any(),
+          excludeFuture = any(),
+          pageable = any(),
+        )
+      } returns Page.empty()
+
+      outOfServiceBedService.getOutOfServiceBeds(
+        temporality.toSet(),
+        premisesId = null,
+        apAreaId = null,
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.outOfServiceFrom, SortDirection.asc, page = null, perPage = null),
+      )
+
+      verify(exactly = 1) {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = null,
+          apAreaId = null,
+          excludePast = !temporality.contains(Temporality.past),
+          excludeCurrent = !temporality.contains(Temporality.current),
+          excludeFuture = !temporality.contains(Temporality.future),
+          pageable = any(),
+        )
+      }
+    }
+
     @Test
-    fun `Delegates to repository method`() {
-      val expectedList = mockk<List<Cas1OutOfServiceBedEntity>>()
-      every { outOfServiceBedRepository.findOutOfServiceBeds() } returns expectedList
+    fun `Filters correctly according to the premises ID`() {
+      every {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = any(),
+          apAreaId = any(),
+          excludePast = any(),
+          excludeCurrent = any(),
+          excludeFuture = any(),
+          pageable = any(),
+        )
+      } returns Page.empty()
 
-      val result = outOfServiceBedService.getOutOfServiceBeds()
+      val expectedId = UUID.randomUUID()
 
-      assertThat(result).isEqualTo(expectedList)
-      verify(exactly = 1) { outOfServiceBedRepository.findOutOfServiceBeds() }
+      outOfServiceBedService.getOutOfServiceBeds(
+        Temporality.entries.toSet(),
+        premisesId = expectedId,
+        apAreaId = null,
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.outOfServiceFrom, SortDirection.asc, page = null, perPage = null),
+      )
+
+      verify(exactly = 1) {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = expectedId,
+          apAreaId = null,
+          excludePast = false,
+          excludeCurrent = false,
+          excludeFuture = false,
+          pageable = any(),
+        )
+      }
+    }
+
+    @Test
+    fun `Filters correctly according to the AP area ID`() {
+      every {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = any(),
+          apAreaId = any(),
+          excludePast = any(),
+          excludeCurrent = any(),
+          excludeFuture = any(),
+          pageable = any(),
+        )
+      } returns Page.empty()
+
+      val expectedId = UUID.randomUUID()
+
+      outOfServiceBedService.getOutOfServiceBeds(
+        Temporality.entries.toSet(),
+        premisesId = null,
+        apAreaId = expectedId,
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.outOfServiceFrom, SortDirection.asc, page = null, perPage = null),
+      )
+
+      verify(exactly = 1) {
+        outOfServiceBedRepository.findOutOfServiceBeds(
+          premisesId = null,
+          apAreaId = expectedId,
+          excludePast = false,
+          excludeCurrent = false,
+          excludeFuture = false,
+          pageable = any(),
+        )
+      }
     }
   }
 

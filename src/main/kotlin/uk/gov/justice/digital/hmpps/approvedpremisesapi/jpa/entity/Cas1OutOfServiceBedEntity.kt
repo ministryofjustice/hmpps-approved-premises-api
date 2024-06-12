@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -15,8 +17,26 @@ import javax.persistence.Table
 
 @Repository
 interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntity, UUID> {
-  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb WHERE oosb.endDate >= CURRENT_DATE ORDER BY oosb.startDate ASC")
-  fun findOutOfServiceBeds(): List<Cas1OutOfServiceBedEntity>
+  @Query(
+    """
+    SELECT oosb
+    FROM Cas1OutOfServiceBedEntity oosb
+    WHERE
+      (CAST(:premisesId as org.hibernate.type.UUIDCharType) IS NULL OR oosb.premises.id = :premisesId) AND
+      (CAST(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL OR oosb.premises.probationRegion.apArea.id = :apAreaId) AND
+      ((FALSE = :excludePast) OR (oosb.endDate >= CURRENT_DATE)) AND
+      ((FALSE = :excludeCurrent) OR (CURRENT_DATE NOT BETWEEN oosb.startDate AND oosb.endDate)) AND
+      ((FALSE = :excludeFuture) OR (oosb.startDate <= CURRENT_DATE))
+    """,
+  )
+  fun findOutOfServiceBeds(
+    premisesId: UUID?,
+    apAreaId: UUID?,
+    excludePast: Boolean,
+    excludeCurrent: Boolean,
+    excludeFuture: Boolean,
+    pageable: Pageable?,
+  ): Page<Cas1OutOfServiceBedEntity>
 
   @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
   fun findAllActiveForPremisesId(premisesId: UUID): List<Cas1OutOfServiceBedEntity>

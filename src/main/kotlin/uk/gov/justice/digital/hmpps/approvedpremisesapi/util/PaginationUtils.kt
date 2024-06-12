@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Direction.ASC
 import org.springframework.data.domain.Sort.Direction.DESC
+import org.springframework.data.jpa.domain.JpaSort
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -33,12 +34,12 @@ data class PageCriteria<S>(
   }
 }
 
-fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null): Pageable? {
+fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null, unsafe: Boolean = false): Pageable? {
   return if (page != null) {
     PageRequest.of(
       page - 1,
       resolvePageSize(pageSize),
-      toSort(sortBy, sortDirection),
+      toSort(sortBy, sortDirection, unsafe),
     )
   } else {
     null
@@ -52,24 +53,25 @@ fun getPageable(criteria: PageCriteria<String>): Pageable? = getPageable(
   criteria.perPage,
 )
 
-fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?): Pageable? {
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable? {
   return if (page != null) {
-    getPageable(sortBy, sortDirection, page, pageSize)
+    getPageable(sortBy, sortDirection, page, pageSize, unsafe)
   } else {
     PageRequest.of(
       0,
       Int.MAX_VALUE,
-      toSort(sortBy, sortDirection),
+      toSort(sortBy, sortDirection, unsafe),
     )
   }
 }
 
-fun getPageableOrAllPages(criteria: PageCriteria<String>): Pageable? =
+fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = false): Pageable? =
   getPageableOrAllPages(
     criteria.sortBy,
     criteria.sortDirection,
     criteria.page,
     criteria.perPage,
+    unsafe,
   )
 
 fun <T> wrapWithMetadata(page: Page<T>, pageCriteria: PageCriteria<*>): Pair<List<T>, PaginationMetadata?> {
@@ -93,5 +95,11 @@ fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): Pagi
 
 private fun resolvePageSize(perPage: Int?) = perPage ?: config.defaultPageSize
 
-private fun toSort(sortBy: String, sortDirection: SortDirection?): Sort =
-  Sort.by(if (sortDirection == SortDirection.desc) DESC else ASC, sortBy)
+private fun toSort(sortBy: String, sortDirection: SortDirection?, unsafe: Boolean): Sort {
+  val direction = when (sortDirection) {
+    SortDirection.desc -> DESC
+    else -> ASC
+  }
+
+  return if (unsafe) JpaSort.unsafe(direction, sortBy) else Sort.by(direction, sortBy)
+}

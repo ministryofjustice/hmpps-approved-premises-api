@@ -482,6 +482,47 @@ paths:
       tags:
         - out-of-service beds
       summary: Lists all Out-Of-Service Beds entries
+      parameters:
+        - name: temporality
+          in: query
+          description: If provided, restrict the results to only those with the given temporality/ies.
+          schema:
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/Temporality'
+        - name: premisesId
+          in: query
+          description: If provided, restrict the results to only those in the premises with the given ID.
+          schema:
+            type: string
+            format: uuid
+        - name: apAreaId
+          in: query
+          description: If provided, restrict the results to only those within the AP area with the given ID.
+          schema:
+            type: string
+            format: uuid
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: sortBy
+          in: query
+          description: The field to sort the results by.
+          schema:
+            $ref: '_shared.yml#/components/schemas/Cas1OutOfServiceBedSortField'
+        - name: page
+          in: query
+          required: false
+          description: Page number of results to return. If not provided results will not be paged
+          schema:
+            type: integer
+        - name: perPage
+          in: query
+          description: Number of items to return per page (defaults to 10)
+          schema:
+            type: integer
       responses:
         200:
           description: successful operation
@@ -491,6 +532,15 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/Cas1OutOfServiceBed'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
