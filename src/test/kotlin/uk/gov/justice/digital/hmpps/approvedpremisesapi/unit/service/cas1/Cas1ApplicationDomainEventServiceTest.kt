@@ -5,6 +5,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -85,44 +87,32 @@ class Cas1ApplicationDomainEventServiceTest {
   @Nested
   inner class ApplicationSubmitted {
 
-    @SuppressWarnings("CyclomaticComplexMethod")
-    @Test
-    fun `applicationSubmitted success`() {
-      val situation = SituationOption.bailSentence
-      val reasonForShortNotice = "reason for short notice"
-      val reasonForShortNoticeOther = "reason for short notice other"
+    private lateinit var application: ApprovedPremisesApplicationEntity
+    private val caseDetails = CaseDetailFactory().produce()
+    private val domainEventStaffMember = StaffMemberFactory().produce()
+    private val domainEventProbationArea = ProbationAreaFactory().produce()
 
-      val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
-        translatedDocument = {},
-        isPipeApplication = true,
-        isWomensApplication = false,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
-        type = "CAS1",
-        sentenceType = SentenceTypeOption.nonStatutory,
-        situation = situation,
-        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
-        caseManagerIsNotApplicant = false,
-        reasonForShortNotice = reasonForShortNotice,
-        reasonForShortNoticeOther = reasonForShortNoticeOther,
+    private val staffUserDetails = StaffUserDetailsFactory()
+      .withTeams(
+        listOf(
+          StaffUserTeamMembershipFactory()
+            .produce(),
+        ),
       )
+      .produce()
 
-      val application = ApprovedPremisesApplicationEntityFactory()
+    @BeforeEach
+    fun setup() {
+      application = ApprovedPremisesApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
+        .withCrn("THECRN")
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
         .apply {
           schemaUpToDate = true
         }
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withGender("male")
-        .withCrn(application.crn)
-        .produce()
 
       every {
         mockOffenderService.getOffenderByCrn(
@@ -131,7 +121,12 @@ class Cas1ApplicationDomainEventServiceTest {
           true,
         )
       } returns AuthorisableActionResult.Success(
-        offenderDetails,
+        OffenderDetailsSummaryFactory()
+          .withGender("male")
+          .withCrn("THECRN")
+          .withNomsNumber("THENOMS")
+          .withDateOfBirth(LocalDate.of(1982, 3, 11))
+          .produce(),
       )
 
       val risks = PersonRisksFactory()
@@ -155,26 +150,13 @@ class Cas1ApplicationDomainEventServiceTest {
         risks,
       )
 
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .produce(),
-          ),
-        )
-        .produce()
-
-      val caseDetails = CaseDetailFactory().produce()
-
       every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = caseDetails,
       )
 
-      val domainEventStaffMember = StaffMemberFactory().produce()
       every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
 
-      val domainEventProbationArea = ProbationAreaFactory().produce()
       every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
 
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
@@ -182,6 +164,27 @@ class Cas1ApplicationDomainEventServiceTest {
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = staffUserDetails,
+      )
+    }
+
+    @SuppressWarnings("CyclomaticComplexMethod")
+    @Test
+    fun `applicationSubmitted success`() {
+      val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+        caseManagerIsNotApplicant = false,
+        reasonForShortNotice = "reason for short notice",
+        reasonForShortNoticeOther = "reason for short notice other",
       )
 
       service.applicationSubmitted(
@@ -197,16 +200,16 @@ class Cas1ApplicationDomainEventServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
-              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
+              it.nomsNumber == "THENOMS" &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
+              crn = "THECRN",
+              noms = "THENOMS",
             ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
-              data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
+              data.age == Period.between(LocalDate.of(1982, 3, 11), LocalDate.now()).years &&
               data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
               staffMember = domainEventStaffMember,
@@ -224,12 +227,47 @@ class Cas1ApplicationDomainEventServiceTest {
                 name = staffUserDetails.probationArea.description,
               ),
             ) &&
-              data.mappa == risks.mappa.value!!.level &&
+              data.mappa == "CAT C1/LEVEL L1" &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId &&
-              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals(reasonForShortNotice) &&
-              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals(reasonForShortNoticeOther) &&
-              enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType().toString().equals(ApType.normal.value)
+              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals("reason for short notice") &&
+              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals("reason for short notice other") &&
+              enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType()
+              .toString() == ApType.normal.value
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `applicationSubmitted doesn't save null metadata values`() {
+      val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+        caseManagerIsNotApplicant = false,
+        reasonForShortNotice = null,
+        reasonForShortNoticeOther = null,
+      )
+
+      service.applicationSubmitted(
+        application,
+        submitApprovedPremisesApplication,
+        username,
+      )
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveApplicationSubmittedDomainEvent(
+          this.withArg {
+            assertThat(it.metadata).containsOnlyKeys(MetaDataName.CAS1_REQUESTED_AP_TYPE)
           },
         )
       }
