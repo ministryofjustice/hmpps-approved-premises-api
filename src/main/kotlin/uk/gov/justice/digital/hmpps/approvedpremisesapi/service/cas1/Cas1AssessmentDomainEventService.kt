@@ -26,8 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -38,7 +36,6 @@ import java.util.UUID
 class Cas1AssessmentDomainEventService(
   private val domainEventService: DomainEventService,
   private val communityApiClient: CommunityApiClient,
-  private val cruService: CruService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
@@ -149,12 +146,17 @@ class Cas1AssessmentDomainEventService(
     application: ApprovedPremisesApplicationEntity,
     assessment: AssessmentEntity,
     offenderDetails: OffenderDetailSummary,
-    staffDetails: StaffUserDetails,
     placementDates: PlacementDates?,
     apType: ApType?,
+    acceptingUser: UserEntity,
   ) {
     val domainEventId = UUID.randomUUID()
     val acceptedAt = assessment.submittedAt!!
+
+    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(acceptingUser.deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
 
     domainEventService.saveApplicationAssessedDomainEvent(
       DomainEvent(
@@ -185,7 +187,7 @@ class Cas1AssessmentDomainEventService(
                 name = staffDetails.probationArea.description,
               ),
               cru = Cru(
-                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+                name = acceptingUser.apArea?.name ?: "Unknown CRU",
               ),
             ),
             decision = assessment.decision.toString(),

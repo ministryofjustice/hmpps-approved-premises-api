@@ -122,7 +122,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
@@ -152,7 +151,6 @@ class BookingServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
-  private val mockCruService = mockk<CruService>()
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
@@ -192,7 +190,6 @@ class BookingServiceTest {
       offenderService = mockOffenderService,
       domainEventService = mockDomainEventService,
       cas3DomainEventService = mockCas3DomainEventService,
-      cruService = mockCruService,
       applicationService = mockApplicationService,
       workingDayService = mockWorkingDayService,
       placementRequestService = mockPlacementRequestService,
@@ -4333,7 +4330,6 @@ class BookingServiceTest {
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
     }
@@ -6464,7 +6460,6 @@ class BookingServiceTest {
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
@@ -6520,7 +6515,6 @@ class BookingServiceTest {
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
@@ -6601,7 +6595,6 @@ class BookingServiceTest {
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
@@ -6668,7 +6661,6 @@ class BookingServiceTest {
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockOffenderService.getOffenderByCrn(application.crn, workflowManager.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(workflowManager.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
