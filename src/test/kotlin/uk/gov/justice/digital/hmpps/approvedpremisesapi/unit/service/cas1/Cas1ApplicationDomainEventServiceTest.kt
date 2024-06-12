@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -231,7 +232,42 @@ class Cas1ApplicationDomainEventServiceTest {
               data.offenceId == application.offenceId &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals("reason for short notice") &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals("reason for short notice other") &&
-              enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType().toString() == ApType.normal.value
+              enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType()
+              .toString() == ApType.normal.value
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `applicationSubmitted doesn't save null metadata values`() {
+      val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+        caseManagerIsNotApplicant = false,
+        reasonForShortNotice = null,
+        reasonForShortNoticeOther = null,
+      )
+
+      service.applicationSubmitted(
+        application,
+        submitApprovedPremisesApplication,
+        username,
+      )
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveApplicationSubmittedDomainEvent(
+          this.withArg {
+            assertThat(it.metadata).containsOnlyKeys(MetaDataName.CAS1_REQUESTED_AP_TYPE)
           },
         )
       }
