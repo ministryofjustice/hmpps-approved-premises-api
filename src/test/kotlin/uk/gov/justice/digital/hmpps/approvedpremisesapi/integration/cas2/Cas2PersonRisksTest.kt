@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoshRatingsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -64,7 +64,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
     `Given a CAS2 POM User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -80,7 +80,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
   fun `Getting risks for a CRN returns OK with correct body`() {
     `Given a CAS2 POM User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        apOASysContextMockSuccessfulRoshRatingsCall(
+        APOASysContext_mockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {
             withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))

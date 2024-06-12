@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.util.UUID
@@ -13,7 +13,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Create Turnaround returns 404 Not Found if the premises was not found`() {
     `Given a User` { _, jwt ->
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${UUID.randomUUID()}/bookings/${UUID.randomUUID()}/turnarounds")
@@ -39,7 +39,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${UUID.randomUUID()}/turnarounds")
@@ -78,7 +78,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withBed(bed)
       }
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
@@ -129,7 +129,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withDepartureDate(LocalDate.of(2023, 8, 5))
       }
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
@@ -184,7 +184,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
@@ -227,7 +227,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withBed(bed)
       }
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")

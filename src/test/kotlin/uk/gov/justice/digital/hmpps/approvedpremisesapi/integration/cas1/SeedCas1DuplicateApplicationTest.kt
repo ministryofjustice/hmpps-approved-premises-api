@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
@@ -47,14 +47,14 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           withReleaseType("licence")
         }
 
-        apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1"),
           ),
         )
 
-        apOASysContextMockSuccessfulNeedsDetailsCall(
+        APOASysContext_mockSuccessfulNeedsDetailsCall(
           offenderDetails.otherIds.crn,
           NeedsDetailsFactory().produce(),
         )

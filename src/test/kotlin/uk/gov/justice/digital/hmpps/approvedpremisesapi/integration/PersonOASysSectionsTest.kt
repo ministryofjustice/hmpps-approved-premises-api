@@ -9,13 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskManagementPlanCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoSHSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
@@ -66,7 +66,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -83,16 +83,16 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val roshSummary = RoshSummaryFactory().produce()
-        apOASysContextMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
+        APOASysContext_mockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        apOASysContextMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         val riskManagementPlan = RiskManagementPlanFactory().produce()
-        apOASysContextMockSuccessfulRiskManagementPlanCall(offenderDetails.otherIds.crn, riskManagementPlan)
+        APOASysContext_mockSuccessfulRiskManagementPlanCall(offenderDetails.otherIds.crn, riskManagementPlan)
 
         val needsDetails = NeedsDetailsFactory().apply {
           withAssessmentId(34853487)
@@ -101,7 +101,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
+        APOASysContext_mockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")
@@ -137,7 +137,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+        APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")

@@ -59,14 +59,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
@@ -225,7 +225,7 @@ class ApplicationTest : IntegrationTestBase() {
                   withData("{}")
                 }
 
-              communityApiMockOffenderUserAccessCall(
+              CommunityAPI_mockOffenderUserAccessCall(
                 userEntity.deliusUsername,
                 offenderDetails.otherIds.crn,
                 inclusion = false,
@@ -308,7 +308,7 @@ class ApplicationTest : IntegrationTestBase() {
                   dateTime,
                 )
 
-              communityApiMockOffenderUserAccessCall(
+              CommunityAPI_mockOffenderUserAccessCall(
                 assessorUser.deliusUsername,
                 offenderDetails.otherIds.crn,
                 inclusion = false,
@@ -398,7 +398,7 @@ class ApplicationTest : IntegrationTestBase() {
               val anotherUsersApplication =
                 createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
-              communityApiMockOffenderUserAccessCall(
+              CommunityAPI_mockOffenderUserAccessCall(
                 referrerUser.deliusUsername,
                 offenderDetails.otherIds.crn,
                 inclusion = false,
@@ -449,12 +449,12 @@ class ApplicationTest : IntegrationTestBase() {
         val crn = "X1234"
 
         val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-        communityApiMockNotFoundOffenderDetailsCall(crn)
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
         loadPreemptiveCacheForOffenderDetails(crn)
 
-        communityApiMockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
 
-        apDeliusContextMockUserAccess(
+        ApDeliusContext_mockUserAccess(
           CaseAccessFactory()
             .withCrn(crn)
             .produce(),
@@ -515,7 +515,7 @@ class ApplicationTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-          communityApiMockOffenderUserAccessCall(
+          CommunityAPI_mockOffenderUserAccessCall(
             userEntity.deliusUsername,
             offenderDetails.otherIds.crn,
             inclusion = false,
@@ -651,7 +651,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          communityApiMockOffenderUserAccessCall(
+          CommunityAPI_mockOffenderUserAccessCall(
             userEntity.deliusUsername,
             offenderDetails.otherIds.crn,
             inclusion = false,
@@ -695,7 +695,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
 
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               userEntity.deliusUsername,
               offenderDetails.otherIds.crn,
               inclusion = false,
@@ -725,7 +725,7 @@ class ApplicationTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-          communityApiMockOffenderUserAccessCall(
+          CommunityAPI_mockOffenderUserAccessCall(
             userEntity.deliusUsername,
             offenderDetails.otherIds.crn,
             inclusion = false,
@@ -853,7 +853,7 @@ class ApplicationTest : IntegrationTestBase() {
             withData("{}")
           }
 
-          communityApiMockOffenderUserAccessCall(
+          CommunityAPI_mockOffenderUserAccessCall(
             userEntity.deliusUsername,
             offenderDetails.otherIds.crn,
             inclusion = false,
@@ -913,7 +913,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          communityApiMockOffenderUserAccessCall(
+          CommunityAPI_mockOffenderUserAccessCall(
             userEntity.deliusUsername,
             offenderDetails.otherIds.crn,
             inclusion = false,
@@ -973,7 +973,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               userEntity.deliusUsername,
               offenderDetails.otherIds.crn,
               inclusion = false,
@@ -1034,7 +1034,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               userEntity.deliusUsername,
               offenderDetails.otherIds.crn,
               inclusion = false,
@@ -1080,7 +1080,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               userEntity.deliusUsername,
               offenderDetails.otherIds.crn,
               inclusion = false,
@@ -1393,7 +1393,7 @@ class ApplicationTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        communityApiMockOffenderUserAccessCall(
+        CommunityAPI_mockOffenderUserAccessCall(
           userEntity.deliusUsername,
           offenderDetails.otherIds.crn,
           inclusion = false,
@@ -1437,7 +1437,7 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { _, jwt ->
         val crn = "X1234"
 
-        communityApiMockNotFoundOffenderDetailsCall(crn)
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
         loadPreemptiveCacheForOffenderDetails(crn)
 
         approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1466,7 +1466,7 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { _, jwt ->
         `Given an Offender` { offenderDetails, _ ->
 
-          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
             offenderDetails.otherIds.crn,
             ManagingTeamsResponse(
               teamCodes = listOf(offenderDetails.otherIds.crn),
@@ -1504,14 +1504,14 @@ class ApplicationTest : IntegrationTestBase() {
             withId(UUID.randomUUID())
           }
 
-          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
             offenderDetails.otherIds.crn,
             ManagingTeamsResponse(
               teamCodes = listOf("TEAM1"),
             ),
           )
 
-          apOASysContextMockSuccessfulNeedsDetailsCall(
+          APOASysContext_mockSuccessfulNeedsDetailsCall(
             offenderDetails.otherIds.crn,
             NeedsDetailsFactory().produce(),
           )
@@ -1553,14 +1553,14 @@ class ApplicationTest : IntegrationTestBase() {
             withId(UUID.randomUUID())
           }
 
-          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
             offenderDetails.otherIds.crn,
             ManagingTeamsResponse(
               teamCodes = listOf("TEAM1"),
             ),
           )
 
-          apOASysContextMockSuccessfulNeedsDetailsCall(
+          APOASysContext_mockSuccessfulNeedsDetailsCall(
             offenderDetails.otherIds.crn,
             NeedsDetailsFactory().produce(),
           )
@@ -1599,7 +1599,7 @@ class ApplicationTest : IntegrationTestBase() {
         `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
-          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
             offenderDetails.otherIds.crn,
             ManagingTeamsResponse(
               teamCodes = listOf(offenderDetails.otherIds.crn),
@@ -1646,7 +1646,7 @@ class ApplicationTest : IntegrationTestBase() {
             withNomsNumber("ABC123")
           },
         ) { offenderDetails, _ ->
-          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
             offenderDetails.otherIds.crn,
             ManagingTeamsResponse(
               teamCodes = listOf(offenderDetails.otherIds.crn),
@@ -2021,7 +2021,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityApiMockSuccessfulRegistrationsCall(
+            CommunityAPI_mockSuccessfulRegistrationsCall(
               offenderDetails.otherIds.crn,
               Registrations(
                 registrations = listOf(
@@ -2049,12 +2049,12 @@ class ApplicationTest : IntegrationTestBase() {
               ),
             )
 
-            apDeliusContextMockSuccessfulCaseDetailCall(
+            APDeliusContext_mockSuccessfulCaseDetailCall(
               offenderDetails.otherIds.crn,
               CaseDetailFactory().produce(),
             )
 
-            govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
             snsDomainEventListener.clearMessages()
 
@@ -2189,7 +2189,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityApiMockSuccessfulRegistrationsCall(
+            CommunityAPI_mockSuccessfulRegistrationsCall(
               offenderDetails.otherIds.crn,
               Registrations(
                 registrations = listOf(
@@ -2217,12 +2217,12 @@ class ApplicationTest : IntegrationTestBase() {
               ),
             )
 
-            apDeliusContextMockSuccessfulCaseDetailCall(
+            APDeliusContext_mockSuccessfulCaseDetailCall(
               offenderDetails.otherIds.crn,
               CaseDetailFactory().produce(),
             )
 
-            govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
             val apArea = apAreaEntityFactory.produceAndPersist {
             }
@@ -2327,7 +2327,7 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityApiMockSuccessfulRegistrationsCall(
+            CommunityAPI_mockSuccessfulRegistrationsCall(
               offenderDetails.otherIds.crn,
               Registrations(
                 registrations = listOf(
@@ -2360,14 +2360,14 @@ class ApplicationTest : IntegrationTestBase() {
               it.invocation.args[0] as ApplicationEntity
             }
 
-            apDeliusContextMockSuccessfulCaseDetailCall(
+            APDeliusContext_mockSuccessfulCaseDetailCall(
               offenderDetails.otherIds.crn,
               CaseDetailFactory().produce(),
             )
 
             var responseStatuses = listOf<HttpStatusCode>()
 
-            govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
             (1..10).map {
               val thread = Thread {

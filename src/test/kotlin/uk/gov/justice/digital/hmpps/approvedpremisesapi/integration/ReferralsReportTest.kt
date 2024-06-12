@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -65,7 +65,7 @@ class ReferralsReportTest : IntegrationTestBase() {
   @ValueSource(strings = ["referrals-by-tier", "referrals-by-ap-type"])
   fun `Get referrals report returns the correct data`(reportType: String) {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       val month = 4
       val year = 2023

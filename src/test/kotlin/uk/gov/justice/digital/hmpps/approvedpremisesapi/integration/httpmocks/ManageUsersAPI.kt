@@ -5,7 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.manageusers.ExternalUserDetails
 
-fun IntegrationTestBase.manageUsersMockSuccessfulExternalUsersCall(
+fun IntegrationTestBase.ManageUsers_mockSuccessfulExternalUsersCall(
   username: String,
   externalUserDetails: ExternalUserDetails,
 ) =

@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoshRatingsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.HMPPSTier_mockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
@@ -79,7 +79,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -95,7 +95,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting risks for a CRN returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
-        apOASysContextMockSuccessfulRoshRatingsCall(
+        APOASysContext_mockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {
             withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
@@ -107,7 +107,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
           }.produce(),
         )
 
-        hmppsTierMockSuccessfulTierCall(
+        HMPPSTier_mockSuccessfulTierCall(
           offenderDetails.otherIds.crn,
           Tier(
             tierScore = "M2",
@@ -116,7 +116,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
           ),
         )
 
-        communityApiMockSuccessfulRegistrationsCall(
+        CommunityAPI_mockSuccessfulRegistrationsCall(
           offenderDetails.otherIds.crn,
           Registrations(
             registrations = listOf(
@@ -133,7 +133,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
           ),
         )
 
-        apDeliusContextMockSuccessfulCaseDetailCall(
+        APDeliusContext_mockSuccessfulCaseDetailCall(
           offenderDetails.otherIds.crn,
           CaseDetailFactory()
             .from(offenderDetails.asCaseDetail())

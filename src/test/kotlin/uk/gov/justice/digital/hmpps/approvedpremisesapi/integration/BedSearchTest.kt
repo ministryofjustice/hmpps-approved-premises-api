@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
@@ -299,7 +299,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         booking.turnarounds = mutableListOf(turnaround)
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
           jwt,
@@ -358,7 +358,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         booking.turnarounds = mutableListOf(turnaround)
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
           jwt,

@@ -7,10 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
@@ -62,7 +62,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     `Given a CAS2 POM User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -79,10 +79,10 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     `Given a CAS2 POM User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        apOASysContextMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
@@ -108,7 +108,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     `Given a CAS2 POM User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
+        APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")

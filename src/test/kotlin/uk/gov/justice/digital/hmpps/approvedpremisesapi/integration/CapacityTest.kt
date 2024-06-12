@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.util.UUID
@@ -86,7 +86,7 @@ class CapacityTest : IntegrationTestBase() {
       }
 
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
       bookingEntityFactory.produceAndPersist {
         withDepartureDate(LocalDate.now().minusDays(1))
@@ -121,7 +121,7 @@ class CapacityTest : IntegrationTestBase() {
       }
 
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
       bookingEntityFactory.produceAndPersist {
         withArrivalDate(LocalDate.now().plusDays(4))

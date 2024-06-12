@@ -6,7 +6,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-fun IntegrationTestBase.caseNotesAPIMockSuccessfulCaseNotesCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage) {
+fun IntegrationTestBase.CaseNotesAPI_mockSuccessfulCaseNotesCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage) {
   val fromLocalDateTime = LocalDateTime.of(from, LocalTime.MIN)
 
   mockSuccessfulGetCallWithJsonResponse(

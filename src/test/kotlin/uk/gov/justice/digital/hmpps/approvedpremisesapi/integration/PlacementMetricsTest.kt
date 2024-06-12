@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelinessEntityRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -111,7 +111,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
 
       val timelinessEntities = applicationTimelinessEntityRepository.findAllForMonthAndYear(month, year)
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       val expectedDataFrame = PlacementMetricsReportGenerator(timelinessEntities, realWorkingDayService)
         .createReport(TierCategory.entries, PlacementMetricsReportProperties(month, year))

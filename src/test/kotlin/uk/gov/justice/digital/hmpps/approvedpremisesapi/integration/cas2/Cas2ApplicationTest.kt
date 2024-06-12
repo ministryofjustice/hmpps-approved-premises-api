@@ -28,8 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Licence Case Admin User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockNotFoundInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -358,7 +358,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         val crn = "X1234"
 
         produceAndPersistBasicApplication(crn, userEntity)
-        communityApiMockNotFoundOffenderDetailsCall(crn)
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
         loadPreemptiveCacheForOffenderDetails(crn)
 
         webTestClient.get()
@@ -1100,7 +1100,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           ) { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(crn, userEntity)
 
-            prisonApiMockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+            PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
             loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
             val rawResponseBody = webTestClient.get()
@@ -1357,7 +1357,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         `Given a CAS2 POM User` { userEntity, jwt ->
           val crn = "X1234"
 
-          communityApiMockNotFoundOffenderDetailsCall(crn)
+          CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
           loadPreemptiveCacheForOffenderDetails(crn)
 
           cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1425,7 +1425,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         `Given a CAS2 Licence Case Admin User` { _, jwt ->
           val crn = "X1234"
 
-          communityApiMockNotFoundOffenderDetailsCall(crn)
+          CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
           loadPreemptiveCacheForOffenderDetails(crn)
 
           cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {

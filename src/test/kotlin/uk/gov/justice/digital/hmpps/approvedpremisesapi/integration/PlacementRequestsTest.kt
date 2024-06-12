@@ -21,8 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -1161,7 +1161,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              communityApiMockOffenderUserAccessCall(
+              CommunityAPI_mockOffenderUserAccessCall(
                 username = user.deliusUsername,
                 crn = offenderDetails.otherIds.crn,
                 inclusion = false,
@@ -1198,14 +1198,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              communityApiMockOffenderUserAccessCall(
+              CommunityAPI_mockOffenderUserAccessCall(
                 username = user.deliusUsername,
                 crn = offenderDetails.otherIds.crn,
                 inclusion = false,
                 exclusion = false,
               )
 
-              apDeliusContextAddResponseToUserAccessCall(
+              ApDeliusContext_addResponseToUserAccessCall(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
                   .produce(),
@@ -1249,7 +1249,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              communityApiMockOffenderUserAccessCall(
+              CommunityAPI_mockOffenderUserAccessCall(
                 username = user.deliusUsername,
                 crn = offenderDetails.otherIds.crn,
                 inclusion = false,

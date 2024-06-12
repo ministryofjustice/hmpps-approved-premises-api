@@ -29,9 +29,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
@@ -1602,7 +1602,7 @@ class PremisesTest {
 
         val keyWorker = ContextStaffMemberFactory().produce()
         premises.forEach {
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, it.qCode)
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, it.qCode)
         }
 
         bookingEntityFactory.produceAndPersist {
@@ -2035,12 +2035,12 @@ class PremisesTest {
     fun `Get Premises Summary by ID returns OK with correct body`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         bookings.forEach {
-          apDeliusContextAddCaseSummaryToBulkResponse(
+          ApDeliusContext_addCaseSummaryToBulkResponse(
             CaseSummaryFactory()
               .withCrn(it.crn)
               .produce(),
           )
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(it.crn)
               .produce(),
@@ -2095,12 +2095,12 @@ class PremisesTest {
     fun `Get Premises Summary by ID returns the correct capacity data`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         bookings.forEach {
-          apDeliusContextAddCaseSummaryToBulkResponse(
+          ApDeliusContext_addCaseSummaryToBulkResponse(
             CaseSummaryFactory()
               .withCrn(it.crn)
               .produce(),
           )
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(it.crn)
               .produce(),

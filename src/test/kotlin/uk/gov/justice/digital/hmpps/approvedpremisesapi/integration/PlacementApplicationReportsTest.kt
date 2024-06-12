@@ -44,9 +44,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -189,7 +189,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   @Test
   fun `Get placement application report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       val singleDateUnsubmittedPlacement = expectedRow {
         isAccepted = false
@@ -481,7 +481,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = `Given an Offender`({ withCrn(crn) })
 
-    communityApiMockSuccessfulRegistrationsCall(
+    CommunityAPI_mockSuccessfulRegistrationsCall(
       offenderDetails.otherIds.crn,
       Registrations(
         registrations = listOf(
@@ -495,7 +495,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       ),
     )
 
-    apDeliusContextMockSuccessfulCaseDetailCall(
+    APDeliusContext_mockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,
       CaseDetailFactory()
         .from(offenderDetails.asCaseDetail())

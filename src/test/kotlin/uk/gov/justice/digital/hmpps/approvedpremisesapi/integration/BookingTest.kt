@@ -21,9 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
@@ -84,7 +84,7 @@ class BookingTest : IntegrationTestBase() {
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -140,7 +140,7 @@ class BookingTest : IntegrationTestBase() {
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -173,7 +173,7 @@ class BookingTest : IntegrationTestBase() {
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -211,7 +211,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -253,7 +253,7 @@ class BookingTest : IntegrationTestBase() {
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -430,7 +430,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
@@ -497,7 +497,7 @@ class BookingTest : IntegrationTestBase() {
       }
 
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
@@ -540,7 +540,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -855,7 +855,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -943,7 +943,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1017,7 +1017,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1091,7 +1091,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1165,7 +1165,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1253,7 +1253,7 @@ class BookingTest : IntegrationTestBase() {
         }
         assessment.schemaUpToDate = true
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1336,7 +1336,7 @@ class BookingTest : IntegrationTestBase() {
           withAssessmentSchema(assessmentSchema)
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         val conflictingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1415,7 +1415,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1481,7 +1481,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1531,7 +1531,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1576,7 +1576,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1630,7 +1630,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1694,7 +1694,7 @@ class BookingTest : IntegrationTestBase() {
 
         existingBooking.turnarounds += existingTurnarounds
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1756,7 +1756,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
         }.toMutableList()
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1824,7 +1824,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1880,7 +1880,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1943,7 +1943,7 @@ class BookingTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -2083,7 +2083,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
@@ -2178,7 +2178,7 @@ class BookingTest : IntegrationTestBase() {
   ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -2233,7 +2233,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when over-booking`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -2295,7 +2295,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when a bed is not present`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -2346,7 +2346,7 @@ class BookingTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withQCode("QCODE")
@@ -2671,7 +2671,7 @@ class BookingTest : IntegrationTestBase() {
   ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -2728,7 +2728,7 @@ class BookingTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withQCode("QCODE")
@@ -2803,7 +2803,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Departure on Approved Premises Booking when a departure already exists returns 400 Bad Request`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -3136,7 +3136,7 @@ class BookingTest : IntegrationTestBase() {
               withServiceScope("*")
             }
 
-            apDeliusContextMockSuccessfulGetReferralDetails(
+            APDeliusContext_mockSuccessfulGetReferralDetails(
               crn = booking.crn,
               bookingId = booking.id.toString(),
               arrivedAt = null,
@@ -3524,7 +3524,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3594,7 +3594,7 @@ class BookingTest : IntegrationTestBase() {
 
         booking.turnarounds += turnarounds
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3655,7 +3655,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-07-14"))
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3724,7 +3724,7 @@ class BookingTest : IntegrationTestBase() {
 
         booking.turnarounds += turnarounds
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
@@ -3754,7 +3754,7 @@ class BookingTest : IntegrationTestBase() {
   ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3788,7 +3788,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Extension on Approved Premises Booking returns OK when a booking has no bed`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3813,7 +3813,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3856,7 +3856,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -3901,7 +3901,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Approved Premises Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -4033,7 +4033,7 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create AP Date Change with MANAGER or MATCHER role returns 200, persists date change`(role: UserRole) {
-    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -4238,7 +4238,7 @@ class BookingTest : IntegrationTestBase() {
   ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -4446,7 +4446,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   private fun creatingNewExtensionReturnsCorrectly(booking: BookingEntity, jwt: String, newDate: String) {
-    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")

@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 
 class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
@@ -55,7 +55,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
+      ApDeliusContext_addListCaseSummaryToBulkResponse(cases)
 
       migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
 
@@ -107,7 +107,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
+      ApDeliusContext_addListCaseSummaryToBulkResponse(cases)
 
       mockOffenderUserAccessCommunityApiCall("", temporaryAccommodationApplications.first().crn, true, true)
 
@@ -147,7 +147,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withCreatedByUser(user)
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(listOf())
+      ApDeliusContext_addListCaseSummaryToBulkResponse(listOf())
 
       mockOffenderUserAccessCommunityApiCall("", temporaryAccommodationApplication.crn, true, true)
 

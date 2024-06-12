@@ -43,9 +43,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -131,7 +131,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
     referrerTeam = StaffUserTeamMembershipFactory().produce()
     referrerProbationArea = "Referrer probation area"
@@ -435,7 +435,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       offenderDetailsConfigBlock = { withCrn(crn) },
     )
 
-    communityApiMockSuccessfulRegistrationsCall(
+    CommunityAPI_mockSuccessfulRegistrationsCall(
       offenderDetails.otherIds.crn,
       Registrations(
         registrations = listOf(
@@ -449,7 +449,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       ),
     )
 
-    apDeliusContextMockSuccessfulCaseDetailCall(
+    APDeliusContext_mockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,
       CaseDetailFactory()
         .from(offenderDetails.asCaseDetail())

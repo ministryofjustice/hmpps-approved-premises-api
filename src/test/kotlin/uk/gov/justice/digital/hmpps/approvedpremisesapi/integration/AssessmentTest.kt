@@ -50,9 +50,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -1739,7 +1739,7 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentExclusion(true)
         },
       ) { offenderDetails, inmateDetails ->
-        communityApiMockOffenderUserAccessCall(
+        CommunityAPI_mockOffenderUserAccessCall(
           username = userEntity.deliusUsername,
           crn = offenderDetails.otherIds.crn,
           inclusion = false,
@@ -1787,14 +1787,14 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentExclusion(true)
         },
       ) { offenderDetails, inmateDetails ->
-        communityApiMockOffenderUserAccessCall(
+        CommunityAPI_mockOffenderUserAccessCall(
           username = userEntity.deliusUsername,
           crn = offenderDetails.otherIds.crn,
           inclusion = false,
           exclusion = false,
         )
 
-        apDeliusContextMockUserAccess(
+        ApDeliusContext_mockUserAccess(
           CaseAccessFactory()
             .withCrn(offenderDetails.otherIds.crn)
             .withUserExcluded(false)
@@ -1853,7 +1853,7 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentRestriction(true)
         },
       ) { offenderDetails, inmateDetails ->
-        communityApiMockOffenderUserAccessCall(
+        CommunityAPI_mockOffenderUserAccessCall(
           username = userEntity.deliusUsername,
           crn = offenderDetails.otherIds.crn,
           inclusion = true,
@@ -2086,7 +2086,7 @@ class AssessmentTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
             `Given an Offender` { offenderDetails, inmateDetails ->
-              govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+              GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
               val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()

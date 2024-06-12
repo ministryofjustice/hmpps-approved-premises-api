@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -349,7 +349,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           decision = AssessmentDecision.REJECTED,
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           webTestClient.post()
             .uri("/applications/${application.id}/appeals")
@@ -412,7 +412,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           decision = AssessmentDecision.REJECTED,
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           webTestClient.post()
             .uri("/applications/${application.id}/appeals")
@@ -464,7 +464,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           decision = AssessmentDecision.REJECTED,
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           webTestClient.post()
             .uri("/applications/${application.id}/appeals")

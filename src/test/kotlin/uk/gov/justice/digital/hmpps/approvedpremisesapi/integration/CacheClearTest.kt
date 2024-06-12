@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.util.UUID
@@ -61,7 +61,7 @@ class CacheClearTest : IntegrationTestBase() {
       .produce()
 
     // Given a Booking for an Offender
-    communityApiMockSuccessfulOffenderDetailsCall(offenderDetails)
+    CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
     setupBookingForOffender(offenderDetails)
 
     // Then OffenderDetailsCacheRefreshWorker should pick up the CRN and preemptively load it
@@ -133,7 +133,7 @@ class CacheClearTest : IntegrationTestBase() {
       withQCode(qCode)
     }
 
-    apDeliusContextMockSuccessfulStaffMembersCall(ContextStaffMemberFactory().produce(), qCode)
+    APDeliusContext_mockSuccessfulStaffMembersCall(ContextStaffMemberFactory().produce(), qCode)
   }
 
   private fun validateUpstreamOffenderDetailsRequestMade(crn: String, times: Int) =

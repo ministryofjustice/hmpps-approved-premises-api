@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.caseNotesAPIMockSuccessfulCaseNotesCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CaseNotesAPI_mockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
@@ -108,7 +108,7 @@ class CaseNotesTest : IntegrationTestBase() {
           CaseNoteFactory().produce(),
         )
 
-        caseNotesAPIMockSuccessfulCaseNotesCall(
+        CaseNotesAPI_mockSuccessfulCaseNotesCall(
           0,
           LocalDate.now().minusDays(365),
           offenderDetails.otherIds.nomsNumber!!,

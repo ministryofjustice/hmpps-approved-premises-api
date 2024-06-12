@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.REJECTED
@@ -418,7 +418,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -490,7 +490,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -551,7 +551,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -614,7 +614,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -678,7 +678,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2023-12-15"),
           )
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -787,7 +787,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -929,7 +929,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1001,7 +1001,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1062,7 +1062,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1125,7 +1125,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1189,7 +1189,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2023-12-15"),
           )
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1255,7 +1255,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1337,7 +1337,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1441,7 +1441,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1525,7 +1525,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1613,7 +1613,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1734,7 +1734,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1838,7 +1838,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1903,7 +1903,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -1959,7 +1959,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withRoom(room)
           }
 
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -2024,7 +2024,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withRoom(room)
           }
 
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -2089,7 +2089,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
           bedRepository.save(bed)
 
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -2156,7 +2156,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
           bedRepository.save(bed)
 
-          govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           bookingEntityFactory.produceAndPersist {
             withPremises(premises)

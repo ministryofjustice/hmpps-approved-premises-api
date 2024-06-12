@@ -6,8 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulConvictionsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulConvictionsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 
 class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
@@ -58,7 +58,7 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -115,7 +115,7 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        communityApiMockSuccessfulConvictionsCall(offenderDetails.otherIds.crn, listOf(activeConviction, inactiveConviction))
+        CommunityAPI_mockSuccessfulConvictionsCall(offenderDetails.otherIds.crn, listOf(activeConviction, inactiveConviction))
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/offences")

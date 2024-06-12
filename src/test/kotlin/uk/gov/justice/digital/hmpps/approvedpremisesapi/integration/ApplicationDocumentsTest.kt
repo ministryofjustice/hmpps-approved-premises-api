@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulDocumentDownloadCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
@@ -62,7 +62,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -116,7 +116,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -170,7 +170,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/documents/${application.crn}/ace0baaf-d7ee-4ea0-9010-da588387c880")
@@ -217,11 +217,11 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        communityApiMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         val fileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
 
-        communityApiMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
+        CommunityAPI_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
 
         val result = webTestClient.get()
           .uri("/documents/${application.crn}/457af8a5-82b1-449a-ad03-032b39435865")

@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ManageUsers_mockSuccessfulExternalUsersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -171,7 +171,7 @@ class Cas2SubmissionTest(
         .withUsername(username)
         .produce()
 
-      manageUsersMockSuccessfulExternalUsersCall(
+      ManageUsers_mockSuccessfulExternalUsersCall(
         username = username,
         externalUserDetails = externalUserDetails,
       )
@@ -348,7 +348,7 @@ class Cas2SubmissionTest(
         .withUsername(username)
         .produce()
 
-      manageUsersMockSuccessfulExternalUsersCall(
+      ManageUsers_mockSuccessfulExternalUsersCall(
         username = username,
         externalUserDetails = externalUserDetails,
       )

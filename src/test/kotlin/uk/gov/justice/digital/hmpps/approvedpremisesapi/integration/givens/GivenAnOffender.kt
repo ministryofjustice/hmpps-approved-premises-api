@@ -4,14 +4,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockServerErrorOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockNotFoundInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockServerErrorInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockSuccessfulInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockServerErrorOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockServerErrorInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
@@ -40,16 +40,16 @@ fun IntegrationTestBase.`Given an Offender`(
   val offenderDetails = offenderDetailsFactory.produce()
 
   when (mockServerErrorForCommunityApi) {
-    true -> communityApiMockServerErrorOffenderDetailsCall(offenderDetails.otherIds.crn)
-    false -> communityApiMockSuccessfulOffenderDetailsCall(offenderDetails)
+    true -> CommunityAPI_mockServerErrorOffenderDetailsCall(offenderDetails.otherIds.crn)
+    false -> CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
   }
 
   val caseDetail = offenderDetails.asCaseDetail()
 
-  apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
+  APDeliusContext_mockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
 
-  apDeliusContextMockCaseSummary(caseDetail.case)
-  apDeliusContextMockUserAccess(
+  ApDeliusContext_mockCaseSummary(caseDetail.case)
+  ApDeliusContext_mockUserAccess(
     CaseAccessFactory()
       .withCrn(offenderDetails.otherIds.crn)
       .withUserExcluded(offenderDetails.currentExclusion)
@@ -60,12 +60,12 @@ fun IntegrationTestBase.`Given an Offender`(
   loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
 
   when (mockServerErrorForPrisonApi) {
-    true -> prisonApiMockServerErrorInmateDetailsCall(inmateDetails.offenderNo)
-    false -> prisonApiMockSuccessfulInmateDetailsCall(inmateDetails)
+    true -> PrisonAPI_mockServerErrorInmateDetailsCall(inmateDetails.offenderNo)
+    false -> PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
   }
 
   when (mockNotFoundErrorForPrisonApi) {
-    true -> prisonApiMockNotFoundInmateDetailsCall(inmateDetails.offenderNo)
+    true -> PrisonAPI_mockNotFoundInmateDetailsCall(inmateDetails.offenderNo)
     false -> {}
   }
 
@@ -117,12 +117,12 @@ fun IntegrationTestBase.`Given Some Offenders`(
     val offenderDetails = offenderDetailsFactory.produce()
     val caseDetail = offenderDetails.asCaseDetail()
 
-    communityApiMockSuccessfulOffenderDetailsCall(offenderDetails)
+    CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
 
-    apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
+    APDeliusContext_mockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
 
-    apDeliusContextMockCaseSummary(caseDetail.case)
-    apDeliusContextMockUserAccess(
+    ApDeliusContext_mockCaseSummary(caseDetail.case)
+    ApDeliusContext_mockUserAccess(
       CaseAccessFactory()
         .withCrn(offenderDetails.otherIds.crn)
         .withUserExcluded(offenderDetails.currentExclusion)
@@ -132,7 +132,7 @@ fun IntegrationTestBase.`Given Some Offenders`(
 
     loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
 
-    prisonApiMockSuccessfulInmateDetailsCall(inmateDetails)
+    PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
 
     loadPreemptiveCacheForInmateDetails(inmateDetails.offenderNo)
 

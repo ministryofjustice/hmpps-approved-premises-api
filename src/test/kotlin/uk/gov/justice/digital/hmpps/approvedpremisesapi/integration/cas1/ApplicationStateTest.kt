@@ -31,9 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -78,19 +78,19 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       withPermissiveSchema()
     }
 
-    apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+    APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
       offenderDetails.otherIds.crn,
       ManagingTeamsResponse(
         teamCodes = listOf("TEAM1"),
       ),
     )
 
-    apOASysContextMockSuccessfulNeedsDetailsCall(
+    APOASysContext_mockSuccessfulNeedsDetailsCall(
       offenderDetails.otherIds.crn,
       NeedsDetailsFactory().produce(),
     )
 
-    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
     this.offenderDetails = offenderDetails
     this.user = user

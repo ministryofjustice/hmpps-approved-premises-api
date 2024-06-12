@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
@@ -69,7 +69,7 @@ class TasksTest {
 
     @BeforeEach
     fun stubBankHolidaysApi() {
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
     }
 
     @Test
@@ -251,7 +251,7 @@ class TasksTest {
 
     @BeforeAll
     fun stubBankHolidaysApi() {
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
     }
 
     @BeforeAll
@@ -2391,7 +2391,7 @@ class TasksTest {
 
     @BeforeEach
     fun stubBankHolidaysApi() {
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
     }
 
     @Test

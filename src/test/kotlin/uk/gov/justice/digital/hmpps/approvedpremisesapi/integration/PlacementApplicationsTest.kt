@@ -28,10 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockOffenderUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockSuccessfulOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -52,7 +52,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setupBankHolidays() {
-    govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
   }
 
   @Nested
@@ -233,7 +233,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               username = user.deliusUsername,
               crn = offenderDetails.otherIds.crn,
               inclusion = false,
@@ -266,14 +266,14 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               username = user.deliusUsername,
               crn = offenderDetails.otherIds.crn,
               inclusion = false,
               exclusion = false,
             )
 
-            apDeliusContextAddResponseToUserAccessCall(
+            ApDeliusContext_addResponseToUserAccessCall(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
                 .produce(),
@@ -318,7 +318,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            communityApiMockOffenderUserAccessCall(
+            CommunityAPI_mockOffenderUserAccessCall(
               username = user.deliusUsername,
               crn = offenderDetails.otherIds.crn,
               inclusion = false,
@@ -672,7 +672,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 withCrn(placementApplicationEntity.application.crn)
               },
             ) { _, _ ->
-              govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+              GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
               val placementDates = listOf(
                 PlacementDates(
@@ -762,7 +762,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 withCrn(placementApplicationEntity.application.crn)
               },
             ) { offenderDetails, inmateDetails ->
-              govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+              GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
               val arrival1 = LocalDate.of(2024, 1, 2)
               val duration1 = 12
@@ -1240,7 +1240,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             withPermissiveSchema()
           },
         ) { placementApplicationEntity ->
-          communityApiMockSuccessfulOffenderDetailsCall(
+          CommunityAPI_mockSuccessfulOffenderDetailsCall(
             OffenderDetailsSummaryFactory()
               .withCrn(placementApplicationEntity.application.crn)
               .produce(),
@@ -1294,7 +1294,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             allocatedToUser = assessor,
           ) { placementApplicationEntity ->
 
-            communityApiMockSuccessfulOffenderDetailsCall(
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
               OffenderDetailsSummaryFactory()
                 .withCrn(placementApplicationEntity.application.crn)
                 .produce(),
@@ -1361,7 +1361,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               allocatedToUser = assessor,
             ) { placementApplicationEntity ->
 
-              communityApiMockSuccessfulOffenderDetailsCall(
+              CommunityAPI_mockSuccessfulOffenderDetailsCall(
                 OffenderDetailsSummaryFactory()
                   .withCrn(placementApplicationEntity.application.crn)
                   .produce(),

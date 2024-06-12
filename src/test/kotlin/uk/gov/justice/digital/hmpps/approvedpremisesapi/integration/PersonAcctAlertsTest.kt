@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AlertFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockSuccessfulAlertsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAlertsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 
 class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
@@ -57,7 +57,7 @@ class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { _, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -79,7 +79,7 @@ class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
           AlertFactory().produce(),
         )
 
-        prisonApiMockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
+        PrisonAPI_mockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")

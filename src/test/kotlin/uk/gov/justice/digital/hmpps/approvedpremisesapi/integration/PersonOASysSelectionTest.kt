@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 
 class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
@@ -58,7 +58,7 @@ class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -81,7 +81,7 @@ class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
+        APOASysContext_mockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/selection")
@@ -110,7 +110,7 @@ class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+        APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/selection")

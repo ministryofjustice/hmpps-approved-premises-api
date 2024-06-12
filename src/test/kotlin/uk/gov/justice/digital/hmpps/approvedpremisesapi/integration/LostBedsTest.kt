@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -1251,7 +1251,7 @@ class LostBedsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/lost-beds")
@@ -1513,7 +1513,7 @@ class LostBedsTest : IntegrationTestBase() {
         withDepartureDate(LocalDate.parse("2022-08-15"))
       }
 
-      govUKBankHolidaysApiMockSuccessfullCallWithEmptyResponse()
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       webTestClient.put()
         .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")

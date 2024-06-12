@@ -6,10 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRoshCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityApiMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoSHSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulRoshCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
@@ -92,7 +92,7 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      communityApiMockNotFoundOffenderDetailsCall(crn)
+      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
@@ -109,10 +109,10 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val rosh = RoshSummaryFactory().produce()
-        apOASysContextMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
+        APOASysContext_mockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/rosh")
@@ -138,7 +138,7 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
-        apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
+        APOASysContext_mockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/rosh")

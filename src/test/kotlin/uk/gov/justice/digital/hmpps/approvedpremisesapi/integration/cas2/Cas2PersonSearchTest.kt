@@ -12,11 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonApiMockSuccessfulInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchApiMockForbiddenOffenderSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchApiMockNotFoundSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchApiMockServerErrorSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchApiMockSuccessfulOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockForbiddenOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockNotFoundSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockServerErrorSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
@@ -114,8 +114,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           )
           .produce()
 
-        probationOffenderSearchApiMockSuccessfulOffenderSearchCall("NOMS321", listOf(offender))
-        prisonApiMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
+        ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall("NOMS321", listOf(offender))
+        PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
         webTestClient.get()
           .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -147,7 +147,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized`() {
       `Given a CAS2 POM User` { userEntity, jwt ->
-        probationOffenderSearchApiMockForbiddenOffenderSearchCall()
+        ProbationOffenderSearchAPI_mockForbiddenOffenderSearchCall()
 
         webTestClient.get()
           .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -161,7 +161,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a NOMIS ID returns Unauthorised error when it is not found`() {
       `Given a CAS2 POM User` { userEntity, jwt ->
-        probationOffenderSearchApiMockNotFoundSearchCall()
+        ProbationOffenderSearchAPI_mockNotFoundSearchCall()
 
         webTestClient.get()
           .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -175,7 +175,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a NOMIS ID returns server error when there is a server error`() {
       `Given a CAS2 POM User` { userEntity, jwt ->
-        probationOffenderSearchApiMockServerErrorSearchCall()
+        ProbationOffenderSearchAPI_mockServerErrorSearchCall()
 
         webTestClient.get()
           .uri("/cas2/people/search?nomsNumber=NOMS321")
