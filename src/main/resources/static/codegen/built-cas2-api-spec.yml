@@ -1544,6 +1544,8 @@ components:
           format: date-time
         premisesName:
           type: string
+        otherReason:
+          type: string
       required:
         - bookingId
         - date
