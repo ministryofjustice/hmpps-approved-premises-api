@@ -9,7 +9,14 @@ generic-service:
     host: approved-premises-api-dev.hmpps.service.justice.gov.uk
     tlsSecretName: hmpps-approved-premises-api-dev-cert
 
+  resources:
+    limits:
+      memory: 1.5Gi
+    requests:
+      memory: 1Gi
+
   env:
+    JAVA_OPTS: "-Xmx1000m"
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
