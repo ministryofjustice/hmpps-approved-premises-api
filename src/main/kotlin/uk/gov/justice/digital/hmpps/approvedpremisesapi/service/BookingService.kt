@@ -1684,7 +1684,7 @@ class BookingService(
     booking: BookingEntity,
     newDepartureDate: LocalDate,
     notes: String?,
-  ) = validated<ExtensionEntity> {
+  ) = validated {
     val expectedLastUnavailableDate =
       workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
@@ -1745,6 +1745,10 @@ class BookingService(
 
     val expectedLastUnavailableDate =
       workingDayService.addWorkingDays(effectiveNewDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+
+    if (booking.isCancelled) {
+      return generalError("This Booking is cancelled and as such cannot be modified")
+    }
 
     if (booking.service != ServiceName.approvedPremises.value) {
       val bedId = booking.bed?.id

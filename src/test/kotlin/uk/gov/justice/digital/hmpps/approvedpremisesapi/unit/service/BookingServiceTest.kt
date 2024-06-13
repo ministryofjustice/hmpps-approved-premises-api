@@ -7321,6 +7321,38 @@ class BookingServiceTest {
     }
 
     @Test
+    fun `returns error if booking is cancelled`() {
+      val booking = BookingEntityFactory()
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .produce()
+        .apply {
+          cancellations = mutableListOf(
+            CancellationEntityFactory()
+              .withDefaults()
+              .withBooking(this)
+              .produce(),
+          )
+        }
+
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = LocalDate.parse("2023-07-15"),
+        newDepartureDate = LocalDate.parse("2023-07-16"),
+      )
+
+      assertThat(result is ValidatableActionResult.GeneralValidationError).isTrue
+      result as ValidatableActionResult.GeneralValidationError
+      assertThat(result.message).isEqualTo("This Booking is cancelled and as such cannot be modified")
+    }
+
+    @Test
     fun `returns success when changing arrived booking by reducing departure date`() {
       val booking = BookingEntityFactory()
         .withPremises(approvedPremises)
