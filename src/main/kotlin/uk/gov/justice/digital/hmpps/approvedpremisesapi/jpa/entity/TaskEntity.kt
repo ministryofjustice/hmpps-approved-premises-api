@@ -42,7 +42,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
 
     private const val ASSESSMENT_QUERY = """
        SELECT
-        cast(assessment.id as TEXT) AS id,
+        assessment.id AS id,
         assessment.created_at AS created_at,
         assessment.due_at AS due_at,
         'ASSESSMENT' AS type,
@@ -84,7 +84,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
 
     private const val PLACEMENT_APPLICATION_QUERY = """
        SELECT
-        cast(placement_application.id as TEXT) AS id,
+        placement_application.id AS id,
         placement_application.created_at AS created_at,
         placement_application.due_at AS due_at,
         'PLACEMENT_APPLICATION' AS type,
@@ -126,7 +126,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
 
     private const val PLACEMENT_REQUEST_QUERY = """
       SELECT
-        cast(placement_request.id as TEXT) AS id,
+        placement_request.id AS id,
         placement_request.created_at AS created_at,
         placement_request.due_at AS due_at,
         'PLACEMENT_REQUEST' AS type,
