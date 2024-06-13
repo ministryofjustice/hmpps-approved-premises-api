@@ -15,6 +15,7 @@ fun transformQualifications(qualification: ApiUserQualification): UserQualificat
   ApiUserQualification.recoveryFocused -> UserQualification.RECOVERY_FOCUSED
 }
 
+@SuppressWarnings("CyclomaticComplexMethod")
 fun transformUserRoles(approvedPremisesUserRole: ApprovedPremisesUserRole): UserRole = when (approvedPremisesUserRole) {
   ApprovedPremisesUserRole.assessor -> UserRole.CAS1_ASSESSOR
   ApprovedPremisesUserRole.matcher -> UserRole.CAS1_MATCHER
@@ -22,6 +23,7 @@ fun transformUserRoles(approvedPremisesUserRole: ApprovedPremisesUserRole): User
   ApprovedPremisesUserRole.legacyManager -> UserRole.CAS1_LEGACY_MANAGER
   ApprovedPremisesUserRole.futureManager -> UserRole.CAS1_FUTURE_MANAGER
   ApprovedPremisesUserRole.workflowManager -> UserRole.CAS1_WORKFLOW_MANAGER
+  ApprovedPremisesUserRole.cruMember -> UserRole.CAS1_CRU_MEMBER
   ApprovedPremisesUserRole.applicant -> UserRole.CAS1_APPLICANT
   ApprovedPremisesUserRole.roleAdmin -> UserRole.CAS1_ADMIN
   ApprovedPremisesUserRole.reportViewer -> UserRole.CAS1_REPORT_VIEWER

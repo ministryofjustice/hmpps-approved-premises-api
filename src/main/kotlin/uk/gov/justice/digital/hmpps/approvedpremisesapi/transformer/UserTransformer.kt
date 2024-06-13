@@ -79,6 +79,7 @@ class UserTransformer(
     UserRole.CAS1_LEGACY_MANAGER -> ApprovedPremisesUserRole.legacyManager
     UserRole.CAS1_FUTURE_MANAGER -> ApprovedPremisesUserRole.futureManager
     UserRole.CAS1_WORKFLOW_MANAGER -> ApprovedPremisesUserRole.workflowManager
+    UserRole.CAS1_CRU_MEMBER -> ApprovedPremisesUserRole.cruMember
     UserRole.CAS1_APPLICANT -> ApprovedPremisesUserRole.applicant
     UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION -> ApprovedPremisesUserRole.excludedFromMatchAllocation
     UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION -> ApprovedPremisesUserRole.excludedFromAssessAllocation

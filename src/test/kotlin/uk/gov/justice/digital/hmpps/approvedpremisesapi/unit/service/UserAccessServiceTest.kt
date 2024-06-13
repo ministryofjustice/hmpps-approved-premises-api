@@ -734,7 +734,7 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
   fun `userCanViewOutOfServiceBeds returns true if the user has the WORKFLOW_MANAGER user role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
@@ -751,7 +751,7 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER" ])
+  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
   fun `currentUserCanViewOutOfServiceBeds returns true if the current user has the WORKFLOW_MANAGER user role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 

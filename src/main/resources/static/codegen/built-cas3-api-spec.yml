@@ -3106,6 +3106,7 @@ components:
         - legacy_manager
         - future_manager
         - workflow_manager
+        - cru_member
         - applicant
         - role_admin
         - report_viewer
