@@ -270,7 +270,18 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     return List(count) {
-      `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier).first
+      `Given a Placement Request`(
+        user,
+        user,
+        user,
+        reallocated = isReallocated,
+        isWithdrawn = isWithdrawn,
+        isParole = isParole,
+        crn = crn,
+        name = name,
+        expectedArrival = expectedArrival,
+        tier = tier,
+      ).first
     }
   }
 }
