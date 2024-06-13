@@ -732,7 +732,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     val (_, jwt) = appealManagerDetails
 
     webTestClient.post()
-      .uri("/applications/${assessment.application.id}/appeals/")
+      .uri("/applications/${assessment.application.id}/appeals")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewAppeal(
@@ -753,7 +753,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     val (_, jwt) = appealManagerDetails
 
     webTestClient.post()
-      .uri("/applications/${assessment.application.id}/appeals/")
+      .uri("/applications/${assessment.application.id}/appeals")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewAppeal(

@@ -126,7 +126,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2/applications/")
+        .uri("/cas2/applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
