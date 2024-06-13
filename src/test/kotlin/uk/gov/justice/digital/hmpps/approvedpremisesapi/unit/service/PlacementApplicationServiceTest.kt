@@ -688,7 +688,8 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(user)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
-        .withDecision(PlacementApplicationDecision.WITHDRAW)
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withIsWithdrawn(true)
         .withReallocatedAt(null)
         .produce()
 
@@ -784,12 +785,15 @@ class PlacementApplicationServiceTest {
     fun `it withdraws a placement application and triggers emails and domain events and cascades to descendants`() {
       val allocatedTo = UserEntityFactory().withDefaultProbationRegion().produce()
 
+      val submittedTimeStamp = OffsetDateTime.now().minusSeconds(1)
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(allocatedTo)
         .withDecision(null)
         .withCreatedByUser(user)
+        .withDecisionMadeAt(submittedTimeStamp)
         .withSubmittedAt(OffsetDateTime.now())
+        .withIsWithdrawn(false)
         .produce()
 
       val withdrawalContext = WithdrawalContext(
@@ -812,9 +816,13 @@ class PlacementApplicationServiceTest {
       assertThat(result is CasResult.Success).isTrue
       val entity = (result as CasResult.Success).value
 
-      assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
+      assertThat(entity.decision).isEqualTo(null)
+      assertThat(entity.decisionMadeAt).isEqualTo(submittedTimeStamp)
+      assertThat(entity.isWithdrawn).isEqualTo(true)
 
-      verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, allocatedTo, WithdrawalTriggeredByUser(user)) }
+      val placementApplicationAfterWithdrawn = placementApplication
+      placementApplicationAfterWithdrawn.isWithdrawn = true
+      verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplicationAfterWithdrawn, allocatedTo, WithdrawalTriggeredByUser(user)) }
     }
 
     @Test
@@ -882,6 +890,7 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(PlacementApplicationDecision.WITHDRAW)
         .withCreatedByUser(user)
+        .withIsWithdrawn(true)
         .produce()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication

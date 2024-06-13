@@ -1273,8 +1273,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           val updatedPlacementApplication =
             placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-          assertThat(updatedPlacementApplication.decision).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAW)
-          assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
+          assertThat(updatedPlacementApplication.isWithdrawn).isTrue()
         }
       }
     }

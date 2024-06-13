@@ -136,7 +136,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   private fun assertPlacementApplicationNotWithdrawn(placementApplication: PlacementApplicationEntity) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    Assertions.assertThat(updatedPlacementApplication.isWithdrawn()).isFalse()
+    Assertions.assertThat(updatedPlacementApplication.isWithdrawn).isFalse()
     Assertions.assertThat(updatedPlacementApplication.withdrawalReason).isNull()
   }
 

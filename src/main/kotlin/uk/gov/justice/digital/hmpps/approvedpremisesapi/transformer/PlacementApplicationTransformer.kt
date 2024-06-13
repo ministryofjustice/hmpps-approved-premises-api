@@ -39,7 +39,7 @@ class PlacementApplicationTransformer(
       outdatedSchema = !jpa.schemaUpToDate,
       submittedAt = jpa.submittedAt?.toInstant(),
       canBeWithdrawn = jpa.isInWithdrawableState(),
-      isWithdrawn = jpa.isWithdrawn(),
+      isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.additional,
       placementDates = jpa.placementDates.map { PlacementDates(it.expectedArrival, it.duration) },

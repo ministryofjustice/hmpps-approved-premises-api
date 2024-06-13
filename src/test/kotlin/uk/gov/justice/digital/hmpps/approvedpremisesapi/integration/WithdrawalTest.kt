@@ -236,8 +236,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Request for placement 4 (Reallocated)     | -            |
      * | -> Request for placement 5 (With Decision)   | Yes          |
      * | -> Request for placement 6 (Withdrawn)       | -            |
-     * | -> Request for placement 7 (Withdrawn by PP) | -            |
-     * | -> Request for placement 7 (Rejected)        | Yes            |
+     * | -> Request for placement 7 (Rejected)        | Yes          |
      * ```
      */
     @Test
@@ -282,13 +281,8 @@ class WithdrawalTest : IntegrationTestBase() {
             createPlacementApplication(
               application,
               DateSpan(now(), duration = 2),
-              decision = PlacementApplicationDecision.WITHDRAW,
-            )
-
-            createPlacementApplication(
-              application,
-              DateSpan(now(), duration = 2),
-              decision = PlacementApplicationDecision.WITHDRAWN_BY_PP,
+              decision = PlacementApplicationDecision.ACCEPTED,
+              isWithdrawn = true,
             )
 
             val applicationWithRejectedDecision = createPlacementApplication(
@@ -910,7 +904,6 @@ class WithdrawalTest : IntegrationTestBase() {
 
             assertPlacementApplicationWithdrawn(
               placementApplication1,
-              PlacementApplicationDecision.WITHDRAW,
               PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
             )
             assertPlacementRequestWithdrawn(
@@ -921,7 +914,6 @@ class WithdrawalTest : IntegrationTestBase() {
 
             assertPlacementApplicationWithdrawn(
               placementApplication2NoBookingBeingAssessed,
-              PlacementApplicationDecision.WITHDRAW,
               PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
             )
 
@@ -1085,7 +1077,6 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationWithdrawn(
             placementApplication1,
-            PlacementApplicationDecision.WITHDRAW,
             PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
           )
 
@@ -1188,7 +1179,6 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationWithdrawn(
             placementApplication1,
-            PlacementApplicationDecision.WITHDRAW,
             PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
           )
 
@@ -1438,17 +1428,16 @@ class WithdrawalTest : IntegrationTestBase() {
 
   private fun assertPlacementApplicationWithdrawn(
     placementApplication: PlacementApplicationEntity,
-    decision: PlacementApplicationDecision,
     reason: PlacementApplicationWithdrawalReason,
   ) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    assertThat(updatedPlacementApplication.decision).isEqualTo(decision)
     assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
+    assertThat(updatedPlacementApplication.isWithdrawn).isTrue()
   }
 
   private fun assertPlacementApplicationNotWithdrawn(placementApplication: PlacementApplicationEntity) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    assertThat(updatedPlacementApplication.isWithdrawn()).isFalse()
+    assertThat(updatedPlacementApplication.isWithdrawn).isFalse()
     assertThat(updatedPlacementApplication.withdrawalReason).isNull()
   }
 
@@ -1600,6 +1589,7 @@ class WithdrawalTest : IntegrationTestBase() {
     reallocatedAt: OffsetDateTime? = null,
     decision: PlacementApplicationDecision? = PlacementApplicationDecision.ACCEPTED,
     allocatedTo: UserEntity? = null,
+    isWithdrawn: Boolean = false,
   ): PlacementApplicationEntity {
     val placementApplication = placementApplicationFactory.produceAndPersist {
       withCreatedByUser(application.createdByUser)
@@ -1614,6 +1604,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
       withReallocatedAt(reallocatedAt)
       withAllocatedToUser(allocatedTo)
+      withIsWithdrawn(isWithdrawn)
     }
 
     if (isSubmitted) {

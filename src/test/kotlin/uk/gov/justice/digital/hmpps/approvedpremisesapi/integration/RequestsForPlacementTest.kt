@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
@@ -84,7 +83,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withSchemaVersion(schema)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
-            withDecision(PlacementApplicationDecision.WITHDRAW)
+            withIsWithdrawn(true)
             withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
           }
 
@@ -143,7 +142,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
           assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[3].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+          assertThat(requestForPlacements[3].isWithdrawn).isTrue()
         }
       }
     }

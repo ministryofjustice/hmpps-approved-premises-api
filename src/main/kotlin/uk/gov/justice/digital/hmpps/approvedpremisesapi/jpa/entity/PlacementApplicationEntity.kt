@@ -141,12 +141,14 @@ data class PlacementApplicationEntity(
   @Column(name = "placement_application_submission_group_id")
   var submissionGroupId: UUID?,
 
+  var isWithdrawn: Boolean = false,
+
   @Version
   var version: Long = 1,
 ) {
   fun isReallocated() = reallocatedAt != null
 
-  fun isActive() = !isReallocated() && !isWithdrawn()
+  fun isActive() = !isReallocated() && !isWithdrawn
 
   fun isAccepted() = decision == PlacementApplicationDecision.ACCEPTED
 
@@ -157,7 +159,6 @@ data class PlacementApplicationEntity(
   fun isBeingAssessed() = isActive() && decision == null
 
   override fun toString() = "PlacementApplicationEntity: $id"
-  fun isWithdrawn(): Boolean = decision?.let { listOf(PlacementApplicationDecision.WITHDRAWN_BY_PP, PlacementApplicationDecision.WITHDRAW).contains(it) } ?: false
 }
 
 // Do not re-order these elements as we currently use ordinal enum mapping in hibernate
@@ -171,7 +172,26 @@ enum class PlacementType {
 enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
   ACCEPTED(ApiPlacementApplicationDecision.accepted),
   REJECTED(ApiPlacementApplicationDecision.rejected),
+
+  /**
+   * @deprecated isWithdrawn property supersedes the use of these two values.
+   * Previous versions of the code would overwrite the decision to WITHDRAW when the PP decided to
+   * withdraw a placement_application. Furthermore, an assessor could mark an assessment as either
+   * WITHDRAW/WITHDRAWN_BY_PP when assessing a placement_application.
+   *
+   * We now maintain separate fields to capture withdrawal state, as to not override the decision made by the assessor,
+   * and assessors can no longer mark a placement_application as WITHDRAW/WITHDRAWN_BY_PP
+   *
+   * Because we don’t have sufficient information to determine what an assessors decision was once a
+   * placement_application has been withdrawn, we couldn’t backfill the ‘decision’ column to replace
+   * WITHDRAW/WITHDRAWN_BY_PP to be either ACCEPTED or REJECTED with the correct decision_made_at value.
+   * For this reason, legacy placement_applications may still have a decision value of WITHDRAW/WITHDRAWN_BY_PP which
+   * is a helpful indicator that the decision_made_at date should not be trusted
+   */
+  @Deprecated("Explicit isWithdrawn property supersedes this value")
   WITHDRAW(ApiPlacementApplicationDecision.withdraw),
+
+  @Deprecated("Explicit isWithdrawn property supersedes this value")
   WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.withdrawnByPp),
   ;
 
