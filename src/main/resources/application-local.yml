@@ -49,8 +49,8 @@ preemptive-cache-logging-enabled: true
 user-allocations:
   rules:
     legacy-allocator:
-      enabled: true
-      priority: 1
+      enabled: false
+      priority: -1
     esap-assessments:
       enabled: true
       allocate-to-user: JIMSNOWLDAP
@@ -69,3 +69,6 @@ user-allocations:
       enabled: true
     female-assessments:
       enabled: true
+    appealed-assessments:
+      enabled: true
+      priority: 0
