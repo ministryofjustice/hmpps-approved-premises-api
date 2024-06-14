@@ -49,8 +49,8 @@ preemptive-cache-logging-enabled: true
 user-allocations:
   rules:
     legacy-allocator:
-      enabled: true
-      priority: 1
+      enabled: false
+      priority: -1
     esap-assessments:
       enabled: true
       allocate-to-user: JIMSNOWLDAP
@@ -62,10 +62,11 @@ user-allocations:
         north-west: JIMSNOWLDAP
         midlands: JIMSNOWLDAP
         south-east-eastern: JIMSNOWLDAP
-        south-west-south central: JIMSNOWLDAP
+        south-west-south-central: JIMSNOWLDAP
         wales: JIMSNOWLDAP
         nat: JIMSNOWLDAP
-    reallocated-assessments:
-      enabled: true
     female-assessments:
       enabled: true
+    appealed-assessments:
+      enabled: true
+      priority: 0
