@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import io.sentry.Sentry
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -40,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.TaskDueMigrationJob
 import javax.persistence.EntityManager
@@ -154,6 +157,13 @@ class MigrationJobService(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(MigrationLogger::class.java),
+        )
+
+        MigrationJobType.cas1PopulateAppReasonForShortNoticeMetadata -> Cas1ReasonForShortNoticeMetadataMigrationJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(DomainEventRepository::class.java),
+          applicationContext.getBean(TransactionTemplate::class.java),
+          applicationContext.getBean(JdbcTemplate::class.java),
         )
       }
 

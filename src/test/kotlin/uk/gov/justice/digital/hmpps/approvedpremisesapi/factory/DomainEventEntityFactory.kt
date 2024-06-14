@@ -6,6 +6,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
@@ -27,6 +28,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var triggerSource: Yielded<TriggerSourceType?> = { null }
   private var triggeredByUserId: Yielded<UUID?> = { null }
   private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
+  private var metadata: Yielded<Map<MetaDataName, String?>> = { emptyMap() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -90,6 +92,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.nomsNumber = { nomsNumber }
   }
 
+  fun withMetadata(metadata: Map<MetaDataName, String>) = apply {
+    this.metadata = { metadata }
+  }
+
   override fun produce(): DomainEventEntity = DomainEventEntity(
     id = this.id(),
     applicationId = this.applicationId(),
@@ -104,5 +110,6 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     triggerSource = null,
     triggeredByUserId = this.triggeredByUserId(),
     nomsNumber = this.nomsNumber(),
+    metadata = this.metadata(),
   )
 }

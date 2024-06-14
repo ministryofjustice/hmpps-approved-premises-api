@@ -3781,6 +3781,7 @@ components:
         - update_cas1_out_of_service_bed_reasons
         - update_cas3_application_offender_name
         - update_cas3_users_pdu_from_community_api
+        - update_cas1_populate_app_reason_for_short_notice_metadata
     PlacementDates:
       type: object
       properties:

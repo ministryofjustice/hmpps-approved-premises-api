@@ -78,6 +78,8 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByApplicationId(applicationId: UUID): List<DomainEventEntity>
 
+  fun getByApplicationIdAndType(applicationId: UUID, type: DomainEventType): DomainEventEntity
+
   @Modifying
   @Query(
     """

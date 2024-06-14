@@ -139,6 +139,18 @@ AND (
     year: Int,
   ): List<ApprovedPremisesApplicationMetricsSummary>
 
+  @Query(
+    """
+      SELECT cast(a.id as varchar) 
+      FROM applications a
+      WHERE a.submitted_at IS NOT NULL AND 
+            a.service = 'approved-premises' AND
+            length(trim(a.data -> 'basic-information' -> 'reason-for-short-notice' ->> 'reason')) > 0 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllSubmittedApprovedPremisesApplicationsWithShortNotice(): List<UUID>
+
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
 
