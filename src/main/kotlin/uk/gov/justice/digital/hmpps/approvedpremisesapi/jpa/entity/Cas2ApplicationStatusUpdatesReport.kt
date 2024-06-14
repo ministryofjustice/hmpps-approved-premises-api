@@ -23,7 +23,7 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
          ) AS updatedAt
 
       FROM domain_events events
-      LEFT JOIN LATERAL json_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
+      LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
       WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
         AND events.occurred_at  > CURRENT_DATE - 365
       GROUP BY events.id  
