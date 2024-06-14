@@ -39,6 +39,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var completedAt: Yielded<OffsetDateTime?> = { null }
   private var summaryData: Yielded<String> = { "{}" }
   private var dueAt: Yielded<OffsetDateTime?> = { null }
+  private var isWithdrawn: Yielded<Boolean> = { false }
   private var referralRejectionReason: Yielded<ReferralRejectionReasonEntity?> = { null }
   private var referralRejectionReasonDetail: Yielded<String?> = { null }
 
@@ -114,6 +115,9 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.referralRejectionReason = { referralRejectionReason }
   }
 
+  fun withIsWithdrawn(isWithdrawn: Boolean) = apply {
+    this.isWithdrawn = { isWithdrawn }
+  }
   fun withReferralRejectionReasonDetail(referralRejectionReasonDetail: String?) = apply {
     this.referralRejectionReasonDetail = { referralRejectionReasonDetail }
   }
@@ -140,7 +144,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     referralHistoryNotes = this.referralHistoryNotes(),
     completedAt = this.completedAt(),
     summaryData = this.summaryData(),
-    isWithdrawn = false,
+    isWithdrawn = this.isWithdrawn(),
     referralRejectionReason = this.referralRejectionReason(),
     referralRejectionReasonDetail = this.referralRejectionReasonDetail(),
     dueAt = this.dueAt(),

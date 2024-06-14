@@ -2805,6 +2805,8 @@ components:
           format: date-time
         message:
           type: string
+        messageDetails:
+          $ref: '#/components/schemas/ReferralHistoryNoteMessageDetails'
         createdByUserName:
           type: string
         type:
@@ -2820,6 +2822,15 @@ components:
         mapping:
           user: '#/components/schemas/ReferralHistoryUserNote'
           system: '#/components/schemas/ReferralHistorySystemNote'
+    ReferralHistoryNoteMessageDetails:
+      type: object
+      properties:
+        rejectionReason:
+          type: string
+        rejectionReasonDetails:
+          type: string
+        isWithdrawn:
+          type: boolean
     ReferralHistoryUserNote:
       allOf:
         - $ref: '#/components/schemas/ReferralHistoryNote'

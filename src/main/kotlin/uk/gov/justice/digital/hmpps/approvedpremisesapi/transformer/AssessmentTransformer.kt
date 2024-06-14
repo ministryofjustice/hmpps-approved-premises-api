@@ -19,8 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -40,7 +42,10 @@ class AssessmentTransformer(
   fun transformJpaToApi(jpa: AssessmentEntity, personInfo: PersonInfoResult) = when (jpa) {
     is ApprovedPremisesAssessmentEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as ApprovedPremisesApplication,
+      application = applicationsTransformer.transformJpaToApi(
+        jpa.application,
+        personInfo,
+      ) as ApprovedPremisesApplication,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
@@ -59,24 +64,44 @@ class AssessmentTransformer(
       createdFromAppeal = jpa.createdFromAppeal,
     )
 
-    is TemporaryAccommodationAssessmentEntity -> TemporaryAccommodationAssessment(
-      id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as TemporaryAccommodationApplication,
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = jpa.schemaUpToDate,
-      createdAt = jpa.createdAt.toInstant(),
-      allocatedAt = jpa.allocatedAt?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      referralHistoryNotes = jpa.referralHistoryNotes.map(assessmentReferralHistoryNoteTransformer::transformJpaToApi),
-      allocatedToStaffMember = jpa.allocatedToUser?.let { userTransformer.transformJpaToApi(it, ServiceName.temporaryAccommodation) as TemporaryAccommodationUser },
-      submittedAt = jpa.submittedAt?.toInstant(),
-      decision = transformJpaDecisionToApi(jpa.decision),
-      rejectionRationale = jpa.rejectionRationale,
-      status = getStatusForTemporaryAccommodationAssessment(jpa),
-      summaryData = objectMapper.readTree(jpa.summaryData),
-      service = "CAS3",
-    )
+    is TemporaryAccommodationAssessmentEntity -> {
+      val lastReferralRejectedHistoryNote =
+        jpa.referralHistoryNotes.filter { it is AssessmentReferralHistorySystemNoteEntity && it.type == ReferralHistorySystemNoteType.REJECTED }
+          .maxByOrNull { it.createdAt }
+
+      TemporaryAccommodationAssessment(
+        id = jpa.id,
+        application = applicationsTransformer.transformJpaToApi(
+          jpa.application,
+          personInfo,
+        ) as TemporaryAccommodationApplication,
+        schemaVersion = jpa.schemaVersion.id,
+        outdatedSchema = jpa.schemaUpToDate,
+        createdAt = jpa.createdAt.toInstant(),
+        allocatedAt = jpa.allocatedAt?.toInstant(),
+        data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+        clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
+        referralHistoryNotes = jpa.referralHistoryNotes.map {
+          if (it.id == lastReferralRejectedHistoryNote?.id) {
+            assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, jpa)
+          } else {
+            assessmentReferralHistoryNoteTransformer.transformJpaToApi(it)
+          }
+        },
+        allocatedToStaffMember = jpa.allocatedToUser?.let {
+          userTransformer.transformJpaToApi(
+            it,
+            ServiceName.temporaryAccommodation,
+          ) as TemporaryAccommodationUser
+        },
+        submittedAt = jpa.submittedAt?.toInstant(),
+        decision = transformJpaDecisionToApi(jpa.decision),
+        rejectionRationale = jpa.rejectionRationale,
+        status = getStatusForTemporaryAccommodationAssessment(jpa),
+        summaryData = objectMapper.readTree(jpa.summaryData),
+        service = "CAS3",
+      )
+    }
 
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
@@ -91,10 +116,16 @@ class AssessmentTransformer(
         arrivalDate = ase.arrivalDate?.toInstant(),
         status = getStatusForApprovedPremisesAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
-        risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
+        risks = ase.riskRatings?.let {
+          risksTransformer.transformDomainToApi(
+            objectMapper.readValue<PersonRisks>(it),
+            ase.crn,
+          )
+        },
         person = personTransformer.transformModelToPersonApi(personInfo),
         dueAt = ase.dueAt!!.toInstant(),
       )
+
       "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
         type = "CAS3",
         id = ase.id,
@@ -103,9 +134,15 @@ class AssessmentTransformer(
         arrivalDate = ase.arrivalDate?.toInstant(),
         status = getStatusForTemporaryAccommodationAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
-        risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
+        risks = ase.riskRatings?.let {
+          risksTransformer.transformDomainToApi(
+            objectMapper.readValue<PersonRisks>(it),
+            ase.crn,
+          )
+        },
         person = personTransformer.transformModelToPersonApi(personInfo),
       )
+
       else -> throw RuntimeException("Unsupported type: ${ase.type}")
     }
 
@@ -161,6 +198,7 @@ class AssessmentTransformer(
     entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
     entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
       TemporaryAccommodationAssessmentStatus.closed
+
     entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
     entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
     else -> TemporaryAccommodationAssessmentStatus.unallocated

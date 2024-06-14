@@ -78,6 +78,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestampOrNull
@@ -87,6 +88,7 @@ import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
+@Suppress("ReturnCount", "CyclomaticComplexMethod")
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
@@ -1913,10 +1915,18 @@ class AssessmentTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
+        val rejectedSystemNoteId1 = UUID.randomUUID()
+        val rejectedSystemNoteId2 = UUID.randomUUID()
+
+        val referralRejectionReason = referralRejectionReasonEntityFactory.produceAndPersist()
+        val referralRejectionReasonDetail = randomStringMultiCaseWithNumbers(15)
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
           withAssessmentSchema(assessmentSchema)
+          withReferralRejectionReason(referralRejectionReason)
+          withReferralRejectionReasonDetail(referralRejectionReasonDetail)
+          withIsWithdrawn(true)
         }.apply {
           this.referralHistoryNotes += assessmentReferralHistoryUserNoteEntityFactory.produceAndPersist {
             withCreatedBy(userEntity)
@@ -1927,6 +1937,14 @@ class AssessmentTest : IntegrationTestBase() {
           this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
             withCreatedBy(userEntity)
             withType(ReferralHistorySystemNoteType.SUBMITTED)
+            withAssessment(this@apply)
+          }
+
+          this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withId(rejectedSystemNoteId1)
+            withCreatedBy(userEntity)
+            withType(ReferralHistorySystemNoteType.REJECTED)
+            withCreatedAt(OffsetDateTime.now().minusDays(90))
             withAssessment(this@apply)
           }
 
@@ -1949,8 +1967,10 @@ class AssessmentTest : IntegrationTestBase() {
           }
 
           this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+            withId(rejectedSystemNoteId2)
             withCreatedBy(userEntity)
             withType(ReferralHistorySystemNoteType.REJECTED)
+            withCreatedAt(OffsetDateTime.now().minusDays(4))
             withAssessment(this@apply)
           }
 
@@ -1979,14 +1999,27 @@ class AssessmentTest : IntegrationTestBase() {
               )
             }
 
-            assertThat(notes).hasSize(7)
+            assertThat(notes).hasSize(8)
             assertThat(notes).allMatch { it.createdByUserName == userEntity.name }
             assertThat(notes).anyMatch { it is ReferralHistoryUserNote && it.message == "Some user note" }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.submitted }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.unallocated }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.inReview }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.readyToPlace }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.rejected }
+            assertThat(notes).anyMatch {
+              it is ReferralHistorySystemNote &&
+                it.category == ReferralHistorySystemNote.Category.rejected &&
+                it.id == rejectedSystemNoteId1 &&
+                it.messageDetails == null
+            }
+            assertThat(notes).anyMatch {
+              it is ReferralHistorySystemNote &&
+                it.category == ReferralHistorySystemNote.Category.rejected &&
+                it.id == rejectedSystemNoteId2 &&
+                it.messageDetails?.rejectionReason == referralRejectionReason.name &&
+                it.messageDetails?.rejectionReasonDetails == referralRejectionReasonDetail &&
+                it.messageDetails?.isWithdrawn == true
+            }
             assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
           }
       }
