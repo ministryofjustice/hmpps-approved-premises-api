@@ -41,6 +41,7 @@ class Cas1ReportsController(
     reportName: Cas1ReportName,
     year: Int,
     month: Int,
+    includePii: Boolean,
   ): ResponseEntity<StreamingResponseBody> {
     if (xServiceName !== ServiceName.approvedPremises) {
       throw NotAllowedProblem("This endpoint only supports CAS1")
