@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 class Cas1BackfillUserApArea(

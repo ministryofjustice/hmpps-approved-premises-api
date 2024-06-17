@@ -1,9 +1,10 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import java.time.OffsetDateTime
 
 class Cas1OutOfServiceBedReasonMigrationJob(

@@ -1,14 +1,15 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.midlandsApplicationIds
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.northEastApplicationIds
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.seeApplicationIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.midlandsApplicationIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.northEastApplicationIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.seeApplicationIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.MigrationJobService
 import java.time.OffsetDateTime
 

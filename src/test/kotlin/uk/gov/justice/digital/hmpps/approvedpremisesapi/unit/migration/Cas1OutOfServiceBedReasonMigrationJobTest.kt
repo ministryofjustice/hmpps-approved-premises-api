@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1OutOfServiceBedReasonMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
 import java.time.OffsetDateTime
 import java.util.UUID
 
