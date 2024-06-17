@@ -43,6 +43,11 @@ VALUES
     'CAS1_WORKFLOW_MANAGER',
     'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
   ),
+    (
+    '882f5ef8-05f9-4306-af98-5bf6b7a23c87',
+    'CAS1_APPEALS_MANAGER',
+    'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
+  ),
   (
     'dd949e2b-5f9b-4560-b3bc-c3ad6793fb28',
     'CAS1_APPLICANT',
