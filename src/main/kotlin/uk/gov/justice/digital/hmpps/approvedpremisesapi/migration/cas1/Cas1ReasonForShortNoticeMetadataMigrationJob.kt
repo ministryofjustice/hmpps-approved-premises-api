@@ -37,17 +37,17 @@ class Cas1ReasonForShortNoticeMetadataMigrationJob(
     for (applicationId in applicationIds) {
       log.debug("Updating $applicationId")
 
-      val application = applicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
-
-      val json = JsonPath.parse(application.data, jsonPathConfig)
-      val reasonForShortNotice = json.read<String>("basic-information.reason-for-short-notice.reason")
-      val reasonForShortNoticeOther = json.read<String>("basic-information.reason-for-short-notice.other")
-      val submittedEvent = domainEventRepository.getByApplicationIdAndType(
-        applicationId = applicationId,
-        type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
-      )
-
       transactionTemplate.executeWithoutResult {
+        val application = applicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+
+        val json = JsonPath.parse(application.data, jsonPathConfig)
+        val reasonForShortNotice = json.read<String>("basic-information.reason-for-short-notice.reason")
+        val reasonForShortNoticeOther = json.read<String>("basic-information.reason-for-short-notice.other")
+        val submittedEvent = domainEventRepository.getByApplicationIdAndType(
+          applicationId = applicationId,
+          type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+        )
+
         insertMetadataIfNotEmpty(submittedEvent, MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE, reasonForShortNotice)
         insertMetadataIfNotEmpty(submittedEvent, MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER, reasonForShortNoticeOther)
       }
