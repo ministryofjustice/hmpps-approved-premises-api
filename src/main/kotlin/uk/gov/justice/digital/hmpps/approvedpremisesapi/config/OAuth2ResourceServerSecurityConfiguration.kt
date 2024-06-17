@@ -46,6 +46,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
         authorize(HttpMethod.GET, "/v3/api-docs/swagger-config", permitAll)
         authorize(HttpMethod.GET, "/api.yml", permitAll)
+        authorize(HttpMethod.GET, "/cas1-api.yml", permitAll)
         authorize(HttpMethod.GET, "/cas2-api.yml", permitAll)
         authorize(HttpMethod.GET, "/_shared.yml", permitAll)
         authorize(HttpMethod.GET, "/domain-events-api.yml", permitAll)

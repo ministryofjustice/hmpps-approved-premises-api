@@ -93,6 +93,8 @@ springdoc:
     urls:
       - name: API
         url: "api.yml"
+      - name: CAS1 API
+        url: "cas1-api.yml"
       - name: CAS2 API
         url: "cas2-api.yml"
       - name: Domain events
