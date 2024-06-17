@@ -212,6 +212,24 @@ class DomainEventDescriberTest {
     assertThat(result).isEqualTo("A placement was not made for the placement request. The reason was: $reason")
   }
 
+  @Test
+  fun `Returns expected description for booking not made event with no failure description`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
+    val bookingNotMade = BookingNotMadeFactory().produce().copy(failureDescription = null)
+
+    every { mockDomainEventService.getBookingNotMadeEvent(any()) } returns buildDomainEvent {
+      BookingNotMadeEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingNotMade,
+        eventDetails = bookingNotMade,
+      )
+    }
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("A placement was not made for the placement request.")
+  }
+
   @ParameterizedTest
   @CsvSource(value = ["Reason A", "Reason B"])
   fun `Returns expected description for booking cancelled event`(reason: String) {
