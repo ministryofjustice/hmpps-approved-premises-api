@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequest
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -16,9 +16,12 @@ class SubjectAccessRequestService(
 
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
     val getApprovedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
+    val getAPApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
+
     val result = """
       {
-        "approvedPremisesApplications": $getApprovedPremisesApplicationsJson
+        "approvedPremisesApplications": $getApprovedPremisesApplicationsJson,
+        "approvedPremisesApplicationTimeline": $getAPApplicationTimelineJson
       }
     """.trimIndent()
 
