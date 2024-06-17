@@ -60,13 +60,13 @@ from
 		a.id = apa.id
 	left join 
         cas_1_application_user_details case_manager on
-		case_manager.id = apa.case_manager_cas1_application_user_details_id
+		    case_manager.id = apa.case_manager_cas1_application_user_details_id
 	left join 
         cas_1_application_user_details app_user on
-		app_user.id = apa.applicant_cas1_application_user_details_id
+		    app_user.id = apa.applicant_cas1_application_user_details_id
 	left join 
-users created_by_user on
-		created_by_user.id = a.created_by_user_id
+        users created_by_user on
+		    created_by_user.id = a.created_by_user_id
 	where
 		(a.crn = :crn
 			or a.noms_number = :noms_number )
@@ -75,6 +75,48 @@ users created_by_user on
 		and (:end_date is null
 			or a.created_at <= :end_date) 
 ) app;
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+  fun getApprovedPremisesApplicationTimeLineJson(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+  
+  select 
+  	json_agg(apptimeline) as json
+  from(
+      select
+          a.id as application_id,
+          a.service,
+          a.crn,
+          a.noms_number,
+          atn.body,
+          atn.created_at,
+          u."name" as user_name
+      from
+      application_timeline_notes atn
+      inner join users u on
+          u.id = atn.created_by_user_id
+      inner join applications a on
+          atn.application_id = a.id
+      where
+      (a.crn = :crn
+          or a.noms_number = :noms_number )
+      and (:start_date is null or a.created_at >= :start_date)
+      and (:end_date is null or a.created_at <= :end_date)
+  ) apptimeline
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,
