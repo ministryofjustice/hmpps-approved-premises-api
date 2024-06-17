@@ -43,6 +43,11 @@ VALUES
     'CAS1_WORKFLOW_MANAGER',
     'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
   ),
+    (
+    '882f5ef8-05f9-4306-af98-5bf6b7a23c87',
+    'CAS1_APPEALS_MANAGER',
+    'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
+  ),
   (
     'dd949e2b-5f9b-4560-b3bc-c3ad6793fb28',
     'CAS1_APPLICANT',
@@ -72,20 +77,14 @@ VALUES
 DO
   NOTHING;
 
--- Copy all roles from JIMSNOWLDAP to APPROVEDPREMISESTESTUSER
+-- Add *only* the FUTURE_MANAGER role to APPROVEDPREMISESTESTUSER
 INSERT INTO
   "user_role_assignments" ("id", "role", "user_id")
-SELECT
-  gen_random_uuid() AS id,
-  role AS role,
-  (SELECT id FROM users where delius_username='APPROVEDPREMISESTESTUSER') AS user_id
-FROM
-  "user_role_assignments"
-WHERE
-  "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
-DO
-  NOTHING;
+VALUES(
+  '15381bc5-cc6d-447a-9081-760d84ed29fd',
+  'CAS1_FUTURE_MANAGER',
+  (SELECT id FROM users where delius_username='APPROVEDPREMISESTESTUSER')
+) ON CONFLICT (id) DO NOTHING;
 
 -- Copy all roles from JIMSNOWLDAP to TEMPORARY-ACCOMMODATION-E2E-TESTER
 INSERT INTO
