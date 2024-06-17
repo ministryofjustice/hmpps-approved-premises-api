@@ -8,24 +8,35 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionChangeType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.EnumSet
 import java.util.UUID
+import javax.transaction.Transactional
 
+@Transactional
 @Service
 class Cas1OutOfServiceBedService(
   private val outOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val outOfServiceBedReasonRepository: Cas1OutOfServiceBedReasonRepository,
   private val outOfServiceBedCancellationRepository: Cas1OutOfServiceBedCancellationRepository,
+  private val outOfServiceBedDetailsRepository: Cas1OutOfServiceBedRevisionRepository,
+  private val userService: UserService,
 ) {
   fun createOutOfServiceBed(
     premises: ApprovedPremisesEntity,
@@ -55,22 +66,36 @@ class Cas1OutOfServiceBedService(
         return fieldValidationError
       }
 
-      val cas1outOfServiceBedsEntity = outOfServiceBedRepository.save(
+      val outOfServiceBed = outOfServiceBedRepository.saveAndFlush(
         Cas1OutOfServiceBedEntity(
           id = UUID.randomUUID(),
           premises = premises,
-          reason = reason!!,
           bed = bed!!,
           createdAt = OffsetDateTime.now(),
-          startDate = startDate,
-          endDate = endDate,
-          referenceNumber = referenceNumber,
-          notes = notes,
           cancellation = null,
+          revisionHistory = mutableListOf(),
         ),
       )
 
-      return success(cas1outOfServiceBedsEntity)
+      outOfServiceBed.apply {
+        revisionHistory += outOfServiceBedDetailsRepository.saveAndFlush(
+          Cas1OutOfServiceBedRevisionEntity(
+            id = UUID.randomUUID(),
+            createdAt = this.createdAt,
+            revisionType = Cas1OutOfServiceBedRevisionType.INITIAL,
+            startDate = startDate,
+            endDate = endDate,
+            referenceNumber = referenceNumber,
+            notes = notes,
+            reason = reason!!,
+            outOfServiceBed = this,
+            createdBy = userService.getUserForRequest(),
+            changeTypePacked = Cas1OutOfServiceBedRevisionChangeType.NO_CHANGE,
+          ),
+        )
+      }
+
+      return success(outOfServiceBedRepository.saveAndFlush(outOfServiceBed))
     }
 
   fun updateOutOfServiceBed(
@@ -99,19 +124,64 @@ class Cas1OutOfServiceBedService(
           return@validated fieldValidationError
         }
 
-        val updatedCas1OutOfServiceBedsEntity = outOfServiceBedRepository.save(
+        val details = outOfServiceBedDetailsRepository.saveAndFlush(
+          Cas1OutOfServiceBedRevisionEntity(
+            id = UUID.randomUUID(),
+            createdAt = OffsetDateTime.now(),
+            revisionType = Cas1OutOfServiceBedRevisionType.UPDATE,
+            startDate = startDate,
+            endDate = endDate,
+            referenceNumber = referenceNumber,
+            notes = notes,
+            reason = reason!!,
+            outOfServiceBed = outOfServiceBed,
+            createdBy = userService.getUserForRequest(),
+            changeTypePacked = getChangeType(outOfServiceBed.latestRevision, startDate, endDate, referenceNumber, notes, reason),
+          ),
+        )
+
+        val updatedOutOfServiceBed = outOfServiceBedRepository.save(
           outOfServiceBed.apply {
-            this.startDate = startDate
-            this.endDate = endDate
-            this.reason = reason!!
-            this.referenceNumber = referenceNumber
-            this.notes = notes
+            this.revisionHistory += details
           },
         )
 
-        success(updatedCas1OutOfServiceBedsEntity)
+        success(updatedOutOfServiceBed)
       },
     )
+  }
+
+  private fun getChangeType(
+    details: Cas1OutOfServiceBedRevisionEntity,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    referenceNumber: String?,
+    notes: String?,
+    reason: Cas1OutOfServiceBedReasonEntity,
+  ): Long {
+    val result = EnumSet.noneOf(Cas1OutOfServiceBedRevisionChangeType::class.java)
+
+    if (startDate != details.startDate) {
+      result.add(Cas1OutOfServiceBedRevisionChangeType.START_DATE)
+    }
+
+    if (endDate != details.endDate) {
+      result.add(Cas1OutOfServiceBedRevisionChangeType.END_DATE)
+    }
+
+    if (referenceNumber != details.referenceNumber) {
+      result.add(Cas1OutOfServiceBedRevisionChangeType.REFERENCE_NUMBER)
+    }
+
+    if (notes != details.notes) {
+      result.add(Cas1OutOfServiceBedRevisionChangeType.NOTES)
+    }
+
+    if (reason.id != details.reason.id) {
+      result.add(Cas1OutOfServiceBedRevisionChangeType.REASON)
+    }
+
+    return Cas1OutOfServiceBedRevisionChangeType.pack(result)
   }
 
   fun cancelOutOfServiceBed(
@@ -141,13 +211,13 @@ class Cas1OutOfServiceBedService(
     pageCriteria: PageCriteria<Cas1OutOfServiceBedSortField>,
   ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> {
     val sortFieldString = when (pageCriteria.sortBy) {
-      Cas1OutOfServiceBedSortField.premisesName -> "premises.name"
-      Cas1OutOfServiceBedSortField.roomName -> "bed.room.name"
-      Cas1OutOfServiceBedSortField.bedName -> "bed.name"
-      Cas1OutOfServiceBedSortField.outOfServiceFrom -> "startDate"
-      Cas1OutOfServiceBedSortField.outOfServiceTo -> "endDate"
-      Cas1OutOfServiceBedSortField.reason -> "reason.name"
-      Cas1OutOfServiceBedSortField.daysLost -> "(oosb.endDate - oosb.startDate)"
+      Cas1OutOfServiceBedSortField.premisesName -> "p.name"
+      Cas1OutOfServiceBedSortField.roomName -> "r.name"
+      Cas1OutOfServiceBedSortField.bedName -> "b.name"
+      Cas1OutOfServiceBedSortField.outOfServiceFrom -> "d.start_date"
+      Cas1OutOfServiceBedSortField.outOfServiceTo -> "d.end_date"
+      Cas1OutOfServiceBedSortField.reason -> "oosr.name"
+      Cas1OutOfServiceBedSortField.daysLost -> "(d.end_date - d.start_date)"
     }
 
     val excludePast = !temporality.contains(Temporality.past)
@@ -163,7 +233,9 @@ class Cas1OutOfServiceBedService(
       getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString), unsafe = true),
     )
 
-    return Pair(page.content, getMetadata(page, pageCriteria))
+    val outOfServiceBeds = outOfServiceBedRepository.findAllById(page.content.map(UUID::fromString))
+
+    return Pair(outOfServiceBeds, getMetadata(page, pageCriteria))
   }
 
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
@@ -173,10 +245,14 @@ class Cas1OutOfServiceBedService(
     endDate: LocalDate,
     thisEntityId: UUID?,
     bedId: UUID,
-  ) = outOfServiceBedRepository.findByBedIdAndOverlappingDate(
-    bedId,
-    startDate,
-    endDate,
-    thisEntityId,
-  ).firstOrNull()
+  ): Cas1OutOfServiceBedEntity? {
+    val outOfServiceBedId = outOfServiceBedRepository.findByBedIdAndOverlappingDate(
+      bedId,
+      startDate,
+      endDate,
+      thisEntityId,
+    ).firstOrNull() ?: return null
+
+    return outOfServiceBedRepository.findByIdOrNull(UUID.fromString(outOfServiceBedId))
+  }
 }

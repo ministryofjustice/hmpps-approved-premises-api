@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
@@ -62,10 +63,15 @@ class Cas1OutOfServiceBedTransformerTest {
           )
         }
       }
-      .withStartDate(today.plusDays(startDateOffsetDays))
-      .withEndDate(today.plusDays(endDateOffsetDays))
-      .withNotes("Some notes")
       .produce()
+      .apply {
+        this.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+          .withOutOfServiceBed(this)
+          .withStartDate(today.plusDays(startDateOffsetDays))
+          .withEndDate(today.plusDays(endDateOffsetDays))
+          .withNotes("Some notes")
+          .produce()
+      }
 
     val reason = Cas1OutOfServiceBedReason(
       id = UUID.randomUUID(),
@@ -102,8 +108,6 @@ class Cas1OutOfServiceBedTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms correctly when cancelled`() {
-    val today = LocalDate.now()
-
     val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
       .withBed {
         withRoom {
@@ -114,8 +118,13 @@ class Cas1OutOfServiceBedTransformerTest {
           )
         }
       }
-      .withNotes("Some notes")
       .produce()
+      .apply {
+        this.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+          .withOutOfServiceBed(this)
+          .withNotes("Some notes")
+          .produce()
+      }
 
     val cancellationEntity = Cas1OutOfServiceBedCancellationEntityFactory()
       .withOutOfServiceBed(outOfServiceBed)
