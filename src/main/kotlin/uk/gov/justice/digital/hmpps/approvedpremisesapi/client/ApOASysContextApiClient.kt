@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -36,10 +35,6 @@ class ApOASysContextApiClient(
 
   fun getNeedsDetails(crn: String) = getRequest<NeedsDetails> {
     path = "/needs-details/$crn"
-  }
-
-  fun getHealthDetails(crn: String) = getRequest<HealthDetails> {
-    path = "/health-details/$crn"
   }
 
   fun getRoshRatings(crn: String) = getRequest<RoshRatings> {
