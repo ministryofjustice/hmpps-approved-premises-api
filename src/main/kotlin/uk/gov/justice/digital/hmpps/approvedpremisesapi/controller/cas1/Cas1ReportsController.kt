@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.RequestsForPlacementReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
@@ -100,6 +101,19 @@ class Cas1ReportsController(
         fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createPlacementMatchingOutcomesReport(Cas1PlacementMatchingOutcomesReportProperties(year, month), outputStream)
+      }
+      Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("requests-for-placement", year, month, ContentType.CSV),
+      ) { outputStream ->
+        cas1ReportService.createRequestForPlacementReport(
+          RequestsForPlacementReportProperties(
+            year = year,
+            month = month,
+            includePii = includePii,
+          ),
+          outputStream,
+        )
       }
     }
   }

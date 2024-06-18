@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import java.time.Clock
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -52,6 +53,7 @@ class PlacementApplicationService(
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
   private val taskDeadlineService: TaskDeadlineService,
+  private val clock: Clock,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -291,11 +293,13 @@ class PlacementApplicationService(
 
     val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(submittedPlacementApplication)
 
+    val now = OffsetDateTime.now(clock)
+
     submittedPlacementApplication.apply {
       document = translatedDocument
       allocatedToUser = allocatedUser
-      submittedAt = OffsetDateTime.now()
-      allocatedAt = OffsetDateTime.now()
+      submittedAt = now
+      allocatedAt = now
       placementType = getPlacementType(apiPlacementType)
       submissionGroupId = UUID.randomUUID()
     }
@@ -384,7 +388,7 @@ class PlacementApplicationService(
 
     placementApplicationEntity.apply {
       decision = JpaPlacementApplicationDecision.valueOf(placementApplicationDecisionEnvelope.decision)
-      decisionMadeAt = OffsetDateTime.now()
+      decisionMadeAt = OffsetDateTime.now(clock)
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)

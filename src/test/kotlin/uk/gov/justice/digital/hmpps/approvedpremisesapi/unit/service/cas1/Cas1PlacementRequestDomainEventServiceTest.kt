@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestDomainEventServiceTest.TestConstants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -45,6 +46,7 @@ class Cas1PlacementRequestDomainEventServiceTest {
     domainEventService,
     domainEventTransformer,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    Clock.systemDefaultZone(),
   )
   val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()

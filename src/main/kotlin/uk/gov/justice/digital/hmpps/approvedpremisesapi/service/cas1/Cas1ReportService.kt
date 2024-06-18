@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.RequestsForPlacementReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
@@ -36,6 +38,7 @@ class Cas1ReportService(
   private val bedRepository: BedRepository,
   private val cas1PlacementMatchingOutcomesReportRepository: Cas1PlacementMatchingOutcomesReportRepository,
   private val cas1ApplicationReportRepository: Cas1ApplicationReportRepository,
+  private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val objectMapper: ObjectMapper,
@@ -113,6 +116,22 @@ class Cas1ReportService(
         WorkbookFactory.create(true)
       }
   }
+
+  fun createRequestForPlacementReport(properties: RequestsForPlacementReportProperties, outputStream: OutputStream) {
+    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = columnsToExclude,
+    ).use { consumer ->
+      cas1PlacementRequestReportRepository.generateForSubmissionOrWithdrawalDate(
+        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
+        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        consumer,
+      )
+    }
+  }
+
   fun createPlacementMatchingOutcomesReport(properties: Cas1PlacementMatchingOutcomesReportProperties, outputStream: OutputStream) {
     ExcelJdbcResultSetConsumer().use { consumer ->
       cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(

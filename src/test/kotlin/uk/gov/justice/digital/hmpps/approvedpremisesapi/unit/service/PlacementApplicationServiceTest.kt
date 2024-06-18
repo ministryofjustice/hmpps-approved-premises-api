@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -82,6 +83,7 @@ class PlacementApplicationServiceTest {
     cas1PlacementApplicationEmailService,
     cas1PlacementApplicationDomainEventService,
     taskDeadlineServiceMock,
+    Clock.systemDefaultZone(),
   )
 
   @Nested
