@@ -7,12 +7,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -162,6 +168,115 @@ class Cas1SimpleApiClient {
     integrationTestBase.webTestClient.put()
       .uri("/assessments/$assessmentId/notes/$noteId")
       .header("Authorization", "Bearer $assessorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationCreate(
+    integrationTestBase: IntegrationTestBase,
+    creatorJwt: String,
+    body: NewPlacementApplication,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-applications")
+      .header("Authorization", "Bearer $creatorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationDecision(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    assessorJwt: String,
+    body: PlacementApplicationDecisionEnvelope,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-applications/$placementApplicationId/decision")
+      .header("Authorization", "Bearer $assessorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationUpdate(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    creatorJwt: String,
+    body: UpdatePlacementApplication,
+  ) {
+    integrationTestBase.webTestClient.put()
+      .uri("/placement-applications/$placementApplicationId")
+      .header("Authorization", "Bearer $creatorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationSubmit(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    creatorJwt: String,
+    body: SubmitPlacementApplication,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-applications/$placementApplicationId/submission")
+      .header("Authorization", "Bearer $creatorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationReallocate(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    body: NewReallocation,
+  ) {
+    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/tasks/placement-application/$placementApplicationId/allocations")
+      .header("Authorization", "Bearer $managerJwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isCreated
+  }
+
+  fun placementApplicationWithdraw(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    body: WithdrawPlacementApplication,
+  ) {
+    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-applications/$placementApplicationId/withdraw")
+      .header("Authorization", "Bearer $managerJwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementRequestWithdraw(
+    integrationTestBase: IntegrationTestBase,
+    placementRequestId: UUID,
+    body: WithdrawPlacementRequest,
+  ) {
+    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-requests/$placementRequestId/withdrawal")
+      .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
       .exchange()
       .expectStatus()

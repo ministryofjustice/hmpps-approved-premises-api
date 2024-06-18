@@ -5335,6 +5335,7 @@ components:
         - lostBeds
         - placementApplications
         - placementMatchingOutcomes
+        - requestsForPlacement
     Cas3ReportType:
       type: string
       enum:

@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -24,6 +25,7 @@ class Cas1PlacementRequestDomainEventService(
   private val domainEventService: DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  val clock: Clock,
 ) {
 
   fun placementRequestCreated(
@@ -100,7 +102,7 @@ class Cas1PlacementRequestDomainEventService(
     val user = withdrawalContext.withdrawalTriggeredBy.user
 
     val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = Instant.now()
+    val eventOccurredAt = Instant.now(clock)
     val application = placementRequest.application
 
     val matchRequestEntity = MatchRequestWithdrawn(
