@@ -68,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1168,6 +1169,8 @@ class AssessmentTest : IntegrationTestBase() {
         withAssessmentSchema(assessmentSchema)
         withDecision(null)
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withReleaseDate(null)
+        withAccommodationRequiredFromDate(null)
 
         when (assessmentStatus) {
           AssessmentStatus.cas3Rejected -> {
@@ -1232,11 +1235,7 @@ class AssessmentTest : IntegrationTestBase() {
               withArrivalDate(LocalDate.now().randomDateAfter(14))
             }
 
-            val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(user)
-              withApplication(application)
-              withAssessmentSchema(assessmentSchema)
-            }
+            val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
 
             assessment.schemaUpToDate = true
 
@@ -1390,11 +1389,7 @@ class AssessmentTest : IntegrationTestBase() {
               withArrivalDate(LocalDate.now().randomDateAfter(14))
             }
 
-            val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(user)
-              withApplication(application)
-              withAssessmentSchema(assessmentSchema)
-            }
+            val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
 
             assessment.schemaUpToDate = true
 
@@ -1444,19 +1439,11 @@ class AssessmentTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           }
 
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-          }
+          val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
 
           assessment.schemaUpToDate = true
 
-          val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(otherApplication)
-            withAssessmentSchema(assessmentSchema)
-          }
+          val otherAssessment = temporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
 
           otherAssessment.schemaUpToDate = true
 
@@ -1508,19 +1495,11 @@ class AssessmentTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           }
 
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-          }
+          val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
 
           assessment.schemaUpToDate = true
 
-          val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(otherApplication)
-            withAssessmentSchema(assessmentSchema)
-          }
+          val otherAssessment = temporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
 
           otherAssessment.schemaUpToDate = true
 
@@ -1539,6 +1518,18 @@ class AssessmentTest : IntegrationTestBase() {
           )
         }
       }
+    }
+
+    private fun temporaryAccommodationAssessmentEntity(
+      user: UserEntity,
+      application: TemporaryAccommodationApplicationEntity,
+      assessmentSchema: TemporaryAccommodationAssessmentJsonSchemaEntity,
+    ) = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(user)
+      withApplication(application)
+      withAssessmentSchema(assessmentSchema)
+      withReleaseDate(null)
+      withAccommodationRequiredFromDate(null)
     }
 
     @Test
@@ -2650,6 +2641,101 @@ class AssessmentTest : IntegrationTestBase() {
         val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
           .isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
+      }
+    }
+  }
+
+  @Test
+  fun `PUT Update release date on temporary accommodation assessment `() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+
+        val originalDate = LocalDate.now().plusDays(10)
+        var newReleaseDate = LocalDate.now()
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withAccommodationRequiredFromDate(originalDate)
+          withReleaseDate(originalDate)
+        }
+
+        webTestClient.put()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-service-name", "temporary-accommodation")
+          .bodyValue(
+            UpdateAssessment(
+              data = emptyMap(),
+              releaseDate = newReleaseDate,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.releaseDate").isEqualTo(newReleaseDate.toString())
+          .jsonPath("$.accommodationRequiredFromDate").isEqualTo(originalDate.toString())
+      }
+    }
+  }
+
+  @Test
+  fun `GET temporary accommodation assessment contains release date and accommodation required from date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+
+        val originalDate = LocalDate.now().plusDays(10)
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withAccommodationRequiredFromDate(originalDate)
+          withReleaseDate(originalDate)
+        }
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-service-name", "temporary-accommodation")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.releaseDate").isEqualTo(originalDate.toString())
+          .jsonPath("$.accommodationRequiredFromDate").isEqualTo(originalDate.toString())
       }
     }
   }
