@@ -2655,6 +2655,101 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `PUT Update release date on temporary accommodation assessment `() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+
+        val originalDate = LocalDate.now().plusDays(10)
+        var newReleaseDate = LocalDate.now()
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withAccommodationRequiredFromDate(originalDate)
+          withReleaseDate(originalDate)
+        }
+
+        webTestClient.put()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-service-name", "temporary-accommodation")
+          .bodyValue(
+            UpdateAssessment(
+              data = emptyMap(),
+              releaseDate = newReleaseDate,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.releaseDate").isEqualTo(newReleaseDate.toString())
+          .jsonPath("$.accommodationRequiredFromDate").isEqualTo(originalDate.toString())
+      }
+    }
+  }
+
+  @Test
+  fun `GET temporary accommodation assessment contains release date and accommodation required from date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+
+        val originalDate = LocalDate.now().plusDays(10)
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withAccommodationRequiredFromDate(originalDate)
+          withReleaseDate(originalDate)
+        }
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-service-name", "temporary-accommodation")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.releaseDate").isEqualTo(originalDate.toString())
+          .jsonPath("$.accommodationRequiredFromDate").isEqualTo(originalDate.toString())
+      }
+    }
+  }
+
+  @Test
   fun `Reject Temporary Accommodation assessment returns 200 and persists decision`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -42,6 +43,8 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var referralRejectionReason: Yielded<ReferralRejectionReasonEntity?> = { null }
   private var referralRejectionReasonDetail: Yielded<String?> = { null }
+  private var releaseDate: Yielded<LocalDate?> = { LocalDate.now().plusDays(20) }
+  private var accommodationRequiredFromDate: Yielded<LocalDate?> = { LocalDate.now().plusDays(20) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -125,6 +128,12 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   fun withDueAt(dueAt: OffsetDateTime) = apply {
     this.dueAt = { dueAt }
   }
+  fun withReleaseDate(releaseDate: LocalDate) = apply {
+    this.releaseDate = { releaseDate }
+  }
+  fun withAccommodationRequiredFromDate(accommodationRequiredFromDate: LocalDate) = apply {
+    this.accommodationRequiredFromDate = { accommodationRequiredFromDate }
+  }
 
   override fun produce(): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntity(
     id = this.id(),
@@ -148,5 +157,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     referralRejectionReason = this.referralRejectionReason(),
     referralRejectionReasonDetail = this.referralRejectionReasonDetail(),
     dueAt = this.dueAt(),
+    releaseDate = this.releaseDate(),
+    accommodationRequiredFromDate = this.accommodationRequiredFromDate(),
   )
 }
