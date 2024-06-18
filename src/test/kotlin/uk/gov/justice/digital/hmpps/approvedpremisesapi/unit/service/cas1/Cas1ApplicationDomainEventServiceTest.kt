@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
@@ -69,6 +70,7 @@ class Cas1ApplicationDomainEventServiceTest {
     mockApDeliusContextApiClient,
     mockDomainEventTransformer,
     UrlTemplate("http://frontend/applications/#id"),
+    Clock.systemDefaultZone(),
   )
 
   val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")

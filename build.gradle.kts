@@ -69,6 +69,8 @@ dependencies {
     exclude("org.apache.httpcomponents", "httpclient")
   }
 
+  implementation("com.opencsv:opencsv:5.9")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.9")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")

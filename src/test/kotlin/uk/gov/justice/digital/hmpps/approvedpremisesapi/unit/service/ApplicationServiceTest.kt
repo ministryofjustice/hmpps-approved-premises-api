@@ -93,6 +93,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import java.sql.Timestamp
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -148,6 +149,7 @@ class ApplicationServiceTest {
     mockCas1ApplicationEmailService,
     mockPlacementApplicationAutomaticRepository,
     mockApplicationListener,
+    Clock.systemDefaultZone(),
   )
 
   @Test

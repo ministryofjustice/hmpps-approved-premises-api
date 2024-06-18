@@ -12,6 +12,11 @@ class ApprovedPremisesApplicationJsonSchemaEntityFactory : Factory<ApprovedPremi
   private var addedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var schema: Yielded<String> = { "{}" }
 
+  fun withDefaults() = apply {
+    withAddedAt(OffsetDateTime.now())
+    withPermissiveSchema()
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

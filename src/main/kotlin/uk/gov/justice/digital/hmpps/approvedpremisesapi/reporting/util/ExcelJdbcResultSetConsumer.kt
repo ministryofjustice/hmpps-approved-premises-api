@@ -20,8 +20,8 @@ import java.sql.Types
  * Kotlin data types into corresponding Excel types. This could be improved as required, consulting
  * DataFrame's [DataFrame.writeExcel] function for an example of how data types could be mapped.
  *
- * Given (2), it's recommended that the SQL is written to format any non string types as required
- * (e.g. format date/timestamps as they should appear in the XLSX)
+ * Given (2), it's recommended that the SQL is written to covert any non string types into a string in
+ * the required format (e.g. format date/timestamps in the SQL as they should appear in the XLSX)
  */
 class ExcelJdbcResultSetConsumer : JdbcResultSetConsumer, AutoCloseable {
   private val workbook = WorkbookFactory.create(true)

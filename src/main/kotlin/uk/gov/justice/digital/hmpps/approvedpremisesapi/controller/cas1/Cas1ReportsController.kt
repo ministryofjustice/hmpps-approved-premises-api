@@ -62,6 +62,21 @@ class Cas1ReportsController(
           outputStream,
         )
       }
+      Cas1ReportName.applicationsV2 -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("applications", year, month, ContentType.CSV),
+      ) { outputStream ->
+        cas1ReportService.createApplicationReportV2(
+          ApplicationReportProperties(
+            serviceName = xServiceName,
+            year = year,
+            month = month,
+            deliusUsername = userService.getUserForRequest().deliusUsername,
+            includePii = includePii,
+          ),
+          outputStream,
+        )
+      }
       Cas1ReportName.dailyMetrics -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
