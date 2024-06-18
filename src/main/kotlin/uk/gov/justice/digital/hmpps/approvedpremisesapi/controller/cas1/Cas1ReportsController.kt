@@ -42,7 +42,7 @@ class Cas1ReportsController(
     reportName: Cas1ReportName,
     year: Int,
     month: Int,
-    includePii: Boolean,
+    includePii: Boolean?,
   ): ResponseEntity<StreamingResponseBody> {
     if (xServiceName !== ServiceName.approvedPremises) {
       throw NotAllowedProblem("This endpoint only supports CAS1")
@@ -73,7 +73,7 @@ class Cas1ReportsController(
             year = year,
             month = month,
             deliusUsername = userService.getUserForRequest().deliusUsername,
-            includePii = includePii,
+            includePii = includePii ?: false,
           ),
           outputStream,
         )
@@ -110,7 +110,7 @@ class Cas1ReportsController(
           RequestsForPlacementReportProperties(
             year = year,
             month = month,
-            includePii = includePii,
+            includePii = includePii ?: false,
           ),
           outputStream,
         )

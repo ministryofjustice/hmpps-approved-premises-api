@@ -131,7 +131,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(2020, 2))
+        .uri(getReportUrl(year = 2020, month = 2, includePii = true))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -194,11 +194,11 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns OK with applications, exclude PII`() {
+  fun `Get application report returns OK with applications, exclude PII by default`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2021, month = 3, includePii = false))
+        .uri(getReportUrl(year = 2021, month = 3, includePii = null))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -610,9 +610,11 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     applicationId: UUID,
     assessorJwt: String,
   ) {
+    clock.advanceOneMinute()
+
     cas1SimpleApiClient.assessmentReallocate(
       this,
-      realApplicationRepository.findByIdOrNull(applicationId)!!.getLatestAssessment()!!.id,
+      getLatestAssessment(applicationId).id,
       assessor.id,
     )
 
@@ -737,6 +739,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     decisionMadeAt: LocalDateTime,
     decision: PlacementApplicationDecision,
   ) {
+    clock.advanceOneMinute()
+
     cas1SimpleApiClient.placementApplicationReallocate(
       integrationTestBase = this,
       placementApplicationId = getPlacementApplication(application).id,
@@ -778,10 +782,13 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   private fun getPlacementApplication(application: ApplicationEntity) =
     placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
 
-  private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId).getLatestAssessment()!!
+  private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId)
+    .assessments.filter { it.reallocatedAt == null }.maxByOrNull { it.createdAt }!!
 
   private fun getApplication(applicationId: UUID) =
     realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean = true) = "/cas1/reports/requestsForPlacement?year=$year&month=$month&includePii=$includePii"
+  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
+    "/cas1/reports/requestsForPlacement?year=$year&month=$month" +
+      if (includePii != null) { "&includePii=$includePii" } else { "" }
 }

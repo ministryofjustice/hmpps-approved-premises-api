@@ -100,7 +100,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2019, month = 2))
+        .uri(getReportUrl(year = 2019, month = 2, includePii = true))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -149,11 +149,11 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns OK with correct applications, excludes PII`() {
+  fun `Get application report returns OK with correct applications, excludes PII by default`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2020, month = 2, includePii = false))
+        .uri(getReportUrl(year = 2020, month = 2, includePii = null))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -1075,5 +1075,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
   private fun getApplication(applicationId: UUID) =
     realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean = true) = "/cas1/reports/applicationsV2?year=$year&month=$month&includePii=$includePii"
+  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
+    "/cas1/reports/applicationsV2?year=$year&month=$month" +
+      if (includePii != null) { "&includePii=$includePii" } else { "" }
 }
