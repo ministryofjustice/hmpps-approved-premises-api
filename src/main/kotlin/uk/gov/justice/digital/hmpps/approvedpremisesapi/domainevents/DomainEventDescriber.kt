@@ -17,7 +17,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import javax.xml.datatype.DatatypeConstants.DAYS
 
 @SuppressWarnings("TooManyFunctions")
 @Component
@@ -113,7 +112,10 @@ class DomainEventDescriber(
 
   private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingNotMadeEvent(domainEventSummary.id())
-    return event.describe { "A placement was not made for the placement request. The reason was: ${it.eventDetails.failureDescription}" }
+    val failureReason = event?.data?.eventDetails?.failureDescription?.let {
+      " The reason was: $it"
+    } ?: ""
+    return event.describe { "A placement was not made for the placement request.$failureReason" }
   }
 
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
