@@ -5297,6 +5297,7 @@ components:
       type: string
       enum:
         - applications
+        - applicationsV2
         - dailyMetrics
         - lostBeds
         - placementApplications

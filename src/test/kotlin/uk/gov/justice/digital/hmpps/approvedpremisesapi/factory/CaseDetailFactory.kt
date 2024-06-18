@@ -227,6 +227,10 @@ class NameFactory : Factory<Name> {
 class ManagerFactory : Factory<Manager> {
   var team: Yielded<Team> = { TeamFactory().produce() }
 
+  fun withTeam(team: Team) = apply {
+    this.team = { team }
+  }
+
   override fun produce(): Manager = Manager(
     team = this.team(),
   )
@@ -236,6 +240,14 @@ class TeamFactory : Factory<Team> {
   var code: Yielded<String> = { randomStringUpperCase(10) }
   var name: Yielded<String> = { randomStringUpperCase(10) }
   var ldu: Yielded<Ldu> = { LduFactory().produce() }
+
+  fun withName(name: String) = apply {
+    this.name = { name }
+  }
+
+  fun withLdu(ldu: Ldu) = apply {
+    this.ldu = { ldu }
+  }
 
   override fun produce(): Team = Team(
     code = this.code(),
@@ -247,6 +259,10 @@ class TeamFactory : Factory<Team> {
 class LduFactory : Factory<Ldu> {
   var code: Yielded<String> = { randomStringUpperCase(10) }
   var name: Yielded<String> = { randomStringUpperCase(10) }
+
+  fun withName(name: String) = apply {
+    this.name = { name }
+  }
 
   override fun produce(): Ldu = Ldu(
     code = this.code(),

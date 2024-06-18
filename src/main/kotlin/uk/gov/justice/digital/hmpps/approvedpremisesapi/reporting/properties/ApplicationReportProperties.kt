@@ -7,4 +7,5 @@ data class ApplicationReportProperties(
   val year: Int,
   val month: Int,
   val deliusUsername: String,
+  val includePii: Boolean = false,
 )
