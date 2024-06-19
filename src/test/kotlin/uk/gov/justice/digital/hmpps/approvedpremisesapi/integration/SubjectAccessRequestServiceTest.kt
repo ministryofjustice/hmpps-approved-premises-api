@@ -6,11 +6,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests.SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
@@ -24,10 +31,12 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
-    const val CREATED_AT = "2021-09-25T16:00:00+00:00"
-    const val SUBMITTED_AT = "2021-10-25T16:00:00+00:00"
-    const val ARRIVED_AT = "2021-09-26T16:00:00+00:00"
-    const val CREATED_AT_NO_TZ = "2021-09-25T16:00:00"
+    const val CREATED_AT = "2021-09-18T16:00:00+00:00"
+    const val SUBMITTED_AT = "2021-10-19T16:00:00+00:00"
+    const val ARRIVED_AT = "2021-09-20T16:00:00+00:00"
+    const val ALLOCATED_AT = "2021-09-21T16:00:00+00:00"
+    const val CREATED_AT_NO_TZ = "2021-09-18T16:00:00"
+    const val DUE_AT = "2021-09-22T16:00:00+00:00"
 
     const val DATA_JSON_SIMPLE = """{ "key": "value" }"""
     const val DOCUMENT_JSON_SIMPLE = """{ "key2": "value2" }"""
@@ -52,7 +61,9 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     assertJsonEquals(
       """ {
           "approvedPremisesApplications": [ ],
-          "approvedPremisesApplicationTimeline": [ ]
+          "approvedPremisesApplicationTimeline": [ ],
+          "approvedPremisesAssessments": [ ]
+ 
         }
       """,
       result,
@@ -71,7 +82,9 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     val expectedJson = """
       {
         "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-        "approvedPremisesApplicationTimeline" :[ ]
+        "approvedPremisesApplicationTimeline" :[ ],
+        "approvedPremisesAssessments": [ ]
+
       }
     """.trimIndent()
 
@@ -102,7 +115,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       timelineNotes,
       offender,
     )
-    }
+    },
+    "approvedPremisesAssessments": [ ]
     }
     """.trimIndent()
 
@@ -110,6 +124,48 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       expectedJson,
       result,
     )
+  }
+
+  @Test
+  fun `Get CAS1 information - have assessment`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offenderDetails)
+
+    val assessment = approvedPremisesAssessment(application)
+
+    val result =
+      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+      {
+        "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+        "approvedPremisesApplicationTimeline" :[ ],
+        "approvedPremisesAssessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)}
+      }
+       """
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun approvedPremisesAssessment(
+    application: ApprovedPremisesApplicationEntity,
+  ): ApprovedPremisesAssessmentEntity {
+    return approvedPremisesAssessmentEntityFactory.produceAndPersist {
+      withData(DATA_JSON_SIMPLE)
+      withDocument(DOCUMENT_JSON_SIMPLE)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
+      withIsWithdrawn(false)
+      withAllocatedToUser(userEntity())
+      withApplication(application)
+      withAssessmentSchema(approvedPremisesAssessmentJsonSchemaEntity())
+      withCreatedFromAppeal(false)
+      withDecision(AssessmentDecision.REJECTED)
+      withReallocatedAt(null)
+      withRejectionRationale("rejected as no good")
+      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withDueAt(OffsetDateTime.parse(DUE_AT))
+    }
   }
 
   private fun approvedPremisesApplicationsJson(
@@ -165,8 +221,38 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "body":"${timelineNote.body}",
         "created_at":"$CREATED_AT_NO_TZ",
         "user_name":"${timelineNote.createdBy?.name}"
+       
         }
       ]
+    """.trimIndent()
+
+  private fun approvedPremisesAssessmentJson(
+    application: ApprovedPremisesApplicationEntity,
+    offenderDetails: OffenderDetailSummary,
+    assessment: ApprovedPremisesAssessmentEntity,
+  ): String =
+    """
+   [
+      {
+        "application_id":"${application.id}",
+        "assessment_id":"${assessment.id}",
+        "crn":"${offenderDetails.otherIds.crn}",
+        "noms_number":"${offenderDetails.otherIds.nomsNumber}",
+        "assessor_name":"${assessment.allocatedToUser?.name}",
+        "data":$DATA_JSON_SIMPLE,
+        "document":$DOCUMENT_JSON_SIMPLE,
+        "created_at":"$CREATED_AT",
+        "allocated_at":"$ALLOCATED_AT",
+        "submitted_at":"$SUBMITTED_AT",
+        "reallocated_at":null,
+        "due_at":"$DUE_AT",
+        "decision":"${AssessmentDecision.REJECTED}",
+        "rejection_rationale":"rejected as no good",
+        "service":"approved-premises",
+        "is_withdrawn":false,
+        "created_from_appeal":false
+     }
+ ]
     """.trimIndent()
 
   private fun risksJson(): String = """
@@ -195,6 +281,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
   private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+  private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity =
+    approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
