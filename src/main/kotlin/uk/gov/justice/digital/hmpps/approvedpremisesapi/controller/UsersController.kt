@@ -138,7 +138,8 @@ class UsersController(
     }
 
     val userEntity = userService.getExistingUserOrCreate(name, true)
-    val userTransformed = userTransformer.transformJpaToApi(userEntity, xServiceName)
+    if (!userEntity.staffRecordFound) throw NotFoundProblem(name, "user", "username")
+    val userTransformed = userTransformer.transformJpaToApi(userEntity.user!!, xServiceName)
     return ResponseEntity.ok(userTransformed)
   }
 

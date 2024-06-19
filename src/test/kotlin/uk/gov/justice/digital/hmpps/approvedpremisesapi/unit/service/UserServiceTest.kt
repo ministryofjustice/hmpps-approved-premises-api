@@ -7,9 +7,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -78,6 +80,63 @@ class UserServiceTest {
 
   @Nested
   inner class GetExistingUserOrCreate {
+
+    @Test
+    fun `getExistingUserOrCreate with username param calls overloaded function with second parameter`() {
+      val username = "SOMEPERSON"
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns user
+
+      assertThat(userService.getExistingUserOrCreate(username)).isEqualTo(user)
+      verify(exactly = 1) { userService.getExistingUserOrCreate(username, false) }
+    }
+
+    @Test
+    fun `getExistingUserOrCreate with invalid username does not throw error when dontThrowExceptionOnStaffRecordNotFound set true`() {
+      val username = "SOMEPERSON"
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/secure/staff/username",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      val result = userService.getExistingUserOrCreate(username, true)
+
+      assertThat(result.staffRecordFound).isEqualTo(false)
+      assertThat(result.user).isEqualTo(null)
+    }
+
+    @Test
+    fun `getExistingUserOrCreate with invalid username throws error when throw flag is set`() {
+      val username = "SOMEPERSON"
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/secure/staff/username",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, false) }
+    }
+
+    @Test
+    fun `getExistingUserOrCreate with invalid username throws error when flag is set and clientResult is failure`() {
+      val username = "SOMEPERSON"
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.PreemptiveCacheTimeout("", "", 0)
+
+      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, false) }
+    }
 
     @Test
     fun `getExistingUserOrCreate returns existing user`() {
