@@ -32,6 +32,10 @@ class MutableClockConfiguration {
       fixedTime = now.toInstant(ZoneOffset.UTC)
     }
 
+    fun advanceOneMinute() {
+      fixedTime = (fixedTime ?: Instant.now()).plusSeconds(60)
+    }
+
     override fun instant(): Instant {
       return fixedTime ?: Instant.now()
     }

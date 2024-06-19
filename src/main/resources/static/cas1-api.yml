@@ -472,10 +472,9 @@ paths:
         - name: includePii
           in: query
           required: false
-          description: If Personally Identifiable Information (PII) should be included in the report
+          description: If Personally Identifiable Information (PII) should be included in the report. Defaults to `false`
           schema:
             type: boolean
-            default: false
       responses:
         200:
           description: Successfully retrieved the report
