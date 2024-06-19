@@ -17,11 +17,13 @@ class SubjectAccessRequestService(
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
     val getApprovedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
     val getAPApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
+    val getAPAssessmentsJson = subjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
 
     val result = """
       {
         "approvedPremisesApplications": $getApprovedPremisesApplicationsJson,
-        "approvedPremisesApplicationTimeline": $getAPApplicationTimelineJson
+        "approvedPremisesApplicationTimeline": $getAPApplicationTimelineJson,
+        "approvedPremisesAssessments": $getAPAssessmentsJson
       }
     """.trimIndent()
 
