@@ -5,9 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
-import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -35,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -217,8 +215,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         }
       }
 
-      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity) {
-        val status = cas2StatusUpdateEntityFactory.produceAndPersist {
+      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity): Cas2StatusUpdateEntity {
+        return cas2StatusUpdateEntityFactory.produceAndPersist {
           withLabel(status.first)
           withStatusId(status.second)
           withApplication(application)
@@ -228,10 +226,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore()
       fun expiredDateTime() = unexpiredDateTime().minusDays(14)
-
-      val unexpiredDateTimesAllStatuses = List(unexpiredSubset.union(expiredSubset).size) { unexpiredDateTime() }
-      val unexpiredDateTimesUnexpiredSubset = List(unexpiredSubset.size) { unexpiredDateTime() }
-      val expiredDateTimesExpiredSubset = List(expiredSubset.size) { expiredDateTime() }
 
       val unexpiredApplicationIds = mutableSetOf<UUID>()
       val expiredApplicationIds = mutableSetOf<UUID>()
@@ -243,26 +237,27 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             unexpiredApplicationIds.add(createApplication(userEntity, offenderDetails).id)
           }
 
-          mockkStatic(OffsetDateTime::class)
-
-          unexpiredSubset.union(expiredSubset).forEachIndexed { index, status ->
+          unexpiredSubset.union(expiredSubset).forEach {
             val application = createApplication(userEntity, offenderDetails)
-            every { OffsetDateTime.now() } returns unexpiredDateTimesAllStatuses[index]
-            createStatusUpdate(status, application)
+            val statusUpdate = createStatusUpdate(it, application)
+            statusUpdate.createdAt = unexpiredDateTime()
+            cas2StatusUpdateRepository.save(statusUpdate)
             unexpiredApplicationIds.add(application.id)
           }
 
-          unexpiredSubset.forEachIndexed { index, status ->
+          unexpiredSubset.forEach {
             val application = createApplication(userEntity, offenderDetails)
-            every { OffsetDateTime.now() } returns unexpiredDateTimesUnexpiredSubset[index]
-            createStatusUpdate(status, application)
+            val statusUpdate = createStatusUpdate(it, application)
+            statusUpdate.createdAt = unexpiredDateTime()
+            cas2StatusUpdateRepository.save(statusUpdate)
             unexpiredApplicationIds.add(application.id)
           }
 
-          expiredSubset.forEachIndexed { index, status ->
+          expiredSubset.forEach {
             val application = createApplication(userEntity, offenderDetails)
-            every { OffsetDateTime.now() } returns expiredDateTimesExpiredSubset[index]
-            createStatusUpdate(status, application)
+            val statusUpdate = createStatusUpdate(it, application)
+            statusUpdate.createdAt = expiredDateTime()
+            cas2StatusUpdateRepository.save(statusUpdate)
             expiredApplicationIds.add(application.id)
           }
 
@@ -283,8 +278,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
           Assertions.assertThat(returnedApplicationIds.equals(unexpiredApplicationIds)).isTrue()
-
-          unmockkAll()
         }
       }
     }
