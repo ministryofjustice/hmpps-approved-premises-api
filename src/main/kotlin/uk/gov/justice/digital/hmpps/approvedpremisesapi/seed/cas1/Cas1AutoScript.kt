@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -35,10 +36,32 @@ class Cas1AutoScript(
   ) {
     seedLogger.info("Auto-Scripting for CAS1")
     try {
+      seedUsers()
       autoCreateApplication(deliusUserName, crn)
     } catch (e: Exception) {
       seedLogger.error("Creating application with crn $crn failed", e)
     }
+  }
+
+  private fun seedUsers() {
+    usersToSeed().forEach { seedUser ->
+      val user = userService
+        .getExistingUserOrCreate(username = seedUser.username, throwExceptionOnStaffRecordNotFound = true)
+        .user
+
+      user?.let {
+        seedUser.roles.forEach { role ->
+          userService.addRoleToUser(user = user, role = role)
+        }
+        seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles ${user.roles}")
+      }
+    }
+  }
+
+  private fun usersToSeed(): List<SeedUser> {
+    return listOf(
+      SeedUser(username = "SHEILAHANCOCKNPS", roles = listOf(UserRole.CAS1_CRU_MEMBER)),
+    )
   }
 
   private fun autoCreateApplication(deliusUserName: String, crn: String) {
@@ -124,3 +147,8 @@ class Cas1AutoScript(
     }
   }
 }
+
+data class SeedUser(
+  val username: String,
+  val roles: List<UserRole>,
+)
