@@ -182,6 +182,51 @@ from
     return toJsonString(result)
   }
 
+  fun getApprovedPremisesAssessmentClarificationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+    select json_agg(assess) as json 
+    from (    
+      select
+        app.id as application_id,
+        a.id as assessment_id,
+        app.crn,
+        app.noms_number,
+        acn.created_at,
+        acn.query,
+        acn.response,
+        u."name" as created_by_user
+      from
+        assessment_clarification_notes acn
+      inner join assessments a
+        on
+        a.id = acn.assessment_id
+      inner join applications app on
+        app.id = a.application_id
+      inner join users u on 
+        u.id = acn.created_by_user_id
+      where
+        a.service = 'approved-premises'
+      and
+          (app.crn = :crn
+          or 
+          app.noms_number = :noms_number)
+      and 
+          (:start_date is null or app.created_at >= :start_date)
+      and 
+          (:end_date is null or app.created_at <= :end_date)
+      ) assess
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+
   private fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value ?: "[]"
 
   private fun MapSqlParameterSource.addSarParameters(
