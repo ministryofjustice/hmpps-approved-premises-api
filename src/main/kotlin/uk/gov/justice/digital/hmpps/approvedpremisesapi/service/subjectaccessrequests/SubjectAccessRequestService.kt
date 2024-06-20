@@ -18,12 +18,14 @@ class SubjectAccessRequestService(
     val getApprovedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
     val getAPApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
     val getAPAssessmentsJson = subjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
+    val getAPAssessmentClarificationNotes = subjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
 
     val result = """
       {
         "approvedPremisesApplications": $getApprovedPremisesApplicationsJson,
         "approvedPremisesApplicationTimeline": $getAPApplicationTimelineJson,
-        "approvedPremisesAssessments": $getAPAssessmentsJson
+        "approvedPremisesAssessments": $getAPAssessmentsJson,
+        "approvedPremisesAssessmentClarificationNotes" : $getAPAssessmentClarificationNotes
       }
     """.trimIndent()
 

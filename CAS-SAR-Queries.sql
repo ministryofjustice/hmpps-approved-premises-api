@@ -109,63 +109,67 @@ where
 	and (:end_date is null or app.created_at <= :end_date)
 	
 -- AP assessments
-
 select
-	app.crn,
-	app.noms_number,
-	u."name" as assessor_name,
-	assess."data" ,
-	assess."document",
-	assess.created_at,
-	assess.allocated_at,
-	assess.submitted_at,
-	assess.reallocated_at,
-	assess.due_at,
-	assess.decision,
-	assess.rejection_rationale,
-	assess.is_withdrawn,
-	assess.service,
-	assess.is_withdrawn,
-	apa.created_from_appeal
-from
-	assessments assess
-inner join applications app
-on
-	app.id = assess.application_id
-inner join users u on
-	u.id = assess.allocated_to_user_id
-left join approved_premises_assessments apa on
-	apa.assessment_id = assess.id
-where
-	assess.service = 'approved-premises'
-and
-	(app.crn = :crn
-		or app.noms_number = :noms_number )
-and 
-	and (:start_date is null or app.created_at >= :start_date) 
-	and (:end_date is null or app.created_at <= :end_date)
-	
+    json_agg(assess) as json
+from (select app.crn,
+             app.noms_number,
+             u."name" as assessor_name,
+             assess."data",
+             assess."document",
+             assess.created_at,
+             assess.allocated_at,
+             assess.submitted_at,
+             assess.reallocated_at,
+             assess.due_at,
+             assess.decision,
+             assess.rejection_rationale,
+             assess.is_withdrawn,
+             assess.service,
+             assess.is_withdrawn,
+             apa.created_from_appeal
+      from assessments assess
+               inner join applications app
+                          on
+                              app.id = assess.application_id
+               inner join users u on
+          u.id = assess.allocated_to_user_id
+               left join approved_premises_assessments apa on
+          apa.assessment_id = assess.id
+      where assess.service = 'approved-premises'
+        and (app.crn = :crn
+          or app.noms_number = :noms_number)
+        and (:start_date is null or app.created_at >= :start_date)
+        and (:end_date is null or app.created_at <= :end_date)
+      ) assess;
 -- assessment clarification notes ap
 select
-	app.crn,
-	app.noms_number,
-	acn.created_at,
-	acn.query,
-	acn.response
-from
-	assessment_clarification_notes acn
-inner join assessments a 
-on
-	a.id = acn.assessment_id
-inner join applications app on
-	app.id = a.application_id
-where
-	a.service = 'approved-premises'
-	and 
-		(app.crn = :crn
-		or app.noms_number = :noms_number )
-	and 
-	app.created_at between :start_date and :end_date
+    json_agg(assess) as json
+    from (
+        select
+            app.id as application_id,
+            a.id as assessment_id,
+            app.crn,
+            app.noms_number,
+            acn.created_at,
+            acn.query,
+            acn.response,
+            u."name" as created_by_user
+        from
+            assessment_clarification_notes acn
+        inner join assessments a
+        on
+            a.id = acn.assessment_id
+        inner join applications app on
+            app.id = a.application_id
+        inner join users u on
+            u.id = acn.created_by_user_id
+        where
+            a.service = 'approved-premises'
+        and (app.crn = :crn
+            or app.noms_number = :noms_number)
+        and (:start_date is null or app.created_at >= :start_date)
+        and (:end_date is null or app.created_at <= :end_date)
+      ) assess;
 	
 -- assessment referral history notes -approved premises
 select
