@@ -13,6 +13,7 @@ import java.time.LocalDate
 class Cas1OutOfServiceBedTransformer(
   private val cas1OutOfServiceBedReasonTransformer: Cas1OutOfServiceBedReasonTransformer,
   private val cas1OutOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,
+  private val cas1OutOfServiceBedRevisionTransformer: Cas1OutOfServiceBedRevisionTransformer,
 ) {
   fun transformJpaToApi(jpa: Cas1OutOfServiceBedEntity) = Cas1OutOfServiceBed(
     id = jpa.id,
@@ -30,6 +31,7 @@ class Cas1OutOfServiceBedTransformer(
     referenceNumber = jpa.referenceNumber,
     notes = jpa.notes,
     cancellation = jpa.cancellation?.let { cas1OutOfServiceBedCancellationTransformer.transformJpaToApi(it) },
+    revisionHistory = jpa.revisionHistory.map(cas1OutOfServiceBedRevisionTransformer::transformJpaToApi),
   )
 
   private fun Cas1OutOfServiceBedEntity.deriveStatus() = when (this.cancellation) {

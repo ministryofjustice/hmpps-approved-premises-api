@@ -14,6 +14,7 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.Table
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType as ApiRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType as DomainRevisionType
 
 @Repository
@@ -50,12 +51,12 @@ enum class Cas1OutOfServiceBedRevisionType {
 }
 
 @Suppress("detekt:MagicNumber")
-enum class Cas1OutOfServiceBedRevisionChangeType(private val value: Long) {
-  START_DATE(0b0000_0001),
-  END_DATE(0b0000_0010),
-  REFERENCE_NUMBER(0b0000_0100),
-  REASON(0b0000_1000),
-  NOTES(0b0001_0000),
+enum class Cas1OutOfServiceBedRevisionChangeType(private val value: Long, val apiValue: ApiRevisionType) {
+  START_DATE(0b0000_0001, ApiRevisionType.updatedStartDate),
+  END_DATE(0b0000_0010, ApiRevisionType.updatedEndDate),
+  REFERENCE_NUMBER(0b0000_0100, ApiRevisionType.updatedReferenceNumber),
+  REASON(0b0000_1000, ApiRevisionType.updatedReason),
+  NOTES(0b0001_0000, ApiRevisionType.updatedNotes),
   ;
 
   companion object {
