@@ -14,7 +14,7 @@ class Cas1RequestForPlacementReportRepository(
     const val QUERY =
       """
 WITH raw_applications_report AS (
-    ${Cas1ApplicationReportRepository.COMPLETE_DATASET_QUERY}
+    ${Cas1ApplicationV2ReportRepository.COMPLETE_DATASET_QUERY}
 )
 
 SELECT 
