@@ -411,6 +411,13 @@ class ApprovedPremisesApplicationEntity(
   fun getLatestBooking(): BookingEntity? = getLatestPlacementRequest()?.booking
   fun isSubmitted() = submittedAt != null
 
+  @Deprecated(
+"""
+    This function should no longer be required as the API caller should define the noticeType. 
+    If required, this function should be used with care as it uses the application createdAt date instead of submittedAt to determine
+    if short notice, and doesn't consider if the application is an emergency application
+  """,
+  )
   fun isShortNoticeApplication() = this.arrivalDate?.let { Duration.between(this.createdAt, this.arrivalDate).toKotlinDuration() < 28.days }
 }
 
