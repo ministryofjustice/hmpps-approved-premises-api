@@ -225,7 +225,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       }
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore()
-      fun expiredDateTime() = unexpiredDateTime().minusDays(14)
+      fun expiredDateTime() = unexpiredDateTime().minusDays(15)
 
       val unexpiredApplicationIds = mutableSetOf<UUID>()
       val expiredApplicationIds = mutableSetOf<UUID>()
