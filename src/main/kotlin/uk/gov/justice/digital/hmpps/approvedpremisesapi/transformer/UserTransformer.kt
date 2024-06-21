@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
@@ -69,6 +71,13 @@ class UserTransformer(
       service = ServiceName.temporaryAccommodation.value,
     )
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
+  }
+
+  fun transformProfileResponseToApi(userName: String, userResponse: GetUserResponse, xServiceName: ServiceName): ProfileResponse {
+    if (!userResponse.staffRecordFound) {
+      return ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound, user = null)
+    }
+    return ProfileResponse(userName, loadError = null, transformJpaToApi(userResponse.user!!, xServiceName))
   }
 
   private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? = when (userRole.role) {

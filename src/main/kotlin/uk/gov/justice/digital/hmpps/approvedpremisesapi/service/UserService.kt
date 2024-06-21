@@ -70,23 +70,18 @@ class UserService(
 
   fun getUserForRequest(): UserEntity {
     val username = getDeliusUserNameForRequest()
-    val serviceForRequest = requestContextService.getServiceForRequest()
-
     val user = getExistingUserOrCreate(username)
-
-    if (serviceForRequest == ServiceName.temporaryAccommodation) {
-      if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
-        user.roles += userRoleAssignmentRepository.save(
-          UserRoleAssignmentEntity(
-            id = UUID.randomUUID(),
-            user = user,
-            role = UserRole.CAS3_REFERRER,
-          ),
-        )
-      }
-    }
+    ensureCas3UserHasCas3ReferrerRole(user)
 
     return user
+  }
+
+  fun getUserForProfile(username: String): GetUserResponse {
+    val userResponse = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
+    if (userResponse.staffRecordFound) {
+      ensureCas3UserHasCas3ReferrerRole(userResponse.user!!)
+    }
+    return userResponse
   }
 
   fun getUserForRequestOrNull(): UserEntity? {
@@ -126,6 +121,21 @@ class UserService(
     }
 
     return Pair(users, metadata)
+  }
+
+  private fun ensureCas3UserHasCas3ReferrerRole(user: UserEntity) {
+    val serviceForRequest = requestContextService.getServiceForRequest()
+    if ((serviceForRequest == ServiceName.temporaryAccommodation) &&
+      (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray()))
+    ) {
+      user.roles += userRoleAssignmentRepository.save(
+        UserRoleAssignmentEntity(
+          id = UUID.randomUUID(),
+          user = user,
+          role = UserRole.CAS3_REFERRER,
+        ),
+      )
+    }
   }
 
   fun getAllocatableUsersForAllocationType(
@@ -285,7 +295,9 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String, dontThrowExceptionOnStaffRecordNotFound: Boolean): GetUserResponse {
+  fun getExistingUserOrCreate(username: String) = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = true).user!!
+
+  fun getExistingUserOrCreate(username: String, throwExceptionOnStaffRecordNotFound: Boolean): GetUserResponse {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -296,7 +308,7 @@ class UserService(
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure.StatusCode -> {
-        if (dontThrowExceptionOnStaffRecordNotFound && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
+        if (!throwExceptionOnStaffRecordNotFound && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
           return GetUserResponse(null, false)
         } else {
           staffUserDetailsResponse.throwException()
@@ -343,11 +355,6 @@ class UserService(
       ),
     )
     return GetUserResponse(savedUser, true)
-  }
-
-  fun getExistingUserOrCreate(username: String): UserEntity {
-    val getUserResponse = getExistingUserOrCreate(username, dontThrowExceptionOnStaffRecordNotFound = false)
-    return getUserResponse.user!!
   }
 
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {

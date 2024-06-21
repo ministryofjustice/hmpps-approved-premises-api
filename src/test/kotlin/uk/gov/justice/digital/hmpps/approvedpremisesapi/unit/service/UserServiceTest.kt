@@ -82,7 +82,7 @@ class UserServiceTest {
   inner class GetExistingUserOrCreate {
 
     @Test
-    fun `getExistingUserOrCreate with username param calls overloaded function with second parameter`() {
+    fun `getExistingUserOrCreate calls overloaded function with throwExceptionOnStaffRecordNotFound parameter set false`() {
       val username = "SOMEPERSON"
 
       val user = UserEntityFactory()
@@ -96,7 +96,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `getExistingUserOrCreate with invalid username does not throw error when dontThrowExceptionOnStaffRecordNotFound set true`() {
+    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is false does not throw error`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
@@ -107,14 +107,14 @@ class UserServiceTest {
         body = null,
       )
 
-      val result = userService.getExistingUserOrCreate(username, true)
+      val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
 
-      assertThat(result.staffRecordFound).isEqualTo(false)
-      assertThat(result.user).isEqualTo(null)
+      assertThat(result.staffRecordFound).isFalse()
+      assertThat(result.user).isNull()
     }
 
     @Test
-    fun `getExistingUserOrCreate with invalid username throws error when throw flag is set`() {
+    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is true throws error`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
@@ -125,17 +125,17 @@ class UserServiceTest {
         body = null,
       )
 
-      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, false) }
+      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, true) }
     }
 
     @Test
-    fun `getExistingUserOrCreate with invalid username throws error when flag is set and clientResult is failure`() {
+    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is true and clientResult is failure throws error`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.PreemptiveCacheTimeout("", "", 0)
 
-      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, false) }
+      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, true) }
     }
 
     @Test

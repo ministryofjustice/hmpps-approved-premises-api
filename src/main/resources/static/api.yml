@@ -3954,6 +3954,31 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /profile/v2:
+    get:
+      tags:
+        - Auth
+      summary: Returns information on the logged in user
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successfully retrieved information on user
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ProfileResponse'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /users:
     get:
       tags:

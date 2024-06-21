@@ -3006,6 +3006,19 @@ components:
       required:
         - roles
         - qualifications
+    ProfileResponse:
+      type: object
+      properties:
+        deliusUsername:
+          type: string
+        loadError:
+          type: string
+          enum:
+            - staff_record_not_found
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - deliusUsername
     TemporaryAccommodationUser:
       allOf:
         - $ref: '#/components/schemas/User'
