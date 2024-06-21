@@ -5412,6 +5412,7 @@ components:
         - lostBeds
         - placementApplications
         - placementMatchingOutcomes
+        - placementMatchingOutcomesV2
         - requestsForPlacement
     Cas3ReportType:
       type: string

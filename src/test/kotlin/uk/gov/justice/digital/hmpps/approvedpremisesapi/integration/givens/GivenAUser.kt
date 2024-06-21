@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -22,6 +23,7 @@ fun IntegrationTestBase.`Given a User`(
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
   mockStaffUserDetailsCall: Boolean = true,
+  apAreaName: String = randomStringMultiCaseWithNumbers(8),
 ): Pair<UserEntity, String> {
   val staffUserDetailsFactory = StaffUserDetailsFactory()
 
@@ -33,7 +35,11 @@ fun IntegrationTestBase.`Given a User`(
 
   val yieldedProbationRegion = probationRegion
     ?: probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      withYieldedApArea {
+        apAreaEntityFactory.produceAndPersist() {
+          withName(apAreaName)
+        }
+      }
     }
 
   val user = userEntityFactory.produceAndPersist {

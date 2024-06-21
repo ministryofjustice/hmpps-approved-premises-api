@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
@@ -32,6 +33,7 @@ class Cas1ReportService(
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val bedRepository: BedRepository,
   private val cas1PlacementMatchingOutcomesReportRepository: Cas1PlacementMatchingOutcomesReportRepository,
+  private val cas1PlacementMatchingOutcomesV2ReportRepository: Cas1PlacementMatchingOutcomesV2ReportRepository,
   private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
@@ -49,6 +51,7 @@ class Cas1ReportService(
       "initial_assessor_username",
       "initial_assessor_name",
       "last_appealed_assessor_username",
+      "matcher_username",
     )
   }
 
@@ -136,6 +139,21 @@ class Cas1ReportService(
       )
 
       consumer.writeBufferedWorkbook(outputStream)
+    }
+  }
+
+  fun createPlacementMatchingOutcomesV2Report(properties: MonthSpecificReportParams, outputStream: OutputStream) {
+    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = columnsToExclude,
+    ).use { consumer ->
+      cas1PlacementMatchingOutcomesV2ReportRepository.generateForArrivalDateThisMonth(
+        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
+        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        consumer,
+      )
     }
   }
 
