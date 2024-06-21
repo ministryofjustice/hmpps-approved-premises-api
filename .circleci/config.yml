@@ -441,17 +441,20 @@ workflows:
             - request-prod-approval
       - cas1_e2e_tests:
           context:
+            - hmpps-common-vars
             - hmpps-community-accommodation
             - approved-premises-ui-e2e
           requires:
             - deploy_dev
       - cas2_e2e_tests:
           context:
+            - hmpps-common-vars
             - hmpps-community-accommodation
           requires:
             - deploy_dev
       - cas3_e2e_tests:
           context:
+            - hmpps-common-vars
             - hmpps-community-accommodation
           requires:
             - deploy_dev
