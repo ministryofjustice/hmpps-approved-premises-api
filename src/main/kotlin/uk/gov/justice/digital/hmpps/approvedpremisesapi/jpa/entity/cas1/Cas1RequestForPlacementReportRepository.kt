@@ -96,8 +96,7 @@ SELECT
         pa.submitted_at is not null AND
         pa.reallocated_at is null AND
         ($placementApplicationsRangeConstraints)
-    ORDER BY request_for_placement_submitted_date ASC
-    ;      
+    ORDER BY request_for_placement_submitted_date ASC     
   """
 
   val query = buildQuery(
@@ -109,7 +108,7 @@ SELECT
       (pa.submitted_at >= :startDateTimeInclusive AND pa.submitted_at <= :endDateTimeInclusive) OR
       (withdrawn_event.occurred_at >= :startDateTimeInclusive AND withdrawn_event.occurred_at <= :endDateTimeInclusive)
     """.trimIndent(),
-  )
+  ) + ";"
 
   fun generateForSubmissionOrWithdrawalDate(
     startDateTimeInclusive: LocalDateTime,

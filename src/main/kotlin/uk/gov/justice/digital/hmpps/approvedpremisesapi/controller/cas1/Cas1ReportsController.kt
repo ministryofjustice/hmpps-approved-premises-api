@@ -97,6 +97,13 @@ class Cas1ReportsController(
       ) { outputStream ->
         cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, outputStream)
       }
+
+      Cas1ReportName.placementMatchingOutcomesV2 -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.CSV),
+      ) { outputStream ->
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, outputStream)
+      }
     }
   }
 
