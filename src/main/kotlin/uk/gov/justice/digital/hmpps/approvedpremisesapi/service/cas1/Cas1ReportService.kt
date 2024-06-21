@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementMatchingOutcomesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
@@ -32,7 +32,7 @@ class Cas1ReportService(
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val bedRepository: BedRepository,
   private val cas1PlacementMatchingOutcomesReportRepository: Cas1PlacementMatchingOutcomesReportRepository,
-  private val cas1ApplicationReportRepository: Cas1ApplicationReportRepository,
+  private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
   private val lostBedsRepository: LostBedsRepository,
@@ -67,7 +67,7 @@ class Cas1ReportService(
       outputStream = outputStream,
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
-      cas1ApplicationReportRepository.generateForSubmissionOrWithdrawalDate(
+      cas1ApplicationV2ReportRepository.generateForSubmissionOrWithdrawalDate(
         startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
         endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
         jbdcResultSetConsumer = consumer,
