@@ -18,12 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Dail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas1PlacementMatchingOutcomesReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.RequestsForPlacementReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
@@ -57,7 +52,7 @@ class Cas1ReportService(
     )
   }
 
-  fun createApplicationReport(properties: ApplicationReportProperties, outputStream: OutputStream) {
+  fun createApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ApplicationReportGenerator()
       .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
@@ -65,7 +60,7 @@ class Cas1ReportService(
       }
   }
 
-  fun createApplicationReportV2(properties: ApplicationReportProperties, outputStream: OutputStream) {
+  fun createApplicationReportV2(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
 
     CsvJdbcResultSetConsumer(
@@ -80,7 +75,7 @@ class Cas1ReportService(
     }
   }
 
-  fun createDailyMetricsReport(properties: DailyMetricReportProperties, outputStream: OutputStream) {
+  fun createDailyMetricsReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
         it.getCreatedAt().toLocalDateTime().toLocalDate(),
@@ -109,7 +104,7 @@ class Cas1ReportService(
       }
   }
 
-  fun createPlacementApplicationReport(properties: PlacementApplicationReportProperties, outputStream: OutputStream) {
+  fun createPlacementApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     PlacementApplicationReportGenerator()
       .createReport(placementApplicationEntityReportRowRepository.generatePlacementApplicationEntityReportRowsForCalendarMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
@@ -117,7 +112,7 @@ class Cas1ReportService(
       }
   }
 
-  fun createRequestForPlacementReport(properties: RequestsForPlacementReportProperties, outputStream: OutputStream) {
+  fun createRequestForPlacementReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
 
     CsvJdbcResultSetConsumer(
@@ -132,7 +127,7 @@ class Cas1ReportService(
     }
   }
 
-  fun createPlacementMatchingOutcomesReport(properties: Cas1PlacementMatchingOutcomesReportProperties, outputStream: OutputStream) {
+  fun createPlacementMatchingOutcomesReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ExcelJdbcResultSetConsumer().use { consumer ->
       cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(
         properties.month,
@@ -143,6 +138,12 @@ class Cas1ReportService(
       consumer.writeBufferedWorkbook(outputStream)
     }
   }
+
+  data class MonthSpecificReportParams(
+    val year: Int,
+    val month: Int,
+    val includePii: Boolean = false,
+  )
 
   @SuppressWarnings("MagicNumber")
   private fun getFirstSecondOfMonth(year: Int, month: Int) = LocalDate.of(year, month, 1).atStartOfDay()
