@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -25,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
@@ -43,8 +42,7 @@ class DailyMetricsReportGeneratorTest {
     LocalDate.parse("2023-01-03"),
   )
 
-  private val properties = DailyMetricReportProperties(
-    serviceName = ServiceName.approvedPremises,
+  private val properties = MonthSpecificReportParams(
     month = 1,
     year = 2023,
   )

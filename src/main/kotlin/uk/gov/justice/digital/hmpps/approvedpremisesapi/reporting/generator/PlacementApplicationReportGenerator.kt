@@ -2,16 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 
 class PlacementApplicationReportGenerator :
-  ReportGenerator<PlacementApplicationEntityReportRow, PlacementApplicationReportRow, PlacementApplicationReportProperties>(PlacementApplicationReportRow::class) {
+  ReportGenerator<PlacementApplicationEntityReportRow, PlacementApplicationReportRow, MonthSpecificReportParams>(PlacementApplicationReportRow::class) {
 
-  override fun filter(properties: PlacementApplicationReportProperties): (PlacementApplicationEntityReportRow) -> Boolean = {
+  override fun filter(properties: MonthSpecificReportParams): (PlacementApplicationEntityReportRow) -> Boolean = {
     true
   }
 
-  override val convert: PlacementApplicationEntityReportRow.(properties: PlacementApplicationReportProperties) -> List<PlacementApplicationReportRow> = { properties ->
+  override val convert: PlacementApplicationEntityReportRow.(properties: MonthSpecificReportParams) -> List<PlacementApplicationReportRow> = { _ ->
     listOf(
       PlacementApplicationReportRow(
         placementRequestId = this.getId(),

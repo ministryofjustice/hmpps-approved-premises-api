@@ -2,14 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 
-class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, ApplicationReportProperties>(ApplicationReportRow::class) {
-  override fun filter(properties: ApplicationReportProperties): (ApplicationEntityReportRow) -> Boolean = {
+class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, Cas1ReportService.MonthSpecificReportParams>(ApplicationReportRow::class) {
+  override fun filter(properties: Cas1ReportService.MonthSpecificReportParams): (ApplicationEntityReportRow) -> Boolean = {
     true
   }
 
-  override val convert: ApplicationEntityReportRow.(properties: ApplicationReportProperties) -> List<ApplicationReportRow> = { properties ->
+  override val convert: ApplicationEntityReportRow.(properties: Cas1ReportService.MonthSpecificReportParams) -> List<ApplicationReportRow> = { _ ->
     listOf(
       ApplicationReportRow(
         id = this.getId(),
