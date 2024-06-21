@@ -10,9 +10,10 @@ class Cas1RequestForPlacementReportRepository(
   val reportJdbcTemplate: ReportJdbcTemplate,
 ) {
 
-  companion object {
-    const val QUERY =
-      """
+  fun buildQuery(
+    placementRequestsRangeConstraints: String,
+    placementApplicationsRangeConstraints: String,
+  ) = """
 WITH raw_applications_report AS (
     ${Cas1ApplicationV2ReportRepository.COMPLETE_DATASET_QUERY}
 )
@@ -57,10 +58,7 @@ SELECT
  WHERE 
   apa.arrival_date IS NOT NULL
   AND
-  (
-    (paa.submitted_at >= :startDateTimeInclusive AND paa.submitted_at <= :endDateTimeInclusive) OR
-    (pr_withdrawn_event.occurred_at >= :startDateTimeInclusive AND pr_withdrawn_event.occurred_at <= :endDateTimeInclusive)
-  )
+  ($placementRequestsRangeConstraints)
      
  UNION all
      
@@ -97,14 +95,21 @@ SELECT
     WHERE
         pa.submitted_at is not null AND
         pa.reallocated_at is null AND
-        (
-          (pa.submitted_at >= :startDateTimeInclusive AND pa.submitted_at <= :endDateTimeInclusive) OR
-          (withdrawn_event.occurred_at >= :startDateTimeInclusive AND withdrawn_event.occurred_at <= :endDateTimeInclusive)
-        )
+        ($placementApplicationsRangeConstraints)
     ORDER BY request_for_placement_submitted_date ASC
     ;      
   """
-  }
+
+  val query = buildQuery(
+    placementRequestsRangeConstraints = """
+      (paa.submitted_at >= :startDateTimeInclusive AND paa.submitted_at <= :endDateTimeInclusive) OR
+      (pr_withdrawn_event.occurred_at >= :startDateTimeInclusive AND pr_withdrawn_event.occurred_at <= :endDateTimeInclusive)
+    """.trimIndent(),
+    placementApplicationsRangeConstraints = """
+      (pa.submitted_at >= :startDateTimeInclusive AND pa.submitted_at <= :endDateTimeInclusive) OR
+      (withdrawn_event.occurred_at >= :startDateTimeInclusive AND withdrawn_event.occurred_at <= :endDateTimeInclusive)
+    """.trimIndent(),
+  )
 
   fun generateForSubmissionOrWithdrawalDate(
     startDateTimeInclusive: LocalDateTime,
@@ -112,7 +117,7 @@ SELECT
     jbdcResultSetConsumer: JdbcResultSetConsumer,
   ) =
     reportJdbcTemplate.query(
-      QUERY,
+      query,
       mapOf<String, Any>(
         "startDateTimeInclusive" to startDateTimeInclusive,
         "endDateTimeInclusive" to endDateTimeInclusive,
