@@ -83,7 +83,7 @@ class RequestForPlacementTransformerTest {
       assertThat(result.id).isEqualTo(placementApplication.id)
       assertThat(result.createdByUserId).isEqualTo(placementApplication.createdByUser.id)
       assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
-      assertThat(result.isWithdrawn).isEqualTo(placementApplication.isWithdrawn())
+      assertThat(result.isWithdrawn).isEqualTo(placementApplication.isWithdrawn)
       assertThat(result.type).isEqualTo(RequestForPlacementType.manual)
       assertPlacementDatesMatchPlacementDateEntities(result.placementDates, placementApplication.placementDates)
       assertThat(result.submittedAt).isEqualTo(placementApplication.submittedAt?.toInstant())
@@ -95,7 +95,7 @@ class RequestForPlacementTransformerTest {
     }
 
     @Test
-    fun `Derives the correct status for a withdrawn placement application`() {
+    fun `Maintains the correct status for a withdrawn placement application`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .produce()
@@ -105,7 +105,7 @@ class RequestForPlacementTransformerTest {
         .withApplication(application)
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-        .withDecision(PlacementApplicationDecision.WITHDRAW)
+        .withIsWithdrawn(true)
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
         .produce()
 

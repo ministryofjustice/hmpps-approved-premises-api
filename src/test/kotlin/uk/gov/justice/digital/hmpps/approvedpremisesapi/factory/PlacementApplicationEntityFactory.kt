@@ -35,6 +35,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
   private var submissionGroupId: Yielded<UUID> = { UUID.randomUUID() }
+  private var isWithdrawn: Yielded<Boolean> = { false }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -104,6 +105,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.dueAt = { dueAt }
   }
 
+  fun withIsWithdrawn(isWithdrawn: Boolean) = apply {
+    this.isWithdrawn = { isWithdrawn }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
@@ -125,5 +130,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     withdrawalReason = this.withdrawalReason(),
     dueAt = this.dueAt(),
     submissionGroupId = this.submissionGroupId(),
+    isWithdrawn = this.isWithdrawn(),
   )
 }

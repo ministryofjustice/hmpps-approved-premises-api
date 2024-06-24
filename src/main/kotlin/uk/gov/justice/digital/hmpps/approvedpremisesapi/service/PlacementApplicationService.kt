@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -226,14 +225,13 @@ class PlacementApplicationService(
     val placementApplication =
       placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
 
-    if (placementApplication.isWithdrawn()) {
+    if (placementApplication.isWithdrawn) {
       return CasResult.Success(placementApplication)
     }
 
     val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) { placementApplication.allocatedToUser } else null
 
-    placementApplication.decision = PlacementApplicationDecision.WITHDRAW
-    placementApplication.decisionMadeAt = OffsetDateTime.now()
+    placementApplication.isWithdrawn = true
     placementApplication.withdrawalReason = when (withdrawalContext.triggeringEntityType) {
       WithdrawableEntityType.Application -> PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
       WithdrawableEntityType.PlacementApplication -> userProvidedReason

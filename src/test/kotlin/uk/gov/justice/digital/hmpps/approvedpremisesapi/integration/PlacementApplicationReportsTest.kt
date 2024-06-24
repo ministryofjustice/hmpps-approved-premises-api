@@ -409,7 +409,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
 
     if (expectedRow.isAccepted) {
-      assertThat(reportRow.decision).isEqualTo(if (expectedRow.isWithdrawn) "WITHDRAW" else "ACCEPTED")
+      assertThat(reportRow.decision).isEqualTo("ACCEPTED")
       assertThat(reportRow.decisionMadeAt).isToday()
     } else {
       assertThat(reportRow.decision).isNull()

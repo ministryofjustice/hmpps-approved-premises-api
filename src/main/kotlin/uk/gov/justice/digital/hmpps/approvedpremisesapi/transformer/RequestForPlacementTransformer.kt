@@ -22,7 +22,7 @@ class RequestForPlacementTransformer(
     id = placementApplicationEntity.id,
     createdByUserId = placementApplicationEntity.createdByUser.id,
     createdAt = placementApplicationEntity.createdAt.toInstant(),
-    isWithdrawn = placementApplicationEntity.isWithdrawn(),
+    isWithdrawn = placementApplicationEntity.isWithdrawn,
     type = RequestForPlacementType.manual,
     placementDates = placementApplicationEntity.placementDates.map { it.toPlacementDates() },
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
@@ -76,7 +76,7 @@ class RequestForPlacementTransformer(
   )
 
   private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
-    this.isWithdrawn() -> RequestForPlacementStatus.requestWithdrawn
+    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
     this.placementRequests.any { pr -> pr.hasActiveBooking() } -> RequestForPlacementStatus.placementBooked
     this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
     this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch

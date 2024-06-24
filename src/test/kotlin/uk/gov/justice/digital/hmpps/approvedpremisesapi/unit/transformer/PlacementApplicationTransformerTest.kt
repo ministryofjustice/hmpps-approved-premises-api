@@ -9,9 +9,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
-import org.junit.jupiter.params.provider.NullSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
@@ -30,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
@@ -215,34 +211,6 @@ class PlacementApplicationTransformerTest {
         ),
       ),
     )
-  }
-
-  @ParameterizedTest
-  @EnumSource(PlacementApplicationDecision::class)
-  @NullSource
-  fun `transformJpaToApi returns isWithdrawn based upon decision`(decision: PlacementApplicationDecision?) {
-    val data = "{\"data\": \"something\"}"
-    val document = "{\"document\": \"something\"}"
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withApplication(applicationMock)
-      .withData(data)
-      .withDocument(document)
-      .withDecision(decision)
-      .withWithdrawalReason(PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
-      .produce()
-
-    val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
-
-    when (decision) {
-      PlacementApplicationDecision.ACCEPTED -> assertThat(result.isWithdrawn).isEqualTo(false)
-      PlacementApplicationDecision.REJECTED -> assertThat(result.isWithdrawn).isEqualTo(false)
-      PlacementApplicationDecision.WITHDRAW -> assertThat(result.isWithdrawn).isEqualTo(true)
-      PlacementApplicationDecision.WITHDRAWN_BY_PP -> assertThat(result.isWithdrawn).isEqualTo(true)
-      null -> assertThat(result.isWithdrawn).isEqualTo(false)
-    }
-
-    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.errorInPlacementRequest)
   }
 
   @Test
