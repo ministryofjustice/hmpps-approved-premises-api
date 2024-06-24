@@ -4,12 +4,12 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
@@ -233,7 +233,7 @@ class OffenderRisksDataSourceTest {
   private fun mock404RoSH(crn: String) {
     every { mockApOASysContextApiClient.getRoshRatings(crn) } returns
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/rosh/a-crn",
         HttpStatus.NOT_FOUND,
         body = null,
@@ -243,7 +243,7 @@ class OffenderRisksDataSourceTest {
   private fun mock404Tier(crn: String) {
     every { mockHMPPSTierApiClient.getTier(crn) } returns
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/crn/a-crn/tier",
         HttpStatus.NOT_FOUND,
         body = null,
@@ -253,7 +253,7 @@ class OffenderRisksDataSourceTest {
   private fun mock404CaseDetail(crn: String) {
     every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/probation-cases/$crn/details",
         HttpStatus.NOT_FOUND,
         body = null,
@@ -263,7 +263,7 @@ class OffenderRisksDataSourceTest {
   private fun mock500RoSH(crn: String) {
     every { mockApOASysContextApiClient.getRoshRatings(crn) } returns
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/rosh/a-crn",
         HttpStatus.INTERNAL_SERVER_ERROR,
         body = null,
@@ -273,7 +273,7 @@ class OffenderRisksDataSourceTest {
   private fun mock500Tier(crn: String) {
     every { mockHMPPSTierApiClient.getTier(crn) } returns
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/crn/a-crn/tier",
         HttpStatus.INTERNAL_SERVER_ERROR,
         body = null,
@@ -283,7 +283,7 @@ class OffenderRisksDataSourceTest {
   private fun mock500CaseDetail(crn: String) {
     every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/probation-cases/$crn/details",
         HttpStatus.INTERNAL_SERVER_ERROR,
         body = null,
