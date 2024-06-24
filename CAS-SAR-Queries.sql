@@ -491,7 +491,7 @@ where
 		(b.crn = :crn
 		or b.noms_number = :noms_number )
 	and (:start_date is null or b.created_at >= :start_date) 
-	and (:end_date is null or b.created_at <= :end_date)	
+	and (:end_date is null or b.created_at <= :end_date)
 	
 -- bookings - Approved Premises
 select
@@ -534,7 +534,7 @@ inner join bookings b on
 	b.id = c.booking_id
 inner join cancellation_reasons cr on
 	c.cancellation_reason_id = cr.id
-	where 
+	where
 		(b.crn = :crn
 		or b.noms_number = :noms_number )
 	and (:start_date is null or b.created_at >= :start_date) 

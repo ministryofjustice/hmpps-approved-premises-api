@@ -227,6 +227,50 @@ from
     return toJsonString(result)
   }
 
+  fun approvedPremisesBookings(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+  select json_agg(booking) as json 
+  from (
+        select
+             b.crn ,
+            b.noms_number,
+            b.arrival_date,
+            b.departure_date,
+            b.original_arrival_date,
+            b.original_departure_date,
+            b.created_at,
+            b.status,
+            p."name" as premises_name,
+            b.adhoc,
+            b.key_worker_staff_code,
+            b.service,
+            b.application_id, 
+            b.offline_application_id,
+            b."version"
+        from
+            bookings b
+        left join premises p on
+            b.premises_id = p.id
+        where
+            b.service = 'approved-premises'
+        and 
+            (b.crn = :crn
+            or b.noms_number = :noms_number )
+        and (:start_date is null or b.created_at >= :start_date) 
+        and (:end_date is null or b.created_at <= :end_date)
+) booking
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+
   private fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value ?: "[]"
 
   private fun MapSqlParameterSource.addSarParameters(

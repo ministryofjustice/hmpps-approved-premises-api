@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -38,7 +40,12 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     const val ALLOCATED_AT = "2021-09-21T16:00:00+00:00"
     const val CREATED_AT_NO_TZ = "2021-09-18T16:00:00"
     const val DUE_AT = "2021-09-22T16:00:00+00:00"
+    const val DEPARTED_AT = "2021-09-23T16:00:00+00:00"
     const val RESPONSE_RECEIVED_AT = "2021-10-23"
+
+    var CREATED_AT_DATE_ONLY = this.CREATED_AT.substring(0..9)
+    var ARRIVED_AT_DATE_ONLY = this.ARRIVED_AT.substring(0..9)
+    var DEPARTED_AT_DATE_ONLY = this.DEPARTED_AT.substring(0..9)
 
     const val DATA_JSON_SIMPLE = """{ "key": "value" }"""
     const val DOCUMENT_JSON_SIMPLE = """{ "key2": "value2" }"""
@@ -65,7 +72,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "approvedPremisesApplications": [ ],
           "approvedPremisesApplicationTimeline": [ ],
           "approvedPremisesAssessments": [ ],
-          "approvedPremisesAssessmentClarificationNotes": [ ]
+          "approvedPremisesAssessmentClarificationNotes": [ ],
+          "approvedPremisesBookings": [ ]
         }
       """,
       result,
@@ -86,7 +94,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
         "approvedPremisesApplicationTimeline" :[ ],
         "approvedPremisesAssessments": [ ],
-        "approvedPremisesAssessmentClarificationNotes": [ ]
+        "approvedPremisesAssessmentClarificationNotes": [ ],
+        "approvedPremisesBookings": [ ]
       }
     """.trimIndent()
 
@@ -118,8 +127,9 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       offender,
     )
     },
-    "approvedPremisesAssessments": [ ],
-     "approvedPremisesAssessmentClarificationNotes": [ ]
+        "approvedPremisesAssessments": [ ],
+        "approvedPremisesAssessmentClarificationNotes": [ ],
+        "approvedPremisesBookings": [ ]
     }
     """.trimIndent()
 
@@ -144,7 +154,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
         "approvedPremisesApplicationTimeline" :[ ],
         "approvedPremisesAssessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
-         "approvedPremisesAssessmentClarificationNotes": [ ]
+        "approvedPremisesAssessmentClarificationNotes": [ ],
+        "approvedPremisesBookings": [ ]
       }
        """
 
@@ -163,15 +174,61 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
     val expectedJson = """
       {
-        "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-        "approvedPremisesApplicationTimeline" :[ ],
-        "approvedPremisesAssessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
-         "approvedPremisesAssessmentClarificationNotes": ${approvedPremisesAssessmentClarificationNoteJson(assessment,offenderDetails,clarificationNote)}
+          "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+          "approvedPremisesApplicationTimeline" :[ ],
+          "approvedPremisesAssessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
+          "approvedPremisesAssessmentClarificationNotes": ${approvedPremisesAssessmentClarificationNoteJson(assessment,offenderDetails,clarificationNote)},
+          "approvedPremisesBookings": [ ]
       }
-       """
+    """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
   }
+
+  @Test
+  fun `Get CAS1 information - have a booking`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offenderDetails)
+
+    val booking = bookingEntity(offenderDetails, application)
+
+    val result =
+      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+      {
+          "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+          "approvedPremisesApplicationTimeline" :[ ],
+          "approvedPremisesAssessments": [ ],
+          "approvedPremisesAssessmentClarificationNotes": [],
+          "approvedPremisesBookings": ${bookingsJson(booking)}
+      }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun bookingsJson(booking: BookingEntity): String =
+    """[
+        {
+          "crn": "${booking.crn}",
+          "noms_number":"${booking.nomsNumber}",
+          "arrival_date":"${booking.arrivalDate}",
+          "departure_date":"${booking.departureDate}",
+          "original_arrival_date":"${booking.originalArrivalDate}",
+          "original_departure_date":"${booking.originalDepartureDate}",
+          "created_at":"$CREATED_AT",
+          "status":"${booking.status}",
+          "premises_name":"${booking.premises.name}",
+          "adhoc":${booking.adhoc},
+          "key_worker_staff_code":"${booking.keyWorkerStaffCode}",
+          "service":"${booking.service}",
+          "application_id":"${booking.application?.id}",
+          "offline_application_id":${booking.offlineApplication?.let {"${it.id}"} ?: "null" },
+          "version":${booking.version}
+         }
+        ]
+    """.trimMargin()
 
   private fun approvedPremisesApplicationsJson(
     application: ApprovedPremisesApplicationEntity,
@@ -322,6 +379,64 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname@noname.net")
     }
+
+  private fun bookingEntity(
+    offenderDetails: OffenderDetailSummary,
+    application: ApprovedPremisesApplicationEntity,
+  ): BookingEntity {
+    var bed = bedEntity()
+
+    var booking = bookingEntityFactory.produceAndPersist {
+      withCrn(offenderDetails.otherIds.crn)
+      withNomsNumber(offenderDetails.otherIds.nomsNumber)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withAdhoc(true)
+      withDepartureDate(LocalDate.parse(DEPARTED_AT_DATE_ONLY))
+      withApplication(application)
+      withArrivalDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withOriginalArrivalDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withOriginalDepartureDate(LocalDate.parse(DEPARTED_AT_DATE_ONLY))
+      withPremises(bed.room.premises)
+      withStaffKeyWorkerCode("KEYWORKERSTAFFCODE")
+      withStatus(BookingStatus.arrived)
+      withBed(bed)
+    }
+    return booking
+  }
+
+  private fun bedEntity() = bedEntityFactory.produceAndPersist {
+    withName("a bed")
+    withCode("a code")
+    withRoom(
+      roomEntityFactory.produceAndPersist {
+        withCode("room code")
+        withName("room name")
+
+        withPremises(
+          approvedPremisesEntityFactory.produceAndPersist {
+            withName("a premises")
+            withApCode("AP Code")
+            withLocalAuthorityArea(
+              localAuthorityEntityFactory.produceAndPersist {
+                withName("An LAA")
+                withIdentifier("LAA ID")
+              },
+            )
+            withProbationRegion(
+              probationRegionEntityFactory.produceAndPersist {
+                withName("Probation Region")
+                withApArea(
+                  apAreaEntityFactory.produceAndPersist {
+                    withName("Probation Area")
+                  },
+                )
+              },
+            )
+          },
+        )
+      },
+    )
+  }
 
   private fun userEntity(): UserEntity =
     userEntityFactory.produceAndPersist {
