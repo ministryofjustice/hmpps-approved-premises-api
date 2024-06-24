@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.approvedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
@@ -209,6 +211,45 @@ class UserTransformerTest {
       val result = userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
 
       assertThat(result.apArea).isEqualTo(apArea)
+    }
+  }
+
+  @Nested
+  inner class TransformProfileResponseToApi {
+
+    @Test
+    fun `transformProfileResponseToApi Should successfully transfer user response when staff record not found`() {
+      val result = userTransformer.transformProfileResponseToApi(
+        "userName",
+        GetUserResponse(null, false),
+        approvedPremises,
+      )
+
+      assertThat(result.deliusUsername).isEqualTo("userName")
+      assertThat(result.user).isEqualTo(null)
+      assertThat(result.loadError).isEqualTo(ProfileResponse.LoadError.staffRecordNotFound)
+    }
+
+    @Test
+    fun `transformProfileResponseToApi Should successfully transfer user response when staff record found`() {
+      val apAreaEntity = ApAreaEntityFactory().produce()
+
+      val user = buildUserEntity(
+        role = CAS1_MATCHER,
+        apArea = apAreaEntity,
+      )
+
+      every { apAreaTransformer.transformJpaToApi(apAreaEntity) } returns apArea
+
+      val result = userTransformer.transformProfileResponseToApi(
+        "userName",
+        GetUserResponse(user, true),
+        approvedPremises,
+      )
+
+      assertThat(result.deliusUsername).isEqualTo("userName")
+      assertThat(result.loadError).isEqualTo(null)
+      verify(exactly = 1) { userTransformer.transformJpaToApi(user, approvedPremises) }
     }
   }
 

@@ -28,12 +28,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
@@ -70,23 +70,18 @@ class UserService(
 
   fun getUserForRequest(): UserEntity {
     val username = getDeliusUserNameForRequest()
-    val serviceForRequest = requestContextService.getServiceForRequest()
-
     val user = getExistingUserOrCreate(username)
-
-    if (serviceForRequest == ServiceName.temporaryAccommodation) {
-      if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
-        user.roles += userRoleAssignmentRepository.save(
-          UserRoleAssignmentEntity(
-            id = UUID.randomUUID(),
-            user = user,
-            role = UserRole.CAS3_REFERRER,
-          ),
-        )
-      }
-    }
+    ensureCas3UserHasCas3ReferrerRole(user)
 
     return user
+  }
+
+  fun getUserForProfile(username: String): GetUserResponse {
+    val userResponse = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
+    if (userResponse.staffRecordFound) {
+      ensureCas3UserHasCas3ReferrerRole(userResponse.user!!)
+    }
+    return userResponse
   }
 
   fun getUserForRequestOrNull(): UserEntity? {
@@ -126,6 +121,21 @@ class UserService(
     }
 
     return Pair(users, metadata)
+  }
+
+  private fun ensureCas3UserHasCas3ReferrerRole(user: UserEntity) {
+    val serviceForRequest = requestContextService.getServiceForRequest()
+    if ((serviceForRequest == ServiceName.temporaryAccommodation) &&
+      (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray()))
+    ) {
+      user.roles += userRoleAssignmentRepository.save(
+        UserRoleAssignmentEntity(
+          id = UUID.randomUUID(),
+          user = user,
+          role = UserRole.CAS3_REFERRER,
+        ),
+      )
+    }
   }
 
   fun getAllocatableUsersForAllocationType(
@@ -285,19 +295,21 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String, throwProblemOn404: Boolean = false): UserEntity {
+  fun getExistingUserOrCreate(username: String) = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = true).user!!
+
+  fun getExistingUserOrCreate(username: String, throwExceptionOnStaffRecordNotFound: Boolean): GetUserResponse {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
-    if (existingUser != null) return existingUser
+    if (existingUser != null) return GetUserResponse(existingUser, true)
 
     val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(normalisedUsername)
 
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure.StatusCode -> {
-        if (throwProblemOn404 && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
-          throw NotFoundProblem(username, "user", "username")
+        if (!throwExceptionOnStaffRecordNotFound && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
+          return GetUserResponse(null, false)
         } else {
           staffUserDetailsResponse.throwException()
         }
@@ -321,7 +333,7 @@ class UserService(
 
     val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
-    return userRepository.save(
+    val savedUser = userRepository.save(
       UserEntity(
         id = UUID.randomUUID(),
         name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}",
@@ -342,6 +354,7 @@ class UserService(
         updatedAt = null,
       ),
     )
+    return GetUserResponse(savedUser, true)
   }
 
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
