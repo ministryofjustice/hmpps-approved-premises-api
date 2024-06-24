@@ -127,9 +127,9 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertThat((firstResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
     wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/secure/offenders/crn/${offenderDetailsResponseOne.otherIds.crn}")))
 
-    val firstMetadata = objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(
+    val firstMetadata = objectMapper.readValue<WebClientCache.MarshallablePreemptiveCacheMetadata>(
       redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-offenderDetailSummary-$crn-metadata").get()!!,
-    )
+    ).toPreemptiveCacheMetadata()
 
     assertThat(firstMetadata.attempt).isEqualTo(1)
 
