@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
@@ -65,7 +64,7 @@ class WebClientCache(
     cacheConfig: PreemptiveCacheConfig,
     exception: WebClientResponseException,
     attempt: Int,
-    method: HttpMethod,
+    method: MarshallableHttpMethod,
   ) {
     val qualifiedKey = getCacheKeySet(requestBuilder, cacheConfig)
 
@@ -221,9 +220,20 @@ class WebClientCache(
   data class PreemptiveCacheMetadata(
     val httpStatus: HttpStatus,
     val refreshableAfter: Instant,
-    val method: HttpMethod?,
+    val method: MarshallableHttpMethod?,
     val path: String?,
     val hasResponseBody: Boolean,
     val attempt: Int?,
   )
+}
+
+enum class MarshallableHttpMethod {
+  GET,
+  HEAD,
+  POST,
+  PUT,
+  PATCH,
+  DELETE,
+  OPTIONS,
+  TRACE,
 }

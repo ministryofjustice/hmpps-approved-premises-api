@@ -15,10 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
 import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -169,7 +169,7 @@ data class SerializableClientResult(
   val status: HttpStatus?,
   val body: String?,
   val exceptionMessage: String?,
-  val method: HttpMethod?,
+  val method: MarshallableHttpMethod?,
   val path: String?,
 )
 

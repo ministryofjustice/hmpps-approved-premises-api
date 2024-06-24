@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource
 
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
@@ -36,7 +36,7 @@ class OffenderDetailsDataSource(
               clientResult.copyWithBody(body = access.asOffenderDetailSummary())
             } else {
               ClientResult.Failure.StatusCode(
-                method = HttpMethod.GET,
+                method = MarshallableHttpMethod.GET,
                 path = "/probation-cases/summaries",
                 status = HttpStatus.NOT_FOUND,
                 body = null,
@@ -77,7 +77,7 @@ class OffenderDetailsDataSource(
               clientResult.copyWithBody(body = access.asUserOffenderAccess())
             } else {
               ClientResult.Failure.StatusCode(
-                method = HttpMethod.GET,
+                method = MarshallableHttpMethod.GET,
                 path = "/users/access?username=$deliusUsername",
                 status = HttpStatus.NOT_FOUND,
                 body = null,

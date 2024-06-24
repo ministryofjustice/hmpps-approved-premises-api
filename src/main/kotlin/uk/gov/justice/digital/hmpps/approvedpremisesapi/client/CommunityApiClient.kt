@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
@@ -77,9 +76,9 @@ class CommunityApiClient(
 
       ClientResult.Success(HttpStatus.OK, Unit)
     } catch (exception: WebClientResponseException) {
-      ClientResult.Failure.StatusCode(HttpMethod.GET, path, exception.statusCode as HttpStatus, exception.responseBodyAsString)
+      ClientResult.Failure.StatusCode(MarshallableHttpMethod.GET, path, exception.statusCode as HttpStatus, exception.responseBodyAsString)
     } catch (exception: Exception) {
-      ClientResult.Failure.Other(HttpMethod.GET, path, exception)
+      ClientResult.Failure.Other(MarshallableHttpMethod.GET, path, exception)
     }
   }
 }

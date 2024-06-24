@@ -12,12 +12,12 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
@@ -102,7 +102,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/secure/staff/username",
         HttpStatus.NOT_FOUND,
         body = null,
@@ -120,7 +120,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/secure/staff/username",
         HttpStatus.NOT_FOUND,
         body = null,

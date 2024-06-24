@@ -6,10 +6,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
@@ -62,7 +62,7 @@ class DeliusServiceTest {
     fun `referralHasArrival returns false if 404 returned`() {
       every { apDeliusContextApiClient.getReferralDetails(booking.crn, booking.id.toString()) } returns
         ClientResult.Failure.StatusCode(
-          method = HttpMethod.GET,
+          method = MarshallableHttpMethod.GET,
           path = "/",
           status = HttpStatus.NOT_FOUND,
           body = "the body",
@@ -77,7 +77,7 @@ class DeliusServiceTest {
     fun `referralHasArrival throw exception if failure other than 404 returned`() {
       every { apDeliusContextApiClient.getReferralDetails(booking.crn, booking.id.toString()) } returns
         ClientResult.Failure.StatusCode(
-          method = HttpMethod.GET,
+          method = MarshallableHttpMethod.GET,
           path = "/",
           status = HttpStatus.BAD_REQUEST,
           body = "the body",

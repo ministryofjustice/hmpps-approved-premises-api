@@ -7,10 +7,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -245,14 +245,14 @@ class OffenderDetailsDataSourceTest {
     private fun <T> allClientResults(successBody: T): List<ClientResult<T>> = listOf(
       ClientResult.Failure.CachedValueUnavailable("some-cache-key"),
       ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
+        MarshallableHttpMethod.GET,
         "/",
         HttpStatus.NOT_FOUND,
         null,
         false,
       ),
       ClientResult.Failure.Other(
-        HttpMethod.POST,
+        MarshallableHttpMethod.POST,
         "/",
         RuntimeException("Some error"),
       ),

@@ -5,10 +5,10 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -45,7 +45,7 @@ class StaffMemberServiceTest {
   @Test
   fun `it returns Unauthorised when Delius returns Unauthorised`() {
     every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
+      MarshallableHttpMethod.GET,
       "/staff-members/code",
       HttpStatus.UNAUTHORIZED,
       body = null,
@@ -59,7 +59,7 @@ class StaffMemberServiceTest {
   @Test
   fun `it returns NotFound when Delius returns NotFound`() {
     every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
+      MarshallableHttpMethod.GET,
       "/staff-members/code",
       HttpStatus.NOT_FOUND,
       body = null,
