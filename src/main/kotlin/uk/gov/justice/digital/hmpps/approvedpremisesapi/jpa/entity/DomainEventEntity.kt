@@ -83,10 +83,12 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
   @Modifying
   @Query(
     """
-    UPDATE DomainEventEntity d set 
-    d.data = :updatedData
-    where d.id = :id
+    UPDATE domain_events 
+    SET
+        data = CAST(:updatedData as jsonb)
+    WHERE id = :id
     """,
+    nativeQuery = true,
   )
   fun updateData(id: UUID, updatedData: String)
 }
