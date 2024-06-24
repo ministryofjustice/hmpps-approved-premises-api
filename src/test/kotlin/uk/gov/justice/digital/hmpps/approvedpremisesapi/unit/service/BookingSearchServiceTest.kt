@@ -69,7 +69,7 @@ class BookingSearchServiceTest {
       crns.map { TestBookingSearchResult().withPersonCrn(it) },
     )
 
-    every { mockOffenderService.getOffenderSummariesByCrns(crns, any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(crns, any(), any()) } returns
       crns.map { PersonSummaryInfoResult.Success.Full(it, CaseSummaryFactory().produce()) }
 
     val (results, metaData) = bookingSearchService.findBookings(
@@ -112,7 +112,7 @@ class BookingSearchServiceTest {
           .withBookingCreatedAt(OffsetDateTime.now().minusDays(1)),
       ),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce()),
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().withName(NameFactory().withForename("Franz").withSurname("Kafka").produce()).produce()),
@@ -161,7 +161,7 @@ class BookingSearchServiceTest {
           .withBookingCreatedAt(OffsetDateTime.now().minusDays(1)),
       ),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
@@ -218,7 +218,7 @@ class BookingSearchServiceTest {
         TestBookingSearchResult().withPersonCrn("crn3"),
       ),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
@@ -271,7 +271,7 @@ class BookingSearchServiceTest {
         TestBookingSearchResult().withPersonCrn("crn3"),
       ),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
@@ -324,7 +324,7 @@ class BookingSearchServiceTest {
         TestBookingSearchResult().withPersonCrn("crn3"),
       ),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
@@ -377,7 +377,7 @@ class BookingSearchServiceTest {
         TestBookingSearchResult().withPersonCrn("crn3"),
       ),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
@@ -412,7 +412,7 @@ class BookingSearchServiceTest {
       }
       .produce()
     every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(emptyList())
-    every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any(), any()) } returns emptyList()
+    every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
       ServiceName.temporaryAccommodation,
@@ -442,7 +442,7 @@ class BookingSearchServiceTest {
       }
       .produce()
     every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(emptyList())
-    every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any(), any()) } returns emptyList()
+    every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
       ServiceName.temporaryAccommodation,

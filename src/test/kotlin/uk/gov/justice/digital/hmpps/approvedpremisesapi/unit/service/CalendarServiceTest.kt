@@ -71,7 +71,7 @@ class CalendarServiceTest {
     )
 
     every { calendarRepositoryMock.getCalendarInfo(premisesId, startDate, endDate) } returns repositoryResults
-    every { offenderServiceMock.getOffenderSummariesByCrns(emptySet(), user.deliusUsername, ignoreLaoRestrictions = false, forceApDeliusContextApi = false) } returns emptyList()
+    every { offenderServiceMock.getOffenderSummariesByCrns(emptySet(), user.deliusUsername, ignoreLaoRestrictions = false) } returns emptyList()
 
     val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
@@ -119,7 +119,7 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderSummariesByCrns(setOf(crn), user.deliusUsername, ignoreLaoRestrictions = false, forceApDeliusContextApi = false) } returns
+    every { offenderServiceMock.getOffenderSummariesByCrns(setOf(crn), user.deliusUsername, ignoreLaoRestrictions = false) } returns
       listOf(PersonSummaryInfoResult.NotFound(crn))
 
     every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.NotFound()
@@ -182,7 +182,7 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderSummariesByCrns(setOf(crn), user.deliusUsername, ignoreLaoRestrictions = false, forceApDeliusContextApi = false) } returns
+    every { offenderServiceMock.getOffenderSummariesByCrns(setOf(crn), user.deliusUsername, ignoreLaoRestrictions = false) } returns
       listOf(PersonSummaryInfoResult.Success.Restricted(crn, "noms"))
 
     val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
@@ -243,7 +243,7 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderSummariesByCrns(setOf(crn), user.deliusUsername, ignoreLaoRestrictions = false, forceApDeliusContextApi = false) } returns
+    every { offenderServiceMock.getOffenderSummariesByCrns(setOf(crn), user.deliusUsername, ignoreLaoRestrictions = false) } returns
       listOf(
         PersonSummaryInfoResult.Success.Full(
           crn,

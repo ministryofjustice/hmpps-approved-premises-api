@@ -330,15 +330,7 @@ class TasksController(
       crns.toSet(),
       user.deliusUsername,
       user.hasQualification(UserQualification.LAO),
-      false,
     )
-  }
-
-  private fun toTaskEntityType(type: String): TaskEntityType = when (toTaskType(type)) {
-    TaskType.assessment -> TaskEntityType.ASSESSMENT
-    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
-    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
-    TaskType.bookingAppeal -> throw BadRequestProblem()
   }
 
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
