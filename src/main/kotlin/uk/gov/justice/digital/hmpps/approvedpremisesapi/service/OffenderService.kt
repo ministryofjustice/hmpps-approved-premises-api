@@ -83,10 +83,7 @@ class OffenderService(
     crns: Set<String>,
     deliusUsername: String,
     ignoreLaoRestrictions: Boolean = false,
-    forceApDeliusContextApi: Boolean = false,
   ): List<PersonSummaryInfoResult> {
-    if (forceApDeliusContextApi) return getOffenderSummariesByCrns(crns.toList(), deliusUsername, ignoreLaoRestrictions)
-
     if (crns.isEmpty()) return emptyList()
 
     val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())

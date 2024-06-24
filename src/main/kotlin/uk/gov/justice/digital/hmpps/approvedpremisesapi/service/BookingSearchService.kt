@@ -72,7 +72,6 @@ class BookingSearchService(
       bookingSearchResultDtos.map { it.personCrn }.toSet(),
       user.deliusUsername,
       ignoreLaoRestrictions = false,
-      forceApDeliusContextApi = false,
     )
 
     return bookingSearchResultDtos

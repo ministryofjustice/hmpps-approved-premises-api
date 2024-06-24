@@ -330,7 +330,6 @@ class TasksController(
       crns.toSet(),
       user.deliusUsername,
       user.hasQualification(UserQualification.LAO),
-      false,
     )
   }
 
