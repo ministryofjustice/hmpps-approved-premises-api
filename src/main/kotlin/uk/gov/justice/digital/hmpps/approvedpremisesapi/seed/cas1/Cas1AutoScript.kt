@@ -30,21 +30,32 @@ class Cas1AutoScript(
 
   @SuppressWarnings("TooGenericExceptionCaught")
   @Transactional
-  fun script(
-    deliusUserName: String = "JIMSNOWLDAP",
-    crn: String = "X320741",
-  ) {
+  fun script() {
     seedLogger.info("Auto-Scripting for CAS1")
+
+    seedUsers()
+
+    createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
+    createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
+    createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
+  }
+
+  @SuppressWarnings("TooGenericExceptionCaught")
+  private fun createApplication(deliusUserName: String, crn: String) {
     try {
-      seedUsers()
-      autoCreateApplication(deliusUserName, crn)
+      createApplicationInternal(deliusUserName = deliusUserName, crn = crn)
     } catch (e: Exception) {
       seedLogger.error("Creating application with crn $crn failed", e)
     }
   }
 
   private fun seedUsers() {
-    usersToSeed().forEach { seedUser ->
+    usersToSeed().forEach { seedUser(it) }
+  }
+
+  @SuppressWarnings("TooGenericExceptionCaught")
+  private fun seedUser(seedUser: SeedUser) {
+    try {
       val user = userService
         .getExistingUserOrCreate(username = seedUser.username, throwExceptionOnStaffRecordNotFound = true)
         .user
@@ -56,6 +67,8 @@ class Cas1AutoScript(
         val roles = user.roles.map { it.role }.joinToString(", ")
         seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
       }
+    } catch (e: Exception) {
+      seedLogger.error("Seeding user with ${seedUser.username} failed", e)
     }
   }
 
@@ -84,16 +97,42 @@ class Cas1AutoScript(
         ),
         documentation = "For local use in development and testing",
       ),
+      SeedUser(
+        username = "LAOFULLACCESS",
+        roles = listOf(
+          UserRole.CAS1_ASSESSOR,
+          UserRole.CAS1_MATCHER,
+          UserRole.CAS1_MANAGER,
+          UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_ADMIN,
+          UserRole.CAS1_REPORT_VIEWER,
+          UserRole.CAS1_APPEALS_MANAGER,
+        ),
+        documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
+      ),
+      SeedUser(
+        username = "LAORESTRICTED",
+        roles = listOf(
+          UserRole.CAS1_ASSESSOR,
+          UserRole.CAS1_MATCHER,
+          UserRole.CAS1_MANAGER,
+          UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_ADMIN,
+          UserRole.CAS1_REPORT_VIEWER,
+          UserRole.CAS1_APPEALS_MANAGER,
+        ),
+        documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
+      ),
     )
   }
 
-  private fun autoCreateApplication(deliusUserName: String, crn: String) {
+  private fun createApplicationInternal(deliusUserName: String, crn: String) {
     if (applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
       seedLogger.info("Already have CAS1 application for $crn, not seeding new applications")
       return
     }
 
-    seedLogger.info("Auto creating a CAS1 application")
+    seedLogger.info("Auto creating a CAS1 application for $crn")
 
     val personInfo =
       when (
