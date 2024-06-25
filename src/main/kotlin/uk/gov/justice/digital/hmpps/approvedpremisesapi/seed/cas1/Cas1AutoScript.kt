@@ -53,14 +53,37 @@ class Cas1AutoScript(
         seedUser.roles.forEach { role ->
           userService.addRoleToUser(user = user, role = role)
         }
-        seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles ${user.roles}")
+        val roles = user.roles.map { it.role }.joinToString(", ")
+        seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
       }
     }
   }
 
   private fun usersToSeed(): List<SeedUser> {
     return listOf(
-      SeedUser(username = "SHEILAHANCOCKNPS", roles = listOf(UserRole.CAS1_CRU_MEMBER)),
+      SeedUser(
+        username = "SHEILAHANCOCKNPS",
+        roles = listOf(UserRole.CAS1_CRU_MEMBER),
+        documentation = "Used for local E2E, with name 'E2E CRU Member",
+      ),
+      SeedUser(
+        username = "APPROVEDPREMISESTESTUSER",
+        roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+        documentation = "Used for E2E testing in local environment",
+      ),
+      SeedUser(
+        username = "JIMSNOWLDAP",
+        roles = listOf(
+          UserRole.CAS1_ASSESSOR,
+          UserRole.CAS1_MATCHER,
+          UserRole.CAS1_MANAGER,
+          UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_ADMIN,
+          UserRole.CAS1_REPORT_VIEWER,
+          UserRole.CAS1_APPEALS_MANAGER,
+        ),
+        documentation = "For local use in development and testing",
+      ),
     )
   }
 
@@ -151,4 +174,5 @@ class Cas1AutoScript(
 data class SeedUser(
   val username: String,
   val roles: List<UserRole>,
+  val documentation: String,
 )
