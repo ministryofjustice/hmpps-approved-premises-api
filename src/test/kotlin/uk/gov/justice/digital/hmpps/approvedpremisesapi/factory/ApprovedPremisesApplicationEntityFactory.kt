@@ -22,6 +22,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplicationEntity> {
+  companion object {
+    val DEFAULT = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory.DEFAULT)
+      .produce()
+  }
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var createdByUser: Yielded<UserEntity>? = null

@@ -35,6 +35,12 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var withdrawalReason: Yielded<PlacementRequestWithdrawalReason?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
 
+  fun withDefaults() = apply {
+    this.placementRequirements = { PlacementRequirementsEntityFactory().withDefaults().produce() }
+    this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
+    this.assessment = { ApprovedPremisesAssessmentEntityFactory().withDefaults().produce() }
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
