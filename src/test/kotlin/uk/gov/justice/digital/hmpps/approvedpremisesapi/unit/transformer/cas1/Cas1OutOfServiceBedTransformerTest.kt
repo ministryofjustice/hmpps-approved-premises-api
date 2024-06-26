@@ -8,28 +8,40 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedRevisionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1OutOfServiceBedTransformerTest {
   private val cas1OutOfServiceBedReasonTransformer = mockk<Cas1OutOfServiceBedReasonTransformer>()
   private val cas1OutOfServiceBedCancellationTransformer = mockk<Cas1OutOfServiceBedCancellationTransformer>()
+  private val cas1OutOfServiceBedRevisionTransformer = mockk<Cas1OutOfServiceBedRevisionTransformer>()
   private val transformer = Cas1OutOfServiceBedTransformer(
     cas1OutOfServiceBedReasonTransformer,
     cas1OutOfServiceBedCancellationTransformer,
+    cas1OutOfServiceBedRevisionTransformer,
   )
 
   @CsvSource(
@@ -62,10 +74,15 @@ class Cas1OutOfServiceBedTransformerTest {
           )
         }
       }
-      .withStartDate(today.plusDays(startDateOffsetDays))
-      .withEndDate(today.plusDays(endDateOffsetDays))
-      .withNotes("Some notes")
       .produce()
+      .apply {
+        this.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+          .withOutOfServiceBed(this)
+          .withStartDate(today.plusDays(startDateOffsetDays))
+          .withEndDate(today.plusDays(endDateOffsetDays))
+          .withNotes("Some notes")
+          .produce()
+      }
 
     val reason = Cas1OutOfServiceBedReason(
       id = UUID.randomUUID(),
@@ -73,7 +90,31 @@ class Cas1OutOfServiceBedTransformerTest {
       isActive = true,
     )
 
+    val historyItem = Cas1OutOfServiceBedRevision(
+      id = UUID.randomUUID(),
+      updatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres().toInstant(),
+      updatedBy = ApprovedPremisesUser(
+        qualifications = listOf(),
+        roles = listOf(),
+        apArea = ApArea(
+          id = UUID.randomUUID(),
+          identifier = "APAREA",
+          name = "An AP Area",
+        ),
+        service = ServiceName.approvedPremises.value,
+        id = UUID.randomUUID(),
+        name = "Some User",
+        deliusUsername = "SOMEUSER",
+        region = ProbationRegion(
+          id = UUID.randomUUID(),
+          name = "A Probation Region",
+        ),
+      ),
+      revisionType = listOf(Cas1OutOfServiceBedRevisionType.created),
+    )
+
     every { cas1OutOfServiceBedReasonTransformer.transformJpaToApi(outOfServiceBed.reason) } returns reason
+    every { cas1OutOfServiceBedRevisionTransformer.transformJpaToApi(any()) } returns historyItem
 
     val result = transformer.transformJpaToApi(outOfServiceBed)
 
@@ -102,8 +143,6 @@ class Cas1OutOfServiceBedTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms correctly when cancelled`() {
-    val today = LocalDate.now()
-
     val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
       .withBed {
         withRoom {
@@ -114,8 +153,13 @@ class Cas1OutOfServiceBedTransformerTest {
           )
         }
       }
-      .withNotes("Some notes")
       .produce()
+      .apply {
+        this.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+          .withOutOfServiceBed(this)
+          .withNotes("Some notes")
+          .produce()
+      }
 
     val cancellationEntity = Cas1OutOfServiceBedCancellationEntityFactory()
       .withOutOfServiceBed(outOfServiceBed)
@@ -135,8 +179,32 @@ class Cas1OutOfServiceBedTransformerTest {
       notes = randomStringMultiCaseWithNumbers(20),
     )
 
+    val historyItem = Cas1OutOfServiceBedRevision(
+      id = UUID.randomUUID(),
+      updatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres().toInstant(),
+      updatedBy = ApprovedPremisesUser(
+        qualifications = listOf(),
+        roles = listOf(),
+        apArea = ApArea(
+          id = UUID.randomUUID(),
+          identifier = "APAREA",
+          name = "An AP Area",
+        ),
+        service = ServiceName.approvedPremises.value,
+        id = UUID.randomUUID(),
+        name = "Some User",
+        deliusUsername = "SOMEUSER",
+        region = ProbationRegion(
+          id = UUID.randomUUID(),
+          name = "A Probation Region",
+        ),
+      ),
+      revisionType = listOf(Cas1OutOfServiceBedRevisionType.created),
+    )
+
     every { cas1OutOfServiceBedReasonTransformer.transformJpaToApi(outOfServiceBed.reason) } returns reason
     every { cas1OutOfServiceBedCancellationTransformer.transformJpaToApi(cancellationEntity) } returns cancellation
+    every { cas1OutOfServiceBedRevisionTransformer.transformJpaToApi(any()) } returns historyItem
 
     val result = transformer.transformJpaToApi(outOfServiceBed)
 

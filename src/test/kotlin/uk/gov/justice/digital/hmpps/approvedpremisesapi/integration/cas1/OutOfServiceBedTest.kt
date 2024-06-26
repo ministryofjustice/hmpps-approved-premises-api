@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
+import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -8,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBedCancellation
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -101,7 +104,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
     fun `Get All Out-Of-Service Beds returns OK with correct body when user has the role WORKFLOW_MANAGER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -119,18 +122,30 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val cancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(3))
-          withEndDate(LocalDate.now().plusDays(5))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(3))
+            withEndDate(LocalDate.now().plusDays(5))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
@@ -160,7 +175,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds filters by premises ID correctly`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -193,19 +208,31 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         // otherPremisesOutOfServiceBed
         cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(3))
-          withEndDate(LocalDate.now().plusDays(5))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(otherBed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(3))
+            withEndDate(LocalDate.now().plusDays(5))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val expectedJson = objectMapper.writeValueAsString(
@@ -227,7 +254,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds filters by AP area ID correctly`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -260,19 +287,31 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         // otherPremisesOutOfServiceBed
         cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(3))
-          withEndDate(LocalDate.now().plusDays(5))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(otherBed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(3))
+            withEndDate(LocalDate.now().plusDays(5))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val expectedJson = objectMapper.writeValueAsString(
@@ -295,7 +334,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.OutOfServiceBedTest#temporalityArgs")
     @ParameterizedTest
     fun `Get All Out-Of-Service Beds filters by temporality correctly`(temporality: List<Temporality>) {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -313,26 +352,44 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val pastOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().minusDays(4))
-          withEndDate(LocalDate.now().minusDays(2))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().minusDays(4))
+            withEndDate(LocalDate.now().minusDays(2))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val currentOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().minusDays(1))
-          withEndDate(LocalDate.now().plusDays(1))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().minusDays(1))
+            withEndDate(LocalDate.now().plusDays(1))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val futureOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val expectedOutOfServiceBeds = mutableListOf<Cas1OutOfServiceBedEntity>()
@@ -382,7 +439,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @Suppress("detekt:CyclomaticComplexMethod")
     fun `Get All Out-Of-Service Beds sorts correctly`(sortField: Cas1OutOfServiceBedSortField, sortDirection: SortDirection) {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -415,14 +472,22 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val expectedOutOfServiceBeds = cas1OutOfServiceBedEntityFactory.produceAndPersistMultipleIndexed(4) {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(it.toLong()))
-          withEndDate(LocalDate.now().plusDays(it.toLong() * 2))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
 
           when {
             it % 2 == 0 -> withBed(bed)
             else -> withBed(otherBed)
           }
+        }.mapIndexed { index, entity ->
+          entity.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(entity)
+            withStartDate(LocalDate.now().plusDays(index.toLong()))
+            withEndDate(LocalDate.now().plusDays(index.toLong() * 2))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+
+          entity
         }
 
         val sortedOutOfServiceBeds = when (sortDirection) {
@@ -463,7 +528,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds paginates correctly`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -481,10 +546,18 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val outOfServiceBeds = cas1OutOfServiceBedEntityFactory.produceAndPersistMultipleIndexed(15) {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(it.toLong()))
-          withEndDate(LocalDate.now().plusDays(it.toLong() + 2))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.mapIndexed { index, entity ->
+          entity.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(entity)
+            withStartDate(LocalDate.now().plusDays(index.toLong()))
+            withEndDate(LocalDate.now().plusDays(index.toLong() + 2))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+
+          entity
         }
 
         val expectedOutOfServiceBeds = outOfServiceBeds.slice(5..9)
@@ -546,7 +619,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -564,17 +637,29 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val cancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
@@ -599,33 +684,41 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class GetOutOfServiceBed {
     @Test
     fun `Get Out-Of-Service Bed without JWT returns 401`() {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      `Given a User` { user, _ ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
         }
-      }
 
-      val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withStartDate(LocalDate.now().plusDays(2))
-        withEndDate(LocalDate.now().plusDays(4))
-        withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-        withBed(
-          bedEntityFactory.produceAndPersist {
-            withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
-                withYieldedPremises { premises }
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withBed(
+            bedEntityFactory.produceAndPersist {
+              withYieldedRoom {
+                roomEntityFactory.produceAndPersist {
+                  withYieldedPremises { premises }
+                }
               }
-            }
-          },
-        )
-      }
+            },
+          )
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+        }
 
-      webTestClient.get()
-        .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
+        webTestClient.get()
+          .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
     }
 
     @Test
@@ -663,7 +756,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -673,9 +766,6 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(
             bedEntityFactory.produceAndPersist {
               withYieldedRoom {
@@ -685,6 +775,15 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               }
             },
           )
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val expectedJson = objectMapper.writeValueAsString(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
@@ -774,7 +873,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Create Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -813,31 +912,47 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath(".outOfServiceTo").isEqualTo("2022-08-18")
-          .jsonPath(".bed.id").isEqualTo(bed.id.toString())
-          .jsonPath(".bed.name").isEqualTo(bed.name)
-          .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
-          .jsonPath(".room.name").isEqualTo(bed.room.name)
-          .jsonPath(".premises.id").isEqualTo(premises.id.toString())
-          .jsonPath(".premises.name").isEqualTo(premises.name)
-          .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
-          .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
-          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-          .jsonPath(".reason.name").isEqualTo(reason.name)
-          .jsonPath(".reason.isActive").isEqualTo(true)
-          .jsonPath(".daysLostCount").isEqualTo(2)
-          .jsonPath(".temporality").isEqualTo(Temporality.past.value)
-          .jsonPath(".referenceNumber").isEqualTo("REF-123")
-          .jsonPath(".notes").isEqualTo("notes")
-          .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo(bed.name)
+          .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
+          .jsonPath("$.room.name").isEqualTo(bed.room.name)
+          .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
+          .jsonPath("$.premises.name").isEqualTo(premises.name)
+          .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+          .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea.name)
+          .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.reason.name").isEqualTo(reason.name)
+          .jsonPath("$.reason.isActive").isEqualTo(true)
+          .jsonPath("$.daysLostCount").isEqualTo(2)
+          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.referenceNumber").isEqualTo("REF-123")
+          .jsonPath("$.notes").isEqualTo("notes")
+          .jsonPath("$.status").isEqualTo("active")
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(user.id.toString())
+          .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(user.name)
+          .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
+          .jsonPath("$.revisionHistory[0].revisionType").value(
+            containsInAnyOrder(
+              Cas1OutOfServiceBedRevisionType.created.value,
+            ),
+          )
+          .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(reason.name)
+          .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(true)
+          .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo("REF-123")
+          .jsonPath("$.revisionHistory[0].notes").isEqualTo("notes")
+          .jsonPath("$.revisionHistory[1]").doesNotExist()
       }
     }
 
     @Test
     fun `Create Out-Of-Service Bed succeeds even if overlapping with Booking`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -883,31 +998,47 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath(".outOfServiceTo").isEqualTo("2022-08-18")
-          .jsonPath(".bed.id").isEqualTo(bed.id.toString())
-          .jsonPath(".bed.name").isEqualTo(bed.name)
-          .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
-          .jsonPath(".room.name").isEqualTo(bed.room.name)
-          .jsonPath(".premises.id").isEqualTo(premises.id.toString())
-          .jsonPath(".premises.name").isEqualTo(premises.name)
-          .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
-          .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
-          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-          .jsonPath(".reason.name").isEqualTo(reason.name)
-          .jsonPath(".reason.isActive").isEqualTo(true)
-          .jsonPath(".daysLostCount").isEqualTo(2)
-          .jsonPath(".temporality").isEqualTo(Temporality.past.value)
-          .jsonPath(".referenceNumber").isEqualTo("REF-123")
-          .jsonPath(".notes").isEqualTo("notes")
-          .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo(bed.name)
+          .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
+          .jsonPath("$.room.name").isEqualTo(bed.room.name)
+          .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
+          .jsonPath("$.premises.name").isEqualTo(premises.name)
+          .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+          .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea.name)
+          .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.reason.name").isEqualTo(reason.name)
+          .jsonPath("$.reason.isActive").isEqualTo(true)
+          .jsonPath("$.daysLostCount").isEqualTo(2)
+          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.referenceNumber").isEqualTo("REF-123")
+          .jsonPath("$.notes").isEqualTo("notes")
+          .jsonPath("$.status").isEqualTo("active")
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(user.id.toString())
+          .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(user.name)
+          .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
+          .jsonPath("$.revisionHistory[0].revisionType").value(
+            containsInAnyOrder(
+              Cas1OutOfServiceBedRevisionType.created.value,
+            ),
+          )
+          .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(reason.name)
+          .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(true)
+          .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo("REF-123")
+          .jsonPath("$.revisionHistory[0].notes").isEqualTo("notes")
+          .jsonPath("$.revisionHistory[1]").doesNotExist()
       }
     }
 
     @Test
     fun `Create Out-Of-Service Beds for current day does not break GET all Premises endpoint`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -929,9 +1060,15 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               }
             },
           )
-          withStartDate(LocalDate.now().minusDays(2))
-          withEndDate(LocalDate.now().plusDays(2))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().minusDays(2))
+            withEndDate(LocalDate.now().plusDays(2))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         bookingEntityFactory.produceAndPersist {
@@ -953,7 +1090,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Bed returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -974,9 +1111,15 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val existingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
-            withStartDate(LocalDate.parse("2022-07-15"))
-            withEndDate(LocalDate.parse("2022-08-15"))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-07-15"))
+              withEndDate(LocalDate.parse("2022-08-15"))
+              withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+            }
           }
 
           webTestClient.post()
@@ -1005,7 +1148,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Bed returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1026,11 +1169,17 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val existingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
-            withStartDate(LocalDate.parse("2022-07-15"))
-            withEndDate(LocalDate.parse("2022-08-15"))
-            withReason(
-              cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
-            )
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-07-15"))
+              withEndDate(LocalDate.parse("2022-08-15"))
+              withReason(
+                cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
+              )
+            }
           }
 
           existingOutOfServiceBed.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
@@ -1055,25 +1204,41 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath(".outOfServiceTo").isEqualTo("2022-08-30")
-            .jsonPath(".bed.id").isEqualTo(bed.id.toString())
-            .jsonPath(".bed.name").isEqualTo(bed.name)
-            .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
-            .jsonPath(".room.name").isEqualTo(bed.room.name)
-            .jsonPath(".premises.id").isEqualTo(premises.id.toString())
-            .jsonPath(".premises.name").isEqualTo(premises.name)
-            .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
-            .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
-            .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-            .jsonPath(".reason.name").isEqualTo(reason.name)
-            .jsonPath(".reason.isActive").isEqualTo(true)
-            .jsonPath(".daysLostCount").isEqualTo(30)
-            .jsonPath(".temporality").isEqualTo(Temporality.past.value)
-            .jsonPath(".referenceNumber").isEqualTo("REF-123")
-            .jsonPath(".notes").isEqualTo("notes")
-            .jsonPath(".status").isEqualTo("active")
-            .jsonPath(".cancellation").isEqualTo(null)
+            .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+            .jsonPath("$.bed.name").isEqualTo(bed.name)
+            .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
+            .jsonPath("$.room.name").isEqualTo(bed.room.name)
+            .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.premises.name").isEqualTo(premises.name)
+            .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+            .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea.name)
+            .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.reason.name").isEqualTo(reason.name)
+            .jsonPath("$.reason.isActive").isEqualTo(true)
+            .jsonPath("$.daysLostCount").isEqualTo(30)
+            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.referenceNumber").isEqualTo("REF-123")
+            .jsonPath("$.notes").isEqualTo("notes")
+            .jsonPath("$.status").isEqualTo("active")
+            .jsonPath("$.cancellation").isEqualTo(null)
+            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(user.id.toString())
+            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(user.name)
+            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
+            .jsonPath("$.revisionHistory[0].revisionType").value(
+              containsInAnyOrder(
+                Cas1OutOfServiceBedRevisionType.created.value,
+              ),
+            )
+            .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(reason.name)
+            .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(true)
+            .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo("REF-123")
+            .jsonPath("$.revisionHistory[0].notes").isEqualTo("notes")
+            .jsonPath("$.revisionHistory[1]").doesNotExist()
         }
       }
     }
@@ -1083,50 +1248,58 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class UpdateOutOfServiceBed {
     @Test
     fun `Update Out-Of-Service Bed without JWT returns 401`() {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
-      }
-
-      val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withStartDate(LocalDate.now().plusDays(2))
-        withEndDate(LocalDate.now().plusDays(4))
-        withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-        withBed(
-          bedEntityFactory.produceAndPersist {
-            withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
-                withYieldedPremises { premises }
-              }
-            }
-          },
-        )
-      }
-
-      bedEntityFactory.produceAndPersist {
-        withYieldedRoom {
-          roomEntityFactory.produceAndPersist {
-            withYieldedPremises { premises }
+      `Given a User` { user, _ ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
           }
         }
-      }
 
-      webTestClient.put()
-        .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
-        .bodyValue(
-          UpdateCas1OutOfServiceBed(
-            startDate = LocalDate.parse("2022-08-15"),
-            endDate = LocalDate.parse("2022-08-18"),
-            reason = UUID.randomUUID(),
-            referenceNumber = "REF-123",
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withBed(
+            bedEntityFactory.produceAndPersist {
+              withYieldedRoom {
+                roomEntityFactory.produceAndPersist {
+                  withYieldedPremises { premises }
+                }
+              }
+            },
+          )
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+        }
+
+        bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        webTestClient.put()
+          .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
+          .bodyValue(
+            UpdateCas1OutOfServiceBed(
+              startDate = LocalDate.parse("2022-08-15"),
+              endDate = LocalDate.parse("2022-08-18"),
+              reason = UUID.randomUUID(),
+              referenceNumber = "REF-123",
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
     }
 
     @Test
@@ -1181,7 +1354,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Update Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1201,11 +1374,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
+        val originalDetails: Cas1OutOfServiceBedRevisionEntity
+
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          originalDetails = cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+
+          this.revisionHistory += originalDetails
         }
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
@@ -1226,31 +1409,66 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath(".outOfServiceTo").isEqualTo("2022-08-18")
-          .jsonPath(".bed.id").isEqualTo(bed.id.toString())
-          .jsonPath(".bed.name").isEqualTo(bed.name)
-          .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
-          .jsonPath(".room.name").isEqualTo(bed.room.name)
-          .jsonPath(".premises.id").isEqualTo(premises.id.toString())
-          .jsonPath(".premises.name").isEqualTo(premises.name)
-          .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
-          .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
-          .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-          .jsonPath(".reason.name").isEqualTo(reason.name)
-          .jsonPath(".reason.isActive").isEqualTo(true)
-          .jsonPath(".daysLostCount").isEqualTo(2)
-          .jsonPath(".temporality").isEqualTo(Temporality.past.value)
-          .jsonPath(".referenceNumber").isEqualTo("REF-123")
-          .jsonPath(".notes").isEqualTo("notes")
-          .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo(bed.name)
+          .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
+          .jsonPath("$.room.name").isEqualTo(bed.room.name)
+          .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
+          .jsonPath("$.premises.name").isEqualTo(premises.name)
+          .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+          .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea.name)
+          .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.reason.name").isEqualTo(reason.name)
+          .jsonPath("$.reason.isActive").isEqualTo(true)
+          .jsonPath("$.daysLostCount").isEqualTo(2)
+          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.referenceNumber").isEqualTo("REF-123")
+          .jsonPath("$.notes").isEqualTo("notes")
+          .jsonPath("$.status").isEqualTo("active")
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy.id.toString())
+          .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy.name)
+          .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy.deliusUsername)
+          .jsonPath("$.revisionHistory[0].revisionType").value(
+            containsInAnyOrder(
+              Cas1OutOfServiceBedRevisionType.created.value,
+            ),
+          )
+          .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo(originalDetails.startDate.toString())
+          .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo(originalDetails.endDate.toString())
+          .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
+          .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
+          .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
+          .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo(originalDetails.referenceNumber)
+          .jsonPath("$.revisionHistory[0].notes").isEqualTo(originalDetails.notes)
+          .jsonPath("$.revisionHistory[1].updatedBy.id").isEqualTo(user.id.toString())
+          .jsonPath("$.revisionHistory[1].updatedBy.name").isEqualTo(user.name)
+          .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
+          .jsonPath("$.revisionHistory[1].revisionType").value(
+            containsInAnyOrder(
+              Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
+              Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
+              Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
+              Cas1OutOfServiceBedRevisionType.updatedReason.value,
+              Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+            ),
+          )
+          .jsonPath("$.revisionHistory[1].outOfServiceFrom").isEqualTo("2022-08-17")
+          .jsonPath("$.revisionHistory[1].outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
+          .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
+          .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)
+          .jsonPath("$.revisionHistory[1].referenceNumber").isEqualTo("REF-123")
+          .jsonPath("$.revisionHistory[1].notes").isEqualTo("notes")
+          .jsonPath("$.revisionHistory[2]").doesNotExist()
       }
     }
 
     @Test
     fun `Update Out-Of-Service Beds returns 409 Conflict when a booking for the same bed overlaps`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1271,10 +1489,16 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withStartDate(LocalDate.parse("2022-08-16"))
-          withEndDate(LocalDate.parse("2022-08-30"))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.parse("2022-08-16"))
+            withEndDate(LocalDate.parse("2022-08-30"))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
@@ -1314,7 +1538,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1335,11 +1559,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             }
           }
 
+          val originalDetails: Cas1OutOfServiceBedRevisionEntity
+
           val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-            withStartDate(LocalDate.parse("2022-08-16"))
-            withEndDate(LocalDate.parse("2022-08-30"))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
             withBed(bed)
+          }.apply {
+            originalDetails = cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-08-16"))
+              withEndDate(LocalDate.parse("2022-08-30"))
+              withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+            }
+
+            this.revisionHistory += originalDetails
           }
 
           val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
@@ -1365,7 +1599,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .bodyValue(
               UpdateCas1OutOfServiceBed(
                 startDate = LocalDate.parse("2022-08-01"),
-                endDate = LocalDate.parse("2022-08-30"),
+                endDate = LocalDate.parse("2022-08-15"),
                 reason = reason.id,
                 referenceNumber = "REF-123",
                 notes = "notes",
@@ -1375,32 +1609,67 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath(".outOfServiceTo").isEqualTo("2022-08-30")
-            .jsonPath(".bed.id").isEqualTo(bed.id.toString())
-            .jsonPath(".bed.name").isEqualTo(bed.name)
-            .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
-            .jsonPath(".room.name").isEqualTo(bed.room.name)
-            .jsonPath(".premises.id").isEqualTo(premises.id.toString())
-            .jsonPath(".premises.name").isEqualTo(premises.name)
-            .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
-            .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
-            .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-            .jsonPath(".reason.name").isEqualTo(reason.name)
-            .jsonPath(".reason.isActive").isEqualTo(true)
-            .jsonPath(".daysLostCount").isEqualTo(30)
-            .jsonPath(".temporality").isEqualTo(Temporality.past.value)
-            .jsonPath(".referenceNumber").isEqualTo("REF-123")
-            .jsonPath(".notes").isEqualTo("notes")
-            .jsonPath(".status").isEqualTo("active")
-            .jsonPath(".cancellation").isEqualTo(null)
+            .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+            .jsonPath("$.bed.name").isEqualTo(bed.name)
+            .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
+            .jsonPath("$.room.name").isEqualTo(bed.room.name)
+            .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.premises.name").isEqualTo(premises.name)
+            .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+            .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea.name)
+            .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.reason.name").isEqualTo(reason.name)
+            .jsonPath("$.reason.isActive").isEqualTo(true)
+            .jsonPath("$.daysLostCount").isEqualTo(15)
+            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.referenceNumber").isEqualTo("REF-123")
+            .jsonPath("$.notes").isEqualTo("notes")
+            .jsonPath("$.status").isEqualTo("active")
+            .jsonPath("$.cancellation").isEqualTo(null)
+            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy.id.toString())
+            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy.name)
+            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy.deliusUsername)
+            .jsonPath("$.revisionHistory[0].revisionType").value(
+              containsInAnyOrder(
+                Cas1OutOfServiceBedRevisionType.created.value,
+              ),
+            )
+            .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo(originalDetails.startDate.toString())
+            .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo(originalDetails.endDate.toString())
+            .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
+            .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
+            .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
+            .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo(originalDetails.referenceNumber)
+            .jsonPath("$.revisionHistory[0].notes").isEqualTo(originalDetails.notes)
+            .jsonPath("$.revisionHistory[1].updatedBy.id").isEqualTo(user.id.toString())
+            .jsonPath("$.revisionHistory[1].updatedBy.name").isEqualTo(user.name)
+            .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
+            .jsonPath("$.revisionHistory[1].revisionType").value(
+              containsInAnyOrder(
+                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
+                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
+                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
+                Cas1OutOfServiceBedRevisionType.updatedReason.value,
+                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+              ),
+            )
+            .jsonPath("$.revisionHistory[1].outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath("$.revisionHistory[1].outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
+            .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)
+            .jsonPath("$.revisionHistory[1].referenceNumber").isEqualTo("REF-123")
+            .jsonPath("$.revisionHistory[1].notes").isEqualTo("notes")
+            .jsonPath("$.revisionHistory[2]").doesNotExist()
         }
       }
     }
 
     @Test
     fun `Update Out-Of-Service Beds returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1420,17 +1689,29 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
           val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-            withStartDate(LocalDate.parse("2022-08-16"))
-            withEndDate(LocalDate.parse("2022-08-30"))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
             withBed(bed)
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-08-16"))
+              withEndDate(LocalDate.parse("2022-08-30"))
+              withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+            }
           }
 
           val existingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
-            withStartDate(LocalDate.parse("2022-07-15"))
-            withEndDate(LocalDate.parse("2022-08-15"))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-07-15"))
+              withEndDate(LocalDate.parse("2022-08-15"))
+              withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+            }
           }
 
           webTestClient.put()
@@ -1458,7 +1739,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1477,20 +1758,36 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
+          val originalDetails: Cas1OutOfServiceBedRevisionEntity
+
           val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-            withStartDate(LocalDate.parse("2022-08-16"))
-            withEndDate(LocalDate.parse("2022-08-30"))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
             withBed(bed)
+          }.apply {
+            originalDetails = cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-08-16"))
+              withEndDate(LocalDate.parse("2022-08-30"))
+              withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+            }
+
+            this.revisionHistory += originalDetails
           }
 
           val existingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
-            withStartDate(LocalDate.parse("2022-07-15"))
-            withEndDate(LocalDate.parse("2022-08-15"))
-            withReason(
-              cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
-            )
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-07-15"))
+              withEndDate(LocalDate.parse("2022-08-15"))
+              withReason(
+                cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
+              )
+            }
           }
 
           existingOutOfServiceBed.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
@@ -1504,7 +1801,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .bodyValue(
               UpdateCas1OutOfServiceBed(
                 startDate = LocalDate.parse("2022-08-01"),
-                endDate = LocalDate.parse("2022-08-30"),
+                endDate = LocalDate.parse("2022-08-15"),
                 reason = reason.id,
                 referenceNumber = "REF-123",
                 notes = "notes",
@@ -1514,25 +1811,60 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath(".outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath(".outOfServiceTo").isEqualTo("2022-08-30")
-            .jsonPath(".bed.id").isEqualTo(bed.id.toString())
-            .jsonPath(".bed.name").isEqualTo(bed.name)
-            .jsonPath(".room.id").isEqualTo(bed.room.id.toString())
-            .jsonPath(".room.name").isEqualTo(bed.room.name)
-            .jsonPath(".premises.id").isEqualTo(premises.id.toString())
-            .jsonPath(".premises.name").isEqualTo(premises.name)
-            .jsonPath(".apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
-            .jsonPath(".apArea.name").isEqualTo(premises.probationRegion.apArea.name)
-            .jsonPath(".reason.id").isEqualTo(reason.id.toString())
-            .jsonPath(".reason.name").isEqualTo(reason.name)
-            .jsonPath(".reason.isActive").isEqualTo(true)
-            .jsonPath(".daysLostCount").isEqualTo(30)
-            .jsonPath(".temporality").isEqualTo(Temporality.past.value)
-            .jsonPath(".referenceNumber").isEqualTo("REF-123")
-            .jsonPath(".notes").isEqualTo("notes")
-            .jsonPath(".status").isEqualTo("active")
-            .jsonPath(".cancellation").isEqualTo(null)
+            .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+            .jsonPath("$.bed.name").isEqualTo(bed.name)
+            .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
+            .jsonPath("$.room.name").isEqualTo(bed.room.name)
+            .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.premises.name").isEqualTo(premises.name)
+            .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea.id.toString())
+            .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea.name)
+            .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.reason.name").isEqualTo(reason.name)
+            .jsonPath("$.reason.isActive").isEqualTo(true)
+            .jsonPath("$.daysLostCount").isEqualTo(15)
+            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.referenceNumber").isEqualTo("REF-123")
+            .jsonPath("$.notes").isEqualTo("notes")
+            .jsonPath("$.status").isEqualTo("active")
+            .jsonPath("$.cancellation").isEqualTo(null)
+            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy.id.toString())
+            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy.name)
+            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy.deliusUsername)
+            .jsonPath("$.revisionHistory[0].revisionType").value(
+              containsInAnyOrder(
+                Cas1OutOfServiceBedRevisionType.created.value,
+              ),
+            )
+            .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo(originalDetails.startDate.toString())
+            .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo(originalDetails.endDate.toString())
+            .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
+            .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
+            .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
+            .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo(originalDetails.referenceNumber)
+            .jsonPath("$.revisionHistory[0].notes").isEqualTo(originalDetails.notes)
+            .jsonPath("$.revisionHistory[1].updatedBy.id").isEqualTo(user.id.toString())
+            .jsonPath("$.revisionHistory[1].updatedBy.name").isEqualTo(user.name)
+            .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
+            .jsonPath("$.revisionHistory[1].revisionType").value(
+              containsInAnyOrder(
+                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
+                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
+                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
+                Cas1OutOfServiceBedRevisionType.updatedReason.value,
+                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+              ),
+            )
+            .jsonPath("$.revisionHistory[1].outOfServiceFrom").isEqualTo("2022-08-01")
+            .jsonPath("$.revisionHistory[1].outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
+            .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)
+            .jsonPath("$.revisionHistory[1].referenceNumber").isEqualTo("REF-123")
+            .jsonPath("$.revisionHistory[1].notes").isEqualTo("notes")
+            .jsonPath("$.revisionHistory[2]").doesNotExist()
         }
       }
     }
@@ -1542,38 +1874,46 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class CancelOutOfServiceBed {
     @Test
     fun `Cancel Out-Of-Service Bed without JWT returns 401`() {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      `Given a User` { user, _ ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
         }
-      }
 
-      val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withStartDate(LocalDate.now().plusDays(2))
-        withEndDate(LocalDate.now().plusDays(4))
-        withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-        withBed(
-          bedEntityFactory.produceAndPersist {
-            withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
-                withYieldedPremises { premises }
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withBed(
+            bedEntityFactory.produceAndPersist {
+              withYieldedRoom {
+                roomEntityFactory.produceAndPersist {
+                  withYieldedPremises { premises }
+                }
               }
-            }
-          },
-        )
-      }
+            },
+          )
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+        }
 
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}/cancellations")
-        .bodyValue(
-          NewCas1OutOfServiceBedCancellation(
-            notes = "Unauthorized",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
+        webTestClient.post()
+          .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}/cancellations")
+          .bodyValue(
+            NewCas1OutOfServiceBedCancellation(
+              notes = "Unauthorized",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
     }
 
     @Test
@@ -1620,7 +1960,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Cancel Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1633,9 +1973,6 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
           withBed(
             bedEntityFactory.produceAndPersist {
               withYieldedRoom {
@@ -1645,6 +1982,15 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               }
             },
           )
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
         }
 
         cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()

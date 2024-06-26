@@ -21,17 +21,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
+import java.util.Optional
 import java.util.UUID
 import java.util.stream.Stream
 
@@ -39,6 +45,8 @@ class Cas1OutOfServiceBedServiceTest {
   private val outOfServiceBedRepository = mockk<Cas1OutOfServiceBedRepository>()
   private val outOfServiceBedReasonRepository = mockk<Cas1OutOfServiceBedReasonRepository>()
   private val outOfServiceBedCancellationRepository = mockk<Cas1OutOfServiceBedCancellationRepository>()
+  private val outOfServiceBedDetailsRepository = mockk<Cas1OutOfServiceBedRevisionRepository>()
+  private val userService = mockk<UserService>()
 
   private val approvedPremisesFactory = ApprovedPremisesEntityFactory()
     .withDefaults()
@@ -47,6 +55,8 @@ class Cas1OutOfServiceBedServiceTest {
     outOfServiceBedRepository,
     outOfServiceBedReasonRepository,
     outOfServiceBedCancellationRepository,
+    outOfServiceBedDetailsRepository,
+    userService,
   )
 
   companion object {
@@ -146,9 +156,16 @@ class Cas1OutOfServiceBedServiceTest {
       val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
         .produce()
 
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
       every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
 
-      every { outOfServiceBedRepository.save(any()) } returnsArgument 0
+      every { outOfServiceBedRepository.saveAndFlush(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      every { userService.getUserForRequest() } returns user
 
       val result = outOfServiceBedService.createOutOfServiceBed(
         premises = premisesEntity,
@@ -223,10 +240,22 @@ class Cas1OutOfServiceBedServiceTest {
         }
         .produce()
 
+      outOfServiceBed.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+        .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
+        .withOutOfServiceBed(outOfServiceBed)
+        .produce()
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
       every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
       every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
 
       every { outOfServiceBedRepository.save(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      every { userService.getUserForRequest() } returns user
 
       val result = outOfServiceBedService.updateOutOfServiceBed(
         outOfServiceBedId = outOfServiceBed.id,
@@ -304,22 +333,22 @@ class Cas1OutOfServiceBedServiceTest {
   inner class GetOutOfServiceBeds {
     @CsvSource(
       // Ascending
-      "'premisesName','asc','premises.name'",
-      "'roomName','asc','bed.room.name'",
-      "'bedName','asc','bed.name'",
-      "'outOfServiceFrom','asc','startDate'",
-      "'outOfServiceTo','asc','endDate'",
-      "'reason','asc','reason.name'",
-      "'daysLost','asc','(oosb.endDate - oosb.startDate)'",
+      "'premisesName','asc','p.name'",
+      "'roomName','asc','r.name'",
+      "'bedName','asc','b.name'",
+      "'outOfServiceFrom','asc','d.start_date'",
+      "'outOfServiceTo','asc','d.end_date'",
+      "'reason','asc','oosr.name'",
+      "'daysLost','asc','(d.end_date - d.start_date)'",
 
       // Descending
-      "'premisesName','desc','premises.name'",
-      "'roomName','desc','bed.room.name'",
-      "'bedName','desc','bed.name'",
-      "'outOfServiceFrom','desc','startDate'",
-      "'outOfServiceTo','desc','endDate'",
-      "'reason','desc','reason.name'",
-      "'daysLost','desc','(oosb.endDate - oosb.startDate)'",
+      "'premisesName','desc','p.name'",
+      "'roomName','desc','r.name'",
+      "'bedName','desc','b.name'",
+      "'outOfServiceFrom','desc','d.start_date'",
+      "'outOfServiceTo','desc','d.end_date'",
+      "'reason','desc','oosr.name'",
+      "'daysLost','desc','(d.end_date - d.start_date)'",
     )
     @ParameterizedTest
     fun `Sorts correctly according to the sort field and direction`(
@@ -339,6 +368,8 @@ class Cas1OutOfServiceBedServiceTest {
           pageable = any(),
         )
       } returns Page.empty()
+
+      every { outOfServiceBedRepository.findAllById(any()) } returns emptyList()
 
       outOfServiceBedService.getOutOfServiceBeds(
         Temporality.entries.toSet(),
@@ -373,6 +404,8 @@ class Cas1OutOfServiceBedServiceTest {
         )
       } returns Page.empty()
 
+      every { outOfServiceBedRepository.findAllById(any()) } returns emptyList()
+
       outOfServiceBedService.getOutOfServiceBeds(
         temporality.toSet(),
         premisesId = null,
@@ -404,6 +437,8 @@ class Cas1OutOfServiceBedServiceTest {
           pageable = any(),
         )
       } returns Page.empty()
+
+      every { outOfServiceBedRepository.findAllById(any()) } returns emptyList()
 
       val expectedId = UUID.randomUUID()
 
@@ -438,6 +473,8 @@ class Cas1OutOfServiceBedServiceTest {
           pageable = any(),
         )
       } returns Page.empty()
+
+      every { outOfServiceBedRepository.findAllById(any()) } returns emptyList()
 
       val expectedId = UUID.randomUUID()
 
@@ -481,7 +518,7 @@ class Cas1OutOfServiceBedServiceTest {
   inner class GetOutOfServiceBedWithConflictingDates {
     @Test
     fun `Returns null when no overlapping out-of-service beds exist`() {
-      val expectedList = listOf<Cas1OutOfServiceBedEntity>()
+      val expectedList = listOf<String>()
       every { outOfServiceBedRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns expectedList
 
       val id = UUID.randomUUID()
@@ -507,39 +544,45 @@ class Cas1OutOfServiceBedServiceTest {
 
     @Test
     fun `Returns the first result when one or more out-of-service beds exist`() {
-      val expectedList = listOf(
-        Cas1OutOfServiceBedEntityFactory()
-          .withBed {
-            withRoom {
-              withPremises(
-                ApprovedPremisesEntityFactory()
-                  .withDefaults()
-                  .produce(),
-              )
-            }
-          }
-          .produce(),
-      )
-      every { outOfServiceBedRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns expectedList
-
-      val id = UUID.randomUUID()
+      val expectedId = UUID.randomUUID()
       val bedId = UUID.randomUUID()
+
+      val expectedOutOfServiceBed = Cas1OutOfServiceBedEntityFactory()
+        .withId(expectedId)
+        .withBed {
+          withId(bedId)
+          withRoom {
+            withPremises(
+              ApprovedPremisesEntityFactory()
+                .withDefaults()
+                .produce(),
+            )
+          }
+        }
+        .produce()
+
+      every { outOfServiceBedRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf(expectedId.toString())
+
+      every { outOfServiceBedRepository.findById(any()) } returns Optional.of(expectedOutOfServiceBed)
 
       val result = outOfServiceBedService.getOutOfServiceBedWithConflictingDates(
         LocalDate.parse("2024-01-01"),
         LocalDate.parse("2024-02-01"),
-        id,
+        expectedId,
         bedId,
       )
 
-      assertThat(result).isEqualTo(expectedList[0])
+      assertThat(result).isEqualTo(expectedOutOfServiceBed)
       verify(exactly = 1) {
         outOfServiceBedRepository.findByBedIdAndOverlappingDate(
           bedId,
           LocalDate.parse("2024-01-01"),
           LocalDate.parse("2024-02-01"),
-          id,
+          expectedId,
         )
+      }
+      verify(exactly = 1) {
+        outOfServiceBedRepository.findById(expectedId)
       }
     }
   }
