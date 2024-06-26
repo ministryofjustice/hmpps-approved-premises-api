@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
@@ -99,7 +100,8 @@ class DomainEventBuilderTest {
       data.cancelledAt == booking.cancellation?.date &&
         data.cancelledBy!!.staffCode == user.deliusStaffCode &&
         data.cancelledBy!!.username == user.deliusUsername &&
-        data.cancelledBy!!.probationRegionCode == user.probationRegion.deliusCode
+        data.cancelledBy!!.probationRegionCode == user.probationRegion.deliusCode &&
+        it.data.eventType == EventType.bookingCancelled
     }
   }
 
@@ -161,9 +163,10 @@ class DomainEventBuilderTest {
         data.cancellationReason == cancellationReasonName &&
         data.notes == cancellationNotes &&
         data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}"
-      data.cancelledAt == booking.cancellation?.date &&
-        data.cancelledBy == null
+        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
+        data.cancelledAt == booking.cancellation?.date &&
+        data.cancelledBy == null &&
+        it.data.eventType == EventType.bookingCancelled
     }
   }
 
@@ -218,7 +221,8 @@ class DomainEventBuilderTest {
         data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
         data.confirmedBy!!.staffCode == user.deliusStaffCode &&
         data.confirmedBy!!.username == user.deliusUsername &&
-        data.confirmedBy!!.probationRegionCode == user.probationRegion.deliusCode
+        data.confirmedBy!!.probationRegionCode == user.probationRegion.deliusCode &&
+        it.data.eventType == EventType.bookingConfirmed
     }
   }
 
@@ -273,7 +277,8 @@ class DomainEventBuilderTest {
         data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
         data.bookedBy?.staffCode == user.deliusStaffCode &&
         data.bookedBy?.username == user.deliusUsername &&
-        data.bookedBy?.probationRegionCode == user.probationRegion.deliusCode
+        data.bookedBy?.probationRegionCode == user.probationRegion.deliusCode &&
+        it.data.eventType == EventType.bookingProvisionallyMade
     }
   }
 
@@ -343,7 +348,8 @@ class DomainEventBuilderTest {
         data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
         data.recordedBy!!.staffCode == user.deliusStaffCode &&
         data.recordedBy!!.username == user.deliusUsername &&
-        data.recordedBy!!.probationRegionCode == user.probationRegion.deliusCode
+        data.recordedBy!!.probationRegionCode == user.probationRegion.deliusCode &&
+        it.data.eventType == EventType.personArrived
     }
   }
 
@@ -404,7 +410,8 @@ class DomainEventBuilderTest {
         data.expectedDepartureOn == expectedDepartureDate &&
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
-        data.recordedBy == null
+        data.recordedBy == null &&
+        it.data.eventType == EventType.personArrived
     }
   }
 
@@ -483,7 +490,8 @@ class DomainEventBuilderTest {
         data.reason == reasonName &&
         data.notes == notes &&
         data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
+        it.data.eventType == EventType.personDeparted
     }
     assertStaffDetails(event.data.eventDetails.recordedBy, user)
   }
@@ -556,7 +564,8 @@ class DomainEventBuilderTest {
         data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
         data.departedAt == departureDateTime.toInstant() &&
         data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
+        it.data.eventType == EventType.personDeparted
     }
     assertThat(event.data.eventDetails.recordedBy).isNull()
   }
@@ -590,7 +599,8 @@ class DomainEventBuilderTest {
         data.personReference.crn == application.crn &&
         data.personReference.noms == application.nomsNumber &&
         data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
+        it.data.eventType == EventType.referralSubmitted
     }
   }
 
@@ -655,7 +665,8 @@ class DomainEventBuilderTest {
         assertTemporaryAccommodationApplicationEventData(it, application) &&
         data.departedAt == departureDateTime.toInstant() &&
         data.reason == reasonName &&
-        data.notes == notes
+        data.notes == notes &&
+        it.data.eventType == EventType.personDepartureUpdated
     }
   }
 
@@ -717,8 +728,9 @@ class DomainEventBuilderTest {
         data.cancellationReason == cancellationReasonName &&
         data.notes == cancellationNotes &&
         data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}"
-      data.cancelledAt == booking.cancellation?.date
+        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
+        data.cancelledAt == booking.cancellation?.date &&
+        it.data.eventType == EventType.bookingCancelledUpdated
     }
   }
 
@@ -780,7 +792,8 @@ class DomainEventBuilderTest {
         assertCAS3PersonArrivedUpdatedEventPremisesEventData(it, premises) &&
         data.arrivedAt == arrivalDateTime &&
         data.expectedDepartureOn == expectedDepartureDate &&
-        data.notes == notes
+        data.notes == notes &&
+        it.data.eventType == EventType.personArrivedUpdated
     }
     assertStaffDetails(event.data.eventDetails.recordedBy, user)
   }
@@ -843,7 +856,8 @@ class DomainEventBuilderTest {
         assertCAS3PersonArrivedUpdatedEventPremisesEventData(it, premises) &&
         data.arrivedAt == arrivalDateTime &&
         data.expectedDepartureOn == expectedDepartureDate &&
-        data.notes == notes
+        data.notes == notes &&
+        it.data.eventType == EventType.personArrivedUpdated
     }
   }
 

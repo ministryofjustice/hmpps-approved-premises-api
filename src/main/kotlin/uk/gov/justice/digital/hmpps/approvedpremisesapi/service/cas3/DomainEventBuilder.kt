@@ -232,7 +232,7 @@ class DomainEventBuilder(
       data = CAS3PersonDepartureUpdatedEvent(
         id = domainEventId,
         timestamp = Instant.now(),
-        eventType = EventType.personDeparted,
+        eventType = EventType.personDepartureUpdated,
         eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
       ),
     )
