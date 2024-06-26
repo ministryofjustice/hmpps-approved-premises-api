@@ -16,6 +16,14 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessmentEntity> {
+
+  companion object {
+    val DEFAULT = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(ApprovedPremisesApplicationEntityFactory.DEFAULT)
+      .withAllocatedToUser(UserEntityFactory.DEFAULT)
+      .produce()
+  }
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
@@ -39,6 +47,10 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var createdFromAppeal: Yielded<Boolean> = { false }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
+
+  fun withDefaults() = apply {
+    this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
+  }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

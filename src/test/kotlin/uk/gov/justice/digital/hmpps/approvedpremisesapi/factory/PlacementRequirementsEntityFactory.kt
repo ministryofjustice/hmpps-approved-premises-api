@@ -13,6 +13,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> {
+
+  companion object {
+    val DEFAULT = PlacementRequirementsEntityFactory()
+      .withDefaults()
+      .produce()
+  }
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var gender: Yielded<Gender> = { Gender.male }
   private var apType: Yielded<ApType> = { ApType.normal }
@@ -23,6 +30,11 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
   private var essentialCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce()) }
   private var desirableCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce(), CharacteristicEntityFactory().produce()) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
+
+  fun withDefaults() = apply {
+    this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
+    this.assessment = { ApprovedPremisesAssessmentEntityFactory().withDefaults().produce() }
+  }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

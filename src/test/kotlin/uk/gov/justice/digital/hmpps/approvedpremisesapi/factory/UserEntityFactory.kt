@@ -16,6 +16,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class UserEntityFactory : Factory<UserEntity> {
+  companion object {
+    val DEFAULT = UserEntityFactory()
+      .withDefaults()
+      .produce()
+  }
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
   private var email: Yielded<String?> = { randomEmailAddress() }

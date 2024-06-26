@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat

@@ -10,11 +10,19 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEntity> {
+
+  companion object {
+    val DEFAULT = ApplicationTimelineNoteEntityFactory().withDefaults().produce()
+  }
+
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var createdBy: Yielded<UserEntity?>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var body: Yielded<String> = { randomStringUpperCase(12) }
+
+  fun withDefaults() = apply {
+  }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

@@ -44,6 +44,10 @@ abstract class SeedTestBase : IntegrationTestBase() {
     }
   }
 
+  protected fun generateCsvFile(fileName: String, contents: String) {
+    withCsv(fileName, contents)
+  }
+
   protected fun withCsv(csvName: String, contents: String) {
     if (!Files.isDirectory(Path(seedFilePrefix))) {
       Files.createDirectory(Path(seedFilePrefix))
