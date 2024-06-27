@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
@@ -31,15 +32,18 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
   fun findAllByCreatedByUser_Id(id: UUID): List<Cas2ApplicationEntity>
 
-  @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id")
-  @Lock(LockModeType.PESSIMISTIC_WRITE)
-  fun findByIdOrNullWithWriteLock(id: UUID): Cas2ApplicationEntity?
-
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
       "AND a.id NOT IN (SELECT application FROM Cas2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
+}
+
+@Repository
+interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicationEntity, UUID> {
+  @Query("SELECT a FROM Cas2LockableApplicationEntity a WHERE a.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): Cas2LockableApplicationEntity?
 }
 
 @Entity
@@ -91,3 +95,16 @@ data class Cas2ApplicationEntity(
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 }
+
+/**
+ * Provides a version of the Cas2ApplicationEntity with no relationships, allowing
+ * us to lock the applications table only without JPA/Hibernate attempting to
+ * lock all eagerly loaded relationships
+ */
+@Entity
+@Table(name = "cas_2_applications")
+@Immutable
+class Cas2LockableApplicationEntity(
+  @Id
+  val id: UUID,
+)
