@@ -185,7 +185,7 @@ pagination:
 user-allocations:
   rules:
     legacy-allocator:
-      enabled: true
+      enabled: false
       priority: 1
     esap-assessments:
       enabled: true
