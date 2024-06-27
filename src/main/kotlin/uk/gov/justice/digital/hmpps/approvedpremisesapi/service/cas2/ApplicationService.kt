@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -36,6 +37,7 @@ import javax.transaction.Transactional
 @Service("Cas2ApplicationService")
 class ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
+  private val lockableApplicationRepository: Cas2LockableApplicationRepository,
   private val applicationSummaryRepository: ApplicationSummaryRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
@@ -232,7 +234,11 @@ class ApplicationService(
     submitApplication: SubmitCas2Application,
     user: NomisUserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
-    var application = applicationRepository.findByIdOrNullWithWriteLock(submitApplication.applicationId)
+    val applicationId = submitApplication.applicationId
+
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
+
+    var application = applicationRepository.findByIdOrNull(applicationId)
       ?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 

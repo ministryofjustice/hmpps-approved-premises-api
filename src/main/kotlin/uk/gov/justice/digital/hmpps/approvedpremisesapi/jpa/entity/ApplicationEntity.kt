@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -154,10 +155,6 @@ AND (
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
 
-  @Query("SELECT a FROM ApplicationEntity a WHERE a.id = :id")
-  @Lock(LockModeType.PESSIMISTIC_WRITE)
-  fun findByIdOrNullWithWriteLock(id: UUID): ApplicationEntity?
-
   @Query(
     """
 SELECT
@@ -264,6 +261,13 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
     """,
   )
   fun updateEventNumber(applicationId: UUID, eventNumber: String, offenceId: String, convictionId: Long)
+}
+
+@Repository
+interface LockableApplicationRepository : JpaRepository<LockableApplicationEntity, UUID> {
+  @Query("SELECT a FROM LockableApplicationEntity a WHERE a.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): LockableApplicationEntity?
 }
 
 @Entity
@@ -493,6 +497,19 @@ class TemporaryAccommodationApplicationEntity(
 ) {
   override fun getRequiredQualifications(): List<UserQualification> = emptyList()
 }
+
+/**
+ * Provides a version of the ApplicationEntity with no relationships, allowing
+ * us to lock the applications table only without JPA/Hibernate attempting to
+ * lock all eagerly loaded relationships
+ */
+@Entity
+@Table(name = "applications")
+@Immutable
+class LockableApplicationEntity(
+  @Id
+  val id: UUID,
+)
 
 interface ApplicationSummary {
   fun getId(): UUID

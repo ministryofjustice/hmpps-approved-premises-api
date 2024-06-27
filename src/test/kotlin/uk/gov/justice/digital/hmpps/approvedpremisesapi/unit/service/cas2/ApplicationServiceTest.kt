@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -50,6 +52,7 @@ import java.util.UUID
 
 class ApplicationServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockLockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
   private val mockApplicationSummaryRepository = mockk<ApplicationSummaryRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
@@ -62,6 +65,7 @@ class ApplicationServiceTest {
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
     mockApplicationRepository,
+    mockLockableApplicationRepository,
     mockApplicationSummaryRepository,
     mockJsonSchemaService,
     mockOffenderService,
@@ -846,6 +850,7 @@ class ApplicationServiceTest {
 
     @BeforeEach
     fun setup() {
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
       every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
     }
@@ -854,7 +859,7 @@ class ApplicationServiceTest {
     fun `returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(applicationService.submitApplication(submitCas2Application, user) is AuthorisableActionResult.NotFound).isTrue
 
@@ -871,7 +876,7 @@ class ApplicationServiceTest {
         .withCreatedByUser(differentUser)
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application
 
@@ -892,7 +897,7 @@ class ApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
+        mockApplicationRepository.findByIdOrNull(applicationId)
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -924,7 +929,7 @@ class ApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
+        mockApplicationRepository.findByIdOrNull(applicationId)
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -953,7 +958,7 @@ class ApplicationServiceTest {
         .produce()
 
       every {
-        mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
+        mockApplicationRepository.findByIdOrNull(applicationId)
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -985,7 +990,7 @@ class ApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNullWithWriteLock(any())
+        mockApplicationRepository.findByIdOrNull(any())
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
         application
@@ -1033,7 +1038,7 @@ class ApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNullWithWriteLock(any())
+        mockApplicationRepository.findByIdOrNull(any())
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
         application
@@ -1097,7 +1102,7 @@ class ApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
+        mockApplicationRepository.findByIdOrNull(applicationId)
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application

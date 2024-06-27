@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
@@ -98,6 +99,7 @@ class ApplicationService(
   private val placementApplicationAutomaticRepository: PlacementApplicationAutomaticRepository,
   private val applicationListener: ApplicationListener,
   private val clock: Clock,
+  private val lockableApplicationRepository: LockableApplicationRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -696,7 +698,9 @@ class ApplicationService(
     username: String,
     apAreaId: UUID?,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    var application = applicationRepository.findByIdOrNullWithWriteLock(
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
+
+    var application = applicationRepository.findByIdOrNull(
       applicationId,
     )?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -842,8 +846,9 @@ class ApplicationService(
     applicationId: UUID,
     submitApplication: SubmitTemporaryAccommodationApplication,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
     var application =
-      applicationRepository.findByIdOrNullWithWriteLock(
+      applicationRepository.findByIdOrNull(
         applicationId,
       )?.let(jsonSchemaService::checkSchemaOutdated)
         ?: return AuthorisableActionResult.NotFound()
