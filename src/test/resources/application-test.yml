@@ -140,6 +140,7 @@ url-templates:
       match-request-withdrawn-event-detail: http://api/events/match-request-withdrawn/#eventId
       assessment-allocated-event-detail: http://api/events/assessment-allocated/#eventId
       request-for-placement-created-event-detail: http://api/events/request-for-placement-created/#eventId
+      request-for-placement-assessed-event-detail: http://api/events/request-for-placement-assessed/#eventId
       assessment-info-requested-detail: http://api/events/further-information-requested/#eventId
     cas2:
       application-submitted-event-detail: http://api/events/cas2/application-submitted/#eventId

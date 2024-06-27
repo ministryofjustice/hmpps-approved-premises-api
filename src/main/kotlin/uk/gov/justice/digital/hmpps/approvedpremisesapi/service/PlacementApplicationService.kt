@@ -398,6 +398,12 @@ class PlacementApplicationService(
       ApiPlacementApplicationDecision.withdrawnByPp -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
     }
 
+    cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
+      savedApplication,
+      user,
+      placementApplicationDecisionEnvelope,
+    )
+
     return CasResult.Success(savedApplication)
   }
 

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -154,6 +155,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == RequestForPlacementCreatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == RequestForPlacementAssessedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED ->
+        objectMapper.readValue(this.data, T::class.java)
       T::class == FurtherInformationRequestedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED ->
         objectMapper.readValue(this.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
@@ -265,6 +268,11 @@ enum class DomainEventType(val typeName: String, val typeDescription: String, va
     Cas1EventType.requestForPlacementCreated.value,
     "An Approved Premises Request for Placement has been created",
     TimelineEventType.approvedPremisesRequestForPlacementCreated,
+  ),
+  APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED(
+    Cas1EventType.requestForPlacementAssessed.value,
+    "An request for placement has been assessed",
+    TimelineEventType.approvedPremisesRequestForPlacementAssessed,
   ),
   CAS2_APPLICATION_SUBMITTED(
     Cas2EventType.applicationSubmitted.value,

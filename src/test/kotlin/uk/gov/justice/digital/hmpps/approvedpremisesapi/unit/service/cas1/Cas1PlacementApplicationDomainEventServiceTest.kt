@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -24,6 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -39,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiDecision
 
 class Cas1PlacementApplicationDomainEventServiceTest {
 
@@ -370,6 +374,100 @@ class Cas1PlacementApplicationDomainEventServiceTest {
           },
         )
       }
+    }
+  }
+
+  @Nested
+  inner class PlacementApplicationAssessed {
+
+    @Test
+    fun `it creates a domain event`() {
+      val placementApplication = getPlacementApplicationWithDecision(PlacementApplicationDecision.ACCEPTED)
+      val assessedByStaffMember = StaffMemberFactory().produce()
+      val decisionSummary = "Decision Summary: Accepted"
+      val decisionMade = ApiDecision.accepted
+
+      every { domainEventTransformer.toStaffMember(user) } returns assessedByStaffMember
+      every { domainEventService.saveRequestForPlacementAssessedEvent(any()) } returns Unit
+
+      service.placementApplicationAssessed(
+        placementApplication,
+        user,
+        PlacementApplicationDecisionEnvelope(
+          decisionMade,
+          "Summary of Changes",
+          decisionSummary,
+        ),
+      )
+
+      verify(exactly = 1) {
+        domainEventService.saveRequestForPlacementAssessedEvent(
+          withArg {
+            assertThat(it.id).isNotNull()
+            assertThat(it.applicationId).isEqualTo(application.id)
+            assertThat(it.crn).isEqualTo(CRN)
+            assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
+            assertThat(it.occurredAt).isWithinTheLastMinute()
+            assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, placementApplication.id.toString())
+
+            val eventDetails = it.data.eventDetails
+            assertThat(eventDetails.applicationId).isEqualTo(application.id)
+            assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+            assertThat(eventDetails.assessedBy).isEqualTo(assessedByStaffMember)
+            assertThat(eventDetails.decision.value).isEqualTo(decisionMade.value)
+            assertThat(eventDetails.decisionSummary).isEqualTo(decisionSummary)
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `PlacementApplicationDecision cannot be deprecated value`() {
+      val placementApplication = getPlacementApplicationWithDecision(PlacementApplicationDecision.WITHDRAW)
+      val assessedByStaffMember = StaffMemberFactory().produce()
+      every { domainEventTransformer.toStaffMember(user) } returns assessedByStaffMember
+
+      val exception = assertThrows<IllegalArgumentException> {
+        service.placementApplicationAssessed(
+          placementApplication,
+          user,
+          PlacementApplicationDecisionEnvelope(
+            ApiDecision.withdraw,
+            "Summary of Changes",
+            "decisionSummary",
+          ),
+        )
+      }
+      assertThat(exception.message).isEqualTo("PlacementApplicationDecision 'WITHDRAW' has been deprecated")
+    }
+
+    @Test
+    fun `PlacementApplicationDecision cannot be null`() {
+      val placementApplication = getPlacementApplicationWithDecision(null)
+      val assessedByStaffMember = StaffMemberFactory().produce()
+      every { domainEventTransformer.toStaffMember(user) } returns assessedByStaffMember
+
+      val exception = assertThrows<IllegalArgumentException> {
+        service.placementApplicationAssessed(
+          placementApplication,
+          user,
+          PlacementApplicationDecisionEnvelope(
+            ApiDecision.accepted,
+            "Summary of Changes",
+            "decisionSummary",
+          ),
+        )
+      }
+      assertThat(exception.message).isEqualTo("PlacementApplicationDecision was null")
+    }
+
+    private fun getPlacementApplicationWithDecision(decision: PlacementApplicationDecision?): PlacementApplicationEntity {
+      return PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(decision)
+        .withCreatedByUser(user)
+        .produce()
     }
   }
 }
