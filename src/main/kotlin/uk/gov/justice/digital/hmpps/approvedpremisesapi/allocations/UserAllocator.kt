@@ -26,20 +26,20 @@ class UserAllocator(
 
   fun getUserForAssessmentAllocation(assessmentEntity: AssessmentEntity): UserEntity? =
     getUserForAllocation(
-      evaluate = { it.evaluateAssessment(assessmentEntity) },
-      selectUser = { userRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(it) },
+      evaluate = { userAllocatorRule -> userAllocatorRule.evaluateAssessment(assessmentEntity) },
+      selectUser = { suitableUsers -> userRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(suitableUsers) },
     )
 
   fun getUserForPlacementRequestAllocation(placementRequestEntity: PlacementRequestEntity): UserEntity? =
     getUserForAllocation(
-      evaluate = { it.evaluatePlacementRequest(placementRequestEntity) },
-      selectUser = { userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(it) },
+      evaluate = { userAllocatorRule -> userAllocatorRule.evaluatePlacementRequest(placementRequestEntity) },
+      selectUser = { suitableUsers -> userRepository.findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(suitableUsers) },
     )
 
   fun getUserForPlacementApplicationAllocation(placementApplicationEntity: PlacementApplicationEntity): UserEntity? =
     getUserForAllocation(
-      evaluate = { it.evaluatePlacementApplication(placementApplicationEntity) },
-      selectUser = { userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(it) },
+      evaluate = { userAllocatorRule -> userAllocatorRule.evaluatePlacementApplication(placementApplicationEntity) },
+      selectUser = { suitableUsers -> userRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(suitableUsers) },
     )
 
   private fun getUserForAllocation(evaluate: (UserAllocatorRule) -> UserAllocatorRuleOutcome, selectUser: (List<UUID>) -> UserEntity?): UserEntity? {

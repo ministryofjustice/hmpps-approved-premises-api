@@ -47,14 +47,14 @@ class UserAllocatorTest {
     every { mockUserRepository.findActiveUsersWithQualification(UserQualification.EMERGENCY) } returns listOf(user1)
     every { mockUserRepository.findActiveUsersWithRole(UserRole.CAS1_ADMIN) } returns listOf(user2)
 
-    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(listOf(user1.id)) } returns user1
-    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(listOf(user2.id)) } returns user2
+    every { mockUserRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
+    every { mockUserRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
 
-    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(listOf(user1.id)) } returns user1
-    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(listOf(user2.id)) } returns user2
+    every { mockUserRepository.findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
+    every { mockUserRepository.findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
 
-    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(listOf(user1.id)) } returns user1
-    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(listOf(user2.id)) } returns user2
+    every { mockUserRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
+    every { mockUserRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
   }
 
   @Nested

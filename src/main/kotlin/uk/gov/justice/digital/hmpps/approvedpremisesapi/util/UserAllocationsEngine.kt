@@ -29,9 +29,9 @@ class UserAllocationsEngine(
     val userIds = this.getUserPool().map { it.id }
 
     return when (this.allocationType) {
-      AllocationType.Assessment -> userRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(userIds)
-      AllocationType.PlacementRequest -> userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(userIds)
-      AllocationType.PlacementApplication -> userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(userIds)
+      AllocationType.Assessment -> userRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(userIds)
+      AllocationType.PlacementRequest -> userRepository.findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(userIds)
+      AllocationType.PlacementApplication -> userRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(userIds)
     }
   }
   fun getUserPool(): MutableList<UserEntity> = userRepository.findAll(this.userPoolSpecification())

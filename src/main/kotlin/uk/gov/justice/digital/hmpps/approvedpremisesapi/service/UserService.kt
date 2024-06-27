@@ -143,11 +143,10 @@ class UserService(
     qualifications: List<UserQualification>,
     allocationType: AllocationType,
   ): List<UserEntity> {
-    val isLao = offenderService.isLao(crn)
     val userQualifications = mutableListOf<UserQualification>()
     userQualifications.addAll(qualifications)
 
-    if (isLao) {
+    if (offenderService.isLao(crn)) {
       userQualifications.add(UserQualification.LAO)
     }
 

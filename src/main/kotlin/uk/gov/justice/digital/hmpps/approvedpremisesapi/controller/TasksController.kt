@@ -136,26 +136,20 @@ class TasksController(
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
-    val type = toTaskType(taskType)
 
-    val transformedTask: Task
-
-    val crn: String
-    val requiredQualifications: List<UserQualification>
-    val allocationType: AllocationType
-
-    when (type) {
+    val taskInfo = when (toTaskType(taskType)) {
       TaskType.assessment -> {
         val assessment = extractEntityFromAuthorisableActionResult(
           assessmentService.getAssessmentForUser(user, id),
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
 
-        transformedTask = getAssessmentTask(assessment, offenderSummaries)
-
-        crn = assessment.application.crn
-        requiredQualifications = assessment.application.getRequiredQualifications()
-        allocationType = AllocationType.Assessment
+        TaskInfo(
+          transformedTask = getAssessmentTask(assessment, offenderSummaries),
+          crn = assessment.application.crn,
+          requiredQualifications = assessment.application.getRequiredQualifications(),
+          allocationType = AllocationType.Assessment,
+        )
       }
 
       TaskType.placementRequest -> {
@@ -164,11 +158,12 @@ class TasksController(
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementRequest.application.crn), user)
 
-        transformedTask = getPlacementRequestTask(placementRequest, offenderSummaries)
-
-        crn = placementRequest.application.crn
-        requiredQualifications = emptyList()
-        allocationType = AllocationType.PlacementRequest
+        TaskInfo(
+          transformedTask = getPlacementRequestTask(placementRequest, offenderSummaries),
+          crn = placementRequest.application.crn,
+          requiredQualifications = emptyList(),
+          allocationType = AllocationType.PlacementRequest,
+        )
       }
 
       TaskType.placementApplication -> {
@@ -177,11 +172,12 @@ class TasksController(
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
 
-        transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries)
-
-        crn = placementApplication.application.crn
-        requiredQualifications = placementApplication.application.getRequiredQualifications()
-        allocationType = AllocationType.PlacementApplication
+        TaskInfo(
+          transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries),
+          crn = placementApplication.application.crn,
+          requiredQualifications = placementApplication.application.getRequiredQualifications(),
+          allocationType = AllocationType.PlacementApplication,
+        )
       }
 
       else -> {
@@ -190,9 +186,9 @@ class TasksController(
     }
 
     val users = userService.getAllocatableUsersForAllocationType(
-      crn,
-      requiredQualifications,
-      allocationType,
+      taskInfo.crn,
+      taskInfo.requiredQualifications,
+      taskInfo.allocationType,
     )
 
     val workload = userService.getUserWorkloads(users.map { it.id })
@@ -202,11 +198,18 @@ class TasksController(
 
     return ResponseEntity.ok(
       TaskWrapper(
-        task = transformedTask,
+        task = taskInfo.transformedTask,
         users = transformedAllocatableUsers,
       ),
     )
   }
+
+  private data class TaskInfo(
+    val transformedTask: Task,
+    val crn: String,
+    val requiredQualifications: List<UserQualification>,
+    val allocationType: AllocationType,
+  )
 
   @Transactional
   override fun tasksTaskTypeIdAllocationsPost(
