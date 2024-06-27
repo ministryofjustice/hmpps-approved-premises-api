@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Boo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createTestBedUtilisationBedspaceReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
@@ -1114,12 +1116,11 @@ class ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2023-04-15"))
           }
 
-          val expectedDataFrame = BedUtilisationReportGenerator(
-            realBookingRepository,
-            realLostBedsRepository,
-            realWorkingDayService,
-          )
-            .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
+          val bedUtilisationBedspaceReportData = createTestBedUtilisationBedspaceReportData(bed)
+          val bedUtilisationReportData = BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf())
+
+          val expectedDataFrame = BedUtilisationReportGenerator(realWorkingDayService)
+            .createReport(listOf(bedUtilisationReportData), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
 
           webTestClient.get()
             .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -1178,12 +1179,11 @@ class ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2023-04-15"))
           }
 
-          val expectedDataFrame = BedUtilisationReportGenerator(
-            realBookingRepository,
-            realLostBedsRepository,
-            realWorkingDayService,
-          )
-            .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
+          val bedUtilisationBedspaceReportData = createTestBedUtilisationBedspaceReportData(bed)
+          val bedUtilisationReportData = BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf())
+
+          val expectedDataFrame = BedUtilisationReportGenerator(realWorkingDayService)
+            .createReport(listOf(bedUtilisationReportData), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
 
           webTestClient.get()
             .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")

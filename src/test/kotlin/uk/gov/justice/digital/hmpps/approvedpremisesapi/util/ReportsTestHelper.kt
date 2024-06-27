@@ -1,10 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBedspaceReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationLostBedReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -79,3 +84,87 @@ fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(): List<BookingsReport
 
 fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(configuration: (crn: String) -> PersonSummaryInfoResult): List<BookingsReportDataAndPersonInfo> =
   this.toBookingsReportData().map { BookingsReportDataAndPersonInfo(it, configuration(it.crn)) }
+
+fun createTestBedUtilisationBedspaceReportData(bed: BedEntity): TestBedUtilisationBedspaceReportData {
+  val room = bed.room
+  var probationDeliveryUnitName: String? = null
+  val premises = room.premises
+
+  if (room.premises is TemporaryAccommodationPremisesEntity) {
+    probationDeliveryUnitName = (room.premises as TemporaryAccommodationPremisesEntity).probationDeliveryUnit?.name
+  }
+
+  return TestBedUtilisationBedspaceReportData(
+    bedId = bed.id.toString(),
+    probationRegionName = premises.probationRegion.name,
+    probationDeliveryUnitName = probationDeliveryUnitName,
+    localAuthorityName = premises.localAuthorityArea?.name,
+    premisesName = premises.name,
+    addressLine1 = premises.addressLine1,
+    town = premises.town,
+    postCode = premises.postcode,
+    roomName = room.name,
+    bedspaceStartDate = bed.createdAt?.toLocalDate(),
+    bedspaceEndDate = bed.endDate,
+    premisesId = premises.id.toString(),
+    roomId = room.id.toString(),
+  )
+}
+
+fun createTestBedUtilisationBookingReportData(booking: BookingEntity): TestBedUtilisationBookingReportData {
+  return TestBedUtilisationBookingReportData(
+    arrivalDate = booking.arrivalDate,
+    departureDate = booking.departureDate,
+    bedId = booking.bed?.id.toString(),
+    cancellationId = booking.cancellation?.id?.toString(),
+    arrivalId = booking.arrival?.id?.toString(),
+    confirmationId = booking.confirmation?.id?.toString(),
+    turnaroundId = booking.turnaround?.id?.toString(),
+    workingDayCount = booking.turnaround?.workingDayCount,
+  )
+}
+
+fun createTestBedUtilisationLostBedReportData(lostBed: LostBedsEntity): TestBedUtilisationLostBedReportData {
+  return TestBedUtilisationLostBedReportData(
+    bedId = lostBed.bed.id.toString(),
+    startDate = lostBed.startDate,
+    endDate = lostBed.endDate,
+    cancellationId = lostBed.cancellation?.id?.toString(),
+  )
+}
+
+@Suppress("LongParameterList")
+class TestBedUtilisationBedspaceReportData(
+  override val bedId: String,
+  override val probationRegionName: String?,
+  override val probationDeliveryUnitName: String?,
+  override val localAuthorityName: String?,
+  override val premisesName: String,
+  override val addressLine1: String,
+  override val town: String?,
+  override val postCode: String,
+  override val roomName: String,
+  override val bedspaceStartDate: LocalDate?,
+  override val bedspaceEndDate: LocalDate?,
+  override val premisesId: String,
+  override val roomId: String,
+) : BedUtilisationBedspaceReportData
+
+@Suppress("LongParameterList")
+class TestBedUtilisationBookingReportData(
+  override val arrivalDate: LocalDate,
+  override val departureDate: LocalDate,
+  override val bedId: String,
+  override val cancellationId: String?,
+  override val arrivalId: String?,
+  override val confirmationId: String?,
+  override val turnaroundId: String?,
+  override val workingDayCount: Int?,
+) : BedUtilisationBookingReportData
+
+class TestBedUtilisationLostBedReportData(
+  override val bedId: String,
+  override val startDate: LocalDate,
+  override val endDate: LocalDate,
+  override val cancellationId: String?,
+) : BedUtilisationLostBedReportData
