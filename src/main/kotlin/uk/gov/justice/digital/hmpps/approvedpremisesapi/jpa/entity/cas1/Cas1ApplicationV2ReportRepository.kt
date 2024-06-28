@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ReportJdb
 import java.time.LocalDateTime
 
 @Repository
-class Cas1ApplicationReportRepository(
+class Cas1ApplicationV2ReportRepository(
   val reportJdbcTemplate: ReportJdbcTemplate,
 ) {
 

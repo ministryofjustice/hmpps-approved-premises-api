@@ -8,19 +8,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.DailyMetricReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import java.time.LocalDate
 
 class DailyMetricsReportGenerator(
   private val domainEvents: List<DomainEventEntity>,
   private val applications: List<ApprovedPremisesApplicationMetricsSummaryDto>,
   private val objectMapper: ObjectMapper,
-) : ReportGenerator<LocalDate, DailyMetricReportRow, DailyMetricReportProperties>(DailyMetricReportRow::class) {
-  override fun filter(properties: DailyMetricReportProperties): (LocalDate) -> Boolean = {
+) : ReportGenerator<LocalDate, DailyMetricReportRow, Cas1ReportService.MonthSpecificReportParams>(DailyMetricReportRow::class) {
+  override fun filter(properties: Cas1ReportService.MonthSpecificReportParams): (LocalDate) -> Boolean = {
     true
   }
 
-  override val convert: LocalDate.(properties: DailyMetricReportProperties) -> List<DailyMetricReportRow> = {
+  override val convert: LocalDate.(properties: Cas1ReportService.MonthSpecificReportParams) -> List<DailyMetricReportRow> = {
     val applicationsCreatedToday = applications.filter {
         application ->
       application.createdAt == this
