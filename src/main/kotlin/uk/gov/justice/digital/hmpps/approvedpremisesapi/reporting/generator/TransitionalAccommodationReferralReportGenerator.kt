@@ -55,6 +55,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
           referralSubmittedDate = referralData.referralSubmittedDate,
           referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
           rejectionReason = referralData.referralRejectionReason,
+          rejectionReasonExplained = referralData.referralRejectionReasonDetail,
           rejectionDate = if (AssessmentDecision.REJECTED.name == referralData.assessmentDecision) referralData.assessmentSubmittedDate else null,
           sourceOfReferral = referralData.referralEligibilityReason,
           prisonReleaseType = referralData.prisonReleaseTypes,

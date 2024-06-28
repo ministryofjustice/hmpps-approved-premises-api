@@ -783,6 +783,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withReferralRejectionReason(referralRejectionReason!!)
           }
 
+          if (referralRejectionReason?.id == UUID.fromString("85799bf8-8b64-4903-9ab8-b08a77f1a9d3")) {
+            assessment.referralRejectionReasonDetail = randomStringLowerCase(100)
+            temporaryAccommodationAssessmentRepository.save(assessment)
+          }
+
           assessment.schemaUpToDate = true
 
           val caseSummary = CaseSummaryFactory()
@@ -2346,6 +2351,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.referralRejected).isEqualTo(expectedReferralRejected)
     assertThat(actualReferralReportRow.rejectionDate).isEqualTo(rejectedDate?.toLocalDate())
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.referralRejectionReason?.name)
+    assertThat(actualReferralReportRow.rejectionReasonExplained).isEqualTo(expectedAssessment.referralRejectionReasonDetail)
     assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())
     assertThat(actualReferralReportRow.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
     assertThat(actualReferralReportRow.releaseDate).isEqualTo(application.personReleaseDate)
