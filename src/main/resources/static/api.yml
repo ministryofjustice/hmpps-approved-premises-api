@@ -3719,7 +3719,7 @@ paths:
         - name: X-Service-Name
           in: header
           required: false
-          description: If given, only premises for this service will be returned
+          description: Required for operations specific to each CAS
           schema:
             $ref: '_shared.yml#/components/schemas/ServiceName'
         - in: path
