@@ -41,10 +41,10 @@ class Cas3AssessmentService(
     }
 
     updateAssessment.releaseDate?.apply {
-      if (notValidateReleaseDate(this, assessment)) return notAfterValidationResult()
+      if (isNotValidateReleaseDate(this, assessment)) return notAfterValidationResult()
       assessment.releaseDate = this
     } ?: updateAssessment.accommodationRequiredFromDate?.apply {
-      if (notValidateAccommodationRequiredFromDate(this, assessment)) return notBeforeValidationResult()
+      if (isNotValidAccommodationRequiredFromDate(this, assessment)) return notBeforeValidationResult()
       assessment.accommodationRequiredFromDate = this
     }
 
@@ -56,7 +56,7 @@ class Cas3AssessmentService(
   private fun notBeforeValidationResult(): AuthorisableActionResult.Success<ValidatableActionResult<AssessmentEntity>> =
     AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Accommodation required from date cannot be before release date."))
 
-  private fun notValidateAccommodationRequiredFromDate(
+  private fun isNotValidAccommodationRequiredFromDate(
     accommodationRequiredFromDate: LocalDate,
     assessment: TemporaryAccommodationAssessmentEntity,
   ): Boolean {
@@ -69,7 +69,7 @@ class Cas3AssessmentService(
   private fun notAfterValidationResult(): AuthorisableActionResult.Success<ValidatableActionResult<AssessmentEntity>> =
     AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Release date cannot be after accommodation required from date."))
 
-  private fun notValidateReleaseDate(
+  private fun isNotValidateReleaseDate(
     releaseDate: LocalDate,
     assessment: TemporaryAccommodationAssessmentEntity,
   ): Boolean {
