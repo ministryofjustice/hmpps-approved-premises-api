@@ -69,7 +69,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     """,
     nativeQuery = true,
   )
-  fun findUserWithLeastPendingOrCompletedInLastWeekAssessments(userIds: List<UUID>): UserEntity?
+  fun findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(userIds: List<UUID>): UserEntity?
 
   @Query(
     """
@@ -99,7 +99,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     """,
     nativeQuery = true,
   )
-  fun findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(userIds: List<UUID>): UserEntity?
+  fun findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(userIds: List<UUID>): UserEntity?
 
   @Query(
     """
@@ -129,7 +129,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     """,
     nativeQuery = true,
   )
-  fun findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(userIds: List<UUID>): UserEntity?
+  fun findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(userIds: List<UUID>): UserEntity?
 
   @Query(
     """
