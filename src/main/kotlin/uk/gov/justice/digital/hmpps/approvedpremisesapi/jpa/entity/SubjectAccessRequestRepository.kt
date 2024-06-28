@@ -349,6 +349,47 @@ from
     return toJsonString(result)
   }
 
+  fun bedMoves(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+     select json_agg(bed_moves) as json
+     from (
+        select
+            b.crn ,
+            b.noms_number,
+            bm.notes,
+            previous_bed."name" as previous_bed_name,
+            previous_bed.code as previous_bed_code,
+            new_bed."name" as new_bed_name,
+            new_bed.code as new_bed_code,
+            bm.created_at
+        from
+            bed_moves bm
+        inner join bookings b on
+            b.id = bm.booking_id
+        inner join beds previous_bed on 
+          bm.previous_bed_id  = previous_bed.id 
+        inner join beds new_bed on 
+          bm.new_bed_id  = new_bed.id 
+                
+        where
+            b.service = :service_name and
+            (b.crn = :crn
+                or b.noms_number = :noms_number )
+          and (:start_date is null or b.created_at >= :start_date)
+          and (:end_date is null or b.created_at <= :end_date)
+      ) bed_moves
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ).addValue("service_name", serviceName.value),
+    )
+    return toJsonString(result)
+  }
+
   private fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value ?: "[]"
 
   private fun MapSqlParameterSource.addSarParameters(
