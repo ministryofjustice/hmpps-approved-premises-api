@@ -1366,6 +1366,68 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Creating a Booking from a Placement Request creates a domain event and sends booking made emails`() {
+      `Given a User` { user, jwt ->
+        `Given a User` { applicant, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given an Application`(createdByUser = applicant) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = applicant,
+                createdByUser = applicant,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                val premises = approvedPremisesEntityFactory.produceAndPersist {
+                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                  withYieldedProbationRegion {
+                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                  }
+                }
+
+                val room = roomEntityFactory.produceAndPersist {
+                  withPremises(premises)
+                }
+
+                val bed = bedEntityFactory.produceAndPersist {
+                  withRoom(room)
+                }
+
+                webTestClient.post()
+                  .uri("/placement-requests/${placementRequest.id}/booking")
+                  .header("Authorization", "Bearer $jwt")
+                  .bodyValue(
+                    NewPlacementRequestBooking(
+                      arrivalDate = LocalDate.parse("2023-03-29"),
+                      departureDate = LocalDate.parse("2023-04-01"),
+                      bedId = bed.id,
+                    ),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+
+                domainEventAsserter.assertDomainEventOfTypeStored(
+                  placementRequest.application.id,
+                  DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+                )
+
+                emailAsserter.assertEmailsRequestedCount(2)
+                emailAsserter.assertEmailRequested(
+                  applicant.email!!,
+                  notifyConfig.templates.bookingMade,
+                )
+                emailAsserter.assertEmailRequested(
+                  premises.emailAddress!!,
+                  notifyConfig.templates.bookingMadePremises,
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Creating a Booking from a Placement Request that is not allocated to the User returns a 403`() {
       `Given a User` { user, jwt ->
         `Given a User` { otherUser, _ ->
@@ -1437,16 +1499,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .exchange()
                   .expectStatus()
                   .isOk
-
-                emailAsserter.assertEmailsRequestedCount(2)
-                emailAsserter.assertEmailRequested(
-                  applicant.email!!,
-                  notifyConfig.templates.bookingMade,
-                )
-                emailAsserter.assertEmailRequested(
-                  premises.emailAddress!!,
-                  notifyConfig.templates.bookingMadePremises,
-                )
               }
             }
           }
