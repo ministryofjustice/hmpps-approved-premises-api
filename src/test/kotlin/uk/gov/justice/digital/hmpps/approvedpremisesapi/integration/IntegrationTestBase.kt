@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -257,6 +258,8 @@ import java.util.UUID
 @ActiveProfiles("test")
 @Tag("integration")
 abstract class IntegrationTestBase {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
   lateinit var webTestClient: WebTestClient
@@ -591,6 +594,8 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun beforeEach(info: TestInfo) {
+    log.info("Running test '${info.displayName}'")
+
     if (!info.tags.contains("isPerClass")) {
       this.setupTests()
     }
