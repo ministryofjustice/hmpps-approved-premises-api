@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -65,6 +66,7 @@ class DomainEventService(
   fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
   fun getAssessmentAllocatedEvent(id: UUID) = get<AssessmentAllocatedEnvelope>(id)
   fun getRequestForPlacementCreatedEvent(id: UUID) = get<RequestForPlacementCreatedEnvelope>(id)
+  fun getRequestForPlacementAssessedEvent(id: UUID) = get<RequestForPlacementAssessedEnvelope>(id)
   fun getFurtherInformationRequestMadeEvent(id: UUID) = get<FurtherInformationRequestedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
@@ -181,6 +183,13 @@ class DomainEventService(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
       emit = emit,
+    )
+
+  @Transactional
+  fun saveRequestForPlacementAssessedEvent(domainEvent: DomainEvent<RequestForPlacementAssessedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
     )
 
   @Transactional

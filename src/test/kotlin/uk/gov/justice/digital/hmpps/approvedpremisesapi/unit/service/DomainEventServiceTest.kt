@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -54,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -170,6 +172,7 @@ class DomainEventServiceTest {
         DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent,
         DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent,
         DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED to domainEventService::getRequestForPlacementCreatedEvent,
+        DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED to domainEventService::getRequestForPlacementAssessedEvent,
         DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED to domainEventService::getFurtherInformationRequestMadeEvent,
       )[type]!!
     }
@@ -769,6 +772,32 @@ class DomainEventServiceTest {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
+        )
+      }
+    }
+
+    @Test
+    fun `savePlacementApplicationDecisionEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
+
+      val eventDetails = RequestForPlacementAssessedFactory().produce()
+      val domainEventEnvelope = mockk<RequestForPlacementAssessedEnvelope>()
+      val domainEvent = mockk<DomainEvent<RequestForPlacementAssessedEnvelope>>()
+
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
+
+      val domainEventServiceSpy = spyk(domainEventService)
+
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
+
+      domainEventServiceSpy.saveRequestForPlacementAssessedEvent(domainEvent)
+
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
         )
       }
     }

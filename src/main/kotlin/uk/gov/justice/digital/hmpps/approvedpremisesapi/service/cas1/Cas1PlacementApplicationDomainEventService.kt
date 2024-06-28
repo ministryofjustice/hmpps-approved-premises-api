@@ -9,12 +9,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -177,6 +181,55 @@ class Cas1PlacementApplicationDomainEventService(
           timestamp = eventOccurredAt,
           eventType = EventType.placementApplicationAllocated,
           eventDetails = placementApplicationAllocated,
+        ),
+      ),
+    )
+  }
+
+  fun placementApplicationAssessed(
+    placementApplication: PlacementApplicationEntity,
+    assessedByUser: UserEntity,
+    placementApplicationDecision: PlacementApplicationDecisionEnvelope,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+    val application = placementApplication.application
+
+    val assessor = assessedByUser.let { domainEventTransformer.toStaffMember(it) }
+
+    val assessmentDecision = when (placementApplication.decision) {
+      PlacementApplicationDecision.ACCEPTED -> RequestForPlacementAssessed.Decision.accepted
+      PlacementApplicationDecision.REJECTED -> RequestForPlacementAssessed.Decision.rejected
+      PlacementApplicationDecision.WITHDRAW,
+      PlacementApplicationDecision.WITHDRAWN_BY_PP,
+      -> throw IllegalArgumentException("PlacementApplicationDecision '${placementApplication.decision}' has been deprecated")
+      null -> throw IllegalArgumentException("PlacementApplicationDecision was null")
+    }
+
+    val requestPlacementApplicationAssessed = RequestForPlacementAssessed(
+      applicationId = application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+      placementApplicationId = placementApplication.id,
+      assessedBy = assessor,
+      decision = assessmentDecision,
+      decisionSummary = placementApplicationDecision.decisionSummary,
+    )
+
+    domainEventService.saveRequestForPlacementAssessedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = application.nomsNumber,
+        occurredAt = eventOccurredAt,
+        data = RequestForPlacementAssessedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.requestForPlacementAssessed,
+          eventDetails = requestPlacementApplicationAssessed,
+        ),
+        metadata = mapOf(
+          MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to placementApplication.id.toString(),
         ),
       ),
     )

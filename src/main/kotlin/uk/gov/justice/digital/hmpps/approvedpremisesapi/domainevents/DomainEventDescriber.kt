@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -43,6 +44,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> buildRequestForPlacementCreatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> buildRequestForPlacementAssessedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
@@ -195,6 +197,21 @@ class DomainEventDescriber(
       }
 
       "$description. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration)}"
+    }
+  }
+
+  private fun buildRequestForPlacementAssessedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getRequestForPlacementAssessedEvent(domainEventSummary.id())
+
+    return event.describe { data ->
+      val details = data.eventDetails
+
+      val description = when (details.decision) {
+        RequestForPlacementAssessed.Decision.accepted -> "A request for placement assessment was accepted."
+        RequestForPlacementAssessed.Decision.rejected -> "A request for placement assessment was rejected."
+      }
+      val summary = details.decisionSummary?.let { " The reason was: $it" } ?: ""
+      "$description$summary"
     }
   }
 

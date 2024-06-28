@@ -334,6 +334,12 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(createdByUser)
         .produce()
 
+      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
+        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted,
+        summaryOfChanges = "summaryOfChanges",
+        decisionSummary = "decisionSummary accepted",
+      )
+
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every {
         placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
@@ -341,14 +347,11 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
 
       val result = placementApplicationService.recordDecision(
         placementApplication.id,
-        PlacementApplicationDecisionEnvelope(
-          decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted,
-          summaryOfChanges = "summaryOfChanges",
-          decisionSummary = "decisionSummary",
-        ),
+        placementApplicationDecisionEnvelope,
       )
 
       assertThat(result is CasResult.Success).isTrue
@@ -357,8 +360,15 @@ class PlacementApplicationServiceTest {
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
 
-      verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary") }
+      verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
+      verify {
+        cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
+          match { it.id == placementApplication.id },
+          user,
+          placementApplicationDecisionEnvelope,
+        )
+      }
     }
 
     @ParameterizedTest
@@ -379,17 +389,20 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(createdByUser)
         .produce()
 
+      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
+        decision = decision,
+        summaryOfChanges = "summaryOfChanges",
+        decisionSummary = "decisionSummary rejected",
+      )
+
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationEmailService.placementApplicationRejected(any()) } returns Unit
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
 
       val result = placementApplicationService.recordDecision(
         placementApplication.id,
-        PlacementApplicationDecisionEnvelope(
-          decision = decision,
-          summaryOfChanges = "summaryOfChanges",
-          decisionSummary = "decisionSummary",
-        ),
+        placementApplicationDecisionEnvelope,
       )
 
       assertThat(result is CasResult.Success).isTrue
@@ -407,6 +420,13 @@ class PlacementApplicationServiceTest {
 
       verify { placementRequestService wasNot Called }
       verify { cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplication) }
+      verify {
+        cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
+          match { it.id == placementApplication.id },
+          user,
+          placementApplicationDecisionEnvelope,
+        )
+      }
     }
   }
 

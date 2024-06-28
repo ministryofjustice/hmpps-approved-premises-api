@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -62,6 +63,8 @@ class DomainEventsController(
 
   override fun eventsRequestForPlacementCreatedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementCreatedEnvelope>(eventId)
 
+  override fun eventsRequestForPlacementAssessedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementAssessedEnvelope>(eventId)
+
   @Suppress("UNCHECKED_CAST") // Safe as the return type is constant and not likely to change at runtime
   private inline fun <reified T> getDomainEvent(eventId: UUID): ResponseEntity<T> {
     val serviceMethod = when (T::class) {
@@ -82,6 +85,7 @@ class DomainEventsController(
       PersonNotArrivedEnvelope::class -> domainEventService::getPersonNotArrivedEvent
       FurtherInformationRequestedEnvelope::class -> domainEventService::getFurtherInformationRequestMadeEvent
       RequestForPlacementCreatedEnvelope::class -> domainEventService::getRequestForPlacementCreatedEvent
+      RequestForPlacementAssessedEnvelope::class -> domainEventService::getRequestForPlacementAssessedEvent
       else -> throw RuntimeException("Only CAS1 events are supported")
     }
 

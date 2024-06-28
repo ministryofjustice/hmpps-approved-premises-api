@@ -490,6 +490,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/request-for-placement-assessed/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Manage' events"
+      summary: A 'request-for-placement-assessed' event
+      responses:
+        '200':
+          description: The 'request-for-placement-assessed' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestForPlacementAssessedEnvelope'
+        404:
+          description: No 'request-for-placement-assessed' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -1713,6 +1740,49 @@ components:
         - rotl
         - releaseFollowingDecisions
         - additionalPlacement
+    RequestForPlacementAssessedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        eventDetails:
+          $ref: '#/components/schemas/RequestForPlacementAssessed'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    RequestForPlacementAssessed:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        placementApplicationId:
+          $ref: '#/components/schemas/PlacementApplicationId'
+        assessedBy:
+          $ref: '#/components/schemas/StaffMember'
+        decision:
+          type: string
+          enum:
+            - accepted
+            - rejected
+        decisionSummary:
+          type: string
+          example: the decision was to accept
+      required:
+        - applicationId
+        - applicationUrl
+        - placementApplicationId
+        - assessedBy
+        - decision
     AppealDecision:
       type: string
       enum:
@@ -1844,6 +1914,7 @@ components:
           - approved-premises.placement-application.allocated
           - approved-premises.match-request.withdrawn
           - approved-premises.request-for-placement.created
+          - approved-premises.request-for-placement.assessed
       x-enum-varnames:
         - applicationSubmitted
         - applicationAssessed
@@ -1862,3 +1933,4 @@ components:
         - placementApplicationAllocated
         - matchRequestWithdrawn
         - requestForPlacementCreated
+        - requestForPlacementAssessed
