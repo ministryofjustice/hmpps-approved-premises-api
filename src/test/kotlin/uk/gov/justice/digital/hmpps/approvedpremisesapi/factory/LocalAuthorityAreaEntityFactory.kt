@@ -11,6 +11,10 @@ class LocalAuthorityAreaEntityFactory : Factory<LocalAuthorityAreaEntity> {
   private var identifier: Yielded<String> = { randomStringUpperCase(5) }
   private var name: Yielded<String> = { randomStringUpperCase(5) }
 
+  fun withName(name: String) = apply {
+    this.name = { name }
+  }
+
   override fun produce(): LocalAuthorityAreaEntity = LocalAuthorityAreaEntity(
     id = this.id(),
     identifier = this.identifier(),

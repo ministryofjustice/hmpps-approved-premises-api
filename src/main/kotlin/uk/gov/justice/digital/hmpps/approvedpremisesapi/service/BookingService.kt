@@ -10,10 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MoveOnCategory
@@ -88,6 +84,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -143,6 +140,7 @@ class BookingService(
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
   private val bookingListener: BookingListener,
+  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -302,18 +300,12 @@ class BookingService(
 
       val application = placementRequest.application
 
-      saveBookingMadeDomainEvent(
-        applicationId = application.id,
-        eventNumber = application.eventNumber,
+      cas1BookingDomainEventService.bookingMade(
+        application = application,
         booking = booking,
         user = user,
         bookingCreatedAt = bookingCreatedAt,
-        applicationSubmittedOn = application.submittedAt,
-        releaseType = application.releaseType,
-        sentenceType = application.sentenceType,
-        situation = application.situation,
       )
-
       cas1BookingEmailService.bookingMade(placementRequest.application, booking)
 
       return@validated success(booking)
@@ -456,7 +448,14 @@ class BookingService(
       val booking = bookingRepository.save(bookingPrePersist)
 
       if (!isCalledFromSeeder) {
-        createApprovedPremisesAdHocBookingDomainEvent(onlineApplication, offlineApplication, eventNumber, booking, user!!, bookingCreatedAt)
+        cas1BookingDomainEventService.adhocBookingMade(
+          onlineApplication,
+          offlineApplication,
+          eventNumber,
+          booking,
+          user!!,
+          bookingCreatedAt,
+        )
 
         if (onlineApplication != null) {
           cas1BookingEmailService.bookingMade(onlineApplication, booking)
@@ -467,34 +466,6 @@ class BookingService(
     }
 
     return AuthorisableActionResult.Success(validationResult)
-  }
-
-  private fun createApprovedPremisesAdHocBookingDomainEvent(
-    onlineApplication: ApprovedPremisesApplicationEntity?,
-    offlineApplication: OfflineApplicationEntity?,
-    eventNumber: String?,
-    booking: BookingEntity,
-    user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
-  ) {
-    val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
-    val eventNumberForDomainEvent =
-      (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
-
-    log.info("Using application ID: $applicationId")
-    log.info("Using Event Number: $eventNumberForDomainEvent")
-
-    saveBookingMadeDomainEvent(
-      applicationId = applicationId!!,
-      eventNumber = eventNumberForDomainEvent!!,
-      booking = booking,
-      user = user,
-      bookingCreatedAt = bookingCreatedAt,
-      applicationSubmittedOn = onlineApplication?.submittedAt,
-      releaseType = onlineApplication?.releaseType,
-      sentenceType = onlineApplication?.sentenceType,
-      situation = onlineApplication?.situation,
-    )
   }
 
   private fun fetchApplication(
@@ -533,80 +504,6 @@ class BookingService(
       log.info("Returning offline application with id ${newestOfflineApplication!!.id}")
       Either.Right(newestOfflineApplication)
     }
-  }
-
-  private fun saveBookingMadeDomainEvent(
-    applicationId: UUID,
-    eventNumber: String,
-    booking: BookingEntity,
-    user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
-    applicationSubmittedOn: OffsetDateTime?,
-    sentenceType: String?,
-    releaseType: String?,
-    situation: String?,
-  ) {
-    val domainEventId = UUID.randomUUID()
-
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
-
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
-    val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-    domainEventService.saveBookingMadeDomainEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = applicationId,
-        crn = booking.crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-        occurredAt = bookingCreatedAt.toInstant(),
-        bookingId = booking.id,
-        data = BookingMadeEnvelope(
-          id = domainEventId,
-          timestamp = bookingCreatedAt.toInstant(),
-          eventType = EventType.bookingMade,
-          eventDetails = BookingMade(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-            bookingId = booking.id,
-            personReference = PersonReference(
-              crn = booking.crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            createdAt = bookingCreatedAt.toInstant(),
-            bookedBy = BookingMadeBookedBy(
-              staffMember = staffDetails.toStaffMember(),
-              cru = Cru(
-                name = user.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            arrivalOn = booking.arrivalDate,
-            departureOn = booking.departureDate,
-            applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
-            releaseType = releaseType,
-            sentenceType = sentenceType,
-            situation = situation,
-          ),
-        ),
-      ),
-    )
   }
 
   private fun saveBookingChangedDomainEvent(
