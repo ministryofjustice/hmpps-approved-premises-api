@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
@@ -27,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests.SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -85,7 +88,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "AssessmentClarificationNotes": [ ],
           "Bookings": [ ],
           "BookingExtensions": [ ],
-          "Cancellations": [ ]
+          "Cancellations": [ ],
+          "BedMoves": [ ]
           }
       }
       """.trimIndent(),
@@ -112,7 +116,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "BedMoves": [ ]
       }
     }
     """.trimIndent()
@@ -142,7 +147,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "BedMoves": [ ]
       }
     }
     """.trimIndent()
@@ -169,11 +175,12 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       {  
         "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
         "ApplicationTimeline" :[ ],
-        "Assessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
+        "Assessments": ${approvedPremisesAssessmentJson(application, offenderDetails, assessment)},
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "BedMoves": [ ]
       }
     }
     """
@@ -196,11 +203,18 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       {        
           "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
           "ApplicationTimeline" :[ ],
-          "Assessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
-          "AssessmentClarificationNotes": ${approvedPremisesAssessmentClarificationNoteJson(assessment,offenderDetails,clarificationNote)},
+          "Assessments": ${approvedPremisesAssessmentJson(application, offenderDetails, assessment)},
+          "AssessmentClarificationNotes": ${
+    approvedPremisesAssessmentClarificationNoteJson(
+      assessment,
+      offenderDetails,
+      clarificationNote,
+    )
+    },
           "Bookings": [ ],
           "BookingExtensions": [ ],
-          "Cancellations": [ ]
+          "Cancellations": [ ],
+          "BedMoves": [ ]
       }
     }
     """.trimIndent()
@@ -228,7 +242,9 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "AssessmentClarificationNotes": [ ],
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": [ ],
-           "Cancellations": [ ]
+          "Cancellations": [ ],
+          "BedMoves": [ ]
+       
       }
     }
     """.trimIndent()
@@ -257,7 +273,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "AssessmentClarificationNotes": [ ],
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": ${bookingExtensionJson(bookingExtension)},
-          "Cancellations": [ ]
+          "Cancellations": [ ],
+          "BedMoves": [ ]
       }
     }
     """.trimIndent()
@@ -286,13 +303,60 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "AssessmentClarificationNotes": [ ],
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": [ ],
-          "Cancellations": ${cancellationJson(cancellation)}     
+          "Cancellations": ${cancellationJson(cancellation)},
+          "BedMoves": [ ]
       }
     }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
   }
+
+  @Test
+  fun `get CAS1 information - has a bed move`() {
+    val (offender, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offender)
+    val booking = bookingEntity(offender, application)
+
+    val newBed = bedEntity()
+    val bedMove = bedMoveEntity(booking, booking.bed!!, newBed)
+
+    val result =
+      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": ${bookingsJson(booking)},
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": ${bedMovesJson(bedMove)}
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun bedMovesJson(bedMove: BedMoveEntity): String =
+    """
+  [
+    {
+      "crn": "${bedMove.booking.crn}" ,
+      "noms_number": "${bedMove.booking.nomsNumber}",
+      "notes": "${bedMove.notes}",
+      "previous_bed_name": "${bedMove.previousBed!!.name}",
+      "previous_bed_code":"${bedMove.previousBed!!.code}",
+      "new_bed_name":"${bedMove.newBed.name}",
+      "new_bed_code":"${bedMove.newBed.code}",
+      "created_at": "$CREATED_AT_NO_TZ"
+    }
+  ]
+    """.trimIndent()
 
   private fun cancellationJson(cancellation: CancellationEntity): String =
     """
@@ -314,7 +378,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         [
             {
               "application_id": "${bookingExtension.booking.application?.id}",
-              "offline_application_id": ${bookingExtension.booking.offlineApplication?.let {"\"${bookingExtension.booking.offlineApplication!!.id}\""}},
+              "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
               "crn": "${bookingExtension.booking.crn}",
               "noms_number": "${bookingExtension.booking.nomsNumber}",
               "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
@@ -493,6 +557,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname_applicant_user@noname.net")
     }
+
   private fun cas1CaseManagerUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname@noname.net")
@@ -506,8 +571,17 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       withCreatedBy(application.createdByUser)
     }
 
-  private fun cancellationEntity(booking: BookingEntity): CancellationEntity {
-    return cancellationEntityFactory.produceAndPersist {
+  private fun bedMoveEntity(booking: BookingEntity, previousBed: BedEntity, newBed: BedEntity): BedMoveEntity =
+    this.bedMoveEntityFactory.produceAndPersist {
+      withBooking(booking)
+      withPreviousBed(previousBed)
+      withNewBed(newBed)
+      withNotes("Some Notes about a bed move")
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    }
+
+  private fun cancellationEntity(booking: BookingEntity): CancellationEntity =
+    cancellationEntityFactory.produceAndPersist {
       withReason(
         cancellationReasonEntityFactory.produceAndPersist {
           withName("some reason")
@@ -521,7 +595,6 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       withDate(LocalDate.parse(CANCELLATION_DATE_ONLY))
       withOtherReason("some other reason")
     }
-  }
 
   private fun bookingExtensionEntity(booking: BookingEntity): ExtensionEntity {
     return extensionEntityFactory.produceAndPersist {
@@ -560,29 +633,29 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
   }
 
   private fun bedEntity() = bedEntityFactory.produceAndPersist {
-    withName("a bed")
-    withCode("a code")
+    withName("a bed ${randomStringMultiCaseWithNumbers(5)}")
+    withCode("a code ${randomStringMultiCaseWithNumbers(5)}")
     withRoom(
       roomEntityFactory.produceAndPersist {
-        withCode("room code")
-        withName("room name")
+        withCode("room code ${randomStringMultiCaseWithNumbers(5)}")
+        withName("room name ${randomStringMultiCaseWithNumbers(5)}")
 
         withPremises(
           approvedPremisesEntityFactory.produceAndPersist {
-            withName("a premises")
-            withApCode("AP Code")
+            withName("a premises ${randomStringMultiCaseWithNumbers(5)}")
+            withApCode("AP Code ${randomStringMultiCaseWithNumbers(5)}")
             withLocalAuthorityArea(
               localAuthorityEntityFactory.produceAndPersist {
-                withName("An LAA")
-                withIdentifier("LAA ID")
+                withName("An LAA ${randomStringMultiCaseWithNumbers(5)}")
+                withIdentifier("LAA ID ${randomStringMultiCaseWithNumbers(5)}")
               },
             )
             withProbationRegion(
               probationRegionEntityFactory.produceAndPersist {
-                withName("Probation Region")
+                withName("Probation Region ${randomStringMultiCaseWithNumbers(5)}")
                 withApArea(
                   apAreaEntityFactory.produceAndPersist {
-                    withName("Probation Area")
+                    withName("Probation Area ${randomStringMultiCaseWithNumbers(5)}")
                   },
                 )
               },
