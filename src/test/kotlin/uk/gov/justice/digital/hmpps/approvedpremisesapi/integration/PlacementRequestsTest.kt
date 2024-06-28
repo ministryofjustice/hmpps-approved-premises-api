@@ -1604,10 +1604,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create a Booking Not Made from a Placement Request returns 200`() {
+    fun `Create a Booking Not Made from a Placement Request returns 200 and creates a domain event`() {
       `Given a User` { _, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             `Given an Application`(createdByUser = otherUser) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
@@ -1629,6 +1629,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .expectBody()
                   .jsonPath("$.placementRequestId").isEqualTo(placementRequest.id.toString())
                   .jsonPath("$.notes").isEqualTo("some notes")
+
+                domainEventAsserter.assertDomainEventOfTypeStored(
+                  placementRequest.application.id,
+                  DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
+                )
               }
             }
           }
