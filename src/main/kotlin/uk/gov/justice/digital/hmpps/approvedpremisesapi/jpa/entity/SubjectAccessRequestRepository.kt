@@ -4,6 +4,7 @@ import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.time.LocalDateTime
 
 @Repository
@@ -227,7 +228,7 @@ from
     return toJsonString(result)
   }
 
-  fun approvedPremisesBookings(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun bookings(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
     val result = jdbcTemplate.queryForMap(
       """
   select json_agg(booking) as json 
@@ -253,7 +254,7 @@ from
         left join premises p on
             b.premises_id = p.id
         where
-            b.service = 'approved-premises'
+            b.service = :service_name
         and 
             (b.crn = :crn
             or b.noms_number = :noms_number )
@@ -266,7 +267,84 @@ from
         nomsNumber,
         startDate,
         endDate,
-      ),
+      ).addValue("service_name", serviceName.value),
+    )
+    return toJsonString(result)
+  }
+
+  fun bookingExtensions(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+      select json_agg(booking_ext) as json 
+      from (
+    select
+          a.id as application_id,
+          oa.id  as offline_application_id,
+          b.crn,
+          b.noms_number,
+          e.previous_departure_date,
+          e.new_departure_date,
+          e.notes,
+          e.created_at
+      from
+          extensions e
+      join bookings b on
+          b.id = e.booking_id
+      left join applications a on
+          a.id = b.application_id
+      left join offline_applications oa on
+          oa.id = b.offline_application_id
+    where
+    b.service = :service_name and
+      (b.crn = :crn
+        or b.noms_number = :noms_number )
+    and (:start_date is null or b.created_at >= :start_date)
+    and (:end_date is null or b.created_at <= :end_date)
+      )booking_ext
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ).addValue("service_name", serviceName.value),
+    )
+    return toJsonString(result)
+  }
+
+  fun cancellations(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+        select json_agg(cancellation) as json
+        from (
+            select
+                b.crn,
+                b.noms_number,
+                c.notes,
+                c."date" as cancellation_date,
+                cr."name" as cancellation_reason,
+                c.other_reason,
+                c.created_at
+            from
+                cancellations c
+                inner join bookings b on
+                    b.id = c.booking_id
+                inner join cancellation_reasons cr on
+                    c.cancellation_reason_id = cr.id
+            where
+                b.service = :service_name and
+                (b.crn = :crn
+                    or b.noms_number = :noms_number )
+              and (:start_date is null or b.created_at >= :start_date)
+              and (:end_date is null or b.created_at <= :end_date)        
+        ) cancellation
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ).addValue("service_name", serviceName.value),
     )
     return toJsonString(result)
   }
