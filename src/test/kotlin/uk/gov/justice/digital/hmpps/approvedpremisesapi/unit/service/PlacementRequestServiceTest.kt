@@ -21,28 +21,22 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -65,12 +59,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -86,9 +79,6 @@ import java.util.UUID
 class PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
-  private val domainEventService = mockk<DomainEventService>()
-  private val offenderService = mockk<OffenderService>()
-  private val communityApiClient = mockk<CommunityApiClient>()
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
@@ -98,13 +88,11 @@ class PlacementRequestServiceTest {
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
+  private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
     bookingNotMadeRepository,
-    domainEventService,
-    offenderService,
-    communityApiClient,
     placementRequirementsRepository,
     placementDateRepository,
     cancellationRepository,
@@ -113,8 +101,8 @@ class PlacementRequestServiceTest {
     applicationService,
     cas1PlacementRequestEmailService,
     cas1PlacementRequestDomainEventService,
-    "http://frontend/applications/#id",
     taskDeadlineServiceMock,
+    cas1BookingDomainEventService,
   )
 
   private val previousUser = UserEntityFactory()
@@ -512,20 +500,7 @@ class PlacementRequestServiceTest {
       .withAssessment(assessment)
       .produce()
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(application.crn)
-      .produce()
-
-    every { offenderService.getOffenderByCrn(application.crn, requestingUser.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
-    val staffUserDetails = StaffUserDetailsFactory().produce()
-
-    every { communityApiClient.getStaffUserDetails(requestingUser.deliusUsername) } returns ClientResult.Success(
-      HttpStatus.OK,
-      staffUserDetails,
-    )
-
-    every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
+    every { cas1BookingDomainEventService.bookingNotMade(any(), any(), any(), any()) } just Runs
 
     every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
     every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
@@ -540,23 +515,11 @@ class PlacementRequestServiceTest {
     verify(exactly = 1) { bookingNotMadeRepository.save(match { it.notes == "some notes" && it.placementRequest == placementRequest }) }
 
     verify(exactly = 1) {
-      domainEventService.saveBookingNotMadeEvent(
-        match {
-          val data = it.data.eventDetails
-          val placementRequestApplication = placementRequest.application
-
-          it.applicationId == placementRequestApplication.id &&
-            it.crn == placementRequestApplication.crn &&
-            it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-            data.applicationId == placementRequestApplication.id &&
-            data.applicationUrl == "http://frontend/applications/${placementRequestApplication.id}" &&
-            data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
-            data.deliusEventNumber == placementRequestApplication.eventNumber &&
-            data.failureDescription == "some notes"
-        },
+      cas1BookingDomainEventService.bookingNotMade(
+        user = requestingUser,
+        placementRequest = placementRequest,
+        bookingNotCreatedAt = any(),
+        notes = "some notes",
       )
     }
   }

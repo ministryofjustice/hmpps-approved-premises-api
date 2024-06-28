@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -15,7 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -76,6 +80,72 @@ class Cas1BookingDomainEventService(
     )
   }
 
+  fun bookingNotMade(
+    user: UserEntity,
+    placementRequest: PlacementRequestEntity,
+    bookingNotCreatedAt: OffsetDateTime,
+    notes: String?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+
+    val application = placementRequest.application
+
+    val offenderDetails = getOffenderDetails(
+      application.crn,
+      user.deliusUsername,
+      user.hasQualification(UserQualification.LAO),
+    )
+
+    val staffDetails = getStaffDetails(user.deliusUsername)
+
+    domainEventService.saveBookingNotMadeEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        occurredAt = bookingNotCreatedAt.toInstant(),
+        data = BookingNotMadeEnvelope(
+          id = domainEventId,
+          timestamp = bookingNotCreatedAt.toInstant(),
+          eventType = EventType.bookingNotMade,
+          eventDetails = BookingNotMade(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            personReference = PersonReference(
+              crn = application.crn,
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = application.eventNumber,
+            attemptedAt = bookingNotCreatedAt.toInstant(),
+            attemptedBy = BookingMadeBookedBy(
+              staffMember = staffDetails.toStaffMember(),
+              cru = Cru(
+                name = user.apArea?.name ?: "Unknown CRU",
+              ),
+            ),
+            failureDescription = notes,
+          ),
+        ),
+      ),
+    )
+  }
+
+  private fun getOffenderDetails(
+    crn: String,
+    deliusUsername: String,
+    ignoreLaoRestrictions: Boolean,
+  ) = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLaoRestrictions)) {
+    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    else -> null
+  }
+
+  private fun getStaffDetails(deliusUsername: String) =
+    when (val staffDetailsResult = communityApiClient.getStaffUserDetails(deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
   private fun bookingMade(
     applicationId: UUID,
     eventNumber: String,
@@ -95,11 +165,7 @@ class Cas1BookingDomainEventService(
         else -> null
       }
 
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
+    val staffDetails = getStaffDetails(user.deliusUsername)
 
     val approvedPremises = booking.premises as ApprovedPremisesEntity
 

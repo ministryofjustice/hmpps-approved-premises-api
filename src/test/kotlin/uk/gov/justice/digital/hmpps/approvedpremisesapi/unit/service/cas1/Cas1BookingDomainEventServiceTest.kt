@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -270,6 +272,93 @@ class Cas1BookingDomainEventServiceTest {
       val domainEvent = domainEventArgument.captured
       val data = domainEvent.data.eventDetails
       assertThat(data.deliusEventNumber).isEqualTo("adhoc event number")
+    }
+  }
+
+  @Nested
+  inner class BookingNotMade {
+
+    @Test
+    fun `bookingNotMade saves domain event`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .withDeliusUsername("THEDELIUSUSERNAME")
+        .produce()
+
+      val otherUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withEventNumber("app event number")
+        .withCrn("Application CRN")
+        .withCreatedByUser(otherUser)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withReleaseType(ReleaseTypeOption.licence.toString())
+        .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+        .withSituation(SituationOption.bailSentence.toString())
+        .produce()
+
+      val notMadeAt = OffsetDateTime.now()
+
+      every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
+
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().withStaffCode("the staff code").produce()
+      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        assigneeUserStaffDetails,
+      )
+
+      every {
+        offenderService.getOffenderByCrn(
+          "Application CRN",
+          "THEDELIUSUSERNAME",
+          false,
+        )
+      } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory()
+          .withGender("male")
+          .withCrn("THECRN")
+          .withNomsNumber("THENOMS")
+          .withDateOfBirth(LocalDate.of(1982, 3, 11))
+          .produce(),
+      )
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      service.bookingNotMade(
+        user = user,
+        placementRequest = placementRequest,
+        bookingNotCreatedAt = notMadeAt,
+        notes = "the notes",
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingNotMadeEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveBookingNotMadeEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.crn).isEqualTo("Application CRN")
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingNotMade)
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(application.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(data.personReference.crn).isEqualTo("Application CRN")
+      assertThat(data.personReference.noms).isEqualTo("THENOMS")
+      assertThat(data.deliusEventNumber).isEqualTo("app event number")
+      assertThat(data.attemptedAt).isNotNull()
+      assertThat(data.attemptedBy.staffMember!!.staffCode).isEqualTo("the staff code")
+      assertThat(data.failureDescription).isEqualTo("the notes")
     }
   }
 }
