@@ -19,6 +19,8 @@ WITH raw_applications_report AS (
 )
 
 SELECT 
+ pr.id as internal_placement_request_id,
+ null as internal_placement_application_request_id,
  CONCAT('placement_request:',paa.id) as request_for_placement_id, 
  'STANDARD' AS request_for_placement_type,
  to_char(paa.expected_arrival_date, 'YYYY-MM-DD') as requested_arrival_date,
@@ -63,6 +65,8 @@ SELECT
  UNION all
      
  SELECT 
+    null as internal_placement_request_id,
+    null as internal_placement_application_request_id,
     CONCAT('placement_application:',pa.id) AS request_for_placement_id,
     CASE
       WHEN pa.placement_type = '0' THEN 'ROTL'

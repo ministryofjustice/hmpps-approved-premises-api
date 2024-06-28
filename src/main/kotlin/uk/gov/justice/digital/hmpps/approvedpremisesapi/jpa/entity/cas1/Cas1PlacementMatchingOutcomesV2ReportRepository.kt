@@ -34,10 +34,26 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
     return """
       WITH raw_requests_for_placements AS ($cte)
       SELECT 
-      raw_requests_for_placements.* 
-      FROM raw_requests_for_placements;
+        pr.id as match_request_id,
+        '' as matcher_cru,
+        '' as matcher_username,
+        '' as match_outcome,
+        rfp.* 
+      FROM raw_requests_for_placements rfp
+      INNER JOIN placement_requests pr ON pr.id = rfp.internal_placement_request_id
+      LEFT OUTER JOIN (
+         select distinct on (application_id)
+                 domain_events.*
+         from domain_events
+         where reallocated_at is null
+         order by application_id, created_at desc
+      ) latest_match_outcome_event on latest_assessment.application_id = a.id
+      WHERE rfp.internal_placement_request_id IS NOT NULL
+      ORDER BY pr.expected_arrival ASC
     """.trimIndent()
   }
+
+  // link on latest domain event of type 'APPROVED_PREMISES_BOOKING_MADE' or 'APPROVED_PREMISES_BOOKING_NOT_MADE'. this drives outcome
 
   val query = buildQuery()
 

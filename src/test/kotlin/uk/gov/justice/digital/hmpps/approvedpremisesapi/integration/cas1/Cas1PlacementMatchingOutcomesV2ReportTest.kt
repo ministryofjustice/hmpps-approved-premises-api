@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -27,11 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1ApplicationReportTest.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1RequestForPlacementReportTest.RequestForPlacementReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
@@ -45,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTestBase() {
@@ -62,7 +59,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   lateinit var assessor: UserEntity
   lateinit var assessorJwt: String
 
-  val standardRFPNotAssessed = StandardRFPNotAllocated()
+  val standardRFPNoDecision = StandardRFPNoDecision()
+  val standardRFPMatched = StandardRFPMatched()
 
   object Constants {
     const val REPORT_MONTH = 1
@@ -86,7 +84,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
-    standardRFPNotAssessed.createRequestForPlacement()
+    standardRFPNoDecision.createRequestForPlacement()
+    standardRFPMatched.createRequestForPlacement()
   }
 
   @Test
@@ -94,13 +93,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2019, month = 2, includePii = true))
+        .uri(getReportUrl(year = REPORT_YEAR, month = REPORT_MONTH + 1, includePii = true))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-2019-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-2020-02-[0-9_]*.csv\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame
@@ -132,49 +131,98 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             .convertTo<PlacementMatchingOutcomeReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(1)
+          assertThat(actual.size).isEqualTo(2)
 
-          standardRFPNotAssessed.assertRow(actual[0])
+          standardRFPNoDecision.assertRow(actual[0])
+          standardRFPMatched.assertRow(actual[1])
 
           /*
           TODO:
-           - placement request, assigned and matched
-           - placement request, assigned, not matched
+           - placement request, no match
            - placement app
-           - test arrival dates outside of testing range
-           - test that withdrawals are not included
-           - then test additional report columns
+           - placement app without assessment (no match request) - shouldn't appear. maybe overkill?
+           - test arrival dates outside of testing month
            - then test PII exclusions
            */
 
-          // TODO: The report says only show complete, not withdrawn.
-          // Note that eventually unmatched are typically withdrawn
-          // so we may need to improve how we track this, or show withdrawn
-          // where the withdrawn reason is linked to matching?
         }
     }
   }
 
-  inner class StandardRFPNotAllocated {
+  inner class StandardRFPNoDecision {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createRequestForPlacement() {
-      application = createSubmitAndAssessApplication(
-        crn = "StandardRFPNotAssessed",
+      application = createSubmitAndAssessedApplication(
+        crn = "StandardRFPNotAllocated",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1),
       )
 
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
+      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.matcher_cru).isNull()
+      assertThat(row.matcher_username).isNull()
+      assertThat(row.match_outcome).isNull()
+
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
-
-      // TODO: test all columns unique to the report
+      assertThat(row.crn).matches("StandardRFPNotAllocated")
     }
   }
 
-  private fun createSubmitAndAssessApplication(
+  inner class StandardRFPMatched {
+    lateinit var application: ApprovedPremisesApplicationEntity
+
+    fun createRequestForPlacement() {
+      application = createSubmitAndAssessedApplication(
+        crn = "StandardRFPAllocatedNoDecision",
+        arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 2),
+      )
+      createBooking(application.placementRequests[0].id)
+    }
+
+    fun assertRow(row: PlacementMatchingOutcomeReportRow) {
+      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      // TODO: these shouldn't be null
+      assertThat(row.matcher_cru).isNull()
+      assertThat(row.matcher_username).isNull()
+      assertThat(row.match_outcome).isEqualTo("Placed")
+
+      assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
+      assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
+      assertThat(row.crn).matches("StandardRFPAllocatedNoDecision")
+    }
+  }
+
+  private fun createBooking(
+    placementRequestId: UUID,
+  ) {
+    val managerJwt = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion {
+        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      }
+    }
+
+    cas1SimpleApiClient.bookingForPlacementRequest(
+      integrationTestBase = this,
+      placementRequestId = placementRequestId,
+      managerJwt = managerJwt,
+      NewPlacementRequestBooking(
+        arrivalDate = LocalDate.now(),
+        departureDate = LocalDate.now(),
+        bedId = null,
+        premisesId = premises.id,
+      ),
+    )
+
+  }
+
+  private fun createSubmitAndAssessedApplication(
     crn: String,
     arrivalDateOnApplication: LocalDate?,
   ): ApprovedPremisesApplicationEntity {
@@ -293,7 +341,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       if (includePii != null) { "&includePii=$includePii" } else { "" }
 
   data class PlacementMatchingOutcomeReportRow(
+    val crn: String?,
     val request_for_placement_id: String?,
     val request_for_placement_type: String?,
+    val match_request_id: String?,
+    val matcher_cru: String?,
+    val matcher_username: String?,
+    val match_outcome: String?,
   )
 }

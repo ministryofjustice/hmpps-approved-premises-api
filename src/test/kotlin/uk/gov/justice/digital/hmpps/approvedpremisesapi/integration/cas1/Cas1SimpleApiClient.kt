@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -276,6 +277,21 @@ class Cas1SimpleApiClient {
 
     integrationTestBase.webTestClient.post()
       .uri("/placement-requests/$placementRequestId/withdrawal")
+      .header("Authorization", "Bearer $managerJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun bookingForPlacementRequest(
+    integrationTestBase: IntegrationTestBase,
+    placementRequestId: UUID,
+    managerJwt: String,
+    body: NewPlacementRequestBooking,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-requests/$placementRequestId/booking")
       .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
       .exchange()
