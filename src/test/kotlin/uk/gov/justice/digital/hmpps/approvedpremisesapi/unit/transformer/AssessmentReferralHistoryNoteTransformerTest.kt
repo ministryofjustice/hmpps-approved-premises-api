@@ -156,6 +156,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       "UNALLOCATED",
       "IN_REVIEW",
       "READY_TO_PLACE",
+      "REJECTED",
       "COMPLETED",
     ],
   )
@@ -173,15 +174,8 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withProbationRegion(probationRegion)
       .produce()
 
-    var rejectionReason = ReferralRejectionReasonEntityFactory()
-      .produce()
-
-    val rejectionReasonDetail = randomNumberChars(10)
     val assessment = TemporaryAccommodationAssessmentEntityFactory()
       .withApplication(application)
-      .withReferralRejectionReason(rejectionReason)
-      .withReferralRejectionReasonDetail(rejectionReasonDetail)
-      .withIsWithdrawn(true)
       .produce()
 
     val note = AssessmentReferralHistorySystemNoteEntityFactory()
@@ -209,8 +203,6 @@ class AssessmentReferralHistoryNoteTransformerTest {
         ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.completed
       },
     )
-    assertThat(result.messageDetails?.rejectionReason).isNull()
-    assertThat(result.messageDetails?.rejectionReasonDetails).isNull()
-    assertThat(result.messageDetails?.isWithdrawn).isNull()
+    assertThat(result.messageDetails).isNull()
   }
 }
