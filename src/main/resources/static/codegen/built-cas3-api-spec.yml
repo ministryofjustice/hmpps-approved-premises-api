@@ -5044,7 +5044,6 @@ components:
       required:
         - id
         - updatedAt
-        - updatedBy
         - revisionType
     Cas1OutOfServiceBedRevisionType:
       type: string
