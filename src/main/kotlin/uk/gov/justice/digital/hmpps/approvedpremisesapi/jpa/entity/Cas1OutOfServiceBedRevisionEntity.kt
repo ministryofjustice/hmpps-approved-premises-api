@@ -40,7 +40,7 @@ data class Cas1OutOfServiceBedRevisionEntity(
   val outOfServiceBed: Cas1OutOfServiceBedEntity,
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
-  val createdBy: UserEntity,
+  val createdBy: UserEntity?,
   @Column(name = "change_type")
   val changeTypePacked: Long,
 )
