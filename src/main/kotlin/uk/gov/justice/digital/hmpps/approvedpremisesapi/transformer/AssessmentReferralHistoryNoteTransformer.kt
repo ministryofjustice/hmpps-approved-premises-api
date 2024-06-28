@@ -51,7 +51,7 @@ class AssessmentReferralHistoryNoteTransformer {
   }
 
   private fun getMessageDetails(systemNoteType: ReferralHistorySystemNoteType, assessmentEntity: TemporaryAccommodationAssessmentEntity): ReferralHistoryNoteMessageDetails? {
-    if (systemNoteType == ReferralHistorySystemNoteType.REJECTED) {
+    if (systemNoteType == ReferralHistorySystemNoteType.REJECTED && assessmentEntity.referralRejectionReason != null) {
       return ReferralHistoryNoteMessageDetails(
         assessmentEntity.referralRejectionReason?.name,
         assessmentEntity.referralRejectionReasonDetail,
