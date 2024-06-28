@@ -15,19 +15,25 @@ class SubjectAccessRequestService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
-    val getApprovedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
-    val getAPApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
-    val getAPAssessmentsJson = subjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
-    val getAPAssessmentClarificationNotes = subjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
-    val getAPBookings = subjectAccessRequestRepository.approvedPremisesBookings(crn, nomsNumber, startDate, endDate)
+    val approvedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
+    val apApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
+    val apAssessmentsJson = subjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
+    val apAssessmentClarificationNotes = subjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
+    val apBookings = subjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate)
+    val apBookingExtensions = subjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
+    val apCancellations = subjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
 
     val result = """
       {
-        "approvedPremisesApplications": $getApprovedPremisesApplicationsJson,
-        "approvedPremisesApplicationTimeline": $getAPApplicationTimelineJson,
-        "approvedPremisesAssessments": $getAPAssessmentsJson,
-        "approvedPremisesAssessmentClarificationNotes" : $getAPAssessmentClarificationNotes,
-        "approvedPremisesBookings": $getAPBookings
+        "approvedPremises" : {
+            "Applications": $approvedPremisesApplicationsJson,
+            "ApplicationTimeline": $apApplicationTimelineJson,
+            "Assessments": $apAssessmentsJson,
+            "AssessmentClarificationNotes" : $apAssessmentClarificationNotes,
+            "Bookings": $apBookings,
+            "BookingExtensions": $apBookingExtensions,
+            "Cancellations": $apCancellations
+        }
       }
     """.trimIndent()
 

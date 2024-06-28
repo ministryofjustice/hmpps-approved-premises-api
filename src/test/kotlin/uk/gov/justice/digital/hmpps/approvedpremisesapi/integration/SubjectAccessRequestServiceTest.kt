@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
@@ -14,7 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -41,11 +44,15 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     const val CREATED_AT_NO_TZ = "2021-09-18T16:00:00"
     const val DUE_AT = "2021-09-22T16:00:00+00:00"
     const val DEPARTED_AT = "2021-09-23T16:00:00+00:00"
+    const val NEW_DEPARTED_AT = "2021-09-24T16:00:00+00:00"
+    const val CANCELLATION_DATE = "2021-09-25T16:00:00+00:00"
     const val RESPONSE_RECEIVED_AT = "2021-10-23"
 
-    var CREATED_AT_DATE_ONLY = this.CREATED_AT.substring(0..9)
     var ARRIVED_AT_DATE_ONLY = this.ARRIVED_AT.substring(0..9)
     var DEPARTED_AT_DATE_ONLY = this.DEPARTED_AT.substring(0..9)
+    var PREVIOUS_DEPARTURE_DATE_ONLY = this.DEPARTED_AT.substring(0..9)
+    var NEW_DEPARTURE_DATE_ONLY = this.NEW_DEPARTED_AT.substring(0..9)
+    var CANCELLATION_DATE_ONLY = this.CANCELLATION_DATE.substring(0..9)
 
     const val DATA_JSON_SIMPLE = """{ "key": "value" }"""
     const val DOCUMENT_JSON_SIMPLE = """{ "key2": "value2" }"""
@@ -68,14 +75,20 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     val result =
       sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertJsonEquals(
-      """ {
-          "approvedPremisesApplications": [ ],
-          "approvedPremisesApplicationTimeline": [ ],
-          "approvedPremisesAssessments": [ ],
-          "approvedPremisesAssessmentClarificationNotes": [ ],
-          "approvedPremisesBookings": [ ]
-        }
-      """,
+      """ 
+     {
+        "approvedPremises":
+        {
+          "Applications": [ ],
+          "ApplicationTimeline": [ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": [ ],
+          "BookingExtensions": [ ],
+          "Cancellations": [ ]
+          }
+      }
+      """.trimIndent(),
       result,
     )
   }
@@ -90,13 +103,18 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-      {
-        "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-        "approvedPremisesApplicationTimeline" :[ ],
-        "approvedPremisesAssessments": [ ],
-        "approvedPremisesAssessmentClarificationNotes": [ ],
-        "approvedPremisesBookings": [ ]
+    {
+      "approvedPremises" : 
+      {    
+        "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+        "ApplicationTimeline" :[ ],
+        "Assessments": [ ],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ]
       }
+    }
     """.trimIndent()
 
     assertJsonEquals(
@@ -109,27 +127,23 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
   fun `Get CAS1 information - have application note`() {
     val (offender, _) = `Given an Offender`()
     val application = approvedPremisesApplicationEntity(offender)
-    val timelineNotes = applicationTimelineNoteEntityFactory.produceAndPersist {
-      withApplicationId(application.id)
-      withBody("Some random note about this application")
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withCreatedBy(application.createdByUser)
-    }
+
+    val timelineNotes = applicationTimelineNoteEntity(application)
 
     val result = sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    val expectedJson = """{
-        "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offender)},
-        "approvedPremisesApplicationTimeline": ${
-    approvedPremisesApplicationTimelineNotesJson(
-      application,
-      timelineNotes,
-      offender,
-    )
-    },
-        "approvedPremisesAssessments": [ ],
-        "approvedPremisesAssessmentClarificationNotes": [ ],
-        "approvedPremisesBookings": [ ]
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {
+        "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+        "ApplicationTimeline": ${approvedPremisesApplicationTimelineNotesJson(application, timelineNotes, offender)},
+        "Assessments": [ ],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ]
+      }
     }
     """.trimIndent()
 
@@ -150,15 +164,19 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-      {
-        "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-        "approvedPremisesApplicationTimeline" :[ ],
-        "approvedPremisesAssessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
-        "approvedPremisesAssessmentClarificationNotes": [ ],
-        "approvedPremisesBookings": [ ]
+    {
+      "approvedPremises" : 
+      {  
+        "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+        "ApplicationTimeline" :[ ],
+        "Assessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ]
       }
-       """
-
+    }
+    """
     assertJsonEquals(expectedJson, result)
   }
 
@@ -173,13 +191,18 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-      {
-          "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "approvedPremisesApplicationTimeline" :[ ],
-          "approvedPremisesAssessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
-          "approvedPremisesAssessmentClarificationNotes": ${approvedPremisesAssessmentClarificationNoteJson(assessment,offenderDetails,clarificationNote)},
-          "approvedPremisesBookings": [ ]
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": ${approvedPremisesAssessmentJson(application,offenderDetails,assessment)},
+          "AssessmentClarificationNotes": ${approvedPremisesAssessmentClarificationNoteJson(assessment,offenderDetails,clarificationNote)},
+          "Bookings": [ ],
+          "BookingExtensions": [ ],
+          "Cancellations": [ ]
       }
+    }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
@@ -196,39 +219,134 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-      {
-          "approvedPremisesApplications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "approvedPremisesApplicationTimeline" :[ ],
-          "approvedPremisesAssessments": [ ],
-          "approvedPremisesAssessmentClarificationNotes": [],
-          "approvedPremisesBookings": ${bookingsJson(booking)}
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": ${bookingsJson(booking)},
+          "BookingExtensions": [ ],
+           "Cancellations": [ ]
       }
+    }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
   }
 
+  @Test
+  fun `Get CAS1 information - have a booking with extension`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offenderDetails)
+
+    val booking = bookingEntity(offenderDetails, application)
+    val bookingExtension = bookingExtensionEntity(booking)
+
+    val result =
+      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": ${bookingsJson(booking)},
+          "BookingExtensions": ${bookingExtensionJson(bookingExtension)},
+          "Cancellations": [ ]
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS1 information - have a booking cancellation`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offenderDetails)
+
+    val booking = bookingEntity(offenderDetails, application)
+    val cancellation = cancellationEntity(booking)
+
+    val result =
+      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": ${bookingsJson(booking)},
+          "BookingExtensions": [ ],
+          "Cancellations": ${cancellationJson(cancellation)}     
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun cancellationJson(cancellation: CancellationEntity): String =
+    """
+      [
+        {   
+            "crn": "${cancellation.booking.crn}",
+            "noms_number": "${cancellation.booking.nomsNumber}",
+            "notes": "${cancellation.notes}",
+            "cancellation_date": "$CANCELLATION_DATE_ONLY",
+            "cancellation_reason": "${cancellation.reason.name}",
+            "other_reason": "${cancellation.otherReason}",
+            "created_at": "$CREATED_AT"
+        }
+      ]
+    """.trimIndent()
+
+  private fun bookingExtensionJson(bookingExtension: ExtensionEntity): String =
+    """
+        [
+            {
+              "application_id": "${bookingExtension.booking.application?.id}",
+              "offline_application_id": ${bookingExtension.booking.offlineApplication?.let {"\"${bookingExtension.booking.offlineApplication!!.id}\""}},
+              "crn": "${bookingExtension.booking.crn}",
+              "noms_number": "${bookingExtension.booking.nomsNumber}",
+              "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
+              "new_departure_date": "$NEW_DEPARTURE_DATE_ONLY",
+              "notes": "${bookingExtension.notes}",
+              "created_at": "$CREATED_AT"
+            }
+        ]
+      """
+      .trimIndent()
+
   private fun bookingsJson(booking: BookingEntity): String =
     """[
-        {
-          "crn": "${booking.crn}",
-          "noms_number":"${booking.nomsNumber}",
-          "arrival_date":"${booking.arrivalDate}",
-          "departure_date":"${booking.departureDate}",
-          "original_arrival_date":"${booking.originalArrivalDate}",
-          "original_departure_date":"${booking.originalDepartureDate}",
-          "created_at":"$CREATED_AT",
-          "status":"${booking.status}",
-          "premises_name":"${booking.premises.name}",
-          "adhoc":${booking.adhoc},
-          "key_worker_staff_code":"${booking.keyWorkerStaffCode}",
-          "service":"${booking.service}",
-          "application_id":"${booking.application?.id}",
-          "offline_application_id":${booking.offlineApplication?.let {"${it.id}"} ?: "null" },
-          "version":${booking.version}
-         }
-        ]
-    """.trimMargin()
+          {
+              "crn": "${booking.crn}",
+              "noms_number": "${booking.nomsNumber}",
+              "arrival_date": "${booking.arrivalDate}",
+              "departure_date": "${booking.departureDate}",
+              "original_arrival_date": "${booking.originalArrivalDate}",
+              "original_departure_date": "${booking.originalDepartureDate}",
+              "created_at": "$CREATED_AT",
+              "status": "${booking.status}",
+              "premises_name": "${booking.premises.name}",
+              "adhoc": ${booking.adhoc},
+              "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
+              "service": "${booking.service}",
+              "application_id": "${booking.application?.id}",
+              "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else "null"},
+              "version": ${booking.version}
+          }
+       ]
+    """.trimIndent()
 
   private fun approvedPremisesApplicationsJson(
     application: ApprovedPremisesApplicationEntity,
@@ -272,12 +390,13 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     application: ApprovedPremisesApplicationEntity,
     timelineNote: ApplicationTimelineNoteEntity,
     offender: OffenderDetailSummary,
+    serviceName: ServiceName = ServiceName.approvedPremises,
   ): String =
     """
       [ 
         {
         "application_id":"${application.id}",
-        "service":"approved-premises",
+        "service":"${serviceName.value}",
         "crn":"${offender.otherIds.crn}",
         "noms_number":"${offender.otherIds.nomsNumber}",
         "body":"${timelineNote.body}",
@@ -370,23 +489,58 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       withPermissiveSchema()
     }
 
-  private fun cas1ApplicationUserDetails(): Cas1ApplicationUserDetailsEntity =
+  private fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname_applicant_user@noname.net")
     }
-
-  private fun cas1CaseManagerUserDetails(): Cas1ApplicationUserDetailsEntity =
+  private fun cas1CaseManagerUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname@noname.net")
     }
 
+  private fun applicationTimelineNoteEntity(application: ApprovedPremisesApplicationEntity) =
+    applicationTimelineNoteEntityFactory.produceAndPersist {
+      withApplicationId(application.id)
+      withBody("Some random note about this application")
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withCreatedBy(application.createdByUser)
+    }
+
+  private fun cancellationEntity(booking: BookingEntity): CancellationEntity {
+    return cancellationEntityFactory.produceAndPersist {
+      withReason(
+        cancellationReasonEntityFactory.produceAndPersist {
+          withName("some reason")
+          withServiceScope("approved-premises")
+          withIsActive(true)
+        },
+      )
+      withBooking(booking)
+      withNotes("some notes")
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withDate(LocalDate.parse(CANCELLATION_DATE_ONLY))
+      withOtherReason("some other reason")
+    }
+  }
+
+  private fun bookingExtensionEntity(booking: BookingEntity): ExtensionEntity {
+    return extensionEntityFactory.produceAndPersist {
+      withBooking(booking)
+      withNotes("some notes")
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withPreviousDepartureDate(LocalDate.parse(PREVIOUS_DEPARTURE_DATE_ONLY))
+      withNewDepartureDate(LocalDate.parse(NEW_DEPARTURE_DATE_ONLY))
+    }
+  }
+
   private fun bookingEntity(
     offenderDetails: OffenderDetailSummary,
     application: ApprovedPremisesApplicationEntity,
+    serviceName: ServiceName = ServiceName.approvedPremises,
   ): BookingEntity {
-    var bed = bedEntity()
+    val bed = bedEntity()
 
-    var booking = bookingEntityFactory.produceAndPersist {
+    val booking = bookingEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -400,6 +554,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       withStaffKeyWorkerCode("KEYWORKERSTAFFCODE")
       withStatus(BookingStatus.arrived)
       withBed(bed)
+      withServiceName(serviceName)
     }
     return booking
   }
@@ -464,8 +619,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
   private fun approvedPremisesApplicationEntity(offenderDetails: OffenderDetailSummary): ApprovedPremisesApplicationEntity {
     val user = userEntity()
     val risk1 = personRisks()
-    val applicantUserDetails = cas1ApplicationUserDetails()
-    val caseManagerUserDetails = cas1CaseManagerUserDetails()
+    val applicantUserDetails = cas1ApplicationUserDetailsEntity()
+    val caseManagerUserDetails = cas1CaseManagerUserDetailsEntity()
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntity()
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
