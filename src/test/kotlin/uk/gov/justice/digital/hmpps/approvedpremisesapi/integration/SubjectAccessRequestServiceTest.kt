@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
@@ -50,6 +52,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     const val NEW_DEPARTED_AT = "2021-09-24T16:00:00+00:00"
     const val CANCELLATION_DATE = "2021-09-25T16:00:00+00:00"
     const val RESPONSE_RECEIVED_AT = "2021-10-23"
+    const val APPEAL_DATE_ONLY = "2021-10-24"
 
     var ARRIVED_AT_DATE_ONLY = this.ARRIVED_AT.substring(0..9)
     var DEPARTED_AT_DATE_ONLY = this.DEPARTED_AT.substring(0..9)
@@ -89,7 +92,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "Bookings": [ ],
           "BookingExtensions": [ ],
           "Cancellations": [ ],
-          "BedMoves": [ ]
+          "BedMoves": [ ],
+          "Appeals": [ ]
           }
       }
       """.trimIndent(),
@@ -117,7 +121,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "Bookings": [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
-        "BedMoves": [ ]
+        "BedMoves": [ ],
+        "Appeals": [ ]
       }
     }
     """.trimIndent()
@@ -148,7 +153,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "Bookings": [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
-        "BedMoves": [ ]
+        "BedMoves": [ ],
+        "Appeals": [ ]
       }
     }
     """.trimIndent()
@@ -180,7 +186,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "Bookings": [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
-        "BedMoves": [ ]
+        "BedMoves": [ ],
+        "Appeals": [ ]
       }
     }
     """
@@ -214,7 +221,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "Bookings": [ ],
           "BookingExtensions": [ ],
           "Cancellations": [ ],
-          "BedMoves": [ ]
+          "BedMoves": [ ],
+          "Appeals": [ ]
       }
     }
     """.trimIndent()
@@ -243,7 +251,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": [ ],
           "Cancellations": [ ],
-          "BedMoves": [ ]
+          "BedMoves": [ ],
+          "Appeals": [ ]
        
       }
     }
@@ -274,7 +283,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": ${bookingExtensionJson(bookingExtension)},
           "Cancellations": [ ],
-          "BedMoves": [ ]
+          "BedMoves": [ ],
+          "Appeals": [ ]
       }
     }
     """.trimIndent()
@@ -304,7 +314,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": [ ],
           "Cancellations": ${cancellationJson(cancellation)},
-          "BedMoves": [ ]
+          "BedMoves": [ ],
+          "Appeals": [ ]
       }
     }
     """.trimIndent()
@@ -334,7 +345,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "Bookings": ${bookingsJson(booking)},
           "BookingExtensions": [ ],
           "Cancellations": [ ],
-          "BedMoves": ${bedMovesJson(bedMove)}
+          "BedMoves": ${bedMovesJson(bedMove)},
+          "Appeals": [ ]
       }
     }
     """.trimIndent()
@@ -342,112 +354,170 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     assertJsonEquals(expectedJson, result)
   }
 
+  @Test
+  fun `get CAS1 information - has an appeal`() {
+    val (offender, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offender)
+    val assessment = approvedPremisesAssessment(application)
+    val appeal = appealEntityFactory.produceAndPersist {
+      withApplication(application)
+      withAssessment(assessment)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withCreatedBy(application.createdByUser)
+      withAppealDate(LocalDate.parse(APPEAL_DATE_ONLY))
+      withAppealDetail("I want to appeal this decision")
+      withDecision(AppealDecision.rejected)
+      withDecisionDetail("rejected as no good")
+    }
+
+    val result =
+      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": ${approvedPremisesAssessmentJson(application, offender, assessment)},
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": [ ],
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": [ ],
+          "Appeals": ${appealsJson(appeal)}
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun appealsJson(appeal: AppealEntity): String =
+    """
+    [
+      {
+          "crn": "${appeal.application.crn}" ,
+          "noms_number": "${appeal.application.nomsNumber}", 
+          "appeal_id": "${appeal.id}",
+          "application_id": "${appeal.application.id}",
+          "assessment_id": "${appeal.assessment.id}",
+          "appeal_date": "$APPEAL_DATE_ONLY",
+          "appeal_detail": "${appeal.appealDetail}",
+          "decision" : "${appeal.decision}",
+          "decision_detail": "${appeal.decisionDetail}" ,
+          "appeal_created_at": "$CREATED_AT" ,
+          "created_by_user" :  "${appeal.createdBy.name}"
+      }
+    ]
+    """.trimIndent()
+
   private fun bedMovesJson(bedMove: BedMoveEntity): String =
     """
-  [
-    {
-      "crn": "${bedMove.booking.crn}" ,
-      "noms_number": "${bedMove.booking.nomsNumber}",
-      "notes": "${bedMove.notes}",
-      "previous_bed_name": "${bedMove.previousBed!!.name}",
-      "previous_bed_code":"${bedMove.previousBed!!.code}",
-      "new_bed_name":"${bedMove.newBed.name}",
-      "new_bed_code":"${bedMove.newBed.code}",
-      "created_at": "$CREATED_AT_NO_TZ"
-    }
-  ]
+    [
+      {
+        "crn": "${bedMove.booking.crn}" ,
+        "noms_number": "${bedMove.booking.nomsNumber}",
+        "notes": "${bedMove.notes}",
+        "previous_bed_name": "${bedMove.previousBed!!.name}",
+        "previous_bed_code":"${bedMove.previousBed!!.code}",
+        "new_bed_name":"${bedMove.newBed.name}",
+        "new_bed_code":"${bedMove.newBed.code}",
+        "created_at": "$CREATED_AT_NO_TZ"
+      }
+    ]
     """.trimIndent()
 
   private fun cancellationJson(cancellation: CancellationEntity): String =
     """
-      [
-        {   
-            "crn": "${cancellation.booking.crn}",
-            "noms_number": "${cancellation.booking.nomsNumber}",
-            "notes": "${cancellation.notes}",
-            "cancellation_date": "$CANCELLATION_DATE_ONLY",
-            "cancellation_reason": "${cancellation.reason.name}",
-            "other_reason": "${cancellation.otherReason}",
-            "created_at": "$CREATED_AT"
-        }
-      ]
+    [
+      {   
+          "crn": "${cancellation.booking.crn}",
+          "noms_number": "${cancellation.booking.nomsNumber}",
+          "notes": "${cancellation.notes}",
+          "cancellation_date": "$CANCELLATION_DATE_ONLY",
+          "cancellation_reason": "${cancellation.reason.name}",
+          "other_reason": "${cancellation.otherReason}",
+          "created_at": "$CREATED_AT"
+      }
+    ]
     """.trimIndent()
 
   private fun bookingExtensionJson(bookingExtension: ExtensionEntity): String =
     """
-        [
-            {
-              "application_id": "${bookingExtension.booking.application?.id}",
-              "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
-              "crn": "${bookingExtension.booking.crn}",
-              "noms_number": "${bookingExtension.booking.nomsNumber}",
-              "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
-              "new_departure_date": "$NEW_DEPARTURE_DATE_ONLY",
-              "notes": "${bookingExtension.notes}",
-              "created_at": "$CREATED_AT"
-            }
-        ]
-      """
-      .trimIndent()
+    [
+        {
+          "application_id": "${bookingExtension.booking.application?.id}",
+          "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
+          "crn": "${bookingExtension.booking.crn}",
+          "noms_number": "${bookingExtension.booking.nomsNumber}",
+          "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
+          "new_departure_date": "$NEW_DEPARTURE_DATE_ONLY",
+          "notes": "${bookingExtension.notes}",
+          "created_at": "$CREATED_AT"
+        }
+    ]
+    """.trimIndent()
 
   private fun bookingsJson(booking: BookingEntity): String =
-    """[
-          {
-              "crn": "${booking.crn}",
-              "noms_number": "${booking.nomsNumber}",
-              "arrival_date": "${booking.arrivalDate}",
-              "departure_date": "${booking.departureDate}",
-              "original_arrival_date": "${booking.originalArrivalDate}",
-              "original_departure_date": "${booking.originalDepartureDate}",
-              "created_at": "$CREATED_AT",
-              "status": "${booking.status}",
-              "premises_name": "${booking.premises.name}",
-              "adhoc": ${booking.adhoc},
-              "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
-              "service": "${booking.service}",
-              "application_id": "${booking.application?.id}",
-              "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else "null"},
-              "version": ${booking.version}
-          }
-       ]
+    """
+    [
+       {
+          "crn": "${booking.crn}",
+          "noms_number": "${booking.nomsNumber}",
+          "arrival_date": "${booking.arrivalDate}",
+          "departure_date": "${booking.departureDate}",
+          "original_arrival_date": "${booking.originalArrivalDate}",
+          "original_departure_date": "${booking.originalDepartureDate}",
+          "created_at": "$CREATED_AT",
+          "status": "${booking.status}",
+          "premises_name": "${booking.premises.name}",
+          "adhoc": ${booking.adhoc},
+          "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
+          "service": "${booking.service}",
+          "application_id": "${booking.application?.id}",
+          "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else "null"},
+          "version": ${booking.version}
+       }
+    ]
     """.trimIndent()
 
   private fun approvedPremisesApplicationsJson(
     application: ApprovedPremisesApplicationEntity,
     offenderDetails: OffenderDetailSummary,
-  ) = """[
-            {
-              "id": "${application.id}",
-              "name": "$NAME",
-              "crn": "${offenderDetails.otherIds.crn}",
-              "noms_number": "${offenderDetails.otherIds.nomsNumber}",
-              "data": $DATA_JSON_SIMPLE, 
-              "document": $DOCUMENT_JSON_SIMPLE,
-              "created_at": "$CREATED_AT",
-              "submitted_at": "$SUBMITTED_AT",
-              "created_by_user": "${application.createdByUser.name}",
-              "application_user_name": "${application.applicantUserDetails?.name}",
-              "event_number": "$EVENT_NUMBER",
-              "is_womens_application": false,
-              "offence_id": "$OFFENCE_ID",
-              "conviction_id": $CONVICTION_ID,
-              "risk_ratings": ${risksJson()}, 
-              "release_type": "$RELEASE_TYPE_CONDITIONAL",
-              "arrival_date": "$ARRIVED_AT",
-              "is_withdrawn": false,
-              "withdrawal_reason": "$WITHDRAWAL_REASON_NOT_WITHDRAWN",
-              "other_withdrawal_reason": "$OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE",
-              "is_emergency_application": true,
-              "target_location": null,
-              "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
-              "inmate_in_out_status_on_submission": null,
-              "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
-              "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
-              "ap_type": "${ApprovedPremisesType.NORMAL}",
-              "case_manager_name": "${application.caseManagerUserDetails?.name}",
-              "case_manager_is_not_applicant" : true
-            }
-        ]
+  ) = """
+   [
+       {
+          "id": "${application.id}",
+          "name": "$NAME",
+          "crn": "${offenderDetails.otherIds.crn}",
+          "noms_number": "${offenderDetails.otherIds.nomsNumber}",
+          "data": $DATA_JSON_SIMPLE, 
+          "document": $DOCUMENT_JSON_SIMPLE,
+          "created_at": "$CREATED_AT",
+          "submitted_at": "$SUBMITTED_AT",
+          "created_by_user": "${application.createdByUser.name}",
+          "application_user_name": "${application.applicantUserDetails?.name}",
+          "event_number": "$EVENT_NUMBER",
+          "is_womens_application": false,
+          "offence_id": "$OFFENCE_ID",
+          "conviction_id": $CONVICTION_ID,
+          "risk_ratings": ${risksJson()}, 
+          "release_type": "$RELEASE_TYPE_CONDITIONAL",
+          "arrival_date": "$ARRIVED_AT",
+          "is_withdrawn": false,
+          "withdrawal_reason": "$WITHDRAWAL_REASON_NOT_WITHDRAWN",
+          "other_withdrawal_reason": "$OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE",
+          "is_emergency_application": true,
+          "target_location": null,
+          "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
+          "inmate_in_out_status_on_submission": null,
+          "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
+          "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
+          "ap_type": "${ApprovedPremisesType.NORMAL}",
+          "case_manager_name": "${application.caseManagerUserDetails?.name}",
+          "case_manager_is_not_applicant" : true
+       }
+   ]
   """.trimIndent()
 
   private fun approvedPremisesApplicationTimelineNotesJson(
@@ -457,18 +527,17 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     serviceName: ServiceName = ServiceName.approvedPremises,
   ): String =
     """
-      [ 
-        {
-        "application_id":"${application.id}",
-        "service":"${serviceName.value}",
-        "crn":"${offender.otherIds.crn}",
-        "noms_number":"${offender.otherIds.nomsNumber}",
-        "body":"${timelineNote.body}",
-        "created_at":"$CREATED_AT_NO_TZ",
-        "user_name":"${timelineNote.createdBy?.name}"
-       
-        }
-      ]
+    [ 
+      {
+          "application_id":"${application.id}",
+          "service":"${serviceName.value}",
+          "crn":"${offender.otherIds.crn}",
+          "noms_number":"${offender.otherIds.nomsNumber}",
+          "body":"${timelineNote.body}",
+          "created_at":"$CREATED_AT_NO_TZ",
+          "user_name":"${timelineNote.createdBy?.name}"
+      }
+    ]
     """.trimIndent()
 
   private fun approvedPremisesAssessmentJson(
@@ -477,31 +546,32 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     assessment: ApprovedPremisesAssessmentEntity,
   ): String =
     """
-   [
-      {
-        "application_id":"${application.id}",
-        "assessment_id":"${assessment.id}",
-        "crn":"${offenderDetails.otherIds.crn}",
-        "noms_number":"${offenderDetails.otherIds.nomsNumber}",
-        "assessor_name":"${assessment.allocatedToUser?.name}",
-        "data":$DATA_JSON_SIMPLE,
-        "document":$DOCUMENT_JSON_SIMPLE,
-        "created_at":"$CREATED_AT",
-        "allocated_at":"$ALLOCATED_AT",
-        "submitted_at":"$SUBMITTED_AT",
-        "reallocated_at":null,
-        "due_at":"$DUE_AT",
-        "decision":"${AssessmentDecision.REJECTED}",
-        "rejection_rationale":"rejected as no good",
-        "service":"approved-premises",
-        "is_withdrawn":false,
-        "created_from_appeal":false
-     }
+    [
+       {
+          "application_id":"${application.id}",
+          "assessment_id":"${assessment.id}",
+          "crn":"${offenderDetails.otherIds.crn}",
+          "noms_number":"${offenderDetails.otherIds.nomsNumber}",
+          "assessor_name":"${assessment.allocatedToUser?.name}",
+          "data":$DATA_JSON_SIMPLE,
+          "document":$DOCUMENT_JSON_SIMPLE,
+          "created_at":"$CREATED_AT",
+          "allocated_at":"$ALLOCATED_AT",
+          "submitted_at":"$SUBMITTED_AT",
+          "reallocated_at":null,
+          "due_at":"$DUE_AT",
+          "decision":"${AssessmentDecision.REJECTED}",
+          "rejection_rationale":"rejected as no good",
+          "service":"approved-premises",
+          "is_withdrawn":false,
+          "created_from_appeal":false
+       }
  ]
     """.trimIndent()
 
-  private fun risksJson(): String = """
-         {
+  private fun risksJson(): String =
+    """
+    {
         "roshRisks" : {
           "status" : "NotFound",
           "value" : null
@@ -521,26 +591,26 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "status" : "NotFound",
           "value" : null
         }
-      }
-  """.trimIndent()
+    }
+    """.trimIndent()
 
   private fun approvedPremisesAssessmentClarificationNoteJson(
     assessment: ApprovedPremisesAssessmentEntity,
     offenderDetails: OffenderDetailSummary,
     clarificationNote: AssessmentClarificationNoteEntity,
   ) = """
-    [
-      {
-        "application_id": "${assessment.application.id}",
-        "assessment_id": "${assessment.id}",
-        "crn": "${offenderDetails.otherIds.crn}",
-        "noms_number": "${offenderDetails.otherIds.nomsNumber}",
-        "created_at": "$CREATED_AT",
-        "query": "${clarificationNote.query}",
-        "response": "${clarificationNote.response}",
-        "created_by_user": "${clarificationNote.createdByUser.name}",   
-      }
-    ]
+      [
+        {
+          "application_id": "${assessment.application.id}",
+          "assessment_id": "${assessment.id}",
+          "crn": "${offenderDetails.otherIds.crn}",
+          "noms_number": "${offenderDetails.otherIds.nomsNumber}",
+          "created_at": "$CREATED_AT",
+          "query": "${clarificationNote.query}",
+          "response": "${clarificationNote.response}",
+          "created_by_user": "${clarificationNote.createdByUser.name}",   
+        }
+      ]
   """.trimIndent()
 
   private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =

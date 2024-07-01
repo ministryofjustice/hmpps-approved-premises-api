@@ -23,6 +23,7 @@ class SubjectAccessRequestService(
     val apBookingExtensions = subjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
     val apCancellations = subjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
     val apBedMoves = subjectAccessRequestRepository.bedMoves(crn, nomsNumber, startDate, endDate)
+    val appeals = subjectAccessRequestRepository.appeals(crn, nomsNumber, startDate, endDate)
 
     val result = """
       {
@@ -34,7 +35,8 @@ class SubjectAccessRequestService(
             "Bookings": $apBookings,
             "BookingExtensions": $apBookingExtensions,
             "Cancellations": $apCancellations,
-            "BedMoves": $apBedMoves 
+            "BedMoves": $apBedMoves,
+            "Appeals": $appeals
         }
       }
     """.trimIndent()
