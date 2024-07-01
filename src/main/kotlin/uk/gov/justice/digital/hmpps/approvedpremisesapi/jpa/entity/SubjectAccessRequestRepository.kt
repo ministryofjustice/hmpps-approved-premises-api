@@ -390,6 +390,47 @@ from
     return toJsonString(result)
   }
 
+  fun appeals(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+    select json_agg(appeals) as json
+    from ( 
+          select
+            app.crn,
+            app.noms_number,
+            a.id as appeal_id,
+            a.application_id,
+            a.assessment_id,
+            a.appeal_date,
+            a.appeal_detail,
+            a.decision ,
+            a.decision_detail,
+            a.created_at as appeal_created_at,
+            u."name" as created_by_user     
+          from appeals a
+            inner join users u on
+            u.id = a.created_by_user_id
+            inner join applications app on
+            app.id = a.application_id
+            inner join assessments assess on
+            assess.id = a.assessment_id 
+          where
+            (app.crn = :crn
+              or app.noms_number = :noms_number )
+          and (:start_date is null or app.created_at >= :start_date)
+          and (:end_date is null or app.created_at <= :end_date)
+      ) appeals;
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+
   private fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value ?: "[]"
 
   private fun MapSqlParameterSource.addSarParameters(
