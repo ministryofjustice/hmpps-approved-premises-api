@@ -827,7 +827,7 @@ components:
           $ref: '#/components/schemas/Task'
         users:
           type: array
-          description: Users to which this task can be allocated
+          description: Users to whom this task can be allocated
           items:
             $ref: '#/components/schemas/UserWithWorkload'
       required:
