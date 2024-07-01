@@ -60,7 +60,9 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
           prisonReleaseType = referralData.prisonReleaseTypes,
           prisonAtReferral = referralData.prisonNameOnCreation,
           releaseDate = referralData.personReleaseDate,
+          updatedReleaseDate = referralData.updatedReleaseDate,
           accommodationRequiredDate = referralData.accommodationRequiredDate?.toLocalDateTime()?.toLocalDate(),
+          updatedAccommodationRequiredFromDate = referralData.updatedAccommodationRequiredFromDate,
           bookingOffered = (referralData.bookingId != null).toYesNo(),
         ),
       )
