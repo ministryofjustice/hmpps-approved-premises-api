@@ -4656,8 +4656,6 @@ components:
         - FullPerson
         - RestrictedPerson
         - UnknownPerson
-        - FullPersonInfo
-        - RestrictedPersonInfo
     Withdrawables:
       type: object
       properties:
