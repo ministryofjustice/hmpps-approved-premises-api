@@ -33,7 +33,7 @@ generic-service:
     SPRING_REDIS_PORT: 6379
     SPRING_REDIS_SSL: true
     SENTRY_SAMPLE-RATE: 1
-    SENTRY_TRACES-SAMPLE-RATE: 0.2
+    SENTRY_TRACES-SAMPLE-RATE: 0.01
     HMPPS_SQS_PROVIDER: "aws"
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.

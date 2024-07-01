@@ -38,7 +38,7 @@ class TracesSamplerCallbackTest {
   }
 
   @Test
-  fun `Child traces are always sampled`() {
+  fun `Child traces are sampled at the recommended sample rate of 0_01`() {
     val mockedContext = mockk<SamplingContext>()
 
     every { mockedContext.transactionContext.parentSampled } returns true
@@ -46,6 +46,6 @@ class TracesSamplerCallbackTest {
 
     val result = tracesSamplerCallback.sample(mockedContext)
 
-    assertThat(result).isEqualTo(1.0)
+    assertThat(result).isEqualTo(0.01)
   }
 }

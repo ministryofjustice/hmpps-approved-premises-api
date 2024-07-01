@@ -14,10 +14,11 @@ class TracesSamplerCallback() : SentryOptions.TracesSamplerCallback {
     it.map { pattern -> parser.parse(pattern) }
   }
 
+  @SuppressWarnings("MagicNumber")
   override fun sample(context: SamplingContext): Double? {
     val parentSampled = context.transactionContext.parentSampled
     if (parentSampled != null) {
-      return if (parentSampled) 1.0 else 0.0
+      return if (parentSampled) 0.01 else 0.0
     }
 
     val path = PathContainer.parsePath(removeHttpMethodPrefix(context.transactionContext.name))
