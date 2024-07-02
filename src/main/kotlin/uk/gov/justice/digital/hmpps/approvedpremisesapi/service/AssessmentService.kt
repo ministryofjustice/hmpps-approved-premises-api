@@ -273,6 +273,8 @@ class AssessmentService(
         referralRejectionReason = null,
         referralRejectionReasonDetail = null,
         dueAt = null,
+        releaseDate = null,
+        accommodationRequiredFromDate = null,
       ),
     )
 

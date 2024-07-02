@@ -2353,8 +2353,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.referralRejectionReason?.name)
     assertThat(actualReferralReportRow.rejectionReasonExplained).isEqualTo(expectedAssessment.referralRejectionReasonDetail)
     assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())
+    assertThat(actualReferralReportRow.updatedAccommodationRequiredFromDate).isEqualTo(LocalDate.now().plusDays(20).toString())
     assertThat(actualReferralReportRow.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
     assertThat(actualReferralReportRow.releaseDate).isEqualTo(application.personReleaseDate)
+    assertThat(actualReferralReportRow.updatedReleaseDate).isEqualTo(LocalDate.now().plusDays(20).toString())
     assertThat(actualReferralReportRow.pdu).isEqualTo(application.pdu)
   }
 

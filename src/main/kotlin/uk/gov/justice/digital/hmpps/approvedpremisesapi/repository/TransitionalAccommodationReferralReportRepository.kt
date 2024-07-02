@@ -41,11 +41,14 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       premises.town as town,
       premises.postcode as postCode,
       taa.pdu as pdu,
-      taa.prison_release_types as prisonReleaseTypes
+      taa.prison_release_types as prisonReleaseTypes,
+      tass.release_date as updatedReleaseDate,
+      tass.accommodation_required_from_date as updatedAccommodationRequiredFromDate
     FROM temporary_accommodation_assessments aa
     JOIN assessments a on aa.assessment_id = a.id AND a.service='temporary-accommodation' AND a.reallocated_at IS NULL
+    JOIN temporary_accommodation_assessments tass on tass.assessment_id = a.id
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
-    LEFT OUTER JOIN temporary_accommodation_applications taa on ap.id = taa.id
+    LEFT JOIN temporary_accommodation_applications taa on ap.id = taa.id
     LEFT JOIN probation_regions probation_region ON probation_region.id = taa.probation_region_id
     LEFT JOIN bookings b on b.application_id = ap.id AND b.service='temporary-accommodation'
     LEFT JOIN premises premises ON premises.id = b.premises_id and premises.service='temporary-accommodation'
@@ -97,4 +100,6 @@ interface TransitionalAccommodationReferralReportData {
   val town: String?
   val postCode: String?
   val prisonReleaseTypes: String?
+  val updatedReleaseDate: LocalDate?
+  val updatedAccommodationRequiredFromDate: LocalDate?
 }

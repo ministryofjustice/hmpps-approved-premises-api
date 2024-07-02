@@ -3716,6 +3716,12 @@ paths:
         - Assessment data
       summary: Updates an assessment
       parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only premises for this service will be returned
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
         - in: path
           name: assessmentId
           required: true

@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -50,6 +51,7 @@ class AssessmentController(
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
+  private val cas3AssessmentService: Cas3AssessmentService,
 ) : AssessmentsApiDelegate {
 
   override fun assessmentsGet(
@@ -123,12 +125,21 @@ class AssessmentController(
   }
 
   @Transactional
-  override fun assessmentsAssessmentIdPut(assessmentId: UUID, updateAssessment: UpdateAssessment): ResponseEntity<Assessment> {
+  override fun assessmentsAssessmentIdPut(
+    assessmentId: UUID,
+    updateAssessment: UpdateAssessment,
+    xServiceName: ServiceName?,
+  ): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
+    val assessmentAuthResult = when (xServiceName) {
+      ServiceName.temporaryAccommodation -> cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment)
+      else -> assessmentService.updateAssessment(
+        user,
+        assessmentId,
+        objectMapper.writeValueAsString(updateAssessment.data),
+      )
+    }
 
-    val serializedData = objectMapper.writeValueAsString(updateAssessment.data)
-
-    val assessmentAuthResult = assessmentService.updateAssessment(user, assessmentId, serializedData)
     val assessmentValidationResult = when (assessmentAuthResult) {
       is AuthorisableActionResult.Success -> assessmentAuthResult.entity
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
@@ -138,11 +149,17 @@ class AssessmentController(
     val assessment = when (assessmentValidationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = assessmentValidationResult.conflictingEntityId,
+        conflictReason = assessmentValidationResult.message,
+      )
+
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    val ignoreLao = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+    val ignoreLao =
+      (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+
     val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLao)
 
     return ResponseEntity.ok(
