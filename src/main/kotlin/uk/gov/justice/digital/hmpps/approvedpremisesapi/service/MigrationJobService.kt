@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.sentry.Sentry
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.LostBedMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -179,6 +181,12 @@ class MigrationJobService(
           applicationContext.getBean(DomainEventRepository::class.java),
           applicationContext.getBean(TransactionTemplate::class.java),
           applicationContext.getBean(JdbcTemplate::class.java),
+        )
+
+        MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
+          applicationContext.getBean(DomainEventRepository::class.java),
+          applicationContext.getBean(ObjectMapper::class.java),
+          applicationContext.getBean(MigrationLogger::class.java),
         )
       }
 
