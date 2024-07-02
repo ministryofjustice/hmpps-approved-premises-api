@@ -16,6 +16,7 @@ class Cas1UpdateNomsNumberSeedJob(
   fileName = fileName,
   requiredHeaders = setOf(
     "crn",
+    "oldNomsNumber",
     "newNomsNumber",
   ),
 ) {
@@ -23,15 +24,17 @@ class Cas1UpdateNomsNumberSeedJob(
 
   override fun deserializeRow(columns: Map<String, String>) = UpdateNomsNumberSeedRow(
     crn = columns["crn"]!!.trim(),
+    oldNomsNumber = columns["oldNomsNumber"]!!.trim(),
     newNomsNumber = columns["newNomsNumber"]!!.trim(),
   )
 
   override fun processRow(row: UpdateNomsNumberSeedRow) {
     val crn = row.crn
+    val oldNomsNumber = row.oldNomsNumber
     val newNomsNumber = row.newNomsNumber
-    log.info("Updating NOMS number for all applications with CRN $crn to $newNomsNumber")
+    log.info("Updating NOMS number for all applications with CRN $crn and NOMS $oldNomsNumber to $newNomsNumber")
 
-    val applications = applicationRepository.findByCrn(crn)
+    val applications = applicationRepository.findByCrnAndNoms(crn, oldNomsNumber)
 
     applications.forEach { application ->
       val applicationId = UUID.fromString(application.getId())
@@ -47,13 +50,14 @@ class Cas1UpdateNomsNumberSeedJob(
     }
     log.info("Have updated ${applications.size} applications")
 
-    log.info("Updating NOMS number for all bookings with CRN $crn to $newNomsNumber")
-    val bookingUpdatedCount = bookingRepository.updateNomsByCrn(crn, newNomsNumber)
+    log.info("Updating NOMS number for all bookings with CRN $crn and NOMS $oldNomsNumber to $newNomsNumber")
+    val bookingUpdatedCount = bookingRepository.updateNomsByCrn(crn, oldNomsNumber, newNomsNumber)
     log.info("Have updated $bookingUpdatedCount bookings")
   }
 }
 
 data class UpdateNomsNumberSeedRow(
   val crn: String,
+  val oldNomsNumber: String,
   val newNomsNumber: String,
 )
