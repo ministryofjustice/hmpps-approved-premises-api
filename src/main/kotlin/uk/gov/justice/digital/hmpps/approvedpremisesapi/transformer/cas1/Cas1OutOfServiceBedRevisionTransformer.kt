@@ -21,7 +21,7 @@ class Cas1OutOfServiceBedRevisionTransformer(
     return Cas1OutOfServiceBedRevision(
       id = jpa.id,
       updatedAt = jpa.createdAt.toInstant(),
-      updatedBy = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),
+      updatedBy = jpa.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
       revisionType = revisionType,
       outOfServiceFrom = if (shouldDisplayOutOfServiceFrom(revisionType)) jpa.startDate else null,
       outOfServiceTo = if (shouldDisplayOutOfServiceTo(revisionType)) jpa.endDate else null,

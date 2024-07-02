@@ -3796,6 +3796,7 @@ components:
         - update_cas1_notice_types
         - update_cas1_backfill_user_ap_area
         - update_cas1_out_of_service_bed_reasons
+        - update_cas1_lost_beds_to_out_of_service_beds
         - update_cas3_application_offender_name
         - update_cas3_users_pdu_from_community_api
         - update_cas1_populate_app_reason_for_short_notice_metadata
@@ -5044,7 +5045,6 @@ components:
       required:
         - id
         - updatedAt
-        - updatedBy
         - revisionType
     Cas1OutOfServiceBedRevisionType:
       type: string

@@ -14,7 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
@@ -25,11 +28,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1LostBedsToOutOfServiceBedsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateUsersPduFromCommunityApiJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.LostBedMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJob
@@ -143,6 +148,16 @@ class MigrationJobService(
         MigrationJobType.cas1OutOfServiceBedReasons -> Cas1OutOfServiceBedReasonMigrationJob(
           applicationContext.getBean(LostBedReasonRepository::class.java),
           applicationContext.getBean(Cas1OutOfServiceBedReasonRepository::class.java),
+        )
+
+        MigrationJobType.cas1LostBedsToOutOfServiceBeds -> Cas1LostBedsToOutOfServiceBedsMigrationJob(
+          applicationContext.getBean(LostBedMigrationRepository::class.java),
+          applicationContext.getBean(Cas1OutOfServiceBedRepository::class.java),
+          applicationContext.getBean(Cas1OutOfServiceBedCancellationRepository::class.java),
+          applicationContext.getBean(Cas1OutOfServiceBedReasonRepository::class.java),
+          applicationContext.getBean(Cas1OutOfServiceBedRevisionRepository::class.java),
+          transactionTemplate,
+          applicationContext.getBean(MigrationLogger::class.java),
         )
 
         MigrationJobType.cas3ApplicationOffenderName -> Cas3UpdateApplicationOffenderNameJob(

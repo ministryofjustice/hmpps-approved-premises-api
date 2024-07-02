@@ -1428,9 +1428,9 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
           .jsonPath("$.cancellation").isEqualTo(null)
-          .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy.id.toString())
-          .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy.name)
-          .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy.deliusUsername)
+          .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy!!.id.toString())
+          .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy!!.name)
+          .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
               Cas1OutOfServiceBedRevisionType.created.value,
@@ -1628,9 +1628,9 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
             .jsonPath("$.cancellation").isEqualTo(null)
-            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy.id.toString())
-            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy.name)
-            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy.deliusUsername)
+            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy!!.id.toString())
+            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy!!.name)
+            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
                 Cas1OutOfServiceBedRevisionType.created.value,
@@ -1830,9 +1830,9 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
             .jsonPath("$.cancellation").isEqualTo(null)
-            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy.id.toString())
-            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy.name)
-            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy.deliusUsername)
+            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy!!.id.toString())
+            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy!!.name)
+            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
                 Cas1OutOfServiceBedRevisionType.created.value,
