@@ -92,6 +92,17 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT DISTINCT(b.crn) FROM BookingEntity b")
   fun getDistinctCrns(): List<String>
 
+  @Modifying
+  @Query(
+    """
+    UPDATE bookings SET 
+    noms_number = :nomsNumber
+    WHERE crn = :crn
+    """,
+    nativeQuery = true,
+  )
+  fun updateNomsByCrn(crn: String, nomsNumber: String): Int
+
   @Query("SELECT DISTINCT(b.nomsNumber) FROM BookingEntity b WHERE b.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
 

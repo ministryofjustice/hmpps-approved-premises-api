@@ -152,6 +152,23 @@ AND (
   )
   fun findAllSubmittedApprovedPremisesApplicationsWithShortNotice(): List<UUID>
 
+  @Query(
+    value = """
+    SELECT 
+     CAST(id AS text) as id,
+     noms_number as nomsNumber
+    FROM applications 
+    WHERE UPPER(crn) = UPPER(:crn)
+    """,
+    nativeQuery = true,
+  )
+  fun findByCrn(crn: String): List<CrnSearchResult>
+
+  interface CrnSearchResult {
+    fun getId(): String
+    fun getNomsNumber(): String
+  }
+
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
 
@@ -261,6 +278,17 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
     """,
   )
   fun updateEventNumber(applicationId: UUID, eventNumber: String, offenceId: String, convictionId: Long)
+
+  @Modifying
+  @Query(
+    """
+    UPDATE applications set 
+    noms_number = :nomsNumber
+    where id = :applicationId
+    """,
+    nativeQuery = true,
+  )
+  fun updateNomsNumber(applicationId: UUID, nomsNumber: String)
 }
 
 @Repository

@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.Cas1UpdateNomsNumberSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CharacteristicsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
@@ -209,6 +210,12 @@ class SeedService(
         SeedFileType.characteristics -> CharacteristicsSeedJob(
           filename,
           applicationContext.getBean(CharacteristicRepository::class.java),
+        )
+        SeedFileType.updateNomsNumber -> Cas1UpdateNomsNumberSeedJob(
+          filename,
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(ApplicationTimelineNoteService::class.java),
+          applicationContext.getBean(BookingRepository::class.java),
         )
         SeedFileType.temporaryAccommodationPremises -> TemporaryAccommodationPremisesSeedJob(
           filename,
