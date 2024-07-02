@@ -214,4 +214,36 @@ class WebClientCache(
     val hasResponseBody: Boolean,
     val attempt: Int?,
   )
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  data class MarshallablePreemptiveCacheMetadata(
+    val httpStatus: HttpStatus,
+    val refreshableAfter: Instant,
+    val method: MarshallableHttpMethod?,
+    val path: String?,
+    val hasResponseBody: Boolean,
+    val attempt: Int?,
+  ) {
+    fun toPreemptiveCacheMetadata(): PreemptiveCacheMetadata {
+      return PreemptiveCacheMetadata(
+        httpStatus,
+        refreshableAfter,
+        if (method != null) HttpMethod.valueOf(method.name) else null,
+        path,
+        hasResponseBody,
+        attempt,
+      )
+    }
+  }
+
+  enum class MarshallableHttpMethod {
+    GET,
+    HEAD,
+    POST,
+    PUT,
+    PATCH,
+    DELETE,
+    OPTIONS,
+    TRACE,
+  }
 }
