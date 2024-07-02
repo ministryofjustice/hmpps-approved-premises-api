@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -22,6 +24,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -44,6 +53,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"
     const val SUBMITTED_AT = "2021-10-19T16:00:00+00:00"
+    const val SUBMITTED_AT_NO_TZ = "2021-10-19T16:00:00"
     const val ARRIVED_AT = "2021-09-20T16:00:00+00:00"
     const val ALLOCATED_AT = "2021-09-21T16:00:00+00:00"
     const val CREATED_AT_NO_TZ = "2021-09-18T16:00:00"
@@ -53,6 +63,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     const val CANCELLATION_DATE = "2021-09-25T16:00:00+00:00"
     const val RESPONSE_RECEIVED_AT = "2021-10-23"
     const val APPEAL_DATE_ONLY = "2021-10-24"
+    const val DECISION_MADE_AT = "2021-10-25T16:01:00+00:00"
+    const val DECISION_MADE_AT_NO_TZ = "2021-10-25T16:01:00"
 
     var ARRIVED_AT_DATE_ONLY = this.ARRIVED_AT.substring(0..9)
     var DEPARTED_AT_DATE_ONLY = this.DEPARTED_AT.substring(0..9)
@@ -93,7 +105,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
           }
       }
       """.trimIndent(),
@@ -112,7 +128,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
     val expectedJson = """
     {
-      "approvedPremises" : 
+      "approvedPremises": 
       {    
         "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
         "ApplicationTimeline" :[ ],
@@ -122,7 +138,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
-        "Appeals": [ ]
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
@@ -154,7 +174,12 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
-        "Appeals": [ ]
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ]
+          
       }
     }
     """.trimIndent()
@@ -187,7 +212,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
-        "Appeals": [ ]
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ]
       }
     }
     """
@@ -222,7 +251,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
@@ -252,8 +285,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
-       
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
@@ -284,7 +320,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": ${bookingExtensionJson(bookingExtension)},
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
@@ -315,7 +355,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": ${cancellationJson(cancellation)},
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
@@ -346,7 +390,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": ${bedMovesJson(bedMove)},
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
@@ -384,13 +432,178 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": ${appealsJson(appeal)}
+          "Appeals": ${appealsJson(appeal)},
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
       }
     }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
   }
+
+  @Test
+  fun `get CAS1 information - has a placement application`() {
+    val (offender, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offender)
+
+    val placementApplication = placementApplicationEntity(application)
+    val result =
+      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": [ ],
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": [ ],
+          "Appeals": [ ],
+          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ]
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `get CAS1 information - has a placement request with requirements`() {
+    val (offender, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offender)
+    val assessment = approvedPremisesAssessment(application)
+    val booking = bookingEntity(offender, application)
+    val placementApplication = placementApplicationEntity(application)
+    val allocatedUser = userEntity()
+
+    val placementRequest = placementRequestEntity(booking, assessment, application, allocatedUser, placementApplication)
+    val result =
+      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": ${approvedPremisesAssessmentJson(application, offender, assessment)},
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": ${bookingsJson(booking)},
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": [ ],
+          "Appeals": [ ],
+          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
+          "PlacementRequests": ${approvedPremisesPlacementRequestsJson(placementRequest)},
+          "PlacementRequirements": ${placementRequirementJson(placementRequest.placementRequirements)},
+          "PlacementRequirementCriteria" : ${placementRequirementCriteriaJson(placementRequest.placementRequirements)}
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun placementRequirementCriteriaJson(placementRequirements: PlacementRequirementsEntity): String =
+    """
+      [
+         {
+            "crn": "${placementRequirements.application.crn}",
+            "noms_number": "${placementRequirements.application.nomsNumber}",
+            "placement_requirement_id": "${placementRequirements.id}",
+            "criteria_name": "${placementRequirements.desirableCriteria[0].name}",
+            "service_scope": "${placementRequirements.desirableCriteria[0].serviceScope}",
+            "model_scope": "${placementRequirements.desirableCriteria[0].modelScope}",
+            "property_name": "${placementRequirements.desirableCriteria[0].propertyName}",
+            "is_active": ${placementRequirements.desirableCriteria[0].isActive},
+            "criteria_type": "DESIRABLE"
+        },
+        {
+            "crn": "${placementRequirements.application.crn}",
+            "noms_number": "${placementRequirements.application.nomsNumber}",
+            "placement_requirement_id": "${placementRequirements.id}",
+            "criteria_name": "${placementRequirements.essentialCriteria[0].name}",
+            "service_scope": "${placementRequirements.essentialCriteria[0].serviceScope}",
+            "model_scope": "${placementRequirements.essentialCriteria[0].modelScope}",
+            "property_name": "${placementRequirements.essentialCriteria[0].propertyName}",
+            "is_active": ${placementRequirements.essentialCriteria[0].isActive},
+            "criteria_type": "ESSENTIAL"
+        }
+      ]
+    """.trimIndent()
+
+  private fun placementRequirementJson(placementRequirement: PlacementRequirementsEntity): String =
+    """
+    [
+        {
+          "crn": "${placementRequirement.application.crn}",
+          "noms_number": "${placementRequirement.application.nomsNumber}",
+          "application_id": "${placementRequirement.application.id}",
+          "assessment_id": "${placementRequirement.assessment.id}",
+          "placement_requirements_id": "${placementRequirement.id}",
+          "gender": "${placementRequirement.gender.value.uppercase()}",
+          "ap_type": "${placementRequirement.apType.value.uppercase()}",
+          "outcode": "${placementRequirement.postcodeDistrict.outcode}",
+          "radius": ${placementRequirement.radius},
+          "created_at": "$CREATED_AT"
+        }
+    ]
+    """.trimIndent()
+
+  private fun approvedPremisesPlacementRequestsJson(placementRequest: PlacementRequestEntity): String =
+    """
+    [
+        {
+          "crn": "${placementRequest.application.crn}",
+          "noms_number": "${placementRequest.application.nomsNumber}",
+          "expected_arrival": "$ARRIVED_AT_DATE_ONLY",
+          "duration": ${placementRequest.duration},
+          "created_at": "$CREATED_AT",
+          "placement_application_id": "${placementRequest.placementApplication?.id}",
+          "booking_id": "${placementRequest.booking?.id}",
+          "application_id": "${placementRequest.application.id}",
+          "assessment_id": "${placementRequest.assessment.id}",
+          "notes": "${placementRequest.notes}",
+          "is_parole": ${placementRequest.isParole},
+          "is_withdrawn": ${placementRequest.isWithdrawn},
+          "withdrawal_reason": "${placementRequest.withdrawalReason}",
+          "due_at": "$DUE_AT"
+        }
+    ]
+    """.trimIndent()
+
+  private fun approvedPremisesPlacementApplicationsJson(placementApplication: PlacementApplicationEntity): String =
+    """
+    [
+      {
+        "crn": "${placementApplication.application.crn}",
+        "noms_number": "${placementApplication.application.nomsNumber}",
+        "application_id": "${placementApplication.application.id}",
+        "data": $DATA_JSON_SIMPLE,
+        "document": $DOCUMENT_JSON_SIMPLE,
+        "created_at": "$CREATED_AT_NO_TZ",
+        "submitted_at": "$SUBMITTED_AT_NO_TZ" ,
+        "allocated_at": null,
+        "reallocated_at": null,
+        "due_at": null,
+        "decision": "${placementApplication.decision}",
+        "decision_made_at": "$DECISION_MADE_AT_NO_TZ" ,
+        "placement_type": "${PlacementType.ADDITIONAL_PLACEMENT}",
+        "is_withdrawn": ${placementApplication.isWithdrawn},
+        "withdrawal_reason": "${placementApplication.withdrawalReason}",
+        "created_by_user": "${placementApplication.createdByUser.name}",
+        "allocated_user": null
+      }
+    ] 
+    """.trimIndent()
 
   private fun appealsJson(appeal: AppealEntity): String =
     """
@@ -613,6 +826,68 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       ]
   """.trimIndent()
 
+  private fun placementRequestEntity(
+    booking: BookingEntity,
+    assessment: ApprovedPremisesAssessmentEntity,
+    application: ApprovedPremisesApplicationEntity,
+    allocatedUser: UserEntity,
+    placementApplication: PlacementApplicationEntity,
+  ) = placementRequestFactory.produceAndPersist {
+    withBooking(booking)
+    withAssessment(assessment)
+    withApplication(application)
+    withPlacementApplication(placementApplication)
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withAllocatedToUser(allocatedUser)
+    withDueAt(OffsetDateTime.parse(DUE_AT))
+    withDuration(5)
+    withExpectedArrival(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+    withIsParole(false)
+    withIsWithdrawn(true)
+    withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
+    withNotes("some notes")
+    withPlacementRequirements(placementRequirementEntity(application, assessment))
+  }
+
+  private fun placementRequirementEntity(
+    application: ApprovedPremisesApplicationEntity,
+    assessment: ApprovedPremisesAssessmentEntity,
+  ) = placementRequirementsFactory.produceAndPersist {
+    withApplication(application)
+    withAssessment(assessment)
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withApType(ApType.normal)
+    withDesirableCriteria(listOf(characteristic()))
+    withEssentialCriteria(listOf(characteristic()))
+    withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+  }
+
+  private fun characteristic() =
+    characteristicEntityFactory.produceAndPersist {
+      withName(randomStringMultiCaseWithNumbers(10))
+      withServiceScope(Characteristic.ServiceScope.star.value)
+      withModelScope(Characteristic.ModelScope.room.value)
+      withPropertyName(randomStringMultiCaseWithNumbers(6))
+    }
+  private fun placementApplicationEntity(application: ApprovedPremisesApplicationEntity) =
+    placementApplicationFactory.produceAndPersist {
+      withApplication(application)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withDueAt(null)
+      withData(DATA_JSON_SIMPLE)
+      withDocument(DOCUMENT_JSON_SIMPLE)
+      withAllocatedToUser(null)
+      withCreatedByUser(application.createdByUser)
+      withDecision(PlacementApplicationDecision.ACCEPTED)
+      withDecisionMadeAt(OffsetDateTime.parse(DECISION_MADE_AT))
+      withIsWithdrawn(true)
+      withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+      withReallocatedAt(null)
+      withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntity())
+      withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+    }
+
   private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
@@ -620,6 +895,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
   private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity =
     approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+  private fun approvedPremisesPlacementApplicationJsonSchemaEntity() =
+    approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 

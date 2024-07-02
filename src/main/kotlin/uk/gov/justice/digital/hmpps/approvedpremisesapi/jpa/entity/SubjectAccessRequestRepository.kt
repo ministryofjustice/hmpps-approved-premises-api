@@ -419,7 +419,7 @@ from
               or app.noms_number = :noms_number )
           and (:start_date is null or app.created_at >= :start_date)
           and (:end_date is null or app.created_at <= :end_date)
-      ) appeals;
+      ) appeals
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,
@@ -427,6 +427,211 @@ from
         startDate,
         endDate,
       ),
+    )
+    return toJsonString(result)
+  }
+
+  fun placementApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+       select json_agg(placement_applications) 
+       as json from (
+          select
+            a.crn,
+            a.noms_number,
+            pa.application_id,
+            pa."data",
+            pa."document",
+            pa.created_at,
+            pa.submitted_at ,
+            pa.allocated_at,
+            pa.reallocated_at,
+            pa.due_at,
+            pa.decision,
+            pa.decision_made_at,
+            case
+               when pa.placement_type = '0' then 'ROTL'
+               when pa.placement_type = '1' then 'RELEASE_FOLLOWING_DECISION'
+               when pa.placement_type = '2' then 'ADDITIONAL_PLACEMENT' 
+               else ''
+            end as placement_type,
+            pa.is_withdrawn,
+            pa.withdrawal_reason,
+            cu."name" as created_by_user,
+            au."name" as allocated_user
+          from
+            placement_applications pa
+          inner join applications a on
+            pa.application_id = a.id
+          inner join users cu on
+            cu.id = pa.created_by_user_id
+          left join users au on
+            au.id = pa.allocated_to_user_id
+          where
+            a.service = :service_name and
+            (a.crn = :crn
+              or a.noms_number = :noms_number )
+          and (:start_date is null or a.created_at >= :start_date)
+          and (:end_date is null or a.created_at <= :end_date)
+       ) placement_applications
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ).addValue("service_name", serviceName.value),
+    )
+    return toJsonString(result)
+  }
+
+  fun placementRequests(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+        select json_agg(placement_requests) 
+        as json from (
+        select 
+              app.crn,
+              app.noms_number, 
+              pr.expected_arrival,
+              pr.duration, 
+              pr.created_at,
+              pr.placement_application_id, 
+              pr.booking_id,
+              pr.application_id,
+              pr.assessment_id,
+              pr.notes,
+              pr.is_parole,
+              pr.is_withdrawn,
+              pr.withdrawal_reason,
+              pr.due_at
+          from placement_requests pr 
+          inner join applications app on
+            app.id = pr.application_id
+          where
+            (app.crn = :crn
+              or 
+              app.noms_number = :noms_number)
+          and 
+            (:start_date is null or app.created_at >= :start_date)
+          and 
+            (:end_date is null or app.created_at <= :end_date)
+        ) placement_requests  
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
+
+  fun placementRequirements(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+     select json_agg(placement_requirements) 
+     as json from (
+        select 
+             app.crn,
+             app.noms_number,
+             pr.application_id,
+             pr.assessment_id,
+             pr.id as placement_requirements_id,
+             case 
+                 when pr.gender = '0' then 'MALE'
+                 when pr.gender = '1' then 'FEMALE'
+                 else 'OTHER'
+             end gender,
+               case
+                 when pr.ap_type = '0' then 'NORMAL'
+                 when pr.ap_type = '1' then 'PIPE'
+                 when pr.ap_type = '2' then 'ESAP'
+                 when pr.ap_type = '3' then 'RFAP'
+                 when pr.ap_type = '4' then 'MHAP_ST_JOSEPHS'
+                 when pr.ap_type = '5' then 'MHAP_ELLIOTT_HOUSE'
+                 else 'other'
+             end ap_type,
+             pd.outcode,
+             pr.radius,
+             pr.created_at
+        from 
+             placement_requirements pr
+        left join postcode_districts pd on 
+        	   pd.id = pr.postcode_district_id 
+        inner join applications app on
+        	   app.id = pr.application_id
+        where
+             (app.crn = :crn
+              or 
+                 app.noms_number = :noms_number)
+        and 
+             (:start_date is null or app.created_at >= :start_date)
+        and 
+             (:end_date is null or app.created_at <= :end_date)
+      ) placement_requirements  
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
+
+  fun placementRequirementsCriteria(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+       select json_agg(placement_requirements_criteria) as json 
+       from (
+          select 
+    
+            app.crn,
+            app.noms_number,
+            pr.id as placement_requirement_id,
+            c."name" as criteria_name,
+            c.service_scope,
+            c.model_scope,
+            c.property_name,
+            c.is_active,
+            'DESIRABLE' as criteria_type
+          from placement_requirements pr
+          inner join applications app on
+       	    app.id = pr.application_id
+       	  left join placement_requirements_desirable_criteria prdc on 
+            prdc.placement_requirement_id  = pr.id 
+       	  inner join "characteristics" c on 
+            c.id = prdc.characteristic_id
+          where 
+       	    (app.crn = :crn
+                or 
+                app.noms_number = :noms_number)
+          and 
+            (:start_date is null or app.created_at >= :start_date)
+          and 
+            (:end_date is null or app.created_at <= :end_date)
+          union all 
+          select 
+            app.crn as crn,
+            app.noms_number as noms_number,
+            pr.id as placement_requirement_id,
+            c."name" as criteria_name,
+            c.service_scope,
+            c.model_scope,
+            c.property_name,
+            c.is_active,
+            'ESSENTIAL' as criteria_type
+          from placement_requirements pr
+          inner join applications app on
+       	    app.id = pr.application_id
+       	  left join placement_requirements_essential_criteria prec 
+            on prec.placement_requirement_id  = pr.id 
+       	  inner join "characteristics" c 
+            on c.id = prec.characteristic_id
+          where 
+       	    (app.crn = :crn
+              or 
+              app.noms_number = :noms_number)
+          and 
+            (:start_date is null or app.created_at >= :start_date)
+          and 
+            (:end_date is null or app.created_at <= :end_date)
+       	) placement_requirements_criteria
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
     )
     return toJsonString(result)
   }
