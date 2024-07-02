@@ -503,7 +503,7 @@ class PersonTransformerTest {
   }
 
   @Nested
-  inner class transformProbationOffenderToPersonApi {
+  inner class TransformProbationOffenderToPersonApi {
     @Test
     fun `transformProbationOffenderToPersonApi returns the correct response when all data is present`() {
       val nomsNumber = "NOMS"

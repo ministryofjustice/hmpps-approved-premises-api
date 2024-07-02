@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.sql.Date
-import java.sql.Timestamp
+import java.time.Instant
 import java.util.UUID
 
 @Repository
@@ -102,9 +102,9 @@ interface PlacementApplicationEntityReportRow {
   fun getRequestedArrivalDate(): Date?
   fun getRequestedDurationDays(): Int?
   fun getDecision(): String?
-  fun getDecisionMadeAt(): Timestamp?
-  fun getPlacementApplicationSubmittedAt(): Timestamp?
-  fun getApplicationSubmittedAt(): Timestamp?
+  fun getDecisionMadeAt(): Instant?
+  fun getPlacementApplicationSubmittedAt(): Instant?
+  fun getApplicationSubmittedAt(): Instant?
   fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?

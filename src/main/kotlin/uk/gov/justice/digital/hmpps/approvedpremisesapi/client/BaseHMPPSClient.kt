@@ -17,30 +17,34 @@ abstract class BaseHMPPSClient(
   private val webClientCache: WebClientCache,
 ) {
   protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.GET, requestBuilderConfiguration)
+    request(MarshallableHttpMethod.GET, requestBuilderConfiguration)
 
   protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.POST, requestBuilderConfiguration)
+    request(MarshallableHttpMethod.POST, requestBuilderConfiguration)
 
   protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.PUT, requestBuilderConfiguration)
+    request(MarshallableHttpMethod.PUT, requestBuilderConfiguration)
 
   protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.DELETE, requestBuilderConfiguration)
+    request(MarshallableHttpMethod.DELETE, requestBuilderConfiguration)
 
   protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.PATCH, requestBuilderConfiguration)
+    request(MarshallableHttpMethod.PATCH, requestBuilderConfiguration)
 
   protected fun checkPreemptiveCacheStatus(cacheConfig: WebClientCache.PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus =
     webClientCache.checkPreemptiveCacheStatus(cacheConfig, key)
 
-  protected inline fun <reified ResponseType : Any> request(method: HttpMethod, noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
+  protected inline fun <reified ResponseType : Any> request(method: MarshallableHttpMethod, noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
     val typeReference = object : TypeReference<ResponseType>() {}
 
     return doRequest(typeReference, method, requestBuilderConfiguration)
   }
 
-  fun <ResponseType : Any> doRequest(typeReference: TypeReference<ResponseType>, method: HttpMethod, requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
+  fun <ResponseType : Any> doRequest(
+    typeReference: TypeReference<ResponseType>,
+    method: MarshallableHttpMethod,
+    requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit,
+  ): ClientResult<ResponseType> {
     val requestBuilder = HMPPSRequestConfiguration()
     requestBuilderConfiguration(requestBuilder)
 
@@ -55,7 +59,7 @@ abstract class BaseHMPPSClient(
         }
       }
 
-      val request = webClient.method(method)
+      val request = webClient.method(HttpMethod.valueOf(method.name))
         .uri(requestBuilder.path ?: "")
         .headers { it.addAll(requestBuilder.headers) }
 
@@ -71,14 +75,14 @@ abstract class BaseHMPPSClient(
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
       }
 
-      return ClientResult.Success(result.statusCode, deserialized, false)
+      return ClientResult.Success(result.statusCode as HttpStatus, deserialized, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, attempt.get(), method)
       }
 
       if (!exception.statusCode.is2xxSuccessful) {
-        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode as HttpStatus, exception.responseBodyAsString, false)
       } else {
         throw exception
       }
@@ -119,7 +123,7 @@ sealed interface ClientResult<ResponseType> {
     fun toException(): Throwable
 
     data class StatusCode<ResponseType>(
-      val method: HttpMethod,
+      val method: MarshallableHttpMethod,
       val path: String,
       val status: HttpStatus,
       val body: String?,
@@ -160,7 +164,7 @@ sealed interface ClientResult<ResponseType> {
     }
 
     data class Other<ResponseType>(
-      val method: HttpMethod,
+      val method: MarshallableHttpMethod,
       val path: String,
       val exception: Exception,
     ) : Failure<ResponseType> {
@@ -180,12 +184,18 @@ class CacheKeySet(
   private val key: String,
 ) {
   val metadataKey: String
-    get() { return "$prefix-$cacheName-$key-metadata" }
+    get() {
+      return "$prefix-$cacheName-$key-metadata"
+    }
 
   val dataKey: String
-    get() { return "$prefix-$cacheName-$key-data" }
+    get() {
+      return "$prefix-$cacheName-$key-data"
+    }
 }
 
 enum class PreemptiveCacheEntryStatus {
-  MISS, REQUIRES_REFRESH, EXISTS
+  MISS,
+  REQUIRES_REFRESH,
+  EXISTS,
 }

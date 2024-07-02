@@ -19,7 +19,9 @@ class OffenderDetailsCacheRefreshWorker(
   override fun work(checkShouldStop: () -> Boolean) {
     val distinctCrns = (applicationRepository.getDistinctCrns() + bookingRepository.getDistinctCrns()).distinct()
 
-    if (loggingEnabled) { log.info("Got $distinctCrns to refresh for Offender Details") }
+    if (loggingEnabled) {
+      log.info("Got $distinctCrns to refresh for Offender Details")
+    }
 
     distinctCrns.forEach {
       if (checkShouldStop()) return

@@ -5,15 +5,16 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelinessEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
-import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 data class MockApplicationTimelinessEntity(
   val mockId: String,
   val mockTier: String?,
-  val mockApplicationSubmittedAt: Timestamp?,
-  val mockBookingMadeAt: Timestamp?,
+  val mockApplicationSubmittedAt: Instant?,
+  val mockBookingMadeAt: Instant?,
   val mockOverallTimeliness: Int?,
   val mockPlacementMatchingTimeliness: Int?,
 ) : ApplicationTimelinessEntity {
@@ -28,8 +29,8 @@ data class MockApplicationTimelinessEntity(
 class ApplicationTimelinessEntityFactory : Factory<MockApplicationTimelinessEntity> {
   private var id: Yielded<String> = { UUID.randomUUID().toString() }
   private var tier: Yielded<String?> = { randomStringUpperCase(2) }
-  private var applicationSubmittedAt: Yielded<Timestamp?> = { Timestamp.valueOf(LocalDateTime.now()) }
-  private var bookingMadeAt: Yielded<Timestamp?> = { Timestamp.valueOf(LocalDateTime.now()) }
+  private var applicationSubmittedAt: Yielded<Instant?> = { LocalDateTime.now().atZone(ZoneOffset.UTC).toInstant() }
+  private var bookingMadeAt: Yielded<Instant?> = { LocalDateTime.now().atZone(ZoneOffset.UTC).toInstant() }
   private var overallTimeliness: Yielded<Int?> = { randomInt(0, 10) }
   private var placementMatchingTimeliness: Yielded<Int?> = { randomInt(0, 10) }
   private var overallTimelinessInWorkingDays: Yielded<Int?> = { randomInt(0, 10) }
@@ -40,10 +41,10 @@ class ApplicationTimelinessEntityFactory : Factory<MockApplicationTimelinessEnti
   fun withTier(tier: String?) = apply {
     this.tier = { tier }
   }
-  fun withApplicationSubmittedAt(applicationSubmittedAt: Timestamp?) = apply {
+  fun withApplicationSubmittedAt(applicationSubmittedAt: Instant?) = apply {
     this.applicationSubmittedAt = { applicationSubmittedAt }
   }
-  fun withBookingMadeAt(bookingMadeAt: Timestamp?) = apply {
+  fun withBookingMadeAt(bookingMadeAt: Instant?) = apply {
     this.bookingMadeAt = { bookingMadeAt }
   }
   fun withOverallTimeliness(overallTimeliness: Int?) = apply {

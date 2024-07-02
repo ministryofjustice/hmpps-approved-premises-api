@@ -206,36 +206,36 @@ class Cas1ApplicationDomainEventServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = "THECRN",
-              noms = "THENOMS",
-            ) &&
+                crn = "THECRN",
+                noms = "THENOMS",
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
               data.age == Period.between(LocalDate.of(1982, 3, 11), LocalDate.now()).years &&
               data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
-              staffMember = domainEventStaffMember,
-              probationArea = domainEventProbationArea,
-              team = Team(
-                code = caseDetails.case.manager.team.code,
-                name = caseDetails.case.manager.team.name,
-              ),
-              ldu = Ldu(
-                code = caseDetails.case.manager.team.ldu.code,
-                name = caseDetails.case.manager.team.ldu.name,
-              ),
-              region = Region(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
-            ) &&
+                staffMember = domainEventStaffMember,
+                probationArea = domainEventProbationArea,
+                team = Team(
+                  code = caseDetails.case.manager.team.code,
+                  name = caseDetails.case.manager.team.name,
+                ),
+                ldu = Ldu(
+                  code = caseDetails.case.manager.team.ldu.code,
+                  name = caseDetails.case.manager.team.ldu.name,
+                ),
+                region = Region(
+                  code = staffUserDetails.probationArea.code,
+                  name = staffUserDetails.probationArea.description,
+                ),
+              ) &&
               data.mappa == "CAT C1/LEVEL L1" &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals("reason for short notice") &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals("reason for short notice other") &&
               enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType()
-              .toString() == ApType.normal.value
+                .toString() == ApType.normal.value
           },
         )
       }
@@ -328,9 +328,9 @@ class Cas1ApplicationDomainEventServiceTest {
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
+                crn = application.crn,
+                noms = application.nomsNumber!!,
+              ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
               data.otherWithdrawalReason == "the other reason"

@@ -80,6 +80,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   }
 }
 
+@Suppress("LongParameterList")
 fun IntegrationTestBase.`Given a Placement Application`(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,

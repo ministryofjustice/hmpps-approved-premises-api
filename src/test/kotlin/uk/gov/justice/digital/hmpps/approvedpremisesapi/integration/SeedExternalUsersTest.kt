@@ -69,8 +69,7 @@ class SeedExternalUsersTest : SeedTestBase() {
     assertThat(persistedUser!!.email).isNotEqualTo("chas.new.ash@example.com")
   }
 
-  private fun externalUserSeedCsvRowsToCsv(rows: List<ExternalUsersSeedUntypedEnumsCsvRow>):
-    String {
+  private fun externalUserSeedCsvRowsToCsv(rows: List<ExternalUsersSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "username",

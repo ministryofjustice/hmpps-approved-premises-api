@@ -184,8 +184,16 @@ data class WithdrawableTreeNode(
 
   @SuppressWarnings("MagicNumber")
   fun render(depth: Int, includeIds: Boolean = true): String {
-    val padding = if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
-    val abbreviatedId = if (includeIds) { entityId.toString().substring(0, 3) } else ""
+    val padding = if (depth > 0) {
+      "-".repeat(3 * depth) + "> "
+    } else {
+      ""
+    }
+    val abbreviatedId = if (includeIds) {
+      entityId.toString().substring(0, 3)
+    } else {
+      ""
+    }
     val description = "" +
       "$entityType($abbreviatedId), " +
       "withdrawable:${yesOrNo(status.withdrawable)}, " +

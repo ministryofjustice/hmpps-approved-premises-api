@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
+import java.time.ZoneOffset
 
 class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, ApplicationReportProperties>(ApplicationReportRow::class) {
   override fun filter(properties: ApplicationReportProperties): (ApplicationEntityReportRow) -> Boolean = {
@@ -15,7 +16,7 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         id = this.getId(),
         crn = this.getCrn(),
         tier = this.getTier(),
-        lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.toLocalDateTime()?.toLocalDate(),
+        lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.atZone(ZoneOffset.UTC)?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.deriveAssessmentDecision(),

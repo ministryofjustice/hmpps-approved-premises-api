@@ -4419,7 +4419,7 @@ class BookingTest : IntegrationTestBase() {
   )
 
   private fun createTemporaryAccommodationPremises(userEntity: UserEntity) =
-    temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+    temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
@@ -4430,7 +4430,7 @@ class BookingTest : IntegrationTestBase() {
     premises: TemporaryAccommodationPremisesEntity,
     offenderDetails: OffenderDetailSummary,
   ): BookingEntity {
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {

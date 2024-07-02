@@ -103,7 +103,7 @@ class JsonSchemaServiceTest {
     val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
     every { mockJsonSchemaRepository.getSchemasForType(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
+    every { mockApplicationRepository.findAllByCreatedByUserId(userId, ApprovedPremisesApplicationEntity::class.java) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {
@@ -192,7 +192,7 @@ class JsonSchemaServiceTest {
     val applicationEntities = listOf(upToDateApplication, outdatedApplication)
 
     every { mockJsonSchemaRepository.getSchemasForType(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUser_Id(userId, TemporaryAccommodationApplicationEntity::class.java) } returns applicationEntities
+    every { mockApplicationRepository.findAllByCreatedByUserId(userId, TemporaryAccommodationApplicationEntity::class.java) } returns applicationEntities
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
@@ -27,7 +28,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.EnumSet
 import java.util.UUID
-import javax.transaction.Transactional
 
 @Transactional
 @Service

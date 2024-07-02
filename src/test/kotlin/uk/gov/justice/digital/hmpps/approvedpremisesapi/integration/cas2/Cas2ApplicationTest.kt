@@ -471,7 +471,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `When a person is not found, returns 200 with placeholder text`() {
-      `Given a CAS2 POM User`() { userEntity, jwt ->
+      `Given a CAS2 POM User` { userEntity, jwt ->
         val crn = "X1234"
 
         produceAndPersistBasicApplication(crn, userEntity)

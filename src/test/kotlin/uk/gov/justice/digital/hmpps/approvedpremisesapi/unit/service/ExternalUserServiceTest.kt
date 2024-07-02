@@ -32,8 +32,7 @@ class ExternalUserServiceTest {
   @Nested
   inner class GetUserForRequest {
     @Test
-    fun `returns existing User when exists, does not call Manage-Users API or save`
-    () {
+    fun `returns existing User when exists, does not call Manage-Users API or save`() {
       val username = "JIM_JIMMERSON"
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
       val mockToken = mockk<Jwt>()

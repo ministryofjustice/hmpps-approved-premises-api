@@ -444,7 +444,8 @@ class PremisesTest {
             town = "Somewhere",
             postcode = "AB456CD",
             notes = "some arbitrary notes",
-            localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+            // not in db
+            localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
             status = PropertyStatus.active,
@@ -499,7 +500,8 @@ class PremisesTest {
             postcode = "AB456CD",
             notes = "some arbitrary notes",
             localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-            probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
+            // not in db
+            probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"),
             characteristicIds = mutableListOf(),
             status = PropertyStatus.active,
           ),
@@ -641,8 +643,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
             ),
@@ -711,7 +715,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -786,7 +791,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.active,
@@ -852,7 +858,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -916,8 +923,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               probationDeliveryUnitId = probationDeliveryUnit.id,
@@ -951,7 +960,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+              // not in db
+              localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
               probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.active,
@@ -1024,7 +1034,8 @@ class PremisesTest {
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-              probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
+              // not in db
+              probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.active,
             ),
@@ -1060,8 +1071,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = null,
@@ -1100,8 +1113,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = "Non-existent PDU",
@@ -1140,8 +1155,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = null,
@@ -1179,8 +1196,10 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"), // North West
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+              // North West
+              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               name = "new-premises-name",
@@ -1235,7 +1254,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -1296,7 +1316,8 @@ class PremisesTest {
               town = "Somewhere Else",
               postcode = "AB456CD",
               notes = "some arbitrary notes updated",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              // Allerdale
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
@@ -1649,7 +1670,7 @@ class PremisesTest {
     @Test
     fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -1888,7 +1909,7 @@ class PremisesTest {
 
     @BeforeAll
     fun setup() {
-      premises = approvedPremisesEntityFactory.produceAndPersist() {
+      premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -2141,7 +2162,7 @@ class PremisesTest {
     @Test
     fun `Get all Rooms for Premises returns OK with correct body`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -2203,7 +2224,7 @@ class PremisesTest {
     @Test
     fun `Get all Rooms for Premises returns OK with correct body with end-date`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }

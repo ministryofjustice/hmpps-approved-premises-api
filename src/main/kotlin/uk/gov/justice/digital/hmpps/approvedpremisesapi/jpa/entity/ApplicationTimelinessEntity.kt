@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
+import java.time.Instant
 import java.util.UUID
 
 @Repository
@@ -44,8 +44,8 @@ interface ApplicationTimelinessEntityRepository : JpaRepository<ApplicationEntit
 interface ApplicationTimelinessEntity {
   fun getId(): String
   fun getTier(): String?
-  fun getApplicationSubmittedAt(): Timestamp?
-  fun getBookingMadeAt(): Timestamp?
+  fun getApplicationSubmittedAt(): Instant?
+  fun getBookingMadeAt(): Instant?
   fun getOverallTimeliness(): Int?
   fun getPlacementMatchingTimeliness(): Int?
 }

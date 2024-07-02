@@ -202,9 +202,9 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           withForenames("Judy Jude")
           withSurname("Juderson")
         },
-        probationRegion = probationRegionEntityFactory.produceAndPersist() {
+        probationRegion = probationRegionEntityFactory.produceAndPersist {
           withApArea(
-            apAreaEntityFactory.produceAndPersist() {
+            apAreaEntityFactory.produceAndPersist {
               withName("Ap Area 1")
             },
           )
@@ -406,9 +406,9 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           withForenames("Assessor")
           withSurname("Assessing")
         },
-        probationRegion = probationRegionEntityFactory.produceAndPersist() {
+        probationRegion = probationRegionEntityFactory.produceAndPersist {
           withApArea(
-            apAreaEntityFactory.produceAndPersist() {
+            apAreaEntityFactory.produceAndPersist {
               withName("Ap Area 4")
             },
           )
@@ -1077,5 +1077,9 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
     "/cas1/reports/applicationsV2?year=$year&month=$month" +
-      if (includePii != null) { "&includePii=$includePii" } else { "" }
+      if (includePii != null) {
+        "&includePii=$includePii"
+      } else {
+        ""
+      }
 }

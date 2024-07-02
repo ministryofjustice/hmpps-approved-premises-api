@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
@@ -2378,7 +2378,7 @@ class ApplicationTest : IntegrationTestBase() {
               CaseDetailFactory().produce(),
             )
 
-            val responseStatuses = mutableListOf<HttpStatus>()
+            var responseStatuses = listOf<HttpStatusCode>()
 
             GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 

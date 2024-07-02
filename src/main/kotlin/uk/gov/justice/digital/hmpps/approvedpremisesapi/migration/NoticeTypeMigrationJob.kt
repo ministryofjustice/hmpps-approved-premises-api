@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
+import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -12,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import java.util.UUID
-import javax.persistence.EntityManager
 
 @Repository
 interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
@@ -30,7 +30,7 @@ interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<Applicatio
 
   @Query(
     "SELECT ap FROM ApprovedPremisesApplicationEntity ap where " +
-      "ap.noticeType = null AND ap.isEmergencyApplication = false ",
+      "ap.noticeType IS null AND ap.isEmergencyApplication = false ",
   )
   fun getApplicationsThatRequireNoticeTypeUpdating(pageable: Pageable): Slice<ApprovedPremisesApplicationEntity>
 }

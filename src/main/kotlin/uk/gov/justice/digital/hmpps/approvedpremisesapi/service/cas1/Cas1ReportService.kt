@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbc
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneOffset
 import java.time.temporal.TemporalAdjusters
 
 @Service
@@ -66,7 +67,11 @@ class Cas1ReportService(
   }
 
   fun createApplicationReportV2(properties: ApplicationReportProperties, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+    val columnsToExclude = if (properties.includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,
@@ -83,7 +88,7 @@ class Cas1ReportService(
   fun createDailyMetricsReport(properties: DailyMetricReportProperties, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
-        it.getCreatedAt().toLocalDateTime().toLocalDate(),
+        it.getCreatedAt().atZone(ZoneOffset.UTC).toLocalDate(),
         it.getCreatedByUserId(),
       )
     }
@@ -118,7 +123,11 @@ class Cas1ReportService(
   }
 
   fun createRequestForPlacementReport(properties: RequestsForPlacementReportProperties, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+    val columnsToExclude = if (properties.includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,

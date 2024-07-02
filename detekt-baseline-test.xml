@@ -1,0 +1,462 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>AvoidReferentialEquality:GivenAnAssessment.kt$name !== null</ID>
+    <ID>CyclomaticComplexMethod:BookingServiceTest.kt$BookingServiceTest.CreateDateChange$@Test fun `emits domain event when booking has associated application`()</ID>
+    <ID>CyclomaticComplexMethod:DomainEventHelpers.kt$fun createDomainEventOfType(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any</ID>
+    <ID>CyclomaticComplexMethod:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean</ID>
+    <ID>CyclomaticComplexMethod:SeedBookingsTest.kt$SeedBookingsTest$private fun approvedPremisesBookingSeedCsvRowsToCsv(rows: List&lt;ApprovedPremisesBookingSeedCsvRow&gt;): String</ID>
+    <ID>DoubleMutabilityForCollection:ApplicationTest.kt$ApplicationTest.Cas1SubmitApplication$var responseStatuses = mutableListOf&lt;HttpStatus&gt;()</ID>
+    <ID>DoubleMutabilityForCollection:Cas2AssessmentEntityFactory.kt$Cas2AssessmentEntityFactory$private var statusUpdates: MutableList&lt;Cas2StatusUpdateEntity&gt; = mutableListOf()</ID>
+    <ID>DoubleMutabilityForCollection:Cas2SubmissionTest.kt$Cas2SubmissionTest.PostToSubmit$var responseStatuses = mutableListOf&lt;HttpStatus&gt;()</ID>
+    <ID>DoubleMutabilityForCollection:CharacteristicQueryTest.kt$CharacteristicQueryTest$var otherCharacteristics = mutableListOf( characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), )</ID>
+    <ID>DoubleMutabilityForCollection:CharacteristicQueryTest.kt$CharacteristicQueryTest$var roomCharacteristics = mutableListOf( characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), )</ID>
+    <ID>DoubleMutabilityForCollection:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$private lateinit var allApplications: MutableList&lt;ApprovedPremisesApplicationEntity&gt;</ID>
+    <ID>DoubleMutabilityForCollection:PremisesTest.kt$PremisesTest.GetAllPremises$private lateinit var cas1Premises: MutableMap&lt;ProbationRegionEntity, List&lt;ApprovedPremisesEntity&gt;&gt;</ID>
+    <ID>DoubleMutabilityForCollection:PremisesTest.kt$PremisesTest.GetAllPremises$private lateinit var cas3Premises: MutableMap&lt;ProbationRegionEntity, List&lt;TemporaryAccommodationPremisesEntity&gt;&gt;</ID>
+    <ID>ExplicitItLambdaParameter:BedSearchResultTransformerTest.kt$BedSearchResultTransformerTest${ index, it -&gt; val domainResult = domainResults[index] assertThat(domainResult.premisesId).isEqualTo(it.premises.id) assertThat(domainResult.premisesName).isEqualTo(it.premises.name) assertThat(domainResult.premisesAddressLine1).isEqualTo(it.premises.addressLine1) assertThat(domainResult.premisesAddressLine2).isEqualTo(it.premises.addressLine2) assertThat(domainResult.premisesTown).isEqualTo(it.premises.town) assertThat(domainResult.premisesPostcode).isEqualTo(it.premises.postcode) assertThat(domainResult.premisesCharacteristics).isEqualTo(it.premises.characteristics.map { c -&gt; CharacteristicNames(c.propertyName, c.name) }) assertThat(domainResult.premisesBedCount).isEqualTo(it.premises.bedCount) assertThat(domainResult.roomId).isEqualTo(it.room.id) assertThat(domainResult.roomName).isEqualTo(it.room.name) assertThat(domainResult.bedId).isEqualTo(it.bed.id) assertThat(domainResult.bedName).isEqualTo(it.bed.name) assertThat(domainResult.roomCharacteristics).isEqualTo(it.room.characteristics.map { c -&gt; CharacteristicNames(c.propertyName, c.name) }) assertThat(domainResult.distance.toBigDecimal()).isEqualTo((it as ApiApprovedPremisesBedSearchResult).distanceMiles) }</ID>
+    <ID>ExplicitItLambdaParameter:BedSearchResultTransformerTest.kt$BedSearchResultTransformerTest${ index, it -&gt; val domainResult = domainResults[index] assertThat(domainResult.premisesId).isEqualTo(it.premises.id) assertThat(domainResult.premisesName).isEqualTo(it.premises.name) assertThat(domainResult.premisesAddressLine1).isEqualTo(it.premises.addressLine1) assertThat(domainResult.premisesAddressLine2).isEqualTo(it.premises.addressLine2) assertThat(domainResult.premisesTown).isEqualTo(it.premises.town) assertThat(domainResult.premisesPostcode).isEqualTo(it.premises.postcode) assertThat(domainResult.premisesCharacteristics).isEqualTo(it.premises.characteristics.map { c -&gt; CharacteristicNames(c.propertyName, c.name) }) assertThat(domainResult.premisesBedCount).isEqualTo(it.premises.bedCount) assertThat(domainResult.roomId).isEqualTo(it.room.id) assertThat(domainResult.roomName).isEqualTo(it.room.name) assertThat(domainResult.bedId).isEqualTo(it.bed.id) assertThat(domainResult.bedName).isEqualTo(it.bed.name) assertThat(domainResult.roomCharacteristics).isEqualTo(it.room.characteristics.map { c -&gt; CharacteristicNames(c.propertyName, c.name) }) assertThat(domainResult.overlaps).isEqualTo((it as ApiTemporaryAccommodationBedSearchResult).overlaps) }</ID>
+    <ID>HasPlatformType:ApplicationServiceTest.kt$ApplicationServiceTest.SubmitApplication$val conditionalReleaseDate = LocalDate.parse("2023-04-29")</ID>
+    <ID>HasPlatformType:ApplicationServiceTest.kt$ApplicationServiceTest.SubmitApplication$val hdcEligibilityDate = LocalDate.parse("2023-03-30")</ID>
+    <ID>HasPlatformType:ApplicationServiceTest.kt$ApplicationServiceTest.UpdateApplicationCas1$val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")</ID>
+    <ID>HasPlatformType:BookingsReportGeneratorTest.kt$BookingsReportGeneratorTest$val endDate = LocalDate.of(2023, 4, 30)</ID>
+    <ID>HasPlatformType:BookingsReportGeneratorTest.kt$BookingsReportGeneratorTest$val startDate = LocalDate.of(2023, 4, 1)</ID>
+    <ID>HasPlatformType:Cas1AppealDomainEventServiceTest.kt$Cas1AppealDomainEventServiceTest$val now = LocalDate.now()</ID>
+    <ID>HasPlatformType:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawBooking$val cancelledAt = LocalDate.now()</ID>
+    <ID>HasPlatformType:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawBooking$val userProvidedReason = UUID.randomUUID()</ID>
+    <ID>HasPlatformType:ConnectionPoolConfiguration.kt$ConnectionPoolConfiguration$@Bean fun getDriverDataSource(@Qualifier("spring.datasource-org.springframework.boot.autoconfigure.jdbc.DataSourceProperties") properties: DataSourceProperties)</ID>
+    <ID>HasPlatformType:IntegrationTestBase.kt$IntegrationTestBase$fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail)</ID>
+    <ID>HasPlatformType:IntegrationTestBase.kt$IntegrationTestBase$fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary)</ID>
+    <ID>HasPlatformType:IntegrationTestBase.kt$IntegrationTestBase$fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String)</ID>
+    <ID>HasPlatformType:IntegrationTestBase.kt$IntegrationTestBase$fun mockStaffUserInfoCommunityApiCallNotFound(username: String)</ID>
+    <ID>HasPlatformType:ManageUsersAPI.kt$fun IntegrationTestBase.manageUsersMockSuccessfulExternalUsersCall( username: String, externalUserDetails: ExternalUserDetails, )</ID>
+    <ID>HasPlatformType:NPlus1QueriesTest.kt$NPlus1QueriesTest$val log = LoggerFactory.getLogger(this::class.java)</ID>
+    <ID>HasPlatformType:NomisUserRolesAPI.kt$fun IntegrationTestBase.nomisUserRolesMockSuccessfulGetUserDetailsCall( jwt: String, nomisUserDetails: NomisUserDetail, )</ID>
+    <ID>IgnoredReturnValue:AcceptAssessmentTest.kt$AcceptAssessmentTest$assertThat(validationResult is ValidatableActionResult.FieldValidationError)</ID>
+    <ID>IgnoredReturnValue:AcceptAssessmentTest.kt$AcceptAssessmentTest$assertThat(validationResult is ValidatableActionResult.GeneralValidationError)</ID>
+    <ID>IgnoredReturnValue:AcceptAssessmentTest.kt$AcceptAssessmentTest$assertThat(validationResult is ValidatableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:ApplicationTest.kt$ApplicationTest.Cas1CreateApplication$assertThat(approvedPremisesApplicationRepository.findAll().none { it.crn == offenderDetails.otherIds.crn })</ID>
+    <ID>IgnoredReturnValue:ApplicationTest.kt$ApplicationTest.Cas1SubmitApplication$singleElement()</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest$assertThat(updatedAssessment is TemporaryAccommodationAssessmentEntity)</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest$assertThat(validationResult is ValidatableActionResult.FieldValidationError)</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest$assertThat(validationResult is ValidatableActionResult.GeneralValidationError)</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest$assertThat(validationResult is ValidatableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest.UpdateAssessmentClarificationNote$assertThat(updatedAssessmentClarificationNote.response contentEquals "Some response")</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest.UpdateAssessmentClarificationNote$assertThat(validationResult is ValidatableActionResult.GeneralValidationError)</ID>
+    <ID>IgnoredReturnValue:AssessmentServiceTest.kt$AssessmentServiceTest.UpdateAssessmentClarificationNote$assertThat(validationResult is ValidatableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:BookingServiceTest.kt$BookingServiceTest.CreateApprovedPremisesAdHocBooking$assertThat(authorisableResult is AuthorisableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:BookingServiceTest.kt$BookingServiceTest.CreateApprovedPremisesAdHocBooking$assertThat(validatableResult is ValidatableActionResult.FieldValidationError)</ID>
+    <ID>IgnoredReturnValue:BookingServiceTest.kt$BookingServiceTest.CreateApprovedPremisesAdHocBooking$assertThat(validatableResult is ValidatableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:BookingServiceTest.kt$BookingServiceTest.CreateTemporaryAccommodationBooking$assertThat(validatableResult is ValidatableActionResult.FieldValidationError)</ID>
+    <ID>IgnoredReturnValue:BookingServiceTest.kt$BookingServiceTest.CreateTemporaryAccommodationBooking$assertThat(validatableResult is ValidatableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:BookingTest.kt$BookingTest$singleElement()</ID>
+    <ID>IgnoredReturnValue:CalendarTransformerTest.kt$CalendarTransformerTest$singleElement()</ID>
+    <ID>IgnoredReturnValue:Cas1RedactAssessmentDetailsTest.kt$Cas1RedactAssessmentDetailsTest$assertThat( applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment1NoJson.id).none { it.body == "Assessment details redacted" }, )</ID>
+    <ID>IgnoredReturnValue:Cas1RedactAssessmentDetailsTest.kt$Cas1RedactAssessmentDetailsTest$assertThat( applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment2HasJson.id).any { it.body == "Assessment details redacted" }, )</ID>
+    <ID>IgnoredReturnValue:Cas1RedactAssessmentDetailsTest.kt$Cas1RedactAssessmentDetailsTest$assertThat( applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment3Unmodified.id).none { it.body == "Assessment details redacted" }, )</ID>
+    <ID>IgnoredReturnValue:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawApplication$assertThat(result is CasResult.GeneralValidationError)</ID>
+    <ID>IgnoredReturnValue:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawApplication$assertThat(result is CasResult.Success)</ID>
+    <ID>IgnoredReturnValue:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawBooking$assertThat(result is CasResult.Success)</ID>
+    <ID>IgnoredReturnValue:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawPlacementApplication$assertThat(result is CasResult.Success)</ID>
+    <ID>IgnoredReturnValue:Cas1WithdrawableServiceTest.kt$Cas1WithdrawableServiceTest.WithdrawPlacementRequest$assertThat(result is CasResult.Success)</ID>
+    <ID>IgnoredReturnValue:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$assertThat(result[0].matches(application))</ID>
+    <ID>IgnoredReturnValue:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$assertThat(summary.matches(chunk[index]))</ID>
+    <ID>IgnoredReturnValue:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$assertThat(summary.matches(expectedApplications[index]))</ID>
+    <ID>IgnoredReturnValue:OffenderServiceTest.kt$OffenderServiceTest$assertThat(result is AuthorisableActionResult.Success)</ID>
+    <ID>IgnoredReturnValue:OffenderServiceTest.kt$OffenderServiceTest.GetInmateDetailByNomsNumber$assertThat(result is AuthorisableActionResult.Success)</ID>
+    <ID>ImplicitDefaultLocale:DbExtension.kt$DbExtension$String.format("Failed to capture initial database state due to error: \"%s\"", e.message)</ID>
+    <ID>ImplicitDefaultLocale:DbExtension.kt$DbExtension$String.format("Failed to clean database due to error: \"%s\"", e.message)</ID>
+    <ID>ImplicitDefaultLocale:DbExtension.kt$DbExtension$String.format("Failed to restore initial database state due to error: \"%s\"", e.message)</ID>
+    <ID>LargeClass:ApplicationServiceTest.kt$ApplicationServiceTest</ID>
+    <ID>LargeClass:AssessmentServiceTest.kt$AssessmentServiceTest</ID>
+    <ID>LargeClass:BookingTest.kt$BookingTest : IntegrationTestBase</ID>
+    <ID>LargeClass:BookingTransformerTest.kt$BookingTransformerTest</ID>
+    <ID>LargeClass:DomainEventServiceTest.kt$DomainEventServiceTest</ID>
+    <ID>LargeClass:LostBedsTest.kt$LostBedsTest : IntegrationTestBase</ID>
+    <ID>LongMethod:BedSearchRepositoryTest.kt$BedSearchRepositoryTest$@Test fun `Searching for a Temporary Accommodation Bed returns correct results`()</ID>
+    <ID>LongMethod:BedSearchRepositoryTest.kt$BedSearchRepositoryTest$@Test fun `Searching for an Approved Premises Bed returns correct results`()</ID>
+    <ID>LongMethod:BookingTransformerTest.kt$BookingTransformerTest$@Test fun `Temporary Accommodation Entity with edited departure is correctly transformed`()</ID>
+    <ID>LongMethod:BookingTransformerTest.kt$BookingTransformerTest$@Test fun `Temporary Accommodation entity with non-zero day turnaround period and departure with turnaround period in past is correctly transformed to closed status`()</ID>
+    <ID>LongMethod:BookingTransformerTest.kt$BookingTransformerTest$@Test fun `Temporary Accommodation entity with non-zero day turnaround period and departure within turnaround period is correctly transformed to departed status`()</ID>
+    <ID>LongMethod:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$@BeforeAll fun setup()</ID>
+    <ID>LongParameterList:Given a Placement Application.kt$( assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED, createdByUser: UserEntity, schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity, crn: String = randomStringMultiCaseWithNumbers(8), allocatedToUser: UserEntity? = null, submittedAt: OffsetDateTime? = null, decision: PlacementApplicationDecision? = null, reallocated: Boolean = false, placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT, dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(), block: (placementApplicationEntity: PlacementApplicationEntity) -&gt; Unit, )</ID>
+    <ID>LongParameterList:GivenAnAssessment.kt$( allocatedToUser: UserEntity?, createdByUser: UserEntity, crn: String = randomStringMultiCaseWithNumbers(8), reallocated: Boolean = false, data: String? = "{ \"some\": \"data\"}", createdAt: OffsetDateTime? = null, block: ((assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:PlacementRequestRepositoryTest.kt$PlacementRequestRepositoryTest$(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null, name: String? = null, expectedArrival: LocalDate? = null, tier: String? = null)</ID>
+    <ID>LongParameterList:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$( tier: String?, hasInformationRequests: Boolean = false, decision: AssessmentDecision = AssessmentDecision.ACCEPTED, rejectionReason: String? = null, releaseType: String = "license", applicationSubmittedAt: LocalDate = LocalDate.now(), assessmentSubmittedAt: LocalDate = LocalDate.now(), isPipe: Boolean = false, isEsap: Boolean = false, )</ID>
+    <ID>LongParameterList:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$(deliusUsername: String, isAssessor: Boolean, qualifications: List&lt;UserQualification&gt;, numberOfPendingAssessments: Int, numberOfRecentCompletedAssessments: Int, numberOfLessRecentCompletedAssessments: Int, isActive: Boolean = true, isExcluded: Boolean = false)</ID>
+    <ID>LongParameterList:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$(deliusUsername: String, isMatcher: Boolean, qualifications: List&lt;UserQualification&gt;, numberOfPlacementApplications: Int, numberOfRecentCompletedPlacementApplications: Int, numberOfLessRecentCompletedPlacementApplications: Int, isActive: Boolean = true, isExcluded: Boolean = false)</ID>
+    <ID>LongParameterList:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$(deliusUsername: String, isMatcher: Boolean, qualifications: List&lt;UserQualification&gt;, numberOfPlacementRequests: Int, numberOfRecentCompletedPlacementRequests: Int, numberOfLessRecentCompletedPlacementRequests: Int, isActive: Boolean = true, isExcluded: Boolean = false)</ID>
+    <ID>MapGetWithNotNullAssertionOperator:Cas3UpdateApplicationOffenderNameJobTest.kt$Cas3UpdateApplicationOffenderNameJobTest$offendersCrnAndName[it.crn]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:DomainEventServiceTest.kt$DomainEventServiceTest.GetDomainEvents$mapOf( DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent, DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to domainEventService::getApplicationAssessedDomainEvent, DomainEventType.APPROVED_PREMISES_BOOKING_MADE to domainEventService::getBookingMadeEvent, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED to domainEventService::getPersonArrivedEvent, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED to domainEventService::getPersonNotArrivedEvent, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED to domainEventService::getPersonDepartedEvent, DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to domainEventService::getBookingNotMadeEvent, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to domainEventService::getBookingCancelledEvent, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to domainEventService::getBookingChangedEvent, DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to domainEventService::getApplicationWithdrawnEvent, DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent, DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent, DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent, DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent, DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent, DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED to domainEventService::getRequestForPlacementCreatedEvent, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED to domainEventService::getFurtherInformationRequestMadeEvent, )[type]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:OffenderServiceTest.kt$OffenderServiceTest.GetOffenderSummariesByCrns$caseSummariesByCrn[crns[0]]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:OffenderServiceTest.kt$OffenderServiceTest.GetOffenderSummariesByCrns$caseSummariesByCrn[crns[1]]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:OffenderServiceTest.kt$OffenderServiceTest.GetOffenderSummariesByCrns$caseSummariesByCrn[crns[2]]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:OffenderServiceTest.kt$OffenderServiceTest.GetOffenderSummariesByCrns$offenderSummaryResultsByCrn[crns[0]]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:OffenderServiceTest.kt$OffenderServiceTest.GetOffenderSummariesByCrns$offenderSummaryResultsByCrn[crns[1]]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByApArea$tasks[TaskType.assessment]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByApArea$tasks[TaskType.placementApplication]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByApArea$tasks[TaskType.placementRequest]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByType$tasks[TaskType.assessment]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByType$tasks[TaskType.placementApplication]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByType$tasks[TaskType.placementRequest]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByType$tasks[taskType1]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByType$tasks[taskType2]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByType$tasks[taskType]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByUser$tasks[TaskType.assessment]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByUser$tasks[TaskType.placementApplication]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterByUser$tasks[TaskType.placementRequest]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[TaskType.assessment]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[TaskType.assessment]!![qualification]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[TaskType.placementApplication]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[TaskType.placementApplication]!![qualification]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[TaskType.placementRequest]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[TaskType.placementRequest]!![qualification]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[taskType]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.FilterQualification$tasks[taskType]!![qualification]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.assessment]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.assessment]!!["allocated"]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.assessment]!!["unallocated"]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.assessment]!![allocatedFilter]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementApplication]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementApplication]!!["allocated"]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementApplication]!!["unallocated"]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementApplication]!![allocatedFilter]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementRequest]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementRequest]!!["allocated"]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementRequest]!!["unallocated"]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[TaskType.placementRequest]!![allocatedFilter]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[taskType]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.Pagination$counts[taskType]!![allocatedFilter]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.SortByTest$assessments[id]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.SortByTest$placementApplications[id]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.SortByTest$placementRequests[id]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.SortByTest$tasks[id]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:TasksTest.kt$TasksTest.SortByTest$tasks[it]!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:UpdateSentenceTypeAndSituationJobTest.kt$UpdateSentenceTypeAndSituationJobTest$data["basic-information"]?.get("sentence-type")?.get("sentenceType")!!</ID>
+    <ID>MapGetWithNotNullAssertionOperator:UpdateSentenceTypeAndSituationJobTest.kt$UpdateSentenceTypeAndSituationJobTest$data["basic-information"]?.get("situation")?.get("situation")!!</ID>
+    <ID>MaxLineLength:AcceptAssessmentTest.kt$AcceptAssessmentTest$every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.GeneralValidationError("Couldn't create Placement Requirements")</ID>
+    <ID>MaxLineLength:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$fun</ID>
+    <ID>MaxLineLength:AssessmentSummaryQueryTest.kt$AssessmentSummaryQueryTest$assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")</ID>
+    <ID>MaxLineLength:AuthTest.kt$AuthTest$val jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhcHByb3ZlZC1wcmVtaXNlcy1hcGkiLCJncmFudF90eXBlIjoiY2xpZW50X2NyZWRlbnRpYWxzIiwic2NvcGUiOlsicmVhZCJdLCJhdXRoX3NvdXJjZSI6Im5vbmUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkwOTEvYXV0aC9pc3N1ZXIiLCJleHAiOjI2NTk3MDQ5NDAsImF1dGhvcml0aWVzIjpbIlJPTEVfSU5URVJWRU5USU9OUyIsIlJPTEVfT0FTWVNfUkVBRF9PTkxZIiwiUk9MRV9DT01NVU5JVFkiLCJST0xFX0dMT0JBTF9TRUFSQ0giLCJST0xFX0NPTU1VTklUWV9VU0VSUyIsIlJPTEVfUklTS19TVU1NQVJZIl0sImp0aSI6ImlTSEtsTXJ1aXFUNjF0dTNXVFFqckE2WWJfTSIsImNsaWVudF9pZCI6ImFwcHJvdmVkLXByZW1pc2VzLWFwaSJ9.Cr7Nl09vjUpyieddsJwyQF02nmqhR6PbM4xePA47ukkyhhctE4SwqpOAO5D5OIstr9ePnlmF_Tug7HZ6-SLF8lBnN9C_M2-74d8127gPkQxjWsGnAKIxAGDnwLjtwV1UpSvS0p-Phg3cBTGiq6_HABEuh2JSD67eJS0ZaqNPUXXp2kTfi1ZJXA1ysxFKvAP5qYHbBpYWfvFq9Wkpsrq4sM41yjzS7hmkpaEUAYvKUdYefeRAT6nMCU6pfkEOoCmXkMTf6n6rJ1HxxTvkucZwEQk1dOKZUH0d_AOjZy5RAXiSRzgiYsMfB02gvn2T0FfOyjkjKXgVDsFc2yf3bd6P0g"</ID>
+    <ID>MaxLineLength:BedSearchServiceTest.kt$BedSearchServiceTest$every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)</ID>
+    <ID>MaxLineLength:BedUsageReportGeneratorTest.kt$BedUsageReportGeneratorTest$every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationBooking)</ID>
+    <ID>MaxLineLength:BedUsageReportGeneratorTest.kt$BedUsageReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)</ID>
+    <ID>MaxLineLength:BedUsageReportGeneratorTest.kt$BedUsageReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)</ID>
+    <ID>MaxLineLength:BedUsageReportGeneratorTest.kt$BedUsageReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)</ID>
+    <ID>MaxLineLength:BedUtilisationReportGeneratorTest.kt$BedUtilisationReportGeneratorTest$every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)</ID>
+    <ID>MaxLineLength:BedUtilisationReportGeneratorTest.kt$BedUtilisationReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantVoidStraddlingStartOfMonth, relevantVoidStraddlingEndOfMonth)</ID>
+    <ID>MaxLineLength:BedUtilisationReportGeneratorTest.kt$BedUtilisationReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)</ID>
+    <ID>MaxLineLength:BedUtilisationReportGeneratorTest.kt$BedUtilisationReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)</ID>
+    <ID>MaxLineLength:BedUtilisationReportGeneratorTest.kt$BedUtilisationReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)</ID>
+    <ID>MaxLineLength:BookingServiceTest.kt$BookingServiceTest.CreateApprovedPremisesAdHocBooking$every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/staff-details/${user.deliusUsername}", HttpStatus.NOT_FOUND, null)</ID>
+    <ID>MaxLineLength:BookingServiceTest.kt$BookingServiceTest.CreateDateChange$every { mockLostBedsRepository.findByBedIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-12"), LocalDate.parse("2023-07-14"), null) } returns listOf(conflictingLostBed)</ID>
+    <ID>MaxLineLength:BookingTransformerTest.kt$BookingTransformerTest$reason = CancellationReason(id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"), name = "Some other reason", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value)</ID>
+    <ID>MaxLineLength:IntegrationTestBase.kt$IntegrationTestBase$approvedPremisesPlacementApplicationJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory() }, approvedPremisesPlacementApplicationJsonSchemaRepository)</ID>
+    <ID>MaxLineLength:IntegrationTestBase.kt$IntegrationTestBase$lateinit var approvedPremisesPlacementApplicationJsonSchemaEntityFactory: PersistedFactory&lt;ApprovedPremisesPlacementApplicationJsonSchemaEntity, UUID, ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory&gt;</ID>
+    <ID>MaxLineLength:IntegrationTestBase.kt$IntegrationTestBase$lateinit var temporaryAccommodationApplicationJsonSchemaEntityFactory: PersistedFactory&lt;TemporaryAccommodationApplicationJsonSchemaEntity, UUID, TemporaryAccommodationApplicationJsonSchemaEntityFactory&gt;</ID>
+    <ID>MaxLineLength:IntegrationTestBase.kt$IntegrationTestBase$lateinit var temporaryAccommodationAssessmentJsonSchemaEntityFactory: PersistedFactory&lt;TemporaryAccommodationAssessmentJsonSchemaEntity, UUID, TemporaryAccommodationAssessmentJsonSchemaEntityFactory&gt;</ID>
+    <ID>MaxLineLength:LostBedReportGeneratorTest.kt$LostBedReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)</ID>
+    <ID>MaxLineLength:LostBedReportGeneratorTest.kt$LostBedReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)</ID>
+    <ID>MaxLineLength:LostBedReportGeneratorTest.kt$LostBedReportGeneratorTest$every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)</ID>
+    <ID>MaxLineLength:PersistedFactory.kt$PersistedFactory$class</ID>
+    <ID>MaxLineLength:PlacementRequestRepositoryTest.kt$PlacementRequestRepositoryTest$givenAPlacementRequest(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier).first</ID>
+    <ID>MaxLineLength:PlacementRequestRepositoryTest.kt$PlacementRequestRepositoryTest$private</ID>
+    <ID>MaxLineLength:PlacementRequestsTest.kt$PlacementRequestsTest.SinglePlacementRequest$fun</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedInsufficientContingencyPlan = (1..7).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Insufficient contingency plan") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedInsufficientMoveOnPlan = (1..8).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Insufficient move on plan") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedNeedsCannotBeMet = (1..2).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Health / social care / disability needs cannot be met") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedRequestedInformationNotProvided = (1..6).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, insufficient information: Requested information not provided by probation practitioner") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedRiskToHighToStaff = (1..11).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to staff") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedRiskTooHighToCommunity = (1..9).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to community") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedRiskTooHighToOtherPeopleInAP = (1..10).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, risk too high (must be approved by an AP Area Manager (APAM): Risk to other people in AP") }</ID>
+    <ID>MaxLineLength:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$val assessmentsRejectedSupervisionPeriodTooShort = (1..3).map { createDto("A0", decision = AssessmentDecision.REJECTED, rejectionReason = "Reject, not suitable for an AP: Remaining supervision period too short") }</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"APP,78 Applemill Court,Pudding Lane,Hereford,HR6 7ZP,West Midlands,Herefordshire,\"Herefordshire, Shropshire and Telford\",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,app@emailaddress.com"</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"CHE,1 CherryTree Lane,,Sheffield,SH7 4PB,Yorkshire and the Humber,Sheffield,Sheffield,FALSE,FALSE,FALSE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,\"Property is located on the same road as a primary school and a park.\",che@emailaddress.com\n"</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"Property reference,Address Line 1,Address Line 2 (optional),City/Town,Postcode,Region,Local authority / Borough,Probation delivery unit (PDU),Floor level access?,Wheelchair accessible?,Pub nearby?,Park nearby?,School nearby?,Women only?,Men only?,Not suitable for RSO?,Not suitable for arson offenders?,Optional notes,Email Address\n"</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"Property reference,Bedspace reference,Single bed?,Double bed?,Shared kitchen?,Floor level access?,Lift access?,Wheelchair accessible?,Not suitable for RSO?,Not suitable for arson offenders?,Optional notes about the bedspace,Email address\n"</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"SIL,12 Silverhill Lane,Broadheath,Bath,BA3 0EZ,South West,Bath and North East Somerset,Bath and North Somerset (Bath and North East Somerset and North Somerset),FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,TRUE,\"This property has 3 bedspaces, with shared kitchen facilities.\",sil@emailaddress.com\n"</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"STR,24 Strawberry Road,City Centre,Newport,NP1 0PA,Wales,Newport,\"Gwent (Blaenau Gwent, Caerphilly, Monmouthshire, Newport, Torfaen)\",FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,\"Not suitable to those who hold addictive behaviours.\",str@emailaddress.com\n"</ID>
+    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"WED,1 Wednesday Street,,Westminster,SE19 4EP,London,Lewisham,Lewisham and Bromley,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,\"Property is located in a block of flats. Bedspace is accessible for wheelchair users, as has ground floor access and a lift up to the property. Cleaning turn around is 7 days.\",wed@emailaddress.com\n"</ID>
+    <ID>MaxLineLength:SeedUsersTest.kt$SeedUsersTest$println("${it.staffUserDetails.username}\n" + it.iterationValidations.mapIndexed { index, validation -&gt; " Run $index: roles correct = ${validation.rolesCorrect}, qalifications correct = ${validation.qualificationsCorrect}" }.joinToString("\n"))</ID>
+    <ID>MaxLineLength:UserAccessServiceTest.kt$UserAccessServiceTest$fun</ID>
+    <ID>MaxLineLength:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$private</ID>
+    <ID>NestedBlockDepth:DbExtension.kt$DbExtension$private fun setInitialDatabaseState(dataSource: DataSource)</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest${ it.type == "CRN" &amp;&amp; it.value == domainEventToSave.data.eventDetails.personReference.crn }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest${ it.type == "NOMS" &amp;&amp; it.value == domainEventToSave.data.eventDetails.personReference.noms }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest.ApplicationStatusUpdated.SaveCas2ApplicationStatusUpdatedDomainEvent${ it.type == "CRN" &amp;&amp; it.value == domainEventToSave.data.eventDetails.personReference.crn }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest.ApplicationStatusUpdated.SaveCas2ApplicationStatusUpdatedDomainEvent${ it.type == "NOMS" &amp;&amp; it.value == domainEventToSave.data.eventDetails.personReference.noms }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest.ApplicationSubmitted.SaveCas2ApplicationSubmittedDomainEvent${ it.type == "CRN" &amp;&amp; it.value == domainEventToSave.data.eventDetails.personReference.crn }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest.ApplicationSubmitted.SaveCas2ApplicationSubmittedDomainEvent${ it.type == "NOMS" &amp;&amp; it.value == domainEventToSave.data.eventDetails.personReference.noms }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest.SaveAndEmit${ it.type == "CRN" &amp;&amp; it.value == crn }</ID>
+    <ID>NoNameShadowing:DomainEventServiceTest.kt$DomainEventServiceTest.SaveAndEmit${ it.type == "NOMS" &amp;&amp; it.value == nomsNumber }</ID>
+    <ID>NoNameShadowing:SeedUsersTest.kt$SeedUsersTest${ assertThat(it.rolesCorrect).isTrue assertThat(it.qualificationsCorrect).isTrue }</ID>
+    <ID>NoNameShadowing:SeedUsersTest.kt$SeedUsersTest${ val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!! it.iterationValidations += IterationValidation( rolesCorrect = persistedUser.roles.map(UserRoleAssignmentEntity::role).containsAll(it.expectedRoles), qualificationsCorrect = persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification).containsAll(it.expectedQualifications), ) }</ID>
+    <ID>PrintStackTrace:DbExtension.kt$DbExtension$e</ID>
+    <ID>TooGenericExceptionThrown:ApplicationReportsTest.kt$ApplicationReportsTest$throw Exception("No offender found for CRN ${application.crn}")</ID>
+    <ID>TooGenericExceptionThrown:ApplicationTeamCodeEntityFactory.kt$ApplicationTeamCodeEntityFactory$throw RuntimeException("Must provide an Application")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesApplicationEntityFactory.kt$ApprovedPremisesApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesAssessmentEntityFactory.kt$ApprovedPremisesAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt$ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a local authority area")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt$ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
+    <ID>TooGenericExceptionThrown:ArrivalEntityFactory.kt$ArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt$AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt$AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistorySystemNoteEntityFactory.kt$AssessmentReferralHistorySystemNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistorySystemNoteEntityFactory.kt$AssessmentReferralHistorySystemNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryUserNoteEntityFactory.kt$AssessmentReferralHistoryUserNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryUserNoteEntityFactory.kt$AssessmentReferralHistoryUserNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
+    <ID>TooGenericExceptionThrown:BedSearchRepositoryTest.kt$BedSearchRepositoryTest$throw RuntimeException("Distance decreased in later search result - therefore results are ordered incorrectly")</ID>
+    <ID>TooGenericExceptionThrown:BookingEntityFactory.kt$BookingEntityFactory$throw RuntimeException("Must provide a Premises")</ID>
+    <ID>TooGenericExceptionThrown:BookingNotMadeEntityFactory.kt$BookingNotMadeEntityFactory$throw RuntimeException("Must provide a Placement Request")</ID>
+    <ID>TooGenericExceptionThrown:CAS3DomainEventFactory.kt$CAS3DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
+    <ID>TooGenericExceptionThrown:CAS3DomainEventFactory.kt$CAS3DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:CacheClearTest.kt$CacheClearTest$throw RuntimeException("Upstream endpoint was never called by OffenderDetailsCacheRefreshWorker", throwable)</ID>
+    <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:Cas2ApplicationEntityFactory.kt$Cas2ApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
+    <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:ConfirmationEntityFactory.kt$ConfirmationEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt$DateChangeEntityFactory$throw RuntimeException("Must provide a booking")</ID>
+    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt$DateChangeEntityFactory$throw RuntimeException("Must provide a changedByUser")</ID>
+    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt$DepartureEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt$DepartureEntityFactory$throw RuntimeException("MoveOnCategory must be provided")</ID>
+    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt$DepartureEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:DomainEventHelpers.kt$throw RuntimeException("Cannot find EventType for $type")</ID>
+    <ID>TooGenericExceptionThrown:DomainEventHelpers.kt$throw RuntimeException("Domain event type $type not supported")</ID>
+    <ID>TooGenericExceptionThrown:ExtensionEntityFactory.kt$ExtensionEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:IntegrationTestBase.kt$WiremockPortHolder$throw RuntimeException("Could not lock any potential Wiremock ports")</ID>
+    <ID>TooGenericExceptionThrown:LostBedCancellationEntityFactory.kt$LostBedCancellationEntityFactory$throw RuntimeException("Lost Bed must be provided")</ID>
+    <ID>TooGenericExceptionThrown:LostBedsEntityFactory.kt$LostBedsEntityFactory$throw RuntimeException("Must provide a Bed")</ID>
+    <ID>TooGenericExceptionThrown:LostBedsEntityFactory.kt$LostBedsEntityFactory$throw RuntimeException("Must provide a Premises")</ID>
+    <ID>TooGenericExceptionThrown:LostBedsEntityFactory.kt$LostBedsEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt$NonArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt$NonArrivalEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:PersistedFactory.kt$PersistedFactory$throw RuntimeException("Unreachable")</ID>
+    <ID>TooGenericExceptionThrown:PlacementApplicationEntityFactory.kt$PlacementApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:PlacementApplicationEntityFactory.kt$PlacementApplicationEntityFactory$throw RuntimeException("Must provide an application")</ID>
+    <ID>TooGenericExceptionThrown:PlacementDateEntityFactory.kt$PlacementDateEntityFactory$throw RuntimeException("Must provide a placementApplication")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt$PlacementRequestEntityFactory$throw RuntimeException("Must provide Placement Requirements")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt$PlacementRequestEntityFactory$throw RuntimeException("Must provide an Application")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt$PlacementRequestEntityFactory$throw RuntimeException("Must provide an Assessment")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequirementsEntityFactory.kt$PlacementRequirementsEntityFactory$throw RuntimeException("Must provide an Application")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequirementsEntityFactory.kt$PlacementRequirementsEntityFactory$throw RuntimeException("Must provide an Assessment")</ID>
+    <ID>TooGenericExceptionThrown:ProbationAreaProbationRegionMappingEntityFactory.kt$ProbationAreaProbationRegionMappingEntityFactory$throw RuntimeException("Must provide a Probation Region")</ID>
+    <ID>TooGenericExceptionThrown:ProbationDeliveryUnitEntityFactory.kt$ProbationDeliveryUnitEntityFactory$throw RuntimeException("Must provide a Probation Region")</ID>
+    <ID>TooGenericExceptionThrown:ProbationRegionEntityFactory.kt$ProbationRegionEntityFactory$throw RuntimeException("Must provide an ApArea")</ID>
+    <ID>TooGenericExceptionThrown:ProblemResponsesTest.kt$DeserializationTestController$throw RuntimeException("I am an unhandled exception")</ID>
+    <ID>TooGenericExceptionThrown:RoomEntityFactory.kt$RoomEntityFactory$throw RuntimeException("Must provide a premises")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationAssessmentEntityFactory.kt$TemporaryAccommodationAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesEntityFactory.kt$TemporaryAccommodationPremisesEntityFactory$throw RuntimeException("Must provide a local authority area")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesEntityFactory.kt$TemporaryAccommodationPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
+    <ID>TooGenericExceptionThrown:TurnaroundEntityFactory.kt$TurnaroundEntityFactory$throw RuntimeException("Must provide a Booking")</ID>
+    <ID>TooGenericExceptionThrown:UserEntityFactory.kt$UserEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
+    <ID>TooGenericExceptionThrown:UserQualificationAssignmentEntityFactory.kt$UserQualificationAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
+    <ID>TooGenericExceptionThrown:UserRoleAssignmentEntityFactory.kt$UserRoleAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
+    <ID>UnnecessaryAbstractClass:IntegrationTestBase.kt$InitialiseDatabasePerClassTestBase$InitialiseDatabasePerClassTestBase</ID>
+    <ID>UnnecessaryAbstractClass:IntegrationTestBase.kt$IntegrationTestBase$IntegrationTestBase</ID>
+    <ID>UnnecessaryAbstractClass:MigrationJobTestBase.kt$MigrationJobTestBase$MigrationJobTestBase</ID>
+    <ID>UnnecessaryAbstractClass:SeedTestBase.kt$SeedTestBase$SeedTestBase</ID>
+    <ID>UnnecessaryApply:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$apply { apType = ApprovedPremisesType.PIPE }</ID>
+    <ID>UnnecessaryApply:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$apply { reallocatedAt = OffsetDateTime.now() }</ID>
+    <ID>UnnecessaryApply:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$apply { roles += UserRoleAssignmentEntityFactory() .withUser(this) .withRole(UserRole.CAS1_ASSESSOR) .produce() }</ID>
+    <ID>UnnecessaryApply:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$apply { roles = mutableListOf() }</ID>
+    <ID>UnnecessaryApply:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$apply { submittedAt = OffsetDateTime.now() }</ID>
+    <ID>UnnecessaryApply:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$apply { this.createdFromAppeal = createdFromAppeal }</ID>
+    <ID>UnnecessaryApply:Cas2SubmissionTest.kt$Cas2SubmissionTest.GetToShow$apply { this.createdAt = OffsetDateTime.now().minusDays(1) }</ID>
+    <ID>UnnecessaryApply:Cas2SubmissionTest.kt$Cas2SubmissionTest.GetToShow$apply { this.createdAt = OffsetDateTime.now().minusDays(15) }</ID>
+    <ID>UnnecessaryApply:Cas2SubmissionTest.kt$Cas2SubmissionTest.GetToShow$apply { this.createdAt = OffsetDateTime.now().minusDays(20) }</ID>
+    <ID>UnnecessaryApply:Cas2SubmissionTest.kt$Cas2SubmissionTest.GetToShow.ControlsOnCas2Admin$apply { this.createdAt = OffsetDateTime.now().minusDays(1) }</ID>
+    <ID>UnnecessaryApply:Cas2SubmissionTest.kt$Cas2SubmissionTest.GetToShow.ControlsOnCas2Admin$apply { this.createdAt = OffsetDateTime.now().minusDays(15) }</ID>
+    <ID>UnnecessaryApply:Cas2SubmissionTest.kt$Cas2SubmissionTest.GetToShow.ControlsOnCas2Admin$apply { this.createdAt = OffsetDateTime.now().minusDays(20) }</ID>
+    <ID>UnnecessaryApply:Cas3ReportsTest.kt$Cas3ReportsTest.GetBedUtilizationReport$apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }</ID>
+    <ID>UnnecessaryApply:PlacementApplicationServiceTest.kt$PlacementApplicationServiceTest.ReallocateApplicationTest$apply { decision = PlacementApplicationDecision.ACCEPTED }</ID>
+    <ID>UnnecessaryApply:PlacementApplicationServiceTest.kt$PlacementApplicationServiceTest.ReallocateApplicationTest$apply { reallocatedAt = OffsetDateTime.now() }</ID>
+    <ID>UnnecessaryApply:PlacementApplicationServiceTest.kt$PlacementApplicationServiceTest.ReallocateApplicationTest$apply { roles += UserRoleAssignmentEntityFactory() .withUser(this) .withRole(UserRole.CAS1_MATCHER) .produce() }</ID>
+    <ID>UnnecessaryApply:PlacementRequestServiceTest.kt$PlacementRequestServiceTest.ReallocatePlacementRequest$apply { reallocatedAt = OffsetDateTime.now() }</ID>
+    <ID>UnnecessaryApply:PlacementRequestServiceTest.kt$PlacementRequestServiceTest.ReallocatePlacementRequest$apply { roles += UserRoleAssignmentEntityFactory() .withUser(this) .withRole(UserRole.CAS1_MATCHER) .produce() }</ID>
+    <ID>UnnecessaryApply:PlacementRequestServiceTest.kt$PlacementRequestServiceTest.ReallocatePlacementRequest$apply { roles = mutableListOf() }</ID>
+    <ID>UnnecessaryApply:PlacementRequestServiceTest.kt$PlacementRequestServiceTest.ReallocatePlacementRequest$apply { this.booking = booking }</ID>
+    <ID>UnnecessaryApply:PremisesTest.kt$PremisesTest.UpdateRoom$apply { createdAt = bedEndDate.plusDays(1).toLocalDateTime() }</ID>
+    <ID>UnnecessaryApply:ReportsTest.kt$ReportsTest.GetBedUtilizationReport$apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }</ID>
+    <ID>UnnecessaryFilter:SeedApprovedPremisesRoomsTest.kt$SeedApprovedPremisesRoomsTest$filter { it.name == "4 - 5" }</ID>
+    <ID>UnnecessaryNotNullOperator:ApplicationTest.kt$ApplicationTest.Cas3CreateApplication$accommodationApplicationEntity!!</ID>
+    <ID>UnnecessaryNotNullOperator:BookingTest.kt$BookingTest$temporaryAccommodationAssessmentEntity!!</ID>
+    <ID>UnnecessaryNotNullOperator:Cas2StatusUpdateTest.kt$Cas2StatusUpdateTest.OnAssessments.PostToCreate.WithStatusDetail$persistedStatusUpdate!!</ID>
+    <ID>UnnecessaryNotNullOperator:Cas2StatusUpdateTest.kt$Cas2StatusUpdateTest.PostToCreate.WithStatusDetail$persistedStatusUpdate!!</ID>
+    <ID>UnnecessaryNotNullOperator:DomainEventBuilderTest.kt$DomainEventBuilderTest$staffMember!!</ID>
+    <ID>UnnecessaryNotNullOperator:SeedExternalUsersTest.kt$SeedExternalUsersTest$persistedUser!!</ID>
+    <ID>UnnecessaryNotNullOperator:SeedNomisUsersTest.kt$SeedNomisUsersTest$persistedUser!!</ID>
+    <ID>UnnecessaryNotNullOperator:TasksTest.kt$TasksTest.ReallocateTaskTest$allocatedPlacementRequest!!</ID>
+    <ID>UnnecessarySafeCall:ApplicationReportsTest.kt$ApplicationReportsTest$arrivalDate?.plusDays(AUTHORISED_DURATION_DAYS.toLong())</ID>
+    <ID>UnusedParameter:APOASysContext.kt$response: NeedsDetails</ID>
+    <ID>UnusedParameter:APOASysContext.kt$response: RisksToTheIndividual</ID>
+    <ID>UnusedParameter:APOASysContext.kt$response: RoshSummary</ID>
+    <ID>UnusedParameter:BookingServiceTest.kt$BookingServiceTest.CreateApprovedPremisesAdHocBooking$role: UserRole</ID>
+    <ID>UnusedParameter:ProblemResponsesTest.kt$DeserializationTestController$@RequestBody body: AllSpecialJSONPrimitives</ID>
+    <ID>UnusedParameter:ProblemResponsesTest.kt$DeserializationTestController$@RequestBody body: DeserializationTestBody</ID>
+    <ID>UnusedParameter:ProblemResponsesTest.kt$DeserializationTestController$@RequestBody body: List&lt;DeserializationTestBody&gt;</ID>
+    <ID>UnusedParameter:ProblemResponsesTest.kt$DeserializationTestController$@RequestParam(value = "requiredProperty", required = true) requiredProperty: Int</ID>
+    <ID>UnusedPrivateProperty:ApplicationTimelinessEntityFactory.kt$ApplicationTimelinessEntityFactory$private var overallTimelinessInWorkingDays: Yielded&lt;Int?&gt; = { randomInt(0, 10) }</ID>
+    <ID>UnusedPrivateProperty:ApplicationTimelinessTest.kt$ApplicationTimelinessTest$val unSubmittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist { withCreatedByUser(user) withApplicationSchema(applicationSchema) withSubmittedAt(null) withRiskRatings(risks) }</ID>
+    <ID>UnusedPrivateProperty:CancellationQueryTest.kt$CancellationQueryTest$val otherCancellations = listOf( cancellationEntityFactory.produceAndPersist { withBooking( bookingEntityFactory.produceAndPersist { withPremises(premises) }, ) withReason(cancellationReasonEntityFactory.produceAndPersist()) }, cancellationEntityFactory.produceAndPersist { withBooking( bookingEntityFactory.produceAndPersist { withPremises(premises) }, ) withReason(cancellationReasonEntityFactory.produceAndPersist()) }, )</ID>
+    <ID>UnusedPrivateProperty:CharacteristicQueryTest.kt$CharacteristicQueryTest$var otherCharacteristics = mutableListOf( characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), )</ID>
+    <ID>UnusedPrivateProperty:ClientResultRedisSerializerTest.kt$ClientResultRedisSerializerTest$val cachedString = String(cachedByteArray)</ID>
+    <ID>UnusedPrivateProperty:DailyMetricsReportTest.kt$DailyMetricsReportTest$val endDate = startDate.with(TemporalAdjusters.lastDayOfMonth())</ID>
+    <ID>UnusedPrivateProperty:IntegrationTestBase.kt$IntegrationTestBase$@Autowired private lateinit var jdbcTemplate: JdbcTemplate</ID>
+    <ID>UnusedPrivateProperty:LostBedsTest.kt$LostBedsTest$val booking = bookingEntityFactory.produceAndPersist { withPremises(premises) withOriginalArrivalDate(LocalDate.now().minusDays(4)) withArrivalDate(LocalDate.now().minusDays(4)) withOriginalDepartureDate(LocalDate.now().plusDays(6)) withDepartureDate(LocalDate.now().plusDays(6)) }</ID>
+    <ID>UnusedPrivateProperty:OffenderServiceTest.kt$OffenderServiceTest$private val objectMapper = ObjectMapper().apply { registerModule(Jdk8Module()) registerModule(JavaTimeModule()) registerKotlinModule() }</ID>
+    <ID>UnusedPrivateProperty:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$private val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory() .withSchema("{}") .produce()</ID>
+    <ID>UnusedPrivateProperty:ReferralsMetricsReportGeneratorTest.kt$ReferralsMetricsReportGeneratorTest$private val user = UserEntityFactory() .withYieldedProbationRegion { ProbationRegionEntityFactory() .withYieldedApArea { ApAreaEntityFactory().produce() } .produce() } .produce()</ID>
+    <ID>UseAnyOrNoneInsteadOfFind:SnsDomainEventListener.kt$SnsDomainEventListener$firstOrNull { it.eventType == eventType }</ID>
+    <ID>UseOrEmpty:CaseDetailFactory.kt$CaseSummaryFactory$offenderDetails.middleNames ?: listOf()</ID>
+    <ID>UseOrEmpty:OffenderUtils.kt$this.middleNames?.let { this.middleNames } ?: emptyList()</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.arrivalNotes ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.cancellationNotes ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.cancellationReason ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.departureDestinationProvider ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.departureMoveOnCategory ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.departureNotes ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.departureReason ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.keyWorkerDeliusUsername ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.nonArrivalNotes ?: ""</ID>
+    <ID>UseOrEmpty:SeedBookingsTest.kt$SeedBookingsTest$it.nonArrivalReason ?: ""</ID>
+    <ID>UseOrEmpty:SeedCas2ApplicationTest.kt$SeedCas2ApplicationTest$it.location ?: ""</ID>
+    <ID>UseOrEmpty:SeedCas2ApplicationTest.kt$SeedCas2ApplicationTest$it.referringPrisonCode ?: ""</ID>
+    <ID>UseOrEmpty:SeedTemporaryAccommodationBedspaceTest.kt$SeedTemporaryAccommodationBedspaceTest$it.notes ?: ""</ID>
+    <ID>UseOrEmpty:SeedTemporaryAccommodationPremisesTest.kt$SeedTemporaryAccommodationPremisesTest$it.addressLine2 ?: ""</ID>
+    <ID>UseOrEmpty:SeedTemporaryAccommodationPremisesTest.kt$SeedTemporaryAccommodationPremisesTest$it.town ?: ""</ID>
+    <ID>VarCouldBeVal:ApplicationTimelinessEntityFactory.kt$ApplicationTimelinessEntityFactory$private var overallTimelinessInWorkingDays: Yielded&lt;Int?&gt; = { randomInt(0, 10) }</ID>
+    <ID>VarCouldBeVal:ApplicationWithdrawnFactory.kt$ApplicationWithdrawnFactory$private var withdrawnBy: Yielded&lt;WithdrawnBy&gt; = { WithdrawnByFactory().produce() }</ID>
+    <ID>VarCouldBeVal:BedSummaryFactory.kt$BedSummaryFactory$private var id: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:BedSummaryFactory.kt$BedSummaryFactory$private var roomId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:BookingServiceTest.kt$BookingServiceTest.CreateApprovedPremisesAdHocBooking$private var user = UserEntityFactory() .withUnitTestControlProbationRegion() .produce()</ID>
+    <ID>VarCouldBeVal:CAS3DomainEventFactory.kt$CAS3DomainEventFactory$private var nomsNumber: Yielded&lt;String?&gt; = { randomStringUpperCase(8) }</ID>
+    <ID>VarCouldBeVal:CancellationReasonEntityFactory.kt$CancellationReasonEntityFactory$private var sortOrder: Yielded&lt;Int&gt; = { 0 }</ID>
+    <ID>VarCouldBeVal:Cas1ApplicationUserDetailsEntityFactory.kt$Cas1ApplicationUserDetailsEntityFactory$private var id: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:Cas1ApplicationUserDetailsEntityFactory.kt$Cas1ApplicationUserDetailsEntityFactory$private var name: Yielded&lt;String&gt; = { randomStringMultiCaseWithNumbers(8) }</ID>
+    <ID>VarCouldBeVal:Cas1ApplicationUserDetailsEntityFactory.kt$Cas1ApplicationUserDetailsEntityFactory$private var telephoneNumber: Yielded&lt;String&gt; = { randomStringMultiCaseWithNumbers(8) }</ID>
+    <ID>VarCouldBeVal:Cas2ApplicationEntityFactory.kt$Cas2ApplicationEntityFactory$private var telephoneNumber: Yielded&lt;String?&gt; = { randomNumberChars(12) }</ID>
+    <ID>VarCouldBeVal:Cas2AssessmentEntityFactory.kt$Cas2AssessmentEntityFactory$private var createdAt: Yielded&lt;OffsetDateTime&gt; = { OffsetDateTime.now() }</ID>
+    <ID>VarCouldBeVal:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$private var nomsNumber: Yielded&lt;String?&gt; = { randomStringUpperCase(8) }</ID>
+    <ID>VarCouldBeVal:Cas2StatusFactory.kt$Cas2StatusFactory$private var description: Yielded&lt;String&gt; = { "More information about the application has been requested" }</ID>
+    <ID>VarCouldBeVal:Cas2StatusFactory.kt$Cas2StatusFactory$private var label: Yielded&lt;String&gt; = { "More information requested" }</ID>
+    <ID>VarCouldBeVal:CharacteristicQueryTest.kt$CharacteristicQueryTest$var localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()</ID>
+    <ID>VarCouldBeVal:CharacteristicQueryTest.kt$CharacteristicQueryTest$var otherCharacteristics = mutableListOf( characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), )</ID>
+    <ID>VarCouldBeVal:CharacteristicQueryTest.kt$CharacteristicQueryTest$var premises = approvedPremisesEntityFactory.produceAndPersist { withProbationRegion(probationRegion) withLocalAuthorityArea(localAuthorityArea) }</ID>
+    <ID>VarCouldBeVal:CharacteristicQueryTest.kt$CharacteristicQueryTest$var probationRegion = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }</ID>
+    <ID>VarCouldBeVal:CharacteristicQueryTest.kt$CharacteristicQueryTest$var room = roomEntityFactory.produceAndPersist { withPremises(premises) withCharacteristics(roomCharacteristics) }</ID>
+    <ID>VarCouldBeVal:CharacteristicQueryTest.kt$CharacteristicQueryTest$var roomCharacteristics = mutableListOf( characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), )</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var authSource: Yielded&lt;String&gt; = { "auth" }</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var enabled: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var inactiveReason: Yielded&lt;String?&gt; = { null }</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var lastLoggedIn: Yielded&lt;LocalDateTime?&gt; = { null }</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var locked: Yielded&lt;Boolean&gt; = { false }</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var userId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:ExternalUserDetailsFactory.kt$ExternalUserDetailsFactory$private var verified: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:ExternalUserEntityFactory.kt$ExternalUserEntityFactory$private var isEnabled: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:ExternalUserFactory.kt$ExternalUserFactory$private var email: Yielded&lt;String&gt; = { "roger@nacro.external.example.com" }</ID>
+    <ID>VarCouldBeVal:ExternalUserFactory.kt$ExternalUserFactory$private var origin: Yielded&lt;String&gt; = { "NACRO" }</ID>
+    <ID>VarCouldBeVal:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$@Autowired private lateinit var applicationService: ApplicationService</ID>
+    <ID>VarCouldBeVal:IntegrationTestBase.kt$IntegrationTestBase$@Autowired private lateinit var cacheManager: CacheManager</ID>
+    <ID>VarCouldBeVal:IntegrationTestBase.kt$IntegrationTestBase$@Autowired private lateinit var communityApiClient: CommunityApiClient</ID>
+    <ID>VarCouldBeVal:IntegrationTestBase.kt$IntegrationTestBase$@Autowired private lateinit var jdbcTemplate: JdbcTemplate</ID>
+    <ID>VarCouldBeVal:IntegrationTestBase.kt$IntegrationTestBase$@Autowired private lateinit var prisonsApiClient: PrisonsApiClient</ID>
+    <ID>VarCouldBeVal:LocalAuthorityAreaEntityFactory.kt$LocalAuthorityAreaEntityFactory$private var id: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:LocalAuthorityAreaEntityFactory.kt$LocalAuthorityAreaEntityFactory$private var identifier: Yielded&lt;String&gt; = { randomStringUpperCase(5) }</ID>
+    <ID>VarCouldBeVal:LocalAuthorityAreaEntityFactory.kt$LocalAuthorityAreaEntityFactory$private var name: Yielded&lt;String&gt; = { randomStringUpperCase(5) }</ID>
+    <ID>VarCouldBeVal:MatchRequestWithdrawnFactory.kt$MatchRequestWithdrawnFactory$private var matchRequestId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:NomisUserDetailFactory.kt$NomisUserDetailFactory$private var accountNonLocked: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:NomisUserDetailFactory.kt$NomisUserDetailFactory$private var accountStatus: Yielded&lt;String?&gt; = { "OPEN" }</ID>
+    <ID>VarCouldBeVal:NomisUserDetailFactory.kt$NomisUserDetailFactory$private var admin: Yielded&lt;Boolean&gt; = { false }</ID>
+    <ID>VarCouldBeVal:NomisUserDetailFactory.kt$NomisUserDetailFactory$private var credentialsNonExpired: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:NomisUserDetailFactory.kt$NomisUserDetailFactory$private var dpsRoleCodes: Yielded&lt;List&lt;String&gt;&gt; = { listOf() }</ID>
+    <ID>VarCouldBeVal:NomisUserDetailFactory.kt$NomisUserDetailFactory$private var staffStatus: Yielded&lt;String?&gt; = { "ACTIVE" }</ID>
+    <ID>VarCouldBeVal:NomisUserEntityFactory.kt$NomisUserEntityFactory$private var accountType: Yielded&lt;String&gt; = { "GENERAL" }</ID>
+    <ID>VarCouldBeVal:NomisUserEntityFactory.kt$NomisUserEntityFactory$private var isActive: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:NomisUserEntityFactory.kt$NomisUserEntityFactory$private var isEnabled: Yielded&lt;Boolean&gt; = { true }</ID>
+    <ID>VarCouldBeVal:PersonDepartedFactory.kt$PersonDepartedFactory$private var keyWorker: Yielded&lt;StaffMember&gt; = { StaffMemberFactory().produce() }</ID>
+    <ID>VarCouldBeVal:PlacementApplicationEntityFactory.kt$PlacementApplicationEntityFactory$private var submissionGroupId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:PlacementApplicationTransformerTest.kt$PlacementApplicationTransformerTest$private var application = ApprovedPremisesApplicationEntityFactory() .withCreatedByUser(user) .withSubmittedAt(OffsetDateTime.now()) .produce()</ID>
+    <ID>VarCouldBeVal:PlacementApplicationTransformerTest.kt$PlacementApplicationTransformerTest$private var applicationMock = mockk&lt;ApprovedPremisesApplicationEntity&gt;()</ID>
+    <ID>VarCouldBeVal:PlacementApplicationTransformerTest.kt$PlacementApplicationTransformerTest$private var assessment = ApprovedPremisesAssessmentEntityFactory() .withAllocatedToUser(user) .withApplication(application) .withSubmittedAt(OffsetDateTime.now()) .produce()</ID>
+    <ID>VarCouldBeVal:PlacementApplicationTransformerTest.kt$PlacementApplicationTransformerTest$private var user = UserEntityFactory() .withYieldedProbationRegion { ProbationRegionEntityFactory() .withYieldedApArea { ApAreaEntityFactory().produce() } .produce() } .produce()</ID>
+    <ID>VarCouldBeVal:PlacementApplicationWithdrawnFactory.kt$PlacementApplicationWithdrawnFactory$private var placementApplicationId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:PlacementDateEntityFactory.kt$PlacementDateEntityFactory$private var createdAt: Yielded&lt;OffsetDateTime&gt; = { OffsetDateTime.now().randomDateTimeBefore(30) }</ID>
+    <ID>VarCouldBeVal:PlacementDateEntityFactory.kt$PlacementDateEntityFactory$private var id: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:PlacementRequirementsEntityFactory.kt$PlacementRequirementsEntityFactory$private var gender: Yielded&lt;Gender&gt; = { Gender.male }</ID>
+    <ID>VarCouldBeVal:PlacementRequirementsEntityFactory.kt$PlacementRequirementsEntityFactory$private var radius: Yielded&lt;Int&gt; = { 50 }</ID>
+    <ID>VarCouldBeVal:PremisesTest.kt$PremisesTest.GetPremisesSummary$private var startDate = LocalDate.now()</ID>
+    <ID>VarCouldBeVal:PremisesTest.kt$PremisesTest.GetPremisesSummary$private var totalBeds = 20</ID>
+    <ID>VarCouldBeVal:ProbationOffenderDetailFactory.kt$ProbationOffenderDetailFactory$private var softDeleted: Yielded&lt;Boolean?&gt; = { false }</ID>
+    <ID>VarCouldBeVal:ReferralsReportTest.kt$ReferralsReportTest$var applicationEntity = it.application as ApprovedPremisesApplicationEntity</ID>
+    <ID>VarCouldBeVal:ReferralsReportTest.kt$ReferralsReportTest$var expectedDTOs = assessments.map { var applicationEntity = it.application as ApprovedPremisesApplicationEntity ReferralsDataDto( tier = applicationEntity.riskRatings?.tier?.value?.level, applicationSubmittedAt = applicationEntity.submittedAt?.toLocalDate(), assessmentSubmittedAt = it.submittedAt?.toLocalDate(), clarificationNoteCount = it.clarificationNotes.size, decision = it.decision.toString(), isEsapApplication = applicationEntity.isEsapApplication, isPipeApplication = applicationEntity.isPipeApplication, rejectionRationale = it.rejectionRationale, releaseType = applicationEntity.releaseType, ) }</ID>
+    <ID>VarCouldBeVal:RegistrationClientResponseFactory.kt$RegistrationClientResponseFactory$private var reviewPerioidMonths: Yielded&lt;Int&gt; = { randomInt(6, 12) }</ID>
+    <ID>VarCouldBeVal:RequestForPlacementCreatedFactory.kt$RequestForPlacementCreatedFactory$private var applicationId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:RequestForPlacementCreatedFactory.kt$RequestForPlacementCreatedFactory$private var createdAt: Yielded&lt;Instant&gt; = { Instant.now().randomDateTimeBefore(7) }</ID>
+    <ID>VarCouldBeVal:RequestForPlacementCreatedFactory.kt$RequestForPlacementCreatedFactory$private var createdBy: Yielded&lt;StaffMember&gt; = { StaffMemberFactory().produce() }</ID>
+    <ID>VarCouldBeVal:RequestForPlacementCreatedFactory.kt$RequestForPlacementCreatedFactory$private var deliusEventNumber: Yielded&lt;String&gt; = { randomStringMultiCaseWithNumbers(6) }</ID>
+    <ID>VarCouldBeVal:RequestForPlacementCreatedFactory.kt$RequestForPlacementCreatedFactory$private var personReference: Yielded&lt;PersonReference&gt; = { PersonReferenceFactory().produce() }</ID>
+    <ID>VarCouldBeVal:RequestForPlacementCreatedFactory.kt$RequestForPlacementCreatedFactory$private var requestForPlacementId: Yielded&lt;UUID&gt; = { UUID.randomUUID() }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasArsonInsuranceConditions: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasCallForAssistance: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasCrib7Bedding: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasEnSuite: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasFixedMobilityAids: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasNearbySprinkler: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasSmokeDetector: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasStepFreeAccess: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasTurningSpace: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var hasWideDoor: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isArsonDesignated: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isFullyFm: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isGroundFloorNrOffice: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isSingle: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isStepFreeDesignated: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isSuitedForSexOffenders: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isTopFloorVulnerable: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isWheelchairAccessible: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesRoomsTest.kt$ApprovedPremisesRoomsSeedCsvRowFactory$private var isWheelchairDesignated: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var acceptsChildSexOffenders: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var acceptsHateCrimeOffenders: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var acceptsNonSexualChildOffenders: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var acceptsSexOffenders: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var addressLine2: Yielded&lt;String?&gt; = { randomStringMultiCaseWithNumbers(10) }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasBrailleSignage: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasHearingLoop: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasLift: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasStepFreeAccessToCommunalAreas: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasTactileFlooring: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasWheelChairAccessibleBathrooms: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasWideAccessToCommunalAreas: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var hasWideStepFreeAccess: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var isESAP: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var isPIPE: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var isRecoveryFocussed: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var isSemiSpecialistMentalHealth: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var isSuitableForVulnerable: Yielded&lt;String&gt; = { "no" }</ID>
+    <ID>VarCouldBeVal:SeedApprovedPremisesTest.kt$ApprovedPremisesSeedCsvRowFactory$private var town: Yielded&lt;String&gt; = { randomStringMultiCaseWithNumbers(10) }</ID>
+    <ID>VarCouldBeVal:SeedTemporaryAccommodationPremisesTest.kt$TemporaryAccommodationPremisesSeedCsvRowFactory$private var emailAddress: Yielded&lt;String?&gt; = { randomStringMultiCaseWithNumbers(10) }</ID>
+    <ID>VarCouldBeVal:TemporaryAccommodationPremisesEntityFactory.kt$TemporaryAccommodationPremisesEntityFactory$private var emailAddress: Yielded&lt;String&gt; = { randomStringUpperCase(10) }</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var bedId: UUID = UUID.randomUUID()</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var bedName: String = randomStringMultiCaseWithNumbers(6)</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var bookingEndDate: LocalDate = LocalDate.now().randomDateAfter()</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var bookingId: UUID = UUID.randomUUID()</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var bookingStartDate: LocalDate = LocalDate.now().randomDateBefore()</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var premisesAddressLine1: String = randomStringMultiCaseWithNumbers(6)</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var premisesAddressLine2: String? = null</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var premisesId: UUID = UUID.randomUUID()</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var premisesName: String = randomStringMultiCaseWithNumbers(6)</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var premisesPostcode: String = randomStringMultiCaseWithNumbers(6)</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var premisesTown: String? = null</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var roomId: UUID = UUID.randomUUID()</ID>
+    <ID>VarCouldBeVal:TestBookingSearchResult.kt$TestBookingSearchResult$private var roomName: String = randomStringMultiCaseWithNumbers(6)</ID>
+    <ID>VarCouldBeVal:TestPropertiesInitializer.kt$TestPropertiesInitializer$private var postgresPort = System.getenv("POSTGRES_PORT") ?: "5433"</ID>
+    <ID>VarCouldBeVal:UserServiceTest.kt$UserServiceTest.UpdateUserFromCommunityApiById$var entity = result.entity</ID>
+    <ID>VarCouldBeVal:WithdrawnByFactory.kt$WithdrawnByFactory$private var withdrawnByProbationArea: Yielded&lt;ProbationArea&gt; = { ProbationAreaFactory().produce() }</ID>
+    <ID>VarCouldBeVal:WithdrawnByFactory.kt$WithdrawnByFactory$private var withdrawnByStaffMember: Yielded&lt;StaffMember&gt; = { StaffMemberFactory().produce() }</ID>
+  </CurrentIssues>
+</SmellBaseline>

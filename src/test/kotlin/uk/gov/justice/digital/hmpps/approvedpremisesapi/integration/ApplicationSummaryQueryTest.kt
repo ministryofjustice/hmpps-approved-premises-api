@@ -84,16 +84,16 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           results.first { it.getId() == nonSubmittedApplication.id }.let {
             assertThat(it.getCrn()).isEqualTo(nonSubmittedApplication.crn)
             assertThat(it.getCreatedByUserId()).isEqualTo(nonSubmittedApplication.createdByUser.id)
-            assertThat(it.getCreatedAt().toInstant()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
-            assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
+            assertThat(it.getCreatedAt()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
+            assertThat(it.getSubmittedAt()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
             assertThat(it.getStatus()).isEqualTo("STARTED")
           }
 
           results.first { it.getId() == submittedApplication.id }.let {
             assertThat(it.getCrn()).isEqualTo(submittedApplication.crn)
             assertThat(it.getCreatedByUserId()).isEqualTo(submittedApplication.createdByUser.id)
-            assertThat(it.getCreatedAt().toInstant()).isEqualTo(submittedApplication.createdAt.toInstant())
-            assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(submittedApplication.submittedAt?.toInstant())
+            assertThat(it.getCreatedAt()).isEqualTo(submittedApplication.createdAt.toInstant())
+            assertThat(it.getSubmittedAt()).isEqualTo(submittedApplication.submittedAt?.toInstant())
             assertThat(it.getStatus()).isEqualTo("SUBMITTED")
           }
 
@@ -178,8 +178,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         results.first { it.getId() == nonSubmittedApplication.id }.let {
           assertThat(it.getCrn()).isEqualTo(nonSubmittedApplication.crn)
           assertThat(it.getCreatedByUserId()).isEqualTo(nonSubmittedApplication.createdByUser.id)
-          assertThat(it.getCreatedAt().toInstant()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
-          assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
+          assertThat(it.getCreatedAt()).isEqualTo(nonSubmittedApplication.createdAt.toInstant())
+          assertThat(it.getSubmittedAt()).isEqualTo(nonSubmittedApplication.submittedAt?.toInstant())
           assertThat(it.getLatestAssessmentSubmittedAt()).isNull()
           assertThat(it.getLatestAssessmentDecision()).isNull()
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(false)
@@ -190,9 +190,9 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         results.first { it.getId() == submittedApplication.id }.let {
           assertThat(it.getCrn()).isEqualTo(submittedApplication.crn)
           assertThat(it.getCreatedByUserId()).isEqualTo(submittedApplication.createdByUser.id)
-          assertThat(it.getCreatedAt().toInstant()).isEqualTo(submittedApplication.createdAt.toInstant())
-          assertThat(it.getSubmittedAt()?.toInstant()).isEqualTo(submittedApplication.submittedAt?.toInstant())
-          assertThat(it.getLatestAssessmentSubmittedAt()?.toInstant()).isEqualTo(assessmentForSubmittedApplication.submittedAt?.toInstant())
+          assertThat(it.getCreatedAt()).isEqualTo(submittedApplication.createdAt.toInstant())
+          assertThat(it.getSubmittedAt()).isEqualTo(submittedApplication.submittedAt?.toInstant())
+          assertThat(it.getLatestAssessmentSubmittedAt()).isEqualTo(assessmentForSubmittedApplication.submittedAt?.toInstant())
           assertThat(it.getLatestAssessmentDecision()).isEqualTo(assessmentForSubmittedApplication.decision)
           assertThat(it.getLatestAssessmentHasClarificationNotesWithoutResponse()).isEqualTo(true)
           assertThat(it.getHasBooking()).isEqualTo(true)

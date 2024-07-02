@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 
-import com.amazonaws.services.sns.model.InternalErrorException
-import com.amazonaws.services.sns.model.PublishResult
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -14,6 +12,9 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import software.amazon.awssdk.services.sns.model.InternalErrorException
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
@@ -54,6 +55,7 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 
 @SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventServiceTest {
@@ -213,7 +215,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -233,8 +235,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled" &&
             deserializedMessage.version == 1 &&
@@ -284,7 +286,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -303,7 +305,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -338,7 +340,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -359,7 +361,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -481,7 +483,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -502,8 +504,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.confirmed" &&
             deserializedMessage.version == 1 &&
@@ -553,7 +555,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -573,7 +575,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -608,7 +610,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -629,7 +631,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -753,7 +755,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -775,8 +777,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.provisionally-made" &&
             deserializedMessage.version == 1 &&
@@ -828,7 +830,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -849,7 +851,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -886,7 +888,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -908,7 +910,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1030,7 +1032,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -1052,8 +1054,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.arrived" &&
             deserializedMessage.version == 1 &&
@@ -1103,7 +1105,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -1124,7 +1126,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1159,7 +1161,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -1181,7 +1183,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1263,7 +1265,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getPersonDepartedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -1285,8 +1287,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.departed" &&
             deserializedMessage.version == 1 &&
@@ -1336,7 +1338,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getPersonDepartedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -1357,7 +1359,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1392,7 +1394,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getPersonDepartedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
@@ -1414,7 +1416,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1496,7 +1498,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getReferralSubmittedDomainEvent(any()) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -1529,8 +1531,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.referral.submitted" &&
             deserializedMessage.version == 1 &&
@@ -1580,7 +1582,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getReferralSubmittedDomainEvent(any()) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -1612,7 +1614,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1647,7 +1649,7 @@ class DomainEventServiceTest {
     every { domainEventBuilderMock.getReferralSubmittedDomainEvent(any()) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -1680,7 +1682,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1698,7 +1700,7 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.buildDepartureUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     domainEventService.savePersonDepartureUpdatedEvent(bookingEntity, user)
 
@@ -1718,8 +1720,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.departed.updated" &&
             deserializedMessage.version == 1 &&
@@ -1752,7 +1754,7 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.buildDepartureUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     assertThatExceptionOfType(RuntimeException::class.java)
       .isThrownBy { domainEventService.savePersonDepartureUpdatedEvent(bookingEntity, user) }
@@ -1771,7 +1773,7 @@ class DomainEventServiceTest {
       )
     }
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1789,7 +1791,7 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.buildDepartureUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } throws InternalErrorException("Unexpected exception")
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } throws InternalErrorException.builder().message("Unexpected exception").build()
 
     assertThatExceptionOfType(InternalErrorException::class.java)
       .isThrownBy { domainEventService.savePersonDepartureUpdatedEvent(bookingEntity, user) }
@@ -1809,8 +1811,8 @@ class DomainEventServiceTest {
     }
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.departed.updated" &&
             deserializedMessage.version == 1 &&
@@ -1906,7 +1908,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -1925,8 +1927,7 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
     domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
@@ -1945,8 +1946,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
             deserializedMessage.version == 1 &&
@@ -1980,7 +1981,9 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), null) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(
+      PublishResponse.builder().build(),
+    )
 
     domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, null)
 
@@ -2000,8 +2003,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
             deserializedMessage.version == 1 &&
@@ -2052,7 +2055,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -2088,7 +2091,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
     }
   }
 
@@ -2154,7 +2157,7 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     domainEventService.savePersonArrivedUpdatedEvent(bookingEntity, user)
 
@@ -2174,8 +2177,8 @@ class DomainEventServiceTest {
 
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+        match<PublishRequest> {
+          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.arrived.updated" &&
             deserializedMessage.version == 1 &&
@@ -2209,7 +2212,7 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
     domainEventServiceEmittingDisabled.savePersonArrivedUpdatedEvent(bookingEntity, user)
 
@@ -2226,7 +2229,7 @@ class DomainEventServiceTest {
         },
       )
     }
-    verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any()) }
+    verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) }
   }
 
   @Test
@@ -2260,7 +2263,7 @@ class DomainEventServiceTest {
         },
       )
     }
-    verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any()) }
+    verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) }
   }
 
   @Test

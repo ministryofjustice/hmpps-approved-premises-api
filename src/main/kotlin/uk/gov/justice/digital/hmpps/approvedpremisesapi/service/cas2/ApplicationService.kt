@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -32,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.transaction.Transactional
 
 @Service("Cas2ApplicationService")
 class ApplicationService(
@@ -88,8 +88,7 @@ class ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedApplicationForAssessor(applicationId: UUID):
-    AuthorisableActionResult<Cas2ApplicationEntity> {
+  fun getSubmittedApplicationForAssessor(applicationId: UUID): AuthorisableActionResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findSubmittedApplicationById(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -111,7 +110,7 @@ class ApplicationService(
     return if (canAccess) {
       AuthorisableActionResult.Success(
         jsonSchemaService.checkSchemaOutdated
-        (applicationEntity),
+          (applicationEntity),
       )
     } else {
       AuthorisableActionResult.Unauthorised()
@@ -156,8 +155,7 @@ class ApplicationService(
     }
 
   @SuppressWarnings("ReturnCount")
-  fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+  fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -195,8 +193,7 @@ class ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonApplication(applicationId: UUID, user: NomisUserEntity):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+  fun abandonApplication(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
