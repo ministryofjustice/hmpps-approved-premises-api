@@ -22,6 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -44,6 +48,7 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"
     const val SUBMITTED_AT = "2021-10-19T16:00:00+00:00"
+    const val SUBMITTED_AT_NO_TZ = "2021-10-19T16:00:00"
     const val ARRIVED_AT = "2021-09-20T16:00:00+00:00"
     const val ALLOCATED_AT = "2021-09-21T16:00:00+00:00"
     const val CREATED_AT_NO_TZ = "2021-09-18T16:00:00"
@@ -53,6 +58,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
     const val CANCELLATION_DATE = "2021-09-25T16:00:00+00:00"
     const val RESPONSE_RECEIVED_AT = "2021-10-23"
     const val APPEAL_DATE_ONLY = "2021-10-24"
+    const val DECISION_MADE_AT = "2021-10-25T16:01:00+00:00"
+    const val DECISION_MADE_AT_NO_TZ = "2021-10-25T16:01:00"
 
     var ARRIVED_AT_DATE_ONLY = this.ARRIVED_AT.substring(0..9)
     var DEPARTED_AT_DATE_ONLY = this.DEPARTED_AT.substring(0..9)
@@ -93,7 +100,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ]          
           }
       }
       """.trimIndent(),
@@ -122,7 +130,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
-        "Appeals": [ ]
+        "Appeals": [ ],
+        "PlacementApplications": [ ]
       }
     }
     """.trimIndent()
@@ -154,7 +163,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
-        "Appeals": [ ]
+        "Appeals": [ ],
+        "PlacementApplications": [ ]
       }
     }
     """.trimIndent()
@@ -187,7 +197,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
-        "Appeals": [ ]
+        "Appeals": [ ],
+        "PlacementApplications": [ ]
       }
     }
     """
@@ -222,7 +233,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ]
       }
     }
     """.trimIndent()
@@ -252,8 +264,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
-       
+          "Appeals": [ ],
+          "PlacementApplications": [ ]       
       }
     }
     """.trimIndent()
@@ -284,7 +296,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": ${bookingExtensionJson(bookingExtension)},
           "Cancellations": [ ],
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ]
       }
     }
     """.trimIndent()
@@ -315,7 +328,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": ${cancellationJson(cancellation)},
           "BedMoves": [ ],
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ]
       }
     }
     """.trimIndent()
@@ -346,7 +360,8 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
           "BookingExtensions": [ ],
           "Cancellations": [ ],
           "BedMoves": ${bedMovesJson(bedMove)},
-          "Appeals": [ ]
+          "Appeals": [ ],
+          "PlacementApplications": [ ]
       }
     }
     """.trimIndent()
@@ -391,6 +406,60 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
     assertJsonEquals(expectedJson, result)
   }
+
+  @Test
+  fun `get CAS1 information - has a placement application`() {
+    val (offender, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offender)
+
+    val placementApplication = placementApplicationEntity(application)
+    val result =
+      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": [ ],
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": [ ],
+          "Appeals": [ ],
+          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)}
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun approvedPremisesPlacementApplicationsJson(placementApplication: PlacementApplicationEntity): String =
+    """
+    [
+      {
+        "crn": "${placementApplication.application.crn}" ,
+        "noms_number": "${placementApplication.application.nomsNumber}",
+        "application_id": "${placementApplication.application.id}",
+        "data": $DATA_JSON_SIMPLE,
+        "document": $DOCUMENT_JSON_SIMPLE,
+        "created_at": "$CREATED_AT_NO_TZ",
+        "submitted_at": "$SUBMITTED_AT_NO_TZ" ,
+        "allocated_at": null,
+        "reallocated_at": null,
+        "due_at": null ,
+        "decision": "${placementApplication.decision}",
+        "decision_made_at": "$DECISION_MADE_AT_NO_TZ" ,
+        "placement_type": "${PlacementType.ADDITIONAL_PLACEMENT}",
+        "is_withdrawn": ${placementApplication.isWithdrawn},
+        "withdrawal_reason": "${placementApplication.withdrawalReason}",
+        "created_by_user": "${placementApplication.createdByUser.name}",
+        "allocated_user": null
+      }
+    ] 
+    """.trimIndent()
 
   private fun appealsJson(appeal: AppealEntity): String =
     """
@@ -613,6 +682,25 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
       ]
   """.trimIndent()
 
+  private fun placementApplicationEntity(application: ApprovedPremisesApplicationEntity) =
+    placementApplicationFactory.produceAndPersist {
+      withApplication(application)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withDueAt(null)
+      withData(DATA_JSON_SIMPLE)
+      withDocument(DOCUMENT_JSON_SIMPLE)
+      withAllocatedToUser(null)
+      withCreatedByUser(application.createdByUser)
+      withDecision(PlacementApplicationDecision.ACCEPTED)
+      withDecisionMadeAt(OffsetDateTime.parse(DECISION_MADE_AT))
+      withIsWithdrawn(true)
+      withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+      withReallocatedAt(null)
+      withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntity())
+      withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+    }
+
   private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
@@ -620,6 +708,11 @@ class SubjectAccessRequestServiceTest : IntegrationTestBase() {
 
   private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity =
     approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+  private fun approvedPremisesPlacementApplicationJsonSchemaEntity() =
+    approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 

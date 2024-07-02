@@ -419,7 +419,7 @@ from
               or app.noms_number = :noms_number )
           and (:start_date is null or app.created_at >= :start_date)
           and (:end_date is null or app.created_at <= :end_date)
-      ) appeals;
+      ) appeals
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,
@@ -427,6 +427,60 @@ from
         startDate,
         endDate,
       ),
+    )
+    return toJsonString(result)
+  }
+
+  fun placementApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+       select json_agg(placement_applications) 
+       as json from (
+          select
+            a.crn,
+            a.noms_number,
+            pa.application_id,
+            pa."data",
+            pa."document",
+            pa.created_at,
+            pa.submitted_at ,
+            pa.allocated_at,
+            pa.reallocated_at,
+            pa.due_at,
+            pa.decision,
+            pa.decision_made_at,
+            case
+               when pa.placement_type = '0' then 'ROTL'
+               when pa.placement_type = '1' then 'RELEASE_FOLLOWING_DECISION'
+               when pa.placement_type = '2' then 'ADDITIONAL_PLACEMENT' 
+               else ''
+            end as placement_type,
+            pa.is_withdrawn,
+            pa.withdrawal_reason,
+            cu."name" as created_by_user,
+            au."name" as allocated_user
+          from
+            placement_applications pa
+          inner join applications a on
+            pa.application_id = a.id
+          inner join users cu on
+            cu.id = pa.created_by_user_id
+          left join users au on
+            au.id = pa.allocated_to_user_id
+          where
+            a.service = :service_name and
+            (a.crn = :crn
+              or a.noms_number = :noms_number )
+          and (:start_date is null or a.created_at >= :start_date)
+          and (:end_date is null or a.created_at <= :end_date)
+       ) placement_applications
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ).addValue("service_name", serviceName.value),
     )
     return toJsonString(result)
   }
