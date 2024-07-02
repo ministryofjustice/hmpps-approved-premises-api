@@ -6,10 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PreemptiveCacheEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
 
+@SuppressWarnings("LongParameterList")
 class InmateDetailsCacheRefreshWorker(
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,
+  private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
   private val prisonsApiClient: PrisonsApiClient,
   private val loggingEnabled: Boolean,
   private val delayMs: Long,
@@ -17,7 +20,11 @@ class InmateDetailsCacheRefreshWorker(
   lockDurationMs: Int,
 ) : CacheRefreshWorker(redLock, "inmateDetails", lockDurationMs) {
   override fun work(checkShouldStop: () -> Boolean) {
-    val distinctNomsNumbers = (applicationRepository.getDistinctNomsNumbers() + bookingRepository.getDistinctNomsNumbers()).distinct()
+    val distinctNomsNumbers =
+      (
+        applicationRepository.getDistinctNomsNumbers() +
+          bookingRepository.getDistinctNomsNumbers()
+        ).distinct() - cacheRefreshExclusionsInmateDetailsRepository.getDistinctNomsNumbers().toSet()
 
     logConspicuously("${distinctNomsNumbers.count()} cache fields to update")
 

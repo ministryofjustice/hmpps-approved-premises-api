@@ -13,16 +13,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
 
 class InmateDetailsCacheRefreshWorkerTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockBookingRepository = mockk<BookingRepository>()
+  private val mockCacheRefreshExclusionsInmateDetailsRepository = mockk<CacheRefreshExclusionsInmateDetailsRepository>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockRedLock = mockk<RedLock>()
 
   private val offenderDetailsCacheRefreshWorker = InmateDetailsCacheRefreshWorker(
     mockApplicationRepository,
     mockBookingRepository,
+    mockCacheRefreshExclusionsInmateDetailsRepository,
     mockPrisonsApiClient,
     false,
     0,
@@ -50,8 +53,11 @@ class InmateDetailsCacheRefreshWorkerTest {
         .produce()
     }
 
-    every { mockApplicationRepository.getDistinctNomsNumbers() } returns listOf("NOMS123", "NOMS456", "NOMS789")
-    every { mockBookingRepository.getDistinctNomsNumbers() } returns listOf("NOMS321", "NOMS456", "NOMS999", "NOMS777")
+    val offenderDetailsExcluded = InmateDetailFactory().withOffenderNo("NOMSIGNORE").produce()
+
+    every { mockApplicationRepository.getDistinctNomsNumbers() } returns listOf("NOMS123", "NOMS456", "NOMS789", "NOMSIGNORE")
+    every { mockBookingRepository.getDistinctNomsNumbers() } returns listOf("NOMS321", "NOMS456", "NOMS999", "NOMS777", "NOMSIGNORE")
+    every { mockCacheRefreshExclusionsInmateDetailsRepository.getDistinctNomsNumbers() } returns listOf("NOMSIGNORE")
 
     inmateDetailsNotCached.forEach {
       every { mockPrisonsApiClient.getInmateDetailsCacheEntryStatus(it.offenderNo) } returns PreemptiveCacheEntryStatus.MISS
@@ -87,6 +93,10 @@ class InmateDetailsCacheRefreshWorkerTest {
       verify(exactly = 0) {
         mockPrisonsApiClient.getInmateDetailsWithCall(it.offenderNo)
       }
+    }
+
+    verify(exactly = 0) {
+      mockPrisonsApiClient.getInmateDetailsWithCall(offenderDetailsExcluded.offenderNo)
     }
 
     verify(exactly = 4) {

@@ -12,12 +12,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
 
 @Component
 class PreemptiveCacheRefresher(
   private val flyway: Flyway,
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,
+  private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
   private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
@@ -51,6 +53,7 @@ class PreemptiveCacheRefresher(
       preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
         applicationRepository,
         bookingRepository,
+        cacheRefreshExclusionsInmateDetailsRepository,
         prisonsApiClient,
         loggingEnabled,
         delayMs,
