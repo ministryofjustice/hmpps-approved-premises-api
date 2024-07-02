@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UpdateNomsNumberSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -19,6 +20,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
 
   companion object CONSTANTS {
     const val CRN = "CRN123"
+    const val OLD_NOMS = "NOMS123"
     const val NEW_NOMS = "NOMS456"
     const val OTHER_CRN = "OTHERCRN"
     const val OTHER_NOMS = "OTHERNOMS"
@@ -38,10 +40,23 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
       )
       withApArea(apAreaEntityFactory.produceAndPersist())
       withCrn(CRN)
-      withNomsNumber("OLDVALUE")
+      withNomsNumber(OLD_NOMS)
     }
 
-    val otherUnaffectedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    val alreadyCorrectApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withDefaults()
+      withCreatedByUser(applicant)
+      withApplicationSchema(
+        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+      )
+      withApArea(apAreaEntityFactory.produceAndPersist())
+      withCrn(CRN)
+      withNomsNumber(NEW_NOMS)
+    }
+
+    val otherCrnApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withDefaults()
       withCreatedByUser(applicant)
       withApplicationSchema(
@@ -64,10 +79,10 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
         },
       )
       withCrn(CRN)
-      withNomsNumber("OLDVALUE")
+      withNomsNumber(OLD_NOMS)
     }
 
-    val otherUnaffectedBooking = bookingEntityFactory.produceAndPersist {
+    val otherCrnBooking = bookingEntityFactory.produceAndPersist {
       withPremises(
         approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -86,6 +101,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
         listOf(
           UpdateNomsNumberSeedRow(
             CRN,
+            OLD_NOMS,
             NEW_NOMS,
           ),
         ),
@@ -96,21 +112,41 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
 
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)
     assertThat(updatedApplication!!.nomsNumber).isEqualTo(NEW_NOMS)
+    assertNoteAdded(updatedApplication, "NOMS Number for application updated from 'NOMS123' to 'NOMS456' by Application Support")
 
-    val updatedOtherApplication = approvedPremisesApplicationRepository.findByIdOrNull(otherUnaffectedApplication.id)
-    assertThat(updatedOtherApplication!!.nomsNumber).isEqualTo(OTHER_NOMS)
+    val updatedAlreadyCorrectApplication = approvedPremisesApplicationRepository.findByIdOrNull(alreadyCorrectApplication.id)
+    assertThat(updatedAlreadyCorrectApplication!!.nomsNumber).isEqualTo(NEW_NOMS)
+    assertNoteNotAdded(updatedAlreadyCorrectApplication)
+
+    val updatedOtherCrnApplication = approvedPremisesApplicationRepository.findByIdOrNull(otherCrnApplication.id)
+    assertThat(updatedOtherCrnApplication!!.nomsNumber).isEqualTo(OTHER_NOMS)
+    assertNoteNotAdded(updatedOtherCrnApplication)
 
     val updatedBooking = bookingRepository.findByIdOrNull(booking.id)
     assertThat(updatedBooking!!.nomsNumber).isEqualTo(NEW_NOMS)
 
-    val updatedOtherBooking = bookingRepository.findByIdOrNull(otherUnaffectedBooking.id)
-    assertThat(updatedOtherBooking!!.nomsNumber).isEqualTo(OTHER_NOMS)
+    val updatedOtherCrnBooking = bookingRepository.findByIdOrNull(otherCrnBooking.id)
+    assertThat(updatedOtherCrnBooking!!.nomsNumber).isEqualTo(OTHER_NOMS)
+  }
+
+  private fun assertNoteAdded(application: ApplicationEntity, message: String) {
+    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(application.id)
+    assertThat(notes).hasSize(1)
+    assertThat(notes)
+      .extracting("body")
+      .contains(message)
+  }
+
+  private fun assertNoteNotAdded(application: ApplicationEntity) {
+    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(application.id)
+    assertThat(notes).isEmpty()
   }
 
   private fun rowsToCsv(rows: List<UpdateNomsNumberSeedRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "crn",
+        "oldNomsNumber",
         "newNomsNumber",
       )
       .newRow()
@@ -118,6 +154,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
     rows.forEach {
       builder
         .withQuotedField(it.crn)
+        .withQuotedField(it.oldNomsNumber)
         .withQuotedField(it.newNomsNumber)
         .newRow()
     }
