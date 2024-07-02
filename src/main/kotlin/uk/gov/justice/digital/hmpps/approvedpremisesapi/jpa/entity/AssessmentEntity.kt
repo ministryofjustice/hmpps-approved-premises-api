@@ -7,6 +7,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -34,6 +35,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
    * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
    * and as such changes should be synchronized
    */
+
   @Query(
     value = """
     select distinct cast(a.id as text) as id,
@@ -236,7 +238,10 @@ abstract class AssessmentEntity(
   // This is in place for optimistic locking (using @Version). We have temporarily disabled this
   // functionality whilst we put protections in the CAS1 UI to reduce duplicate form submissions
   var version: Long = 1,
-)
+) {
+  @Suppress("unchecked")
+  fun <T : ApplicationEntity> typedApplication(): T = application as T
+}
 
 @Entity
 @DiscriminatorValue("approved-premises")
@@ -312,6 +317,8 @@ class TemporaryAccommodationAssessmentEntity(
   var referralRejectionReason: ReferralRejectionReasonEntity?,
   var referralRejectionReasonDetail: String?,
   dueAt: OffsetDateTime?,
+  var releaseDate: LocalDate?,
+  var accommodationRequiredFromDate: LocalDate?,
 ) : AssessmentEntity(
   id,
   application,
@@ -469,3 +476,5 @@ interface ReferralsDataResult {
   fun getReleaseType(): String?
   fun getClarificationNoteCount(): Int
 }
+
+fun <T : AssessmentEntity> AssessmentRepository.findAssessmentById(id: UUID): T? = findByIdOrNull(id) as T?

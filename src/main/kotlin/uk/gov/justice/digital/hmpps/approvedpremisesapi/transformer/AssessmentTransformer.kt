@@ -23,9 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
@@ -69,12 +71,14 @@ class AssessmentTransformer(
         jpa.referralHistoryNotes.filter { it is AssessmentReferralHistorySystemNoteEntity && it.type == ReferralHistorySystemNoteType.REJECTED }
           .maxByOrNull { it.createdAt }
 
+      val application = applicationsTransformer.transformJpaToApi(
+        jpa.application,
+        personInfo,
+      ) as TemporaryAccommodationApplication
+
       TemporaryAccommodationAssessment(
         id = jpa.id,
-        application = applicationsTransformer.transformJpaToApi(
-          jpa.application,
-          personInfo,
-        ) as TemporaryAccommodationApplication,
+        application = application,
         schemaVersion = jpa.schemaVersion.id,
         outdatedSchema = jpa.schemaUpToDate,
         createdAt = jpa.createdAt.toInstant(),
@@ -100,6 +104,8 @@ class AssessmentTransformer(
         status = getStatusForTemporaryAccommodationAssessment(jpa),
         summaryData = objectMapper.readTree(jpa.summaryData),
         service = "CAS3",
+        releaseDate = jpa.releaseDate ?: LocalDate.from((jpa.application as TemporaryAccommodationApplicationEntity).arrivalDate),
+        accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: (jpa.application as TemporaryAccommodationApplicationEntity).personReleaseDate,
       )
     }
 
