@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalAccommodationReferralReportData
@@ -40,6 +41,7 @@ class Cas3ReportServiceTest {
   private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockBedRepository = mockk<BedRepository>()
+  private val mockBedUtilisationReportRepository = mockk<BedUtilisationReportRepository>()
 
   private val cas3ReportService = Cas3ReportService(
     mockOffenderService,
@@ -51,6 +53,7 @@ class Cas3ReportServiceTest {
     mockWorkingDayService,
     mockBookingRepository,
     mockBedRepository,
+    mockBedUtilisationReportRepository,
     2,
   )
 
@@ -105,6 +108,7 @@ class Cas3ReportServiceTest {
       mockWorkingDayService,
       mockBookingRepository,
       mockBedRepository,
+      mockBedUtilisationReportRepository,
       3,
     )
 
