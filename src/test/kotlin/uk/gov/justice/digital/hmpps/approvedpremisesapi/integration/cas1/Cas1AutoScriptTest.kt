@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
@@ -29,26 +28,21 @@ class Cas1AutoScriptTest : IntegrationTestBase() {
 
   @Test
   fun `ensure auto script runs`() {
-    `Given a User` { user, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+    `Given an Offender` { offenderDetails, _ ->
 
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1"),
-          ),
-        )
+      APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+        offenderDetails.otherIds.crn,
+        ManagingTeamsResponse(
+          teamCodes = listOf("TEAM1"),
+        ),
+      )
 
-        Cas1AutoScript(
-          seedLogger,
-          applicationService,
-          userService,
-          offenderService,
-        ).script(
-          deliusUserName = user.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
-        )
-      }
+      Cas1AutoScript(
+        seedLogger,
+        applicationService,
+        userService,
+        offenderService,
+      ).script()
     }
   }
 }
