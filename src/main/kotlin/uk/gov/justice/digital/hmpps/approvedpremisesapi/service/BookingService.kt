@@ -304,6 +304,7 @@ class BookingService(
         application = application,
         booking = booking,
         user = user,
+        placementRequest = placementRequest,
       )
       cas1BookingEmailService.bookingMade(placementRequest.application, booking)
 

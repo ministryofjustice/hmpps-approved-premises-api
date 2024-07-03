@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -89,6 +90,10 @@ class Cas1BookingDomainEventServiceTest {
       .withCreatedAt(createdAt)
       .produce()
 
+    val placementRequest = PlacementRequestEntityFactory()
+      .withDefaults()
+      .produce()
+
     @BeforeEach
     fun before() {
       every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
@@ -117,7 +122,7 @@ class Cas1BookingDomainEventServiceTest {
 
     @Test
     fun `bookingMade saves domain event`() {
-      service.bookingMade(application, booking, user)
+      service.bookingMade(application, booking, user, placementRequest)
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
 
@@ -154,6 +159,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
+
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
 
     @Test
@@ -201,6 +208,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
+
+      assertThat(domainEvent.metadata).isEmpty()
     }
 
     @Test
@@ -249,6 +258,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.releaseType).isNull()
       assertThat(data.sentenceType).isNull()
       assertThat(data.situation).isNull()
+
+      assertThat(domainEvent.metadata).isEmpty()
     }
 
     @Test
