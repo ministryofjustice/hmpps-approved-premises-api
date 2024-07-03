@@ -158,11 +158,11 @@ AND (
      CAST(id AS text) as id,
      noms_number as nomsNumber
     FROM applications 
-    WHERE UPPER(crn) = UPPER(:crn)
+    WHERE UPPER(crn) = UPPER(:crn) AND UPPER(noms_number) = UPPER(:nomsNumber)
     """,
     nativeQuery = true,
   )
-  fun findByCrn(crn: String): List<CrnSearchResult>
+  fun findByCrnAndNoms(crn: String, nomsNumber: String): List<CrnSearchResult>
 
   interface CrnSearchResult {
     fun getId(): String
