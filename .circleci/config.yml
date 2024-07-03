@@ -9,10 +9,10 @@ orbs:
 parameters:
   alerts-slack-channel:
     type: string
-    default: approved-premises-team-events
+    default: cas-events
   releases-slack-channel:
     type: string
-    default: approved-premises-team-events
+    default: cas-events
   run-security-workflow-on-branch:
     type: boolean
     default: false
