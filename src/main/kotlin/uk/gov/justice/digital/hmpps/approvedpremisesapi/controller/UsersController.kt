@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -54,7 +55,7 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    var roles = roles?.map(::transformApiRole)
+    var roles = roles?.map(UserRole::valueOf)
     var qualifications = qualifications?.map(::transformApiQualification)
 
     val (users, metadata) = userService.getUsersWithQualificationsAndRoles(
@@ -141,24 +142,6 @@ class UsersController(
     if (!userEntity.staffRecordFound) throw NotFoundProblem(name, "user", "username")
     val userTransformed = userTransformer.transformJpaToApi(userEntity.user!!, xServiceName)
     return ResponseEntity.ok(userTransformed)
-  }
-
-  @SuppressWarnings("CyclomaticComplexMethod")
-  private fun transformApiRole(apiRole: ApprovedPremisesUserRole): JpaUserRole = when (apiRole) {
-    ApprovedPremisesUserRole.roleAdmin -> JpaUserRole.CAS1_ADMIN
-    ApprovedPremisesUserRole.applicant -> JpaUserRole.CAS1_APPLICANT
-    ApprovedPremisesUserRole.assessor -> JpaUserRole.CAS1_ASSESSOR
-    ApprovedPremisesUserRole.manager -> JpaUserRole.CAS1_MANAGER
-    ApprovedPremisesUserRole.legacyManager -> JpaUserRole.CAS1_LEGACY_MANAGER
-    ApprovedPremisesUserRole.futureManager -> JpaUserRole.CAS1_FUTURE_MANAGER
-    ApprovedPremisesUserRole.matcher -> JpaUserRole.CAS1_MATCHER
-    ApprovedPremisesUserRole.workflowManager -> JpaUserRole.CAS1_WORKFLOW_MANAGER
-    ApprovedPremisesUserRole.cruMember -> JpaUserRole.CAS1_CRU_MEMBER
-    ApprovedPremisesUserRole.reportViewer -> JpaUserRole.CAS1_REPORT_VIEWER
-    ApprovedPremisesUserRole.excludedFromAssessAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION
-    ApprovedPremisesUserRole.excludedFromMatchAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION
-    ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION
-    ApprovedPremisesUserRole.appealsManager -> JpaUserRole.CAS1_APPEALS_MANAGER
   }
 
   private fun transformApiQualification(apiQualification: UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =

@@ -80,23 +80,11 @@ class UserTransformer(
     return ProfileResponse(userName, loadError = null, transformJpaToApi(userResponse.user!!, xServiceName))
   }
 
-  private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? = when (userRole.role) {
-    UserRole.CAS1_ADMIN -> ApprovedPremisesUserRole.roleAdmin
-    UserRole.CAS1_ASSESSOR -> ApprovedPremisesUserRole.assessor
-    UserRole.CAS1_MATCHER -> ApprovedPremisesUserRole.matcher
-    UserRole.CAS1_MANAGER -> ApprovedPremisesUserRole.manager
-    UserRole.CAS1_LEGACY_MANAGER -> ApprovedPremisesUserRole.legacyManager
-    UserRole.CAS1_FUTURE_MANAGER -> ApprovedPremisesUserRole.futureManager
-    UserRole.CAS1_WORKFLOW_MANAGER -> ApprovedPremisesUserRole.workflowManager
-    UserRole.CAS1_CRU_MEMBER -> ApprovedPremisesUserRole.cruMember
-    UserRole.CAS1_APPLICANT -> ApprovedPremisesUserRole.applicant
-    UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION -> ApprovedPremisesUserRole.excludedFromMatchAllocation
-    UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION -> ApprovedPremisesUserRole.excludedFromAssessAllocation
-    UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION -> ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation
-    UserRole.CAS1_REPORT_VIEWER -> ApprovedPremisesUserRole.reportViewer
-    UserRole.CAS1_APPEALS_MANAGER -> ApprovedPremisesUserRole.appealsManager
-    UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER, UserRole.CAS3_REPORTER -> null
-  }
+  private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? =
+    when (userRole.role.service) {
+      ServiceName.approvedPremises -> userRole.role.cas1ApiValue!!
+      else -> null
+    }
 
   private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? = when (userRole.role) {
     UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor

@@ -733,6 +733,38 @@ class UserAccessServiceTest {
     assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
+  @Test
+  fun `userCanCancelOutOfServiceBed returns true if the user has the JANITOR user role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(UserRole.CAS1_JANITOR)
+
+    assertThat(userAccessService.userCanCancelOutOfServiceBed(user)).isTrue
+  }
+
+  @Test
+  fun `userCanCancelOutOfServiceBed returns false if the user has no suitable role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.userCanCancelOutOfServiceBed(user)).isFalse
+  }
+
+  @Test
+  fun `currentUserCanCancelOutOfServiceBed returns true if the current user has the JANITOR user role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    user.addRoleForUnitTest(UserRole.CAS1_JANITOR)
+
+    assertThat(userAccessService.currentUserCanCancelOutOfServiceBed()).isTrue
+  }
+
+  @Test
+  fun `currentUserCanCancelOutOfServiceBed returns false if the current user has no suitable role`() {
+    currentRequestIsFor(ServiceName.approvedPremises)
+
+    assertThat(userAccessService.currentUserCanCancelOutOfServiceBed()).isFalse
+  }
+
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
   fun `userCanViewOutOfServiceBeds returns true if the user has the WORKFLOW_MANAGER user role`(role: UserRole) {

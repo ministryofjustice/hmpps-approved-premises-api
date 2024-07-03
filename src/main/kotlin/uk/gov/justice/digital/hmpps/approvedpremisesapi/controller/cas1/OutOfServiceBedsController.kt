@@ -93,7 +93,7 @@ class OutOfServiceBedsController(
       .firstOrNull { it.id == outOfServiceBedId }
       ?: throw NotFoundProblem(outOfServiceBedId, "OutOfServiceBed")
 
-    if (!userAccessService.currentUserCanManagePremisesOutOfServiceBed(premises)) {
+    if (!userAccessService.currentUserCanCancelOutOfServiceBed()) {
       throw ForbiddenProblem()
     }
 

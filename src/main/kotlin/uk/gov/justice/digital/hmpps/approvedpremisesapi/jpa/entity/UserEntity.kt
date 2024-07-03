@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.time.OffsetDateTime
@@ -301,28 +302,31 @@ data class UserRoleAssignmentEntity(
   override fun hashCode() = Objects.hash(id, role)
 }
 
-enum class UserRole(val service: ServiceName) {
-  CAS1_ASSESSOR(ServiceName.approvedPremises),
-  CAS1_MATCHER(ServiceName.approvedPremises),
-  CAS1_MANAGER(ServiceName.approvedPremises),
-  CAS1_LEGACY_MANAGER(ServiceName.approvedPremises),
-  CAS1_FUTURE_MANAGER(ServiceName.approvedPremises),
-  CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises),
-  CAS1_CRU_MEMBER(ServiceName.approvedPremises),
-  CAS1_APPLICANT(ServiceName.approvedPremises),
-  CAS1_ADMIN(ServiceName.approvedPremises),
-  CAS1_REPORT_VIEWER(ServiceName.approvedPremises),
-  CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises),
-  CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises),
-  CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises),
-  CAS1_APPEALS_MANAGER(ServiceName.approvedPremises),
-  CAS3_ASSESSOR(ServiceName.temporaryAccommodation),
-  CAS3_REFERRER(ServiceName.temporaryAccommodation),
-  CAS3_REPORTER(ServiceName.temporaryAccommodation),
+enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremisesUserRole?) {
+  CAS1_ASSESSOR(ServiceName.approvedPremises, ApprovedPremisesUserRole.assessor),
+  CAS1_MATCHER(ServiceName.approvedPremises, ApprovedPremisesUserRole.matcher),
+  CAS1_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.manager),
+  CAS1_LEGACY_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.legacyManager),
+  CAS1_FUTURE_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.futureManager),
+  CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.workflowManager),
+  CAS1_CRU_MEMBER(ServiceName.approvedPremises, ApprovedPremisesUserRole.cruMember),
+  CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
+  CAS1_ADMIN(ServiceName.approvedPremises, ApprovedPremisesUserRole.roleAdmin),
+  CAS1_REPORT_VIEWER(ServiceName.approvedPremises, ApprovedPremisesUserRole.reportViewer),
+  CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromAssessAllocation),
+  CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromMatchAllocation),
+  CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation),
+  CAS1_APPEALS_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.appealsManager),
+  CAS1_JANITOR(ServiceName.approvedPremises, ApprovedPremisesUserRole.janitor),
+  CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
+  CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
+  CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
   ;
 
   companion object {
     fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }
+
+    fun valueOf(apiValue: ApprovedPremisesUserRole) = UserRole.entries.first { it.cas1ApiValue == apiValue }
   }
 }
 

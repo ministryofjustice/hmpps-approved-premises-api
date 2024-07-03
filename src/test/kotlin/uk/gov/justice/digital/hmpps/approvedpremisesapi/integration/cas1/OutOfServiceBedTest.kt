@@ -1958,8 +1958,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Cancel Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_JANITOR" ])
+    fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the JANITOR role`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

@@ -99,6 +99,12 @@ class UserAccessService(
   fun userCanManagePremisesOutOfServiceBed(user: UserEntity, premises: PremisesEntity) =
     userCanManagePremisesLostBeds(user, premises)
 
+  fun currentUserCanCancelOutOfServiceBed() =
+    userCanCancelOutOfServiceBed(userService.getUserForRequest())
+
+  fun userCanCancelOutOfServiceBed(user: UserEntity) =
+    user.hasRole(UserRole.CAS1_JANITOR)
+
   fun currentUserCanViewOutOfServiceBeds() =
     userCanViewOutOfServiceBeds(userService.getUserForRequest())
 
