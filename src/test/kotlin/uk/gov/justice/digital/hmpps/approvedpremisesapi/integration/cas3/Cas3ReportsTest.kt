@@ -5,7 +5,6 @@ import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns.Remove
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
-import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Nested
@@ -21,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3InReview
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3ReadyToPlace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3Unallocated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -37,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.REJECTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -49,15 +49,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -73,6 +76,15 @@ import java.util.UUID
 class Cas3ReportsTest : IntegrationTestBase() {
   @Autowired
   lateinit var bookingTransformer: BookingTransformer
+
+  @Autowired
+  lateinit var realBookingRepository: BookingRepository
+
+  @Autowired
+  lateinit var realLostBedsRepository: LostBedsRepository
+
+  @Autowired
+  lateinit var realWorkingDayCountService: WorkingDayService
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
@@ -2041,6 +2053,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get bed usage report returns OK with correct body`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -2065,30 +2079,16 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2023-04-15"))
           }
 
-          val expectedReportRows = listOf(
-            BedUsageReportRow(
-              probationRegion = userEntity.probationRegion.name,
-              pdu = userEntity.probationDeliveryUnit?.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = room.name,
-              crn = offenderDetails.otherIds.crn,
-              type = BedUsageType.Booking,
-              startDate = LocalDate.parse("2023-04-05"),
-              endDate = LocalDate.parse("2023-04-15"),
-              durationOfBookingDays = 10,
-              bookingStatus = BookingStatus.provisional,
-              voidCategory = null,
-              voidNotes = null,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = room.id.toShortBase58(),
-            ),
+          val expectedDataFrame = BedUsageReportGenerator(
+            bookingTransformer,
+            realBookingRepository,
+            realLostBedsRepository,
+            realWorkingDayCountService,
           )
-
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+            .createReport(
+              listOf(bed),
+              BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+            )
 
           webTestClient.get()
             .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
@@ -2112,6 +2112,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get bed usage report returns OK with correct body with pdu and local authority`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
@@ -2142,30 +2144,16 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2023-04-15"))
           }
 
-          val expectedReportRows = listOf(
-            BedUsageReportRow(
-              probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = room.name,
-              crn = offenderDetails.otherIds.crn,
-              type = BedUsageType.Booking,
-              startDate = LocalDate.parse("2023-04-05"),
-              endDate = LocalDate.parse("2023-04-15"),
-              durationOfBookingDays = 10,
-              bookingStatus = BookingStatus.provisional,
-              voidCategory = null,
-              voidNotes = null,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = room.id.toShortBase58(),
-            ),
+          val expectedDataFrame = BedUsageReportGenerator(
+            bookingTransformer,
+            realBookingRepository,
+            realLostBedsRepository,
+            realWorkingDayCountService,
           )
-
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+            .createReport(
+              listOf(bed),
+              BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+            )
 
           webTestClient.get()
             .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
@@ -2192,6 +2180,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get bed utilisation report returns OK with correct body`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -2219,33 +2209,15 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2023-04-15"))
           }
 
-          val expectedReportRows = listOf(
-            BedUtilisationReportRow(
-              probationRegion = userEntity.probationRegion.name,
-              pdu = userEntity.probationDeliveryUnit?.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = room.name,
-              bookedDaysActiveAndClosed = 0,
-              confirmedDays = 0,
-              provisionalDays = 0,
-              scheduledTurnaroundDays = 0,
-              effectiveTurnaroundDays = 0,
-              voidDays = 0,
-              totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
-              bedspaceEndDate = bed.endDate,
-              bedspaceOnlineDays = 30,
-              occupancyRate = 0.0,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = room.id.toShortBase58(),
-            ),
+          val expectedDataFrame = BedUtilisationReportGenerator(
+            realBookingRepository,
+            realLostBedsRepository,
+            realWorkingDayCountService,
           )
-
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+            .createReport(
+              listOf(bed),
+              BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+            )
 
           webTestClient.get()
             .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
@@ -2269,6 +2241,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get bed utilisation report returns OK with correct body with pdu and local authority`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
@@ -2302,33 +2276,15 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2023-04-15"))
           }
 
-          val expectedReportRows = listOf(
-            BedUtilisationReportRow(
-              probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = room.name,
-              bookedDaysActiveAndClosed = 0,
-              confirmedDays = 0,
-              provisionalDays = 0,
-              scheduledTurnaroundDays = 0,
-              effectiveTurnaroundDays = 0,
-              voidDays = 0,
-              totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
-              bedspaceEndDate = bed.endDate,
-              bedspaceOnlineDays = 30,
-              occupancyRate = 0.0,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = room.id.toShortBase58(),
-            ),
+          val expectedDataFrame = BedUtilisationReportGenerator(
+            realBookingRepository,
+            realLostBedsRepository,
+            realWorkingDayCountService,
           )
-
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+            .createReport(
+              listOf(bed),
+              BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+            )
 
           webTestClient.get()
             .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")

@@ -22,15 +22,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util.convertToBedUtilisationBedspaceReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util.convertToBedUtilisationBookingReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util.convertToBedUtilisationLostBedReportData
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -38,9 +36,15 @@ import java.time.OffsetDateTime
 class BedUtilisationReportGeneratorTest {
   private val startDate = LocalDate.of(2023, 4, 1)
   private val endDate = LocalDate.of(2023, 4, 30)
+  private val mockBookingRepository = mockk<BookingRepository>()
+  private val mockLostBedsRepository = mockk<LostBedsRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
-  private val bedUtilisationReportGenerator = BedUtilisationReportGenerator(mockWorkingDayService)
+  private val bedUtilisationReportGenerator = BedUtilisationReportGenerator(
+    mockBookingRepository,
+    mockLostBedsRepository,
+    mockWorkingDayService,
+  )
 
   @Test
   fun `Only results for beds from the specified service are returned in the report`() {
@@ -76,21 +80,21 @@ class BedUtilisationReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    LostBedsEntityFactory()
+    val approvedPremisesLostBed = LostBedsEntityFactory()
       .withBed(approvedPremisesBed)
-      .withStartDate(LocalDate.parse("2023-04-10"))
-      .withEndDate(LocalDate.parse("2023-04-17"))
+      .withStartDate(LocalDate.parse("2023-04-05"))
+      .withEndDate(LocalDate.parse("2023-04-07"))
       .withYieldedReason { LostBedReasonEntityFactory().produce() }
       .withPremises(approvedPremises)
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(temporaryAccommodationBed)
-    val bedUtilisationLostBedReportData = convertToBedUtilisationLostBedReportData(temporaryAccommodationLostBed)
-    val bedUtilisationReportData =
-      BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf(bedUtilisationLostBedReportData))
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns emptyList()
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns listOf(approvedPremisesLostBed)
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(approvedPremisesBed, temporaryAccommodationBed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -135,7 +139,7 @@ class BedUtilisationReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    LostBedsEntityFactory()
+    val approvedPremisesLostBed = LostBedsEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -143,15 +147,43 @@ class BedUtilisationReportGeneratorTest {
       .withPremises(approvedPremises)
       .produce()
 
-    val bedUtilisationReportGeneratorForThreeMonths = BedUtilisationReportGenerator(mockWorkingDayService)
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        temporaryAccommodationBed,
+      )
+    } returns emptyList()
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        approvedPremisesBed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        temporaryAccommodationBed,
+      )
+    } returns listOf(temporaryAccommodationLostBed)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        approvedPremisesBed,
+      )
+    } returns listOf(approvedPremisesLostBed)
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(temporaryAccommodationBed)
-    val bedUtilisationLostBedReportData = convertToBedUtilisationLostBedReportData(temporaryAccommodationLostBed)
-    val bedUtilisationReportData =
-      BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf(bedUtilisationLostBedReportData))
+    val bedUtilisationReportGeneratorForThreeMonths = BedUtilisationReportGenerator(
+      mockBookingRepository,
+      mockLostBedsRepository,
+      mockWorkingDayService,
+    )
 
     val result = bedUtilisationReportGeneratorForThreeMonths.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(approvedPremisesBed, temporaryAccommodationBed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -174,7 +206,7 @@ class BedUtilisationReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -202,15 +234,19 @@ class BedUtilisationReportGeneratorTest {
       .withPremises(approvedPremises)
       .produce()
 
-    val bedUtilisationReportGeneratorForThreeMonths = BedUtilisationReportGenerator(mockWorkingDayService)
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns emptyList()
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns listOf(approvedPremisesLostBed)
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(approvedPremisesBed)
-    val bedUtilisationLostBedReportData = convertToBedUtilisationLostBedReportData(approvedPremisesLostBed)
-    val bedUtilisationReportData =
-      BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf(bedUtilisationLostBedReportData))
+    val bedUtilisationReportGeneratorForThreeMonths = BedUtilisationReportGenerator(
+      mockBookingRepository,
+      mockLostBedsRepository,
+      mockWorkingDayService,
+    )
 
     val result = bedUtilisationReportGeneratorForThreeMonths.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(approvedPremisesBed, temporaryAccommodationBed),
       BedUtilisationReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
     )
 
@@ -278,25 +314,19 @@ class BedUtilisationReportGeneratorTest {
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
-    val bedUtilisationBedspaceReportData =
-      convertToBedUtilisationBedspaceReportData(temporaryAccommodationBedInProbationRegion)
-    val bedUtilisationLostBedReportData =
-      convertToBedUtilisationLostBedReportData(temporaryAccommodationLostBedInProbationArea)
-    val bedUtilisationReportData =
-      BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf(bedUtilisationLostBedReportData))
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(
-      temporaryAccommodationPremisesInProbationRegion.name,
-    )
-    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(
-      temporaryAccommodationPremisesInProbationRegion.id.toShortBase58(),
-    )
+    assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.id.toShortBase58())
   }
 
   @Test
@@ -358,43 +388,21 @@ class BedUtilisationReportGeneratorTest {
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
-    val bedUtilisationBedInProbationRegionReportData =
-      convertToBedUtilisationBedspaceReportData(temporaryAccommodationBedInProbationRegion)
-    val bedUtilisationLostBedInProbationRegionReportData =
-      convertToBedUtilisationLostBedReportData(temporaryAccommodationLostBedInProbationArea)
-    val bedUtilisationInProbationRegionReportData = BedUtilisationReportData(
-      bedUtilisationBedInProbationRegionReportData,
-      listOf(),
-      listOf(bedUtilisationLostBedInProbationRegionReportData),
-    )
-    val bedUtilisationBedOutsideProbationRegionReportData =
-      convertToBedUtilisationBedspaceReportData(temporaryAccommodationBedOutsideProbationRegion)
-    val bedUtilisationLostBedOutsideProbationRegionReportData =
-      convertToBedUtilisationLostBedReportData(temporaryAccommodationLostBedOutsideProbationArea)
-    val bedUtilisationOutsideProbationRegionReportData = BedUtilisationReportData(
-      bedUtilisationBedOutsideProbationRegionReportData,
-      listOf(),
-      listOf(bedUtilisationLostBedOutsideProbationRegionReportData),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationInProbationRegionReportData, bedUtilisationOutsideProbationRegionReportData),
+      listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(2)
-    assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(
-      temporaryAccommodationPremisesInProbationRegion.name,
-    )
-    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(
-      temporaryAccommodationPremisesInProbationRegion.id.toShortBase58(),
-    )
-    assertThat(result[1][BedUtilisationReportRow::propertyRef]).isEqualTo(
-      temporaryAccommodationPremisesOutsideProbationRegion.name,
-    )
-    assertThat(result[1][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(
-      temporaryAccommodationPremisesOutsideProbationRegion.id.toShortBase58(),
-    )
+    assertThat(result[0][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.id.toShortBase58())
+    assertThat(result[1][BedUtilisationReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.name)
+    assertThat(result[1][BedUtilisationReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.id.toShortBase58())
   }
 
   @Test
@@ -453,19 +461,11 @@ class BedUtilisationReportGeneratorTest {
           .produce()
       }
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -529,19 +529,11 @@ class BedUtilisationReportGeneratorTest {
           .produce()
       }
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -593,12 +585,7 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns LocalDate.parse("2023-04-10")
 
-    every {
-      mockWorkingDayService.getWorkingDaysCount(
-        LocalDate.parse("2023-04-05"),
-        LocalDate.parse("2023-04-10"),
-      )
-    } returns 5
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-10")) } returns 5
 
     val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
       .withBed(bed)
@@ -620,26 +607,13 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns LocalDate.parse("2023-05-01")
 
-    every {
-      mockWorkingDayService.getWorkingDaysCount(
-        LocalDate.parse("2023-04-28"),
-        LocalDate.parse("2023-04-30"),
-      )
-    } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -691,12 +665,7 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns LocalDate.parse("2023-04-10")
 
-    every {
-      mockWorkingDayService.getWorkingDaysCount(
-        LocalDate.parse("2023-04-05"),
-        LocalDate.parse("2023-04-10"),
-      )
-    } returns 4
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-10")) } returns 4
 
     val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
       .withBed(bed)
@@ -718,26 +687,13 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns LocalDate.parse("2023-05-01")
 
-    every {
-      mockWorkingDayService.getWorkingDaysCount(
-        LocalDate.parse("2023-04-28"),
-        LocalDate.parse("2023-04-30"),
-      )
-    } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -785,19 +741,11 @@ class BedUtilisationReportGeneratorTest {
       .withYieldedReason { LostBedReasonEntityFactory().produce() }
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantVoidStraddlingStartOfMonthReportData =
-      convertToBedUtilisationLostBedReportData(relevantVoidStraddlingStartOfMonth)
-    val relevantVoidStraddlingEndOfMonthReportData =
-      convertToBedUtilisationLostBedReportData(relevantVoidStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(),
-      listOf(relevantVoidStraddlingStartOfMonthReportData, relevantVoidStraddlingEndOfMonthReportData),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantVoidStraddlingStartOfMonth, relevantVoidStraddlingEndOfMonth)
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -863,12 +811,7 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns LocalDate.parse("2023-04-09")
 
-    every {
-      mockWorkingDayService.getWorkingDaysCount(
-        LocalDate.parse("2023-04-05"),
-        LocalDate.parse("2023-04-09"),
-      )
-    } returns 4
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-09")) } returns 4
 
     val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
       .withBed(bed)
@@ -900,12 +843,7 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns LocalDate.parse("2023-05-01")
 
-    every {
-      mockWorkingDayService.getWorkingDaysCount(
-        LocalDate.parse("2023-04-28"),
-        LocalDate.parse("2023-04-30"),
-      )
-    } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
 
     val relevantVoidStraddlingStartOfMonth = LostBedsEntityFactory()
       .withBed(bed)
@@ -923,23 +861,11 @@ class BedUtilisationReportGeneratorTest {
       .withYieldedReason { LostBedReasonEntityFactory().produce() }
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val relevantVoidStraddlingStartOfMonthReportData =
-      convertToBedUtilisationLostBedReportData(relevantVoidStraddlingStartOfMonth)
-    val relevantVoidStraddlingEndOfMonthReportData =
-      convertToBedUtilisationLostBedReportData(relevantVoidStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(relevantVoidStraddlingStartOfMonthReportData, relevantVoidStraddlingEndOfMonthReportData),
-    )
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantVoidStraddlingStartOfMonth, relevantVoidStraddlingEndOfMonth)
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -985,11 +911,23 @@ class BedUtilisationReportGeneratorTest {
       .withCreatedAt { OffsetDateTime.parse("2024-01-16T14:03:00+00:00") }
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val bedUtilisationReportData = BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf())
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1025,11 +963,23 @@ class BedUtilisationReportGeneratorTest {
       .withEndDate { LocalDate.parse("2024-05-12") }
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val bedUtilisationReportData = BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf())
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1064,11 +1014,23 @@ class BedUtilisationReportGeneratorTest {
       .withCreatedAt(null)
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val bedUtilisationReportData = BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf())
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1103,11 +1065,23 @@ class BedUtilisationReportGeneratorTest {
       .withCreatedAt { OffsetDateTime.parse("2024-02-16T14:03:00+00:00") }
       .produce()
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val bedUtilisationReportData = BedUtilisationReportData(bedUtilisationBedspaceReportData, listOf(), listOf())
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1219,19 +1193,23 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns 3
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1348,19 +1326,23 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns 3
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1477,19 +1459,23 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns 3
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
@@ -1606,19 +1592,23 @@ class BedUtilisationReportGeneratorTest {
       )
     } returns 3
 
-    val bedUtilisationBedspaceReportData = convertToBedUtilisationBedspaceReportData(bed)
-    val relevantBookingStraddlingStartOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingStartOfMonth)
-    val relevantBookingStraddlingEndOfMonthReportData =
-      convertToBedUtilisationBookingReportData(relevantBookingStraddlingEndOfMonth)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(relevantBookingStraddlingStartOfMonthReportData, relevantBookingStraddlingEndOfMonthReportData),
-      listOf(),
-    )
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
 
     val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
+      listOf(bed),
       BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
