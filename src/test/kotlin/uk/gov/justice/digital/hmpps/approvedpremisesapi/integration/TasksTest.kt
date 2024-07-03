@@ -28,6 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -49,7 +51,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -100,6 +104,8 @@ class TasksTest {
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
+
             val task = `Given a Placement Application`(
               createdByUser = otherUser,
               allocatedToUser = otherUser,
@@ -113,7 +119,7 @@ class TasksTest {
             val expectedTasks = listOf(
               taskTransformer.transformPlacementApplicationToTask(
                 task,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
@@ -151,6 +157,9 @@ class TasksTest {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
+
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
+
             val (task1, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
@@ -190,23 +199,23 @@ class TasksTest {
             val expectedTasks = listOf(
               taskTransformer.transformPlacementRequestToTask(
                 task1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 task2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementRequestToTask(
                 task3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementApplicationToTask(
                 task4,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 task5,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
@@ -261,6 +270,8 @@ class TasksTest {
           `Given an Offender` { offenderDetails, _ ->
             this.jwt = jwt
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
+
             val (task1, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
@@ -300,29 +311,29 @@ class TasksTest {
             val placementRequests = listOf(
               taskTransformer.transformPlacementRequestToTask(
                 task1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementRequestToTask(
                 task3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             val placementApplications = listOf(
               taskTransformer.transformPlacementApplicationToTask(
                 task4,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             val assessments = listOf(
               taskTransformer.transformAssessmentToTask(
                 task2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 task5,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
@@ -446,6 +457,8 @@ class TasksTest {
             apArea = `Given an AP Area`()
             val apArea2 = `Given an AP Area`()
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
+
             val (assessment) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
@@ -501,21 +514,21 @@ class TasksTest {
             val assessments = listOf(
               taskTransformer.transformAssessmentToTask(
                 assessment,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             val placementApplications = listOf(
               taskTransformer.transformPlacementApplicationToTask(
                 placementApplication,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             val placementRequests = listOf(
               taskTransformer.transformPlacementRequestToTask(
                 placementRequest,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
@@ -590,6 +603,8 @@ class TasksTest {
             this.jwt = jwt
             this.user = user
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
+
             val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
               allocatedToUser = user,
               createdByUser = otherUser,
@@ -639,21 +654,21 @@ class TasksTest {
             val assessments = listOf(
               taskTransformer.transformAssessmentToTask(
                 allocatableAssessment,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             val placementApplications = listOf(
               taskTransformer.transformPlacementApplicationToTask(
                 allocatablePlacementApplication,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             val placementRequests = listOf(
               taskTransformer.transformPlacementRequestToTask(
                 allocatablePlacementRequest,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
@@ -886,6 +901,7 @@ class TasksTest {
           `Given an Offender` { offenderDetails, _ ->
             this.jwt = jwt
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
             val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
             val placementRequestTasks = mutableMapOf<UserQualification, List<Task>>()
             val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
@@ -901,7 +917,7 @@ class TasksTest {
 
               return taskTransformer.transformAssessmentToTask(
                 assessment,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               )
             }
 
@@ -917,7 +933,7 @@ class TasksTest {
 
               return taskTransformer.transformPlacementRequestToTask(
                 placementRequest,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               )
             }
 
@@ -936,7 +952,7 @@ class TasksTest {
 
               return taskTransformer.transformPlacementApplicationToTask(
                 placementApplication,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               )
             }
 
@@ -1067,6 +1083,8 @@ class TasksTest {
               this.jwt = jwt
               this.crn = offenderDetails2.otherIds.crn
 
+              val offenderSummaries1 = getOffenderSummaries(offenderDetails1)
+              val offenderSummaries2 = getOffenderSummaries(offenderDetails2)
               val (assessment1, _) = `Given an Assessment for Approved Premises`(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
@@ -1122,30 +1140,30 @@ class TasksTest {
               nameMatchTasks = mapOf(
                 TaskType.assessment to taskTransformer.transformAssessmentToTask(
                   assessment1,
-                  "${offenderDetails1.firstName} ${offenderDetails1.surname}",
+                  offenderSummaries1,
                 ),
                 TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
                   placementApplication1,
-                  "${offenderDetails1.firstName} ${offenderDetails1.surname}",
+                  offenderSummaries1,
                 ),
                 TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
                   placementRequest1,
-                  "${offenderDetails1.firstName} ${offenderDetails1.surname}",
+                  offenderSummaries1,
                 ),
               )
 
               crnMatchTasks = mapOf(
                 TaskType.assessment to taskTransformer.transformAssessmentToTask(
                   assessment2,
-                  "${offenderDetails2.firstName} ${offenderDetails2.surname}",
+                  offenderSummaries2,
                 ),
                 TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
                   placementApplication2,
-                  "${offenderDetails2.firstName} ${offenderDetails2.surname}",
+                  offenderSummaries2,
                 ),
                 TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
                   placementRequest2,
-                  "${offenderDetails2.firstName} ${offenderDetails2.surname}",
+                  offenderSummaries2,
                 ),
               )
             }
@@ -1258,6 +1276,8 @@ class TasksTest {
             this.jwt = jwt
             this.crn = offenderDetails.otherIds.crn
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
+
             val (assessment1, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
@@ -1333,54 +1353,54 @@ class TasksTest {
             incompleteTasks = listOf(
               taskTransformer.transformAssessmentToTask(
                 assessment1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementRequestToTask(
                 placementRequest1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementApplicationToTask(
                 placementApplication1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
 
             completeTasks = listOf(
               taskTransformer.transformAssessmentToTask(
                 assessment2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 placementRequest1.assessment,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 placementRequest2.assessment,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 placementRequest3.assessment,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformAssessmentToTask(
                 assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementRequestToTask(
                 placementRequest2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementRequestToTask(
                 placementRequest3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
               taskTransformer.transformPlacementApplicationToTask(
                 placementApplication2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               ),
             )
           }
@@ -1509,6 +1529,7 @@ class TasksTest {
               },
             )
 
+            val offenderSummaries = getOffenderSummaries(offenderDetails)
             val (placementRequest3, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
@@ -1572,19 +1593,19 @@ class TasksTest {
             tasks += assessments.mapValues {
               taskTransformer.transformAssessmentToTask(
                 it.value,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               )
             }
             tasks += placementRequests.mapValues {
               taskTransformer.transformPlacementRequestToTask(
                 it.value,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               )
             }
             tasks += placementApplications.mapValues {
               taskTransformer.transformPlacementApplicationToTask(
                 it.value,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
+                offenderSummaries,
               )
             }
           }
@@ -1990,7 +2011,7 @@ class TasksTest {
                         TaskWrapper(
                           task = taskTransformer.transformAssessmentToTask(
                             assessment,
-                            "${offenderDetails.firstName} ${offenderDetails.surname}",
+                            getOffenderSummaries(offenderDetails),
                           ),
                           users = listOf(
                             userTransformer.transformJpaToAPIUserWithWorkload(
@@ -2042,7 +2063,7 @@ class TasksTest {
                       TaskWrapper(
                         task = taskTransformer.transformPlacementRequestToTask(
                           placementRequest,
-                          "${offenderDetails.firstName} ${offenderDetails.surname}",
+                          getOffenderSummaries(offenderDetails),
                         ),
                         users = listOf(
                           userTransformer.transformJpaToAPIUserWithWorkload(
@@ -2091,7 +2112,7 @@ class TasksTest {
                       TaskWrapper(
                         task = taskTransformer.transformPlacementApplicationToTask(
                           placementApplication,
-                          "${offenderDetails.firstName} ${offenderDetails.surname}",
+                          getOffenderSummaries(offenderDetails),
                         ),
                         users = listOf(
                           userTransformer.transformJpaToAPIUserWithWorkload(
@@ -2140,7 +2161,7 @@ class TasksTest {
                       TaskWrapper(
                         task = taskTransformer.transformPlacementApplicationToTask(
                           placementApplication,
-                          "${offenderDetails.firstName} ${offenderDetails.surname}",
+                          getOffenderSummaries(offenderDetails),
                         ),
                         users = listOf(
                           userTransformer.transformJpaToAPIUserWithWorkload(
@@ -2270,7 +2291,7 @@ class TasksTest {
                         TaskWrapper(
                           task = taskTransformer.transformPlacementApplicationToTask(
                             placementApplication,
-                            "${offenderDetails.firstName} ${offenderDetails.surname}",
+                            getOffenderSummaries(offenderDetails),
                           ),
                           users = listOf(
                             userTransformer.transformJpaToAPIUserWithWorkload(
@@ -2770,5 +2791,20 @@ class TasksTest {
         }
       }
     }
+  }
+
+  fun getOffenderSummaries(offenderDetails: OffenderDetailSummary): List<PersonSummaryInfoResult> {
+    return listOf(
+      PersonSummaryInfoResult.Success.Full(
+        offenderDetails.otherIds.crn,
+        CaseSummaryFactory().withName(
+          NameFactory()
+            .withForename(offenderDetails.firstName)
+            .withSurname(offenderDetails.surname)
+            .produce(),
+        )
+          .produce(),
+      ),
+    )
   }
 }
