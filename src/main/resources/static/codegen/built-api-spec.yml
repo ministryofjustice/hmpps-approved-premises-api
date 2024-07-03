@@ -7646,6 +7646,7 @@ components:
         - excluded_from_match_allocation
         - excluded_from_placement_application_allocation
         - appeals_manager
+        - janitor
     TemporaryAccommodationUserRole:
       type: string
       enum:
