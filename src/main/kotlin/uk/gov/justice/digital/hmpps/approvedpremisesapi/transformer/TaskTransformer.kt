@@ -4,12 +4,17 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -18,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
@@ -30,10 +37,12 @@ class TaskTransformer(
   private val apAreaTransformer: ApAreaTransformer,
   private val assessmentTransformer: AssessmentTransformer,
 ) {
-  fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
+
+  fun transformAssessmentToTask(assessment: AssessmentEntity, offenderSummaries: List<PersonSummaryInfoResult>) = AssessmentTask(
     id = assessment.id,
     applicationId = assessment.application.id,
-    personName = personName,
+    personName = getPersonNameFromApplication(assessment.application, offenderSummaries),
+    personSummary = getPersonSummaryFromApplication(assessment.application, offenderSummaries),
     crn = assessment.application.crn,
     dueDate = transformDueAtToDate(assessment.dueAt),
     dueAt = transformDueAtToInstant(assessment.dueAt),
@@ -49,12 +58,13 @@ class TaskTransformer(
     outcome = assessment.decision?.let { assessmentTransformer.transformJpaDecisionToApi(assessment.decision) },
   )
 
-  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, personName: String): PlacementRequestTask {
+  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderSummaries: List<PersonSummaryInfoResult>): PlacementRequestTask {
     val (outcomeRecordedAt, outcome) = placementRequest.getOutcomeDetails()
     return PlacementRequestTask(
       id = placementRequest.id,
       applicationId = placementRequest.application.id,
-      personName = personName,
+      personName = getPersonNameFromApplication(placementRequest.application, offenderSummaries),
+      personSummary = getPersonSummaryFromApplication(placementRequest.application, offenderSummaries),
       crn = placementRequest.application.crn,
       dueDate = transformDueAtToDate(placementRequest.dueAt),
       dueAt = transformDueAtToInstant(placementRequest.dueAt),
@@ -72,10 +82,11 @@ class TaskTransformer(
     )
   }
 
-  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, personName: String) = PlacementApplicationTask(
+  fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>) = PlacementApplicationTask(
     id = placementApplication.id,
     applicationId = placementApplication.application.id,
-    personName = personName,
+    personName = getPersonNameFromApplication(placementApplication.application, offenderSummaries),
+    personSummary = getPersonSummaryFromApplication(placementApplication.application, offenderSummaries),
     crn = placementApplication.application.crn,
     dueDate = transformDueAtToDate(placementApplication.dueAt),
     dueAt = transformDueAtToInstant(placementApplication.dueAt),
@@ -95,6 +106,43 @@ class TaskTransformer(
     outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),
     outcome = placementApplication.decision?.apiValue,
   )
+
+  private fun getPersonNameFromApplication(
+    application: ApplicationEntity,
+    offenderSummaries: List<PersonSummaryInfoResult>,
+  ): String {
+    val crn = application.crn
+    val offenderSummary = offenderSummaries.first { it.crn == crn }
+    return getNameFromPersonSummaryInfoResult(offenderSummary)
+  }
+
+  private fun getPersonSummaryFromApplication(
+    application: ApplicationEntity,
+    offenderSummaries: List<PersonSummaryInfoResult>,
+  ): PersonSummary {
+    val offenderSummary = offenderSummaries.first { it.crn == application.crn }
+    when (offenderSummary) {
+      is PersonSummaryInfoResult.Success.Full -> {
+        return FullPersonSummary(
+          crn = application.crn,
+          personType = PersonSummaryDiscriminator.fullPersonSummary,
+          name = getNameFromPersonSummaryInfoResult(offenderSummary),
+        )
+      }
+      is PersonSummaryInfoResult.Success.Restricted -> {
+        return RestrictedPersonSummary(
+          crn = application.crn,
+          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+        )
+      }
+      is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
+        return UnknownPersonSummary(
+          crn = application.crn,
+          personType = PersonSummaryDiscriminator.unknownPersonSummary,
+        )
+      }
+    }
+  }
 
   private fun getApArea(application: ApplicationEntity): ApArea? {
     return (application as ApprovedPremisesApplicationEntity).apArea?.let { apAreaTransformer.transformJpaToApi(it) }

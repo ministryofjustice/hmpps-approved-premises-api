@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -46,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
 import javax.transaction.Transactional
@@ -295,7 +293,7 @@ class TasksController(
   ): AssessmentTask {
     return taskTransformer.transformAssessmentToTask(
       assessment = assessment,
-      personName = getPersonNameFromApplication(assessment.application, offenderSummaries),
+      offenderSummaries = offenderSummaries,
     )
   }
 
@@ -305,7 +303,7 @@ class TasksController(
   ): PlacementRequestTask {
     return taskTransformer.transformPlacementRequestToTask(
       placementRequest = placementRequest,
-      personName = getPersonNameFromApplication(placementRequest.application, offenderSummaries),
+      offenderSummaries = offenderSummaries,
     )
   }
 
@@ -315,17 +313,8 @@ class TasksController(
   ): PlacementApplicationTask {
     return taskTransformer.transformPlacementApplicationToTask(
       placementApplication = placementApplication,
-      personName = getPersonNameFromApplication(placementApplication.application, offenderSummaries),
+      offenderSummaries = offenderSummaries,
     )
-  }
-
-  private fun getPersonNameFromApplication(
-    application: ApplicationEntity,
-    offenderSummaries: List<PersonSummaryInfoResult>,
-  ): String {
-    val crn = application.crn
-    val offenderSummary = offenderSummaries.first { it.crn == crn }
-    return getNameFromPersonSummaryInfoResult(offenderSummary)
   }
 
   private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> {

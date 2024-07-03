@@ -255,8 +255,12 @@ components:
           type: string
           format: uuid
           example: 6abb5fa3-e93f-4445-887b-30d081688f44
+        personSummary:
+          $ref: '#/components/schemas/PersonSummary'
         personName:
           type: string
+          deprecated: true
+          description: Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.
         crn:
           type: string
         dueDate:
@@ -288,6 +292,7 @@ components:
         - taskType
         - applicationId
         - personName
+        - personSummary
         - dueDate
         - status
         - crn
@@ -782,6 +787,23 @@ components:
             - dateOfBirth
             - sex
             - status
+    PersonSummary:
+      type: object
+      properties:
+        crn:
+          type: string
+        personType:
+          $ref: '#/components/schemas/PersonSummaryDiscriminator'
+      discriminator:
+        propertyName: personType
+        mapping:
+          FullPersonSummary: '#/components/schemas/FullPersonSummary'
+          RestrictedPersonSummary: '#/components/schemas/RestrictedPersonSummary'
+          UnknownPersonSummary: '#/components/schemas/UnknownPersonSummary'
+      required:
+        - crn
+        - type
+        - personType
     PersonStatus:
       type: string
       enum:
@@ -4568,6 +4590,27 @@ components:
         - FullPerson
         - RestrictedPerson
         - UnknownPerson
+    FullPersonSummary:
+      allOf:
+        - $ref: '#/components/schemas/PersonSummary'
+        - type : object
+          properties:
+            name:
+              type: string
+          required:
+            - name
+    RestrictedPersonSummary:
+      allOf:
+        - $ref: '#/components/schemas/PersonSummary'
+    UnknownPersonSummary:
+      allOf:
+        - $ref: '#/components/schemas/PersonSummary'
+    PersonSummaryDiscriminator:
+      type: string
+      enum:
+        - FullPersonSummary
+        - RestrictedPersonSummary
+        - UnknownPersonSummary
     Withdrawables:
       type: object
       properties:
