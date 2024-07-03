@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
@@ -8,16 +11,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
-import java.util.UUID
 
 class BedUtilisationReportGenerator(
+  private val bookingRepository: BookingRepository,
+  private val lostBedsRepository: LostBedsRepository,
   private val workingDayService: WorkingDayService,
-) : ReportGenerator<BedUtilisationReportData, BedUtilisationReportRow, BedUtilisationReportProperties>(BedUtilisationReportRow::class) {
-  override fun filter(properties: BedUtilisationReportProperties): (BedUtilisationReportData) -> Boolean = {
-    true
+) : ReportGenerator<BedEntity, BedUtilisationReportRow, BedUtilisationReportProperties>(BedUtilisationReportRow::class) {
+  override fun filter(properties: BedUtilisationReportProperties): (BedEntity) -> Boolean = {
+    checkServiceType(properties.serviceName, it.room.premises) &&
+      (properties.probationRegionId == null || it.room.premises.probationRegion.id == properties.probationRegionId)
   }
 
-  override val convert: BedUtilisationReportData.(properties: BedUtilisationReportProperties) -> List<BedUtilisationReportRow> = { properties ->
+  override val convert: BedEntity.(properties: BedUtilisationReportProperties) -> List<BedUtilisationReportRow> = { properties ->
     var bookedDaysActiveAndClosed = 0
     var confirmedDays = 0
     var provisionalDays = 0
@@ -25,9 +30,13 @@ class BedUtilisationReportGenerator(
     var effectiveTurnaroundDays = 0
     var voidDays = 0
 
-    val bedspace = this.bedspaceReportData
-    val nonCancelledBookings = this.bookingsReportData.filter { it.cancellationId == null }
-    val nonCancelledVoids = this.lostBedReportData.filter { it.cancellationId == null }
+    val nonCancelledBookings = bookingRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
+      .filter { it.cancellation == null }
+
+    val nonCancelledVoids = lostBedsRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
+      .filter { it.cancellation == null }
+
+    val premises = this.room.premises
 
     nonCancelledBookings
       .forEach { booking ->
@@ -36,14 +45,14 @@ class BedUtilisationReportGenerator(
           .count()
 
         when {
-          booking.arrivalId != null -> bookedDaysActiveAndClosed += daysOfBookingInMonth
-          booking.confirmationId != null && booking.arrivalId == null -> confirmedDays += daysOfBookingInMonth
-          booking.confirmationId == null -> provisionalDays += daysOfBookingInMonth
+          booking.arrival != null -> bookedDaysActiveAndClosed += daysOfBookingInMonth
+          booking.confirmation != null && booking.arrival == null -> confirmedDays += daysOfBookingInMonth
+          booking.confirmation == null -> provisionalDays += daysOfBookingInMonth
         }
 
-        if (booking.turnaroundId != null) {
+        if (booking.turnaround != null) {
           val turnaroundStartDate = booking.departureDate.plusDays(1)
-          val turnaroundEndDate = workingDayService.addWorkingDays(booking.departureDate, booking.workingDayCount!!)
+          val turnaroundEndDate = workingDayService.addWorkingDays(booking.departureDate, booking.turnaround!!.workingDayCount)
           val firstDayOfTurnaroundInMonth = latestDateOf(turnaroundStartDate, properties.startDate)
           val lastDayOfTurnaroundInMonth = earliestDateOf(turnaroundEndDate, properties.endDate)
 
@@ -64,25 +73,26 @@ class BedUtilisationReportGenerator(
 
     val totalBookedDays = bookedDaysActiveAndClosed
     val bedspaceOnlineDaysStartDate =
-      if (bedspace.bedspaceStartDate == null) properties.startDate else latestDateOf(bedspace.bedspaceStartDate!!, properties.startDate)
+      if (this.createdAt == null) properties.startDate else latestDateOf(this.createdAt!!.toLocalDate(), properties.startDate)
 
     val bedspaceOnlineDaysEndDate =
-      if (bedspace.bedspaceEndDate == null) properties.endDate else earliestDateOf(bedspace.bedspaceEndDate!!, properties.endDate)
+      if (this.endDate == null) properties.endDate else earliestDateOf(this.endDate!!, properties.endDate)
 
     val bedspaceOnlineDays = bedspaceOnlineDaysStartDate
       .getDaysUntilInclusive(bedspaceOnlineDaysEndDate)
       .count()
 
+    val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity
     listOf(
       BedUtilisationReportRow(
-        probationRegion = bedspace.probationRegionName,
-        pdu = bedspace.probationDeliveryUnitName,
-        localAuthority = bedspace.localAuthorityName,
-        propertyRef = bedspace.premisesName,
-        addressLine1 = bedspace.addressLine1,
-        town = bedspace.town,
-        postCode = bedspace.postCode,
-        bedspaceRef = bedspace.roomName,
+        probationRegion = temporaryAccommodationPremisesEntity?.probationRegion?.name,
+        pdu = temporaryAccommodationPremisesEntity?.probationDeliveryUnit?.name,
+        localAuthority = temporaryAccommodationPremisesEntity?.localAuthorityArea?.name,
+        propertyRef = premises.name,
+        addressLine1 = premises.addressLine1,
+        town = premises.town,
+        postCode = premises.postcode,
+        bedspaceRef = this.room.name,
         bookedDaysActiveAndClosed = bookedDaysActiveAndClosed,
         confirmedDays = confirmedDays,
         provisionalDays = provisionalDays,
@@ -90,12 +100,12 @@ class BedUtilisationReportGenerator(
         effectiveTurnaroundDays = effectiveTurnaroundDays,
         voidDays = voidDays,
         totalBookedDays = totalBookedDays,
-        bedspaceStartDate = if (bedspace.bedspaceStartDate == null) null else bedspace.bedspaceStartDate!!,
-        bedspaceEndDate = bedspace.bedspaceEndDate,
+        bedspaceStartDate = if (this.createdAt == null) null else this.createdAt!!.toLocalDate(),
+        bedspaceEndDate = this.endDate,
         bedspaceOnlineDays = bedspaceOnlineDays,
         occupancyRate = totalBookedDays.toDouble() / bedspaceOnlineDays,
-        uniquePropertyRef = UUID.fromString(bedspace.premisesId).toShortBase58(),
-        uniqueBedspaceRef = UUID.fromString(bedspace.roomId).toShortBase58(),
+        uniquePropertyRef = premises.id.toShortBase58(),
+        uniqueBedspaceRef = this.room.id.toShortBase58(),
       ),
     )
   }
