@@ -40,14 +40,12 @@ class Cas1BookingDomainEventService(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
   ) {
     bookingMade(
       applicationId = application.id,
       eventNumber = application.eventNumber,
       booking = booking,
       user = user,
-      bookingCreatedAt = bookingCreatedAt,
       applicationSubmittedOn = application.submittedAt,
       releaseType = application.releaseType,
       sentenceType = application.sentenceType,
@@ -61,7 +59,6 @@ class Cas1BookingDomainEventService(
     eventNumber: String?,
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
   ) {
     val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
     val eventNumberForDomainEvent =
@@ -72,7 +69,6 @@ class Cas1BookingDomainEventService(
       eventNumber = eventNumberForDomainEvent!!,
       booking = booking,
       user = user,
-      bookingCreatedAt = bookingCreatedAt,
       applicationSubmittedOn = onlineApplication?.submittedAt,
       releaseType = onlineApplication?.releaseType,
       sentenceType = onlineApplication?.sentenceType,
@@ -151,7 +147,6 @@ class Cas1BookingDomainEventService(
     eventNumber: String,
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
     applicationSubmittedOn: OffsetDateTime?,
     sentenceType: String?,
     releaseType: String?,
@@ -168,6 +163,7 @@ class Cas1BookingDomainEventService(
     val staffDetails = getStaffDetails(user.deliusUsername)
 
     val approvedPremises = booking.premises as ApprovedPremisesEntity
+    val bookingCreatedAt = booking.createdAt
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(

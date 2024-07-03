@@ -79,14 +79,15 @@ class Cas1BookingDomainEventServiceTest {
       .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
       .produce()
 
+    val createdAt = OffsetDateTime.now()
+
     val booking = BookingEntityFactory()
       .withDefaults()
       .withCrn("THEBOOKINGCRN")
       .withArrivalDate(LocalDate.of(2025, 12, 11))
       .withPremises(premises)
+      .withCreatedAt(createdAt)
       .produce()
-
-    val createdAt = OffsetDateTime.now()
 
     @BeforeEach
     fun before() {
@@ -116,7 +117,7 @@ class Cas1BookingDomainEventServiceTest {
 
     @Test
     fun `bookingMade saves domain event`() {
-      service.bookingMade(application, booking, user, createdAt)
+      service.bookingMade(application, booking, user)
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
 
@@ -131,9 +132,12 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
 
       val data = domainEvent.data.eventDetails
+      assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(booking.id)
@@ -160,7 +164,6 @@ class Cas1BookingDomainEventServiceTest {
         eventNumber = "adhoc event number",
         booking = booking,
         user = user,
-        bookingCreatedAt = createdAt,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
@@ -176,9 +179,12 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
 
       val data = domainEvent.data.eventDetails
+      assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(booking.id)
@@ -209,7 +215,6 @@ class Cas1BookingDomainEventServiceTest {
         eventNumber = "adhoc event number",
         booking = booking,
         user = user,
-        bookingCreatedAt = createdAt,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
@@ -258,7 +263,6 @@ class Cas1BookingDomainEventServiceTest {
         eventNumber = "adhoc event number",
         booking = booking,
         user = user,
-        bookingCreatedAt = createdAt,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()

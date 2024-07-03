@@ -304,7 +304,6 @@ class BookingService(
         application = application,
         booking = booking,
         user = user,
-        bookingCreatedAt = bookingCreatedAt,
       )
       cas1BookingEmailService.bookingMade(placementRequest.application, booking)
 
@@ -454,7 +453,6 @@ class BookingService(
           eventNumber,
           booking,
           user!!,
-          bookingCreatedAt,
         )
 
         if (onlineApplication != null) {

@@ -4315,7 +4315,7 @@ class BookingServiceTest {
       every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { bookingEntity }
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-      every { mockCas1BookingDomainEventService.adhocBookingMade(any(), any(), any(), any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.adhocBookingMade(any(), any(), any(), any(), any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
     }
 
@@ -4492,7 +4492,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
 
@@ -4540,7 +4539,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
 
@@ -4588,7 +4586,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
 
@@ -4634,7 +4631,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
     }
@@ -4679,7 +4675,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
     }
@@ -6394,7 +6389,7 @@ class BookingServiceTest {
       every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -6413,7 +6408,6 @@ class BookingServiceTest {
           application,
           booking,
           user,
-          any(),
         )
       }
 
@@ -6448,7 +6442,7 @@ class BookingServiceTest {
       every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -6467,7 +6461,6 @@ class BookingServiceTest {
           application,
           booking,
           user,
-          any(),
         )
       }
 
@@ -6527,7 +6520,7 @@ class BookingServiceTest {
       every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -6546,7 +6539,6 @@ class BookingServiceTest {
           application,
           booking,
           user,
-          any(),
         )
       }
 
@@ -6592,7 +6584,7 @@ class BookingServiceTest {
       every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -6611,7 +6603,6 @@ class BookingServiceTest {
           application,
           booking,
           workflowManager,
-          any(),
         )
       }
 
