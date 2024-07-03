@@ -441,6 +441,26 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /reference-data/out-of-service-bed-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all reasons for beds going out of service
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:
