@@ -317,6 +317,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromMatchAllocation),
   CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation),
   CAS1_APPEALS_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.appealsManager),
+  CAS1_JANITOR(ServiceName.approvedPremises, ApprovedPremisesUserRole.janitor),
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
   CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
