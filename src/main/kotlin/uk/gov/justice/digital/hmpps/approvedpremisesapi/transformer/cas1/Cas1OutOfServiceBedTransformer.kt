@@ -18,8 +18,8 @@ class Cas1OutOfServiceBedTransformer(
   fun transformJpaToApi(jpa: Cas1OutOfServiceBedEntity) = Cas1OutOfServiceBed(
     id = jpa.id,
     createdAt = jpa.createdAt.toInstant(),
-    outOfServiceFrom = jpa.startDate,
-    outOfServiceTo = jpa.endDate,
+    startDate = jpa.startDate,
+    endDate = jpa.endDate,
     bed = NamedId(jpa.bed.id, jpa.bed.name),
     room = NamedId(jpa.bed.room.id, jpa.bed.room.name),
     premises = NamedId(jpa.premises.id, jpa.premises.name),
