@@ -636,6 +636,35 @@ from
     return toJsonString(result)
   }
 
+  fun offlineApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    var result = jdbcTemplate.queryForMap(
+      """
+        select json_agg(offline_applications) as json
+        from ( 
+            select 
+                B.CRN,
+                B.noms_number ,
+                oa.id as offline_application_id, 
+                b.id as booking_id,
+                oa.created_at 
+            from offline_applications oa 
+            inner join bookings b on b.offline_application_id = oa.id 
+            where 
+                (b.crn = :crn
+                    or 
+                b.noms_number = :noms_number)
+            and 
+                (:start_date is null or b.created_at >= :start_date)
+            and 
+                (:end_date is null or b.created_at <= :end_date)
+            ) offline_applications
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
+
   private fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value ?: "[]"
 
   private fun MapSqlParameterSource.addSarParameters(

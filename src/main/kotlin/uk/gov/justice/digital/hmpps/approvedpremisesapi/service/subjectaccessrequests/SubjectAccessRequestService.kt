@@ -28,6 +28,7 @@ class SubjectAccessRequestService(
     val placementRequests = subjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
     val placementRequirements = subjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
     val placementRequirementCriteria = subjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
+    val offlineApplications = subjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
 
     val result = """
       {
@@ -37,6 +38,7 @@ class SubjectAccessRequestService(
             "Assessments": $apAssessmentsJson,
             "AssessmentClarificationNotes" : $apAssessmentClarificationNotes,
             "Bookings": $apBookings,
+            "OfflineApplications": $offlineApplications,
             "BookingExtensions": $apBookingExtensions,
             "Cancellations": $apCancellations,
             "BedMoves": $apBedMoves,
