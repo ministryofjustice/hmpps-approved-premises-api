@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
@@ -407,6 +408,21 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       ]
   """.trimIndent()
 
+  protected fun bookingsNotMadeJson(bookingNotMade: BookingNotMadeEntity): String =
+    """
+      [
+        {
+          "crn": "${bookingNotMade.placementRequest.application.crn}",
+          "noms_number": "${bookingNotMade.placementRequest.application.nomsNumber}",
+          "booking_not_made_id": "${bookingNotMade.id}",
+          "application_id": "${bookingNotMade.placementRequest.application.id}",
+          "placement_request_id": "${bookingNotMade.placementRequest.id}",
+          "created_at": "$CREATED_AT_NO_TZ",
+          "notes": "${bookingNotMade.notes}"
+        }
+      ]
+    """.trimIndent()
+
   protected fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary) =
     offlineApplicationEntityFactory.produceAndPersist {
       withService(ServiceName.approvedPremises.value)
@@ -713,4 +729,11 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withDueAt(OffsetDateTime.parse(DUE_AT))
   }
+
+  protected fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity) =
+    bookingNotMadeFactory.produceAndPersist {
+      withPlacementRequest(placementRequest)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withNotes("Some notes on booking not made")
+    }
 }

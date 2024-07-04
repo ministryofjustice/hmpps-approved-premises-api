@@ -29,7 +29,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
           }
       }
       """.trimIndent(),
@@ -63,7 +64,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementApplications": [ ],
         "PlacementRequests": [ ],
         "PlacementRequirements": [ ],
-        "PlacementRequirementCriteria" : [ ]
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -100,7 +102,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementApplications": [ ],
         "PlacementRequests": [ ],
         "PlacementRequirements": [ ],
-        "PlacementRequirementCriteria" : [ ]
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -138,7 +141,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementApplications": [ ],
         "PlacementRequests": [ ],
         "PlacementRequirements": [ ],
-        "PlacementRequirementCriteria" : [ ]
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ]
       }
     }
     """
@@ -178,7 +182,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -214,7 +219,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -249,7 +255,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -285,7 +292,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -321,7 +329,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -357,7 +366,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -391,7 +401,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": [ ],
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+           "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -424,7 +435,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ]
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ]
       }
     }
     """.trimIndent()
@@ -461,7 +473,47 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
           "PlacementRequests": ${approvedPremisesPlacementRequestsJson(placementRequest)},
           "PlacementRequirements": ${placementRequirementJson(placementRequest.placementRequirements)},
-          "PlacementRequirementCriteria" : ${placementRequirementCriteriaJson(placementRequest.placementRequirements)}
+          "PlacementRequirementCriteria" : ${placementRequirementCriteriaJson(placementRequest.placementRequirements)},
+          "BookingNotMades" : [ ]
+      }
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `get CAS1 information - has bookings not made`() {
+    val (offender, _) = `Given an Offender`()
+    val application = approvedPremisesApplicationEntity(offender)
+    val assessment = approvedPremisesAssessment(application)
+    val booking = bookingEntity(offender, application)
+    val placementApplication = placementApplicationEntity(application)
+    val allocatedUser = userEntity()
+    val placementRequest = placementRequestEntity(booking, assessment, application, allocatedUser, placementApplication)
+    val bookingNotMade = bookingNotMadeEntity(placementRequest)
+
+    val result =
+      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val expectedJson = """
+    {
+      "approvedPremises" : 
+      {        
+          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
+          "ApplicationTimeline" :[ ],
+          "Assessments": ${approvedPremisesAssessmentJson(application, offender, assessment)},
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": ${bookingsJson(booking)},
+          "OfflineApplications":  [ ],    
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": [ ],
+          "Appeals": [ ],
+          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
+          "PlacementRequests": ${approvedPremisesPlacementRequestsJson(placementRequest)},
+          "PlacementRequirements": ${placementRequirementJson(placementRequest.placementRequirements)},
+          "PlacementRequirementCriteria" : ${placementRequirementCriteriaJson(placementRequest.placementRequirements)},
+          "BookingNotMades": ${bookingsNotMadeJson(bookingNotMade)}
       }
     }
     """.trimIndent()

@@ -29,7 +29,7 @@ class SubjectAccessRequestService(
     val placementRequirements = subjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
     val placementRequirementCriteria = subjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
     val offlineApplications = subjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
-
+    val bookingNotMades = subjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
     val result = """
       {
         "approvedPremises" : {
@@ -46,8 +46,8 @@ class SubjectAccessRequestService(
             "PlacementApplications": $placementApplications,
             "PlacementRequests": $placementRequests,
             "PlacementRequirements": $placementRequirements,
-            "PlacementRequirementCriteria": $placementRequirementCriteria
-            
+            "PlacementRequirementCriteria": $placementRequirementCriteria,
+            "BookingNotMades": $bookingNotMades            
         }
       }
     """.trimIndent()
