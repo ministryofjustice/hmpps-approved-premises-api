@@ -416,6 +416,8 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(eventDetails.assessedBy).isEqualTo(assessedByStaffMember)
             assertThat(eventDetails.decision.value).isEqualTo(decisionMade.value)
             assertThat(eventDetails.decisionSummary).isEqualTo(decisionSummary)
+            assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
+            assertThat(eventDetails.duration).isEqualTo(7)
           },
         )
       }
@@ -462,12 +464,20 @@ class Cas1PlacementApplicationDomainEventServiceTest {
     }
 
     private fun getPlacementApplicationWithDecision(decision: PlacementApplicationDecision?): PlacementApplicationEntity {
-      return PlacementApplicationEntityFactory()
+      val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(decision)
         .withCreatedByUser(user)
         .produce()
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
+          .withDuration(7)
+          .produce(),
+      )
+      return placementApplication
     }
   }
 }

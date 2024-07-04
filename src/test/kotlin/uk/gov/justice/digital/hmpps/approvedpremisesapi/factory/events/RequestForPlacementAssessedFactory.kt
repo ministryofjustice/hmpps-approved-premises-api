@@ -4,7 +4,9 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.util.UUID
 
 class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> {
@@ -14,6 +16,8 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
   private var assessedBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var decision: Yielded<RequestForPlacementAssessed.Decision> = { RequestForPlacementAssessed.Decision.accepted }
   private var decisionSummary: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
+  private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
+  private var duration: Yielded<Int> = { randomInt(0, 1000) }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -39,6 +43,14 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
     this.decisionSummary = { decisionSummary }
   }
 
+  fun withExpectedArrival(expectedArrival: LocalDate) = apply {
+    this.expectedArrival = { expectedArrival }
+  }
+
+  fun withDuration(duration: Int) = apply {
+    this.duration = { duration }
+  }
+
   override fun produce() = RequestForPlacementAssessed(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -46,5 +58,7 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
     assessedBy = this.assessedBy(),
     decision = this.decision(),
     decisionSummary = this.decisionSummary(),
+    expectedArrival = this.expectedArrival(),
+    duration = this.duration(),
   )
 }

@@ -1777,12 +1777,21 @@ components:
         decisionSummary:
           type: string
           example: the decision was to accept
+        expectedArrival:
+          type: string
+          example: '2023-01-30'
+          format: date
+        duration:
+          type: integer
+          example: 7
       required:
         - applicationId
         - applicationUrl
         - placementApplicationId
         - assessedBy
         - decision
+        - expectedArrival
+        - duration
     AppealDecision:
       type: string
       enum:

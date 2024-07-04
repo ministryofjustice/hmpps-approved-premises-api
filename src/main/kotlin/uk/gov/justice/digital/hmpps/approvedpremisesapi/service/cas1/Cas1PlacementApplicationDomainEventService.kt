@@ -194,6 +194,7 @@ class Cas1PlacementApplicationDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
+    val dates = placementApplication.placementDates[0]
 
     val assessor = assessedByUser.let { domainEventTransformer.toStaffMember(it) }
 
@@ -213,6 +214,8 @@ class Cas1PlacementApplicationDomainEventService(
       assessedBy = assessor,
       decision = assessmentDecision,
       decisionSummary = placementApplicationDecision.decisionSummary,
+      expectedArrival = dates.expectedArrival,
+      duration = dates.duration,
     )
 
     domainEventService.saveRequestForPlacementAssessedEvent(
