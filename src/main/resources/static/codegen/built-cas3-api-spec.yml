@@ -4919,10 +4919,10 @@ components:
         createdAt:
           type: string
           format: date-time
-        outOfServiceFrom:
+        startDate:
           type: string
           format: date
-        outOfServiceTo:
+        endDate:
           type: string
           format: date
         bed:
@@ -4956,8 +4956,8 @@ components:
       required:
         - id
         - createdAt
-        - outOfServiceFrom
-        - outOfServiceTo
+        - startDate
+        - endDate
         - bed
         - room
         - premises
@@ -5056,8 +5056,8 @@ components:
         - premisesName
         - roomName
         - bedName
-        - outOfServiceFrom
-        - outOfServiceTo
+        - startDate
+        - endDate
         - reason
         - daysLost
     Cas1OutOfServiceBedRevision:
@@ -5075,10 +5075,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas1OutOfServiceBedRevisionType'
-        outOfServiceFrom:
+        startDate:
           type: string
           format: date
-        outOfServiceTo:
+        endDate:
           type: string
           format: date
         reason:

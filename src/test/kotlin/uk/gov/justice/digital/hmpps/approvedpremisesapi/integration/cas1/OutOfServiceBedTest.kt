@@ -423,16 +423,16 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       "'premisesName','asc'",
       "'roomName','asc'",
       "'bedName','asc'",
-      "'outOfServiceFrom','asc'",
-      "'outOfServiceTo','asc'",
+      "'startDate','asc'",
+      "'endDate','asc'",
       "'reason','asc'",
       "'daysLost','asc'",
 
       "'premisesName','desc'",
       "'roomName','desc'",
       "'bedName','desc'",
-      "'outOfServiceFrom','desc'",
-      "'outOfServiceTo','desc'",
+      "'startDate','desc'",
+      "'endDate','desc'",
       "'reason','desc'",
       "'daysLost','desc'",
     )
@@ -495,8 +495,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
             Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
             Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
-            Cas1OutOfServiceBedSortField.outOfServiceFrom -> expectedOutOfServiceBeds.sortedBy { it.startDate }
-            Cas1OutOfServiceBedSortField.outOfServiceTo -> expectedOutOfServiceBeds.sortedBy { it.endDate }
+            Cas1OutOfServiceBedSortField.startDate -> expectedOutOfServiceBeds.sortedBy { it.startDate }
+            Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedBy { it.endDate }
             Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
             Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
           }
@@ -504,8 +504,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
             Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
             Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
-            Cas1OutOfServiceBedSortField.outOfServiceFrom -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
-            Cas1OutOfServiceBedSortField.outOfServiceTo -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
+            Cas1OutOfServiceBedSortField.startDate -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
+            Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
             Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
             Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
           }
@@ -912,8 +912,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.startDate").isEqualTo("2022-08-17")
+          .jsonPath("$.endDate").isEqualTo("2022-08-18")
           .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
           .jsonPath("$.bed.name").isEqualTo(bed.name)
           .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
@@ -939,8 +939,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               Cas1OutOfServiceBedRevisionType.created.value,
             ),
           )
-          .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-17")
+          .jsonPath("$.revisionHistory[0].endDate").isEqualTo("2022-08-18")
           .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(reason.id.toString())
           .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(reason.name)
           .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(true)
@@ -998,8 +998,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.startDate").isEqualTo("2022-08-17")
+          .jsonPath("$.endDate").isEqualTo("2022-08-18")
           .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
           .jsonPath("$.bed.name").isEqualTo(bed.name)
           .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
@@ -1025,8 +1025,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               Cas1OutOfServiceBedRevisionType.created.value,
             ),
           )
-          .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-17")
+          .jsonPath("$.revisionHistory[0].endDate").isEqualTo("2022-08-18")
           .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(reason.id.toString())
           .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(reason.name)
           .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(true)
@@ -1204,8 +1204,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath("$.startDate").isEqualTo("2022-08-01")
+            .jsonPath("$.endDate").isEqualTo("2022-08-30")
             .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
             .jsonPath("$.bed.name").isEqualTo(bed.name)
             .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
@@ -1231,8 +1231,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
                 Cas1OutOfServiceBedRevisionType.created.value,
               ),
             )
-            .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo("2022-08-30")
+            .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-01")
+            .jsonPath("$.revisionHistory[0].endDate").isEqualTo("2022-08-30")
             .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(reason.id.toString())
             .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(reason.name)
             .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(true)
@@ -1409,8 +1409,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.startDate").isEqualTo("2022-08-17")
+          .jsonPath("$.endDate").isEqualTo("2022-08-18")
           .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
           .jsonPath("$.bed.name").isEqualTo(bed.name)
           .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
@@ -1436,8 +1436,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               Cas1OutOfServiceBedRevisionType.created.value,
             ),
           )
-          .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo(originalDetails.startDate.toString())
-          .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo(originalDetails.endDate.toString())
+          .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
+          .jsonPath("$.revisionHistory[0].endDate").isEqualTo(originalDetails.endDate.toString())
           .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
           .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
           .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
@@ -1455,8 +1455,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
               Cas1OutOfServiceBedRevisionType.updatedNotes.value,
             ),
           )
-          .jsonPath("$.revisionHistory[1].outOfServiceFrom").isEqualTo("2022-08-17")
-          .jsonPath("$.revisionHistory[1].outOfServiceTo").isEqualTo("2022-08-18")
+          .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-17")
+          .jsonPath("$.revisionHistory[1].endDate").isEqualTo("2022-08-18")
           .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
           .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
           .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)
@@ -1609,8 +1609,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.startDate").isEqualTo("2022-08-01")
+            .jsonPath("$.endDate").isEqualTo("2022-08-15")
             .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
             .jsonPath("$.bed.name").isEqualTo(bed.name)
             .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
@@ -1636,8 +1636,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
                 Cas1OutOfServiceBedRevisionType.created.value,
               ),
             )
-            .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo(originalDetails.startDate.toString())
-            .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo(originalDetails.endDate.toString())
+            .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
+            .jsonPath("$.revisionHistory[0].endDate").isEqualTo(originalDetails.endDate.toString())
             .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
             .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
             .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
@@ -1655,8 +1655,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
                 Cas1OutOfServiceBedRevisionType.updatedNotes.value,
               ),
             )
-            .jsonPath("$.revisionHistory[1].outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath("$.revisionHistory[1].outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")
+            .jsonPath("$.revisionHistory[1].endDate").isEqualTo("2022-08-15")
             .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
             .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
             .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)
@@ -1811,8 +1811,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$.outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath("$.outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.startDate").isEqualTo("2022-08-01")
+            .jsonPath("$.endDate").isEqualTo("2022-08-15")
             .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
             .jsonPath("$.bed.name").isEqualTo(bed.name)
             .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
@@ -1838,8 +1838,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
                 Cas1OutOfServiceBedRevisionType.created.value,
               ),
             )
-            .jsonPath("$.revisionHistory[0].outOfServiceFrom").isEqualTo(originalDetails.startDate.toString())
-            .jsonPath("$.revisionHistory[0].outOfServiceTo").isEqualTo(originalDetails.endDate.toString())
+            .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
+            .jsonPath("$.revisionHistory[0].endDate").isEqualTo(originalDetails.endDate.toString())
             .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
             .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
             .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
@@ -1857,8 +1857,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
                 Cas1OutOfServiceBedRevisionType.updatedNotes.value,
               ),
             )
-            .jsonPath("$.revisionHistory[1].outOfServiceFrom").isEqualTo("2022-08-01")
-            .jsonPath("$.revisionHistory[1].outOfServiceTo").isEqualTo("2022-08-15")
+            .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")
+            .jsonPath("$.revisionHistory[1].endDate").isEqualTo("2022-08-15")
             .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
             .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
             .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)

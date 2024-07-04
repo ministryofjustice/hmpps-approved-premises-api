@@ -336,8 +336,8 @@ class Cas1OutOfServiceBedServiceTest {
       "'premisesName','asc','p.name'",
       "'roomName','asc','r.name'",
       "'bedName','asc','b.name'",
-      "'outOfServiceFrom','asc','d.start_date'",
-      "'outOfServiceTo','asc','d.end_date'",
+      "'startDate','asc','d.start_date'",
+      "'endDate','asc','d.end_date'",
       "'reason','asc','oosr.name'",
       "'daysLost','asc','(d.end_date - d.start_date)'",
 
@@ -345,8 +345,8 @@ class Cas1OutOfServiceBedServiceTest {
       "'premisesName','desc','p.name'",
       "'roomName','desc','r.name'",
       "'bedName','desc','b.name'",
-      "'outOfServiceFrom','desc','d.start_date'",
-      "'outOfServiceTo','desc','d.end_date'",
+      "'startDate','desc','d.start_date'",
+      "'endDate','desc','d.end_date'",
       "'reason','desc','oosr.name'",
       "'daysLost','desc','(d.end_date - d.start_date)'",
     )
@@ -410,7 +410,7 @@ class Cas1OutOfServiceBedServiceTest {
         temporality.toSet(),
         premisesId = null,
         apAreaId = null,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.outOfServiceFrom, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
@@ -446,7 +446,7 @@ class Cas1OutOfServiceBedServiceTest {
         Temporality.entries.toSet(),
         premisesId = expectedId,
         apAreaId = null,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.outOfServiceFrom, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
@@ -482,7 +482,7 @@ class Cas1OutOfServiceBedServiceTest {
         Temporality.entries.toSet(),
         premisesId = null,
         apAreaId = expectedId,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.outOfServiceFrom, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
