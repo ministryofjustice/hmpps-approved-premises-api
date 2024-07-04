@@ -85,7 +85,8 @@ class DomainEventDescriber(
     val event = domainEventService.getBookingMadeEvent(domainEventSummary.id())
     return event.describe {
       "A placement at ${it.eventDetails.premises.name} was booked for " +
-        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
+        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()} " +
+        "against Delius Event Number ${it.eventDetails.deliusEventNumber}"
     }
   }
 

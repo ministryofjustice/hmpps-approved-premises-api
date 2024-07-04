@@ -123,13 +123,14 @@ class DomainEventDescriberTest {
               .withName("The Premises Name")
               .produce(),
           )
+          .withDeliusEventNumber("989")
           .produce(),
       )
     }
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024")
+    assertThat(result).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024 against Delius Event Number 989")
   }
 
   @ParameterizedTest
