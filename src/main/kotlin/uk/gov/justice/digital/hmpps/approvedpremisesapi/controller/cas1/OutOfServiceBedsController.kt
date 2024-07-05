@@ -56,7 +56,7 @@ class OutOfServiceBedsController(
       premisesId,
       apAreaId,
       PageCriteria(
-        sortBy ?: Cas1OutOfServiceBedSortField.outOfServiceFrom,
+        sortBy ?: Cas1OutOfServiceBedSortField.startDate,
         sortDirection ?: SortDirection.asc,
         page,
         perPage,

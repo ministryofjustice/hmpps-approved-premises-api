@@ -120,8 +120,8 @@ class Cas1OutOfServiceBedTransformerTest {
 
     assertThat(result.id).isEqualTo(outOfServiceBed.id)
     assertThat(result.createdAt).isEqualTo(outOfServiceBed.createdAt.toInstant())
-    assertThat(result.outOfServiceFrom).isEqualTo(outOfServiceBed.startDate)
-    assertThat(result.outOfServiceTo).isEqualTo(outOfServiceBed.endDate)
+    assertThat(result.startDate).isEqualTo(outOfServiceBed.startDate)
+    assertThat(result.endDate).isEqualTo(outOfServiceBed.endDate)
     assertThat(result.bed.id).isEqualTo(outOfServiceBed.bed.id)
     assertThat(result.bed.name).isEqualTo(outOfServiceBed.bed.name)
     assertThat(result.room.id).isEqualTo(outOfServiceBed.bed.room.id)

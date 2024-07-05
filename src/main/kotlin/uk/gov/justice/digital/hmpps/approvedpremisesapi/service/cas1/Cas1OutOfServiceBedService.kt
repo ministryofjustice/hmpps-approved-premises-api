@@ -214,8 +214,8 @@ class Cas1OutOfServiceBedService(
       Cas1OutOfServiceBedSortField.premisesName -> "p.name"
       Cas1OutOfServiceBedSortField.roomName -> "r.name"
       Cas1OutOfServiceBedSortField.bedName -> "b.name"
-      Cas1OutOfServiceBedSortField.outOfServiceFrom -> "d.start_date"
-      Cas1OutOfServiceBedSortField.outOfServiceTo -> "d.end_date"
+      Cas1OutOfServiceBedSortField.startDate -> "d.start_date"
+      Cas1OutOfServiceBedSortField.endDate -> "d.end_date"
       Cas1OutOfServiceBedSortField.reason -> "oosr.name"
       Cas1OutOfServiceBedSortField.daysLost -> "(d.end_date - d.start_date)"
     }
