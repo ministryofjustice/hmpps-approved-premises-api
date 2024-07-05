@@ -528,6 +528,7 @@ class DomainEventDescriberTest {
   @EnumSource(value = RequestForPlacementAssessed.Decision::class)
   fun `Returns expected description for request for placement assessed event with summary`(decision: RequestForPlacementAssessed.Decision) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
+    val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       RequestForPlacementAssessedEnvelope(
@@ -536,7 +537,9 @@ class DomainEventDescriberTest {
         eventType = EventType.requestForPlacementCreated,
         eventDetails = RequestForPlacementAssessedFactory()
           .withDecision(decision)
-          .withDecisionSummary(decision.toString())
+          .withDecisionSummary("Request was $decision")
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
+          .withDuration(7)
           .produce(),
       )
     }
@@ -544,7 +547,7 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo(
-      "A request for placement assessment was $decision. The reason was: $decision",
+      "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week). The reason was: Request was $decision.",
     )
   }
 
@@ -552,6 +555,7 @@ class DomainEventDescriberTest {
   @EnumSource(value = RequestForPlacementAssessed.Decision::class)
   fun `Returns expected description for request for placement assessed event without summary`(decision: RequestForPlacementAssessed.Decision) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
+    val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       RequestForPlacementAssessedEnvelope(
@@ -561,6 +565,8 @@ class DomainEventDescriberTest {
         eventDetails = RequestForPlacementAssessedFactory()
           .withDecision(decision)
           .withDecisionSummary(null)
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
+          .withDuration(7)
           .produce(),
       )
     }
@@ -568,7 +574,7 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo(
-      "A request for placement assessment was $decision.",
+      "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week).",
     )
   }
 
