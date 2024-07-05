@@ -31,6 +31,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   name: String? = null,
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
+  isWithdrawn: Boolean = false,
 ): PlacementApplicationEntity {
   val userApArea = apAreaEntityFactory.produceAndPersist()
 
@@ -77,6 +78,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
       withReallocatedAt(OffsetDateTime.now())
     }
     withDueAt(dueAt)
+    withIsWithdrawn(isWithdrawn)
   }
 }
 
