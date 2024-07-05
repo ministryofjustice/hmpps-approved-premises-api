@@ -58,7 +58,7 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
 
     val jdbcTemplate = JdbcTemplate(driver)
 
-    val databaseName = "approved_premises_integration_test_${randomStringLowerCase(6)}"
+    val databaseName = "ap_api_it_${System.currentTimeMillis()}"
 
     jdbcTemplate.execute("CREATE DATABASE $databaseName")
 
