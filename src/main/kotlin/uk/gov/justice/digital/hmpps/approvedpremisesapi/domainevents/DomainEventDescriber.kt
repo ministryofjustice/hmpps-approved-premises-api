@@ -206,13 +206,14 @@ class DomainEventDescriber(
 
     return event.describe { data ->
       val details = data.eventDetails
+      val summary = details.decisionSummary?.let { " The reason was: $it." } ?: ""
 
-      val description = when (details.decision) {
-        RequestForPlacementAssessed.Decision.accepted -> "A request for placement assessment was accepted."
-        RequestForPlacementAssessed.Decision.rejected -> "A request for placement assessment was rejected."
+      when (details.decision) {
+        RequestForPlacementAssessed.Decision.accepted ->
+          "A request for placement assessment was accepted. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration)}.$summary"
+        RequestForPlacementAssessed.Decision.rejected ->
+          "A request for placement assessment was rejected. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration, true)}.$summary"
       }
-      val summary = details.decisionSummary?.let { " The reason was: $it" } ?: ""
-      "$description$summary"
     }
   }
 
@@ -228,9 +229,9 @@ class DomainEventDescriber(
     return "$prelude $allocatedToDescription $allocatedByDescription".trim()
   }
 
-  private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int): String {
+  private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int, rejected: Boolean = false): String {
     val endDate = expectedArrival.plusDays(duration.toLong())
-    return "The placement request is for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
+    return "The placement request ${if (rejected) "was" else "is"} for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
