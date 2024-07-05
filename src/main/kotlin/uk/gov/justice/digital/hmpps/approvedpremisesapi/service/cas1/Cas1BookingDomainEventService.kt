@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -40,18 +42,18 @@ class Cas1BookingDomainEventService(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
+    placementRequest: PlacementRequestEntity,
   ) {
     bookingMade(
       applicationId = application.id,
       eventNumber = application.eventNumber,
       booking = booking,
       user = user,
-      bookingCreatedAt = bookingCreatedAt,
       applicationSubmittedOn = application.submittedAt,
       releaseType = application.releaseType,
       sentenceType = application.sentenceType,
       situation = application.situation,
+      placementRequestId = placementRequest.id,
     )
   }
 
@@ -61,7 +63,6 @@ class Cas1BookingDomainEventService(
     eventNumber: String?,
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
   ) {
     val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
     val eventNumberForDomainEvent =
@@ -72,11 +73,11 @@ class Cas1BookingDomainEventService(
       eventNumber = eventNumberForDomainEvent!!,
       booking = booking,
       user = user,
-      bookingCreatedAt = bookingCreatedAt,
       applicationSubmittedOn = onlineApplication?.submittedAt,
       releaseType = onlineApplication?.releaseType,
       sentenceType = onlineApplication?.sentenceType,
       situation = onlineApplication?.situation,
+      placementRequestId = null,
     )
   }
 
@@ -127,6 +128,9 @@ class Cas1BookingDomainEventService(
             failureDescription = notes,
           ),
         ),
+        metadata = mapOfNonNullValues(
+          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString(),
+        ),
       ),
     )
   }
@@ -151,11 +155,11 @@ class Cas1BookingDomainEventService(
     eventNumber: String,
     booking: BookingEntity,
     user: UserEntity,
-    bookingCreatedAt: OffsetDateTime,
     applicationSubmittedOn: OffsetDateTime?,
     sentenceType: String?,
     releaseType: String?,
     situation: String?,
+    placementRequestId: UUID?,
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -168,6 +172,7 @@ class Cas1BookingDomainEventService(
     val staffDetails = getStaffDetails(user.deliusUsername)
 
     val approvedPremises = booking.premises as ApprovedPremisesEntity
+    val bookingCreatedAt = booking.createdAt
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(
@@ -211,6 +216,9 @@ class Cas1BookingDomainEventService(
             sentenceType = sentenceType,
             situation = situation,
           ),
+        ),
+        metadata = mapOfNonNullValues(
+          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
         ),
       ),
     )

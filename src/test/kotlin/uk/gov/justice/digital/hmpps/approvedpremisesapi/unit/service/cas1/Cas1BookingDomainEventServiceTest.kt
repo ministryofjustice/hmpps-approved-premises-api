@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -79,14 +80,19 @@ class Cas1BookingDomainEventServiceTest {
       .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
       .produce()
 
+    val createdAt = OffsetDateTime.now()
+
     val booking = BookingEntityFactory()
       .withDefaults()
       .withCrn("THEBOOKINGCRN")
       .withArrivalDate(LocalDate.of(2025, 12, 11))
       .withPremises(premises)
+      .withCreatedAt(createdAt)
       .produce()
 
-    val createdAt = OffsetDateTime.now()
+    val placementRequest = PlacementRequestEntityFactory()
+      .withDefaults()
+      .produce()
 
     @BeforeEach
     fun before() {
@@ -116,7 +122,7 @@ class Cas1BookingDomainEventServiceTest {
 
     @Test
     fun `bookingMade saves domain event`() {
-      service.bookingMade(application, booking, user, createdAt)
+      service.bookingMade(application, booking, user, placementRequest)
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
 
@@ -131,9 +137,12 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
 
       val data = domainEvent.data.eventDetails
+      assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(booking.id)
@@ -150,6 +159,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
+
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
 
     @Test
@@ -160,7 +171,6 @@ class Cas1BookingDomainEventServiceTest {
         eventNumber = "adhoc event number",
         booking = booking,
         user = user,
-        bookingCreatedAt = createdAt,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
@@ -176,9 +186,12 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
 
       val data = domainEvent.data.eventDetails
+      assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(booking.id)
@@ -195,6 +208,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
+
+      assertThat(domainEvent.metadata).isEmpty()
     }
 
     @Test
@@ -209,7 +224,6 @@ class Cas1BookingDomainEventServiceTest {
         eventNumber = "adhoc event number",
         booking = booking,
         user = user,
-        bookingCreatedAt = createdAt,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
@@ -244,6 +258,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.releaseType).isNull()
       assertThat(data.sentenceType).isNull()
       assertThat(data.situation).isNull()
+
+      assertThat(domainEvent.metadata).isEmpty()
     }
 
     @Test
@@ -258,7 +274,6 @@ class Cas1BookingDomainEventServiceTest {
         eventNumber = "adhoc event number",
         booking = booking,
         user = user,
-        bookingCreatedAt = createdAt,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
@@ -359,6 +374,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.attemptedAt).isNotNull()
       assertThat(data.attemptedBy.staffMember!!.staffCode).isEqualTo("the staff code")
       assertThat(data.failureDescription).isEqualTo("the notes")
+
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
   }
 }

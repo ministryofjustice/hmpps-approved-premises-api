@@ -4315,7 +4315,7 @@ class BookingServiceTest {
       every { mockBookingListener.prePersist(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { bookingEntity }
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
-      every { mockCas1BookingDomainEventService.adhocBookingMade(any(), any(), any(), any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.adhocBookingMade(any(), any(), any(), any(), any()) } just Runs
       every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
     }
 
@@ -4492,7 +4492,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
 
@@ -4540,7 +4539,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
 
@@ -4588,7 +4586,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
 
@@ -4634,7 +4631,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
     }
@@ -4679,7 +4675,6 @@ class BookingServiceTest {
           eventNumber = "eventNumber",
           booking = booking,
           user = user,
-          bookingCreatedAt = any(),
         )
       }
     }
@@ -6413,7 +6408,7 @@ class BookingServiceTest {
           application,
           booking,
           user,
-          any(),
+          placementRequest,
         )
       }
 
@@ -6467,7 +6462,7 @@ class BookingServiceTest {
           application,
           booking,
           user,
-          any(),
+          placementRequest,
         )
       }
 
@@ -6546,7 +6541,7 @@ class BookingServiceTest {
           application,
           booking,
           user,
-          any(),
+          placementRequest,
         )
       }
 
@@ -6611,7 +6606,7 @@ class BookingServiceTest {
           application,
           booking,
           workflowManager,
-          any(),
+          placementRequest,
         )
       }
 
