@@ -732,7 +732,7 @@ class TasksTest {
     }
 
     @Nested
-    inner class Pagination : InitialiseDatabasePerClassTestBase() {
+    inner class PaginationAndWithdrawalExclusion : InitialiseDatabasePerClassTestBase() {
       private val pageSize = 1
       private lateinit var counts: Map<TaskType, Map<String, Int>>
 
@@ -749,6 +749,7 @@ class TasksTest {
                 TaskType.assessment to mapOf(
                   "allocated" to 2,
                   "unallocated" to 3,
+                  "withdrawn" to 1,
                 ),
                 TaskType.placementRequest to mapOf(
                   "allocated" to 2,
@@ -757,6 +758,7 @@ class TasksTest {
                 TaskType.placementApplication to mapOf(
                   "allocated" to 3,
                   "unallocated" to 2,
+                  "withdrawn" to 1,
                 ),
               )
 
@@ -778,6 +780,15 @@ class TasksTest {
                   null,
                   createdByUser = otherUser,
                   crn = offenderDetails.otherIds.crn,
+                )
+              }
+
+              repeat(counts[TaskType.assessment]!!["withdrawn"]!!) {
+                `Given an Assessment for Approved Premises`(
+                  null,
+                  createdByUser = otherUser,
+                  crn = offenderDetails.otherIds.crn,
+                  isWithdrawn = true,
                 )
               }
 
@@ -819,6 +830,18 @@ class TasksTest {
                   },
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
+                )
+              }
+
+              repeat(counts[TaskType.placementApplication]!!["withdrawn"]!!) {
+                `Given a Placement Application`(
+                  createdByUser = user,
+                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                  crn = offenderDetails.otherIds.crn,
+                  submittedAt = OffsetDateTime.now(),
+                  isWithdrawn = true,
                 )
               }
             }
