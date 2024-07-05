@@ -2,24 +2,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -33,16 +24,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -62,9 +52,6 @@ import javax.transaction.Transactional
 class PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
-  private val domainEventService: DomainEventService,
-  private val offenderService: OffenderService,
-  private val communityApiClient: CommunityApiClient,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
   private val placementDateRepository: PlacementDateRepository,
   private val cancellationRepository: CancellationRepository,
@@ -73,8 +60,8 @@ class PlacementRequestService(
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val taskDeadlineService: TaskDeadlineService,
+  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -305,7 +292,7 @@ class PlacementRequestService(
       notes = notes,
     )
 
-    saveBookingNotMadeDomainEvent(user, placementRequest, bookingNotCreatedAt, notes)
+    cas1BookingDomainEventService.bookingNotMade(user, placementRequest, bookingNotCreatedAt, notes)
 
     return AuthorisableActionResult.Success(
       bookingNotMadeRepository.save(bookingNotMade),
@@ -397,74 +384,6 @@ class PlacementRequestService(
         ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
       )
     }
-  }
-
-  private fun saveBookingNotMadeDomainEvent(
-    user: UserEntity,
-    placementRequest: PlacementRequestEntity,
-    bookingNotCreatedAt: OffsetDateTime,
-    notes: String?,
-  ) {
-    val domainEventId = UUID.randomUUID()
-
-    val application = placementRequest.application
-
-    val offenderDetails = when (
-      val offenderDetailsResult = offenderService.getOffenderByCrn(
-        application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-    ) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException(
-        "Unable to get Offender Details when " +
-          "creating Booking Not Made Domain Event: Unauthorised",
-      )
-
-      is AuthorisableActionResult.NotFound -> throw RuntimeException(
-        "Unable to get Offender Details when " +
-          "creating Booking Not Made Domain Event: Not Found",
-      )
-    }
-
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
-    domainEventService.saveBookingNotMadeEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = application.id,
-        crn = application.crn,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-        occurredAt = bookingNotCreatedAt.toInstant(),
-        data = BookingNotMadeEnvelope(
-          id = domainEventId,
-          timestamp = bookingNotCreatedAt.toInstant(),
-          eventType = EventType.bookingNotMade,
-          eventDetails = BookingNotMade(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
-            personReference = PersonReference(
-              crn = application.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            attemptedAt = bookingNotCreatedAt.toInstant(),
-            attemptedBy = BookingMadeBookedBy(
-              staffMember = staffDetails.toStaffMember(),
-              cru = Cru(
-                name = user.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            failureDescription = notes,
-          ),
-        ),
-      ),
-    )
   }
 
   private fun toPlacementRequestAndCancellations(placementRequest: PlacementRequestEntity): PlacementRequestAndCancellations {
