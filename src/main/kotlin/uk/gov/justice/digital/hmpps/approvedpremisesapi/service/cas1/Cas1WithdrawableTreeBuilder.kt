@@ -41,7 +41,7 @@ class Cas1WithdrawableTreeBuilder(
       children.add(treeForPlacementReq(it, user).rootNode)
     }
 
-    placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id).forEach {
+    placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id).forEach {
       children.add(treeForPlacementApp(it, user).rootNode)
     }
 
