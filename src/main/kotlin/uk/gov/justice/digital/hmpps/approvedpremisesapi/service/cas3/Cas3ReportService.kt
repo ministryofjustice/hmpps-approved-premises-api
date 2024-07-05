@@ -14,14 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -42,7 +40,6 @@ class Cas3ReportService(
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
   private val bedRepository: BedRepository,
-  private val bedUtilisationReportRepository: BedUtilisationReportRepository,
   @Value("\${cas3-report.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
   fun createCas3ApplicationReferralsReport(
@@ -101,31 +98,8 @@ class Cas3ReportService(
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
-    val bedspacesInScope = bedUtilisationReportRepository.findAllBedspaces(
-      probationRegionId = properties.probationRegionId,
-    )
-
-    val bedspaceBookingsInScope = bedUtilisationReportRepository.findAllBookingsByOverlappingDate(
-      probationRegionId = properties.probationRegionId,
-      properties.startDate,
-      properties.endDate,
-    )
-
-    val lostBedspaceInScope = bedUtilisationReportRepository.findAllLostBedByOverlappingDate(
-      probationRegionId = properties.probationRegionId,
-      properties.startDate,
-      properties.endDate,
-    )
-
-    val reportData = bedspacesInScope.map {
-      val bedId = it.bedId
-      val bedspaceBookings = bedspaceBookingsInScope.filter { it.bedId == bedId }
-      val lostBedspace = lostBedspaceInScope.filter { it.bedId == bedId }
-      BedUtilisationReportData(it, bedspaceBookings, lostBedspace)
-    }
-
-    BedUtilisationReportGenerator(workingDayService)
-      .createReport(reportData, properties)
+    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayService)
+      .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
