@@ -1802,6 +1802,9 @@ components:
             arrivalDate:
               type: string
               format: date-time
+            personReleaseDate:
+              type: string
+              format: date
             offenceId:
               type: string
           required:
@@ -2586,6 +2589,13 @@ components:
               $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
             summaryData:
               $ref: '#/components/schemas/AnyValue'
+            releaseDate:
+              type: string
+              format: date
+            accommodationRequiredFromDate:
+              type: string
+              format: date
+
           required:
             - application
             - summaryData
@@ -2740,6 +2750,12 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'
+        releaseDate:
+          type: string
+          format: date
+        accommodationRequiredFromDate:
+          type: string
+          format: date
       required:
         - data
     AssessmentAcceptance:

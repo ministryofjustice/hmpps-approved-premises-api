@@ -157,6 +157,8 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
     withData(data)
+    withReleaseDate(null)
+    withAccommodationRequiredFromDate(null)
     if (createdAt != null) {
       withCreatedAt(createdAt)
     }

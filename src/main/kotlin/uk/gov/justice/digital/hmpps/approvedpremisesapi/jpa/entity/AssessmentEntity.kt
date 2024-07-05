@@ -7,6 +7,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -34,6 +35,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
    * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
    * and as such changes should be synchronized
    */
+
   @Query(
     value = """
     select distinct cast(a.id as text) as id,
@@ -107,7 +109,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
              cast(a.application_id as text) as applicationId,
              a.created_at as createdAt,
              CAST(taa.risk_ratings AS TEXT) as riskRatings,
-             taa.arrival_date as arrivalDate,
+             coalesce(aa.accommodation_required_from_date, taa.arrival_date) as arrivalDate,
              null as dateOfInfoRequest,
              aa.completed_at is not null as completed,
              a.decision as decision,
@@ -184,6 +186,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun updateData(id: UUID, updatedJson: Any)
 }
 
+fun <T : AssessmentEntity> AssessmentRepository.findAssessmentById(id: UUID): T? = findByIdOrNull(id) as T?
+
 @Entity
 @Table(name = "assessments")
 @DiscriminatorColumn(name = "service")
@@ -236,7 +240,10 @@ abstract class AssessmentEntity(
   // This is in place for optimistic locking (using @Version). We have temporarily disabled this
   // functionality whilst we put protections in the CAS1 UI to reduce duplicate form submissions
   var version: Long = 1,
-)
+) {
+  @Suppress("unchecked")
+  fun <T : ApplicationEntity> typedApplication(): T = application as T
+}
 
 @Entity
 @DiscriminatorValue("approved-premises")
@@ -312,6 +319,8 @@ class TemporaryAccommodationAssessmentEntity(
   var referralRejectionReason: ReferralRejectionReasonEntity?,
   var referralRejectionReasonDetail: String?,
   dueAt: OffsetDateTime?,
+  var releaseDate: LocalDate?,
+  var accommodationRequiredFromDate: LocalDate?,
 ) : AssessmentEntity(
   id,
   application,
@@ -330,7 +339,15 @@ class TemporaryAccommodationAssessmentEntity(
   schemaUpToDate,
   isWithdrawn,
   dueAt,
-)
+) {
+  fun currentReleaseDate(): LocalDate =
+    this.releaseDate
+      ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate!!
+
+  fun currentAccommodationRequiredFromDate(): LocalDate =
+    this.accommodationRequiredFromDate
+      ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate!!.toLocalDate()
+}
 
 interface DomainAssessmentSummary {
   val type: String
