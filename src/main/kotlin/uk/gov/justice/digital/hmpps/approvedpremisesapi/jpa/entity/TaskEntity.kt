@@ -102,6 +102,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         'PLACEMENT_APPLICATION' in :taskTypes AND
         placement_application.submitted_at IS NOT NULL
         AND placement_application.reallocated_at IS NULL
+        AND placement_application.is_withdrawn is FALSE
         AND (
           (:completed = true AND placement_application.decision IS NOT NULL) OR (:completed = false AND placement_application.decision IS NULL)
         )
