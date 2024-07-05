@@ -374,6 +374,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.attemptedAt).isNotNull()
       assertThat(data.attemptedBy.staffMember!!.staffCode).isEqualTo("the staff code")
       assertThat(data.failureDescription).isEqualTo("the notes")
+
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
   }
 }

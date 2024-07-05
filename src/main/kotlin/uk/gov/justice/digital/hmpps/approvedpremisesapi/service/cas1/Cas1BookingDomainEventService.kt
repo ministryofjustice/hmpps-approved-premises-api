@@ -128,6 +128,9 @@ class Cas1BookingDomainEventService(
             failureDescription = notes,
           ),
         ),
+        metadata = mapOfNonNullValues(
+          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString(),
+        ),
       ),
     )
   }
