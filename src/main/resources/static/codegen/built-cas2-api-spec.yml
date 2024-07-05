@@ -5407,6 +5407,7 @@ components:
         - applicationsV2
         - dailyMetrics
         - lostBeds
+        - outOfServiceBeds
         - placementApplications
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
