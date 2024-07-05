@@ -7,6 +7,9 @@
 .gradle/
 build/
 
+#generated files
+src/main/resources/static/codegen/
+
 # Mac
 *.DS_Store
 
