@@ -9,17 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 
 @Component
 class PlacementApplicationTransformer(
   private val objectMapper: ObjectMapper,
-  private val jsonSchemaService: JsonSchemaService,
-  private val placementRequestTransformer: PlacementRequestTransformer,
 ) {
   fun transformJpaToApi(jpa: PlacementApplicationEntity): PlacementApplication {
     val assessment = jpa.application.getLatestAssessment()!!
@@ -43,31 +38,6 @@ class PlacementApplicationTransformer(
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.additional,
       placementDates = jpa.placementDates.map { PlacementDates(it.expectedArrival, it.duration) },
-    )
-  }
-
-  fun transformPlacementRequestJpaToApi(jpa: PlacementRequestEntity): PlacementApplication {
-    val application = jpa.application
-    val assessment = jpa.assessment
-
-    return PlacementApplication(
-      id = jpa.id,
-      applicationId = application.id,
-      applicationCompletedAt = application.submittedAt!!.toInstant(),
-      assessmentId = assessment.id,
-      assessmentCompletedAt = assessment.submittedAt!!.toInstant(),
-      createdByUserId = application.createdByUser.id,
-      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java).id,
-      createdAt = jpa.createdAt.toInstant(),
-      data = "{}",
-      document = "{}",
-      outdatedSchema = false,
-      submittedAt = application.submittedAt?.toInstant(),
-      canBeWithdrawn = jpa.isInWithdrawableState(),
-      isWithdrawn = jpa.isWithdrawn,
-      withdrawalReason = placementRequestTransformer.getWithdrawalReason(jpa.withdrawalReason),
-      type = PlacementApplicationType.initial,
-      placementDates = listOf(PlacementDates(jpa.expectedArrival, jpa.duration)),
     )
   }
 
