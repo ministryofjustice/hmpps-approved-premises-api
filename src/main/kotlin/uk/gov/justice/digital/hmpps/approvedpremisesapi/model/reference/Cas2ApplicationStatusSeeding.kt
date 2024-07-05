@@ -230,6 +230,11 @@ object Cas2ApplicationStatusSeeding {
             name = "hdcNotEligible",
             label = "HDC not eligible",
           ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("4f1033ab-2dea-47ce-8a86-7c47b3ccadd8"),
+            name = "personTransferredToAnotherPrison",
+            label = "Person transferred to another prison",
+          ),
         ),
       ),
       Cas2PersistedApplicationStatus(
