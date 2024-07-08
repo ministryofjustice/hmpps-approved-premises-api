@@ -227,6 +227,12 @@ class WebClientCache(
   )
 }
 
+/*
+Before the Spring Boot 3 Upgrade, we would directly marshal Spring's HttpMethod class into JSON for use in the Cache.
+As of Spring Boot 3 this class has been changed such that it can't be unmarshalled back into Java. As to avoid modifying
+entries in the cache during the Spring Boot 2 to 3, we have introduced our own version of Spring's HttpMethod that can
+be marshalled into JSON and back into Java.
+*/
 enum class MarshallableHttpMethod {
   GET,
   HEAD,
