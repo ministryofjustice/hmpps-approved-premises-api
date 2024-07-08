@@ -62,6 +62,10 @@ class Cas1OutOfServiceBedService(
         "$.reason" hasValidationError "doesNotExist"
       }
 
+      if (notes.isNullOrEmpty()) {
+        "$.notes" hasValidationError "empty"
+      }
+
       if (validationErrors.any()) {
         return fieldValidationError
       }
@@ -118,6 +122,10 @@ class Cas1OutOfServiceBedService(
         val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
         if (reason == null) {
           "$.reason" hasValidationError "doesNotExist"
+        }
+
+        if (notes.isNullOrEmpty()) {
+          "$.notes" hasValidationError "empty"
         }
 
         if (validationErrors.any()) {

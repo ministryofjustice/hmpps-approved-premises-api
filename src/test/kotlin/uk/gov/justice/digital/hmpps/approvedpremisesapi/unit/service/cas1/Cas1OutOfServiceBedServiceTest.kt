@@ -127,7 +127,7 @@ class Cas1OutOfServiceBedServiceTest {
         endDate = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         referenceNumber = "12345",
-        notes = "notes",
+        notes = "",
         bedId = UUID.randomUUID(),
       )
 
@@ -135,6 +135,7 @@ class Cas1OutOfServiceBedServiceTest {
       assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
         entry("$.endDate", "beforeStartDate"),
         entry("$.reason", "doesNotExist"),
+        entry("$.notes", "empty"),
       )
     }
 
@@ -213,7 +214,7 @@ class Cas1OutOfServiceBedServiceTest {
         endDate = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         referenceNumber = "12345",
-        notes = "notes",
+        notes = "",
       )
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -222,6 +223,7 @@ class Cas1OutOfServiceBedServiceTest {
       assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
         entry("$.endDate", "beforeStartDate"),
         entry("$.reason", "doesNotExist"),
+        entry("$.notes", "empty"),
       )
     }
 
