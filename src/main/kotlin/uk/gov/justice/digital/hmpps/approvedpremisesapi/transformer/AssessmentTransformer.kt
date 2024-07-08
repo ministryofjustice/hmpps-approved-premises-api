@@ -104,8 +104,8 @@ class AssessmentTransformer(
         status = getStatusForTemporaryAccommodationAssessment(jpa),
         summaryData = objectMapper.readTree(jpa.summaryData),
         service = "CAS3",
-        releaseDate = jpa.releaseDate ?: LocalDate.from((jpa.application as TemporaryAccommodationApplicationEntity).arrivalDate),
-        accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: (jpa.application as TemporaryAccommodationApplicationEntity).personReleaseDate,
+        releaseDate = jpa.releaseDate ?: jpa.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate,
+        accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: LocalDate.from(jpa.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate),
       )
     }
 
