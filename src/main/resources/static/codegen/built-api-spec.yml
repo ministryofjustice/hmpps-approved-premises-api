@@ -3718,6 +3718,12 @@ paths:
         - Assessment data
       summary: Updates an assessment
       parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: Required for operations specific to each CAS
+          schema:
+            $ref: '#/components/schemas/ServiceName'
         - in: path
           name: assessmentId
           required: true
@@ -6378,6 +6384,9 @@ components:
             arrivalDate:
               type: string
               format: date-time
+            personReleaseDate:
+              type: string
+              format: date
             offenceId:
               type: string
           required:
@@ -7162,6 +7171,13 @@ components:
               $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
             summaryData:
               $ref: '#/components/schemas/AnyValue'
+            releaseDate:
+              type: string
+              format: date
+            accommodationRequiredFromDate:
+              type: string
+              format: date
+
           required:
             - application
             - summaryData
@@ -7316,6 +7332,12 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AnyValue'
+        releaseDate:
+          type: string
+          format: date
+        accommodationRequiredFromDate:
+          type: string
+          format: date
       required:
         - data
     AssessmentAcceptance:
