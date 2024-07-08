@@ -21,7 +21,7 @@ executors:
   integration-test-gradle:
     resource_class: medium+
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
       - image: "postgis/postgis"
         environment:
           - POSTGRES_USER=integration_test
@@ -41,13 +41,13 @@ executors:
   unit-test-gradle:
     resource_class: medium+
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
 
 jobs:
   generate_trivyignore:
     # Needed to get Trivy to respect the .trivyignore file, as it doesn't use the one that's inside the Docker image.
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     resource_class: small
     steps:
       - checkout
@@ -127,7 +127,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     steps:
       - checkout
       - restore_cache:
@@ -153,7 +153,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     steps:
       - attach_workspace:
           at: ~/
@@ -165,7 +165,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/openjdk:21.0.2
     steps:
       - attach_workspace:
           at: ~/
