@@ -59,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -1118,7 +1119,7 @@ class BookingService(
       is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
     }
     if (shouldCreateDomainEventForBooking(booking, user)) {
-      createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
+      createCas1CancellationDomainEvent(booking, user, cancellationEntity, reason)
     }
 
     updateApplicationStatusOnCancellation(
@@ -1191,7 +1192,7 @@ class BookingService(
   private fun createCas1CancellationDomainEvent(
     booking: BookingEntity,
     user: UserEntity?,
-    cancelledAt: LocalDate,
+    cancellation: CancellationEntity,
     reason: CancellationReasonEntity,
   ) {
     val dateTime = OffsetDateTime.now()
@@ -1249,9 +1250,12 @@ class BookingService(
               localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
             ),
             cancelledBy = staffDetails.toStaffMember(),
-            cancelledAt = cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
+            cancelledAt = cancellation.date.atTime(0, 0).toInstant(ZoneOffset.UTC),
             cancellationReason = reason.name,
           ),
+        ),
+        metadata = mapOf(
+          MetaDataName.CAS1_CANCELLATION_ID to cancellation.id.toString(),
         ),
       ),
     )
