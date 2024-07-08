@@ -11,15 +11,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStrea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas1PlacementMatchingOutcomesReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.RequestsForPlacementReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -29,7 +24,6 @@ private const val MONTH_MIN = 1
 @Service
 class Cas1ReportsController(
   private val cas1ReportService: Cas1ReportService,
-  private val userService: UserService,
   private val userAccessService: UserAccessService,
 ) : ReportsCas1Delegate {
 
@@ -51,38 +45,33 @@ class Cas1ReportsController(
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
     }
+
     validateMonth(month)
+
+    val monthSpecificReportParams = MonthSpecificReportParams(
+      year = year,
+      month = month,
+      includePii = includePii ?: false,
+    )
 
     return when (reportName) {
       Cas1ReportName.applications -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("applications", year, month, ContentType.XLSX),
       ) { outputStream ->
-        cas1ReportService.createApplicationReport(
-          ApplicationReportProperties(xServiceName, year, month, userService.getUserForRequest().deliusUsername),
-          outputStream,
-        )
+        cas1ReportService.createApplicationReport(monthSpecificReportParams, outputStream)
       }
       Cas1ReportName.applicationsV2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("applications", year, month, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createApplicationReportV2(
-          ApplicationReportProperties(
-            serviceName = xServiceName,
-            year = year,
-            month = month,
-            deliusUsername = userService.getUserForRequest().deliusUsername,
-            includePii = includePii ?: false,
-          ),
-          outputStream,
-        )
+        cas1ReportService.createApplicationReportV2(monthSpecificReportParams, outputStream)
       }
       Cas1ReportName.dailyMetrics -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
       ) { outputStream ->
-        cas1ReportService.createDailyMetricsReport(DailyMetricReportProperties(xServiceName, year, month), outputStream)
+        cas1ReportService.createDailyMetricsReport(monthSpecificReportParams, outputStream)
       }
       Cas1ReportName.lostBeds -> generateStreamingResponse(
         contentType = ContentType.XLSX,
@@ -94,26 +83,26 @@ class Cas1ReportsController(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
       ) { outputStream ->
-        cas1ReportService.createPlacementApplicationReport(PlacementApplicationReportProperties(year, month), outputStream)
+        cas1ReportService.createPlacementApplicationReport(monthSpecificReportParams, outputStream)
       }
       Cas1ReportName.placementMatchingOutcomes -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.XLSX),
       ) { outputStream ->
-        cas1ReportService.createPlacementMatchingOutcomesReport(Cas1PlacementMatchingOutcomesReportProperties(year, month), outputStream)
+        cas1ReportService.createPlacementMatchingOutcomesReport(monthSpecificReportParams, outputStream)
       }
       Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("requests-for-placement", year, month, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createRequestForPlacementReport(
-          RequestsForPlacementReportProperties(
-            year = year,
-            month = month,
-            includePii = includePii ?: false,
-          ),
-          outputStream,
-        )
+        cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, outputStream)
+      }
+
+      Cas1ReportName.placementMatchingOutcomesV2 -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.CSV),
+      ) { outputStream ->
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, outputStream)
       }
     }
   }

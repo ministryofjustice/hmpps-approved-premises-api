@@ -8,29 +8,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas1PlacementMatchingOutcomesReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
+@Deprecated("Use [Cas1ReportsController]")
 @Service
 class ReportsController(
   private val cas1ReportService: Cas1ReportService,
   private val cas3ReportService: Cas3ReportService,
   private val userAccessService: UserAccessService,
-  private val userService: UserService,
 ) : ReportsApiDelegate {
 
   companion object {
@@ -107,11 +103,9 @@ class ReportsController(
       throw ForbiddenProblem()
     }
 
-    val user = userService.getUserForRequest()
-
     validateParameters(null, month)
 
-    val properties = ApplicationReportProperties(xServiceName, year, month, user.deliusUsername)
+    val properties = MonthSpecificReportParams(year, month)
 
     return generateStreamingResponse(
       contentType = ContentType.XLSX,
@@ -131,7 +125,7 @@ class ReportsController(
       throw NotAllowedProblem("This endpoint only supports CAS1")
     }
 
-    val properties = DailyMetricReportProperties(xServiceName, year, month)
+    val properties = MonthSpecificReportParams(year, month)
 
     return generateStreamingResponse(
       contentType = ContentType.XLSX,
@@ -153,7 +147,7 @@ class ReportsController(
 
     validateParameters(null, month)
 
-    val properties = PlacementApplicationReportProperties(year, month)
+    val properties = MonthSpecificReportParams(year, month)
 
     return generateStreamingResponse(
       contentType = ContentType.XLSX,
@@ -177,7 +171,7 @@ class ReportsController(
       throw NotAllowedProblem("This endpoint only supports CAS1")
     }
 
-    val properties = Cas1PlacementMatchingOutcomesReportProperties(year, month)
+    val properties = MonthSpecificReportParams(year, month)
 
     return generateStreamingResponse(
       contentType = ContentType.XLSX,

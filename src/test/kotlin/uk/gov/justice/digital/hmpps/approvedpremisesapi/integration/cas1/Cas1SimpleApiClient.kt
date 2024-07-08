@@ -6,8 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -276,6 +278,36 @@ class Cas1SimpleApiClient {
 
     integrationTestBase.webTestClient.post()
       .uri("/placement-requests/$placementRequestId/withdrawal")
+      .header("Authorization", "Bearer $managerJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementRequestBookingNotMade(
+    integrationTestBase: IntegrationTestBase,
+    placementRequestId: UUID,
+    managerJwt: String,
+    body: NewBookingNotMade,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-requests/$placementRequestId/booking-not-made")
+      .header("Authorization", "Bearer $managerJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun bookingForPlacementRequest(
+    integrationTestBase: IntegrationTestBase,
+    placementRequestId: UUID,
+    managerJwt: String,
+    body: NewPlacementRequestBooking,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/placement-requests/$placementRequestId/booking")
       .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
       .exchange()

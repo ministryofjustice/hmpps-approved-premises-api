@@ -194,7 +194,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns OK with applications, exclude PII by default`() {
+  fun `Get application report returns OK with applications, exclude PII by default and always exclude internal columns`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
@@ -219,6 +219,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(headers).doesNotContain("initial_assessor_username")
           assertThat(headers).doesNotContain("initial_assessor_name")
           assertThat(headers).doesNotContain("last_appealed_assessor_username")
+          assertThat(headers).doesNotContain("internal_placement_request_id")
+          assertThat(headers).doesNotContain("internal_placement_application_date_id")
 
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())

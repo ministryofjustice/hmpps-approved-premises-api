@@ -7,23 +7,19 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementMatchingOutcomesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas1PlacementMatchingOutcomesReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.RequestsForPlacementReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
@@ -37,7 +33,8 @@ class Cas1ReportService(
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val bedRepository: BedRepository,
   private val cas1PlacementMatchingOutcomesReportRepository: Cas1PlacementMatchingOutcomesReportRepository,
-  private val cas1ApplicationReportRepository: Cas1ApplicationReportRepository,
+  private val cas1PlacementMatchingOutcomesV2ReportRepository: Cas1PlacementMatchingOutcomesV2ReportRepository,
+  private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
   private val lostBedsRepository: LostBedsRepository,
@@ -54,10 +51,11 @@ class Cas1ReportService(
       "initial_assessor_username",
       "initial_assessor_name",
       "last_appealed_assessor_username",
+      "matcher_username",
     )
   }
 
-  fun createApplicationReport(properties: ApplicationReportProperties, outputStream: OutputStream) {
+  fun createApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ApplicationReportGenerator()
       .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
@@ -65,14 +63,14 @@ class Cas1ReportService(
       }
   }
 
-  fun createApplicationReportV2(properties: ApplicationReportProperties, outputStream: OutputStream) {
+  fun createApplicationReportV2(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
-      cas1ApplicationReportRepository.generateForSubmissionOrWithdrawalDate(
+      cas1ApplicationV2ReportRepository.generateForSubmissionOrWithdrawalDate(
         startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
         endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
         jbdcResultSetConsumer = consumer,
@@ -80,7 +78,7 @@ class Cas1ReportService(
     }
   }
 
-  fun createDailyMetricsReport(properties: DailyMetricReportProperties, outputStream: OutputStream) {
+  fun createDailyMetricsReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
         it.getCreatedAt().toLocalDateTime().toLocalDate(),
@@ -109,7 +107,7 @@ class Cas1ReportService(
       }
   }
 
-  fun createPlacementApplicationReport(properties: PlacementApplicationReportProperties, outputStream: OutputStream) {
+  fun createPlacementApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     PlacementApplicationReportGenerator()
       .createReport(placementApplicationEntityReportRowRepository.generatePlacementApplicationEntityReportRowsForCalendarMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
@@ -117,7 +115,7 @@ class Cas1ReportService(
       }
   }
 
-  fun createRequestForPlacementReport(properties: RequestsForPlacementReportProperties, outputStream: OutputStream) {
+  fun createRequestForPlacementReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
 
     CsvJdbcResultSetConsumer(
@@ -132,7 +130,7 @@ class Cas1ReportService(
     }
   }
 
-  fun createPlacementMatchingOutcomesReport(properties: Cas1PlacementMatchingOutcomesReportProperties, outputStream: OutputStream) {
+  fun createPlacementMatchingOutcomesReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ExcelJdbcResultSetConsumer().use { consumer ->
       cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(
         properties.month,
@@ -143,6 +141,27 @@ class Cas1ReportService(
       consumer.writeBufferedWorkbook(outputStream)
     }
   }
+
+  fun createPlacementMatchingOutcomesV2Report(properties: MonthSpecificReportParams, outputStream: OutputStream) {
+    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = columnsToExclude,
+    ).use { consumer ->
+      cas1PlacementMatchingOutcomesV2ReportRepository.generateForArrivalDateThisMonth(
+        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
+        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        consumer,
+      )
+    }
+  }
+
+  data class MonthSpecificReportParams(
+    val year: Int,
+    val month: Int,
+    val includePii: Boolean = false,
+  )
 
   @SuppressWarnings("MagicNumber")
   private fun getFirstSecondOfMonth(year: Int, month: Int) = LocalDate.of(year, month, 1).atStartOfDay()

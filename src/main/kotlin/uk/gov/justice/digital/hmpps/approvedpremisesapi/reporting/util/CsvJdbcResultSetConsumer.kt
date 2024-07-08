@@ -20,6 +20,7 @@ class CsvJdbcResultSetConsumer(
     val columnsToExcludeLowercase = columnsToExclude.map { it.lowercase() }
     val columnsToInclude = getAllColNames(resultSet)
       .filter { !columnsToExcludeLowercase.contains(it.lowercase()) }
+      .filter { !it.lowercase().startsWith("internal_") }
 
     val columnNameHelper = ResultSetColumnNameHelperService()
     val columnNames = columnsToInclude.toTypedArray()

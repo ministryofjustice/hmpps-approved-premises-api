@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.JdbcResultSetConsumer
