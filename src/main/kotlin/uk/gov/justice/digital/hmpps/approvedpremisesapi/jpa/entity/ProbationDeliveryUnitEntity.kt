@@ -11,11 +11,14 @@ import java.util.UUID
 
 @Repository
 interface ProbationDeliveryUnitRepository : JpaRepository<ProbationDeliveryUnitEntity, UUID> {
-  fun findAllByProbationRegionId(probationRegionId: UUID): List<ProbationDeliveryUnitEntity>
+  @Suppress("FunctionNaming")
+  fun findAllByProbationRegion_Id(probationRegionId: UUID): List<ProbationDeliveryUnitEntity>
 
-  fun findByIdAndProbationRegionId(id: UUID, probationRegionId: UUID): ProbationDeliveryUnitEntity?
+  @Suppress("FunctionNaming")
+  fun findByIdAndProbationRegion_Id(id: UUID, probationRegionId: UUID): ProbationDeliveryUnitEntity?
 
-  fun findByNameAndProbationRegionId(name: String, probationRegionId: UUID): ProbationDeliveryUnitEntity?
+  @Suppress("FunctionNaming")
+  fun findByNameAndProbationRegion_Id(name: String, probationRegionId: UUID): ProbationDeliveryUnitEntity?
 
   fun findByDeliusCode(deliusCode: String): ProbationDeliveryUnitEntity?
 }
