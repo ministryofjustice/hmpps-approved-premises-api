@@ -30,7 +30,7 @@ interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<Applicatio
 
   @Query(
     "SELECT ap FROM ApprovedPremisesApplicationEntity ap where " +
-      "ap.noticeType = null AND ap.isEmergencyApplication = false ",
+      "ap.noticeType IS null AND ap.isEmergencyApplication = false ",
   )
   fun getApplicationsThatRequireNoticeTypeUpdating(pageable: Pageable): Slice<ApprovedPremisesApplicationEntity>
 }
