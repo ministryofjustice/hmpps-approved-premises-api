@@ -120,7 +120,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetAllApplications {
+  inner class GetApplications {
 
     @Test
     fun `Get all applications without JWT returns 401`() {
