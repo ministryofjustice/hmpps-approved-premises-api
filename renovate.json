@@ -28,5 +28,6 @@
         "org.testcontainers"
       ]
     }
-  ]
+  ],
+  "rebaseWhen": "conflicted"
 }
