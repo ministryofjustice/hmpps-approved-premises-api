@@ -92,6 +92,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -2687,6 +2688,8 @@ class BookingServiceTest {
             it.applicationId == application.id &&
               it.crn == application.crn &&
               it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
+              it.metadata.contains(MetaDataName.CAS1_CANCELLATION_ID) &&
+              it.metadata.get(MetaDataName.CAS1_CANCELLATION_ID) == result.value.id.toString() &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(

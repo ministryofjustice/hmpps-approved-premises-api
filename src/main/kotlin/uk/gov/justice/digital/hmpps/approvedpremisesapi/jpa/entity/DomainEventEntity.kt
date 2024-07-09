@@ -184,6 +184,7 @@ enum class MetaDataName {
   CAS1_PLACEMENT_APPLICATION_ID,
   CAS1_REQUESTED_AP_TYPE,
   CAS1_PLACEMENT_REQUEST_ID,
+  CAS1_CANCELLATION_ID,
 }
 
 enum class DomainEventType(val typeName: String, val typeDescription: String, val timelineEventType: TimelineEventType?) {
