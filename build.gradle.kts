@@ -76,7 +76,7 @@ dependencies {
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
