@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 echo "==> Starting database..."
 if [ "$(uname -m)" = "arm64" ]; then
-  docker-compose -f docker-compose.yml -f docker-compose.arm64.yml up -d
+  docker compose -f docker-compose.yml -f docker-compose.arm64.yml up -d
 else
-  docker-compose -f docker-compose.yml up -d
+  docker compose -f docker-compose.yml up -d
 fi
