@@ -54,6 +54,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
+import java.time.LocalDate
 
 class AssessmentTransformerTest {
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
@@ -278,6 +279,8 @@ class AssessmentTransformerTest {
       val assessment = temporaryAccommodationAssessmentFactory
         .withDecision(null)
         .withoutAllocatedToUser()
+        .withReleaseDate(LocalDate.now())
+        .withAccommodationRequiredFromDate(LocalDate.now())
         .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
@@ -291,6 +294,8 @@ class AssessmentTransformerTest {
     fun `transformJpaToApi for Temporary Accommodation sets an inReview status when there is an allocated user`() {
       val assessment = temporaryAccommodationAssessmentFactory
         .withDecision(null)
+        .withReleaseDate(LocalDate.now())
+        .withAccommodationRequiredFromDate(LocalDate.now())
         .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
@@ -304,6 +309,8 @@ class AssessmentTransformerTest {
     fun `transformJpaToApi for Temporary Accommodation sets a readyToPlace status when the assessment is approved`() {
       val assessment = temporaryAccommodationAssessmentFactory
         .withDecision(JpaAssessmentDecision.ACCEPTED)
+        .withReleaseDate(LocalDate.now())
+        .withAccommodationRequiredFromDate(LocalDate.now())
         .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
@@ -318,6 +325,8 @@ class AssessmentTransformerTest {
       val assessment = temporaryAccommodationAssessmentFactory
         .withDecision(JpaAssessmentDecision.ACCEPTED)
         .withCompletedAt(OffsetDateTime.now())
+        .withReleaseDate(LocalDate.now())
+        .withAccommodationRequiredFromDate(LocalDate.now())
         .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
@@ -331,6 +340,8 @@ class AssessmentTransformerTest {
     fun `transformJpaToApi for Temporary Accommodation sets a rejected status when the assessment is rejected`() {
       val assessment = temporaryAccommodationAssessmentFactory
         .withDecision(JpaAssessmentDecision.REJECTED)
+        .withReleaseDate(LocalDate.now())
+        .withAccommodationRequiredFromDate(LocalDate.now())
         .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
@@ -344,6 +355,8 @@ class AssessmentTransformerTest {
     fun `transformJpaToApi for Temporary Accommodation serializes the summary data blob correctly`() {
       val assessment = temporaryAccommodationAssessmentFactory
         .withSummaryData("{\"num\": 50, \"text\": \"Hello world!\"}")
+        .withReleaseDate(LocalDate.now())
+        .withAccommodationRequiredFromDate(LocalDate.now())
         .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
