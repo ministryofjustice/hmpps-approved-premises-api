@@ -577,34 +577,56 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get single application returns 200 with correct body`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
           val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema(
-              """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-            )
+            withPermissiveSchema()
           }
 
           val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withData("""{"thingId":123}""")
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+          assertThat(responseBody.id).isEqualTo(applicationEntity.id)
+          assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
+          assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
+          assertThat(responseBody.createdByUserId).isEqualTo(applicationEntity.createdByUser.id)
+          assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
+          assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
+          assertThat(responseBody.schemaVersion).isEqualTo(applicationEntity.schemaVersion.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for application creator with LAO access returns 200`() {
+      `Given a User` { applicationCreator, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, _ ->
+          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(
+              approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(applicationCreator)
             withData(
               """
           {
@@ -614,11 +636,13 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(
-            userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
+          ApDeliusContext_mockUserAccess(
+            caseAccess = CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .withUserExcluded(false)
+              .withUserRestricted(false)
+              .produce(),
+            username = applicationCreator.deliusUsername,
           )
 
           val rawResponseBody = webTestClient.get()
@@ -633,13 +657,87 @@ class ApplicationTest : IntegrationTestBase() {
 
           val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-          assertThat(responseBody).matches {
-            applicationEntity.id == it.id && applicationEntity.crn == it.person.crn &&
-              applicationEntity.createdAt.toInstant() == it.createdAt &&
-              applicationEntity.createdByUser.id == it.createdByUserId &&
-              applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-              serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-              newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+          assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for user who is not creator returns 403`() {
+      `Given a User` { applicationCreator, _ ->
+        `Given a User` { _, otherUserJwt ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, _ ->
+            val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(
+                approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+              )
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(applicationCreator)
+              withData(
+                """
+          {
+             "thingId": 123
+          }
+          """,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $otherUserJwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for user who is not creator but has LAO Qualification returns RestrictedPerson`() {
+      `Given a User` { applicationCreator, _ ->
+        `Given a User`(qualifications = listOf(UserQualification.LAO)) { _, otherUserJwt ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, _ ->
+            val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(
+                approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+              )
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(applicationCreator)
+              withData(
+                """
+          {
+             "thingId": 123
+          }
+          """,
+              )
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $otherUserJwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+            assertThat(responseBody.person).isInstanceOf(RestrictedPerson::class.java)
           }
         }
       }
@@ -677,7 +775,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns successfully when a person has no NOMS number`() {
+    fun `Get single application returns 200 when a person has no NOMS number`() {
       `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -722,7 +820,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
+    fun `Get single application returns 200 when the person cannot be fetched from the prisons API`() {
       `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -965,6 +1063,150 @@ class ApplicationTest : IntegrationTestBase() {
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
                 newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
             }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for application creator with LAO access returns 200`() {
+      `Given a User` { createdByUser, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(createdByUser)
+            withProbationRegion(createdByUser.probationRegion)
+            withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          CommunityAPI_mockOffenderUserAccessCall(
+            createdByUser.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, TemporaryAccommodationApplication::class.java)
+
+          assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for user who is not creator returns 403`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { otherUser, otherUserJwt ->
+        `Given a User`(probationRegion = otherUser.probationRegion) { createdByUser, _ ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $otherUserJwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for user who is not creator but has LAO Qualification returns RestrictedPerson`() {
+      `Given a User`(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        qualifications = listOf(UserQualification.LAO),
+      ) { otherUser, otherUserJwt ->
+        `Given a User`(probationRegion = otherUser.probationRegion) { createdByUser, _ ->
+          `Given an Offender`(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $otherUserJwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isForbidden
           }
         }
       }
