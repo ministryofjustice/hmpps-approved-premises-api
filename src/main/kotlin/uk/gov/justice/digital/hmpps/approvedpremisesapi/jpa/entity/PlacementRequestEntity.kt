@@ -28,7 +28,7 @@ import java.util.UUID
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
-  fun findByApplicationId(applicationId: UUID): List<PlacementRequestEntity>
+  fun findByApplication_id(applicationId: UUID): List<PlacementRequestEntity>
 
   fun findByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementRequestEntity>
 

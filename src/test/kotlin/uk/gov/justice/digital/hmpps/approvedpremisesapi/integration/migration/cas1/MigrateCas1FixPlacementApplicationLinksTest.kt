@@ -97,7 +97,7 @@ class MigrateCas1FixPlacementApplicationLinksTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.cas1FixPlacementAppLinks)
 
-        val updatedPlacementRequests = placementRequestRepository.findByApplicationId(application.id)
+        val updatedPlacementRequests = placementRequestRepository.findByApplication_id(application.id)
         assertThat(updatedPlacementRequests).hasSize(1)
         assertThat(updatedPlacementRequests[0].placementApplication!!.id).isEqualTo(placementApplication.id)
       }
