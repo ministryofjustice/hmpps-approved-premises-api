@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -131,7 +132,11 @@ class ApplicationsController(
       metadata?.toHeaders(),
     ).body(
       applications.map {
-        getPersonDetailAndTransformToSummary(it, user)
+        getPersonDetailAndTransformToSummary(
+          application = it,
+          user = user,
+          ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
+        )
       },
     )
   }
@@ -604,8 +609,9 @@ class ApplicationsController(
   private fun getPersonDetailAndTransformToSummary(
     application: JPAApplicationSummary,
     user: UserEntity,
+    ignoreLaoRestrictions: Boolean = false,
   ): ApplicationSummary {
-    val personInfo = offenderService.getInfoForPerson(application.getCrn(), user.deliusUsername, false)
+    val personInfo = offenderService.getInfoForPerson(application.getCrn(), user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
   }

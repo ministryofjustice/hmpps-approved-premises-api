@@ -2932,7 +2932,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get applications all LAO with LAO qualification returns 200 and restricted person`() {
+    fun `Get applications all LAO with LAO qualification returns 200 and full person`() {
       `Given a User`(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
         val (offenderDetails, _) = `Given an Offender`(
           offenderDetailsConfigBlock = {
@@ -2970,7 +2970,7 @@ class ApplicationTest : IntegrationTestBase() {
           .bodyAsListOfObjects<ApplicationSummary>()
 
         assertThat(response).hasSize(1)
-        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
+        assertThat(response[0].person).isInstanceOf(FullPerson::class.java)
       }
     }
 
