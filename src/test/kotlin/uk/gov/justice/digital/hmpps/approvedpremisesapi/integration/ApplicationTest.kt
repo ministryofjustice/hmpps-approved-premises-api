@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
@@ -2828,28 +2830,10 @@ class ApplicationTest : IntegrationTestBase() {
           val applicationId2 = UUID.randomUUID()
 
           val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema(
-              """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-            )
+            withPermissiveSchema()
           }
 
-          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
             withId(applicationId1)
             withCrn(offenderDetails.otherIds.crn)
@@ -2900,6 +2884,93 @@ class ApplicationTest : IntegrationTestBase() {
 
           assertThat(responseBody.count()).isEqualTo(2)
         }
+      }
+    }
+
+    @Test
+    fun `Get applications all LAO without qualification returns 200 and restricted person`() {
+      `Given a User` { userEntity, jwt ->
+
+        val (offenderDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(
+            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          )
+          withId(UUID.randomUUID())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/applications/all")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
+      }
+    }
+
+    @Test
+    fun `Get applications all LAO with LAO qualification returns 200 and restricted person`() {
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+        val (offenderDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(
+            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          )
+          withId(UUID.randomUUID())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/applications/all")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
       }
     }
 

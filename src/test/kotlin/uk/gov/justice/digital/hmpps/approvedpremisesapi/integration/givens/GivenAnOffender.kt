@@ -81,8 +81,8 @@ fun IntegrationTestBase.`Given an Offender`(
   mockServerErrorForCommunityApi: Boolean = false,
   mockServerErrorForPrisonApi: Boolean = false,
   mockNotFoundErrorForPrisonApi: Boolean = false,
-  block: (offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit,
-) {
+  block: ((offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit)? = null,
+): Pair<OffenderDetailSummary, InmateDetail> {
   val (offenderDetails, inmateDetails) = `Given an Offender`(
     offenderDetailsConfigBlock,
     inmateDetailsConfigBlock,
@@ -91,7 +91,9 @@ fun IntegrationTestBase.`Given an Offender`(
     mockNotFoundErrorForPrisonApi,
   )
 
-  block(offenderDetails, inmateDetails)
+  block?.invoke(offenderDetails, inmateDetails)
+
+  return Pair(offenderDetails, inmateDetails)
 }
 
 fun IntegrationTestBase.`Given Some Offenders`(
