@@ -1768,7 +1768,7 @@ class BookingService(
   private fun findAndCloseCAS3Assessment(booking: BookingEntity, user: UserEntity) {
     booking.application?.let {
       val assessment =
-        assessmentRepository.findByApplicationIdAndReallocatedAtNull(booking.application!!.id)
+        assessmentRepository.findByApplication_IdAndReallocatedAtNull(booking.application!!.id)
       if (assessment != null) {
         closeTransitionalAccommodationAssessment(assessment.id, user, booking)
       }

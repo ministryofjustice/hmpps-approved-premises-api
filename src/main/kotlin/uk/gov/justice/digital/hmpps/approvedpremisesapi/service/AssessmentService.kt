@@ -188,7 +188,7 @@ class AssessmentService(
   ): AuthorisableActionResult<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
-    val assessment = assessmentRepository.findByApplicationIdAndReallocatedAtNull(applicationID)
+    val assessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
       ?: return AuthorisableActionResult.NotFound()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {

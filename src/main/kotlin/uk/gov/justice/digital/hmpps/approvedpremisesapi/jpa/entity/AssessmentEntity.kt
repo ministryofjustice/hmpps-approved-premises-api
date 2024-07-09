@@ -173,7 +173,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     page: Pageable? = null,
   ): Page<DomainAssessmentSummary>
 
-  fun findByApplicationIdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
+  @Suppress("FunctionNaming")
+  fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 
   @Query("SELECT a from ApprovedPremisesAssessmentEntity a WHERE a.dueAt IS NULL")
   fun findAllWithNullDueAt(pageable: Pageable?): Slice<ApprovedPremisesAssessmentEntity>

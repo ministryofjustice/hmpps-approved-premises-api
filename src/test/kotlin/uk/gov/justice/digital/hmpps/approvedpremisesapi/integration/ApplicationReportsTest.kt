@@ -527,7 +527,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity, shortNotice: Boolean = false): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     assessment.data = if (shortNotice) {
@@ -581,7 +581,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
 
     assessment.data = "{}"
     assessment.allocatedToUser = assessorEntity
