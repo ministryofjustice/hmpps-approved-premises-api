@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
@@ -94,6 +96,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -120,7 +123,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetAllApplications {
+  inner class GetApplications {
 
     @Test
     fun `Get all applications without JWT returns 401`() {
@@ -232,21 +235,13 @@ class ApplicationTest : IntegrationTestBase() {
                 exclusion = false,
               )
 
-              val rawResponseBody = webTestClient.get()
+              val responseBody = webTestClient.get()
                 .uri("/applications")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
                 .isOk
-                .returnResult<String>()
-                .responseBody
-                .blockFirst()
-
-              val responseBody =
-                objectMapper.readValue(
-                  rawResponseBody,
-                  object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-                )
+                .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
               assertThat(responseBody).anyMatch {
                 outdatedApplicationEntityManagedByTeam.id == it.id &&
@@ -315,22 +310,14 @@ class ApplicationTest : IntegrationTestBase() {
                 exclusion = false,
               )
 
-              val rawResponseBody = webTestClient.get()
+              val responseBody = webTestClient.get()
                 .uri("/applications")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
                 .exchange()
                 .expectStatus()
                 .isOk
-                .returnResult<String>()
-                .responseBody
-                .blockFirst()
-
-              val responseBody =
-                objectMapper.readValue(
-                  rawResponseBody,
-                  object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
-                )
+                .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
 
               assertThat(responseBody).anyMatch {
                 application.id == it.id && application.crn == it.person.crn &&
@@ -405,22 +392,14 @@ class ApplicationTest : IntegrationTestBase() {
                 exclusion = false,
               )
 
-              val rawResponseBody = webTestClient.get()
+              val responseBody = webTestClient.get()
                 .uri("/applications")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
                 .exchange()
                 .expectStatus()
                 .isOk
-                .returnResult<String>()
-                .responseBody
-                .blockFirst()
-
-              val responseBody =
-                objectMapper.readValue(
-                  rawResponseBody,
-                  object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
-                )
+                .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
 
               assertThat(responseBody).anyMatch {
                 application.id == it.id &&
@@ -522,21 +501,13 @@ class ApplicationTest : IntegrationTestBase() {
             exclusion = false,
           )
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody).matches {
             val person = it[0].person as FullPerson
@@ -568,21 +539,13 @@ class ApplicationTest : IntegrationTestBase() {
         ) { _, _ ->
           val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody).matches {
             val person = it[0].person as FullPerson
@@ -2867,28 +2830,10 @@ class ApplicationTest : IntegrationTestBase() {
           val applicationId2 = UUID.randomUUID()
 
           val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema(
-              """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-            )
+            withPermissiveSchema()
           }
 
-          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
             withId(applicationId1)
             withCrn(offenderDetails.otherIds.crn)
@@ -2943,27 +2888,106 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get applications all LAO without qualification returns 200 and restricted person`() {
+      `Given a User` { userEntity, jwt ->
+
+        val (offenderDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(
+            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          )
+          withId(UUID.randomUUID())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/applications/all")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
+      }
+    }
+
+    @Test
+    fun `Get applications all LAO with LAO qualification returns 200 and full person`() {
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+        val (offenderDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(
+            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          )
+          withId(UUID.randomUUID())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/applications/all")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(FullPerson::class.java)
+      }
+    }
+
+    @Test
     fun `Get applications all returns twelve items if no page parameter passed`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
             .expectStatus()
             .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(12)
         }
@@ -2976,7 +3000,7 @@ class ApplicationTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=asc")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -2987,15 +3011,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(10)
         }
@@ -3009,22 +3025,14 @@ class ApplicationTest : IntegrationTestBase() {
           val crn = offenderDetails.otherIds.crn
           createTwelveApplications(crn, userEntity)
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?crnOrName=$crn")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
             .expectStatus()
             .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(12)
         }
@@ -3043,22 +3051,14 @@ class ApplicationTest : IntegrationTestBase() {
             val crn2 = offenderDetails2.otherIds.crn
             createTwelveApplications(crn2, userEntity)
 
-            val rawResponseBody = webTestClient.get()
+            val responseBody = webTestClient.get()
               .uri("/applications/all?crnOrName=$crn2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(
-                rawResponseBody,
-                object : TypeReference<List<ApplicationSummary>>() {},
-              )
+              .bodyAsListOfObjects<ApplicationSummary>()
 
             assertThat(responseBody.count()).isEqualTo(12)
           }
@@ -3078,7 +3078,7 @@ class ApplicationTest : IntegrationTestBase() {
             val crn2 = offenderDetails2.otherIds.crn
             createTwelveApplications(crn2, userEntity)
 
-            val rawResponseBody = webTestClient.get()
+            val responseBody = webTestClient.get()
               .uri("/applications/all?page=2&sortDirection=desc&crnOrName=$crn2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3089,15 +3089,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
               .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
               .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(
-                rawResponseBody,
-                object : TypeReference<List<ApplicationSummary>>() {},
-              )
+              .bodyAsListOfObjects<ApplicationSummary>()
 
             assertThat(responseBody.count()).isEqualTo(2)
           }
@@ -3137,7 +3129,7 @@ class ApplicationTest : IntegrationTestBase() {
             withCreatedAt(date3)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=desc&sortBy=createdAt")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3148,15 +3140,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].createdAt).isEqualTo(date3.toInstant())
@@ -3198,7 +3182,7 @@ class ApplicationTest : IntegrationTestBase() {
             withCreatedAt(date3)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=asc&sortBy=createdAt")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3209,15 +3193,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].createdAt).isEqualTo(date1.toInstant())
@@ -3259,7 +3235,7 @@ class ApplicationTest : IntegrationTestBase() {
             withArrivalDate(date3)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=desc&sortBy=arrivalDate")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3270,15 +3246,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].arrivalDate).isEqualTo(date3.toInstant())
@@ -3320,7 +3288,7 @@ class ApplicationTest : IntegrationTestBase() {
             withArrivalDate(date3)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=asc&sortBy=arrivalDate")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3331,15 +3299,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].arrivalDate).isEqualTo(date1.toInstant())
@@ -3418,7 +3378,7 @@ class ApplicationTest : IntegrationTestBase() {
             withRiskRatings(risk3)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=asc&sortBy=tier")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3429,15 +3389,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].tier).isEqualTo("M1")
@@ -3516,7 +3468,7 @@ class ApplicationTest : IntegrationTestBase() {
             withRiskRatings(risk3)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=desc&sortBy=tier")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3527,15 +3479,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].tier).isEqualTo("M3")
@@ -3568,7 +3512,7 @@ class ApplicationTest : IntegrationTestBase() {
             withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
           }
 
-          val rawResponseBody = webTestClient.get()
+          val responseBody = webTestClient.get()
             .uri("/applications/all?page=2&sortDirection=desc&status=assesmentInProgress")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3579,15 +3523,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(2)
           assertThat(responseBody[0].status).isEqualTo(ApiApprovedPremisesApplicationStatus.assesmentInProgress)
@@ -3625,7 +3561,7 @@ class ApplicationTest : IntegrationTestBase() {
               withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
             }
 
-            val rawResponseBody = webTestClient.get()
+            val responseBody = webTestClient.get()
               .uri("/applications/all?page=1&sortDirection=desc&crnOrName=Gareth")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -3636,15 +3572,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
               .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
               .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(
-                rawResponseBody,
-                object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-              )
+              .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
             assertThat(responseBody.count()).isEqualTo(10)
           }
