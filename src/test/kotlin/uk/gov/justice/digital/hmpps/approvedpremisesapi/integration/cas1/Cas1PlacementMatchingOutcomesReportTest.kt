@@ -41,7 +41,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
   fun `Get placement matching outcomes report returns 403 Forbidden if user does not have correct role`() {
     `Given a User` { _, jwt ->
       webTestClient.get()
-        .uri("/reports/placement-applications?year=2023&month=4")
+        .uri("/cas1/reports/placementMatchingOutcomes?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -54,7 +54,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
   fun `Get placement matching outcomes report returns 400 if month is provided and not within 1-12`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri("/reports/placement-applications?year=2023&month=-1")
+        .uri("/cas1/reports/placementMatchingOutcomes?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -442,7 +442,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
   private fun getReport(jwt: String, inlineAssertion: (input: List<ExpectedRows>) -> Unit) {
     webTestClient.get()
-      .uri("/reports/placement-matching-outcomes?year=$REPORT_YEAR&month=$REPORT_MONTH")
+      .uri("/cas1/reports/placementMatchingOutcomes?year=$REPORT_YEAR&month=$REPORT_MONTH")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()

@@ -215,7 +215,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   fun `Get application report returns 403 Forbidden if user does not have all regions access`() {
     `Given a User` { _, jwt ->
       webTestClient.get()
-        .uri("/reports/applications?year=2023&month=4")
+        .uri("/cas1/reports/applications?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -228,7 +228,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   fun `Get application report returns 400 if month is provided and not within 1-12`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri("/reports/applications?year=2023&month=-1")
+        .uri("/cas1/reports/applications?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -247,7 +247,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       val month = now.monthValue.toString()
 
       webTestClient.get()
-        .uri("/reports/applications?year=$year&month=$month")
+        .uri("/cas1/reports/applications?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
