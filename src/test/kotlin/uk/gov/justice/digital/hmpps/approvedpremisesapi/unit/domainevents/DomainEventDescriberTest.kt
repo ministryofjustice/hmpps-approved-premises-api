@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
@@ -30,8 +31,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
@@ -53,6 +63,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestFo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -71,8 +84,9 @@ import java.util.UUID
 class DomainEventDescriberTest {
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockAssessmentClarificationNoteRepository = mockk<AssessmentClarificationNoteRepository>()
+  private val mockBookingRepository = mockk<BookingRepository>()
 
-  private val domainEventDescriber = DomainEventDescriber(mockDomainEventService, mockAssessmentClarificationNoteRepository)
+  private val domainEventDescriber = DomainEventDescriber(mockDomainEventService, mockAssessmentClarificationNoteRepository, mockBookingRepository)
 
   @Test
   fun `Returns expected description for application submitted event`() {
@@ -235,10 +249,10 @@ class DomainEventDescriberTest {
     assertThat(result).isEqualTo("A placement was not made for the placement request.")
   }
 
-  @ParameterizedTest
-  @CsvSource(value = ["Reason A", "Reason B"])
-  fun `Returns expected description for booking cancelled event`(reason: String) {
+  @Test
+  fun `Throws exception for booking cancelled event when booking is not found`() {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
       BookingCancelledEnvelope(
@@ -246,14 +260,141 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
         eventDetails = BookingCancelledFactory()
-          .withCancellationReason(reason)
+          .withBookingId(bookingId)
+          .produce(),
+      )
+    }
+    every { mockBookingRepository.findByIdOrNull(any()) } returns null
+
+    val exception = assertThrows<RuntimeException> {
+      domainEventDescriber.getDescription(domainEventSummary)
+    }
+    assertThat(exception.message).isEqualTo("Booking ID $bookingId with cancellation not found")
+  }
+
+  @Test
+  fun `Throws exception for booking cancelled event when booking does not have one cancellation`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val bookingEntity = getBookingEntity()
+
+    every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
+      BookingCancelledEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = BookingCancelledFactory()
+          .withBookingId(bookingEntity.id)
           .produce(),
       )
     }
 
+    every { mockBookingRepository.findByIdOrNull(any()) } returns bookingEntity
+
+    val exception = assertThrows<RuntimeException> {
+      domainEventDescriber.getDescription(domainEventSummary)
+    }
+    assertThat(exception.message).isEqualTo("Booking ID ${bookingEntity.id} does not have one cancellation")
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = ["Reason A", "Reason B"])
+  fun `Returns expected description for booking cancelled event`(reason: String) {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val bookingEntity = getBookingEntity()
+    val cancellation = CancellationEntityFactory()
+      .withDefaultReason()
+      .withBooking(bookingEntity)
+      .produce()
+
+    bookingEntity.cancellations += cancellation
+
+    every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
+      BookingCancelledEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = BookingCancelledFactory()
+          .withBookingId(bookingEntity.id)
+          .withCancellationReason(reason)
+          .produce(),
+      )
+    }
+    every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The placement was cancelled. The reason was: '$reason'")
+    assertThat(result).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: '$reason'")
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = ["narrative A", "narrative B"])
+  fun `Returns expected description for booking cancelled event when reason is other with text narrative`(otherReasonText: String) {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val bookingEntity = getBookingEntity()
+    val cancellationOtherReason = CancellationReasonEntityFactory()
+      .withServiceScope(ServiceName.approvedPremises.value)
+      .withName("Other")
+      .withId(CancellationReasonRepository.CAS1_RELATED_OTHER_ID)
+      .produce()
+
+    val cancellation = CancellationEntityFactory()
+      .withReason(cancellationOtherReason)
+      .withOtherReason(otherReasonText)
+      .withBooking(bookingEntity)
+      .produce()
+
+    bookingEntity.cancellations += cancellation
+
+    every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
+      BookingCancelledEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = BookingCancelledFactory()
+          .withBookingId(bookingEntity.id)
+          .withCancellationReason(cancellationOtherReason.name)
+          .produce(),
+      )
+    }
+    every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other': $otherReasonText.")
+  }
+
+  @Test
+  fun `Returns expected description for booking cancelled event when reason is other without text narrative`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val bookingEntity = getBookingEntity()
+    val cancellationOtherReason = CancellationReasonEntityFactory()
+      .withServiceScope(ServiceName.approvedPremises.value)
+      .withName("Other")
+      .withId(CancellationReasonRepository.CAS1_RELATED_OTHER_ID)
+      .produce()
+    val cancellation = CancellationEntityFactory()
+      .withReason(cancellationOtherReason)
+      .withBooking(bookingEntity)
+      .produce()
+
+    bookingEntity.cancellations += cancellation
+
+    every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
+      BookingCancelledEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = BookingCancelledFactory()
+          .withBookingId(bookingEntity.id)
+          .withCancellationReason(cancellationOtherReason.name)
+          .produce(),
+      )
+    }
+    every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other'")
   }
 
   @Test
@@ -667,6 +808,33 @@ class DomainEventDescriberTest {
       "$query"
       """.trimIndent(),
     )
+  }
+
+  private fun getBookingEntity(): BookingEntity {
+    val premisesId = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+    val premisesName = "premisesName"
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    val premisesEntity = ApprovedPremisesEntityFactory()
+      .withId(premisesId)
+      .withName(premisesName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    return BookingEntityFactory()
+      .withId(bookingId)
+      .withPremises(premisesEntity)
+      .withArrivalDate(LocalDate.parse("2024-08-15"))
+      .withDepartureDate(LocalDate.parse("2024-08-18"))
+      .withStaffKeyWorkerCode(keyWorker.code)
+      .produce()
   }
 
   private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {

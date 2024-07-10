@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -24,6 +26,7 @@ import java.util.UUID
 class DomainEventDescriber(
   private val domainEventService: DomainEventService,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
+  private val bookingRepository: BookingRepository,
 ) {
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -121,9 +124,29 @@ class DomainEventDescriber(
     return event.describe { "A placement was not made for the placement request.$failureReason" }
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
-    return event.describe { "The placement was cancelled. The reason was: '${it.eventDetails.cancellationReason}'" }
+    return event.describe { data ->
+      val booking = bookingRepository.findByIdOrNull(data.eventDetails.bookingId)
+        ?: throw RuntimeException("Booking ID ${data.eventDetails.bookingId} with cancellation not found")
+      if (booking.cancellations.count() != 1) {
+        throw RuntimeException("Booking ID ${data.eventDetails.bookingId} does not have one cancellation")
+      }
+      val cancellation = booking.cancellations.first()
+      val otherReasonText =
+        if (cancellation.reason.id == CancellationReasonRepository.CAS1_RELATED_OTHER_ID &&
+          !cancellation.otherReason.isNullOrEmpty()
+        ) {
+          ": ${cancellation.otherReason}."
+        } else {
+          ""
+        }
+
+      "A placement at ${booking.premises.name} booked for " +
+        "${booking.arrivalDate.toUiFormat()} to ${booking.departureDate.toUiFormat()} " +
+        "was cancelled. The reason was: '${data.eventDetails.cancellationReason}'$otherReasonText"
+    }
   }
 
   private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): String? {
