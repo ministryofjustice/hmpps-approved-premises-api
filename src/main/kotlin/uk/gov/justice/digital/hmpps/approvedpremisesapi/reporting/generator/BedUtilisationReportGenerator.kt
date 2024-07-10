@@ -30,7 +30,11 @@ class BedUtilisationReportGenerator(
 
       val bedspace = this.bedspaceReportData
       val nonCancelledBookings =
-        this.bookingsReportData.filterNot { bookingCancellationReportData.map { it.bookingId }.contains(it.bookingId) }
+        this.bookingsReportData
+          .filterNot { bookingCancellationReportData.map { it.bookingId }.contains(it.bookingId) }
+          .groupBy { it.bookingId }
+          .mapValues { it.value.sortedByDescending { it.arrivalCreatedAt }.take(1) }
+          .map { it.value.first() }
       val nonCancelledVoids = this.lostBedReportData.filter { it.cancellationId == null }
 
       nonCancelledBookings
@@ -45,7 +49,8 @@ class BedUtilisationReportGenerator(
             booking.confirmationId == null -> provisionalDays += daysOfBookingInMonth
           }
 
-          val bookingTurnaround = this.bookingTurnaroundReportData.filter { it.bookingId == booking.bookingId }.maxByOrNull { it.createdAt }
+          val bookingTurnaround =
+            this.bookingTurnaroundReportData.filter { it.bookingId == booking.bookingId }.maxByOrNull { it.createdAt }
           if (bookingTurnaround != null) {
             val turnaroundStartDate = booking.departureDate.plusDays(1)
             val turnaroundEndDate =

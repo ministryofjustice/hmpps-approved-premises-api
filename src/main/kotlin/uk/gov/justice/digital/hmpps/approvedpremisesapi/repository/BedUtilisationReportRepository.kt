@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.repository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -49,6 +50,7 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
       booking.departure_date AS departureDate,
       CAST(bed.id AS VARCHAR) AS bedId,
       CAST(arrival.id AS VARCHAR) AS arrivalId,
+      arrival.created_at AS arrivalCreatedAt,
       CAST(confirmation.id AS VARCHAR) AS confirmationId
     From bookings booking
     INNER JOIN beds bed ON bed.id = booking.bed_id
@@ -153,6 +155,7 @@ interface BedUtilisationBookingReportData {
   val departureDate: LocalDate
   val bedId: String
   val arrivalId: String?
+  val arrivalCreatedAt: Instant?
   val confirmationId: String?
 }
 
@@ -160,7 +163,7 @@ interface BedUtilisationBookingCancellationReportData {
   val cancellationId: String
   val bedId: String
   val bookingId: String
-  val createdAt: LocalDate
+  val createdAt: Instant
 }
 
 interface BedUtilisationBookingTurnaroundReportData {
@@ -168,7 +171,7 @@ interface BedUtilisationBookingTurnaroundReportData {
   val bedId: String
   val bookingId: String
   val workingDayCount: Int
-  val createdAt: LocalDate
+  val createdAt: Instant
 }
 
 interface BedUtilisationLostBedReportData {
