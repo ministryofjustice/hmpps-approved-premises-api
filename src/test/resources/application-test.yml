@@ -211,8 +211,4 @@ notify:
   emailaddresses:
     cas2assessors: "assessors@example.com"
 
-feature-flags:
-  local-overrides:
-    cas1-provide-offline-application-events-in-personal-timeline: true
-
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
