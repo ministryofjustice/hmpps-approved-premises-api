@@ -57,6 +57,10 @@ class PlacementApplicationService(
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
+  companion object {
+    val ROLE_REQUIRED_TO_ASSESS = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_ASSESSOR)
+  }
+
   fun getAllSubmittedNonReallocatedApplications(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
   }
@@ -142,7 +146,7 @@ class PlacementApplicationService(
       )
     }
 
-    if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
+    if (!assigneeUser.hasAnyRole(ROLE_REQUIRED_TO_ASSESS)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(
           ValidationErrors().apply {

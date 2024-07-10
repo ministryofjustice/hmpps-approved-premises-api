@@ -90,7 +90,7 @@ class TasksTest {
       }
 
       @Test
-      fun `Get all tasks without workflow manager or matcher permissions returns 403`() {
+      fun `Get all tasks without workflow manager, matcher or assessor permissions returns 403`() {
         `Given a User` { _, jwt ->
           webTestClient.get()
             .uri("/tasks")
@@ -102,8 +102,8 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = UserRole::class, names = ["CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-      fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER OR CAS1_MATCHER roles`(role: UserRole) {
+      @EnumSource(value = UserRole::class, names = ["CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR"])
+      fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER, CAS1_MATCHER or CAS1_ASSESSOR roles`(role: UserRole) {
         `Given a User`(roles = listOf(role)) { _, jwt ->
           `Given a User` { otherUser, _ ->
             `Given an Offender` { offenderDetails, _ ->
@@ -2237,6 +2237,10 @@ class TasksTest {
                       ),
                       userTransformer.transformJpaToAPIUserWithWorkload(
                         matcherUser2,
+                        UserWorkload(0, 0, 0),
+                      ),
+                      userTransformer.transformJpaToAPIUserWithWorkload(
+                        assessorUser,
                         UserWorkload(0, 0, 0),
                       ),
                       userTransformer.transformJpaToAPIUserWithWorkload(
