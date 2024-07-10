@@ -87,7 +87,7 @@ import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-@Suppress("ReturnCount", "CyclomaticComplexMethod")
+@Suppress("ReturnCount", "CyclomaticComplexMethod", "LargeClass")
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer

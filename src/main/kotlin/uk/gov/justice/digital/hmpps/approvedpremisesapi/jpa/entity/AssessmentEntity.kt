@@ -293,6 +293,7 @@ class ApprovedPremisesAssessmentEntity(
 @DiscriminatorValue("temporary-accommodation")
 @Table(name = "temporary_accommodation_assessments")
 @PrimaryKeyJoinColumn(name = "assessment_id")
+@Suppress("LongParameterList")
 class TemporaryAccommodationAssessmentEntity(
   id: UUID,
   application: ApplicationEntity,
