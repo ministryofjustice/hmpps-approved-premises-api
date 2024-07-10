@@ -43,8 +43,8 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var referralRejectionReason: Yielded<ReferralRejectionReasonEntity?> = { null }
   private var referralRejectionReasonDetail: Yielded<String?> = { null }
-  private var releaseDate: Yielded<LocalDate?> = { LocalDate.now().plusDays(20) }
-  private var accommodationRequiredFromDate: Yielded<LocalDate?> = { LocalDate.now().plusDays(20) }
+  private var releaseDate: Yielded<LocalDate?> = { null }
+  private var accommodationRequiredFromDate: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

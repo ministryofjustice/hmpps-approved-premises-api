@@ -2379,9 +2379,6 @@ components:
             arrivalDate:
               type: string
               format: date-time
-            personReleaseDate:
-              type: string
-              format: date
             offenceId:
               type: string
           required:
