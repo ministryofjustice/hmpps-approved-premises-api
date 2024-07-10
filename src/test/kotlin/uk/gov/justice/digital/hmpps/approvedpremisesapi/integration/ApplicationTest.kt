@@ -700,7 +700,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator but has LAO Qualification returns RestrictedPerson`() {
+    fun `Get single LAO application for user who is not creator but has LAO Qualification returns FullPerson`() {
       `Given a User` { applicationCreator, _ ->
         `Given a User`(qualifications = listOf(UserQualification.LAO)) { _, otherUserJwt ->
           `Given an Offender`(
@@ -737,7 +737,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-            assertThat(responseBody.person).isInstanceOf(RestrictedPerson::class.java)
+            assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
           }
         }
       }
