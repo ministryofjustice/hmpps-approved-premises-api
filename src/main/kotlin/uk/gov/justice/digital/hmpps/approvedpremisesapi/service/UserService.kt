@@ -148,13 +148,13 @@ class UserService(
       userQualifications.add(UserQualification.LAO)
     }
 
-    val requiredRole = when (allocationType) {
-      AllocationType.Assessment -> UserRole.CAS1_ASSESSOR
-      AllocationType.PlacementRequest -> UserRole.CAS1_MATCHER
-      AllocationType.PlacementApplication -> UserRole.CAS1_MATCHER
+    val requiredRoles = when (allocationType) {
+      AllocationType.Assessment -> listOf(UserRole.CAS1_ASSESSOR)
+      AllocationType.PlacementRequest -> listOf(UserRole.CAS1_MATCHER)
+      AllocationType.PlacementApplication -> PlacementApplicationService.ROLE_REQUIRED_TO_ASSESS
     }
 
-    var users = userRepository.findActiveUsersWithRole(requiredRole)
+    var users = userRepository.findActiveUsersWithAtLeastOneRole(requiredRoles)
 
     userQualifications.forEach { qualification ->
       users = users.filter { it.hasQualification(qualification) }

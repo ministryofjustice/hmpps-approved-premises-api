@@ -2240,6 +2240,10 @@ class TasksTest {
                         UserWorkload(0, 0, 0),
                       ),
                       userTransformer.transformJpaToAPIUserWithWorkload(
+                        assessorUser,
+                        UserWorkload(0, 0, 0),
+                      ),
+                      userTransformer.transformJpaToAPIUserWithWorkload(
                         assessorAndMatcherUser,
                         UserWorkload(0, 0, 0),
                       ),

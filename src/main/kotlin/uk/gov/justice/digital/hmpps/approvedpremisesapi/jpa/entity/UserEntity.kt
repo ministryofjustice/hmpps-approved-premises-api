@@ -37,7 +37,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role in (:roles) and u.isActive = true")
-  fun findActiveUsersWithRoles(roles: List<UserRole>): List<UserEntity>
+  fun findActiveUsersWithAtLeastOneRole(roles: List<UserRole>): List<UserEntity>
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.qualifications q where q.qualification = :qualification and u.isActive = true")
   fun findActiveUsersWithQualification(qualification: UserQualification): List<UserEntity>
@@ -276,6 +276,7 @@ data class UserEntity(
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
+  fun hasAnyRole(userRoles: List<UserRole>) = userRoles.any(::hasRole)
   fun hasQualification(userQualification: UserQualification) =
     qualifications.any { it.qualification === userQualification }
 

@@ -14,7 +14,7 @@ class Cas3UpdateUsersPduFromCommunityApiJob(
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
   override fun process() {
     val cas3Roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER, UserRole.CAS3_REPORTER)
-    userRepository.findActiveUsersWithRoles(cas3Roles).forEach {
+    userRepository.findActiveUsersWithAtLeastOneRole(cas3Roles).forEach {
       migrationLogger.info("Updating user PDU. User id ${it.id}")
       try {
         userService.updateUserPduFromCommunityApiById(it.id)
