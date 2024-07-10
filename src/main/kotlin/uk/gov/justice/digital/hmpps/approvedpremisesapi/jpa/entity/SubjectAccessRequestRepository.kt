@@ -431,7 +431,13 @@ from
     return toJsonString(result)
   }
 
-  fun placementApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?, serviceName: ServiceName = ServiceName.approvedPremises): String {
+  fun placementApplications(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+    serviceName: ServiceName = ServiceName.approvedPremises,
+  ): String {
     var result = jdbcTemplate.queryForMap(
       """
        select json_agg(placement_applications) 
@@ -665,7 +671,12 @@ from
     return toJsonString(result)
   }
 
-  fun bookingNotMades(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun bookingNotMades(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String {
     var result = jdbcTemplate.queryForMap(
       """
          select json_agg(booking_not_mades) as json from ( 
@@ -693,6 +704,86 @@ from
           )booking_not_mades
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
+
+  fun domainEvents(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+    serviceName: String = "CAS1",
+  ): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+         select json_agg(domain_events) as json from ( 
+             select 
+               de.id,
+               de.application_id,
+               de.crn,
+               de."type",
+               de.occurred_at,
+               de.created_at,
+               de."data",
+               de.booking_id,
+               de.service,
+               de.assessment_id,
+               u."name" as triggered_by_user,
+               de.noms_number,
+               de.trigger_source
+             from
+             	  domain_events de 
+             inner join users u on 
+             	  u.id = de.triggered_by_user_id
+             where
+                de.service = :service_name and
+                (de.crn = :crn
+                      or de.noms_number = :noms_number )
+             and (:start_date is null or de.created_at >= :start_date)
+             and (:end_date is null or de.created_at <= :end_date) 
+         ) domain_events
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate)
+        .addValue("service_name", serviceName),
+    )
+    return toJsonString(result)
+  }
+
+  fun domainEventMetadata(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+    serviceName: String = "CAS1",
+  ): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+           select json_agg(domain_events_metadata) as json
+           from ( 
+               select 
+                   de.crn,
+                   de.noms_number,
+                   de.created_at,
+                   dem.domain_event_id,
+                   dem."name",
+                   dem.value
+               from 
+                   domain_events_metadata dem 
+               inner join domain_events de on 
+                   de.id = dem.domain_event_id
+               where
+                  de.service = :service_name and
+                  (de.crn = :crn
+                       or de.noms_number = :noms_number )
+               and (:start_date is null or de.created_at >= :start_date)
+               and (:end_date is null or de.created_at <= :end_date) 
+           ) domain_events_metadata
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate)
+        .addValue("service_name", serviceName),
     )
     return toJsonString(result)
   }

@@ -22,7 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -43,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 
 open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   @Autowired
@@ -84,236 +88,214 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   }
   protected fun offlineApplicationJson(booking: BookingEntity) =
     """
-        [
-          {
-            "crn": "${booking.crn}",
-            "noms_number": "${booking.nomsNumber}",
-            "offline_application_id":"${booking.offlineApplication!!.id}",
-            "booking_id":"${booking.id}",
-            "created_at":"$CREATED_AT"
-          }
-        ]
+      {
+        "crn": "${booking.crn}",
+        "noms_number": "${booking.nomsNumber}",
+        "offline_application_id":"${booking.offlineApplication!!.id}",
+        "booking_id":"${booking.id}",
+        "created_at":"$CREATED_AT"
+      }
     """.trimIndent()
 
   protected fun placementRequirementCriteriaJson(placementRequirements: PlacementRequirementsEntity): String =
     """
-        [
-           {
-              "crn": "${placementRequirements.application.crn}",
-              "noms_number": "${placementRequirements.application.nomsNumber}",
-              "placement_requirement_id": "${placementRequirements.id}",
-              "criteria_name": "${placementRequirements.desirableCriteria[0].name}",
-              "service_scope": "${placementRequirements.desirableCriteria[0].serviceScope}",
-              "model_scope": "${placementRequirements.desirableCriteria[0].modelScope}",
-              "property_name": "${placementRequirements.desirableCriteria[0].propertyName}",
-              "is_active": ${placementRequirements.desirableCriteria[0].isActive},
-              "criteria_type": "DESIRABLE"
-          },
-          {
-              "crn": "${placementRequirements.application.crn}",
-              "noms_number": "${placementRequirements.application.nomsNumber}",
-              "placement_requirement_id": "${placementRequirements.id}",
-              "criteria_name": "${placementRequirements.essentialCriteria[0].name}",
-              "service_scope": "${placementRequirements.essentialCriteria[0].serviceScope}",
-              "model_scope": "${placementRequirements.essentialCriteria[0].modelScope}",
-              "property_name": "${placementRequirements.essentialCriteria[0].propertyName}",
-              "is_active": ${placementRequirements.essentialCriteria[0].isActive},
-              "criteria_type": "ESSENTIAL"
-          }
-        ]
+      {
+          "crn": "${placementRequirements.application.crn}",
+          "noms_number": "${placementRequirements.application.nomsNumber}",
+          "placement_requirement_id": "${placementRequirements.id}",
+          "criteria_name": "${placementRequirements.desirableCriteria[0].name}",
+          "service_scope": "${placementRequirements.desirableCriteria[0].serviceScope}",
+          "model_scope": "${placementRequirements.desirableCriteria[0].modelScope}",
+          "property_name": "${placementRequirements.desirableCriteria[0].propertyName}",
+          "is_active": ${placementRequirements.desirableCriteria[0].isActive},
+          "criteria_type": "DESIRABLE"
+      },
+      {
+          "crn": "${placementRequirements.application.crn}",
+          "noms_number": "${placementRequirements.application.nomsNumber}",
+          "placement_requirement_id": "${placementRequirements.id}",
+          "criteria_name": "${placementRequirements.essentialCriteria[0].name}",
+          "service_scope": "${placementRequirements.essentialCriteria[0].serviceScope}",
+          "model_scope": "${placementRequirements.essentialCriteria[0].modelScope}",
+          "property_name": "${placementRequirements.essentialCriteria[0].propertyName}",
+          "is_active": ${placementRequirements.essentialCriteria[0].isActive},
+          "criteria_type": "ESSENTIAL"
+      }
     """.trimIndent()
 
   protected fun placementRequirementJson(placementRequirement: PlacementRequirementsEntity): String =
     """
-      [
-          {
-            "crn": "${placementRequirement.application.crn}",
-            "noms_number": "${placementRequirement.application.nomsNumber}",
-            "application_id": "${placementRequirement.application.id}",
-            "assessment_id": "${placementRequirement.assessment.id}",
-            "placement_requirements_id": "${placementRequirement.id}",
-            "gender": "${placementRequirement.gender.value.uppercase()}",
-            "ap_type": "${placementRequirement.apType.value.uppercase()}",
-            "outcode": "${placementRequirement.postcodeDistrict.outcode}",
-            "radius": ${placementRequirement.radius},
-            "created_at": "$CREATED_AT"
-          }
-      ]
+      {
+        "crn": "${placementRequirement.application.crn}",
+        "noms_number": "${placementRequirement.application.nomsNumber}",
+        "application_id": "${placementRequirement.application.id}",
+        "assessment_id": "${placementRequirement.assessment.id}",
+        "placement_requirements_id": "${placementRequirement.id}",
+        "gender": "${placementRequirement.gender.value.uppercase()}",
+        "ap_type": "${placementRequirement.apType.value.uppercase()}",
+        "outcode": "${placementRequirement.postcodeDistrict.outcode}",
+        "radius": ${placementRequirement.radius},
+        "created_at": "$CREATED_AT"
+      }
     """.trimIndent()
 
   protected fun approvedPremisesPlacementRequestsJson(placementRequest: PlacementRequestEntity): String =
     """
-      [
-          {
-            "crn": "${placementRequest.application.crn}",
-            "noms_number": "${placementRequest.application.nomsNumber}",
-            "expected_arrival": "$ARRIVED_AT_DATE_ONLY",
-            "duration": ${placementRequest.duration},
-            "created_at": "$CREATED_AT",
-            "placement_application_id": "${placementRequest.placementApplication?.id}",
-            "booking_id": "${placementRequest.booking?.id}",
-            "application_id": "${placementRequest.application.id}",
-            "assessment_id": "${placementRequest.assessment.id}",
-            "notes": "${placementRequest.notes}",
-            "is_parole": ${placementRequest.isParole},
-            "is_withdrawn": ${placementRequest.isWithdrawn},
-            "withdrawal_reason": "${placementRequest.withdrawalReason}",
-            "due_at": "$DUE_AT"
-          }
-      ]
+      {
+        "crn": "${placementRequest.application.crn}",
+        "noms_number": "${placementRequest.application.nomsNumber}",
+        "expected_arrival": "$ARRIVED_AT_DATE_ONLY",
+        "duration": ${placementRequest.duration},
+        "created_at": "$CREATED_AT",
+        "placement_application_id": "${placementRequest.placementApplication?.id}",
+        "booking_id": "${placementRequest.booking?.id}",
+        "application_id": "${placementRequest.application.id}",
+        "assessment_id": "${placementRequest.assessment.id}",
+        "notes": "${placementRequest.notes}",
+        "is_parole": ${placementRequest.isParole},
+        "is_withdrawn": ${placementRequest.isWithdrawn},
+        "withdrawal_reason": "${placementRequest.withdrawalReason}",
+        "due_at": "$DUE_AT"
+      }
     """.trimIndent()
 
   protected fun approvedPremisesPlacementApplicationsJson(placementApplication: PlacementApplicationEntity): String =
     """
-      [
-        {
-          "crn": "${placementApplication.application.crn}",
-          "noms_number": "${placementApplication.application.nomsNumber}",
-          "application_id": "${placementApplication.application.id}",
-          "data": $DATA_JSON_SIMPLE,
-          "document": $DOCUMENT_JSON_SIMPLE,
-          "created_at": "$CREATED_AT_NO_TZ",
-          "submitted_at": "$SUBMITTED_AT_NO_TZ" ,
-          "allocated_at": null,
-          "reallocated_at": null,
-          "due_at": null,
-          "decision": "${placementApplication.decision}",
-          "decision_made_at": "$DECISION_MADE_AT_NO_TZ" ,
-          "placement_type": "${PlacementType.ADDITIONAL_PLACEMENT}",
-          "is_withdrawn": ${placementApplication.isWithdrawn},
-          "withdrawal_reason": "${placementApplication.withdrawalReason}",
-          "created_by_user": "${placementApplication.createdByUser.name}",
-          "allocated_user": null
-        }
-      ] 
+      {
+        "crn": "${placementApplication.application.crn}",
+        "noms_number": "${placementApplication.application.nomsNumber}",
+        "application_id": "${placementApplication.application.id}",
+        "data": $DATA_JSON_SIMPLE,
+        "document": $DOCUMENT_JSON_SIMPLE,
+        "created_at": "$CREATED_AT_NO_TZ",
+        "submitted_at": "$SUBMITTED_AT_NO_TZ" ,
+        "allocated_at": null,
+        "reallocated_at": null,
+        "due_at": null,
+        "decision": "${placementApplication.decision}",
+        "decision_made_at": "$DECISION_MADE_AT_NO_TZ" ,
+        "placement_type": "${PlacementType.ADDITIONAL_PLACEMENT}",
+        "is_withdrawn": ${placementApplication.isWithdrawn},
+        "withdrawal_reason": "${placementApplication.withdrawalReason}",
+        "created_by_user": "${placementApplication.createdByUser.name}",
+        "allocated_user": null
+      }
     """.trimIndent()
 
   protected fun appealsJson(appeal: AppealEntity): String =
     """
-      [
-        {
-            "crn": "${appeal.application.crn}" ,
-            "noms_number": "${appeal.application.nomsNumber}", 
-            "appeal_id": "${appeal.id}",
-            "application_id": "${appeal.application.id}",
-            "assessment_id": "${appeal.assessment.id}",
-            "appeal_date": "$APPEAL_DATE_ONLY",
-            "appeal_detail": "${appeal.appealDetail}",
-            "decision" : "${appeal.decision}",
-            "decision_detail": "${appeal.decisionDetail}" ,
-            "appeal_created_at": "$CREATED_AT" ,
-            "created_by_user" :  "${appeal.createdBy.name}"
-        }
-      ]
+      {
+          "crn": "${appeal.application.crn}" ,
+          "noms_number": "${appeal.application.nomsNumber}", 
+          "appeal_id": "${appeal.id}",
+          "application_id": "${appeal.application.id}",
+          "assessment_id": "${appeal.assessment.id}",
+          "appeal_date": "$APPEAL_DATE_ONLY",
+          "appeal_detail": "${appeal.appealDetail}",
+          "decision" : "${appeal.decision}",
+          "decision_detail": "${appeal.decisionDetail}" ,
+          "appeal_created_at": "$CREATED_AT" ,
+          "created_by_user" :  "${appeal.createdBy.name}"
+      }
     """.trimIndent()
 
   protected fun bedMovesJson(bedMove: BedMoveEntity): String =
     """
-      [
-        {
-          "crn": "${bedMove.booking.crn}" ,
-          "noms_number": "${bedMove.booking.nomsNumber}",
-          "notes": "${bedMove.notes}",
-          "previous_bed_name": "${bedMove.previousBed!!.name}",
-          "previous_bed_code":"${bedMove.previousBed!!.code}",
-          "new_bed_name":"${bedMove.newBed.name}",
-          "new_bed_code":"${bedMove.newBed.code}",
-          "created_at": "$CREATED_AT_NO_TZ"
-        }
-      ]
+      {
+        "crn": "${bedMove.booking.crn}" ,
+        "noms_number": "${bedMove.booking.nomsNumber}",
+        "notes": "${bedMove.notes}",
+        "previous_bed_name": "${bedMove.previousBed!!.name}",
+        "previous_bed_code":"${bedMove.previousBed!!.code}",
+        "new_bed_name":"${bedMove.newBed.name}",
+        "new_bed_code":"${bedMove.newBed.code}",
+        "created_at": "$CREATED_AT_NO_TZ"
+      }
     """.trimIndent()
 
   protected fun cancellationJson(cancellation: CancellationEntity): String =
     """
-      [
-        {   
-            "crn": "${cancellation.booking.crn}",
-            "noms_number": "${cancellation.booking.nomsNumber}",
-            "notes": "${cancellation.notes}",
-            "cancellation_date": "$CANCELLATION_DATE_ONLY",
-            "cancellation_reason": "${cancellation.reason.name}",
-            "other_reason": "${cancellation.otherReason}",
-            "created_at": "$CREATED_AT"
-        }
-      ]
+      {   
+          "crn": "${cancellation.booking.crn}",
+          "noms_number": "${cancellation.booking.nomsNumber}",
+          "notes": "${cancellation.notes}",
+          "cancellation_date": "$CANCELLATION_DATE_ONLY",
+          "cancellation_reason": "${cancellation.reason.name}",
+          "other_reason": "${cancellation.otherReason}",
+          "created_at": "$CREATED_AT"
+      }
     """.trimIndent()
 
   protected fun bookingExtensionJson(bookingExtension: ExtensionEntity): String =
     """
-      [
-          {
-            "application_id": "${bookingExtension.booking.application?.id}",
-            "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
-            "crn": "${bookingExtension.booking.crn}",
-            "noms_number": "${bookingExtension.booking.nomsNumber}",
-            "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
-            "new_departure_date": "$NEW_DEPARTURE_DATE_ONLY",
-            "notes": "${bookingExtension.notes}",
-            "created_at": "$CREATED_AT"
-          }
-      ]
+      {
+        "application_id": "${bookingExtension.booking.application?.id}",
+        "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
+        "crn": "${bookingExtension.booking.crn}",
+        "noms_number": "${bookingExtension.booking.nomsNumber}",
+        "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
+        "new_departure_date": "$NEW_DEPARTURE_DATE_ONLY",
+        "notes": "${bookingExtension.notes}",
+        "created_at": "$CREATED_AT"
+      }
     """.trimIndent()
 
   protected fun bookingsJson(booking: BookingEntity): String =
     """
-      [
-         {
-            "crn": "${booking.crn}",
-            "noms_number": "${booking.nomsNumber}",
-            "arrival_date": "${booking.arrivalDate}",
-            "departure_date": "${booking.departureDate}",
-            "original_arrival_date": "${booking.originalArrivalDate}",
-            "original_departure_date": "${booking.originalDepartureDate}",
-            "created_at": "$CREATED_AT",
-            "status": "${booking.status}",
-            "premises_name": "${booking.premises.name}",
-            "adhoc": ${booking.adhoc},
-            "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
-            "service": "${booking.service}",
-            "application_id": "${booking.application?.id}",
-            "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else "null"},
-            "version": ${booking.version}
-         }
-      ]
+      {
+         "crn": "${booking.crn}",
+         "noms_number": "${booking.nomsNumber}",
+         "arrival_date": "${booking.arrivalDate}",
+         "departure_date": "${booking.departureDate}",
+         "original_arrival_date": "${booking.originalArrivalDate}",
+         "original_departure_date": "${booking.originalDepartureDate}",
+         "created_at": "$CREATED_AT",
+         "status": "${booking.status}",
+         "premises_name": "${booking.premises.name}",
+         "adhoc": ${booking.adhoc},
+         "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
+         "service": "${booking.service}",
+         "application_id": "${booking.application?.id}",
+         "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else "null"},
+         "version": ${booking.version}
+      }
     """.trimIndent()
 
   protected fun approvedPremisesApplicationsJson(
     application: ApprovedPremisesApplicationEntity,
     offenderDetails: OffenderDetailSummary,
-  ) = """
-     [
-         {
-            "id": "${application.id}",
-            "name": "$NAME",
-            "crn": "${offenderDetails.otherIds.crn}",
-            "noms_number": "${offenderDetails.otherIds.nomsNumber}",
-            "data": $DATA_JSON_SIMPLE, 
-            "document": $DOCUMENT_JSON_SIMPLE,
-            "created_at": "$CREATED_AT",
-            "submitted_at": "$SUBMITTED_AT",
-            "created_by_user": "${application.createdByUser.name}",
-            "application_user_name": "${application.applicantUserDetails?.name}",
-            "event_number": "$EVENT_NUMBER",
-            "is_womens_application": false,
-            "offence_id": "$OFFENCE_ID",
-            "conviction_id": $CONVICTION_ID,
-            "risk_ratings": ${risksJson()}, 
-            "release_type": "$RELEASE_TYPE_CONDITIONAL",
-            "arrival_date": "$ARRIVED_AT",
-            "is_withdrawn": false,
-            "withdrawal_reason": "$WITHDRAWAL_REASON_NOT_WITHDRAWN",
-            "other_withdrawal_reason": "$OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE",
-            "is_emergency_application": true,
-            "target_location": null,
-            "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
-            "inmate_in_out_status_on_submission": null,
-            "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
-            "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
-            "ap_type": "${ApprovedPremisesType.NORMAL}",
-            "case_manager_name": "${application.caseManagerUserDetails?.name}",
-            "case_manager_is_not_applicant" : true
-         }
-     ]
+  ): String = """
+        {
+           "id": "${application.id}",
+           "name": "$NAME",
+           "crn": "${offenderDetails.otherIds.crn}",
+           "noms_number": "${offenderDetails.otherIds.nomsNumber}",
+           "data": $DATA_JSON_SIMPLE, 
+           "document": $DOCUMENT_JSON_SIMPLE,
+           "created_at": "$CREATED_AT",
+           "submitted_at": "$SUBMITTED_AT",
+           "created_by_user": "${application.createdByUser.name}",
+           "application_user_name": "${application.applicantUserDetails?.name}",
+           "event_number": "$EVENT_NUMBER",
+           "is_womens_application": false,
+           "offence_id": "$OFFENCE_ID",
+           "conviction_id": $CONVICTION_ID,
+           "risk_ratings": ${risksJson()}, 
+           "release_type": "$RELEASE_TYPE_CONDITIONAL",
+           "arrival_date": "$ARRIVED_AT",
+           "is_withdrawn": false,
+           "withdrawal_reason": "$WITHDRAWAL_REASON_NOT_WITHDRAWN",
+           "other_withdrawal_reason": "$OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE",
+           "is_emergency_application": true,
+           "target_location": null,
+           "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
+           "inmate_in_out_status_on_submission": null,
+           "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
+           "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
+           "ap_type": "${ApprovedPremisesType.NORMAL}",
+           "case_manager_name": "${application.caseManagerUserDetails?.name}",
+           "case_manager_is_not_applicant" : true
+        }
   """.trimIndent()
 
   protected fun approvedPremisesApplicationTimelineNotesJson(
@@ -323,17 +305,15 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     serviceName: ServiceName = ServiceName.approvedPremises,
   ): String =
     """
-      [ 
-        {
-            "application_id":"${application.id}",
-            "service":"${serviceName.value}",
-            "crn":"${offender.otherIds.crn}",
-            "noms_number":"${offender.otherIds.nomsNumber}",
-            "body":"${timelineNote.body}",
-            "created_at":"$CREATED_AT_NO_TZ",
-            "user_name":"${timelineNote.createdBy?.name}"
-        }
-      ]
+      {
+          "application_id":"${application.id}",
+          "service":"${serviceName.value}",
+          "crn":"${offender.otherIds.crn}",
+          "noms_number":"${offender.otherIds.nomsNumber}",
+          "body":"${timelineNote.body}",
+          "created_at":"$CREATED_AT_NO_TZ",
+          "user_name":"${timelineNote.createdBy?.name}"
+      }
     """.trimIndent()
 
   protected fun approvedPremisesAssessmentJson(
@@ -342,27 +322,25 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     assessment: ApprovedPremisesAssessmentEntity,
   ): String =
     """
-      [
-         {
-            "application_id":"${application.id}",
-            "assessment_id":"${assessment.id}",
-            "crn":"${offenderDetails.otherIds.crn}",
-            "noms_number":"${offenderDetails.otherIds.nomsNumber}",
-            "assessor_name":"${assessment.allocatedToUser?.name}",
-            "data":$DATA_JSON_SIMPLE,
-            "document":$DOCUMENT_JSON_SIMPLE,
-            "created_at":"$CREATED_AT",
-            "allocated_at":"$ALLOCATED_AT",
-            "submitted_at":"$SUBMITTED_AT",
-            "reallocated_at":null,
-            "due_at":"$DUE_AT",
-            "decision":"${AssessmentDecision.REJECTED}",
-            "rejection_rationale":"rejected as no good",
-            "service":"approved-premises",
-            "is_withdrawn":false,
-            "created_from_appeal":false
-         }
-   ]
+      {
+         "application_id":"${application.id}",
+         "assessment_id":"${assessment.id}",
+         "crn":"${offenderDetails.otherIds.crn}",
+         "noms_number":"${offenderDetails.otherIds.nomsNumber}",
+         "assessor_name":"${assessment.allocatedToUser?.name}",
+         "data":$DATA_JSON_SIMPLE,
+         "document":$DOCUMENT_JSON_SIMPLE,
+         "created_at":"$CREATED_AT",
+         "allocated_at":"$ALLOCATED_AT",
+         "submitted_at":"$SUBMITTED_AT",
+         "reallocated_at":null,
+         "due_at":"$DUE_AT",
+         "decision":"${AssessmentDecision.REJECTED}",
+         "rejection_rationale":"rejected as no good",
+         "service":"approved-premises",
+         "is_withdrawn":false,
+         "created_from_appeal":false
+      }
     """.trimIndent()
 
   private fun risksJson(): String =
@@ -393,34 +371,62 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     assessment: ApprovedPremisesAssessmentEntity,
     offenderDetails: OffenderDetailSummary,
     clarificationNote: AssessmentClarificationNoteEntity,
-  ) = """
-      [
-        {
-          "application_id": "${assessment.application.id}",
-          "assessment_id": "${assessment.id}",
-          "crn": "${offenderDetails.otherIds.crn}",
-          "noms_number": "${offenderDetails.otherIds.nomsNumber}",
-          "created_at": "$CREATED_AT",
-          "query": "${clarificationNote.query}",
-          "response": "${clarificationNote.response}",
-          "created_by_user": "${clarificationNote.createdByUser.name}",   
-        }
-      ]
-  """.trimIndent()
+  ): String =
+    """
+      {
+        "application_id": "${assessment.application.id}",
+        "assessment_id": "${assessment.id}",
+        "crn": "${offenderDetails.otherIds.crn}",
+        "noms_number": "${offenderDetails.otherIds.nomsNumber}",
+        "created_at": "$CREATED_AT",
+        "query": "${clarificationNote.query}",
+        "response": "${clarificationNote.response}",
+        "created_by_user": "${clarificationNote.createdByUser.name}",   
+      }
+    """.trimIndent()
 
   protected fun bookingsNotMadeJson(bookingNotMade: BookingNotMadeEntity): String =
     """
-      [
-        {
-          "crn": "${bookingNotMade.placementRequest.application.crn}",
-          "noms_number": "${bookingNotMade.placementRequest.application.nomsNumber}",
-          "booking_not_made_id": "${bookingNotMade.id}",
-          "application_id": "${bookingNotMade.placementRequest.application.id}",
-          "placement_request_id": "${bookingNotMade.placementRequest.id}",
-          "created_at": "$CREATED_AT_NO_TZ",
-          "notes": "${bookingNotMade.notes}"
-        }
-      ]
+      {
+        "crn": "${bookingNotMade.placementRequest.application.crn}",
+        "noms_number": "${bookingNotMade.placementRequest.application.nomsNumber}",
+        "booking_not_made_id": "${bookingNotMade.id}",
+        "application_id": "${bookingNotMade.placementRequest.application.id}",
+        "placement_request_id": "${bookingNotMade.placementRequest.id}",
+        "created_at": "$CREATED_AT_NO_TZ",
+        "notes": "${bookingNotMade.notes}"
+      }
+    """.trimIndent()
+
+  protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity): String =
+    """ 
+      {
+        "id": "${domainEvent.id}",
+        "application_id": "${domainEvent.applicationId}",
+        "crn": "${domainEvent.crn}",
+        "type": "${domainEvent.type}",
+        "occurred_at": "$ALLOCATED_AT",
+        "created_at": "$CREATED_AT",
+        "data": ${domainEvent.data},
+        "booking_id": null,
+        "service": "${domainEvent.service}",
+        "assessment_id": "${domainEvent.assessmentId}",
+        "triggered_by_user": "${user.name}",
+        "noms_number": "${domainEvent.nomsNumber}",
+        "trigger_source": null
+      }
+    """.trimIndent()
+
+  protected fun domainEventMetadataJson(domainEvent: DomainEventEntity): String =
+    """
+      {
+        "crn": "${domainEvent.crn}",
+        "noms_number": "${domainEvent.nomsNumber}",
+        "created_at": "$CREATED_AT",
+        "domain_event_id": "${domainEvent.id}",
+        "name": ${MetaDataName.CAS1_REQUESTED_AP_TYPE},
+        "value": ${ApprovedPremisesType.NORMAL}
+      }
     """.trimIndent()
 
   protected fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary) =
@@ -462,12 +468,12 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withAssessment(assessment)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withApType(ApType.normal)
-    withDesirableCriteria(listOf(characteristic()))
-    withEssentialCriteria(listOf(characteristic()))
+    withDesirableCriteria(listOf(characteristicEntity()))
+    withEssentialCriteria(listOf(characteristicEntity()))
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
   }
 
-  private fun characteristic() =
+  private fun characteristicEntity() =
     characteristicEntityFactory.produceAndPersist {
       withName(randomStringMultiCaseWithNumbers(10))
       withServiceScope(Characteristic.ServiceScope.star.value)
@@ -701,7 +707,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     return application
   }
 
-  protected fun approvedPremisesAssessmentClarificationNote(assessment: ApprovedPremisesAssessmentEntity): AssessmentClarificationNoteEntity =
+  protected fun approvedPremisesAssessmentClarificationNoteEntity(assessment: ApprovedPremisesAssessmentEntity): AssessmentClarificationNoteEntity =
     assessmentClarificationNoteEntityFactory.produceAndPersist() {
       withAssessment(assessment)
       withCreatedBy(assessment.allocatedToUser!!)
@@ -711,7 +717,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     }
 
-  protected fun approvedPremisesAssessment(
+  protected fun approvedPremisesAssessmentEntity(
     application: ApprovedPremisesApplicationEntity,
   ): ApprovedPremisesAssessmentEntity = approvedPremisesAssessmentEntityFactory.produceAndPersist {
     withData(DATA_JSON_SIMPLE)
@@ -736,4 +742,31 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
       withNotes("Some notes on booking not made")
     }
+
+  protected fun domainEventEntity(
+    offender: OffenderDetailSummary,
+    application: ApprovedPremisesApplicationEntity,
+    assessment: ApprovedPremisesAssessmentEntity,
+    user: UserEntity,
+  ): DomainEventEntity {
+    val domainEvent = domainEventFactory.produceAndPersist {
+      withId(UUID.randomUUID())
+      withService(ServiceName.approvedPremises)
+      withCrn(offender.otherIds.crn)
+      withNomsNumber(offender.otherIds.nomsNumber)
+      withApplicationId(application.id)
+      withAssessmentId(assessment.id)
+      withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
+      withData("{ }")
+      withTriggeredByUserId(user.id)
+      withMetadata(
+        mapOf(
+          MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
+        ),
+      )
+    }
+    return domainEvent
+  }
 }

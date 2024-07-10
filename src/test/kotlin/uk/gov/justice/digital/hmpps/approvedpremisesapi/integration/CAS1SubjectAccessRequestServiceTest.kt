@@ -10,12 +10,10 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `Get CAS1 Information - No Results`() {
     val (offenderDetails, _) = `Given an Offender`()
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertJsonEquals(
       """ 
      {
-        "approvedPremises":
-        {
           "Applications": [ ],
           "ApplicationTimeline": [ ],
           "Assessments": [ ],
@@ -30,8 +28,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementRequests": [ ],
           "PlacementRequirements": [ ],
           "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-          }
+          "BookingNotMades" : [ ],
+          "DomainEvents": [ ],
+          "DomainEventMetadata": [ ]
       }
       """.trimIndent(),
       result,
@@ -45,13 +44,11 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
     {
-      "approvedPremises": 
-      {    
-        "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
         "ApplicationTimeline" :[ ],
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
@@ -65,8 +62,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequests": [ ],
         "PlacementRequirements": [ ],
         "PlacementRequirementCriteria" : [ ],
-        "BookingNotMades" : [ ]
-      }
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -83,14 +81,12 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val timelineNotes = applicationTimelineNoteEntity(application)
 
-    val result = sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {
-        "Applications": ${approvedPremisesApplicationsJson(application, offender)},
-        "ApplicationTimeline": ${approvedPremisesApplicationTimelineNotesJson(application, timelineNotes, offender)},
+        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(application, timelineNotes, offender)}],
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
@@ -103,8 +99,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequests": [ ],
         "PlacementRequirements": [ ],
         "PlacementRequirementCriteria" : [ ],
-        "BookingNotMades" : [ ]
-      }
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -119,18 +116,16 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offenderDetails, _) = `Given an Offender`()
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
-    val assessment = approvedPremisesAssessment(application)
+    val assessment = approvedPremisesAssessmentEntity(application)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {  
-        "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
+        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
         "ApplicationTimeline" :[ ],
-        "Assessments": ${approvedPremisesAssessmentJson(application, offenderDetails, assessment)},
+        "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
         "OfflineApplications":  [ ],
@@ -142,8 +137,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequests": [ ],
         "PlacementRequirements": [ ],
         "PlacementRequirementCriteria" : [ ],
-        "BookingNotMades" : [ ]
-      }
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """
     assertJsonEquals(expectedJson, result)
@@ -153,38 +149,35 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `Get CAS1 information - have assessment with clarification notes`() {
     val (offenderDetails, _) = `Given an Offender`()
     val application = approvedPremisesApplicationEntity(offenderDetails)
-    val assessment = approvedPremisesAssessment(application)
-    val clarificationNote = approvedPremisesAssessmentClarificationNote(assessment)
+    val assessment = approvedPremisesAssessmentEntity(application)
+    val clarificationNote = approvedPremisesAssessmentClarificationNoteEntity(assessment)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": ${approvedPremisesAssessmentJson(application, offenderDetails, assessment)},
-          "AssessmentClarificationNotes": ${
-    approvedPremisesAssessmentClarificationNoteJson(
+       "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
+       "ApplicationTimeline" :[ ],
+       "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
+       "AssessmentClarificationNotes": [${approvedPremisesAssessmentClarificationNoteJson(
       assessment,
       offenderDetails,
       clarificationNote,
-    )
-    },
-          "Bookings": [ ],
-          "OfflineApplications":  [ ],
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+    )}],
+       "Bookings": [ ],
+       "OfflineApplications":  [ ],
+       "BookingExtensions": [ ],
+       "Cancellations": [ ],
+       "BedMoves": [ ],
+       "Appeals": [ ],
+       "PlacementApplications": [ ],
+       "PlacementRequests": [ ],
+       "PlacementRequirements": [ ],
+       "PlacementRequirementCriteria" : [ ],
+       "BookingNotMades" : [ ],
+       "DomainEvents": [ ],
+       "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -199,29 +192,27 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val booking = bookingEntity(offenderDetails, application)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-    {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": [ ],
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          
-          "OfflineApplications":  [ ],
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+    {        
+      "Applications":[${approvedPremisesApplicationsJson(application, offenderDetails)}],
+      "ApplicationTimeline" :[ ],
+      "Assessments": [ ],
+      "AssessmentClarificationNotes": [ ],
+      "Bookings": [${bookingsJson(booking)}],
+      "OfflineApplications":  [ ],
+      "BookingExtensions": [ ],
+      "Cancellations": [ ],
+      "BedMoves": [ ],
+      "Appeals": [ ],
+      "PlacementApplications": [ ],
+      "PlacementRequests": [ ],
+      "PlacementRequirements": [ ],
+      "PlacementRequirementCriteria" : [ ],
+      "BookingNotMades" : [ ],
+      "DomainEvents": [ ],
+      "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -236,28 +227,27 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val booking = bookingEntity(offenderDetails, application, offlineApplication)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-    {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": [ ],
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          "OfflineApplications":  ${offlineApplicationJson(booking)},
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+    {       
+        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [ ],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings":[${bookingsJson(booking)}],
+        "OfflineApplications": [${offlineApplicationJson(booking)}],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ],
+        "BedMoves": [ ],
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -273,28 +263,27 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val bookingExtension = bookingExtensionEntity(booking)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": [ ],
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          "OfflineApplications":  [ ],
-          "BookingExtensions": ${bookingExtensionJson(bookingExtension)},
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [ ],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [${bookingsJson(booking)}],
+        "OfflineApplications":  [ ],
+        "BookingExtensions":[${bookingExtensionJson(bookingExtension)}],
+        "Cancellations": [ ],
+        "BedMoves": [ ],
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -310,28 +299,27 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val cancellation = cancellationEntity(booking)
 
     val result =
-      sarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
-    {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offenderDetails)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": [ ],
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          "OfflineApplications":  [ ],
-          "BookingExtensions": [ ],
-          "Cancellations": ${cancellationJson(cancellation)},
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+    {      
+        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [ ],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [${bookingsJson(booking)}],
+        "OfflineApplications":  [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [${cancellationJson(cancellation)}],
+        "BedMoves": [ ],
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -348,27 +336,26 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val bedMove = bedMoveEntity(booking, booking.bed!!, newBed)
 
     val result =
-      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": [ ],
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          "OfflineApplications":  [ ],
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": ${bedMovesJson(bedMove)},
-          "Appeals": [ ],
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [ ],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [${bookingsJson(booking)}],
+        "OfflineApplications":  [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ],
+        "BedMoves": [${bedMovesJson(bedMove)}],
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -379,31 +366,30 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `get CAS1 information - has an appeal`() {
     val (offender, _) = `Given an Offender`()
     val application = approvedPremisesApplicationEntity(offender)
-    val assessment = approvedPremisesAssessment(application)
+    val assessment = approvedPremisesAssessmentEntity(application)
     val appeal = appealEntity(application, assessment)
 
     val result =
-      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
     val expectedJson = """
-    {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": ${approvedPremisesAssessmentJson(application, offender, assessment)},
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": [ ],
-          "OfflineApplications":  [ ],
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": ${appealsJson(appeal)},
-          "PlacementApplications": [ ],
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-           "BookingNotMades" : [ ]
-      }
+    {        
+        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [ ],
+        "OfflineApplications":  [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ],
+        "BedMoves": [ ],
+        "Appeals":[ ${appealsJson(appeal)}],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -417,27 +403,26 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val placementApplication = placementApplicationEntity(application)
     val result =
-      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": [ ],
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": [ ],
-          "OfflineApplications":  [ ],
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
-          "PlacementRequests": [ ],
-          "PlacementRequirements": [ ],
-          "PlacementRequirementCriteria" : [ ],
-          "BookingNotMades" : [ ]
-      }
+      "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+      "ApplicationTimeline" :[ ],
+      "Assessments": [ ],
+      "AssessmentClarificationNotes": [ ],
+      "Bookings": [ ],
+      "OfflineApplications":  [ ],
+      "BookingExtensions": [ ],
+      "Cancellations": [ ],
+      "BedMoves": [ ],
+      "Appeals": [ ],
+      "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
+      "PlacementRequests": [ ],
+      "PlacementRequirements": [ ],
+      "PlacementRequirementCriteria" : [ ],
+      "BookingNotMades" : [ ],
+      "DomainEvents": [ ],
+      "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -448,34 +433,33 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `get CAS1 information - has a placement request with requirements`() {
     val (offender, _) = `Given an Offender`()
     val application = approvedPremisesApplicationEntity(offender)
-    val assessment = approvedPremisesAssessment(application)
+    val assessment = approvedPremisesAssessmentEntity(application)
     val booking = bookingEntity(offender, application)
     val placementApplication = placementApplicationEntity(application)
     val allocatedUser = userEntity()
 
     val placementRequest = placementRequestEntity(booking, assessment, application, allocatedUser, placementApplication)
     val result =
-      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
     val expectedJson = """
-    {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": ${approvedPremisesAssessmentJson(application, offender, assessment)},
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          "OfflineApplications":  [ ],    
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
-          "PlacementRequests": ${approvedPremisesPlacementRequestsJson(placementRequest)},
-          "PlacementRequirements": ${placementRequirementJson(placementRequest.placementRequirements)},
-          "PlacementRequirementCriteria" : ${placementRequirementCriteriaJson(placementRequest.placementRequirements)},
-          "BookingNotMades" : [ ]
-      }
+    {   
+        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [${bookingsJson(booking)}],
+        "OfflineApplications":  [ ],    
+        "BookingExtensions": [ ],
+        "Cancellations": [ ],
+        "BedMoves": [ ],
+        "Appeals": [ ],
+        "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
+        "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
+        "PlacementRequirements": [${placementRequirementJson(placementRequest.placementRequirements)}],
+        "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
+        "BookingNotMades" : [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -486,7 +470,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `get CAS1 information - has bookings not made`() {
     val (offender, _) = `Given an Offender`()
     val application = approvedPremisesApplicationEntity(offender)
-    val assessment = approvedPremisesAssessment(application)
+    val assessment = approvedPremisesAssessmentEntity(application)
     val booking = bookingEntity(offender, application)
     val placementApplication = placementApplicationEntity(application)
     val allocatedUser = userEntity()
@@ -494,30 +478,63 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val bookingNotMade = bookingNotMadeEntity(placementRequest)
 
     val result =
-      sarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
     val expectedJson = """
     {
-      "approvedPremises" : 
-      {        
-          "Applications": ${approvedPremisesApplicationsJson(application, offender)},
-          "ApplicationTimeline" :[ ],
-          "Assessments": ${approvedPremisesAssessmentJson(application, offender, assessment)},
-          "AssessmentClarificationNotes": [ ],
-          "Bookings": ${bookingsJson(booking)},
-          "OfflineApplications":  [ ],    
-          "BookingExtensions": [ ],
-          "Cancellations": [ ],
-          "BedMoves": [ ],
-          "Appeals": [ ],
-          "PlacementApplications": ${approvedPremisesPlacementApplicationsJson(placementApplication)},
-          "PlacementRequests": ${approvedPremisesPlacementRequestsJson(placementRequest)},
-          "PlacementRequirements": ${placementRequirementJson(placementRequest.placementRequirements)},
-          "PlacementRequirementCriteria" : ${placementRequirementCriteriaJson(placementRequest.placementRequirements)},
-          "BookingNotMades": ${bookingsNotMadeJson(bookingNotMade)}
-      }
+      "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+      "ApplicationTimeline" :[ ],
+      "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+      "AssessmentClarificationNotes": [ ],
+      "Bookings":[${bookingsJson(booking)}],
+      "OfflineApplications":  [ ],    
+      "BookingExtensions": [ ],
+      "Cancellations": [ ],
+      "BedMoves": [ ],
+      "Appeals": [ ],
+      "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
+      "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
+      "PlacementRequirements": [${placementRequirementJson(placementRequest.placementRequirements)}],
+      "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
+      "BookingNotMades": [${bookingsNotMadeJson(bookingNotMade)}],
+      "DomainEvents": [ ],
+      "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `get CAS1 information - Domain Events`() {
+    val (offender, _) = `Given an Offender`()
+
+    val application = approvedPremisesApplicationEntity(offender)
+    val assessment = approvedPremisesAssessmentEntity(application)
+    val user = userEntity()
+    val domainEvent = domainEventEntity(offender, application, assessment, user)
+    val result = sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+      {
+        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
+        "ApplicationTimeline" :[ ],
+        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "AssessmentClarificationNotes": [ ],
+        "Bookings": [ ],
+        "OfflineApplications":  [ ],    
+        "BookingExtensions": [ ],
+        "Cancellations": [ ],
+        "BedMoves": [ ],
+        "Appeals": [ ],
+        "PlacementApplications": [ ],
+        "PlacementRequests": [ ],
+        "PlacementRequirements": [ ],
+        "PlacementRequirementCriteria" : [ ],
+        "BookingNotMades": [],
+        "DomainEvents": [${domainEventJson(domainEvent,user)}],
+        "DomainEventMetadata": [${domainEventMetadataJson(domainEvent)}]
+      }
+    """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
 }

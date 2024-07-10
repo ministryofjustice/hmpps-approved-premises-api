@@ -14,7 +14,7 @@ class SubjectAccessRequestService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getCAS1Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
     val approvedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
     val apApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
     val apAssessmentsJson = subjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
@@ -30,25 +30,27 @@ class SubjectAccessRequestService(
     val placementRequirementCriteria = subjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
     val offlineApplications = subjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
     val bookingNotMades = subjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
+    val domainEvents = subjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
+    val domainEventMetaData = subjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
     val result = """
       {
-        "approvedPremises" : {
-            "Applications": $approvedPremisesApplicationsJson,
-            "ApplicationTimeline": $apApplicationTimelineJson,
-            "Assessments": $apAssessmentsJson,
-            "AssessmentClarificationNotes" : $apAssessmentClarificationNotes,
-            "Bookings": $apBookings,
-            "OfflineApplications": $offlineApplications,
-            "BookingExtensions": $apBookingExtensions,
-            "Cancellations": $apCancellations,
-            "BedMoves": $apBedMoves,
-            "Appeals": $appeals,
-            "PlacementApplications": $placementApplications,
-            "PlacementRequests": $placementRequests,
-            "PlacementRequirements": $placementRequirements,
-            "PlacementRequirementCriteria": $placementRequirementCriteria,
-            "BookingNotMades": $bookingNotMades            
-        }
+         "Applications": $approvedPremisesApplicationsJson,
+         "ApplicationTimeline": $apApplicationTimelineJson,
+         "Assessments": $apAssessmentsJson,
+         "AssessmentClarificationNotes" : $apAssessmentClarificationNotes,
+         "Bookings": $apBookings,
+         "OfflineApplications": $offlineApplications,
+         "BookingExtensions": $apBookingExtensions,
+         "Cancellations": $apCancellations,
+         "BedMoves": $apBedMoves,
+         "Appeals": $appeals,
+         "PlacementApplications": $placementApplications,
+         "PlacementRequests": $placementRequests,
+         "PlacementRequirements": $placementRequirements,
+         "PlacementRequirementCriteria": $placementRequirementCriteria,
+         "BookingNotMades": $bookingNotMades,
+         "DomainEvents": $domainEvents,
+         "DomainEventMetadata": $domainEventMetaData
       }
     """.trimIndent()
 
@@ -56,9 +58,16 @@ class SubjectAccessRequestService(
       val prettyPrintJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
         objectMapper.readValue(result, Any::class.java),
       )
-      log.debug("SAR result is $prettyPrintJson")
+      log.debug("CAS1 SAR result is $prettyPrintJson")
     }
 
     return result
   }
+
+  fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?) =
+    """
+      {
+         "ApprovedPremises" : ${getCAS1Result(crn, nomsNumber, startDate, endDate)}
+      }
+    """.trimIndent()
 }
