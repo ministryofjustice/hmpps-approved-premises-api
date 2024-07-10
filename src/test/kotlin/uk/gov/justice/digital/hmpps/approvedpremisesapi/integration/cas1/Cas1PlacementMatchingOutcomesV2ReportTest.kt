@@ -683,7 +683,11 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
     "/cas1/reports/placementMatchingOutcomesV2?year=$year&month=$month" +
-      if (includePii != null) { "&includePii=$includePii" } else { "" }
+      if (includePii != null) {
+        "&includePii=$includePii"
+      } else {
+        ""
+      }
 
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(
