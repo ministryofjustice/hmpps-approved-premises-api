@@ -26,3 +26,5 @@ abstract class SeedJob<RowType> (
   abstract fun deserializeRow(columns: Map<String, String>): RowType
   abstract fun processRow(row: RowType)
 }
+
+class SeedException(message: String) : RuntimeException(message)
