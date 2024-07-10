@@ -38,7 +38,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.0.0-jre")
 
-  runtimeOnly("org.postgresql:postgresql:42.7.3")
+  implementation("org.postgresql:postgresql:42.7.3")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
