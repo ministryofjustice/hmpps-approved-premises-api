@@ -22,10 +22,10 @@ if [ \$? -ne 0 ]; then
   exit 1
 fi
 
-curl -L https://jdbc.postgresql.org/download/postgresql-42.5.1.jar --output postgresql-42.5.1.jar
+curl -L https://jdbc.postgresql.org/download/postgresql-42.7.3.jar --output postgresql-42.7.3.jar
 
 java -jar jaqy-1.2.0.jar -- \
-  .classpath postgresql postgresql-42.5.1.jar \; \
+  .classpath postgresql postgresql-42.7.3.jar \; \
   .open -u \${SPRING_DATASOURCE_USERNAME} -p \${SPRING_DATASOURCE_PASSWORD} postgresql://\${DB_HOST}/\${DB_NAME} \; \
   \"SET default_transaction_read_only = TRUE;\"
 """
