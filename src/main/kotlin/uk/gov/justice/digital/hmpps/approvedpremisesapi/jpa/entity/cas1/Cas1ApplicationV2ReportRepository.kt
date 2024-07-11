@@ -42,6 +42,7 @@ concat(
   submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'staffMember' ->> 'surname'
 ) as referrer_name,
 submission_event.data -> 'eventDetails' ->> 'targetLocation' as target_location,
+to_char(apa.arrival_date, 'YYYY-MM-DD') as standard_rfp_arrival_date,
 to_char(cast(submission_event.data -> 'eventDetails' ->> 'submittedAt' as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as application_submission_date,
 apa.notice_type as application_timeliness_status,
 reason_for_short_notice_metadata.value as applicant_reason_for_late_application,

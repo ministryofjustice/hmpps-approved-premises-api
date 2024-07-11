@@ -247,6 +247,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         timelinessCategory = Cas1ApplicationTimelinessCategory.standard,
         reasonForShortNotice = "reasonForShortNotice1",
         reasonForShortNoticeOther = "reasonForShortNoticeOther1",
+        arrivalDate = LocalDate.of(2020, 5, 1),
       )
       allocateLatestAssessment(
         applicationId = application.id,
@@ -341,6 +342,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       }
 
       assertThat(row.target_location).isEqualTo("location1")
+      assertThat(row.standard_rfp_arrival_date).isEqualTo("2020-05-01")
       assertThat(row.application_submission_date).isEqualTo("2020-02-01T12:35:00Z")
       assertThat(row.application_timeliness_status).isEqualTo("standard")
       assertThat(row.applicant_reason_for_late_application).isEqualTo("reasonForShortNotice1")
@@ -443,6 +445,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         timelinessCategory = Cas1ApplicationTimelinessCategory.emergency,
         reasonForShortNotice = "reasonForShortNotice3",
         reasonForShortNoticeOther = "reasonForShortNoticeOther3",
+        arrivalDate = LocalDate.of(2030, 12, 31),
       )
       allocateLatestAssessment(
         applicationId = application.id,
@@ -489,6 +492,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.referrer_username).isEqualTo("USER3")
       assertThat(row.referrer_name).isEqualTo("Test Testing")
       assertThat(row.target_location).isEqualTo("location3")
+      assertThat(row.standard_rfp_arrival_date).isEqualTo("2030-12-31")
       assertThat(row.application_submission_date).isEqualTo("2020-02-15T11:25:00Z")
       assertThat(row.application_timeliness_status).isEqualTo("emergency")
       assertThat(row.applicant_reason_for_late_application).isEqualTo("reasonForShortNotice3")
@@ -559,6 +563,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
+        arrivalDate = null,
       )
       allocateLatestAssessment(
         applicationId = application.id,
@@ -592,6 +597,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.referrer_username).isEqualTo("USER2")
       assertThat(row.referrer_name).isEqualTo("App Licant")
       assertThat(row.target_location).isEqualTo("location2")
+      assertThat(row.standard_rfp_arrival_date).isNull()
       assertThat(row.application_submission_date).isEqualTo("2020-02-29T11:25:00Z")
       assertThat(row.application_timeliness_status).isEqualTo("shortNotice")
       assertThat(row.applicant_reason_for_late_application).isNull()
@@ -646,6 +652,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
+        arrivalDate = null,
       )
       withdrawApplication(
         applicationId = application.id,
@@ -688,6 +695,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
+        arrivalDate = null,
       )
     }
   }
@@ -717,6 +725,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
+        arrivalDate = null,
       )
     }
   }
@@ -746,6 +755,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     val referral_team: String?,
     val referrer_username: String?,
     val referrer_name: String?,
+    val standard_rfp_arrival_date: String?,
     val target_location: String?,
     val application_submission_date: String?,
     val application_timeliness_status: String?,
@@ -795,6 +805,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     timelinessCategory: Cas1ApplicationTimelinessCategory,
     reasonForShortNotice: String?,
     reasonForShortNoticeOther: String?,
+    arrivalDate: LocalDate?,
   ): ApprovedPremisesApplicationEntity {
     val (applicant, jwt) = applicantDetails
     val (offenderDetails, _) = `Given an Offender`(
@@ -882,6 +893,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         apType = apType,
         noticeType = timelinessCategory,
         apAreaId = apArea.id,
+        arrivalDate = arrivalDate,
       ),
     )
 
