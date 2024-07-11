@@ -916,6 +916,108 @@ class Cas3ReportsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `CAS3 referral report shows updatedReleaseDate and updatedAccommodationRequiredFrom dates in report when they have been updated`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          val applicationSchema =
+            temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+          val assessmentSchema =
+            temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+          val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
+          val application =
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withProbationRegion(user.probationRegion)
+              withApplicationSchema(applicationSchema)
+              withArrivalDate(LocalDate.now().plusDays(1))
+              withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
+              withCreatedAt(OffsetDateTime.now())
+              withDutyToReferLocalAuthorityAreaName("London")
+              withDutyToReferSubmissionDate(LocalDate.now())
+              withHasHistoryOfArson(false)
+              withIsConcerningArsonBehaviour(true)
+              withIsDutyToReferSubmitted(true)
+              withHasRegisteredSexOffender(null)
+              withHasHistoryOfSexualOffence(false)
+              withIsConcerningSexualBehaviour(true)
+              withNeedsAccessibleProperty(true)
+              withPrisonReleaseTypes(prisonReleaseTypes)
+              withRiskRatings {
+                withRoshRisks(
+                  RiskWithStatus(
+                    value =
+                    RoshRisks(
+                      overallRisk = "High",
+                      riskToChildren = "Medium",
+                      riskToPublic = "Low",
+                      riskToKnownAdult = "High",
+                      riskToStaff = "High",
+                      lastUpdated = null,
+                    ),
+                  ),
+                )
+              }
+              withPrisonNameAtReferral("HM Hounslow")
+              withPersonReleaseDate(LocalDate.now())
+              withPdu("Probation Delivery Unit Test")
+            }
+
+          val assessment =
+            temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+              withDecision(REJECTED)
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
+              withRejectionRationale("some reason")
+              withReleaseDate(LocalDate.now().plusDays(9))
+              withAccommodationRequiredFromDate(LocalDate.now().plusDays(10))
+            }
+
+          assessment.schemaUpToDate = true
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient
+            .get()
+            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val reportRow =
+                DataFrame
+                  .readExcel(it.responseBody!!.inputStream())
+                  .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
+                  .toList()[0]
+
+              assertThat(reportRow.releaseDate).isEqualTo(application.personReleaseDate)
+              assertThat(reportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate!!.toLocalDate())
+              assertThat(reportRow.updatedReleaseDate).isEqualTo(assessment.releaseDate)
+              assertThat(reportRow.updatedAccommodationRequiredFromDate).isEqualTo(assessment.accommodationRequiredFromDate)
+            }
+        }
+      }
+    }
   }
 
   @Nested
@@ -3359,8 +3461,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.referralRejectionReason?.name)
     assertThat(actualReferralReportRow.rejectionReasonExplained).isEqualTo(expectedAssessment.referralRejectionReasonDetail)
     assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())
+    assertThat(actualReferralReportRow.updatedAccommodationRequiredFromDate).isNull()
     assertThat(actualReferralReportRow.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
     assertThat(actualReferralReportRow.releaseDate).isEqualTo(application.personReleaseDate)
+    assertThat(actualReferralReportRow.updatedReleaseDate).isNull()
     assertThat(actualReferralReportRow.pdu).isEqualTo(application.pdu)
   }
 
