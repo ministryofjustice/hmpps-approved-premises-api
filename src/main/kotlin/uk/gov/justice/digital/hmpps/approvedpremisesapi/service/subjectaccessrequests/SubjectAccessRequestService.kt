@@ -3,35 +3,37 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessre
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
 import java.time.LocalDateTime
 
 @Service
 class SubjectAccessRequestService(
   val objectMapper: ObjectMapper,
-  val subjectAccessRequestRepository: SubjectAccessRequestRepository,
+  val CAS1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
+  val CAS3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun getCAS1Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
-    val approvedPremisesApplicationsJson = subjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
-    val apApplicationTimelineJson = subjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
-    val apAssessmentsJson = subjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
-    val apAssessmentClarificationNotes = subjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
-    val apBookings = subjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate)
-    val apBookingExtensions = subjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
-    val apCancellations = subjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
-    val apBedMoves = subjectAccessRequestRepository.bedMoves(crn, nomsNumber, startDate, endDate)
-    val appeals = subjectAccessRequestRepository.appeals(crn, nomsNumber, startDate, endDate)
-    val placementApplications = subjectAccessRequestRepository.placementApplications(crn, nomsNumber, startDate, endDate)
-    val placementRequests = subjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
-    val placementRequirements = subjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
-    val placementRequirementCriteria = subjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
-    val offlineApplications = subjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
-    val bookingNotMades = subjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
-    val domainEvents = subjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
-    val domainEventMetaData = subjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
+    val approvedPremisesApplicationsJson = CAS1SubjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
+    val apApplicationTimelineJson = CAS1SubjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
+    val apAssessmentsJson = CAS1SubjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
+    val apAssessmentClarificationNotes = CAS1SubjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
+    val apBookings = CAS1SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate)
+    val apBookingExtensions = CAS1SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
+    val apCancellations = CAS1SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
+    val apBedMoves = CAS1SubjectAccessRequestRepository.bedMoves(crn, nomsNumber, startDate, endDate)
+    val appeals = CAS1SubjectAccessRequestRepository.appeals(crn, nomsNumber, startDate, endDate)
+    val placementApplications = CAS1SubjectAccessRequestRepository.placementApplications(crn, nomsNumber, startDate, endDate)
+    val placementRequests = CAS1SubjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
+    val placementRequirements = CAS1SubjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
+    val placementRequirementCriteria = CAS1SubjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
+    val offlineApplications = CAS1SubjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
+    val bookingNotMades = CAS1SubjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
+    val domainEvents = CAS1SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
+    val domainEventMetaData = CAS1SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
     val result = """
       {
          "Applications": $approvedPremisesApplicationsJson,
@@ -61,6 +63,23 @@ class SubjectAccessRequestService(
       log.debug("CAS1 SAR result is $prettyPrintJson")
     }
 
+    return result
+  }
+
+  fun getCAS3Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val temporaryAccommodationApplications = CAS3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
+    val result = """
+      {
+        "Applications": $temporaryAccommodationApplications
+      }
+    """.trimIndent()
+
+    if (log.isDebugEnabled) {
+      val prettyPrintJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+        objectMapper.readValue(result, Any::class.java),
+      )
+      log.debug("CAS3 SAR result is $prettyPrintJson")
+    }
     return result
   }
 

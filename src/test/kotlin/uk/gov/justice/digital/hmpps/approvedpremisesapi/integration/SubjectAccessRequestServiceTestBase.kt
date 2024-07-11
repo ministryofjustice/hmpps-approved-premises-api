@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -81,6 +81,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
     var ARRIVED_AT_DATE_ONLY = ARRIVED_AT.substring(0..9)
+    var SUBMITTED_AT_DATE_ONLY = SUBMITTED_AT.substring(0..9)
     var DEPARTED_AT_DATE_ONLY = DEPARTED_AT.substring(0..9)
     var PREVIOUS_DEPARTURE_DATE_ONLY = DEPARTED_AT.substring(0..9)
     var NEW_DEPARTURE_DATE_ONLY = NEW_DEPARTED_AT.substring(0..9)
@@ -343,7 +344,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  private fun risksJson(): String =
+  protected fun risksJson(): String =
     """
       {
           "roshRisks" : {
@@ -514,27 +515,27 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withDecisionDetail("rejected as no good")
   }
 
-  private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =
+  protected fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-  private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity =
+  protected fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity =
     approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-  private fun approvedPremisesPlacementApplicationJsonSchemaEntity() =
+  protected fun approvedPremisesPlacementApplicationJsonSchemaEntity() =
     approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-  private fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
+  protected fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname_applicant_user@noname.net")
     }
 
-  private fun cas1CaseManagerUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
+  protected fun cas1CaseManagerUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
     cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
       withEmailAddress("noname@noname.net")
     }
@@ -629,17 +630,19 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
               },
             )
             withProbationRegion(
-              probationRegionEntityFactory.produceAndPersist {
-                withName("Probation Region ${randomStringMultiCaseWithNumbers(5)}")
-                withApArea(
-                  apAreaEntityFactory.produceAndPersist {
-                    withName("Probation Area ${randomStringMultiCaseWithNumbers(5)}")
-                  },
-                )
-              },
+              probationRegionEntity(),
             )
           },
         )
+      },
+    )
+  }
+
+  protected fun probationRegionEntity() = probationRegionEntityFactory.produceAndPersist {
+    withName("Probation Region ${randomStringMultiCaseWithNumbers(5)}")
+    withApArea(
+      apAreaEntityFactory.produceAndPersist {
+        withName("Probation Area ${randomStringMultiCaseWithNumbers(5)}")
       },
     )
   }
@@ -656,15 +659,22 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       )
     }
 
-  private fun personRisks(): PersonRisks =
+  protected fun personRisks() =
     PersonRisksFactory()
       .withTier(
         RiskWithStatus(
+          status = RiskStatus.Retrieved,
           RiskTier(
             level = "M1",
             lastUpdated = LocalDate.parse("2023-06-26"),
           ),
         ),
+      ).withRoshRisks(
+        RiskWithStatus(status = RiskStatus.NotFound),
+      ).withMappa(
+        RiskWithStatus(status = RiskStatus.NotFound),
+      ).withFlags(
+        RiskWithStatus(status = RiskStatus.NotFound),
       ).produce()
 
   protected fun approvedPremisesApplicationEntity(offenderDetails: OffenderDetailSummary): ApprovedPremisesApplicationEntity {

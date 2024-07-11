@@ -126,6 +126,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.arrivalDate = { arrivalDate?.let { OffsetDateTime.of(it, LocalTime.MIDNIGHT, ZoneOffset.UTC) } }
   }
 
+  fun withArrivalDate(arrivalDate: OffsetDateTime) = apply {
+    this.arrivalDate = { arrivalDate }
+  }
+
   fun withHasRegisteredSexOffender(hasRegisteredSexOffender: Boolean?) = apply {
     this.hasRegisteredSexOffender = { hasRegisteredSexOffender }
   }
@@ -156,6 +160,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
 
   fun withRiskRatings(configuration: PersonRisksFactory.() -> Unit) = apply {
     this.riskRatings = { PersonRisksFactory().apply(configuration).produce() }
+  }
+
+  fun withRiskRatings(riskRatings: PersonRisks) = apply {
+    this.riskRatings = { riskRatings }
   }
 
   fun withDutyToReferLocalAuthorityAreaName(dutyToReferLocalAuthorityAreaName: String?) = apply {
