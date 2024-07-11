@@ -6793,6 +6793,7 @@ class BookingServiceTest {
 
       val result = bookingService.getWithdrawableState(booking, user)
 
+      assertThat(result.withdrawn).isTrue()
       assertThat(result.withdrawable).isFalse()
     }
 
@@ -6807,6 +6808,7 @@ class BookingServiceTest {
 
       val result = bookingService.getWithdrawableState(booking, user)
 
+      assertThat(result.withdrawn).isFalse()
       assertThat(result.withdrawable).isTrue()
     }
 

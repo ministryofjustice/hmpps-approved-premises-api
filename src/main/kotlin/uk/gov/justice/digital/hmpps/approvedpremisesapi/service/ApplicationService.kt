@@ -644,6 +644,7 @@ class ApplicationService(
   fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = !application.isWithdrawn,
+      withdrawn = application.isWithdrawn,
       userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
     )
   }

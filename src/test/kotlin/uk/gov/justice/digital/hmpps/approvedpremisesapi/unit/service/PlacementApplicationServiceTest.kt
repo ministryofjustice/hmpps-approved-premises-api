@@ -717,6 +717,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.getWithdrawableState(placementApplication, user)
 
+      assertThat(result.withdrawn).isTrue()
       assertThat(result.withdrawable).isFalse()
     }
 
@@ -753,6 +754,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.getWithdrawableState(placementApplication, user)
 
+      assertThat(result.withdrawn).isFalse()
       assertThat(result.withdrawable).isTrue()
     }
 

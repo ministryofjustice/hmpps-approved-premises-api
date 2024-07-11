@@ -1038,6 +1038,7 @@ class BookingService(
   fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = booking.isInCancellableStateCas1(),
+      withdrawn = booking.isCancelled,
       userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
       blockingReason = if (booking.hasArrivals()) {
         BlockingReason.ArrivalRecordedInCas1

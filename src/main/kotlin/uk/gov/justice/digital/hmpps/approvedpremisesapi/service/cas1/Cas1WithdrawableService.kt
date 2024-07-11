@@ -271,6 +271,7 @@ data class WithdrawableState(
    * placement and application
    */
   val blockingReason: BlockingReason? = null,
+  val withdrawn: Boolean,
 )
 
 data class WithdrawableDatePeriod(

@@ -204,6 +204,7 @@ class PlacementApplicationService(
   fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = placementApplication.isInWithdrawableState(),
+      withdrawn = placementApplication.isWithdrawn,
       userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
     )
   }
