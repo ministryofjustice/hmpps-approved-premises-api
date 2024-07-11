@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.sentry.Sentry
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
@@ -12,6 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -21,6 +21,7 @@ class WebClientCache(
   private val objectMapper: ObjectMapper,
   private val redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
+  private val sentryService: SentryService,
 ) {
   fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
     val cacheKeySet = CacheKeySet(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
@@ -74,17 +75,24 @@ class WebClientCache(
       cacheConfig.failureSoftTtlBackoffSeconds.last().toLong()
     }
 
+    val path = requestBuilder.path ?: ""
+
     val cacheEntry = PreemptiveCacheMetadata(
       httpStatus = exception.statusCode,
       refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
       method = method,
-      path = requestBuilder.path ?: "",
+      path = path,
       hasResponseBody = body != null,
       attempt = attempt,
     )
 
     if (attempt >= FAILED_ATTEMPT_WARN_THRESHOLD) {
-      Sentry.captureException(RuntimeException("Unable to make upstream request after $attempt attempts", exception))
+      sentryService.captureException(
+        RuntimeException(
+          "Unable to make upstream request to refresh cache after $attempt attempts. Path is $path",
+          exception,
+        ),
+      )
     }
 
     writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())
