@@ -7,7 +7,7 @@ class CsvBuilder {
     csv.append("$field,")
   }
 
-  fun withHeader(vararg fields: Any) = withUnquotedFields(fields)
+  fun withHeader(vararg fields: Any) = withUnquotedFields(*fields)
   fun withUnquotedFields(vararg fields: Any) = apply {
     fields.forEach {
       csv.append("$it,")
