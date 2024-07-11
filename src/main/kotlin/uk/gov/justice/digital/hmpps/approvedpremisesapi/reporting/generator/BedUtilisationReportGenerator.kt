@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
+import java.time.ZoneOffset
 import java.util.UUID
 
 class BedUtilisationReportGenerator(
@@ -82,7 +83,7 @@ class BedUtilisationReportGenerator(
           properties.startDate
         } else {
           latestDateOf(
-            bedspace.bedspaceStartDate!!,
+            bedspace.bedspaceStartDate!!.atZone(ZoneOffset.UTC).toLocalDate(),
             properties.startDate,
           )
         }
@@ -118,7 +119,13 @@ class BedUtilisationReportGenerator(
           effectiveTurnaroundDays = effectiveTurnaroundDays,
           voidDays = voidDays,
           totalBookedDays = totalBookedDays,
-          bedspaceStartDate = if (bedspace.bedspaceStartDate == null) null else bedspace.bedspaceStartDate!!,
+          bedspaceStartDate = if (bedspace.bedspaceStartDate == null) {
+            null
+          } else {
+            bedspace.bedspaceStartDate!!.atZone(
+              ZoneOffset.UTC,
+            ).toLocalDate()
+          },
           bedspaceEndDate = bedspace.bedspaceEndDate,
           bedspaceOnlineDays = bedspaceOnlineDays,
           occupancyRate = totalBookedDays.toDouble() / bedspaceOnlineDays,
