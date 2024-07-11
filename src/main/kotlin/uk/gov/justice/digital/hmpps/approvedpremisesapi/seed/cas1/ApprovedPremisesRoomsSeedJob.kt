@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -165,7 +164,7 @@ class ApprovedPremisesRoomsSeedJob(
   }
 
   private fun findExistingPremisesOrThrow(row: ApprovedPremisesRoomsSeedCsvRow): PremisesEntity {
-    return premisesRepository.findByApCode(row.apCode, ApprovedPremisesEntity::class.java)
+    return premisesRepository.findByApCode(row.apCode)
       ?: throw RuntimeException(
         "Error: no premises with apCode '${row.apCode}' found. " +
           "Please seed premises before rooms/beds.",
