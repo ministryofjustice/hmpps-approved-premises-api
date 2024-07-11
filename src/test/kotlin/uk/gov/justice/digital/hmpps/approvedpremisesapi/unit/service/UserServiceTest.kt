@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -212,6 +213,45 @@ class UserServiceTest {
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
       verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
+    }
+
+    @Test
+    fun `getExistingUserOrCreate throws intenal server error problem if can't resolve region`() {
+      val username = "SOMEPERSON"
+      val pduDeliusCode = randomStringMultiCaseWithNumbers(7)
+      val brought = KeyValue(
+        code = pduDeliusCode,
+        description = randomStringMultiCaseWithNumbers(10),
+      )
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+
+      val deliusUser = StaffUserDetailsFactory()
+        .withUsername(username)
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .withProbationAreaCode("AREACODE")
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().withCode("TC1").withBorough(brought).produce(),
+            StaffUserTeamMembershipFactory().withCode("TC2").withBorough(brought).produce(),
+          ),
+        )
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns null
+
+      assertThatThrownBy {
+        userService.getExistingUserOrCreate(username)
+      }
+        .hasMessage("Unknown probation region code 'AREACODE' for user 'SOMEPERSON'")
+        .isInstanceOf(RuntimeException::class.java)
     }
   }
 
