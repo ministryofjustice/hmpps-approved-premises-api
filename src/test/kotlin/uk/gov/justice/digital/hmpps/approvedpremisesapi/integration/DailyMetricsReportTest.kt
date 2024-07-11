@@ -37,7 +37,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
   fun `Get daily metrics report for returns 403 Forbidden if user does not have access`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
-        .uri("/reports/daily-metrics?year=2023&month=4")
+        .uri("/cas1/reports/dailyMetrics?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -51,7 +51,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
   fun `Get daily metrics report for returns not allowed if the service is not Approved Premises`(serviceName: ServiceName) {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri("/reports/daily-metrics?year=2023&month=4")
+        .uri("/cas1/reports/dailyMetrics?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", serviceName.value)
         .exchange()
@@ -236,7 +236,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         )
 
       webTestClient.get()
-        .uri("/reports/daily-metrics?year=$year&month=$month")
+        .uri("/cas1/reports/dailyMetrics?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
