@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingTurnaroundReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationLostBedReportData
+import java.time.Instant
 import java.time.LocalDate
 
 fun convertToCas3BedUtilisationBedspaceReportData(bed: BedEntity): Cas3BedUtilisationBedspaceReportData {
@@ -44,6 +45,7 @@ fun convertToCas3BedUtilisationBookingReportData(booking: BookingEntity): Cas3Be
     departureDate = booking.departureDate,
     bedId = booking.bed?.id.toString(),
     arrivalId = booking.arrival?.id?.toString(),
+    arrivalCreatedAt = booking.arrival?.createdAt?.toInstant(),
     confirmationId = booking.confirmation?.id?.toString(),
   )
 }
@@ -53,7 +55,7 @@ fun convertToCas3BedUtilisationBookingCancellationReportData(booking: BookingEnt
     cancellationId = booking.cancellation?.id.toString(),
     bedId = booking.bed?.id.toString(),
     bookingId = booking.id.toString(),
-    createdAt = booking.cancellation?.createdAt?.toLocalDate()!!,
+    createdAt = booking.cancellation?.createdAt?.toInstant()!!,
   )
 }
 
@@ -63,7 +65,7 @@ fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntit
     bedId = booking.bed?.id.toString(),
     bookingId = booking.id.toString(),
     workingDayCount = booking.turnaround?.workingDayCount!!,
-    createdAt = booking.turnaround?.createdAt?.toLocalDate()!!,
+    createdAt = booking.turnaround?.createdAt?.toInstant()!!,
   )
 }
 
@@ -100,6 +102,7 @@ class Cas3BedUtilisationBookingReportData(
   override val departureDate: LocalDate,
   override val bedId: String,
   override val arrivalId: String?,
+  override val arrivalCreatedAt: Instant?,
   override val confirmationId: String?,
 ) : BedUtilisationBookingReportData
 
@@ -107,14 +110,14 @@ class Cas3BedUtilisationBookingCancellationReportData(
   override val cancellationId: String,
   override val bedId: String,
   override val bookingId: String,
-  override val createdAt: LocalDate,
+  override val createdAt: Instant,
 ) : BedUtilisationBookingCancellationReportData
 
 class Cas3BedUtilisationBookingTurnaroundReportData(
   override val turnaroundId: String,
   override val bedId: String,
   override val bookingId: String,
-  override val createdAt: LocalDate,
+  override val createdAt: Instant,
   override val workingDayCount: Int,
 ) : BedUtilisationBookingTurnaroundReportData
 
