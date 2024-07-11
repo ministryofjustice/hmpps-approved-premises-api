@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -58,7 +57,6 @@ class PeopleController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
-  private val featureFlagService: FeatureFlagService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -261,15 +259,9 @@ class PeopleController(
           .getApplicationsForCrn(crn, ServiceName.approvedPremises)
           .map { BoxedApplication.of(it as ApprovedPremisesApplicationEntity) }
 
-        val useOfflineApplications = featureFlagService.getBooleanFlag("cas1-provide-offline-application-events-in-personal-timeline", default = false)
-        val offlineApplications = when (useOfflineApplications) {
-          true ->
-            applicationService
-              .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
-              .map { BoxedApplication.of(it) }
-
-          false -> listOf()
-        }
+        val offlineApplications = applicationService
+          .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+          .map { BoxedApplication.of(it) }
 
         val allApplications = regularApplications + offlineApplications
 
