@@ -49,7 +49,9 @@ You can force applying the latest migrations by restarting the API pods in pre-p
 
 ## Run an adhoc database refresh
 
-Note! Due to the Known Issues mentioned above, it's strongly advised that you ensure the pre-prod database is on the same version of migrations as the prod database before running the job
+Note! Due to the Known Issues mentioned above, it's strongly advised that you ensure the pre-prod database is on the same version of migrations as the prod database before running the job. You can do this using the following script in each environment:
+
+```select script, installed_on from flyway_schema_history  order by installed_on desc limit 10;```
 
 If you need to run the database refresh outside the schedule, you can run the following command:
 
