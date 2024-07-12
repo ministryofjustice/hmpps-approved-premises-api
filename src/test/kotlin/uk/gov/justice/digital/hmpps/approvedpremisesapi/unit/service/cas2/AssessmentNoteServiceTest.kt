@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -8,7 +7,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import io.sentry.Sentry
-import io.sentry.protocol.SentryId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -431,23 +429,13 @@ class AssessmentNoteServiceTest {
         every { mockExternalUserService.getUserForRequest() } returns externalUser
         mockkStatic(Sentry::class)
 
-        every {
-          Sentry.captureException(
-            RuntimeException(
-              "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
-                "Unable to send email for Note ${noteEntity.id} on Application ${submittedApplicationWithNoReferrerEmail.id}",
-              NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
-            ),
-          )
-        } returns SentryId.EMPTY_ID
-
         assessmentNoteService.createAssessmentNote(
           assessmentId = assessment.id,
           NewCas2ApplicationNote(note = "new note"),
         )
 
         verify(exactly = 1) {
-          Sentry.captureException(
+          Sentry.captureMessage(
             any(),
           )
         }

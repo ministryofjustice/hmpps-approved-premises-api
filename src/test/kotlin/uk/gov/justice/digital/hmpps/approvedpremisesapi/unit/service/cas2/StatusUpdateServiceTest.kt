@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -8,7 +7,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import io.sentry.Sentry
-import io.sentry.protocol.SentryId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -392,16 +390,6 @@ class StatusUpdateServiceTest {
 
           mockkStatic(Sentry::class)
 
-          every {
-            Sentry.captureException(
-              RuntimeException(
-                "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
-                  "Unable to send email when updating status of Application ${submittedApplicationWithNoReferrerEmail.id}",
-                NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
-              ),
-            )
-          } returns SentryId.EMPTY_ID
-
           statusUpdateService.createForAssessment(
             assessmentId = assessmentWithNoEmail.id,
             statusUpdate = applicationStatusUpdateWithDetail,
@@ -409,7 +397,7 @@ class StatusUpdateServiceTest {
           )
 
           verify(exactly = 1) {
-            Sentry.captureException(
+            Sentry.captureMessage(
               any(),
             )
           }
