@@ -30,8 +30,6 @@ COPY --from=builder --chown=appuser:appgroup /app/build/libs/applicationinsights
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.json /app
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.nonprod.json /app
 
-COPY --from=builder --chown=appuser:appgroup /app/src/main/resources/static/jaqy-1.2.0.jar.checksum.sha256 /app
-
 COPY --from=builder --chown=appuser:appgroup /app/script/run_seed_job /app
 COPY --from=builder --chown=appuser:appgroup /app/script/run_migration_job /app
 COPY --from=builder --chown=appuser:appgroup /app/script/hard_delete /app
