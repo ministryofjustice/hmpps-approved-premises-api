@@ -10,10 +10,10 @@ import javax.persistence.Table
 
 @Repository
 interface MoveOnCategoryRepository : JpaRepository<MoveOnCategoryEntity, UUID> {
-  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*'")
+  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope IN (:serviceName, '*')")
   fun findAllByServiceScope(serviceName: String): List<MoveOnCategoryEntity>
 
-  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' AND m.isActive = true")
+  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.isActive = true AND m.serviceScope IN (:serviceName, '*')")
   fun findActiveByServiceScope(serviceName: String): List<MoveOnCategoryEntity>
 
   @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.isActive = true")
