@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
@@ -20,7 +22,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     assertJsonEquals(
       """ 
      {
-          "Applications": [ ]
+          "Applications": [ ],
+          "Assessments": [ ]
       }
       """.trimIndent(),
       result,
@@ -36,14 +39,101 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
       {
-        "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}]     
+        "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
+        "Assessments"  : [ ]
+           
       }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
   }
 
-  private fun temporaryAccommodationApplicationJson(temporaryAccommodationApplication: TemporaryAccommodationApplicationEntity): String =
+  @Test
+  fun `Get CAS3 Information - Assessments`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val user = userEntity()
+    val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
+    val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
+    val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+      {
+        "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
+        "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}]
+           
+      }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun temporaryAccommodationAssessmentJson(
+    assessment: TemporaryAccommodationAssessmentEntity,
+  ): String =
+    """
+      {
+         "application_id": "${assessment.application.id}",
+         "assessment_id": "${assessment.id}",
+         "crn": "${assessment.application.crn}",
+         "noms_number": "${assessment.application.nomsNumber}",
+         "assessor_name": "${assessment.allocatedToUser?.name}",
+         "data": $DATA_JSON_SIMPLE,
+         "document": $DOCUMENT_JSON_SIMPLE,
+         "created_at": "$CREATED_AT",
+         "allocated_at": "$ALLOCATED_AT",
+         "submitted_at": "$SUBMITTED_AT",
+         "reallocated_at": null,
+         "due_at": "$DUE_AT",
+         "decision": "${AssessmentDecision.REJECTED}",
+         "rejection_rationale": "${assessment.rejectionRationale}",
+         "is_withdrawn": ${assessment.isWithdrawn},
+         "service": "temporary-accommodation",
+         "summary_data": $DATA_JSON_SIMPLE,
+         "completed_at": "$SUBMITTED_AT",
+         "referral_rejection_reason_category": "${assessment.referralRejectionReason?.name}",
+         "referral_rejection_reason_detail": "${assessment.referralRejectionReasonDetail}",
+         "release_date": "$ARRIVED_AT_DATE_ONLY",
+         "accommodation_required_from_date": "$ARRIVED_AT_DATE_ONLY"      
+      }
+    """.trimIndent()
+
+  private fun temporaryAccommodationAssessmentEntity(
+    application: TemporaryAccommodationApplicationEntity,
+  ): TemporaryAccommodationAssessmentEntity {
+    var user = userEntity()
+    return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+      withData(DATA_JSON_SIMPLE)
+      withDocument(DOCUMENT_JSON_SIMPLE)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
+      withIsWithdrawn(false)
+      withAllocatedToUser(userEntity())
+      withApplication(application)
+      withAssessmentSchema(approvedPremisesAssessmentJsonSchemaEntity())
+      withDecision(AssessmentDecision.REJECTED)
+      withReallocatedAt(null)
+      withRejectionRationale("rejected as no good")
+      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withDueAt(OffsetDateTime.parse(DUE_AT))
+      withSummaryData(DATA_JSON_SIMPLE)
+      withCompletedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withReferralRejectionReason(
+        referralRejectionReasonEntityFactory.produceAndPersist {
+          withName(randomStringMultiCaseWithNumbers(6))
+          withIsActive(true)
+          withServiceScope("TEMPORARY_ACCOMMODATION")
+          withSortOrder(1)
+        },
+      )
+      withReferralRejectionReasonDetail("Some Reason Detail")
+      withReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withAccommodationRequiredFromDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+    }
+  }
+
+  private fun temporaryAccommodationApplicationJson(
+    temporaryAccommodationApplication: TemporaryAccommodationApplicationEntity,
+  ): String =
     """
     {
         "crn": "${temporaryAccommodationApplication.crn}",
@@ -94,7 +184,11 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
       withPersonReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
       withCreatedByUser(user)
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaEntity())
+      withApplicationSchema(
+        temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+      )
       withConvictionId(CONVICTION_ID)
       withName(NAME)
       withCreatedByUser(user)

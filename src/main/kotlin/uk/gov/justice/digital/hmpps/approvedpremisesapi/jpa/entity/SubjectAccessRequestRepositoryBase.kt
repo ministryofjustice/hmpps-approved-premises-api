@@ -49,7 +49,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
           and (:start_date is null or b.created_at >= :start_date) 
           and (:end_date is null or b.created_at <= :end_date)
   ) booking
-        """.trimIndent(),
+      """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,
         nomsNumber,
@@ -95,7 +95,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
       and (:start_date is null or b.created_at >= :start_date)
       and (:end_date is null or b.created_at <= :end_date)
         )booking_ext
-        """.trimIndent(),
+      """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,
         nomsNumber,
@@ -138,101 +138,13 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                 and (:start_date is null or b.created_at >= :start_date)
                 and (:end_date is null or b.created_at <= :end_date)        
           ) cancellation
-        """.trimIndent(),
+      """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,
         nomsNumber,
         startDate,
         endDate,
       ).addValue("service_name", serviceName.value),
-    )
-    return toJsonString(result)
-  }
-
-  fun bedMoves(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceName: ServiceName = ServiceName.approvedPremises,
-  ): String {
-    var result = jdbcTemplate.queryForMap(
-      """
-       select json_agg(bed_moves) as json
-       from (
-          select
-              b.crn ,
-              b.noms_number,
-              bm.notes,
-              previous_bed."name" as previous_bed_name,
-              previous_bed.code as previous_bed_code,
-              new_bed."name" as new_bed_name,
-              new_bed.code as new_bed_code,
-              bm.created_at
-          from
-              bed_moves bm
-          inner join bookings b on
-              b.id = bm.booking_id
-          inner join beds previous_bed on 
-            bm.previous_bed_id  = previous_bed.id 
-          inner join beds new_bed on 
-            bm.new_bed_id  = new_bed.id 
-                  
-          where
-              b.service = :service_name and
-              (b.crn = :crn
-                  or b.noms_number = :noms_number )
-            and (:start_date is null or b.created_at >= :start_date)
-            and (:end_date is null or b.created_at <= :end_date)
-        ) bed_moves
-        """.trimIndent(),
-      MapSqlParameterSource().addSarParameters(
-        crn,
-        nomsNumber,
-        startDate,
-        endDate,
-      ).addValue("service_name", serviceName.value),
-    )
-    return toJsonString(result)
-  }
-
-  fun appeals(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
-    var result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(appeals) as json
-      from ( 
-            select
-              app.crn,
-              app.noms_number,
-              a.id as appeal_id,
-              a.application_id,
-              a.assessment_id,
-              a.appeal_date,
-              a.appeal_detail,
-              a.decision ,
-              a.decision_detail,
-              a.created_at as appeal_created_at,
-              u."name" as created_by_user     
-            from appeals a
-              inner join users u on
-              u.id = a.created_by_user_id
-              inner join applications app on
-              app.id = a.application_id
-              inner join assessments assess on
-              assess.id = a.assessment_id 
-            where
-              (app.crn = :crn
-                or app.noms_number = :noms_number )
-            and (:start_date is null or app.created_at >= :start_date)
-            and (:end_date is null or app.created_at <= :end_date)
-        ) appeals
-        """.trimIndent(),
-      MapSqlParameterSource().addSarParameters(
-        crn,
-        nomsNumber,
-        startDate,
-        endDate,
-      ),
     )
     return toJsonString(result)
   }
@@ -272,7 +184,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                and (:start_date is null or de.created_at >= :start_date)
                and (:end_date is null or de.created_at <= :end_date) 
            ) domain_events
-        """.trimIndent(),
+      """.trimIndent(),
       MapSqlParameterSource()
         .addSarParameters(crn, nomsNumber, startDate, endDate)
         .addValue("service_name", serviceName),
@@ -309,7 +221,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                  and (:start_date is null or de.created_at >= :start_date)
                  and (:end_date is null or de.created_at <= :end_date) 
              ) domain_events_metadata
-        """.trimIndent(),
+      """.trimIndent(),
       MapSqlParameterSource()
         .addSarParameters(crn, nomsNumber, startDate, endDate)
         .addValue("service_name", serviceName),

@@ -86,6 +86,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     var PREVIOUS_DEPARTURE_DATE_ONLY = DEPARTED_AT.substring(0..9)
     var NEW_DEPARTURE_DATE_ONLY = NEW_DEPARTED_AT.substring(0..9)
     var CANCELLATION_DATE_ONLY = CANCELLATION_DATE.substring(0..9)
+    var ALLOCATED_DATE_ONLY = ALLOCATED_AT.substring(0..9)
   }
   protected fun offlineApplicationJson(booking: BookingEntity) =
     """

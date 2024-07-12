@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class CAS3SubjectAccessRequestRepository (
+class CAS3SubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
@@ -65,6 +65,55 @@ class CAS3SubjectAccessRequestRepository (
 
     return toJsonString(result)
   }
-
-
+  fun temporaryAccommodationAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+        select json_agg(assessments) as json 
+        from (
+              select
+                app.id as application_id,
+                assess.id as assessment_id,
+                app.crn,
+                app.noms_number,
+                u."name" as assessor_name,
+                assess."data" ,
+                assess."document",
+                assess.created_at,
+                assess.allocated_at,
+                assess.submitted_at,
+                assess.reallocated_at,
+                assess.due_at,
+                assess.decision,
+                assess.rejection_rationale,
+                assess.is_withdrawn,
+                assess.service,
+                taa.summary_data,
+                taa.completed_at,
+                rrr."name" as referral_rejection_reason_category,
+                taa.referral_rejection_reason_detail,
+                taa.release_date,
+                taa.accommodation_required_from_date
+              from
+                temporary_accommodation_assessments taa
+              inner join assessments assess on
+                assess.id = taa.assessment_id
+              inner join applications app on
+                app.id = assess.application_id
+              inner join users u on 
+                u.id = assess.allocated_to_user_id 
+              left join referral_rejection_reasons rrr on
+                rrr.id = taa.referral_rejection_reason_id
+              where 
+                (app.crn = :crn
+                  or app.noms_number = :noms_number )
+              and (:start_date is null or app.created_at >= :start_date) 
+              and (:end_date is null or app.created_at <= :end_date)
+            ) assessments
+      
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
 }
