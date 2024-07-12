@@ -64,6 +64,10 @@ class Cas1OutOfServiceBedRevisionEntityFactory : Factory<Cas1OutOfServiceBedRevi
     this.reason = { Cas1OutOfServiceBedReasonEntityFactory().apply(configuration).produce() }
   }
 
+  fun withYieldedReason(reason: Yielded<Cas1OutOfServiceBedReasonEntity>) = apply {
+    this.reason = reason
+  }
+
   fun withOutOfServiceBed(outOfServiceBed: Cas1OutOfServiceBedEntity) = apply {
     this.outOfServiceBed = { outOfServiceBed }
   }

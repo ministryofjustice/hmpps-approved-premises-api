@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
@@ -38,6 +40,7 @@ class Cas1ReportService(
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
   private val lostBedsRepository: LostBedsRepository,
+  private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val objectMapper: ObjectMapper,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
 ) {
@@ -101,6 +104,14 @@ class Cas1ReportService(
 
   fun createLostBedReport(properties: LostBedReportProperties, outputStream: OutputStream) {
     LostBedsReportGenerator(lostBedsRepository)
+      .createReport(bedRepository.findAll(), properties)
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
+  fun createOutOfServiceBedReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
+    Cas1OutOfServiceBedsReportGenerator(cas1OutOfServiceBedRepository)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

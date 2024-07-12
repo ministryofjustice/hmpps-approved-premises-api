@@ -79,6 +79,12 @@ class Cas1ReportsController(
       ) { outputStream ->
         cas1ReportService.createLostBedReport(LostBedReportProperties(xServiceName, null, year, month), outputStream)
       }
+      Cas1ReportName.outOfServiceBeds -> return generateStreamingResponse(
+        contentType = ContentType.XLSX,
+        fileName = createCas1ReportName("out-of-service-beds", year, month, ContentType.XLSX),
+      ) { outputStream ->
+        cas1ReportService.createOutOfServiceBedReport(monthSpecificReportParams, outputStream)
+      }
       Cas1ReportName.placementApplications -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
