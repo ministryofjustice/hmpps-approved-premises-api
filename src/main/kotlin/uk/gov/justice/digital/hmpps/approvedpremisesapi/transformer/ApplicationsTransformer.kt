@@ -9,8 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -158,12 +156,6 @@ class ApplicationsTransformer(
     person = personTransformer.transformModelToPersonApi(personInfo),
     createdAt = jpa.createdAt.toInstant(),
     type = "Offline",
-  )
-
-  fun transformToWithdrawable(jpa: ApplicationEntity) = Withdrawable(
-    id = jpa.id,
-    type = WithdrawableType.application,
-    dates = emptyList(),
   )
 
   private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus {

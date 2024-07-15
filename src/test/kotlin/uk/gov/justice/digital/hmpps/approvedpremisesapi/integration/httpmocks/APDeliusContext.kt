@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
@@ -35,12 +34,6 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String
   mockSuccessfulGetCallWithJsonResponse(
     url = "/probation-cases/$crn/details",
     responseBody = response,
-  )
-
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffDetailsCall(staffCode: String, staffUserDetails: StaffUserDetails) =
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/secure/staff/staffCode/$staffCode",
-    responseBody = staffUserDetails,
   )
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulTeamsManagingCaseCall(crn: String, response: ManagingTeamsResponse) =

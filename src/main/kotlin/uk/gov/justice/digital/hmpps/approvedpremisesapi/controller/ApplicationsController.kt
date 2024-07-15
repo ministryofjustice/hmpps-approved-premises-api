@@ -154,7 +154,13 @@ class ApplicationsController(
     }
 
     if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+      return ResponseEntity.ok(
+        getPersonDetailAndTransform(
+          application = application,
+          user = user,
+          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity && user.hasQualification(UserQualification.LAO),
+        ),
+      )
     }
 
     val offlineApplication = when (
@@ -166,7 +172,13 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> offlineApplicationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(offlineApplication, user))
+    return ResponseEntity.ok(
+      getPersonDetailAndTransform(
+        offlineApplication = offlineApplication,
+        user = user,
+        ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
+      ),
+    )
   }
 
   @Transactional
@@ -600,8 +612,12 @@ class ApplicationsController(
     return cas1WithdrawableService.allDirectlyWithdrawables(application, user)
   }
 
-  private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getInfoForPerson(application.crn, user.deliusUsername, false)
+  private fun getPersonDetailAndTransform(
+    application: ApplicationEntity,
+    user: UserEntity,
+    ignoreLaoRestrictions: Boolean = false,
+  ): Application {
+    val personInfo = offenderService.getInfoForPerson(application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
@@ -616,8 +632,12 @@ class ApplicationsController(
     return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
   }
 
-  private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getInfoForPerson(offlineApplication.crn, user.deliusUsername, false)
+  private fun getPersonDetailAndTransform(
+    offlineApplication: OfflineApplicationEntity,
+    user: UserEntity,
+    ignoreLaoRestrictions: Boolean = false,
+  ): Application {
+    val personInfo = offenderService.getInfoForPerson(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }
