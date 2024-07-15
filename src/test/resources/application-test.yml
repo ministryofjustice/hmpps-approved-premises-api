@@ -21,9 +21,6 @@ spring:
         enable_lazy_load_no_trans: true
   main:
     allow-bean-definition-overriding: true
-  redis:
-    port: 6377
-    password: ""
   security:
     oauth2:
       client:
