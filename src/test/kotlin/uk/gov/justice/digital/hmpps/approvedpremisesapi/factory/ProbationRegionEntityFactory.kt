@@ -44,7 +44,6 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
   override fun produce(): ProbationRegionEntity = ProbationRegionEntity(
     id = this.id(),
     name = this.name(),
-    premises = mutableListOf(),
     apArea = this.apArea?.invoke() ?: throw RuntimeException("Must provide an ApArea"),
     deliusCode = this.deliusCode(),
   )

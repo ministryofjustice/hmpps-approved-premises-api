@@ -109,7 +109,6 @@ class BookingTransformerTest {
       id = UUID.fromString("4eae0059-af28-4436-a4d8-7106523866d9"),
       name = "region",
       deliusCode = "ABC",
-      premises = mutableListOf(),
       apArea = ApAreaEntity(
         id = UUID.fromString("a005f122-a0e9-4d93-b5bb-f7c5bd82a015"),
         identifier = "APA",

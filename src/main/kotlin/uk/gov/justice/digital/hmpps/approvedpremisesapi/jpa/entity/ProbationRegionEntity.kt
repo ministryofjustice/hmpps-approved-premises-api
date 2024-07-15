@@ -7,7 +7,6 @@ import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -27,8 +26,6 @@ data class ProbationRegionEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   val apArea: ApAreaEntity,
-  @OneToMany(mappedBy = "probationRegion")
-  val premises: MutableList<PremisesEntity>,
   val deliusCode: String,
 ) {
   override fun toString() = "ProbationRegionEntity:$id"
