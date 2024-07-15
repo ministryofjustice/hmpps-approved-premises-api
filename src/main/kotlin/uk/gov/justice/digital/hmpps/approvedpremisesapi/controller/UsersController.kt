@@ -15,15 +15,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole as JpaUserRole
 
 @Service
 class UsersController(
   private val userService: UserService,
   private val userTransformer: UserTransformer,
+  private val userAccessService: UserAccessService,
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
@@ -46,12 +47,7 @@ class UsersController(
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
   ): ResponseEntity<List<User>> {
-    val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
-        JpaUserRole.CAS1_ADMIN,
-        JpaUserRole.CAS1_WORKFLOW_MANAGER,
-      )
-    ) {
+    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
@@ -80,12 +76,7 @@ class UsersController(
     id: java.util.UUID,
     userRolesAndQualifications: UserRolesAndQualifications,
   ): ResponseEntity<User> {
-    val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
-        JpaUserRole.CAS1_ADMIN,
-        JpaUserRole.CAS1_WORKFLOW_MANAGER,
-      )
-    ) {
+    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
@@ -99,12 +90,7 @@ class UsersController(
   }
 
   override fun usersIdDelete(id: UUID, xServiceName: ServiceName): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
-        JpaUserRole.CAS1_ADMIN,
-        JpaUserRole.CAS1_WORKFLOW_MANAGER,
-      )
-    ) {
+    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
     return ResponseEntity.ok(
@@ -113,12 +99,7 @@ class UsersController(
   }
 
   override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
-    val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
-        JpaUserRole.CAS1_ADMIN,
-        JpaUserRole.CAS1_WORKFLOW_MANAGER,
-      )
-    ) {
+    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
@@ -129,12 +110,7 @@ class UsersController(
   }
 
   override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
-    val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
-        JpaUserRole.CAS1_ADMIN,
-        JpaUserRole.CAS1_WORKFLOW_MANAGER,
-      )
-    ) {
+    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
