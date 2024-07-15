@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
@@ -345,8 +349,8 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Move on Categories returns 200 with correct body`() {
-    moveOnCategoryRepository.deleteAll()
-
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
+    inactivateExistingMoveOnCategories()
     val moveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
       moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
@@ -365,9 +369,65 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Move on Categories for only approved premises returns 200 with correct body`() {
-    moveOnCategoryRepository.deleteAll()
+  fun `Get Move on Categories with includeInactive flag set returns active and inactive move on categories`() {
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
+    inactivateExistingMoveOnCategories()
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
 
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val result =
+      webTestClient
+        .get()
+        .uri("/reference-data/move-on-categories?includeInactive=true")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectBodyList(MoveOnCategory::class.java)
+        .returnResult()
+        .responseBody
+
+    var allRecords = moveOnCategoryRepository.findAll()
+
+    assertThat(result!!.size).isEqualTo(allRecords.count())
+    assertThat(result.filter { !it.isActive }.count()).isEqualTo(allRecords.count { it.isActive == false })
+    assertThat(result.filter { it.isActive }.size).isEqualTo(10)
+  }
+
+  @Test
+  fun `Get Move on Categories returns categories with asterisk service scope`() {
+    inactivateExistingMoveOnCategories()
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope("*")
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val result =
+      webTestClient
+        .get()
+        .uri("/reference-data/move-on-categories")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectBodyList(MoveOnCategory::class.java)
+        .returnResult()
+        .responseBody
+
+    assertThat(result!!.size).isEqualTo(20)
+    assertThat(result.filter { it.serviceScope == ServiceName.temporaryAccommodation.value }.size).isEqualTo(10)
+    assertThat(result.filter { it.serviceScope == ServiceName.approvedPremises.value }).isEmpty()
+    assertThat(result.filter { it.serviceScope == "*" }.size).isEqualTo(10)
+  }
+
+  @Test
+  fun `Get Move on Categories for only approved premises returns 200 with correct body`() {
+    inactivateExistingMoveOnCategories()
     moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
 
     val expectedMoveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
@@ -383,7 +443,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/reference-data/move-on-categories")
       .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "approved-premises")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
@@ -393,7 +453,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Move on Categories for only temporary accommodation returns 200 with correct body`() {
-    moveOnCategoryRepository.deleteAll()
+    inactivateExistingMoveOnCategories()
 
     moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
 
@@ -410,12 +470,57 @@ class ReferenceDataTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/reference-data/move-on-categories")
       .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "temporary-accommodation")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
       .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Move on Categories returns the same result when not providing includeInactive parameter as when it's set to false `() {
+    inactivateExistingMoveOnCategories()
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
+    moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    var resultWithIncludeInactiveNull =
+      webTestClient
+        .get()
+        .uri("/reference-data/move-on-categories")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .returnResult()
+        .responseBody.contentToString()
+
+    var resultWithIncludeInctiveFalse =
+      webTestClient
+        .get()
+        .uri("/reference-data/move-on-categories?includeInactive=false")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .returnResult()
+        .responseBody.contentToString()
+
+    assertEquals(resultWithIncludeInactiveNull, resultWithIncludeInctiveFalse)
+  }
+
+  private fun inactivateExistingMoveOnCategories(): List<MoveOnCategoryEntity> {
+    val inactive = moveOnCategoryRepository.findAll()
+      .map { category -> category.copy(isActive = false) }
+    return moveOnCategoryRepository.saveAllAndFlush(inactive)
   }
 
   @Test
