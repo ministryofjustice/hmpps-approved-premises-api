@@ -29,7 +29,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "Applications": [ ],
           "Assessments": [ ],
           "AssessmentReferralHistoryNotes" : [ ],
-          "Bookings": [ ]
+          "Bookings": [ ],
+          "BookingExtensions": [ ]
       }
       """.trimIndent(),
       result,
@@ -48,7 +49,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments"  : [ ],
         "AssessmentReferralHistoryNotes" : [ ],
-        "Bookings": [ ]
+        "Bookings": [ ],
+        "BookingExtensions": [ ]
       }
     """.trimIndent()
 
@@ -68,7 +70,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
         "AssessmentReferralHistoryNotes" : [ ],
-        "Bookings": [ ] 
+        "Bookings": [ ],
+        "BookingExtensions": [ ]
       }
     """.trimIndent()
 
@@ -91,7 +94,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Applications": [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments": [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
         "AssessmentReferralHistoryNotes": [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ],
-        "Bookings": [ ]
+        "Bookings": [ ],
+        "BookingExtensions": [ ]
       }
     """.trimIndent()
 
@@ -114,7 +118,33 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     "Applications" : [${temporaryAccommodationApplicationJson(application)}],
     "Assessments"  : [ ],
     "AssessmentReferralHistoryNotes" : [ ],
-    "Bookings": [${bookingsJson(booking)}]
+    "Bookings": [${bookingsJson(booking)}],
+    "BookingExtensions": [ ]
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS3 information - have a booking with extension`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val user = userEntity()
+    val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
+
+    val booking = bookingEntity(offenderDetails, application, null, ServiceName.temporaryAccommodation)
+    val bookingExtension = bookingExtensionEntity(booking)
+
+    val result =
+      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+    {
+      "Applications" : [${temporaryAccommodationApplicationJson(application)}],
+          "Assessments"  : [ ],
+          "AssessmentReferralHistoryNotes" : [ ],
+          "Bookings": [${bookingsJson(booking)}],
+          "BookingExtensions": [${bookingExtensionJson(bookingExtension)}],
     }
     """.trimIndent()
 
