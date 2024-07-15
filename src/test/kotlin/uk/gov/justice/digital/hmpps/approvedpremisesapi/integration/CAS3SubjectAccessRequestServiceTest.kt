@@ -31,7 +31,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "AssessmentReferralHistoryNotes" : [ ],
          "Bookings": [ ],
          "BookingExtensions": [ ],
-         "Cancellations": [ ]
+         "Cancellations": [ ],
+         "DomainEvents": [ ],
+         "DomainEventMetadata": [ ]
 
       }
       """.trimIndent(),
@@ -53,7 +55,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [ ],
         "Bookings": [ ],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
       }
     """.trimIndent()
 
@@ -75,7 +79,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [ ],
         "Bookings": [ ],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
       }
     """.trimIndent()
 
@@ -100,8 +106,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes": [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ],
         "Bookings": [ ],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
-
+        "Cancellations": [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
       }
     """.trimIndent()
 
@@ -126,7 +133,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [ ],
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [ ],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -152,7 +161,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [ ],
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [${bookingExtensionJson(bookingExtension)}],
-        "Cancellations": [ ]
+        "Cancellations": [ ],
+        "DomainEvents": [ ],
+        "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
@@ -177,12 +188,40 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "AssessmentReferralHistoryNotes" : [ ], 
       "Bookings": [${bookingsJson(booking)}],
       "BookingExtensions": [ ],
-      "Cancellations": [${cancellationJson(cancellation)}]
+      "Cancellations": [${cancellationJson(cancellation)}],
+      "DomainEvents": [ ],
+      "DomainEventMetadata": [ ]
     }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
   }
+
+  @Test
+  fun `get CAS3 information - Domain Events`() {
+    val (offender, _) = `Given an Offender`()
+    val user = userEntity()
+    val application = temporaryAccommodationApplicationEntity(offender, user)
+    val assessment = temporaryAccommodationAssessmentEntity(application)
+
+    val domainEvent = domainEventEntity(offender, application, assessment, user, ServiceName.temporaryAccommodation)
+    val result = sarService.getCAS3Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+      {
+        "Applications" : [${temporaryAccommodationApplicationJson(application)}],
+        "Assessments"  : [${temporaryAccommodationAssessmentJson(assessment)}],
+        "AssessmentReferralHistoryNotes" : [ ],
+        "Bookings": [ ],
+        "BookingExtensions": [ ],
+        "Cancellations": [ ],
+        "DomainEvents": [${domainEventJson(domainEvent,user)}],
+        "DomainEventMetadata": [${domainEventMetadataJson(domainEvent)}]
+      }
+    """.trimIndent()
+    assertJsonEquals(expectedJson, result)
+  }
+
   private fun assessmentReferralHistoryNotesJson(
     assessmentReferralHistoryNoteSystem: AssessmentReferralHistorySystemNoteEntity,
     assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,

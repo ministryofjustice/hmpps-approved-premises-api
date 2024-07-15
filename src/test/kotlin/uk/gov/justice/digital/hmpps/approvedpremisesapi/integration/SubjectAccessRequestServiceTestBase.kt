@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -757,13 +758,14 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
   protected fun domainEventEntity(
     offender: OffenderDetailSummary,
-    application: ApprovedPremisesApplicationEntity,
-    assessment: ApprovedPremisesAssessmentEntity,
+    application: ApplicationEntity,
+    assessment: AssessmentEntity,
     user: UserEntity,
+    serviceName: ServiceName = ServiceName.approvedPremises,
   ): DomainEventEntity {
     val domainEvent = domainEventFactory.produceAndPersist {
       withId(UUID.randomUUID())
-      withService(ServiceName.approvedPremises)
+      withService(serviceName)
       withCrn(offender.otherIds.crn)
       withNomsNumber(offender.otherIds.nomsNumber)
       withApplicationId(application.id)
