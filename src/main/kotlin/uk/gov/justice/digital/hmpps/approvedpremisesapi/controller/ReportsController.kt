@@ -7,31 +7,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReportsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Deprecated("Use [Cas1ReportsController]")
 @Service
 class ReportsController(
-  private val cas1ReportService: Cas1ReportService,
   private val cas3ReportService: Cas3ReportService,
   private val userAccessService: UserAccessService,
 ) : ReportsApiDelegate {
-
-  companion object {
-    val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMdd_HHmm")
-  }
 
   override fun reportsBookingsGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
@@ -78,111 +67,6 @@ class ReportsController(
       cas3ReportService.createBedUtilisationReport(properties, outputStream)
     }
   }
-
-  @Deprecated("Use Cas1ReportsController")
-  override fun reportsLostBedsGet(xServiceName: ServiceName, year: Int, month: Int, probationRegionId: UUID?): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    validateParameters(probationRegionId, month)
-
-    val properties = LostBedReportProperties(xServiceName, probationRegionId, year, month)
-
-    return generateStreamingResponse(
-      contentType = ContentType.XLSX,
-      fileName = createCas1ReportName("lost-beds", year, month, ContentType.XLSX),
-    ) { outputStream ->
-      cas1ReportService.createLostBedReport(properties, outputStream)
-    }
-  }
-
-  @Deprecated("Use Cas1ReportsController")
-  override fun reportsApplicationsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    validateParameters(null, month)
-
-    val properties = MonthSpecificReportParams(year, month)
-
-    return generateStreamingResponse(
-      contentType = ContentType.XLSX,
-      fileName = createCas1ReportName("applications", year, month, ContentType.XLSX),
-    ) { outputStream ->
-      cas1ReportService.createApplicationReport(properties, outputStream)
-    }
-  }
-
-  @Deprecated("Use Cas1ReportsController")
-  override fun reportsDailyMetricsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    if (xServiceName !== ServiceName.approvedPremises) {
-      throw NotAllowedProblem("This endpoint only supports CAS1")
-    }
-
-    val properties = MonthSpecificReportParams(year, month)
-
-    return generateStreamingResponse(
-      contentType = ContentType.XLSX,
-      fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
-    ) { outputStream ->
-      cas1ReportService.createDailyMetricsReport(properties, outputStream)
-    }
-  }
-
-  @Deprecated("Use Cas1ReportsController")
-  override fun reportsPlacementApplicationsGet(
-    xServiceName: ServiceName,
-    year: Int,
-    month: Int,
-  ): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    validateParameters(null, month)
-
-    val properties = MonthSpecificReportParams(year, month)
-
-    return generateStreamingResponse(
-      contentType = ContentType.XLSX,
-      fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
-    ) { outputStream ->
-      cas1ReportService.createPlacementApplicationReport(properties, outputStream)
-    }
-  }
-
-  @Deprecated("Use Cas1ReportsController")
-  override fun reportsPlacementMatchingOutcomesGet(
-    xServiceName: ServiceName,
-    year: Int,
-    month: Int,
-  ): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-
-    if (xServiceName !== ServiceName.approvedPremises) {
-      throw NotAllowedProblem("This endpoint only supports CAS1")
-    }
-
-    val properties = MonthSpecificReportParams(year, month)
-
-    return generateStreamingResponse(
-      contentType = ContentType.XLSX,
-      fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.XLSX),
-    ) { outputStream ->
-      cas1ReportService.createPlacementMatchingOutcomesReport(properties, outputStream)
-    }
-  }
-
-  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType) =
-    "$name-$year-${month.toString().padStart(2, '0')}-${LocalDateTime.now().format(TIMESTAMP_FORMAT)}.${contentType.extension}"
 
   private fun validateParameters(probationRegionId: UUID?, month: Int) {
     when {
