@@ -2879,6 +2879,7 @@ class ApplicationServiceTest {
 
       val result = applicationService.getWithdrawableState(application, user)
 
+      assertThat(result.withdrawn).isFalse()
       assertThat(result.withdrawable).isTrue()
     }
 
@@ -2893,6 +2894,7 @@ class ApplicationServiceTest {
 
       val result = applicationService.getWithdrawableState(application, user)
 
+      assertThat(result.withdrawn).isTrue()
       assertThat(result.withdrawable).isFalse()
     }
 

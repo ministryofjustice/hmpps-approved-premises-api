@@ -110,31 +110,31 @@ class Cas1WithdrawableTreeOperationsTest {
       applicationId = application.id,
       entityType = WithdrawableEntityType.Application,
       entityId = application.id,
-      status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
       children = listOf(
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.PlacementApplication,
           entityId = placementApplication.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawable.id,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingWithdrawable.id,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
                 ),
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
-                  status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
                 ),
               ),
             ),
@@ -142,7 +142,7 @@ class Cas1WithdrawableTreeOperationsTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestNotWithdrawable.id,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -150,13 +150,13 @@ class Cas1WithdrawableTreeOperationsTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawable.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingNotWithdrawable.id,
-          status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+          status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
         ),
       ),
     )
@@ -270,19 +270,19 @@ class Cas1WithdrawableTreeOperationsTest {
       applicationId = application.id,
       entityType = WithdrawableEntityType.Application,
       entityId = application.id,
-      status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
       children = listOf(
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.PlacementApplication,
           entityId = placementApplicationWithdrawable.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawable.id,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -290,25 +290,25 @@ class Cas1WithdrawableTreeOperationsTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.PlacementApplication,
           entityId = placementApplicationWithdrawableButBlocked.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawableButBlocked.id,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingWithdrawableButBlocking.id,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
                 ),
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
-                  status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockingReason = null),
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false, blockingReason = null),
                 ),
               ),
             ),
@@ -316,7 +316,7 @@ class Cas1WithdrawableTreeOperationsTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestNotWithdrawable.id,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -324,13 +324,13 @@ class Cas1WithdrawableTreeOperationsTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawable.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = null),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = null),
         ),
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawableButBlocked.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
         ),
       ),
     )
@@ -428,31 +428,31 @@ class Cas1WithdrawableTreeOperationsTest {
       applicationId = application.id,
       entityType = WithdrawableEntityType.Application,
       entityId = application.id,
-      status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
       children = listOf(
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.PlacementApplication,
           entityId = placementApplication.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawable.id,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingWithdrawable.id,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
                 ),
                 WithdrawableTreeNode(
                   applicationId = UUID.randomUUID(),
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
-                  status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
                 ),
               ),
             ),
@@ -460,7 +460,7 @@ class Cas1WithdrawableTreeOperationsTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestNotWithdrawable.id,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -468,13 +468,13 @@ class Cas1WithdrawableTreeOperationsTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawable.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingNotWithdrawable.id,
-          status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+          status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
         ),
       ),
     )
@@ -575,31 +575,31 @@ class Cas1WithdrawableTreeOperationsTest {
       applicationId = application.id,
       entityType = WithdrawableEntityType.Application,
       entityId = application.id,
-      status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
       children = listOf(
         WithdrawableTreeNode(
           applicationId = otherApplicationId,
           entityType = WithdrawableEntityType.PlacementApplication,
           entityId = placementApplicationOtherApp.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawable.id,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = otherApplicationId,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingWithdrawableOtherApp.id,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
                 ),
                 WithdrawableTreeNode(
                   applicationId = otherApplicationId,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
-                  status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
                 ),
               ),
             ),
@@ -607,7 +607,7 @@ class Cas1WithdrawableTreeOperationsTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestNotWithdrawable.id,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -615,13 +615,13 @@ class Cas1WithdrawableTreeOperationsTest {
           applicationId = otherApplicationId,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingWithdrawableOtherApp.id,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
         WithdrawableTreeNode(
           applicationId = application.id,
           entityType = WithdrawableEntityType.Booking,
           entityId = adhocBookingNotWithdrawable.id,
-          status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+          status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
         ),
       ),
     )
@@ -650,7 +650,7 @@ class Cas1WithdrawableTreeOperationsTest {
         applicationId = application.id,
         entityType = WithdrawableEntityType.PlacementRequest,
         entityId = UUID.randomUUID(),
-        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
       )
     }
 
@@ -658,7 +658,7 @@ class Cas1WithdrawableTreeOperationsTest {
       applicationId = application.id,
       entityType = WithdrawableEntityType.Application,
       entityId = application.id,
-      status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
       children = childenNodes,
     )
 

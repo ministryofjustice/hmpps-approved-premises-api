@@ -302,12 +302,13 @@ class PlacementRequestService(
   fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = placementRequest.isInWithdrawableState(),
+      withdrawn = placementRequest.isWithdrawn,
       userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
     )
   }
 
   /**
-   * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementRequest] that
+   * This function should not be called directly. Instead, use [Cas1WithdrawableService.withdrawPlacementRequest] that
    * will indirectly invoke this function. It will also ensure that:
    *
    * 1. The entity is withdrawable, and error if not

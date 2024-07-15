@@ -79,7 +79,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.PlacementApplication,
           entityId = appId,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           dates = listOf(
             WithdrawableDatePeriod(LocalDate.of(2021, 1, 2), LocalDate.of(2021, 2, 3)),
             WithdrawableDatePeriod(LocalDate.of(2021, 3, 4), LocalDate.of(2021, 4, 5)),
@@ -121,19 +121,19 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.Application,
           entityId = appWithdrawableId,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequest1WithdrawableId,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = placementWithdrawableId,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
                 ),
               ),
             ),
@@ -141,19 +141,19 @@ class Cas1WithdrawableServiceTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawableButNotPermittedId,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
             ),
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementApplication,
               entityId = placementApplication1WithdrawableId,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.PlacementRequest,
                   entityId = placementRequest2WithdrawableId,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
                 ),
               ),
             ),
@@ -161,13 +161,13 @@ class Cas1WithdrawableServiceTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementApplication,
               entityId = placementApplication2NotWithdrawableId,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.Booking,
               entityId = placementNotWithdrawableId,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -202,19 +202,19 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           entityType = WithdrawableEntityType.Application,
           entityId = appWithdrawableButBlockedId,
-          status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequest1WithdrawableButBlockedId,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = placementWithdrawableButBlockingId,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
                 ),
               ),
             ),
@@ -222,19 +222,19 @@ class Cas1WithdrawableServiceTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementRequest,
               entityId = placementRequestWithdrawableButNotPermittedId,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
             ),
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementApplication,
               entityId = placementApplication1WithdrawableId,
-              status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
               children = listOf(
                 WithdrawableTreeNode(
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.PlacementRequest,
                   entityId = placementRequest2WithdrawableId,
-                  status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = null),
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = null),
                 ),
               ),
             ),
@@ -242,13 +242,13 @@ class Cas1WithdrawableServiceTest {
               applicationId = application.id,
               entityType = WithdrawableEntityType.PlacementApplication,
               entityId = placementApplication2NotWithdrawableId,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
             WithdrawableTreeNode(
               applicationId = application.id,
               entityType = WithdrawableEntityType.Booking,
               entityId = placementNotWithdrawableId,
-              status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
             ),
           ),
         ),
@@ -279,7 +279,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Application,
           application.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -339,7 +339,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Application,
           application.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
       )
 
@@ -359,7 +359,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Application,
           application.id,
-          WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -380,13 +380,13 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Application,
           application.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               WithdrawableEntityType.Booking,
               UUID.randomUUID(),
-              WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
+              WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
             ),
           ),
         ),
@@ -430,7 +430,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementRequest,
           placementRequest.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -477,7 +477,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementRequest,
           placementRequest.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
       )
 
@@ -497,7 +497,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementRequest,
           placementRequest.id,
-          WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -518,13 +518,13 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementRequest,
           placementRequest.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               WithdrawableEntityType.Booking,
               UUID.randomUUID(),
-              WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
+              WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
             ),
           ),
         ),
@@ -559,7 +559,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementApplication,
           placementApplication.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -601,7 +601,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementApplication,
           placementApplication.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
       )
 
@@ -621,7 +621,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementApplication,
           placementApplication.id,
-          WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -642,13 +642,13 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.PlacementApplication,
           placementApplication.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
           children = listOf(
             WithdrawableTreeNode(
               applicationId = application.id,
               WithdrawableEntityType.PlacementApplication,
               placementApplication.id,
-              WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
+              WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
             ),
           ),
         ),
@@ -683,7 +683,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Booking,
           booking.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -726,7 +726,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Booking,
           booking.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
         ),
       )
 
@@ -744,7 +744,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Booking,
           booking.id,
-          WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
         ),
       )
 
@@ -763,7 +763,7 @@ class Cas1WithdrawableServiceTest {
           applicationId = application.id,
           WithdrawableEntityType.Booking,
           booking.id,
-          WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
         ),
       )
 
@@ -797,7 +797,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementApplication.id,
-            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
             dates = emptyList(),
           ),
         )
@@ -817,7 +817,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementApplication.id,
-            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+            status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
             dates = emptyList(),
           ),
         )
@@ -860,7 +860,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementRequest,
             entityId = placementRequest.id,
-            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
             dates = emptyList(),
           ),
         )
@@ -880,7 +880,7 @@ class Cas1WithdrawableServiceTest {
             applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementRequest.id,
-            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+            status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
             dates = emptyList(),
           ),
         )

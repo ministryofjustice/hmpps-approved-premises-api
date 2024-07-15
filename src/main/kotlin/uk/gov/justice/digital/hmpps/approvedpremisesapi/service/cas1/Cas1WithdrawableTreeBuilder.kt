@@ -188,6 +188,7 @@ data class WithdrawableTreeNode(
     val abbreviatedId = if (includeIds) { entityId.toString().substring(0, 3) } else ""
     val description = "" +
       "$entityType($abbreviatedId), " +
+      "withdrawn:${yesOrNo(status.withdrawn)}, " +
       "withdrawable:${yesOrNo(status.withdrawable)}, " +
       "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}" +
       blockingDescription()
