@@ -53,7 +53,7 @@ fun IntegrationTestBase.`Given a User`(
       yieldedProbationRegion
     }
     withYieldedApArea {
-      yieldedProbationRegion.apArea
+      yieldedProbationRegion.apArea!!
     }
   }
 

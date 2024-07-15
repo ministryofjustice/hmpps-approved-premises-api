@@ -69,7 +69,7 @@ class Cas1ApAreaMappingService(
 
       return apAreaForCode(deliusTeamMapping.apAreaCode)
     } else {
-      return usersProbationRegion.apArea
+      return usersProbationRegion.apArea!!
     }
   }
 

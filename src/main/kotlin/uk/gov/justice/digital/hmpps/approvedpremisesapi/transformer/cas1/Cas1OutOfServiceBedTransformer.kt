@@ -23,7 +23,7 @@ class Cas1OutOfServiceBedTransformer(
     bed = NamedId(jpa.bed.id, jpa.bed.name),
     room = NamedId(jpa.bed.room.id, jpa.bed.room.name),
     premises = NamedId(jpa.premises.id, jpa.premises.name),
-    apArea = NamedId(jpa.premises.probationRegion.apArea.id, jpa.premises.probationRegion.apArea.name),
+    apArea = NamedId(jpa.premises.probationRegion.apArea!!.id, jpa.premises.probationRegion.apArea!!.name),
     reason = cas1OutOfServiceBedReasonTransformer.transformJpaToApi(jpa.reason),
     daysLostCount = jpa.deriveDaysLost(),
     temporality = jpa.deriveTemporality(),

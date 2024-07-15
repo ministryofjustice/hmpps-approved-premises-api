@@ -10,7 +10,7 @@ import java.util.UUID
 class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var apArea: Yielded<ApAreaEntity>? = null
+  private var apArea: Yielded<ApAreaEntity?> = { null }
   private var deliusCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
 
   fun withDefaults() = apply {
@@ -29,7 +29,7 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
     this.apArea = apArea
   }
 
-  fun withApArea(apArea: ApAreaEntity) = apply {
+  fun withApArea(apArea: ApAreaEntity?) = apply {
     this.apArea = { apArea }
   }
 
@@ -44,7 +44,7 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
   override fun produce(): ProbationRegionEntity = ProbationRegionEntity(
     id = this.id(),
     name = this.name(),
-    apArea = this.apArea?.invoke() ?: throw RuntimeException("Must provide an ApArea"),
+    apArea = this.apArea(),
     deliusCode = this.deliusCode(),
   )
 }
