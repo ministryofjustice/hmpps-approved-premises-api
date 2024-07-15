@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 
 @Component
-class Cas1UserMappingService(
+class Cas1ApAreaMappingService(
   private val apAreaRepository: ApAreaRepository,
 ) {
   private val deliusTeamMappings = listOf(

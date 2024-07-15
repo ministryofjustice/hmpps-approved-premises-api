@@ -13,13 +13,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 
-class Cas1UserMappingServiceTest {
+class Cas1ApAreaMappingServiceTest {
 
   private val apAreaRepository = mockk<ApAreaRepository>()
 
-  private val service = Cas1UserMappingService(apAreaRepository)
+  private val service = Cas1ApAreaMappingService(apAreaRepository)
 
   private val usersProbationRegionApArea = ApAreaEntityFactory().produce()
 

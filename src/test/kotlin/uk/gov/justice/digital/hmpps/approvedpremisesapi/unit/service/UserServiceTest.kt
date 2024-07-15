@@ -48,7 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -67,8 +67,8 @@ class UserServiceTest {
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
-  private val mockCas1UserMappingService = mockk<Cas1UserMappingService>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
+  private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
 
   private val userService = UserService(
     false,
@@ -81,7 +81,7 @@ class UserServiceTest {
     mockUserQualificationAssignmentRepository,
     mockProbationRegionRepository,
     mockProbationAreaProbationRegionMappingRepository,
-    mockCas1UserMappingService,
+    mockCas1ApAreaMappingService,
     mockProbationDeliveryUnitRepository,
     mockFeatureFlagService,
   )
@@ -202,7 +202,7 @@ class UserServiceTest {
 
       val apArea = ApAreaEntityFactory().produce()
 
-      every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
+      every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
 
       every { mockProbationDeliveryUnitRepository.findByDeliusCode(pduDeliusCode) } returns ProbationDeliveryUnitEntityFactory()
         .withProbationRegion(probationRegion)
@@ -323,7 +323,7 @@ class UserServiceTest {
 
       val apArea = ApAreaEntityFactory().produce()
 
-      every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
+      every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
 
       assertThat(userService.getUserForRequest()).matches {
         it.name == "Jim Jimmerson"
@@ -868,7 +868,7 @@ class UserServiceTest {
 
       val newApAreaForCas1 = ApAreaEntityFactory().produce()
       if (forService == ServiceName.approvedPremises) {
-        every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
+        every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
       }
 
       val result = userService.updateUserFromCommunityApiById(id, forService, force)
