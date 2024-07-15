@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessre
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
 import java.time.LocalDateTime
@@ -73,9 +74,9 @@ class SubjectAccessRequestService(
     val temporaryAccommodationApplications = cas3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
     val temporaryAccommodationAssessments = cas3SubjectAccessRequestRepository.temporaryAccommodationAssessments(crn, nomsNumber, startDate, endDate)
     val assessmentReferralHistoryNotes = cas3SubjectAccessRequestRepository.assessmentReferralHistoryNotes(crn, nomsNumber, startDate, endDate)
-    /*
 
-    val bookings = cas3SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate,ServiceName.temporaryAccommodation)
+    val bookings = cas3SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
+    /*
     val bookingExtensions = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate,ServiceName.temporaryAccommodation)
     val cancellations = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate,ServiceName.temporaryAccommodation)
     val domainEvents = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate,"CAS3")
@@ -86,7 +87,8 @@ class SubjectAccessRequestService(
       {
         "Applications": $temporaryAccommodationApplications,
         "Assessments": $temporaryAccommodationAssessments,
-        "AssessmentReferralHistoryNotes": $assessmentReferralHistoryNotes
+        "AssessmentReferralHistoryNotes": $assessmentReferralHistoryNotes,
+        "Bookings": $bookings
       }
     """.trimIndent()
 

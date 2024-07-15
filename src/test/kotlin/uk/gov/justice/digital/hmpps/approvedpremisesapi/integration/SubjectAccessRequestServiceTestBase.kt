@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
@@ -586,7 +587,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
   protected fun bookingEntity(
     offenderDetails: OffenderDetailSummary,
-    application: ApprovedPremisesApplicationEntity,
+    application: ApplicationEntity,
     offlineApplication: OfflineApplicationEntity? = null,
     serviceName: ServiceName = ServiceName.approvedPremises,
   ): BookingEntity {

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
@@ -27,7 +28,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
      {
           "Applications": [ ],
           "Assessments": [ ],
-          "AssessmentReferralHistoryNotes" : [ ]
+          "AssessmentReferralHistoryNotes" : [ ],
+          "Bookings": [ ]
       }
       """.trimIndent(),
       result,
@@ -45,7 +47,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments"  : [ ],
-        "AssessmentReferralHistoryNotes" : [ ]   
+        "AssessmentReferralHistoryNotes" : [ ],
+        "Bookings": [ ]
       }
     """.trimIndent()
 
@@ -64,7 +67,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
-        "AssessmentReferralHistoryNotes" : [ ]   
+        "AssessmentReferralHistoryNotes" : [ ],
+        "Bookings": [ ] 
       }
     """.trimIndent()
 
@@ -84,10 +88,34 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
       {
-        "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
-        "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
-        "AssessmentReferralHistoryNotes" : [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ]   
+        "Applications": [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
+        "Assessments": [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
+        "AssessmentReferralHistoryNotes": [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ],
+        "Bookings": [ ]
       }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS3 information - have a booking`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val user = userEntity()
+    val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
+
+    val booking = bookingEntity(offenderDetails, application, null, ServiceName.temporaryAccommodation)
+
+    val result =
+      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+    {        
+    "Applications" : [${temporaryAccommodationApplicationJson(application)}],
+    "Assessments"  : [ ],
+    "AssessmentReferralHistoryNotes" : [ ],
+    "Bookings": [${bookingsJson(booking)}]
+    }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
