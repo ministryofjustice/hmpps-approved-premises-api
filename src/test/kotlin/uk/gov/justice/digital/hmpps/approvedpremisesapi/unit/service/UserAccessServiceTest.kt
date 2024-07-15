@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -384,6 +385,33 @@ class UserAccessServiceTest {
 
       assertThat(userAccessService.userCanViewBooking(user, cas3BookingInUserRegion)).isFalse
       assertThat(userAccessService.userCanViewBooking(user, cas3BookingNotInUserRegion)).isFalse
+    }
+  }
+
+  @Nested
+  inner class CurrentUserCanManageUsers {
+
+    @ParameterizedTest
+    @EnumSource(ServiceName::class, names = ["approvedPremises"], mode = EnumSource.Mode.EXCLUDE)
+    fun `currentUserCanManageUsers returns false if serviceName is not ApprovedPremises`(serviceName: ServiceName) {
+      user.addRoleForUnitTest(CAS1_JANITOR)
+      assertThat(userAccessService.currentUserCanManageUsers(serviceName)).isFalse()
+    }
+
+    @ParameterizedTest
+    @EnumSource(UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `currentUserCanManageUsers returns false if serviceName is ApprovedPremises and user does not have permitted role`(userRole: UserRole) {
+      user.addRoleForUnitTest(userRole)
+
+      assertThat(userAccessService.currentUserCanManageUsers(ServiceName.approvedPremises)).isFalse()
+    }
+
+    @ParameterizedTest
+    @EnumSource(UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+    fun `currentUserCanManageUsers returns true if serviceName is ApprovedPremises and user does have permitted role`(userRole: UserRole) {
+      user.addRoleForUnitTest(userRole)
+
+      assertThat(userAccessService.currentUserCanManageUsers(ServiceName.approvedPremises)).isTrue()
     }
   }
 

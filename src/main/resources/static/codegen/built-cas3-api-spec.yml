@@ -3175,6 +3175,7 @@ components:
         - excluded_from_placement_application_allocation
         - appeals_manager
         - janitor
+        - user_manager
     TemporaryAccommodationUserRole:
       type: string
       enum:
