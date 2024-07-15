@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.Id
-import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -27,8 +26,6 @@ data class ApAreaEntity(
   val id: UUID,
   val name: String,
   val identifier: String,
-  @OneToMany(mappedBy = "apArea")
-  val probationRegions: MutableList<ProbationRegionEntity>,
   val emailAddress: String?,
   val notifyReplyToEmailId: String?,
 )
