@@ -3,6 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -23,7 +26,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       """ 
      {
           "Applications": [ ],
-          "Assessments": [ ]
+          "Assessments": [ ],
+          "AssessmentReferralHistoryNotes" : [ ]
       }
       """.trimIndent(),
       result,
@@ -40,8 +44,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val expectedJson = """
       {
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
-        "Assessments"  : [ ]
-           
+        "Assessments"  : [ ],
+        "AssessmentReferralHistoryNotes" : [ ]   
       }
     """.trimIndent()
 
@@ -59,12 +63,83 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val expectedJson = """
       {
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
-        "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}]
-           
+        "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
+        "AssessmentReferralHistoryNotes" : [ ]   
       }
     """.trimIndent()
 
     assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS3 Information - Assessment Referral History Notes`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val user = userEntity()
+    val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
+    val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
+    val assessmentReferralHistoryNoteSystem =
+      assessmentReferralHistorySystemNoteEntity(temporaryAccomodationAssessment, user)
+    val assessmentReferralHistoryNoteUser = assessmentReferralHistoryUserNoteEntity(temporaryAccomodationAssessment, user)
+    val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+
+    val expectedJson = """
+      {
+        "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
+        "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
+        "AssessmentReferralHistoryNotes" : [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ]   
+      }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun assessmentReferralHistoryNotesJson(
+    assessmentReferralHistoryNoteSystem: AssessmentReferralHistorySystemNoteEntity,
+    assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,
+  ) = """
+    {
+      "crn": "${assessmentReferralHistoryNoteSystem.assessment.application.crn}",
+      "noms_number": "${assessmentReferralHistoryNoteSystem.assessment.application.nomsNumber}",
+      "application_id": "${assessmentReferralHistoryNoteSystem.assessment.application.id}",
+      "assessment_id": "${assessmentReferralHistoryNoteSystem.assessment.id}",
+      "message": "${assessmentReferralHistoryNoteSystem.message}",
+      "created_at": "$CREATED_AT",
+      "created_by_user": "${assessmentReferralHistoryNoteSystem.createdByUser.name}",
+      "note_type":  "System",
+      "system_note_type": "${assessmentReferralHistoryNoteSystem.type}"
+    },
+    { 
+      "crn": "${assessmentReferralHistoryNoteUser.assessment.application.crn}",
+      "noms_number": "${assessmentReferralHistoryNoteUser.assessment.application.nomsNumber}",
+      "application_id": "${assessmentReferralHistoryNoteUser.assessment.application.id}",
+      "assessment_id": "${assessmentReferralHistoryNoteUser.assessment.id}",
+      "message": "${assessmentReferralHistoryNoteUser.message}",
+      "created_at": "$CREATED_AT",
+      "created_by_user": "${assessmentReferralHistoryNoteUser.createdByUser.name}",
+      "note_type":  "User",
+      "system_note_type": null
+      }
+  """.trimIndent()
+
+  private fun assessmentReferralHistoryUserNoteEntity(
+    temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
+    user: UserEntity,
+  ) = assessmentReferralHistoryUserNoteEntityFactory.produceAndPersist {
+    withAssessment(temporaryAccomodationAssessment)
+    withMessage("some other message")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withCreatedBy(user)
+  }
+
+  private fun assessmentReferralHistorySystemNoteEntity(
+    temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
+    user: UserEntity,
+  ) = assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
+    withAssessment(temporaryAccomodationAssessment)
+    withType(ReferralHistorySystemNoteType.READY_TO_PLACE)
+    withMessage("Some message")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withCreatedBy(user)
   }
 
   private fun temporaryAccommodationAssessmentJson(

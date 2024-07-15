@@ -116,4 +116,47 @@ class CAS3SubjectAccessRequestRepository(
     )
     return toJsonString(result)
   }
+
+  fun assessmentReferralHistoryNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+      select json_agg(referral_notes) as json 
+      from ( 
+        select
+            app.crn,
+            app.noms_number,
+            app.id as application_id,
+            assess.id  as assessment_id,
+            arhn.message,
+            arhn.created_at,
+            u."name" as created_by_user,
+            case
+                when arhsn.id is not null then 'System'
+                when arhun.id is not null then 'User'
+            end as note_type,
+            arhsn.type as system_note_type
+        from
+            assessment_referral_history_notes arhn
+        inner join assessments assess on
+            assess.id = arhn.assessment_id
+        inner join applications app on
+            app.id = assess.application_id
+        inner join users u 
+            on u.id = arhn.created_by_user_id 
+        left join assessment_referral_history_system_notes arhsn 
+            on arhsn.id = arhn.id
+        left join assessment_referral_history_user_notes arhun 
+            on arhun.id = arhn.id 
+        where 
+            (app.crn = :crn
+            or app.noms_number = :noms_number )
+        and (:start_date is null or app.created_at >= :start_date) 
+        and (:end_date is null or app.created_at <= :end_date)
+     ) referral_notes
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
 }

@@ -72,7 +72,7 @@ class SubjectAccessRequestService(
   fun getCAS3Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
     val temporaryAccommodationApplications = cas3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
     val temporaryAccommodationAssessments = cas3SubjectAccessRequestRepository.temporaryAccommodationAssessments(crn, nomsNumber, startDate, endDate)
-
+    val assessmentReferralHistoryNotes = cas3SubjectAccessRequestRepository.assessmentReferralHistoryNotes(crn, nomsNumber, startDate, endDate)
     /*
 
     val bookings = cas3SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate,ServiceName.temporaryAccommodation)
@@ -85,7 +85,8 @@ class SubjectAccessRequestService(
     val result = """
       {
         "Applications": $temporaryAccommodationApplications,
-        "Assessments": $temporaryAccommodationAssessments
+        "Assessments": $temporaryAccommodationAssessments,
+        "AssessmentReferralHistoryNotes": $assessmentReferralHistoryNotes
       }
     """.trimIndent()
 
