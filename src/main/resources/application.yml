@@ -37,11 +37,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  data.redis:
-    database: 5
-    timeout: 60000
-    ssl: false
-
   security:
     oauth2:
       resourceserver:
