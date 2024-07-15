@@ -77,8 +77,8 @@ class SubjectAccessRequestService(
 
     val bookings = cas3SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val bookingExtensions = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
+    val cancellations = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     /*
-    val cancellations = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate,ServiceName.temporaryAccommodation)
     val domainEvents = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate,"CAS3")
     val domainEventMetaData = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
       */
@@ -89,7 +89,8 @@ class SubjectAccessRequestService(
         "Assessments": $temporaryAccommodationAssessments,
         "AssessmentReferralHistoryNotes": $assessmentReferralHistoryNotes,
         "Bookings": $bookings,
-        "BookingExtensions": $bookingExtensions
+        "BookingExtensions": $bookingExtensions,
+        "Cancellations": $cancellations
       }
     """.trimIndent()
 
