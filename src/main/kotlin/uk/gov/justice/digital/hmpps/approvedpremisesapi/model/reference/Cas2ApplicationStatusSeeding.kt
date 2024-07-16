@@ -172,6 +172,11 @@ object Cas2ApplicationStatusSeeding {
             name = "withdrewOrDeclinedOffer",
             label = "Withdrew or declined offer",
           ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("6fc8d3b7-eb53-479d-8903-3880a9ed563f"),
+            name = "personTransferredToAnotherPrisonWithdrawal",
+            label = "Person transferred to another prison",
+          ),
         ),
       ),
       Cas2PersistedApplicationStatus(
