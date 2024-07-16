@@ -1,0 +1,1 @@
+UPDATE probation_regions SET ap_area_id = NULL WHERE delius_code = 'NA'
