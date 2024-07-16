@@ -68,7 +68,9 @@ class ExceptionHandling(
 
     sentryService.captureException(throwable)
 
-    return InternalServerErrorProblem(
+    // We throw this instead of an InternalServerErrorProblem to avoid the Sentry Alert
+    // being raised again by [ExceptionHandling.logInternalServerErrorProblem]
+    return UnhandledExceptionProblem(
       detail = "There was an unexpected problem",
     )
   }
@@ -145,6 +147,7 @@ class ExceptionHandling(
     when (problem) {
       is BadRequestProblem -> logBadRequestProblem(problem)
       is InternalServerErrorProblem -> logInternalServerErrorProblem(problem)
+      is NotImplementedProblem -> logNotImplementedProblem(problem)
       else -> {
         super<ProblemHandling>.log(throwable, problem, request, status)
       }
@@ -152,7 +155,16 @@ class ExceptionHandling(
   }
 
   private fun logBadRequestProblem(problem: BadRequestProblem) = log.error("Bad Request. Error Detail: ${problem.errorDetail ?: "None"}, Invalid Params: [${problem.invalidParams?.entries?.joinToString(",") { "${it.key}=${it.value}" } ?: "None"}]")
-  private fun logInternalServerErrorProblem(problem: InternalServerErrorProblem) = log.error("Internal Server Error. Error Detail: ${problem.detail ?: "None"}")
+
+  private fun logInternalServerErrorProblem(problem: InternalServerErrorProblem) {
+    log.error("Internal Server Error. Error Detail: ${problem.detail ?: "None"}")
+    sentryService.captureException(problem)
+  }
+
+  private fun logNotImplementedProblem(problem: NotImplementedProblem) {
+    log.error("Not Implemented. Error Detail: ${problem.detail ?: "None"}")
+    sentryService.captureException(problem)
+  }
 
   private fun expectedArrayButGotObject(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ObjectNode && isInputTypeArray(mismatchedInputException)
   private fun expectedObjectButGotArray(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ArrayNode && !isInputTypeArray(mismatchedInputException)
