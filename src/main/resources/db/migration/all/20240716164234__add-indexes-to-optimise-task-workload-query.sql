@@ -1,0 +1,3 @@
+CREATE INDEX assessments_allocation_idx ON assessments (allocated_to_user_id,reallocated_at);
+CREATE INDEX placement_requests_allocation_idx ON placement_requests (allocated_to_user_id,reallocated_at);
+CREATE INDEX placement_applications_allocation_idx ON placement_applications (allocated_to_user_id,reallocated_at);
