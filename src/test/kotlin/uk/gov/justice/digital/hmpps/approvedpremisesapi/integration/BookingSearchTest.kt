@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResultBookingSummary
@@ -10,12 +12,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 
@@ -120,7 +130,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val crn = "S121978"
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResult =
-          createTestTemporaryAccommodationBookings(userEntity, 1, 1, crn)
+          createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
 
         webTestClient.get()
@@ -143,7 +153,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val crn = "S121978"
         val expectedBookingInSearchResult =
           create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        createTestTemporaryAccommodationBookings(userEntity, 1, 1, crn)
+        createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponse(expectedBookingInSearchResult, offenderDetails)
 
         webTestClient.get()
@@ -592,6 +602,101 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
+  @ParameterizedTest
+  @EnumSource(value = SortOrder::class)
+  fun `Results are ordered by the person name when the query parameters are supplied with Pagination`(
+    sortOrder: SortOrder,
+  ) {
+    `Given a User` { userEntity, jwt ->
+      val sortDirection = when (sortOrder) {
+        SortOrder.ascending -> "ascending"
+        SortOrder.descending -> "descending"
+      }
+      val crns = mutableListOf<String>()
+      repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
+
+      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val allBookings = mutableListOf<BookingEntity>()
+      val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
+      val offendersCrnAndName = crns.associateBy(
+        keySelector = { it },
+        valueTransform = { NameFactory().produce() },
+      )
+
+      crns.forEach {
+        val offenderName = "${offendersCrnAndName[it]?.forename} ${offendersCrnAndName[it]?.surname}"
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withName(offenderName)
+          withCrn(it)
+          withProbationRegion(userEntity.probationRegion)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+        }
+        temporaryAccommodationApplications += application
+
+        val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it)
+        allBookings += booking
+      }
+
+      // Assert bookings page 1
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 10, 0)
+
+      var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
+      var expectedResponse = BookingSearchResults(
+        10,
+        if (sortOrder == SortOrder.ascending) {
+          bookingSearchResults.results.sortedBy { it.person.name }.take(10)
+        } else {
+          bookingSearchResults.results.sortedByDescending { it.person.name }.take(10)
+        },
+      )
+
+      webTestClient.get()
+        .uri("/bookings/search?sortOrder=$sortDirection&sortField=name&page=1&status=provisional")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+        .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+        .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
+        .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+        .expectBody()
+        .json(objectMapper.writeValueAsString(expectedResponse), true)
+
+      // Assert bookings page 2
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 5, 10)
+
+      bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
+      expectedResponse = BookingSearchResults(
+        5,
+        if (sortOrder == SortOrder.ascending) {
+          bookingSearchResults.results.sortedBy { it.person.name }.drop(10)
+        } else {
+          bookingSearchResults.results.sortedByDescending { it.person.name }.drop(10)
+        },
+      )
+
+      webTestClient.get()
+        .uri("/bookings/search?sortOrder=$sortDirection&sortField=name&page=2&status=provisional")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+        .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+        .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
+        .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+        .expectBody()
+        .json(objectMapper.writeValueAsString(expectedResponse), true)
+    }
+  }
+
   @Test
   fun `No Results returned when searching for cancelled booking status and all existing bookings are confirmed`() {
     `Given a User` { userEntity, jwt ->
@@ -617,7 +722,10 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
-  private fun getExpectedResponse(expectedBookings: List<BookingEntity>, offenderDetails: OffenderDetailSummary): BookingSearchResults {
+  private fun getExpectedResponse(
+    expectedBookings: List<BookingEntity>,
+    offenderDetails: OffenderDetailSummary,
+  ): BookingSearchResults {
     return BookingSearchResults(
       resultsCount = expectedBookings.size,
       results = expectedBookings.map { booking ->
@@ -662,7 +770,59 @@ class BookingSearchTest : IntegrationTestBase() {
     )
   }
 
-  private fun getExpectedResponseWithoutPersonName(expectedBookings: List<BookingEntity>, crn: String): BookingSearchResults {
+  private fun getExpectedResponse(
+    expectedBookings: List<BookingEntity>,
+    temporaryAccommodationApplications: List<TemporaryAccommodationApplicationEntity>,
+  ): BookingSearchResults {
+    return BookingSearchResults(
+      resultsCount = expectedBookings.size,
+      results = expectedBookings.map { booking ->
+        val userApplication = temporaryAccommodationApplications.firstOrNull { a -> a.crn == booking.crn }
+        BookingSearchResult(
+          person = BookingSearchResultPersonSummary(
+            name = userApplication?.name,
+            crn = booking.crn,
+          ),
+          booking = BookingSearchResultBookingSummary(
+            id = booking.id,
+            status = when {
+              booking.cancellation != null -> BookingStatus.cancelled
+              booking.departure != null -> BookingStatus.departed
+              booking.arrival != null -> BookingStatus.arrived
+              booking.nonArrival != null -> BookingStatus.notMinusArrived
+              booking.confirmation != null -> BookingStatus.confirmed
+              booking.service == ServiceName.approvedPremises.value -> BookingStatus.awaitingMinusArrival
+              else -> BookingStatus.provisional
+            },
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            createdAt = booking.createdAt.toInstant(),
+          ),
+          premises = BookingSearchResultPremisesSummary(
+            id = booking.premises.id,
+            name = booking.premises.name,
+            addressLine1 = booking.premises.addressLine1,
+            addressLine2 = booking.premises.addressLine2,
+            town = booking.premises.town,
+            postcode = booking.premises.postcode,
+          ),
+          room = BookingSearchResultRoomSummary(
+            id = booking.bed!!.room.id,
+            name = booking.bed!!.room.name,
+          ),
+          bed = BookingSearchResultBedSummary(
+            id = booking.bed!!.id,
+            name = booking.bed!!.name,
+          ),
+        )
+      },
+    )
+  }
+
+  private fun getExpectedResponseWithoutPersonName(
+    expectedBookings: List<BookingEntity>,
+    crn: String,
+  ): BookingSearchResults {
     return BookingSearchResults(
       resultsCount = expectedBookings.size,
       results = expectedBookings.map { booking ->
@@ -727,17 +887,22 @@ class BookingSearchTest : IntegrationTestBase() {
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
   ): MutableList<BookingEntity> {
-    return createTestTemporaryAccommodationBookings(userEntity, numberOfPremises, numberOfBedsInEachPremises, offenderDetails.otherIds.crn)
+    return createTestTemporaryAccommodationBookings(
+      userEntity.probationRegion,
+      numberOfPremises,
+      numberOfBedsInEachPremises,
+      offenderDetails.otherIds.crn,
+    )
   }
 
   private fun createTestTemporaryAccommodationBookings(
-    userEntity: UserEntity,
+    probationRegion: ProbationRegionEntity,
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
     crn: String,
   ): MutableList<BookingEntity> {
     val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
-      withProbationRegion(userEntity.probationRegion)
+      withProbationRegion(probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
@@ -814,5 +979,31 @@ class BookingSearchTest : IntegrationTestBase() {
       allBookings += booking
     }
     return allBookings
+  }
+
+  private fun mockApDeliusContextCasesSummary(
+    applications: MutableList<TemporaryAccommodationApplicationEntity>,
+    offendersCrnAndName: Map<String, Name>,
+    sortOrder: SortOrder,
+    take: Int,
+    skip: Int,
+  ) {
+    val cases = if (sortOrder == SortOrder.ascending) {
+      applications.sortedBy { it.name }.drop(skip).take(take).map {
+        CaseSummaryFactory()
+          .withCrn(it.crn)
+          .withName(offendersCrnAndName[it.crn]!!)
+          .produce()
+      }
+    } else {
+      applications.sortedByDescending { it.name }.drop(skip).take(take).map {
+        CaseSummaryFactory()
+          .withCrn(it.crn)
+          .withName(offendersCrnAndName[it.crn]!!)
+          .produce()
+      }
+    }
+
+    ApDeliusContext_addListCaseSummaryToBulkResponse(cases)
   }
 }

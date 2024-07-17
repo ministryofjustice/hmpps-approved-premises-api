@@ -65,7 +65,7 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(
       crns.map { TestBookingSearchResult().withPersonCrn(it) },
     )
 
@@ -99,7 +99,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
         TestBookingSearchResult()
           .withPersonCrn("crn1")
@@ -133,7 +133,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metadata).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())
     }
   }
 
@@ -148,7 +148,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
         TestBookingSearchResult()
           .withPersonCrn("crn1")
@@ -190,7 +190,7 @@ class BookingSearchServiceTest {
     assertThat(results.last().personName).isNull()
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())
     }
   }
 
@@ -198,8 +198,8 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns sorted results by person name and database default sort when page number is given`(sortOrder: SortOrder) {
     val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("created_at").ascending()
-      SortOrder.descending -> Sort.by("created_at").descending()
+      SortOrder.ascending -> Sort.by("personName").ascending()
+      SortOrder.descending -> Sort.by("personName").descending()
     }
     val pageable = PageRequest.of(0, cas3BookingSearchPageSize, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -211,7 +211,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -243,7 +243,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -251,8 +251,8 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns sorted approved premises booking results by person name and database default sort when page number is given`(sortOrder: SortOrder) {
     val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("created_at").ascending()
-      SortOrder.descending -> Sort.by("created_at").descending()
+      SortOrder.ascending -> Sort.by("personName").ascending()
+      SortOrder.descending -> Sort.by("personName").descending()
     }
     val pageable = PageRequest.of(0, defaultBookingSearchPageSize, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -264,7 +264,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -296,7 +296,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
+      mockBookingRepository.findBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -304,8 +304,8 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns sorted results by person name and database default sort when page number is not given`(sortOrder: SortOrder) {
     val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("created_at").ascending()
-      SortOrder.descending -> Sort.by("created_at").descending()
+      SortOrder.ascending -> Sort.by("personName").ascending()
+      SortOrder.descending -> Sort.by("personName").descending()
     }
     val pageable = PageRequest.of(0, Int.MAX_VALUE, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -317,7 +317,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -349,7 +349,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -370,7 +370,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -396,7 +396,7 @@ class BookingSearchServiceTest {
     assertThat(results).hasSize(3)
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -411,7 +411,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
@@ -426,7 +426,7 @@ class BookingSearchServiceTest {
     assertThat(results).hasSize(0)
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())
     }
   }
 
@@ -441,7 +441,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
@@ -456,7 +456,7 @@ class BookingSearchServiceTest {
     assertThat(results).hasSize(0)
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())
     }
   }
 
@@ -471,7 +471,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) }.throws(
+    every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) }.throws(
       DataRetrievalFailureException(
         "some-exception",
       ),
@@ -488,7 +488,7 @@ class BookingSearchServiceTest {
       )
     }
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
+      mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())
     }
     verify(exactly = 0) {
       mockOffenderService.getOffenderByCrn(any(), any())
