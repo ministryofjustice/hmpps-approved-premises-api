@@ -350,7 +350,7 @@ jobs:
 
 workflows:
   version: 2
-  build-test-and-deploy:
+  build-and-test-upgrade-branch:
     jobs:
       - build
       - code_linting_check_with_ktlint:
@@ -378,7 +378,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - CAS-365/spring-boot-upgrade-squashed
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -389,56 +389,56 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - CAS-365/spring-boot-upgrade-squashed
           requires:
             - build_docker
             - helm_lint
-      - request-test-approval:
-          type: approval
-          requires:
-            - deploy_dev
-      - hmpps/deploy_env:
-          name: deploy_test
-          env: "test"
-          context:
-            - hmpps-common-vars
-            - hmpps-approved-premises-api-stage
-          requires:
-            - request-test-approval
-      - request-preprod-approval:
-          type: approval
-          requires:
-           - cas1_e2e_tests
-           - cas2_e2e_tests
-           - cas3_e2e_tests
-      - hmpps/deploy_env:
-          name: deploy_preprod
-          env: "preprod"
-          jira_update: true
-          pipeline_id: <<pipeline.id>>
-          pipeline_number: <<pipeline.number>>
-          context:
-            - hmpps-common-vars
-            - hmpps-approved-premises-api-preprod
-          requires:
-            - request-preprod-approval
-      - request-prod-approval:
-          type: approval
-          requires:
-            - deploy_preprod
-      - hmpps/deploy_env:
-          name: deploy_prod
-          env: "prod"
-          jira_update: true
-          pipeline_id: <<pipeline.id>>
-          pipeline_number: <<pipeline.number>>
-          slack_notification: true
-          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
-          context:
-            - hmpps-common-vars
-            - hmpps-approved-premises-api-prod
-          requires:
-            - request-prod-approval
+#      - request-test-approval:
+#          type: approval
+#          requires:
+#            - deploy_dev
+#      - hmpps/deploy_env:
+#          name: deploy_test
+#          env: "test"
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-approved-premises-api-stage
+#          requires:
+#            - request-test-approval
+#      - request-preprod-approval:
+#          type: approval
+#          requires:
+#           - cas1_e2e_tests
+#           - cas2_e2e_tests
+#           - cas3_e2e_tests
+#      - hmpps/deploy_env:
+#          name: deploy_preprod
+#          env: "preprod"
+#          jira_update: true
+#          pipeline_id: <<pipeline.id>>
+#          pipeline_number: <<pipeline.number>>
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-approved-premises-api-preprod
+#          requires:
+#            - request-preprod-approval
+#      - request-prod-approval:
+#          type: approval
+#          requires:
+#            - deploy_preprod
+#      - hmpps/deploy_env:
+#          name: deploy_prod
+#          env: "prod"
+#          jira_update: true
+#          pipeline_id: <<pipeline.id>>
+#          pipeline_number: <<pipeline.number>>
+#          slack_notification: true
+#          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-approved-premises-api-prod
+#          requires:
+#            - request-prod-approval
       - cas1_e2e_tests:
           context:
             - hmpps-common-vars
@@ -458,66 +458,66 @@ workflows:
             - hmpps-community-accommodation
           requires:
             - deploy_dev
-  security:
-    triggers:
-      - schedule:
-          cron: "11 5 * * 1-5"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - generate_trivyignore:
-          name: generate_trivyignore
-      - hmpps/gradle_owasp_dependency_check:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - hmpps-common-vars
-      - hmpps/trivy_latest_scan:
-          pre-steps:
-            - attach_workspace:
-                at: ~/trivyetc
-          additional_args: --ignorefile ~/trivyetc/.trivyignore
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - hmpps-common-vars
-          requires:
-            - generate_trivyignore
-      - hmpps/veracode_pipeline_scan:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - veracode-credentials
-            - hmpps-common-vars
-  security-branch:
-    # Mimics the 'security' workflow, but can be manually triggered on any branch.
-    when: << pipeline.parameters.run-security-workflow-on-branch >>
-    jobs:
-      - generate_trivyignore:
-          name: generate_trivyignore
-      - build_multiplatform_docker_without_publish:
-          name: build_docker
-          image_name: hmpps-approved-premises-api
-      - hmpps/gradle_owasp_dependency_check:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - hmpps-common-vars
-      - hmpps/trivy_pipeline_scan:
-          context:
-            - hmpps-common-vars
-          requires:
-            - build_docker
-            - generate_trivyignore
-  security-weekly:
-    triggers:
-      - schedule:
-          cron: "0 5 * * 1"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - hmpps/veracode_policy_scan:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - veracode-credentials
-            - hmpps-common-vars
+#  security:
+#    triggers:
+#      - schedule:
+#          cron: "11 5 * * 1-5"
+#          filters:
+#            branches:
+#              only:
+#                - main
+#    jobs:
+#      - generate_trivyignore:
+#          name: generate_trivyignore
+#      - hmpps/gradle_owasp_dependency_check:
+#          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+#          context:
+#            - hmpps-common-vars
+#      - hmpps/trivy_latest_scan:
+#          pre-steps:
+#            - attach_workspace:
+#                at: ~/trivyetc
+#          additional_args: --ignorefile ~/trivyetc/.trivyignore
+#          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+#          context:
+#            - hmpps-common-vars
+#          requires:
+#            - generate_trivyignore
+#      - hmpps/veracode_pipeline_scan:
+#          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+#          context:
+#            - veracode-credentials
+#            - hmpps-common-vars
+#  security-branch:
+#    # Mimics the 'security' workflow, but can be manually triggered on any branch.
+#    when: << pipeline.parameters.run-security-workflow-on-branch >>
+#    jobs:
+#      - generate_trivyignore:
+#          name: generate_trivyignore
+#      - build_multiplatform_docker_without_publish:
+#          name: build_docker
+#          image_name: hmpps-approved-premises-api
+#      - hmpps/gradle_owasp_dependency_check:
+#          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+#          context:
+#            - hmpps-common-vars
+#      - hmpps/trivy_pipeline_scan:
+#          context:
+#            - hmpps-common-vars
+#          requires:
+#            - build_docker
+#            - generate_trivyignore
+#  security-weekly:
+#    triggers:
+#      - schedule:
+#          cron: "0 5 * * 1"
+#          filters:
+#            branches:
+#              only:
+#                - main
+#    jobs:
+#      - hmpps/veracode_policy_scan:
+#          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+#          context:
+#            - veracode-credentials
+#            - hmpps-common-vars
