@@ -373,26 +373,30 @@ workflows:
             - build
       - hmpps/helm_lint:
           name: helm_lint
-      - hmpps/build_multiplatform_docker:
-          name: build_docker
-          filters:
-            branches:
-              only:
-                - CAS-365/spring-boot-upgrade-squashed
-      - hmpps/deploy_env:
-          name: deploy_dev
-          env: "dev"
-          context: hmpps-common-vars
-          jira_update: true
-          pipeline_id: <<pipeline.id>>
-          pipeline_number: <<pipeline.number>>
-          filters:
-            branches:
-              only:
-                - CAS-365/spring-boot-upgrade-squashed
-          requires:
-            - build_docker
-            - helm_lint
+
+# UNCOMMENT BELOW TO RUN TESTS FROM BRANCH
+#      - hmpps/build_multiplatform_docker:
+#          name: build_docker
+#          filters:
+#            branches:
+#              only:
+#                - CAS-365/spring-boot-upgrade-squashed
+#      - hmpps/deploy_env:
+#          name: deploy_dev
+#          env: "dev"
+#          context: hmpps-common-vars
+#          jira_update: true
+#          pipeline_id: <<pipeline.id>>
+#          pipeline_number: <<pipeline.number>>
+#          filters:
+#            branches:
+#              only:
+#                - CAS-365/spring-boot-upgrade-squashed
+#          requires:
+#            - build_docker
+#            - helm_lint
+# UNCOMMENT TO HERE
+
 #      - request-test-approval:
 #          type: approval
 #          requires:
@@ -439,25 +443,27 @@ workflows:
 #            - hmpps-approved-premises-api-prod
 #          requires:
 #            - request-prod-approval
-      - cas1_e2e_tests:
-          context:
-            - hmpps-common-vars
-            - hmpps-community-accommodation
-            - approved-premises-ui-e2e
-          requires:
-            - deploy_dev
-      - cas2_e2e_tests:
-          context:
-            - hmpps-common-vars
-            - hmpps-community-accommodation
-          requires:
-            - deploy_dev
-      - cas3_e2e_tests:
-          context:
-            - hmpps-common-vars
-            - hmpps-community-accommodation
-          requires:
-            - deploy_dev
+# UNCOMMENT BELOW TO RUN TESTS FROM BRANCH
+#      - cas1_e2e_tests:
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-community-accommodation
+#            - approved-premises-ui-e2e
+#          requires:
+#            - deploy_dev
+#      - cas2_e2e_tests:
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-community-accommodation
+#          requires:
+#            - deploy_dev
+#      - cas3_e2e_tests:
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-community-accommodation
+#          requires:
+#            - deploy_dev
+# END OF UNCOMMENT
 #  security:
 #    triggers:
 #      - schedule:
