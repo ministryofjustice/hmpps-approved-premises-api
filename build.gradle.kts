@@ -73,7 +73,6 @@ dependencies {
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.9")
-  testImplementation("net.bytebuddy:byte-buddy:1.14.17")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
@@ -93,7 +92,7 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 // The `buildDir` built-in property has been deprecated in favour of `layout.buildDirectory`
@@ -103,7 +102,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "21"
+      jvmTarget = "17"
     }
 
     kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
