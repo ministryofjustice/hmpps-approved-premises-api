@@ -517,7 +517,7 @@ where
 	and (:start_date is null or ca.created_at >= :start_date) 
 	and (:end_date is null or ca.created_at <= :end_date);
 
--- cas2 status updates
+-- cas2 status updates - Users needed
 select
 	ca.crn,
 	ca.noms_number,

@@ -1,0 +1,85 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class CAS2SubjectAccessRequestRepository(
+  jdbcTemplate: NamedParameterJdbcTemplate,
+) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
+
+  fun getApplicationsJson(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+      select json_agg(applications) as json
+      from ( 
+        select
+          ca.id,
+        	ca.crn,
+        	ca.noms_number,
+        	ca."data",
+        	ca."document",
+        	nu."name" as created_by_user,
+        	ca.created_at,
+        	ca.submitted_at,
+        	ca.referring_prison_code,
+        	ca.preferred_areas,
+        	ca.telephone_number,
+        	ca.hdc_eligibility_date,
+        	ca.conditional_release_date,
+        	ca.abandoned_at 
+        from
+        	cas_2_applications ca
+        inner join nomis_users nu on
+        	nu.id = ca.created_by_user_id
+        where 
+        	(ca.crn = :crn
+        		or ca.noms_number = :noms_number ) 
+        	and (:start_date is null or ca.created_at >= :start_date) 
+        	and (:end_date is null or ca.created_at <= :end_date)
+      ) applications
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
+
+  fun getAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+      select json_agg(assessments) as json
+      from(
+          select
+          	caa.id,
+          	ca.crn,
+          	ca.noms_number,
+          	ca.id as application_id,
+          	caa.created_at,
+          	caa.assessor_name,
+          	caa.nacro_referral_id
+          from
+          	cas_2_assessments caa
+          inner join cas_2_applications ca 
+          on
+          	ca.id = caa.application_id
+          where 
+          	(ca.crn = :crn
+          		or ca.noms_number = :noms_number )
+          and (:start_date is null or ca.created_at >= :start_date) 
+          and (:end_date is null or ca.created_at <= :end_date)
+      ) assessments
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+
+    return toJsonString(result)
+  }
+}

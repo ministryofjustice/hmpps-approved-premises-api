@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
 import java.time.LocalDateTime
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime
 class SubjectAccessRequestService(
   val objectMapper: ObjectMapper,
   val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
+  val cas2SubjectAccessRequestRepository: CAS2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
 ) {
 
@@ -74,11 +76,9 @@ class SubjectAccessRequestService(
     val temporaryAccommodationApplications = cas3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
     val temporaryAccommodationAssessments = cas3SubjectAccessRequestRepository.temporaryAccommodationAssessments(crn, nomsNumber, startDate, endDate)
     val assessmentReferralHistoryNotes = cas3SubjectAccessRequestRepository.assessmentReferralHistoryNotes(crn, nomsNumber, startDate, endDate)
-
     val bookings = cas3SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val bookingExtensions = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val cancellations = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
-
     val domainEvents = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS3")
     val domainEventMetaData = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
 
@@ -104,11 +104,31 @@ class SubjectAccessRequestService(
     return result
   }
 
+  fun getCAS2Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val applications = cas2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate)
+    val assessments = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
+    val result = """
+      {
+       "Applications": $applications,
+       "Assessments": $assessments
+       }
+    """.trimIndent()
+
+    if (log.isDebugEnabled) {
+      val prettyPrintJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+        objectMapper.readValue(result, Any::class.java),
+      )
+      log.debug("CAS2 SAR result is $prettyPrintJson")
+    }
+    return result
+  }
+
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?) =
     """
       {
          "ApprovedPremises" : ${getCAS1Result(crn, nomsNumber, startDate, endDate)},
-         "TemporaryAccommodation": ${getCAS3Result(crn, nomsNumber, startDate, endDate)}
+         "TemporaryAccommodation": ${getCAS3Result(crn, nomsNumber, startDate, endDate)},
+         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)}
       }
     """.trimIndent()
 }

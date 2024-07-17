@@ -36,6 +36,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
   private var referringPrisonCode: Yielded<String?> = { null }
+  private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
 
@@ -107,6 +108,14 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.referringPrisonCode = { referringPrisonCode }
   }
 
+  fun withPreferredAreas(preferredAreas: String) = apply {
+    this.preferredAreas = { preferredAreas }
+  }
+
+  fun withTelephoneNumber(telephoneNumber: String) = apply {
+    this.telephoneNumber = { telephoneNumber }
+  }
+
   fun withHdcEligibilityDate(hdcEligibilityDate: LocalDate) = apply {
     this.hdcEligibilityDate = { hdcEligibilityDate }
   }
@@ -134,5 +143,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     referringPrisonCode = this.referringPrisonCode(),
     hdcEligibilityDate = this.hdcEligibilityDate(),
     conditionalReleaseDate = this.conditionalReleaseDate(),
+    preferredAreas = this.preferredAreas(),
   )
 }
