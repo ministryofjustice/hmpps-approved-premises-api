@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
-import com.amazonaws.services.sns.model.NotFoundException
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -104,12 +103,7 @@ class AssessmentNoteService(
       )
     } else {
       log.error("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
-      Sentry.captureException(
-        RuntimeException(
-          "Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}",
-          NotFoundException("Email not found for User ${application.createdByUser.id}"),
-        ),
-      )
+      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
     }
   }
 
