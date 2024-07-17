@@ -38,9 +38,9 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   fun findArchivedBedByBedIdAndDate(bedId: UUID, endDate: LocalDate): BedEntity?
 }
 
-const val bedSummaryQuery =
+const val BED_SUMMARY_QUERY =
   """
-    select cast(b.id as text) as id,
+    select b.id as id,
       cast(b.name as text) as name,
       cast(r.name as text) as roomName,
       r.id as roomId,
@@ -75,7 +75,7 @@ const val bedSummaryQuery =
   name = "BedEntity.findAllBedsForPremises",
   query =
   """
-    $bedSummaryQuery
+    $BED_SUMMARY_QUERY
     where r.premises_id = cast(?1 as UUID) and (b.end_date is null or b.end_date > CURRENT_DATE)
   """,
   resultSetMapping = "DomainBedSummaryMapping",
@@ -84,7 +84,7 @@ const val bedSummaryQuery =
   name = "BedEntity.getDetailById",
   query =
   """
-    $bedSummaryQuery
+    $BED_SUMMARY_QUERY
     where b.id = cast(?1 as UUID)
   """,
   resultSetMapping = "DomainBedSummaryMapping",
