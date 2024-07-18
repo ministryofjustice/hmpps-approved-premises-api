@@ -143,7 +143,7 @@ interface BedUtilisationBedspaceReportData {
   val town: String?
   val postCode: String
   val roomName: String
-  val bedspaceStartDate: Instant?
+  val bedspaceStartDate: LocalDate?
   val bedspaceEndDate: LocalDate?
   val premisesId: String
   val roomId: String

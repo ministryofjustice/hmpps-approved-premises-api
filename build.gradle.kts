@@ -194,7 +194,7 @@ registerOpenApiGenerateTask(
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
   apiSuffix = "Cas1",
-  useTags = true
+  useTags = true,
 )
 
 registerOpenApiGenerateTask(
@@ -202,14 +202,14 @@ registerOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas2"
+  apiSuffix = "Cas2",
 )
 
 registerOpenApiGenerateTask(
   name = "openApiGenerateDomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model"
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model",
 )
 
 registerOpenApiGenerateTask(
@@ -217,7 +217,7 @@ registerOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
-  useTags = true
+  useTags = true,
 )
 
 registerOpenApiGenerateTask(
@@ -225,7 +225,7 @@ registerOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model",
-  useTags = true
+  useTags = true,
 )
 
 registerOpenApiGenerateTask(
@@ -233,7 +233,7 @@ registerOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas3"
+  apiSuffix = "Cas3",
 )
 
 fun registerOpenApiGenerateTask(
@@ -242,7 +242,7 @@ fun registerOpenApiGenerateTask(
   apiPackageName: String,
   modelPackageName: String,
   apiSuffix: String? = null,
-  useTags: Boolean = false
+  useTags: Boolean = false,
 ) {
   tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(name) {
     generatorName.set("kotlin-spring")
@@ -256,7 +256,14 @@ fun registerOpenApiGenerateTask(
       put("gradleBuildFile", "false")
       put("exceptionHandler", "false")
       put("useBeanValidation", "false")
-      put("useTags", if (useTags) { "true" } else { "false" })
+      put(
+        "useTags",
+        if (useTags) {
+          "true"
+        } else {
+          "false"
+        },
+      )
       apiSuffix?.let {
         put("apiSuffix", it)
       }
