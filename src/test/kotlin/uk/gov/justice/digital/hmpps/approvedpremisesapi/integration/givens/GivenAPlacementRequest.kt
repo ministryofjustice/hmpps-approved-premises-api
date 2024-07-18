@@ -77,7 +77,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   }
 
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-    crn?.let { withCrn(it) }
+    crn?.let { withCrn(it.uppercase()) }
     name?.let { withName(it) }
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)

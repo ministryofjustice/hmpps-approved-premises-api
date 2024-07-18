@@ -414,7 +414,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = `Given an Offender`(
-      offenderDetailsConfigBlock = { withCrn(crn) },
+      offenderDetailsConfigBlock = { withCrn(crn.uppercase()) },
     )
 
     CommunityAPI_mockSuccessfulRegistrationsCall(

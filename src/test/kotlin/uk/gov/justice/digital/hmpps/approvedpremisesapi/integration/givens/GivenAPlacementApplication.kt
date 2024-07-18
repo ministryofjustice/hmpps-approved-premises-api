@@ -82,11 +82,12 @@ fun IntegrationTestBase.`Given a Placement Application`(
   }
 }
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a Placement Application`(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
   schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
-  crn: String = randomStringMultiCaseWithNumbers(8),
+  crn: String = randomStringMultiCaseWithNumbers(8).uppercase(),
   allocatedToUser: UserEntity? = null,
   submittedAt: OffsetDateTime? = null,
   decision: PlacementApplicationDecision? = null,

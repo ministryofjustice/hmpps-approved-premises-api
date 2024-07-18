@@ -272,7 +272,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-12-01T09:15:45Z")
       assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2021-03-15T00:10:00Z")
       assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("DUPLICATE_PLACEMENT_REQUEST")
-      assertThat(row.crn).isEqualTo("StandardRFPAcceptedAndWithdrawnManager")
+      assertThat(row.crn).isEqualTo("STANDARDRFPACCEPTEDANDWITHDRAWNMANAGER")
     }
   }
 
@@ -308,7 +308,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-04-01T09:15:45Z")
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
-      assertThat(row.crn).isEqualTo("StandardRFPRejectedManager")
+      assertThat(row.crn).isEqualTo("STANDARDRFPREJECTEDMANAGER")
     }
   }
 
@@ -334,7 +334,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isNull()
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
-      assertThat(row.crn).isEqualTo("StandardRFPNotAssessed")
+      assertThat(row.crn).isEqualTo("STANDARDRFPNOTASSESSED")
     }
   }
 
@@ -417,7 +417,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2021-03-24T15:20:00Z")
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
-      assertThat(row.crn).isEqualTo("${type}PlacementAppAssessed")
+      assertThat(row.crn).isEqualTo("${type}PlacementAppAssessed".uppercase())
     }
   }
 
@@ -471,7 +471,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2025-12-01T15:20:00Z")
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
-      assertThat(row.crn).isEqualTo("PlacementAppRejected")
+      assertThat(row.crn).isEqualTo("PLACEMENTAPPREJECTED")
     }
   }
 
@@ -564,12 +564,12 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val (applicant, jwt) = `Given a User`()
     val (offenderDetails, _) = `Given an Offender`(
       offenderDetailsConfigBlock = {
-        withCrn(crn)
+        withCrn(crn.uppercase())
       },
     )
 
     APDeliusContext_mockSuccessfulCaseDetailCall(
-      crn,
+      crn.uppercase(),
       CaseDetailFactory().from(offenderDetails.asCaseDetail()).produce(),
     )
 

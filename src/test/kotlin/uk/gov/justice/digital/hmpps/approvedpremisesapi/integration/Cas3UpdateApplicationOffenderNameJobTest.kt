@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
@@ -39,6 +40,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
           withProbationRegion(probationRegion)
+          withCrn(randomStringUpperCase(8))
           withCreatedByUser(user)
         }
       }.take(10).toList()
@@ -91,6 +93,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
           withProbationRegion(probationRegion)
+          withCrn(randomStringUpperCase(8))
           withCreatedByUser(user)
         }
       }.take(10).toList()
@@ -144,6 +147,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
       val temporaryAccommodationApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
         withApplicationSchema(applicationSchema)
         withProbationRegion(probationRegion)
+        withCrn(randomStringUpperCase(8))
         withCreatedByUser(user)
       }
 
