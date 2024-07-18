@@ -202,18 +202,18 @@ registerOpenApiGenerateTask(
 )
 
 registerOpenApiGenerateTask(
+  name = "openApiGenerateCas3Namespace",
+  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  apiSuffix = "Cas3"
+)
+
+registerOpenApiGenerateTask(
   name = "openApiGenerateDomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model"
-)
-
-registerOpenApiGenerateTask(
-  name = "openApiGenerateCas3DomainEvents",
-  ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
-  useTags = true
 )
 
 registerOpenApiGenerateTask(
@@ -225,11 +225,11 @@ registerOpenApiGenerateTask(
 )
 
 registerOpenApiGenerateTask(
-  name = "openApiGenerateCas3Namespace",
-  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas3"
+  name = "openApiGenerateCas3DomainEvents",
+  ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
+  useTags = true
 )
 
 fun registerOpenApiGenerateTask(
