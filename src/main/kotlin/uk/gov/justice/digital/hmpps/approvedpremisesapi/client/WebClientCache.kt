@@ -80,7 +80,7 @@ class WebClientCache(
     val cacheEntry = PreemptiveCacheMetadata(
       httpStatus = exception.statusCode,
       refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
-      method = method,
+      method = MarshallableHttpMethod.fromHttpMethod(method),
       path = path,
       hasResponseBody = body != null,
       attempt = attempt,
@@ -195,7 +195,7 @@ class WebClientCache(
     return ClientResult.Failure.StatusCode(
       status = cacheEntry.httpStatus,
       body = cachedBody,
-      method = cacheEntry.method!!,
+      method = cacheEntry.method!!.toHttpMethod(),
       path = cacheEntry.path!!,
       isPreemptivelyCachedResponse = true,
     )
@@ -217,9 +217,33 @@ class WebClientCache(
   data class PreemptiveCacheMetadata(
     val httpStatus: HttpStatus,
     val refreshableAfter: Instant,
-    val method: HttpMethod?,
+    val method: MarshallableHttpMethod?,
     val path: String?,
     val hasResponseBody: Boolean,
     val attempt: Int?,
   )
+}
+
+/*
+Before the Spring Boot 3 Upgrade, we would directly marshal Spring's HttpMethod class into JSON for use in the Cache.
+As of Spring Boot 3 this class has been changed such that it can't be unmarshalled back into Java. As to avoid modifying
+entries in the cache during the Spring Boot 2 to 3, we have introduced our own version of Spring's HttpMethod that can
+be marshalled into JSON and back into Java.
+*/
+enum class MarshallableHttpMethod {
+  GET,
+  HEAD,
+  POST,
+  PUT,
+  PATCH,
+  DELETE,
+  OPTIONS,
+  TRACE,
+  ;
+
+  companion object {
+    fun fromHttpMethod(value: HttpMethod) = MarshallableHttpMethod.valueOf(value.name)
+  }
+
+  fun toHttpMethod() = HttpMethod.valueOf(this.name)
 }
