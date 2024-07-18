@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findAllByIdOrdered
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
@@ -280,7 +281,7 @@ class Cas1OutOfServiceBedService(
       getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString), unsafe = true),
     )
 
-    val outOfServiceBeds = outOfServiceBedRepository.findAllById(page.content.map(UUID::fromString))
+    val outOfServiceBeds = outOfServiceBedRepository.findAllByIdOrdered(page.content.map(UUID::fromString))
 
     return Pair(outOfServiceBeds, getMetadata(page, pageCriteria))
   }
