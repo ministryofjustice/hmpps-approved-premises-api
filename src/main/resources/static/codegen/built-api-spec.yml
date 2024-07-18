@@ -8132,6 +8132,7 @@ components:
         - approved_premises_duplicate_application
         - approved_premises_update_event_number
         - approved_premises_link_booking_to_placement_request
+        - approved_premises_out_of_service_beds
     MigrationJobRequest:
       type: object
       properties:

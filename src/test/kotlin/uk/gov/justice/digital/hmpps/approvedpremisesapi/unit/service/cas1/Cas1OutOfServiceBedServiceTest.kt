@@ -120,6 +120,9 @@ class Cas1OutOfServiceBedServiceTest {
       val reasonId = UUID.randomUUID()
 
       every { outOfServiceBedReasonRepository.findByIdOrNull(reasonId) } returns null
+      every { userService.getUserForRequest() } returns UserEntityFactory()
+        .withDefaults()
+        .produce()
 
       val result = outOfServiceBedService.createOutOfServiceBed(
         premises = premisesEntity,
@@ -187,6 +190,110 @@ class Cas1OutOfServiceBedServiceTest {
       assertThat(result.entity.referenceNumber).isEqualTo("12345")
       assertThat(result.entity.notes).isEqualTo("notes")
     }
+
+    @Test
+    fun `Returns Success with correct result when createdBy is null`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premisesEntity)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withYieldedRoom { room }
+        .produce()
+
+      premisesEntity.rooms += room
+      room.beds += bed
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .produce()
+
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      every { outOfServiceBedRepository.saveAndFlush(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      val result = outOfServiceBedService.createOutOfServiceBed(
+        premises = premisesEntity,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        bedId = bed.id,
+        createdBy = null,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+
+      assertThat(result.entity.premises).isEqualTo(premisesEntity)
+      assertThat(result.entity.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.entity.referenceNumber).isEqualTo("12345")
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.latestRevision.createdBy).isNull()
+
+      verify(exactly = 0) {
+        userService.getUserForRequest()
+      }
+    }
+
+    @Test
+    fun `Returns Success with correct result when createdBy is specified`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premisesEntity)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withYieldedRoom { room }
+        .produce()
+
+      premisesEntity.rooms += room
+      room.beds += bed
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .produce()
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      every { outOfServiceBedRepository.saveAndFlush(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      val result = outOfServiceBedService.createOutOfServiceBed(
+        premises = premisesEntity,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        bedId = bed.id,
+        createdBy = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+
+      assertThat(result.entity.premises).isEqualTo(premisesEntity)
+      assertThat(result.entity.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.entity.referenceNumber).isEqualTo("12345")
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.latestRevision.createdBy).isEqualTo(user)
+
+      verify(exactly = 0) {
+        userService.getUserForRequest()
+      }
+    }
   }
 
   @Nested
@@ -207,6 +314,10 @@ class Cas1OutOfServiceBedServiceTest {
 
       every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
       every { outOfServiceBedReasonRepository.findByIdOrNull(reasonId) } returns null
+
+      every { userService.getUserForRequest() } returns UserEntityFactory()
+        .withDefaults()
+        .produce()
 
       val result = outOfServiceBedService.updateOutOfServiceBed(
         outOfServiceBedId = outOfServiceBed.id,
@@ -277,6 +388,120 @@ class Cas1OutOfServiceBedServiceTest {
       assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
       assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
       assertThat(resultEntity.entity.notes).isEqualTo("notes")
+    }
+
+    @Test
+    fun `Returns Success with correct result when createdBy is null`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .produce()
+
+      val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
+        .withBed {
+          withRoom {
+            withPremises(premisesEntity)
+          }
+        }
+        .produce()
+
+      outOfServiceBed.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+        .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
+        .withOutOfServiceBed(outOfServiceBed)
+        .produce()
+
+      every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      every { outOfServiceBedRepository.save(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      val result = outOfServiceBedService.updateOutOfServiceBed(
+        outOfServiceBedId = outOfServiceBed.id,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        createdBy = null,
+      )
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val resultEntity = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
+      resultEntity as ValidatableActionResult.Success
+
+      assertThat(resultEntity.entity.premises).isEqualTo(premisesEntity)
+      assertThat(resultEntity.entity.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(resultEntity.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
+      assertThat(resultEntity.entity.notes).isEqualTo("notes")
+      assertThat(resultEntity.entity.latestRevision.createdBy).isNull()
+
+      verify(exactly = 0) {
+        userService.getUserForRequest()
+      }
+    }
+
+    @Test
+    fun `Returns Success with correct result when createdBy is specified`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .produce()
+
+      val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
+        .withBed {
+          withRoom {
+            withPremises(premisesEntity)
+          }
+        }
+        .produce()
+
+      outOfServiceBed.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+        .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
+        .withOutOfServiceBed(outOfServiceBed)
+        .produce()
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      every { outOfServiceBedRepository.save(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      val result = outOfServiceBedService.updateOutOfServiceBed(
+        outOfServiceBedId = outOfServiceBed.id,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        createdBy = user,
+      )
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val resultEntity = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
+      resultEntity as ValidatableActionResult.Success
+
+      assertThat(resultEntity.entity.premises).isEqualTo(premisesEntity)
+      assertThat(resultEntity.entity.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(resultEntity.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
+      assertThat(resultEntity.entity.notes).isEqualTo("notes")
+      assertThat(resultEntity.entity.latestRevision.createdBy).isEqualTo(user)
+
+      verify(exactly = 0) {
+        userService.getUserForRequest()
+      }
     }
   }
 

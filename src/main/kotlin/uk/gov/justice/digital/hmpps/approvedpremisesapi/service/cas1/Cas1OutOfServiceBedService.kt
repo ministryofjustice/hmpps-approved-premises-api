@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -46,6 +47,26 @@ class Cas1OutOfServiceBedService(
     referenceNumber: String?,
     notes: String?,
     bedId: UUID,
+  ) = createOutOfServiceBed(
+    premises,
+    startDate,
+    endDate,
+    reasonId,
+    referenceNumber,
+    notes,
+    bedId,
+    userService.getUserForRequest(),
+  )
+
+  fun createOutOfServiceBed(
+    premises: ApprovedPremisesEntity,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    reasonId: UUID,
+    referenceNumber: String?,
+    notes: String?,
+    bedId: UUID,
+    createdBy: UserEntity?,
   ): ValidatableActionResult<Cas1OutOfServiceBedEntity> =
     validated {
       if (endDate.isBefore(startDate)) {
@@ -93,7 +114,7 @@ class Cas1OutOfServiceBedService(
             notes = notes,
             reason = reason!!,
             outOfServiceBed = this,
-            createdBy = userService.getUserForRequest(),
+            createdBy = createdBy,
             changeTypePacked = Cas1OutOfServiceBedRevisionChangeType.NO_CHANGE,
           ),
         )
@@ -109,6 +130,24 @@ class Cas1OutOfServiceBedService(
     reasonId: UUID,
     referenceNumber: String?,
     notes: String?,
+  ) = updateOutOfServiceBed(
+    outOfServiceBedId,
+    startDate,
+    endDate,
+    reasonId,
+    referenceNumber,
+    notes,
+    userService.getUserForRequest(),
+  )
+
+  fun updateOutOfServiceBed(
+    outOfServiceBedId: UUID,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    reasonId: UUID,
+    referenceNumber: String?,
+    notes: String?,
+    createdBy: UserEntity?,
   ): AuthorisableActionResult<ValidatableActionResult<Cas1OutOfServiceBedEntity>> {
     val outOfServiceBed = outOfServiceBedRepository.findByIdOrNull(outOfServiceBedId)
       ?: return AuthorisableActionResult.NotFound()
@@ -143,7 +182,7 @@ class Cas1OutOfServiceBedService(
             notes = notes,
             reason = reason!!,
             outOfServiceBed = outOfServiceBed,
-            createdBy = userService.getUserForRequest(),
+            createdBy = createdBy,
             changeTypePacked = getChangeType(outOfServiceBed.latestRevision, startDate, endDate, referenceNumber, notes, reason),
           ),
         )
