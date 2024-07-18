@@ -82,4 +82,44 @@ class CAS2SubjectAccessRequestRepository(
 
     return toJsonString(result)
   }
+
+  fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+      select json_agg(application_notes) as json 
+      from (
+          select
+          	can.id,
+          	ca.crn,
+          	ca.noms_number,
+          	can.application_id,
+          	can.assessment_id, 
+          	case 
+          		when created_by_external_user_id is not null then eu."name"
+          		when created_by_nomis_user_id is not null then nu."name"
+          		else 'unknown'
+          	end as created_by_user,
+          	case 
+          		when created_by_external_user_id is not null then 'external'
+          		when created_by_nomis_user_id is not null then 'nomis'
+          		else 'unknown'
+          	end as created_by_user_type,
+          	can.body
+          from cas_2_application_notes can 
+          inner join cas_2_applications ca on
+          	ca.id  = can.application_id 
+          left join external_users eu on 
+          	eu.id = can.created_by_external_user_id
+          left join nomis_users nu on nu.id = can.created_by_nomis_user_id 
+          where 
+          	(ca.crn = :crn
+          		or ca.noms_number = :noms_number )
+          and (:start_date is null or ca.created_at >= :start_date) 
+          and (:end_date is null or ca.created_at <= :end_date)
+      ) application_notes
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
 }
