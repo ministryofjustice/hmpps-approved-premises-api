@@ -184,121 +184,84 @@ tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
   }
 }
 
-tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas1Namespace") {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-cas1-api-spec.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put("apiSuffix", "Cas1")
-    put("dateLibrary", "custom")
-    put("useTags", "true")
-  }
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-  templateDir.set("$rootDir/openapi")
-}
+registerOpenApiGenerateTask(
+  name = "openApiGenerateCas1Namespace",
+  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas1-api-spec.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  apiSuffix = "Cas1",
+  useTags = true
+)
 
-tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2Namespace") {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put("apiSuffix", "Cas2")
-    put("dateLibrary", "custom")
-  }
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-  templateDir.set("$rootDir/openapi")
-}
+registerOpenApiGenerateTask(
+  name = "openApiGenerateCas2Namespace",
+  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  apiSuffix = "Cas2"
+)
 
-tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateDomainEvents") {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/domain-events-api.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model")
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put("dateLibrary", "custom")
-  }
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-}
+registerOpenApiGenerateTask(
+  name = "openApiGenerateDomainEvents",
+  ymlPath = "$rootDir/src/main/resources/static/domain-events-api.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model"
+)
 
-tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas3DomainEvents") {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/cas3-domain-events-api.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model")
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put("dateLibrary", "custom")
-    put("useTags", "true")
-  }
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-}
+registerOpenApiGenerateTask(
+  name = "openApiGenerateCas3DomainEvents",
+  ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
+  useTags = true
+)
 
-tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas2DomainEvents") {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/cas2-domain-events-api.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model")
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put("dateLibrary", "custom")
-    put("useTags", "true")
-  }
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-}
+registerOpenApiGenerateTask(
+  name = "openApiGenerateCas2DomainEvents",
+  ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model",
+  useTags = true
+)
 
-tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("openApiGenerateCas3Namespace") {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put("apiSuffix", "Cas3")
-    put("dateLibrary", "custom")
+registerOpenApiGenerateTask(
+  name = "openApiGenerateCas3Namespace",
+  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  apiSuffix = "Cas3"
+)
+
+fun registerOpenApiGenerateTask(
+  name: String,
+  ymlPath: String,
+  apiPackageName: String,
+  modelPackageName: String,
+  apiSuffix: String? = null,
+  useTags: Boolean = false
+) {
+  tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(name) {
+    generatorName.set("kotlin-spring")
+    inputSpec.set(ymlPath)
+    outputDir.set("$buildDir/generated")
+    apiPackage.set(apiPackageName)
+    modelPackage.set(modelPackageName)
+    configOptions.apply {
+      put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
+      put("delegatePattern", "true")
+      put("gradleBuildFile", "false")
+      put("exceptionHandler", "false")
+      put("useBeanValidation", "false")
+      put("useTags", if (useTags) { "true" } else { "false" })
+      apiSuffix?.let {
+        put("apiSuffix", it)
+      }
+      put("dateLibrary", "custom")
+    }
+    typeMappings.put("DateTime", "Instant")
+    importMappings.put("Instant", "java.time.Instant")
+    templateDir.set("$rootDir/openapi")
   }
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-  templateDir.set("$rootDir/openapi")
 }
 
 tasks.register("openApiPreCompilation") {
