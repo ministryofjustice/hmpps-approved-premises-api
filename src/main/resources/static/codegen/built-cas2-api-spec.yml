@@ -2845,9 +2845,12 @@ components:
           CAS1: '#/components/schemas/SubmitApprovedPremisesApplication'
           CAS3: '#/components/schemas/SubmitTemporaryAccommodationApplication'
           CAS2: '#/components/schemas/SubmitCas2Application'
+      # Ideally translatedDocument would be marked required here, but there is a bug
+      # in open api generator that leads to the subclass marking this as kotlin.Any?
+      # whilst in the superclass it has the type kotlin.Any. This leads to a compilation
+      # error as the override has the incorrect type.
       required:
         - type
-        - translatedDocument
     SubmitApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'

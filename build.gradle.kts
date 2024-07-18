@@ -3,7 +3,7 @@ import org.apache.commons.io.FileUtils
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.14.0"
   kotlin("plugin.spring") version "1.9.22"
-  id("org.openapi.generator") version "5.4.0"
+  id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.10.3.2"
   id("io.gitlab.arturbosch.detekt") version "1.23.4"
@@ -181,6 +181,8 @@ fun addOpenApiConfigOptions(
       put("apiSuffix", it)
     }
     put("dateLibrary", "custom")
+    put("useSpringBoot3", "false")
+    put("enumPropertyNaming", "camelCase")
   }
 }
 

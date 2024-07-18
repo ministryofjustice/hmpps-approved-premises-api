@@ -916,7 +916,7 @@ class ApplicationService(
       prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
     }
 
-    assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)
+    assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData!!)
 
     application = applicationRepository.save(application)
 
