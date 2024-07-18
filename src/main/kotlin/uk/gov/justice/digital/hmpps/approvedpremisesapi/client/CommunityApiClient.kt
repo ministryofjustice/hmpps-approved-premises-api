@@ -79,7 +79,7 @@ class CommunityApiClient(
 
       ClientResult.Success(HttpStatus.OK, Unit)
     } catch (exception: WebClientResponseException) {
-      ClientResult.Failure.StatusCode(HttpMethod.GET, path, exception.statusCode, exception.responseBodyAsString)
+      ClientResult.Failure.StatusCode(HttpMethod.GET, path, exception.statusCode.toHttpStatus(), exception.responseBodyAsString)
     } catch (exception: Exception) {
       ClientResult.Failure.Other(HttpMethod.GET, path, exception)
     }

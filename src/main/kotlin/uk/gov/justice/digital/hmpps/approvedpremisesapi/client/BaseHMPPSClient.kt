@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import java.util.concurrent.atomic.AtomicInteger
@@ -71,14 +72,14 @@ abstract class BaseHMPPSClient(
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
       }
 
-      return ClientResult.Success(result.statusCode, deserialized, false)
+      return ClientResult.Success(result.statusCode.toHttpStatus(), deserialized, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, attempt.get(), method)
       }
 
       if (!exception.statusCode.is2xxSuccessful) {
-        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode.toHttpStatus(), exception.responseBodyAsString, false)
       } else {
         throw exception
       }
@@ -189,3 +190,5 @@ class CacheKeySet(
 enum class PreemptiveCacheEntryStatus {
   MISS, REQUIRES_REFRESH, EXISTS
 }
+
+fun HttpStatusCode.toHttpStatus(): HttpStatus = HttpStatus.valueOf(this.value())

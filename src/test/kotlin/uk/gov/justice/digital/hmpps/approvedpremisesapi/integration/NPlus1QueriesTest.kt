@@ -9,13 +9,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import org.springframework.test.context.ActiveProfiles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@ActiveProfiles("test", "log-sql")
 class NPlus1QueriesTest : IntegrationTestBase() {
   val appender = mockk<Appender<ILoggingEvent>>()
 
