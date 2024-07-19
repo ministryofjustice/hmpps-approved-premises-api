@@ -20,6 +20,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.BaseHMPPSClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -132,6 +133,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     )
 
     assertThat(firstMetadata.attempt).isEqualTo(1)
+    assertThat(firstMetadata.method).isEqualTo(MarshallableHttpMethod.GET)
 
     // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds should return the cached value without making an upstream request
     every { Instant.now() } returns fourSecondsLaterInstant
