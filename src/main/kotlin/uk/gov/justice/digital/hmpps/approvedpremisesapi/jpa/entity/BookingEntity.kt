@@ -177,13 +177,55 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       LEFT JOIN premises p ON r.premises_id = p.id
       WHERE b.service = :serviceName
       AND (:status is null or b.status = :#{#status?.toString()})
-      AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
       AND (:crn is null OR b.crn = :crn)
     """,
     nativeQuery = true,
   )
   fun findBookings(
     serviceName: String,
+    status: BookingStatus?,
+    crn: String?,
+    pageable: Pageable?,
+  ): Page<BookingSearchResult>
+
+  @Query(
+    """
+      SELECT
+        b.crn AS personCrn,
+        offenders.name AS personName,
+        Cast(b.id as varchar) bookingId,
+        COALESCE(b.status, 'provisional') as bookingStatus,
+        b.arrival_date AS bookingStartDate,
+        b.departure_date AS bookingEndDate,
+        b.created_at AS bookingCreatedAt,
+        Cast(p.id as varchar) premisesId,
+        p.name AS premisesName,
+        p.address_line1 AS premisesAddressLine1,
+        p.address_line2 AS premisesAddressLine2,
+        p.town AS premisesTown,
+        p.postcode AS premisesPostcode,
+        Cast(r.id as varchar) roomId,
+        r.name AS roomName,
+        Cast(b2.id as varchar) bedId,
+        b2.name AS bedName
+      FROM bookings b
+      LEFT JOIN beds b2 ON b.bed_id = b2.id
+      LEFT JOIN rooms r ON b2.room_id = r.id
+      LEFT JOIN premises p ON r.premises_id = p.id
+      LEFT JOIN (
+        SELECT distinct on (crn) crn,name
+        FROM temporary_accommodation_applications taa
+        INNER JOIN applications a ON a.id = taa.id
+        ORDER BY crn,a.created_at desc
+      ) offenders on b.crn = offenders.crn       
+      WHERE b.service = 'temporary-accommodation'
+      AND (:status is null or b.status = :#{#status?.toString()})
+      AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
+      AND (:crn is null OR b.crn = :crn)
+    """,
+    nativeQuery = true,
+  )
+  fun findTemporaryAccommodationBookings(
     status: BookingStatus?,
     probationRegionId: UUID?,
     crn: String?,

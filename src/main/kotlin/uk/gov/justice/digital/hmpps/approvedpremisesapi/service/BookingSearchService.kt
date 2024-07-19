@@ -38,21 +38,31 @@ class BookingSearchService(
     crn: String?,
   ): Pair<List<BookingSearchResultDto>, PaginationMetadata?> {
     val user = userService.getUserForRequest()
-    val probationRegionId = when (serviceName) {
-      ServiceName.temporaryAccommodation -> user.probationRegion.id
-      else -> null
+    val findBookings: Page<BookingSearchResult>
+    val pageSize: Int
+
+    when (serviceName) {
+      ServiceName.temporaryAccommodation -> {
+        pageSize = cas3BookingSearchPageSize
+        findBookings = bookingRepository.findTemporaryAccommodationBookings(
+          status,
+          user.probationRegion.id,
+          crn,
+          buildPage(sortOrder, sortField, page, pageSize),
+        )
+      }
+
+      else -> {
+        pageSize = defaultSearchPageSize
+        findBookings = bookingRepository.findBookings(
+          serviceName.value,
+          status,
+          crn,
+          buildPage(sortOrder, sortField, page, pageSize),
+        )
+      }
     }
-    val pageSize = when (serviceName) {
-      ServiceName.temporaryAccommodation -> cas3BookingSearchPageSize
-      else -> defaultSearchPageSize
-    }
-    val findBookings = bookingRepository.findBookings(
-      serviceName.value,
-      status,
-      probationRegionId,
-      crn,
-      buildPage(sortOrder, sortField, page, pageSize),
-    )
+
     var results = removeRestrictedAndUpdatePersonNameFromOffenderDetail(
       mapToBookingSearchResults(findBookings),
       user,
@@ -131,6 +141,7 @@ class BookingSearchService(
       BookingSearchSortField.bookingStartDate -> "arrival_date"
       BookingSearchSortField.bookingCreatedAt -> "created_at"
       BookingSearchSortField.personCrn -> "crn"
+      BookingSearchSortField.personName -> "personName"
       else -> "created_at"
     }
 
