@@ -312,7 +312,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: ApplicationReportRow, shouldIncludePii: Boolean = true) {
       assertThat(row.application_id).isEqualTo(application.id.toString())
-      assertThat(row.crn).isEqualTo("AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn")
+      assertThat(row.crn).isEqualTo("APPSUBMITTEDWITHSUCCESSFULAPPEALSCLARIFICATIONSANDWITHDRAWN")
       assertThat(row.noms).isEqualTo("noms1")
       assertThat(row.age_in_years).isEqualTo("25")
       assertThat(row.gender).isEqualTo("Male")
@@ -469,7 +469,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: ApplicationReportRow) {
       assertThat(row.application_id).isEqualTo(application.id.toString())
-      assertThat(row.crn).isEqualTo("AppSubmittedWithAcceptedAssessment")
+      assertThat(row.crn).isEqualTo("APPSUBMITTEDWITHACCEPTEDASSESSMENT")
       assertThat(row.noms).isEqualTo("noms3")
       assertThat(row.age_in_years).isEqualTo("50")
       assertThat(row.gender).isEqualTo("Female")
@@ -574,7 +574,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: ApplicationReportRow) {
       assertThat(row.application_id).isEqualTo(application.id.toString())
-      assertThat(row.crn).isEqualTo("AppSubmittedNoAssessment")
+      assertThat(row.crn).isEqualTo("APPSUBMITTEDNOASSESSMENT")
       assertThat(row.noms).isEqualTo("noms2")
       assertThat(row.age_in_years).isEqualTo("20")
       assertThat(row.gender).isEqualTo("Female")
@@ -663,7 +663,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: ApplicationReportRow) {
       assertThat(row.application_id).isEqualTo(application.id.toString())
-      assertThat(row.crn).isEqualTo("appWithdrawnDuringReportingPeriod")
+      assertThat(row.crn).isEqualTo("APPWITHDRAWNDURINGREPORTINGPERIOD")
 
       assertThat(row.application_withdrawal_date).isEqualTo("2020-02-12T11:25:00Z")
       assertThat(row.application_withdrawal_reason).isEqualTo("death")
@@ -810,7 +810,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     val (applicant, jwt) = applicantDetails
     val (offenderDetails, _) = `Given an Offender`(
       offenderDetailsConfigBlock = {
-        withCrn(crn)
+        withCrn(crn.uppercase())
         withDateOfBirth(dateOfBirth)
         withGender(gender)
         withNomsNumber(nomsNumber)
