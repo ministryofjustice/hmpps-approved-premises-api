@@ -5,6 +5,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
@@ -13,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase() {
 
@@ -26,7 +29,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
           "Applications": [ ],
           "ApplicationNotes": [ ],
-          "Assessments": [ ]
+          "Assessments": [ ],
+          "StatusUpdates": [ ]
       }
       """.trimIndent(),
       result,
@@ -51,7 +55,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
    {
       "Applications": [${Cas2ApplicationsJson(application)}],
       "ApplicationNotes": [ ],
-      "Assessments": [ ]
+      "Assessments": [ ],
+      "StatusUpdates": [ ]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -76,7 +81,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
    {
       "Applications": [${Cas2ApplicationsJson(application)}],
       "ApplicationNotes": [ ],
-      "Assessments": [${Cas2AssessmentsJson(assessment)}]
+      "Assessments": [${Cas2AssessmentsJson(assessment)}],
+      "StatusUpdates": [ ]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -103,11 +109,57 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
    {
       "Applications": [${Cas2ApplicationsJson(application)}],
       "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
-      "Assessments": [${Cas2AssessmentsJson(assessment)}]
+      "Assessments": [${Cas2AssessmentsJson(assessment)}],
+      "StatusUpdates": [ ]
+
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
+
+  @Test
+  fun `Get CAS2 Information - Application with Notes and Status updates`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val user = nomisUserEntity()
+    val externalAssessor = externalUserEntity()
+    val application = cas2ApplicationEntity(offenderDetails, user)
+    val assessment = cas2AssessmentEntity(application)
+
+    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, externalAssessor)
+
+    val result = sarService.getCAS2Result(
+      offenderDetails.otherIds.crn,
+      offenderDetails.otherIds.nomsNumber,
+      START_DATE,
+      END_DATE,
+    )
+
+    val expectedJson = """
+   {
+      "Applications": [${Cas2ApplicationsJson(application)}],
+      "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
+      "Assessments": [${Cas2AssessmentsJson(assessment)}],
+      "StatusUpdates": [${Cas2StatusUpdatesJson(statusUpdate)}]
+   }
+    """.trimIndent()
+    assertJsonEquals(expectedJson, result)
+  }
+
+  private fun Cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
+    {
+      	"id": "${statusUpdate.id}",
+      	"crn": "${statusUpdate.application.crn}",
+      	"noms_number": "${statusUpdate.application.nomsNumber}", 
+      	"application_id": "${statusUpdate.application.id}",
+      	"assessment_id": "${statusUpdate.assessment!!.id}",
+      	"assessor_name": "${statusUpdate.assessor.name}",
+        "assessor_origin": "${statusUpdate.assessor.origin}",
+      	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
+        "description": "${statusUpdate.description}",
+        "label": "${statusUpdate.label}"
+    }    
+  """.trimIndent()
 
   private fun Cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
@@ -163,6 +215,26 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withCreatedByUser(user)
     withBody("some body text")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+  }
+
+  private fun cas2StatusUpdateEntity(
+    application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
+    externalAssessor: ExternalUserEntity,
+  ) = cas2StatusUpdateEntityFactory.produceAndPersist {
+    withApplication(application)
+    withAssessment(assessment)
+    withStatusId(UUID.randomUUID())
+    withAssessor(externalAssessor)
+    withLabel("Some Label")
+    withDescription("Some Description")
+  }
+
+  private fun externalUserEntity() = externalUserEntityFactory.produceAndPersist {
+    withName(randomStringMultiCaseWithNumbers(12))
+    withEmail(randomEmailAddress())
+    withOrigin("NACRO")
+    withUsername(randomStringMultiCaseWithNumbers(10))
   }
 
   private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) =

@@ -122,4 +122,38 @@ class CAS2SubjectAccessRequestRepository(
     )
     return toJsonString(result)
   }
+
+  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+      select json_agg(application_status_updates) as json 
+      from (
+          select
+              csu.id,
+              ca.crn,
+              ca.noms_number, 
+              csu.application_id,
+              csu.assessment_id,
+              eu."name" as assessor_name,
+              eu.origin as assessor_origin,
+              to_char(csu.created_at,'YYYY-MM-DD HH:MI:SS') as created_at,
+              csu.description ,
+              csu."label"
+          from cas_2_status_updates csu 
+          inner join cas_2_applications ca
+              on ca.id =csu.application_id
+          inner join external_users eu 
+              on eu.id = csu.assessor_id
+          where 
+          	(ca.crn = :crn
+          		or ca.noms_number = :noms_number )
+          and (:start_date is null or ca.created_at >= :start_date) 
+          and (:end_date is null or ca.created_at <= :end_date)
+      ) application_status_updates
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
 }

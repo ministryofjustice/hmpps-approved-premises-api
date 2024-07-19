@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
@@ -90,6 +91,8 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     var CANCELLATION_DATE_ONLY = CANCELLATION_DATE.substring(0..9)
     var ALLOCATED_DATE_ONLY = ALLOCATED_AT.substring(0..9)
   }
+
+  protected fun OffsetDateTime.toStandardisedFormat(): String = this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
   protected fun offlineApplicationJson(booking: BookingEntity) =
     """
       {
