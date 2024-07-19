@@ -15,10 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
 import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -98,7 +98,7 @@ class ClientResultRedisSerializer(
           body = clientResult.body,
           exceptionMessage = null,
           type = null,
-          method = clientResult.method,
+          method = MarshallableHttpMethod.fromHttpMethod(clientResult.method),
           path = clientResult.path,
         )
       }
@@ -109,7 +109,7 @@ class ClientResultRedisSerializer(
           body = null,
           exceptionMessage = clientResult.exception.message,
           type = null,
-          method = clientResult.method,
+          method = MarshallableHttpMethod.fromHttpMethod(clientResult.method),
           path = clientResult.path,
         )
       }
@@ -144,7 +144,7 @@ class ClientResultRedisSerializer(
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.STATUS_CODE_FAILURE) {
       return ClientResult.Failure.StatusCode(
-        method = deserializedWrapper.method!!,
+        method = deserializedWrapper.method!!.toHttpMethod(),
         path = deserializedWrapper.path!!,
         status = deserializedWrapper.status!!,
         body = deserializedWrapper.body,
@@ -153,7 +153,7 @@ class ClientResultRedisSerializer(
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.OTHER_FAILURE) {
       return ClientResult.Failure.Other(
-        method = deserializedWrapper.method!!,
+        method = deserializedWrapper.method!!.toHttpMethod(),
         path = deserializedWrapper.path!!,
         exception = RuntimeException(deserializedWrapper.exceptionMessage),
       )
@@ -169,7 +169,7 @@ data class SerializableClientResult(
   val status: HttpStatus?,
   val body: String?,
   val exceptionMessage: String?,
-  val method: HttpMethod?,
+  val method: MarshallableHttpMethod?,
   val path: String?,
 )
 
