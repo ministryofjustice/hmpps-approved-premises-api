@@ -1,0 +1,1 @@
+CREATE INDEX placement_applications_application_id_idx ON placement_applications (application_id);
