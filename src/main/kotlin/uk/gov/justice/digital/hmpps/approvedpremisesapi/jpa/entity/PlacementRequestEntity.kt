@@ -43,7 +43,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         p.allocatedToUser.id = :userId AND
         ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR apArea.id = :apAreaId) AND
         p.reallocatedAt IS NULL AND 
-        p.isWithdrawn IS FALSE
+        p.isWithdrawn = FALSE
     """,
   )
   fun findOpenRequestsAssignedToUser(
