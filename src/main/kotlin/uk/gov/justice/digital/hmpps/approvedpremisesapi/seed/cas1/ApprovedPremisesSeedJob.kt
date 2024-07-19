@@ -102,11 +102,7 @@ class ApprovedPremisesSeedJob(
   )
 
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
-    val existingPremises = premisesRepository.findByApCode(row.apCode, ApprovedPremisesEntity::class.java)
-
-    if (existingPremises != null && existingPremises !is ApprovedPremisesEntity) {
-      throw RuntimeException("Premises ${row.apCode} is of type ${existingPremises::class.qualifiedName}, cannot be updated with Approved Premises Seed Job")
-    }
+    val existingPremises = premisesRepository.findByApCode(row.apCode)
 
     val probationRegion = probationRegionRepository.findByName(row.probationRegion)
       ?: throw RuntimeException("Probation Region ${row.probationRegion} does not exist")
