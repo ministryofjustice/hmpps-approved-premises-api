@@ -3828,6 +3828,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
+            permissions:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApprovedPremisesUserPermission'
             apArea:
               $ref: '#/components/schemas/ApArea'
           required:
@@ -3891,6 +3895,15 @@ components:
         - appeals_manager
         - janitor
         - user_manager
+    ApprovedPremisesUserPermission:
+      type: string
+      enum:
+        - cas1_view_assigned_assessments
+        - cas1_process_an_appeal
+        - cas1_assess_placement_application
+        - cas1_assess_placement_request
+        - cas1_assess_application
+        - cas1_assess_appealed_application
     TemporaryAccommodationUserRole:
       type: string
       enum:

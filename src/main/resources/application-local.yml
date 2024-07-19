@@ -70,3 +70,6 @@ user-allocations:
     appealed-assessments:
       enabled: true
       priority: 0
+
+feature-flags:
+  cas1-appeal-manager-can-assess-applications: false

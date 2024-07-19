@@ -212,3 +212,6 @@ notify:
     cas2assessors: "assessors@example.com"
 
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
+
+feature-flags:
+  cas1-appeal-manager-can-assess-applications: true

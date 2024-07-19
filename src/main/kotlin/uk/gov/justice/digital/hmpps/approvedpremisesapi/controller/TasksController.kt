@@ -17,11 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -42,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
@@ -139,14 +140,18 @@ class TasksController(
       TaskType.assessment -> {
         val assessment = extractEntityFromAuthorisableActionResult(
           assessmentService.getAssessmentForUser(user, id),
-        )
+        ) as ApprovedPremisesAssessmentEntity
         val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
+
+        val requiredPermission = if (assessment.createdFromAppeal) {
+          UserPermission.CAS1_ASSESS_APPEALED_APPLICATION
+        } else { UserPermission.CAS1_ASSESS_APPLICATION }
 
         TaskInfo(
           transformedTask = getAssessmentTask(assessment, offenderSummaries),
           crn = assessment.application.crn,
           requiredQualifications = assessment.application.getRequiredQualifications(),
-          allocationType = AllocationType.Assessment,
+          requiredPermission = requiredPermission,
         )
       }
 
@@ -160,7 +165,7 @@ class TasksController(
           transformedTask = getPlacementRequestTask(placementRequest, offenderSummaries),
           crn = placementRequest.application.crn,
           requiredQualifications = emptyList(),
-          allocationType = AllocationType.PlacementRequest,
+          requiredPermission = UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
         )
       }
 
@@ -174,7 +179,7 @@ class TasksController(
           transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries),
           crn = placementApplication.application.crn,
           requiredQualifications = placementApplication.application.getRequiredQualifications(),
-          allocationType = AllocationType.PlacementApplication,
+          requiredPermission = UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
         )
       }
 
@@ -186,7 +191,7 @@ class TasksController(
     val users = userService.getAllocatableUsersForAllocationType(
       taskInfo.crn,
       taskInfo.requiredQualifications,
-      taskInfo.allocationType,
+      taskInfo.requiredPermission,
     )
 
     val workload = userService.getUserWorkloads(users.map { it.id })
@@ -206,7 +211,7 @@ class TasksController(
     val transformedTask: Task,
     val crn: String,
     val requiredQualifications: List<UserQualification>,
-    val allocationType: AllocationType,
+    val requiredPermission: UserPermission,
   )
 
   @Transactional

@@ -153,6 +153,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                       createdBy = ApprovedPremisesUser(
                         qualifications = emptyList(),
                         roles = emptyList(),
+                        permissions = emptyList(),
                         apArea = ApArea(
                           id = userEntity.apArea!!.id,
                           identifier = userEntity.apArea!!.identifier,
@@ -277,6 +278,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                       createdBy = ApprovedPremisesUser(
                         qualifications = emptyList(),
                         roles = emptyList(),
+                        permissions = emptyList(),
                         apArea = ApArea(
                           id = userEntity.apArea!!.id,
                           identifier = userEntity.apArea!!.identifier,

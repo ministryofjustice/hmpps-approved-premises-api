@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
@@ -663,11 +664,11 @@ class AssessmentService(
     val application = currentAssessment.application
     val requiredQualifications = application.getRequiredQualifications()
 
-    if (!assigneeUser.hasRole(UserRole.CAS1_ASSESSOR)) {
+    if (!canUserAssessPlacement(assigneeUser, currentAssessment)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(
           ValidationErrors().apply {
-            this["$.userId"] = "lackingAssessorRole"
+            this["$.userId"] = "lacking assess application or assess appealed application permission"
           },
         ),
       )
@@ -730,6 +731,15 @@ class AssessmentService(
         newAssessment,
       ),
     )
+  }
+
+  private fun canUserAssessPlacement(user: UserEntity, assessment: ApprovedPremisesAssessmentEntity): Boolean {
+    val assigneeUsersPermissions = (user.roles.map { it.role.permissions }).flatten().distinct()
+
+    return (
+      assigneeUsersPermissions.contains(UserPermission.CAS1_ASSESS_APPLICATION) ||
+        (assessment.createdFromAppeal && assigneeUsersPermissions.contains(UserPermission.CAS1_ASSESS_APPEALED_APPLICATION))
+      )
   }
 
   private fun reallocateTemporaryAccommodationAssessment(

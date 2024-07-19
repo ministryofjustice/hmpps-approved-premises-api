@@ -26,12 +26,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -40,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -63,6 +66,7 @@ class UserServiceTest {
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockCas1UserMappingService = mockk<Cas1UserMappingService>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val userService = UserService(
     false,
@@ -77,6 +81,7 @@ class UserServiceTest {
     mockProbationAreaProbationRegionMappingRepository,
     mockCas1UserMappingService,
     mockProbationDeliveryUnitRepository,
+    mockFeatureFlagService,
   )
 
   @Nested
@@ -869,6 +874,61 @@ class UserServiceTest {
           },
         )
       }
+    }
+  }
+
+  @Nested
+  inner class getAllocatableUsersForAllocationType {
+
+    @Test
+    fun `getAllocatableUsersForAllocationType asserts lao qualification if offender is lao`() {
+      every { mockOffenderService.isLao(any()) } returns true
+
+      val userWithLao = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      userWithLao.apply {
+        qualifications += UserQualificationAssignmentEntityFactory()
+          .withUser(this)
+          .withQualification(UserQualification.LAO)
+          .produce()
+      }
+
+      val userWithoutLao = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      every { mockUserRepository.findActiveUsersWithRoles(any()) } returns listOf(userWithLao, userWithoutLao)
+      every { mockFeatureFlagService.getBooleanFlag(any()) } returns true
+
+      val allocatableUser = userService.getAllocatableUsersForAllocationType(
+        "crn",
+        emptyList<UserQualification>(),
+        UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
+      )
+      assertThat(allocatableUser.size).isEqualTo(1)
+      assertThat(allocatableUser.first().id).isEqualTo(userWithLao.id)
+    }
+
+    @Test
+    fun `getAllocatableUsersForAllocationType seeks correct role when process appeal permission is present `() {
+      every { mockOffenderService.isLao(any()) } returns false
+
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      every { mockUserRepository.findActiveUsersWithRoles(any()) } returns listOf(user)
+      every { mockFeatureFlagService.getBooleanFlag(any()) } returns true
+
+      val allocatableUser = userService.getAllocatableUsersForAllocationType(
+        "crn",
+        emptyList<UserQualification>(),
+        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
+      )
+
+      verify(exactly = 1) { mockUserRepository.findActiveUsersWithRoles(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER)) }
     }
   }
 }

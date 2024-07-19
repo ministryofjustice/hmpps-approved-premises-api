@@ -200,6 +200,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
             service = "CAS1",
             isActive = true,
             apArea = ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name),
+            permissions = emptyList(),
           ),
         ),
       )

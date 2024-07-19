@@ -33,6 +33,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   name: String? = null,
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
+  createdFromAppeal: Boolean = false,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -87,6 +88,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
+    withCreatedFromAppeal(createdFromAppeal)
     withIsWithdrawn(isWithdrawn)
     withDueAt(dueAt)
   }
@@ -108,17 +110,19 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   decision: AssessmentDecision? = null,
   submittedAt: OffsetDateTime? = null,
   dueAt: OffsetDateTime? = null,
+  createdFromAppeal: Boolean = false,
   block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
 ) {
   val (assessment, application) = `Given an Assessment for Approved Premises`(
-    allocatedToUser,
-    createdByUser,
-    crn,
-    reallocated,
-    data,
-    decision,
-    submittedAt,
-    dueAt,
+    allocatedToUser = allocatedToUser,
+    createdByUser = createdByUser,
+    crn = crn,
+    reallocated = reallocated,
+    data = data,
+    decision = decision,
+    submittedAt = submittedAt,
+    dueAt = dueAt,
+    createdFromAppeal = createdFromAppeal,
   )
 
   block(assessment, application)

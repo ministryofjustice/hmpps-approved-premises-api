@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission as ApiUserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 @Component
@@ -54,6 +56,7 @@ class UserTransformer(
       telephoneNumber = jpa.telephoneNumber,
       isActive = jpa.isActive,
       qualifications = jpa.qualifications.map(::transformQualificationToApi),
+      permissions = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToPermissionApi).flatten().distinct(),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = "CAS1",
       apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) } ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set"),
@@ -101,5 +104,18 @@ class UserTransformer(
     UserQualification.EMERGENCY -> ApiUserQualification.emergency
     UserQualification.MENTAL_HEALTH_SPECIALIST -> ApiUserQualification.mentalHealthSpecialist
     UserQualification.RECOVERY_FOCUSED -> ApiUserQualification.recoveryFocused
+  }
+
+  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
+    return userRole.role.permissions.map {
+      when (it) {
+        UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
+        UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
+        UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
+        UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
+        UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
+        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
+      }
+    }
   }
 }
