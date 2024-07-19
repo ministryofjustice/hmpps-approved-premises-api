@@ -108,15 +108,17 @@ class SubjectAccessRequestService(
     val applications = cas2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate)
     val applicationNotes = cas2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate)
     val statusUpdates = cas2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate)
+    val statusUpdateDetails = cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
     val assessments = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
 
     val result = """
-      {
-       "Applications": $applications,
-       "ApplicationNotes": $applicationNotes,
-       "Assessments": $assessments,
-       "StatusUpdates": $statusUpdates
-       }
+     {
+        "Applications": $applications,
+        "ApplicationNotes": $applicationNotes,
+        "Assessments": $assessments,
+        "StatusUpdates": $statusUpdates,
+        "StatusUpdateDetails": $statusUpdateDetails
+     }
     """.trimIndent()
 
     if (log.isDebugEnabled) {
