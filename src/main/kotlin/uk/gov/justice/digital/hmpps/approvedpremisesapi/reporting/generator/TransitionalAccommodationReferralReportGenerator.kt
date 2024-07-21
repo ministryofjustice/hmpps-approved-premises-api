@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
   TransitionalAccommodationReferralReportDataAndPersonInfo,
@@ -23,7 +24,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
       listOf(
         TransitionalAccommodationReferralReportRow(
           referralId = referralData.referralId,
-          referralDate = referralData.referralCreatedDate,
+          referralDate = referralData.referralCreatedDate.toLocalDate(),
           personName = personInfo.tryGetDetails {
             val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
             nameParts.joinToString(" ")
@@ -52,7 +53,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
           postCode = referralData.postCode,
           probationRegion = referralData.probationRegionName,
           pdu = referralData.pdu,
-          referralSubmittedDate = referralData.referralSubmittedDate,
+          referralSubmittedDate = referralData.referralSubmittedDate?.toLocalDate(),
           referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
           rejectionReason = referralData.referralRejectionReason,
           rejectionReasonExplained = referralData.referralRejectionReasonDetail,

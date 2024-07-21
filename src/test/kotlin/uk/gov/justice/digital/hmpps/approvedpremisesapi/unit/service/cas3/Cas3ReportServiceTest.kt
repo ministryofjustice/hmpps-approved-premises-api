@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.ByteArrayOutputStream
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -296,7 +297,7 @@ class Cas3ReportServiceTest {
   }
   private fun createDBReferralReportData(crn: String) = TestTransitionalAccommodationReferralReportData(
     UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-    LocalDate.now(), crn, LocalDate.now(), "riskOfSeriousHarm",
+    Instant.now(), crn, Instant.now(), "riskOfSeriousHarm",
     registeredSexOffender = false,
     historyOfSexualOffence = false,
     concerningSexualBehaviour = true,
@@ -361,9 +362,9 @@ class Cas3ReportServiceTest {
     override val assessmentId: String,
     override val referralId: String,
     override val bookingId: String?,
-    override val referralCreatedDate: LocalDate,
+    override val referralCreatedDate: Instant,
     override val crn: String,
-    override val referralSubmittedDate: LocalDate?,
+    override val referralSubmittedDate: Instant?,
     override val riskOfSeriousHarm: String?,
     override val registeredSexOffender: Boolean?,
     override val historyOfSexualOffence: Boolean?,
