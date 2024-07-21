@@ -1,11 +1,6 @@
 # Feature flags
 
-Feature flags are managed by [Flipt](https://www.flipt.io). We use hosted Flipt instances
-for all of our live environments:
-
-- [Dev / Test](https://feature-flags-dev.hmpps.service.justice.gov.uk)
-- [Preprod](https://feature-flags-preprod.hmpps.service.justice.gov.uk)
-- [Prod](https://feature-flags.hmpps.service.justice.gov.uk)
+Feature flags are managed by spring configuration, set via environment-specific ENV VARs
 
 ## Adding a feature flag
 
@@ -17,47 +12,33 @@ feature flag. If it's a large feature that requires multiple PRs and is likely t
 communicating to users, then a feature flag _might_ be the way to go. It is still worth
 considering other alternative routes before going down this one though.
 
-### Step 1: Add a new flag in the Flipt UI
+### Step 1: Add a default value flag in spring configuration
 
-Go to the Flipt UI for each environment, and create a new flag in the
-`community-accommodation` namespace for each environment. Currently only boolean flags
-are supported:
+Ensure an entry exists as follows in application.yml providing a default value
 
-![KgXgB09MLS](https://github.com/ministryofjustice/hmpps-approved-premises-ui/assets/109774/2365414a-7d45-41b4-8370-625d78285b56)
+```
+feature-flags:
+   my-flag: false
+```
 
-## Step 2: Inject the FeatureFlagService into your controller
+You may wish to set a default in application-test.yml too for integration tests
+
+### Step 2: Add the new flag in environment variables
+
+Update the environment-specific helm configurations (see /helm), adding
+environment-specific entries to override the spring configuration e.g.
+
+```values-dev.yml:
+  env:
+     FEATURE-FLAGS_MY-FLAG: true
+```
+
+### Step 3: Inject the FeatureFlagService into your controller
 
 In your controller, add the `FeatureFlagService` to the constructor of the controller
 you want to add the feature flag to
 
-## Step 3: Call the `getBooleanFlag` method in your controller action
+### Step 4: Call the `getBooleanFlag` method in your controller action
 
-You can then call the `getBooleanFlag` method to return a boolean value depending on if
-the flag is enabled or not, e.g (where `FLAG_NAME` is a string specifying the key of the
-flag you created in step 1)
+You can then call the `getBooleanFlag` method to return the flag value
 
-You can then pass that boolean value to wherever it is required in your code.
-
-NOTE: By default, Flipt is disabled in local development environments, and `getBooleanFlag`
-will always return true
-
-## Step 4: Override for local deployments and/or integration tests
-
-If you'd like to override the default featre flag value in local deployments and/or integration
-tests an override can be added into application-local.yml and/or application-test.yml:
-
-```
-feature-flags:
-  local-overrides:
-    cas1-email-use-cru-for-reply-to: true
-```
-
-## Step 5: Enable/disable the flag in the appropriate environment
-
-Once your code is deployed, you can then enable/disable the flag in the appropriate
-environment like so:
-
-![cq4ZJ73Z6a](https://github.com/ministryofjustice/hmpps-approved-premises-ui/assets/109774/92b1892c-0fbe-4537-9ef1-11e6ed1c9566)
-
-NOTE: Ensure that when enabling/disabling feature flags this has been clearly discussed
-with users / SMEs
