@@ -62,7 +62,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         actualNightsStayed = if (booking.startDate == null) {
           null
         } else {
-          booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.toLocalDateTime()).toInt() }
+          booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.toLocalDateTime()).toInt() + 1 }
         },
         accommodationOutcome = booking.accommodationOutcome,
       ),
