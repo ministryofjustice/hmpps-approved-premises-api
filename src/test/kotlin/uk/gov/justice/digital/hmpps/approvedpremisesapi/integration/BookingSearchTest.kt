@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 
@@ -613,7 +613,7 @@ class BookingSearchTest : IntegrationTestBase() {
         SortOrder.descending -> "descending"
       }
       val crns = mutableListOf<String>()
-      repeat(15) { crns += randomStringUpperCase(8) }
+      repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
 
       val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -630,7 +630,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val offenderName = "${offendersCrnAndName[it]?.forename} ${offendersCrnAndName[it]?.surname}"
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withName(offenderName)
-          withCrn(it.uppercase())
+          withCrn(it)
           withProbationRegion(userEntity.probationRegion)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)

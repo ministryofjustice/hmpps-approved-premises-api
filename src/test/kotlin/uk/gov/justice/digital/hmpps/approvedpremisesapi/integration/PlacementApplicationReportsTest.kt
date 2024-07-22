@@ -494,7 +494,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
   private fun createAndSubmitApplication(crn: String): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
-    val (offenderDetails, _) = `Given an Offender`({ withCrn(crn.uppercase()) })
+    val (offenderDetails, _) = `Given an Offender`({ withCrn(crn) })
 
     CommunityAPI_mockSuccessfulRegistrationsCall(
       offenderDetails.otherIds.crn,

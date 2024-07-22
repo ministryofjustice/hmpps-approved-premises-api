@@ -26,17 +26,17 @@ class ApDeliusContextApiClient(
 
   @Cacheable(value = ["teamsManagingCaseCache"], unless = IS_NOT_SUCCESSFUL)
   fun getTeamsManagingCase(crn: String) = getRequest<ManagingTeamsResponse> {
-    path = "/teams/managingCase/${crn.uppercase()}"
+    path = "/teams/managingCase/$crn"
   }
 
   @Cacheable(value = ["crnGetCaseDetailCache"], unless = IS_NOT_SUCCESSFUL)
   fun getCaseDetail(crn: String) = getRequest<CaseDetail> {
-    path = "/probation-cases/${crn.uppercase()}/details"
+    path = "/probation-cases/$crn/details"
   }
 
   fun getSummariesForCrns(crns: List<String>) = getRequest<CaseSummaries> {
     path = "/probation-cases/summaries"
-    body = crns.map { it.uppercase() }
+    body = crns
   }
 
   fun getUserAccessForCrns(deliusUsername: String, crns: List<String>) = getRequest<UserAccess> {

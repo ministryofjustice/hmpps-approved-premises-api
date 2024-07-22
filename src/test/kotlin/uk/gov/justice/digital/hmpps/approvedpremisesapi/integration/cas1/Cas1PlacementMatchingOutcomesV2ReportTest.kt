@@ -222,7 +222,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
-      assertThat(row.crn).matches("STANDARDRFPNOTALLOCATED")
+      assertThat(row.crn).matches("StandardRFPNotAllocated")
     }
   }
 
@@ -278,7 +278,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-02")
-      assertThat(row.crn).matches("STANDARDRFPMATCHED")
+      assertThat(row.crn).matches("StandardRFPMatched")
     }
   }
 
@@ -306,7 +306,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-03")
-      assertThat(row.crn).matches("STANDARDRFPNOTMATCHED")
+      assertThat(row.crn).matches("StandardRFPNotMatched")
     }
   }
 
@@ -339,7 +339,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-04")
-      assertThat(row.crn).matches("STANDARDRFPMNOTMATCHEDANDTHENMATCHED")
+      assertThat(row.crn).matches("StandardRFPMNotMatchedAndThenMatched")
     }
   }
 
@@ -379,7 +379,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_application:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("ROTL")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-05")
-      assertThat(row.crn).matches("ROTLRFPMULTIDATES")
+      assertThat(row.crn).matches("ROTLRFPMultiDates")
     }
   }
 
@@ -500,12 +500,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val (applicant, jwt) = `Given a User`()
     val (offenderDetails, _) = `Given an Offender`(
       offenderDetailsConfigBlock = {
-        withCrn(crn.uppercase())
+        withCrn(crn)
       },
     )
 
     APDeliusContext_mockSuccessfulCaseDetailCall(
-      crn.uppercase(),
+      crn,
       CaseDetailFactory().from(offenderDetails.asCaseDetail()).produce(),
     )
 
