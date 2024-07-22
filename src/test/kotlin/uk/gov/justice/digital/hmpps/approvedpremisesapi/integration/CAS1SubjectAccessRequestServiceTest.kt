@@ -30,7 +30,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "PlacementRequirementCriteria" : [ ],
           "BookingNotMades" : [ ],
           "DomainEvents": [ ],
-          "DomainEventMetadata": [ ]
+          "DomainEventsMetadata": [ ]
       }
       """.trimIndent(),
       result,
@@ -64,7 +64,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -101,7 +101,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -139,7 +139,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """
     assertJsonEquals(expectedJson, result)
@@ -177,7 +177,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
        "PlacementRequirementCriteria" : [ ],
        "BookingNotMades" : [ ],
        "DomainEvents": [ ],
-       "DomainEventMetadata": [ ]
+       "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -212,7 +212,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "PlacementRequirementCriteria" : [ ],
       "BookingNotMades" : [ ],
       "DomainEvents": [ ],
-      "DomainEventMetadata": [ ]
+      "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -247,7 +247,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -283,7 +283,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -319,7 +319,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -355,7 +355,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -389,7 +389,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -422,7 +422,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "PlacementRequirementCriteria" : [ ],
       "BookingNotMades" : [ ],
       "DomainEvents": [ ],
-      "DomainEventMetadata": [ ]
+      "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -459,7 +459,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
         "BookingNotMades" : [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -497,7 +497,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
       "BookingNotMades": [${bookingsNotMadeJson(bookingNotMade)}],
       "DomainEvents": [ ],
-      "DomainEventMetadata": [ ]
+      "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -511,7 +511,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
     val user = userEntity()
-    val domainEvent = domainEventEntity(offender, application, assessment, user)
+    val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id)
     val result = sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
@@ -532,7 +532,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "PlacementRequirementCriteria" : [ ],
         "BookingNotMades": [],
         "DomainEvents": [${domainEventJson(domainEvent,user)}],
-        "DomainEventMetadata": [${domainEventMetadataJson(domainEvent)}]
+        "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
       }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)

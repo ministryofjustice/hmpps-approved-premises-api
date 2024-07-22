@@ -175,7 +175,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                  de.trigger_source
                from
                      domain_events de 
-               inner join users u on 
+               left join users u on 
                      u.id = de.triggered_by_user_id
                where
                   de.service = :service_name and

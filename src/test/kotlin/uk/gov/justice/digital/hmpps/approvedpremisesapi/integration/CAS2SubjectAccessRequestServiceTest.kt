@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -32,7 +33,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "ApplicationNotes": [ ],
           "Assessments": [ ],
           "StatusUpdates": [ ],
-          "StatusUpdateDetails": [ ]
+          "StatusUpdateDetails": [ ],
+          "DomainEvents":  [ ],
+          "DomainEventsMetadata": [ ]
       }
       """.trimIndent(),
       result,
@@ -59,7 +62,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationNotes": [ ],
       "Assessments": [ ],
       "StatusUpdates": [ ],
-      "StatusUpdateDetails": [ ]
+      "StatusUpdateDetails": [ ],
+      "DomainEvents":  [ ],
+      "DomainEventsMetadata": [ ]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -86,7 +91,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationNotes": [ ],
       "Assessments": [${Cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [ ],
-      "StatusUpdateDetails": [ ]
+      "StatusUpdateDetails": [ ],
+      "DomainEvents":  [ ],
+      "DomainEventsMetadata": [ ]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -115,7 +122,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${Cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [ ],
-      "StatusUpdateDetails": [ ]
+      "StatusUpdateDetails": [ ],
+      "DomainEvents":  [ ],
+      "DomainEventsMetadata": [ ]
 
    }
     """.trimIndent()
@@ -123,7 +132,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   @Test
-  fun `Get CAS2 Information - Application with Notes and Status updates with details`() {
+  fun `Get CAS2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = `Given an Offender`()
     val user = nomisUserEntity()
     val externalAssessor = externalUserEntity()
@@ -147,7 +156,44 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${Cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${Cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${Cas2StatusUpdateDetails(statusUpdateDetail)}]
+      "StatusUpdateDetails": [${Cas2StatusUpdateDetails(statusUpdateDetail)}],
+      "DomainEvents":  [ ],
+      "DomainEventsMetadata": [ ]
+      
+   }
+    """.trimIndent()
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS2 Information - Domain Events`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val user = nomisUserEntity()
+    val externalAssessor = externalUserEntity()
+    val application = cas2ApplicationEntity(offenderDetails, user)
+    val assessment = cas2AssessmentEntity(application)
+
+    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, externalAssessor)
+    val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
+    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, ServiceName.cas2)
+
+    val result = sarService.getCAS2Result(
+      offenderDetails.otherIds.crn,
+      offenderDetails.otherIds.nomsNumber,
+      START_DATE,
+      END_DATE,
+    )
+
+    val expectedJson = """
+   {
+      "Applications": [${Cas2ApplicationsJson(application)}],
+      "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
+      "Assessments": [${Cas2AssessmentsJson(assessment)}],
+      "StatusUpdates": [${Cas2StatusUpdatesJson(statusUpdate)}],
+      "StatusUpdateDetails": [${Cas2StatusUpdateDetails(statusUpdateDetail)}],
+      "DomainEvents": [${domainEventJson(domainEvent,null)}],
+      "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -190,7 +236,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "assessment_id": "${applicationNotes.assessment!!.id}",
       "created_by_user": "${applicationNotes.getUser().name}",
       "created_by_user_type": "nomis",
-      "body": "${applicationNotes.body}",
+      "body": "${applicationNotes.body}"
   }
   """.trimIndent()
 

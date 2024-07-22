@@ -33,8 +33,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "BookingExtensions": [ ],
          "Cancellations": [ ],
          "DomainEvents": [ ],
-         "DomainEventMetadata": [ ]
-
+         "DomainEventsMetadata": [ ]
       }
       """.trimIndent(),
       result,
@@ -57,7 +56,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
       }
     """.trimIndent()
 
@@ -81,7 +80,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
       }
     """.trimIndent()
 
@@ -108,7 +107,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
       }
     """.trimIndent()
 
@@ -135,7 +134,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -163,7 +162,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "BookingExtensions": [${bookingExtensionJson(bookingExtension)}],
         "Cancellations": [ ],
         "DomainEvents": [ ],
-        "DomainEventMetadata": [ ]
+        "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -190,7 +189,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "BookingExtensions": [ ],
       "Cancellations": [${cancellationJson(cancellation)}],
       "DomainEvents": [ ],
-      "DomainEventMetadata": [ ]
+      "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -204,7 +203,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val application = temporaryAccommodationApplicationEntity(offender, user)
     val assessment = temporaryAccommodationAssessmentEntity(application)
 
-    val domainEvent = domainEventEntity(offender, application, assessment, user, ServiceName.temporaryAccommodation)
+    val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, ServiceName.temporaryAccommodation)
     val result = sarService.getCAS3Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     val expectedJson = """
@@ -216,7 +215,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "DomainEvents": [${domainEventJson(domainEvent,user)}],
-        "DomainEventMetadata": [${domainEventMetadataJson(domainEvent)}]
+        "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
       }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)

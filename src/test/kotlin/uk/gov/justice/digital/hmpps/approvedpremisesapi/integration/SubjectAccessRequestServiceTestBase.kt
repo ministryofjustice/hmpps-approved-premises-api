@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -405,7 +404,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity): String =
+  protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String =
     """ 
       {
         "id": "${domainEvent.id}",
@@ -418,21 +417,21 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         "booking_id": null,
         "service": "${domainEvent.service}",
         "assessment_id": "${domainEvent.assessmentId}",
-        "triggered_by_user": "${user.name}",
+        "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
         "noms_number": "${domainEvent.nomsNumber}",
         "trigger_source": null
       }
     """.trimIndent()
 
-  protected fun domainEventMetadataJson(domainEvent: DomainEventEntity): String =
+  protected fun domainEventsMetadataJson(domainEvent: DomainEventEntity): String =
     """
       {
         "crn": "${domainEvent.crn}",
         "noms_number": "${domainEvent.nomsNumber}",
         "created_at": "$CREATED_AT",
         "domain_event_id": "${domainEvent.id}",
-        "name": ${MetaDataName.CAS1_REQUESTED_AP_TYPE},
-        "value": ${ApprovedPremisesType.NORMAL}
+        "name": "${MetaDataName.CAS1_REQUESTED_AP_TYPE}",
+        "value": "${ApprovedPremisesType.NORMAL}"
       }
     """.trimIndent()
 
@@ -761,9 +760,9 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
   protected fun domainEventEntity(
     offender: OffenderDetailSummary,
-    application: ApplicationEntity,
-    assessment: AssessmentEntity,
-    user: UserEntity,
+    applicationId: UUID,
+    assessmentId: UUID,
+    userId: UUID?,
     serviceName: ServiceName = ServiceName.approvedPremises,
   ): DomainEventEntity {
     val domainEvent = domainEventFactory.produceAndPersist {
@@ -771,13 +770,13 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withService(serviceName)
       withCrn(offender.otherIds.crn)
       withNomsNumber(offender.otherIds.nomsNumber)
-      withApplicationId(application.id)
-      withAssessmentId(assessment.id)
+      withApplicationId(applicationId)
+      withAssessmentId(assessmentId)
       withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
       withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
       withData("{ }")
-      withTriggeredByUserId(user.id)
+      withTriggeredByUserId(userId)
       withMetadata(
         mapOf(
           MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),

@@ -58,7 +58,7 @@ class SubjectAccessRequestService(
          "PlacementRequirementCriteria": $placementRequirementCriteria,
          "BookingNotMades": $bookingNotMades,
          "DomainEvents": $domainEvents,
-         "DomainEventMetadata": $domainEventMetaData
+         "DomainEventsMetadata": $domainEventMetaData
       }
     """.trimIndent()
 
@@ -80,7 +80,7 @@ class SubjectAccessRequestService(
     val bookingExtensions = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val cancellations = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val domainEvents = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS3")
-    val domainEventMetaData = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
+    val domainEventsMetaData = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
 
     val result = """
       {
@@ -91,7 +91,7 @@ class SubjectAccessRequestService(
         "BookingExtensions": $bookingExtensions,
         "Cancellations": $cancellations,
         "DomainEvents": $domainEvents,
-        "DomainEventMetadata": $domainEventMetaData
+        "DomainEventsMetadata": $domainEventsMetaData
       }
     """.trimIndent()
 
@@ -110,6 +110,8 @@ class SubjectAccessRequestService(
     val statusUpdates = cas2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate)
     val statusUpdateDetails = cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
     val assessments = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
+    val domainEvents = cas2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
+    val domainEventsMetaData = cas2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2")
 
     val result = """
      {
@@ -117,7 +119,9 @@ class SubjectAccessRequestService(
         "ApplicationNotes": $applicationNotes,
         "Assessments": $assessments,
         "StatusUpdates": $statusUpdates,
-        "StatusUpdateDetails": $statusUpdateDetails
+        "StatusUpdateDetails": $statusUpdateDetails,
+        "DomainEvents": $domainEvents,
+        "DomainEventsMetadata": $domainEventsMetaData
      }
     """.trimIndent()
 
@@ -135,7 +139,8 @@ class SubjectAccessRequestService(
       {
          "ApprovedPremises" : ${getCAS1Result(crn, nomsNumber, startDate, endDate)},
          "TemporaryAccommodation": ${getCAS3Result(crn, nomsNumber, startDate, endDate)},
-         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)}
+         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)},
+    
       }
     """.trimIndent()
 }
