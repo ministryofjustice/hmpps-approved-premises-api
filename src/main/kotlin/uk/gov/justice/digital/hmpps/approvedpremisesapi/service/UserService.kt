@@ -201,7 +201,7 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUserFromCommunityApiById(id: UUID, forService: ServiceName): AuthorisableActionResult<UserEntity> {
+  fun updateUserFromCommunityApiById(id: UUID, forService: ServiceName, force: Boolean = false): AuthorisableActionResult<UserEntity> {
     var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
     val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
@@ -209,7 +209,7 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    if (userHasChanged(user, deliusUser)) {
+    if (userHasChanged(user, deliusUser) || force) {
       user = updateUser(user, deliusUser, forService)
     }
 

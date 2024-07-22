@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UpdateUsersFromApiSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
@@ -317,6 +318,11 @@ class SeedService(
           filename,
           getBean(Cas1OutOfServiceBedService::class),
           getBean(PremisesService::class),
+        )
+
+        SeedFileType.updateUsersFromApi -> UpdateUsersFromApiSeedJob(
+          filename,
+          getBean(UserService::class),
         )
       }
 
