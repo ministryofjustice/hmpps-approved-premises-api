@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -300,40 +301,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-  private fun temporaryAccommodationAssessmentEntity(
-    application: TemporaryAccommodationApplicationEntity,
-  ): TemporaryAccommodationAssessmentEntity {
-    var user = userEntity()
-    return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-      withData(DATA_JSON_SIMPLE)
-      withDocument(DOCUMENT_JSON_SIMPLE)
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
-      withIsWithdrawn(false)
-      withAllocatedToUser(userEntity())
-      withApplication(application)
-      withAssessmentSchema(approvedPremisesAssessmentJsonSchemaEntity())
-      withDecision(AssessmentDecision.REJECTED)
-      withReallocatedAt(null)
-      withRejectionRationale("rejected as no good")
-      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withDueAt(OffsetDateTime.parse(DUE_AT))
-      withSummaryData(DATA_JSON_SIMPLE)
-      withCompletedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withReferralRejectionReason(
-        referralRejectionReasonEntityFactory.produceAndPersist {
-          withName(randomStringMultiCaseWithNumbers(6))
-          withIsActive(true)
-          withServiceScope("TEMPORARY_ACCOMMODATION")
-          withSortOrder(1)
-        },
-      )
-      withReferralRejectionReasonDetail("Some Reason Detail")
-      withReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-      withAccommodationRequiredFromDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-    }
-  }
-
   private fun temporaryAccommodationApplicationJson(
     temporaryAccommodationApplication: TemporaryAccommodationApplicationEntity,
   ): String =
@@ -372,6 +339,45 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
     """.trimIndent()
 
+  private fun temporaryAccommodationAssessmentEntity(
+    application: TemporaryAccommodationApplicationEntity,
+  ): TemporaryAccommodationAssessmentEntity {
+    var user = userEntity()
+    return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+      withData(DATA_JSON_SIMPLE)
+      withDocument(DOCUMENT_JSON_SIMPLE)
+      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+      withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
+      withIsWithdrawn(false)
+      withAllocatedToUser(userEntity())
+      withApplication(application)
+      withAssessmentSchema(temporaryAccommodationAssessmentJsonSchemaEntity())
+      withDecision(AssessmentDecision.REJECTED)
+      withReallocatedAt(null)
+      withRejectionRationale("rejected as no good")
+      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withDueAt(OffsetDateTime.parse(DUE_AT))
+      withSummaryData(DATA_JSON_SIMPLE)
+      withCompletedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withReferralRejectionReason(
+        referralRejectionReasonEntityFactory.produceAndPersist {
+          withName(randomStringMultiCaseWithNumbers(6))
+          withIsActive(true)
+          withServiceScope("TEMPORARY_ACCOMMODATION")
+          withSortOrder(1)
+        },
+      )
+      withReferralRejectionReasonDetail("Some Reason Detail")
+      withReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withAccommodationRequiredFromDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+    }
+  }
+
+  private fun temporaryAccommodationAssessmentJsonSchemaEntity(): JsonSchemaEntity =
+    temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
   private fun temporaryAccommodationApplicationEntity(
     offenderDetails: OffenderDetailSummary,
     user: UserEntity,
@@ -387,11 +393,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
       withPersonReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
       withCreatedByUser(user)
-      withApplicationSchema(
-        temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
+      withApplicationSchema(temporaryAccommodationApplicationJsonSchemaEntity())
       withConvictionId(CONVICTION_ID)
       withName(NAME)
       withCreatedByUser(user)
@@ -415,4 +417,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withPrisonNameAtReferral("HMP Birmingham")
     }
   }
+
+  private fun temporaryAccommodationApplicationJsonSchemaEntity() =
+    temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
 }
