@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.GenderForAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -144,6 +145,7 @@ class ApplicationsTransformerTest {
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
     assertThat(result.caseManagerIsNotApplicant).isTrue()
     assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
+    assertThat(result.genderForAp).isEqualTo(GenderForAp.male)
   }
 
   @Test

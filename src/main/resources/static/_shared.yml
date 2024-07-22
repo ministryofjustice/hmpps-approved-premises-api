@@ -1694,6 +1694,8 @@ components:
               type: boolean
             caseManagerUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            genderForAp:
+              $ref: '#/components/schemas/GenderForAp'
           required:
             - createdByUserId
             - schemaVersion
@@ -5047,3 +5049,8 @@ components:
         - past
         - current
         - future
+    GenderForAp:
+      type: string
+      enum:
+        - male
+        - female
