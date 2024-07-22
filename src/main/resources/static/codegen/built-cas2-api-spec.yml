@@ -725,6 +725,45 @@ components:
         - postcode
         - bedCount
         - status
+    Cas1PremisesSearchResultSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        apCode:
+          type: string
+          example: NEHOPE1
+        deliusQCode:
+          type: string
+          example: Q005
+        apType:
+          $ref: '#/components/schemas/ApType'
+        name:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: 1 The Street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        town:
+          type: string
+          example: Braintree
+        postcode:
+          type: string
+          example: LS1 3AD
+        apArea:
+          $ref: '#/components/schemas/NamedId'
+        totalSpaceCount:
+          type: integer
+          description: The total number of spaces in this premises
+          example: 22
+        premisesCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/CharacteristicPair'
     ApprovedPremises:
       allOf:
         - $ref: '#/components/schemas/Premises'
@@ -1137,6 +1176,142 @@ components:
       required:
         - arrivalDate
         - departureDate
+    NewCas1SpaceBooking:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+          example: 2022-07-28
+        departureDate:
+          type: string
+          format: date
+          example: 2022-09-30
+        premisesId:
+          type: string
+          format: uuid
+          example: 290fa58c-77b2-47e2-b729-4cd6b2ed1a78
+        placementRequestId:
+          type: string
+          format: uuid
+          example: 6d924fdf-4a79-41b6-a251-89edbf369479
+        requirements:
+          type: object
+          $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
+      required:
+        - arrivalDate
+        - departureDate
+        - premisesId
+        - placementRequestId
+        - requirements
+    Cas1SpaceBookingRequirements:
+      type: object
+      properties:
+        apType:
+          $ref: '#/components/schemas/ApType'
+        needCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
+        riskCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+        gender:
+          $ref: '#/components/schemas/Gender'
+      required:
+        - apType
+        - gender
+    Cas1SpaceNeedCharacteristic:
+      type: string
+      enum:
+        - single
+        - enSuite
+        - wheelchair
+        - limitedMobility
+        - catered
+    Cas1SpaceRiskCharacteristic:
+      type: string
+      enum:
+        - atRiskOfExploitation
+        - arson
+        - posesSexualRiskToAdults
+        - posesSexualRiskToChildren
+        - posesNonSexualRiskToChildren
+    Cas1SpaceSearchParameters:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: The date the space is required from
+        durationInDays:
+          type: integer
+          example: 84
+          description: The number of days the space is needed, from the start date
+        targetPostcodeDistrict:
+          type: string
+          description: The 'target' location, in the form of a postcode district
+          example: SE5
+        requirements:
+          $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
+      required:
+        - startDate
+        - durationInDays
+        - targetPostcodeDistrict
+        - requirements
+    Cas1SpaceSearchResults:
+      type: object
+      properties:
+        searchCriteria:
+          $ref: '#/components/schemas/Cas1SpaceSearchParameters'
+        resultsCount:
+          type: integer
+          example: 4
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceSearchResult'
+      required:
+        - resultsCount
+        - results
+    Cas1SpaceSearchResult:
+      type: object
+      properties:
+        premises:
+          $ref: '#/components/schemas/Cas1PremisesSearchResultSummary'
+        distanceInMiles:
+          type: number
+          example: 2.1
+        spacesAvailable:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceAvailability'
+    Cas1SpaceAvailability:
+      type: object
+      properties:
+        needCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
+        riskCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+        durationInDays:
+          type: integer
+          example: 77
+    Cas1SpaceCategory:
+      type: string
+      example: arson
+      description: Spaces are categorised by these traits - 'standard' plus selected physcial and risk characteristics
+      enum:
+        - standard
+        - arson
+        - wheelchair
+        - sexOffender
+        - enSuite
+        - single
     WithdrawPlacementRequest:
       type: object
       properties:
@@ -1168,6 +1343,41 @@ components:
       enum:
         - Initial
         - Additional
+    Cas1SpaceBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        requirements:
+          $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        apArea:
+          $ref: '#/components/schemas/NamedId'
+        bookedBy:
+          $ref: '#/components/schemas/User'
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - person
+        - requirements
+        - premises
+        - apArea
+        - bookedBy
+        - arrivalDate
+        - departureDate
+        - createdAt
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

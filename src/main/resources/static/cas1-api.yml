@@ -5,6 +5,82 @@ info:
 servers:
   - url: /cas1
 paths:
+  /spaces/search:
+    post:
+      tags:
+        - space searches
+      summary: Search for accommodation "spaces" which are available and match the given requirements
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/Cas1SpaceSearchParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Cas1SpaceSearchResults'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /placement-requests/{placementRequestId}/space-bookings:
+    post:
+      tags:
+        - space bookings
+      summary: Create a booking for a space in premises, associated with a given placement request
+      parameters:
+        - name: placementRequestId
+          in: path
+          description: ID of the placement request from which the matching requirements originate
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the space booking to be created
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/NewCas1SpaceBooking'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Cas1SpaceBooking'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds:
     post:
       tags:
