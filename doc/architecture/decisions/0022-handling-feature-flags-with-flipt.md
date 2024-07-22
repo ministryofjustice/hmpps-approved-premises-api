@@ -1,5 +1,9 @@
 # 12. Handling feature flags with Flipt
 
+Note - As of May 2024 the integration team flipt instance has been deprecated. Whilst we're
+determining a suitable replacement, we have reverted to using environment variables to
+manage feature flags (via spring configuration)
+
 Date: 2024-04-30
 
 ## Status

@@ -65,10 +65,6 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:1.2.1")
   implementation("io.github.s-sathish:redlock-java:1.0.4")
 
-  implementation("io.flipt:flipt-java:1.1.0") {
-    exclude("org.apache.httpcomponents", "httpclient")
-  }
-
   implementation("com.opencsv:opencsv:5.9")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
