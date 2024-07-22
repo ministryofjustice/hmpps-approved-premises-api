@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toJavaZoneId
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -131,3 +135,6 @@ private fun toWeeksString(weeks: Int) = if (weeks != 1) {
 } else {
   "1 week"
 }
+
+fun Instant.toLocalDate(): LocalDate = this.toLocalDateTime().toLocalDate()
+fun Instant.toLocalDateTime(): LocalDateTime = this.atZone(TimeZone.currentSystemDefault().toJavaZoneId()).toLocalDateTime()
