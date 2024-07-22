@@ -212,6 +212,8 @@ class UserAccessService(
     else -> false
   }
 
+  fun userCanViewOwnUserDetails() = userService.getUserForRequest().hasAnyRole(UserRole.CAS3_REFERRER)
+
   fun currentUserCanManageUsers(xServiceName: ServiceName): Boolean {
     val user = userService.getUserForRequest()
     return (

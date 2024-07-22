@@ -4238,6 +4238,38 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /users/me:
+    get:
+      operationId: getCurrentUserDetails
+      tags:
+        - User
+      summary: Returns the user details from delius for the signed in user
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successfully retrieved user details
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/User'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: User not found
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /seed:
     post:
       summary: Starts the data seeding process, can only be called from a local connection

@@ -201,19 +201,28 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUserFromCommunityApiById(id: UUID, forService: ServiceName, force: Boolean = false): AuthorisableActionResult<UserEntity> {
-    var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  fun getUpdatedCurrentUserDetails(service: ServiceName) = updateUser(getUserForRequest(), service, false)
 
+  fun updateUserFromCommunityApiById(id: UUID, forService: ServiceName, force: Boolean = false): AuthorisableActionResult<UserEntity> {
+    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    return AuthorisableActionResult.Success(updateUser(user, forService, force))
+  }
+
+  private fun updateUser(
+    user: UserEntity,
+    forService: ServiceName,
+    force: Boolean,
+  ): UserEntity {
     val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    if (userHasChanged(user, deliusUser) || force) {
-      user = updateUser(user, deliusUser, forService)
+    if (force || userHasChanged(user, deliusUser)) {
+      return updateUser(user, deliusUser, forService)
     }
 
-    return AuthorisableActionResult.Success(user)
+    return user
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -412,14 +421,16 @@ class UserService(
     user.qualifications.clear()
   }
 
-  private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
-    return (deliusUser.email !== user.email) ||
-      (deliusUser.telephoneNumber !== user.telephoneNumber) ||
+  private fun userHasChanged(
+    user: UserEntity,
+    deliusUser: StaffUserDetails,
+  ): Boolean =
+    (deliusUser.email != user.email) ||
+      (deliusUser.telephoneNumber != user.telephoneNumber) ||
       (deliusUser.staff.fullName != user.name) ||
       (deliusUser.staffCode != user.deliusStaffCode) ||
       (deliusUser.probationArea.code != user.probationRegion.deliusCode) ||
       !CollectionUtils.isEqualCollection(deliusUser.getTeamCodes(), user.teamCodes ?: emptyList<String>())
-  }
 }
 
 fun StaffUserDetails.getTeamCodes() = teams?.let { teams -> teams.map { it.code } } ?: emptyList()

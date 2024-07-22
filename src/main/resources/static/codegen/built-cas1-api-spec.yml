@@ -3850,7 +3850,7 @@ components:
         propertyName: service
         mapping:
           CAS1: '#/components/schemas/ApprovedPremisesUser'
-          CAS3: '#/components/schemas/TemporaryAccommodationUser'
+          temporary-accommodation: '#/components/schemas/TemporaryAccommodationUser'
       required:
         - service
         - id

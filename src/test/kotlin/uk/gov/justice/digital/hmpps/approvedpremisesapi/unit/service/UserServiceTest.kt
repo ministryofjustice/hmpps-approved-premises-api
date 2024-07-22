@@ -485,7 +485,7 @@ class UserServiceTest {
   }
 
   @Nested
-  inner class UpdateUserFromCommunityApiById {
+  inner class UpdateUserFromCommunityApi {
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
     private val email = "foo@example.com"
     private val telephoneNumber = "0123456789"
@@ -522,6 +522,59 @@ class UserServiceTest {
     @BeforeEach
     fun setup() {
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+    }
+
+    @Test
+    fun `user is not updated when the fields are the same as delius`() {
+      val user = userFactory.produce()
+      val deliusUser = staffUserDetailsFactory.produce()
+
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
+      every { mockPrincipal.name } returns username
+      every { mockUserRepository.findByDeliusUsername(any()) } returns user
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
+      every { mockCommunityApiClient.getStaffUserDetails(any()) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      val result = userService.getUpdatedCurrentUserDetails(ServiceName.temporaryAccommodation)
+
+      assertThat(result).isInstanceOf(UserEntity::class.java)
+      assertThat(result.id).isEqualTo(user.id)
+
+      verify(exactly = 0) { mockUserRepository.save(any()) }
+    }
+
+    @Test
+    fun `User is updated when the details are different in delius`() {
+      val user = userFactory.produce()
+      val deliusUser = staffUserDetailsFactory.withEmail("changed@change.com").produce()
+
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns probationAreaProbationRegionMappingEntity(
+        user.probationRegion,
+      )
+      every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
+      every { mockPrincipal.name } returns username
+      every { mockUserRepository.findByDeliusUsername(any()) } returns user
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
+      every { mockCommunityApiClient.getStaffUserDetails(any()) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      val result = userService.getUpdatedCurrentUserDetails(ServiceName.temporaryAccommodation)
+
+      assertThat(result).isInstanceOf(UserEntity::class.java)
+      assertThat(result.id).isEqualTo(user.id)
+
+      verify(exactly = 1) { mockUserRepository.save(any()) }
     }
 
     @Test
@@ -672,10 +725,7 @@ class UserServiceTest {
 
       every {
         mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(probationRegion.deliusCode)
-      } returns ProbationAreaProbationRegionMappingEntityFactory()
-        .withProbationRegion(probationRegion)
-        .withProbationAreaDeliusCode(probationRegion.deliusCode)
-        .produce()
+      } returns probationAreaProbationRegionMappingEntity(probationRegion)
 
       var pduId: UUID? = null
       val userBoroughCode = deliusUser.teams?.maxByOrNull { it.startDate }?.borough?.code
@@ -737,10 +787,9 @@ class UserServiceTest {
         HttpStatus.OK,
         deliusUser,
       )
-      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(user.probationRegion.deliusCode) } returns ProbationAreaProbationRegionMappingEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withProbationAreaDeliusCode(user.probationRegion.deliusCode)
-        .produce()
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(user.probationRegion.deliusCode) } returns probationAreaProbationRegionMappingEntity(
+        user.probationRegion,
+      )
 
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.temporaryAccommodation)
 
@@ -764,6 +813,12 @@ class UserServiceTest {
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
   }
+
+  private fun probationAreaProbationRegionMappingEntity(probationRegion: ProbationRegionEntity) =
+    ProbationAreaProbationRegionMappingEntityFactory()
+      .withProbationRegion(probationRegion)
+      .withProbationAreaDeliusCode(probationRegion.deliusCode)
+      .produce()
 
   @Nested
   inner class UpdateUserRolesAndQualifications {

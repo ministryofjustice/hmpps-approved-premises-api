@@ -109,6 +109,16 @@ class UsersController(
     )
   }
 
+  override fun getCurrentUserDetails(xServiceName: ServiceName): ResponseEntity<User> {
+    if (!userAccessService.userCanViewOwnUserDetails()) {
+      throw ForbiddenProblem()
+    }
+
+    val userFromDelius = userService.getUpdatedCurrentUserDetails(xServiceName)
+    val userTransformed = userTransformer.transformJpaToApi(userFromDelius, xServiceName)
+    return ResponseEntity.ok(userTransformed)
+  }
+
   override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
     if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()

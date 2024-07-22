@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
@@ -872,6 +873,44 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath(".roles[3]").isEqualTo(ApprovedPremisesUserRole.excludedFromMatchAllocation.value)
           .jsonPath(".roles[4]").isEqualTo(ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation.value)
           .jsonPath(".isActive").isEqualTo(true)
+      }
+    }
+  }
+
+  @Nested
+  inner class CurrentUserDetails {
+    @Test
+    fun `User without appropriate role is forbidden`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
+        val id = UUID.randomUUID()
+        webTestClient.get()
+          .uri("/users/me")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `User with appropriate role returns 200 with correct response`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { user, jwt ->
+        val response = webTestClient.get()
+          .uri("/users/me")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody(User::class.java)
+          .returnResult()
+          .responseBody
+
+        assertThat(response).isNotNull()
+        assertThat(response == user)
       }
     }
   }
