@@ -153,10 +153,14 @@ class Cas3ReportService(
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
-        log.info("Report $reportName. Call get Offender Summaries with CRNs ${crns.joinToString { "," }}")
-        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy { it.crn }
+        log.info("Report $reportName. Call get Offender Summaries with CRNs $crns")
+        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy {
+          log.info("Report $reportName. Response Offender Summaries for CRN $it.crn")
+          it.crn
+        }
       }.collect(Collectors.toList())
 
+    log.info("Report $reportName. Return the offender personal information")
     return crnMap.flatMap { it.toList() }.toMap()
   }
 }
