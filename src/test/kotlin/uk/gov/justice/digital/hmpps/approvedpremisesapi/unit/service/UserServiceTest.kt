@@ -899,7 +899,7 @@ class UserServiceTest {
         .withDefaultProbationRegion()
         .produce()
 
-      every { mockUserRepository.findActiveUsersWithRoles(any()) } returns listOf(userWithLao, userWithoutLao)
+      every { mockUserRepository.findActiveUsersWithAtLeastOneRole(any()) } returns listOf(userWithLao, userWithoutLao)
       every { mockFeatureFlagService.getBooleanFlag(any()) } returns true
 
       val allocatableUser = userService.getAllocatableUsersForAllocationType(
@@ -919,7 +919,7 @@ class UserServiceTest {
         .withDefaultProbationRegion()
         .produce()
 
-      every { mockUserRepository.findActiveUsersWithRoles(any()) } returns listOf(user)
+      every { mockUserRepository.findActiveUsersWithAtLeastOneRole(any()) } returns listOf(user)
       every { mockFeatureFlagService.getBooleanFlag(any()) } returns true
 
       val allocatableUser = userService.getAllocatableUsersForAllocationType(
@@ -928,7 +928,7 @@ class UserServiceTest {
         UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
       )
 
-      verify(exactly = 1) { mockUserRepository.findActiveUsersWithRoles(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER)) }
+      verify(exactly = 1) { mockUserRepository.findActiveUsersWithAtLeastOneRole(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER)) }
     }
   }
 }

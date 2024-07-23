@@ -73,6 +73,7 @@ class ProfileTest : IntegrationTestBase() {
                 permissions = listOf(
                   ApprovedPremisesUserPermission.assessApplication,
                   ApprovedPremisesUserPermission.assessAppealedApplication,
+                  ApprovedPremisesUserPermission.assessPlacementApplication,
                   ApprovedPremisesUserPermission.viewAssignedAssessments,
                 ),
               ),
@@ -258,6 +259,7 @@ class ProfileTest : IntegrationTestBase() {
                   permissions = listOf(
                     ApprovedPremisesUserPermission.assessApplication,
                     ApprovedPremisesUserPermission.assessAppealedApplication,
+                    ApprovedPremisesUserPermission.assessPlacementApplication,
                     ApprovedPremisesUserPermission.viewAssignedAssessments,
                   ),
                 ),

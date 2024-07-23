@@ -37,7 +37,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role in (:roles) and u.isActive = true")
-  fun findActiveUsersWithRoles(roles: List<UserRole>): List<UserEntity>
+  fun findActiveUsersWithAtLeastOneRole(roles: List<UserRole>): List<UserEntity>
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.qualifications q where q.qualification = :qualification and u.isActive = true")
   fun findActiveUsersWithQualification(qualification: UserQualification): List<UserEntity>
@@ -276,11 +276,13 @@ data class UserEntity(
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
+  fun hasAnyRole(userRoles: List<UserRole>) = userRoles.any(::hasRole)
   fun hasQualification(userQualification: UserQualification) =
     qualifications.any { it.qualification === userQualification }
 
   fun hasAllQualifications(requiredQualifications: List<UserQualification>) =
     requiredQualifications.all(::hasQualification)
+  fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
 
   override fun toString() = "User $id"
 }
@@ -306,12 +308,20 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_ASSESSOR(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.assessor,
-    listOf(UserPermission.CAS1_ASSESS_APPLICATION, UserPermission.CAS1_ASSESS_APPEALED_APPLICATION, UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS),
+    listOf(
+      UserPermission.CAS1_ASSESS_APPLICATION,
+      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
+      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
+      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
+    ),
   ),
   CAS1_MATCHER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.matcher,
-    listOf(UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION, UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST),
+    listOf(
+      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
+      UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
+    ),
   ),
   CAS1_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.manager),
   CAS1_LEGACY_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.legacyManager),
@@ -327,18 +337,27 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_APPEALS_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.appealsManager,
-    listOf(UserPermission.CAS1_PROCESS_AN_APPEAL, UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS, UserPermission.CAS1_ASSESS_APPEALED_APPLICATION),
+    listOf(
+      UserPermission.CAS1_PROCESS_AN_APPEAL,
+      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
+      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
+    ),
   ),
   CAS1_JANITOR(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.janitor,
-    listOf(UserPermission.CAS1_PROCESS_AN_APPEAL, UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS),
+    listOf(
+      UserPermission.CAS1_PROCESS_AN_APPEAL,
+      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
+    ),
   ),
   CAS1_USER_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.userManager),
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
   CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
   ;
+
+  fun hasPermission(permission: UserPermission) = permissions.contains(permission)
 
   companion object {
     fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }

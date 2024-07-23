@@ -154,7 +154,7 @@ class UserService(
       requiredRole = requiredRole.filter { it != UserRole.CAS1_APPEALS_MANAGER }
     }
 
-    var users = userRepository.findActiveUsersWithRoles(requiredRole)
+    var users = userRepository.findActiveUsersWithAtLeastOneRole(requiredRole)
 
     userQualifications.forEach { qualification ->
       users = users.filter { it.hasQualification(qualification) }

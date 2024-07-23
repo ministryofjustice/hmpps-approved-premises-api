@@ -464,12 +464,13 @@ class PlacementApplicationServiceTest {
       ),
     )
 
-    @Test
-    fun `Reallocating an allocated application returns successfully`() {
+    @CsvSource("CAS1_MATCHER,CAS1_ASSESSOR")
+    @ParameterizedTest
+    fun `Reallocating an allocated application returns successfully`(role: UserRole) {
       assigneeUser.apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.CAS1_MATCHER)
+          .withRole(role)
           .produce()
       }
 
@@ -658,7 +659,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Reallocating a placement application when user to assign to is not a MATCHER returns a field validation error`() {
+    fun `Reallocating a placement application when user to assign to is not a MATCHER or ASSESSOR returns a field validation error`() {
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)

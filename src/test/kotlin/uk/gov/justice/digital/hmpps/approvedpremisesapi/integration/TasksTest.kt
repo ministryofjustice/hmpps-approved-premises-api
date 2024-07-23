@@ -2189,7 +2189,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an application returns users with MATCHER roles`() {
+    fun `Get a Placement Application Task for an application returns users with MATCHER or ASSESSOR roles`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
 
         val (matcherUser1, _) = `Given a User`(
@@ -2239,6 +2239,10 @@ class TasksTest {
                       ),
                       userTransformer.transformJpaToAPIUserWithWorkload(
                         matcherUser2,
+                        UserWorkload(0, 0, 0),
+                      ),
+                      userTransformer.transformJpaToAPIUserWithWorkload(
+                        assessorUser,
                         UserWorkload(0, 0, 0),
                       ),
                       userTransformer.transformJpaToAPIUserWithWorkload(
