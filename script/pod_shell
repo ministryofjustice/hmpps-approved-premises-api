@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ -z "$1" ] || ! [[ "$1" =~ ^(dev|test|preprod|prod)$ ]]; then
+  echo "Usage:"
+  echo "pod_shell dev|test|preprod|prod [pod_name]"
+  echo ""
+  echo "If no pod name is defined, the first API pod found will be used"
+  exit 1
+else
+  environment=$1
+fi
+
+namespace="hmpps-community-accommodation-$environment"
+
+if [ -z "$2" ]; then
+  echo "No pod specified, will use first API pod found"
+  pod=$(kubectl -n "$namespace" get pods -l app=hmpps-approved-premises-api -o jsonpath='{.items[0].metadata.name}')
+else
+  pod="$2"
+fi
+
+echo "Connecting to pod $pod"
+
+kubectl -n "$namespace" exec --stdin --tty "$pod" -- /bin/bash
