@@ -29,7 +29,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -288,9 +287,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var redisTemplate: RedisTemplate<String, String>
-
-  @Autowired
-  private lateinit var communityApiClient: CommunityApiClient
 
   @Autowired
   private lateinit var prisonsApiClient: PrisonsApiClient
@@ -960,7 +956,6 @@ abstract class IntegrationTestBase {
     block()
   }
 
-  fun loadPreemptiveCacheForOffenderDetails(crn: String) = communityApiClient.getOffenderDetailSummaryWithCall(crn)
   fun loadPreemptiveCacheForInmateDetails(nomsNumber: String) = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
 }
 

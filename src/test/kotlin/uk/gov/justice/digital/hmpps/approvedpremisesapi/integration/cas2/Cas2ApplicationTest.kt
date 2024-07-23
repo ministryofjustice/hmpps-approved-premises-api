@@ -476,7 +476,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
         produceAndPersistBasicApplication(crn, userEntity)
         CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-        loadPreemptiveCacheForOffenderDetails(crn)
 
         webTestClient.get()
           .uri("/cas2/applications")
@@ -1483,7 +1482,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val crn = "X1234"
 
           CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-          loadPreemptiveCacheForOffenderDetails(crn)
 
           cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
@@ -1551,7 +1549,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val crn = "X1234"
 
           CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-          loadPreemptiveCacheForOffenderDetails(crn)
 
           cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())

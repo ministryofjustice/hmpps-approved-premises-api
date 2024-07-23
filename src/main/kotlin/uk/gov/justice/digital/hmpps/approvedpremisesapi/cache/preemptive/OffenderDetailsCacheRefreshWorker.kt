@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PreemptiveCacheEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 
+@Deprecated("All usages of this cache are deprecated, therefore the cache should be cleared and then removed")
 class OffenderDetailsCacheRefreshWorker(
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,

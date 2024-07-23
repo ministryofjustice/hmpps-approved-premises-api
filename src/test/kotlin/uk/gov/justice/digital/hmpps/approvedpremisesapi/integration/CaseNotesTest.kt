@@ -67,7 +67,6 @@ class CaseNotesTest : IntegrationTestBase() {
               .withStatus(404),
           ),
       )
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
         .uri("/people/$crn/prison-case-notes")

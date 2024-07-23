@@ -429,7 +429,6 @@ class ApplicationTest : IntegrationTestBase() {
 
         val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
         CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-        loadPreemptiveCacheForOffenderDetails(crn)
 
         CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
 
@@ -1643,7 +1642,6 @@ class ApplicationTest : IntegrationTestBase() {
         val crn = "X1234"
 
         CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-        loadPreemptiveCacheForOffenderDetails(crn)
 
         approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())

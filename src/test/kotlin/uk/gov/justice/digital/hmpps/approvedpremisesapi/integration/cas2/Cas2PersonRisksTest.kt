@@ -65,7 +65,6 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
         .uri("/cas2/people/$crn/risks")

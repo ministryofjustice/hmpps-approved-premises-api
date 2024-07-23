@@ -93,7 +93,6 @@ class PersonOASysRoshTest : InitialiseDatabasePerClassTestBase() {
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
         .uri("/people/$crn/oasys/rosh")
