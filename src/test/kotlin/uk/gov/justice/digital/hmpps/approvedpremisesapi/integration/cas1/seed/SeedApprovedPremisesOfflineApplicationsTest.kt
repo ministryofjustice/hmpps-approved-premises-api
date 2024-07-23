@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.OfflineApplicationsSeedCsvRow
 

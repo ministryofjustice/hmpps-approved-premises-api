@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UpdateUsersFromApiSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
@@ -74,6 +75,7 @@ import java.io.IOException
 import java.nio.file.Path
 import javax.annotation.PostConstruct
 import kotlin.io.path.absolutePathString
+import kotlin.reflect.KClass
 
 @Service
 class SeedService(
@@ -159,163 +161,168 @@ class SeedService(
       val job: SeedJob<*> = when (seedFileType) {
         SeedFileType.approvedPremises -> ApprovedPremisesSeedJob(
           filename,
-          applicationContext.getBean(PremisesRepository::class.java),
-          applicationContext.getBean(ProbationRegionRepository::class.java),
-          applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
-          applicationContext.getBean(CharacteristicRepository::class.java),
+          getBean(PremisesRepository::class),
+          getBean(ProbationRegionRepository::class),
+          getBean(LocalAuthorityAreaRepository::class),
+          getBean(CharacteristicRepository::class),
         )
         SeedFileType.approvedPremisesRooms -> ApprovedPremisesRoomsSeedJob(
           filename,
-          applicationContext.getBean(PremisesRepository::class.java),
-          applicationContext.getBean(RoomRepository::class.java),
-          applicationContext.getBean(BedRepository::class.java),
-          applicationContext.getBean(CharacteristicRepository::class.java),
+          getBean(PremisesRepository::class),
+          getBean(RoomRepository::class),
+          getBean(BedRepository::class),
+          getBean(CharacteristicRepository::class),
         )
         SeedFileType.user -> UsersSeedJob(
           filename,
           ServiceName.values().toList(),
-          applicationContext.getBean(UserService::class.java),
+          getBean(UserService::class),
         )
         SeedFileType.approvedPremisesApStaffUsers -> ApStaffUsersSeedJob(
           filename,
-          applicationContext.getBean(UserService::class.java),
+          getBean(UserService::class),
           seedLogger,
         )
         SeedFileType.nomisUsers -> NomisUsersSeedJob(
           filename,
-          applicationContext.getBean(NomisUserRepository::class.java),
+          getBean(NomisUserRepository::class),
         )
         SeedFileType.externalUsers -> ExternalUsersSeedJob(
           filename,
-          applicationContext.getBean(ExternalUserRepository::class.java),
+          getBean(ExternalUserRepository::class),
         )
         SeedFileType.cas2Applications -> Cas2ApplicationsSeedJob(
           filename,
-          applicationContext.getBean(Cas2ApplicationRepository::class.java),
-          applicationContext.getBean(NomisUserRepository::class.java),
-          applicationContext.getBean(ExternalUserRepository::class.java),
-          applicationContext.getBean(Cas2StatusUpdateRepository::class.java),
-          applicationContext.getBean(Cas2AssessmentRepository::class.java),
-          applicationContext.getBean(JsonSchemaService::class.java),
-          applicationContext.getBean(Cas2PersistedApplicationStatusFinder::class.java),
+          getBean(Cas2ApplicationRepository::class),
+          getBean(NomisUserRepository::class),
+          getBean(ExternalUserRepository::class),
+          getBean(Cas2StatusUpdateRepository::class),
+          getBean(Cas2AssessmentRepository::class),
+          getBean(JsonSchemaService::class),
+          getBean(Cas2PersistedApplicationStatusFinder::class),
         )
         SeedFileType.approvedPremisesUsers -> UsersSeedJob(
           filename,
           listOf(ServiceName.approvedPremises),
-          applicationContext.getBean(UserService::class.java),
+          getBean(UserService::class),
         )
         SeedFileType.temporaryAccommodationUsers -> UsersSeedJob(
           filename,
           listOf(ServiceName.temporaryAccommodation),
-          applicationContext.getBean(UserService::class.java),
+          getBean(UserService::class),
         )
         SeedFileType.characteristics -> CharacteristicsSeedJob(
           filename,
-          applicationContext.getBean(CharacteristicRepository::class.java),
+          getBean(CharacteristicRepository::class),
         )
         SeedFileType.updateNomsNumber -> Cas1UpdateNomsNumberSeedJob(
           filename,
-          applicationContext.getBean(ApplicationRepository::class.java),
-          applicationContext.getBean(ApplicationTimelineNoteService::class.java),
-          applicationContext.getBean(BookingRepository::class.java),
+          getBean(ApplicationRepository::class),
+          getBean(ApplicationTimelineNoteService::class),
+          getBean(BookingRepository::class),
         )
         SeedFileType.temporaryAccommodationPremises -> TemporaryAccommodationPremisesSeedJob(
           filename,
-          applicationContext.getBean(PremisesRepository::class.java),
-          applicationContext.getBean(ProbationRegionRepository::class.java),
-          applicationContext.getBean(LocalAuthorityAreaRepository::class.java),
-          applicationContext.getBean(ProbationDeliveryUnitRepository::class.java),
-          applicationContext.getBean(CharacteristicService::class.java),
+          getBean(PremisesRepository::class),
+          getBean(ProbationRegionRepository::class),
+          getBean(LocalAuthorityAreaRepository::class),
+          getBean(ProbationDeliveryUnitRepository::class),
+          getBean(CharacteristicService::class),
         )
         SeedFileType.temporaryAccommodationBedspace -> TemporaryAccommodationBedspaceSeedJob(
           filename,
-          applicationContext.getBean(PremisesRepository::class.java),
-          applicationContext.getBean(CharacteristicService::class.java),
-          applicationContext.getBean(RoomService::class.java),
+          getBean(PremisesRepository::class),
+          getBean(CharacteristicService::class),
+          getBean(RoomService::class),
         )
 
         SeedFileType.approvedPremisesOfflineApplications -> ApprovedPremisesOfflineApplicationsSeedJob(
           filename,
-          applicationContext.getBean(OfflineApplicationRepository::class.java),
+          getBean(OfflineApplicationRepository::class),
         )
 
         SeedFileType.approvedPremisesBookings -> ApprovedPremisesBookingSeedJob(
           filename,
-          applicationContext.getBean(BookingRepository::class.java),
-          applicationContext.getBean(BookingService::class.java),
-          applicationContext.getBean(CommunityApiClient::class.java),
-          applicationContext.getBean(BedRepository::class.java),
-          applicationContext.getBean(DepartureReasonRepository::class.java),
-          applicationContext.getBean(MoveOnCategoryRepository::class.java),
-          applicationContext.getBean(DestinationProviderRepository::class.java),
-          applicationContext.getBean(NonArrivalReasonRepository::class.java),
-          applicationContext.getBean(CancellationReasonRepository::class.java),
+          getBean(BookingRepository::class),
+          getBean(BookingService::class),
+          getBean(CommunityApiClient::class),
+          getBean(BedRepository::class),
+          getBean(DepartureReasonRepository::class),
+          getBean(MoveOnCategoryRepository::class),
+          getBean(DestinationProviderRepository::class),
+          getBean(NonArrivalReasonRepository::class),
+          getBean(CancellationReasonRepository::class),
         )
 
         SeedFileType.approvedPremisesCancelBookings -> ApprovedPremisesBookingCancelSeedJob(
           filename,
-          applicationContext.getBean(BookingService::class.java),
-          applicationContext.getBean(BookingRepository::class.java),
+          getBean(BookingService::class),
+          getBean(BookingRepository::class),
         )
 
         SeedFileType.approvedPremisesApAreaEmailAddresses -> Cas1ApAreaEmailAddressSeedJob(
           filename,
-          applicationContext.getBean(ApAreaRepository::class.java),
+          getBean(ApAreaRepository::class),
         )
 
         SeedFileType.approvedPremisesBookingAdhocProperty -> Cas1BookingAdhocPropertySeedJob(
           filename,
-          applicationContext.getBean(BookingRepository::class.java),
+          getBean(BookingRepository::class),
         )
 
         SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> Cas1FurtherInfoBugFixSeedJob(
           filename,
-          applicationContext.getBean(AssessmentRepository::class.java),
+          getBean(AssessmentRepository::class),
         )
 
         SeedFileType.approvedPremisesRedactAssessmentDetails -> Cas1RemoveAssessmentDetailsSeedJob(
           filename,
-          applicationContext.getBean(AssessmentRepository::class.java),
-          applicationContext.getBean(ObjectMapper::class.java),
-          applicationContext.getBean(ApplicationService::class.java),
+          getBean(AssessmentRepository::class),
+          getBean(ObjectMapper::class),
+          getBean(ApplicationService::class),
         )
 
         SeedFileType.approvedPremisesWithdrawPlacementRequest -> Cas1WithdrawPlacementRequestSeedJob(
           filename,
-          applicationContext.getBean(PlacementRequestService::class.java),
-          applicationContext.getBean(ApplicationService::class.java),
+          getBean(PlacementRequestService::class),
+          getBean(ApplicationService::class),
         )
 
         SeedFileType.approvedPremisesReplayDomainEvents -> Cas1DomainEventReplaySeedJob(
           filename,
-          applicationContext.getBean(DomainEventService::class.java),
+          getBean(DomainEventService::class),
         )
 
         SeedFileType.approvedPremisesDuplicateApplication -> Cas1DuplicateApplicationSeedJob(
           filename,
-          applicationContext.getBean(ApplicationService::class.java),
-          applicationContext.getBean(OffenderService::class.java),
+          getBean(ApplicationService::class),
+          getBean(OffenderService::class),
         )
 
         SeedFileType.approvedPremisesUpdateEventNumber -> Cas1UpdateEventNumberSeedJob(
           filename,
-          applicationContext.getBean(ApplicationService::class.java),
-          applicationContext.getBean(ApplicationRepository::class.java),
-          applicationContext.getBean(DomainEventRepository::class.java),
-          applicationContext.getBean(ObjectMapper::class.java),
+          getBean(ApplicationService::class),
+          getBean(ApplicationRepository::class),
+          getBean(DomainEventRepository::class),
+          getBean(ObjectMapper::class),
         )
 
         SeedFileType.approvedPremisesLinkBookingToPlacementRequest -> Cas1LinkedBookingToPlacementRequestSeedJob(
           filename,
-          applicationContext.getBean(PlacementRequestRepository::class.java),
-          applicationContext.getBean(BookingRepository::class.java),
-          applicationContext.getBean(ApplicationTimelineNoteService::class.java),
+          getBean(PlacementRequestRepository::class),
+          getBean(BookingRepository::class),
+          getBean(ApplicationTimelineNoteService::class),
         )
 
         SeedFileType.approvedPremisesOutOfServiceBeds -> Cas1OutOfServiceBedSeedJob(
           filename,
-          applicationContext.getBean(Cas1OutOfServiceBedService::class.java),
-          applicationContext.getBean(PremisesService::class.java),
+          getBean(Cas1OutOfServiceBedService::class),
+          getBean(PremisesService::class),
+        )
+
+        SeedFileType.updateUsersFromApi -> UpdateUsersFromApiSeedJob(
+          filename,
+          getBean(UserService::class),
         )
       }
 
@@ -326,6 +333,8 @@ class SeedService(
       seedLogger.error("Unable to complete Seed Job", exception)
     }
   }
+
+  private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
 
   private fun <T> processJob(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.

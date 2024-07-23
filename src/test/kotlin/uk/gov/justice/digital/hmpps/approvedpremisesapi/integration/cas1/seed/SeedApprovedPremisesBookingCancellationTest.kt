@@ -6,8 +6,8 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.CancelBookingSeedCsvRow
 import java.util.UUID

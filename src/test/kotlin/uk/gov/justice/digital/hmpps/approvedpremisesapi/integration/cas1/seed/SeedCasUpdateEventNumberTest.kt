@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.NEW_CONVICTION_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.NEW_EVENT_NUMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.NEW_OFFENCE_ID
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.Se
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.OLD_OFFENCE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary

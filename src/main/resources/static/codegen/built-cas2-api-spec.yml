@@ -4512,6 +4512,7 @@ components:
         - approved_premises_users
         - characteristics
         - update_noms_number
+        - update_users_from_api
         - approved_premises_ap_staff_users
         - approved_premises_offline_applications
         - approved_premises_bookings

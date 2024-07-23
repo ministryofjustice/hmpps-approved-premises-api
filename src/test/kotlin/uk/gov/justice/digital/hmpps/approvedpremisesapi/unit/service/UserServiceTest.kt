@@ -542,6 +542,15 @@ class UserServiceTest {
 
     @ParameterizedTest
     @EnumSource(ServiceName::class)
+    fun `it will update the user entity if fields of interest are the same as delius if force = true`(forService: ServiceName) {
+      val user = userFactory.produce()
+      val deliusUser = staffUserDetailsFactory.produce()
+
+      assertUserUpdated(user, deliusUser, probationRegion, forService, force = true)
+    }
+
+    @ParameterizedTest
+    @EnumSource(ServiceName::class)
     fun `it updates the user entity if the email has been updated in delius`(forService: ServiceName) {
       val user = userFactory.produce()
 
@@ -648,6 +657,7 @@ class UserServiceTest {
       deliusUser: StaffUserDetails,
       probationRegion: ProbationRegionEntity,
       forService: ServiceName,
+      force: Boolean = false,
     ) {
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
@@ -680,7 +690,7 @@ class UserServiceTest {
         every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
       }
 
-      val result = userService.updateUserFromCommunityApiById(id, forService)
+      val result = userService.updateUserFromCommunityApiById(id, forService, force)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val entity = (result as AuthorisableActionResult.Success).entity
@@ -693,7 +703,7 @@ class UserServiceTest {
       assertThat(entity.deliusStaffCode).isEqualTo(deliusUser.staffCode)
       assertThat(entity.probationRegion.name).isEqualTo(probationRegion.name)
       assertThat(entity.probationDeliveryUnit?.id).isEqualTo(pduId)
-      assertThat(entity.teamCodes).isEqualTo(deliusUser.getTeamCodes())
+      assertThat(entity.teamCodes ?: emptyList()).isEqualTo(deliusUser.getTeamCodes())
 
       if (forService == ServiceName.approvedPremises) {
         assertThat(entity.apArea).isEqualTo(newApAreaForCas1)
