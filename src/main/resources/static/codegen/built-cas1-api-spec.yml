@@ -1297,6 +1297,7 @@ components:
       enum:
         - atRiskOfExploitation
         - arson
+        - hateBasedOffences
         - posesSexualRiskToAdults
         - posesSexualRiskToChildren
         - posesNonSexualRiskToChildren
