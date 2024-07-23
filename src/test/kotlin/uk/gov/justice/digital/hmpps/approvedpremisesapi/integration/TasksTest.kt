@@ -2044,102 +2044,97 @@ class TasksTest {
     }
 
     @Test
-    fun `Get an assessment task for an application returns 200 with correct body`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { user, _ ->
-          `Given a User`(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
-          ) { allocatableUser, _ ->
-            `Given a User`(
-              roles = listOf(UserRole.CAS1_MATCHER),
-              isActive = false,
-            ) { _, _ ->
-              `Given an Offender` { offenderDetails, inmateDetails ->
-                `Given an Assessment for Approved Premises`(
-                  allocatedToUser = user,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
-                ) { assessment, _ ->
+    fun `Get an Assessment Task for an application returns users with ASSESSOR role`() {
+      val (creator, _) = `Given a User`()
+      val (workflowManager, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+      val (assessor, _) = `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+      )
+      val (inactiveMatcher, _) = `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        isActive = false,
+      )
+      val (matcher, _) = `Given a User`(
+        roles = listOf(UserRole.CAS1_MATCHER),
+      )
 
-                  webTestClient.get()
-                    .uri("/tasks/assessment/${assessment.id}")
-                    .header("Authorization", "Bearer $jwt")
-                    .exchange()
-                    .expectStatus()
-                    .isOk
-                    .expectBody()
-                    .json(
-                      objectMapper.writeValueAsString(
-                        TaskWrapper(
-                          task = taskTransformer.transformAssessmentToTask(
-                            assessment,
-                            getOffenderSummaries(offenderDetails),
-                          ),
-                          users = listOf(
-                            userTransformer.transformJpaToAPIUserWithWorkload(
-                              allocatableUser,
-                              UserWorkload(
-                                0,
-                                0,
-                                0,
-                              ),
-                            ),
-                          ),
-                        ),
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = null,
+          createdByUser = creator,
+          crn = offenderDetails.otherIds.crn,
+          dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+        ) { assessment, _ ->
+
+          webTestClient.get()
+            .uri("/tasks/assessment/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                TaskWrapper(
+                  task = taskTransformer.transformAssessmentToTask(
+                    assessment,
+                    getOffenderSummaries(offenderDetails),
+                  ),
+                  users = listOf(
+                    userTransformer.transformJpaToAPIUserWithWorkload(
+                      assessor,
+                      UserWorkload(
+                        0,
+                        0,
+                        0,
                       ),
-                    )
-                }
-              }
-            }
-          }
+                    ),
+                  ),
+                ),
+              ),
+            )
         }
       }
     }
 
     @Test
-    fun `Get a Placement Request Task for an application returns 200`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(
-          roles = listOf(UserRole.CAS1_ASSESSOR),
-        ) { user, _ ->
-          `Given a User`(
-            roles = listOf(UserRole.CAS1_MATCHER),
-          ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = user,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
+    fun `Get a Placement Request Task for an application returns users with MATCHER role`() {
+      val (workflowManager, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+      val (creator, _) = `Given a User`()
+      val (matcher, _) = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))
+      val (assessor, _) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR))
 
-                webTestClient.get()
-                  .uri("/tasks/placement-request/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformPlacementRequestToTask(
-                          placementRequest,
-                          getOffenderSummaries(offenderDetails),
-                        ),
-                        users = listOf(
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            allocatableUser,
-                            UserWorkload(0, 0, 0),
-                          ),
-                        ),
-                      ),
+      `Given an Offender` { offenderDetails, _ ->
+        `Given a Placement Request`(
+          placementRequestAllocatedTo = creator,
+          assessmentAllocatedTo = creator,
+          createdByUser = creator,
+          crn = offenderDetails.otherIds.crn,
+        ) { placementRequest, _ ->
+
+          webTestClient.get()
+            .uri("/tasks/placement-request/${placementRequest.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                TaskWrapper(
+                  task = taskTransformer.transformPlacementRequestToTask(
+                    placementRequest,
+                    getOffenderSummaries(offenderDetails),
+                  ),
+                  users = listOf(
+                    userTransformer.transformJpaToAPIUserWithWorkload(
+                      matcher,
+                      UserWorkload(0, 0, 0),
                     ),
-                  )
-              }
-            }
-          }
+                  ),
+                ),
+              ),
+            )
         }
       }
     }
@@ -2194,103 +2189,128 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an application returns 2 users with correct roles`() {
+    fun `Get a Placement Application Task for an application returns users with MATCHER roles`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User`(
-          roles = listOf(UserRole.CAS1_MATCHER),
-        ) { user, _ ->
-          `Given a User`(
-            roles = listOf(UserRole.CAS1_MATCHER),
-          ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-              ) { placementApplication ->
 
-                webTestClient.get()
-                  .uri("/tasks/placement-application/${placementApplication.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformPlacementApplicationToTask(
-                          placementApplication,
-                          getOffenderSummaries(offenderDetails),
-                        ),
-                        users = listOf(
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            user,
-                            UserWorkload(1, 0, 0),
-                          ),
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            allocatableUser,
-                            UserWorkload(0, 0, 0),
-                          ),
-                        ),
+        val (matcherUser1, _) = `Given a User`(
+          roles = listOf(UserRole.CAS1_MATCHER),
+        )
+
+        val (matcherUser2, _) = `Given a User`(
+          roles = listOf(UserRole.CAS1_MATCHER),
+        )
+
+        val (assessorUser, _) = `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+        )
+
+        val (assessorAndMatcherUser, _) = `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
+        )
+
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a Placement Application`(
+            createdByUser = matcherUser1,
+            allocatedToUser = matcherUser1,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            crn = offenderDetails.otherIds.crn,
+          ) { placementApplication ->
+
+            webTestClient.get()
+              .uri("/tasks/placement-application/${placementApplication.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  TaskWrapper(
+                    task = taskTransformer.transformPlacementApplicationToTask(
+                      placementApplication,
+                      getOffenderSummaries(offenderDetails),
+                    ),
+                    users = listOf(
+                      userTransformer.transformJpaToAPIUserWithWorkload(
+                        matcherUser1,
+                        UserWorkload(1, 0, 0),
+                      ),
+                      userTransformer.transformJpaToAPIUserWithWorkload(
+                        matcherUser2,
+                        UserWorkload(0, 0, 0),
+                      ),
+                      userTransformer.transformJpaToAPIUserWithWorkload(
+                        assessorAndMatcherUser,
+                        UserWorkload(0, 0, 0),
                       ),
                     ),
-                  )
-              }
-            }
+                  ),
+                ),
+              )
           }
         }
       }
     }
 
     @Test
-    fun `Get a Placement Application Task for an appealed application returns only 1 user with cas1 assess appealed application role`() {
+    fun `Get an Assessment Task for an appealed application returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_JANITOR),
         ) { user, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_APPEALS_MANAGER),
-          ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = user,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                decision = AssessmentDecision.REJECTED,
-                createdFromAppeal = true,
-                dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
-              ) { assessment, _ ->
-                webTestClient.get()
-                  .uri("/tasks/assessment/${assessment.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformAssessmentToTask(
-                          assessment,
-                          getOffenderSummaries(offenderDetails),
-                        ),
-                        users = listOf(
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            allocatableUser,
-                            UserWorkload(
-                              0,
-                              0,
-                              0,
+          ) { appealsManager, _ ->
+            `Given a User`(
+              roles = listOf(UserRole.CAS1_ASSESSOR),
+            ) { assessor, _ ->
+              `Given an Offender` { offenderDetails, inmateDetails ->
+                `Given an Assessment for Approved Premises`(
+                  allocatedToUser = user,
+                  createdByUser = user,
+                  crn = offenderDetails.otherIds.crn,
+                  decision = AssessmentDecision.REJECTED,
+                  createdFromAppeal = true,
+                  dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+                ) { assessment, _ ->
+                  webTestClient.get()
+                    .uri("/tasks/assessment/${assessment.id}")
+                    .header("Authorization", "Bearer $jwt")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+                    .expectBody()
+                    .json(
+                      objectMapper.writeValueAsString(
+                        TaskWrapper(
+                          task = taskTransformer.transformAssessmentToTask(
+                            assessment,
+                            getOffenderSummaries(offenderDetails),
+                          ),
+                          users = listOf(
+                            userTransformer.transformJpaToAPIUserWithWorkload(
+                              appealsManager,
+                              UserWorkload(
+                                0,
+                                0,
+                                0,
+                              ),
+                            ),
+                            userTransformer.transformJpaToAPIUserWithWorkload(
+                              assessor,
+                              UserWorkload(
+                                0,
+                                0,
+                                0,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  )
+                    )
+                }
               }
             }
           }
@@ -2299,18 +2319,18 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an application created from appeal returns 0 users if no users with cas1 assess appealed application role exist`() {
+    fun `Get an Assessment Task for an application created from appeal returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_JANITOR),
-        ) { user, _ ->
+        ) { janitor, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_MATCHER),
-          ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
+          ) { matcher, _ ->
+            `Given an Offender` { offenderDetails, _ ->
               `Given an Assessment for Approved Premises`(
-                allocatedToUser = user,
-                createdByUser = user,
+                allocatedToUser = null,
+                createdByUser = janitor,
                 crn = offenderDetails.otherIds.crn,
                 decision = AssessmentDecision.REJECTED,
                 createdFromAppeal = true,
@@ -2342,7 +2362,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an accepted application returns only 1 user with cas 1 assessor role`() {
+    fun `Get an Assessment Task for an accepted application returns user with ASSESSOR role`() {
       `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_JANITOR),
@@ -2393,7 +2413,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a PlacementApplication Task for an application gets UserWithWorkload, ignores inactive users and returns 200`() {
+    fun `Get a Placement Application Task for an application gets UserWithWorkload, ignores inactive users and returns 200`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User` { user, _ ->
           `Given a User`(
