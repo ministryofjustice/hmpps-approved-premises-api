@@ -8350,7 +8350,6 @@ components:
         - update_users_from_api
         - approved_premises_ap_staff_users
         - approved_premises_offline_applications
-        - approved_premises_bookings
         - approved_premises_cancel_bookings
         - approved_premises_ap_area_email_addresses
         - approved_premises_booking_adhoc_property
