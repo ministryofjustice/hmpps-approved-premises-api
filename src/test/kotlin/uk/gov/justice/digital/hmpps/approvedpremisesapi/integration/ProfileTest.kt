@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
@@ -69,6 +70,11 @@ class ProfileTest : IntegrationTestBase() {
                 service = "CAS1",
                 isActive = true,
                 apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
+                permissions = listOf(
+                  ApprovedPremisesUserPermission.assessApplication,
+                  ApprovedPremisesUserPermission.assessAppealedApplication,
+                  ApprovedPremisesUserPermission.viewAssignedAssessments,
+                ),
               ),
             ),
           )
@@ -249,6 +255,11 @@ class ProfileTest : IntegrationTestBase() {
                   service = "CAS1",
                   isActive = true,
                   apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
+                  permissions = listOf(
+                    ApprovedPremisesUserPermission.assessApplication,
+                    ApprovedPremisesUserPermission.assessAppealedApplication,
+                    ApprovedPremisesUserPermission.viewAssignedAssessments,
+                  ),
                 ),
               ),
             ),

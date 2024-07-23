@@ -302,9 +302,17 @@ data class UserRoleAssignmentEntity(
   override fun hashCode() = Objects.hash(id, role)
 }
 
-enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremisesUserRole?) {
-  CAS1_ASSESSOR(ServiceName.approvedPremises, ApprovedPremisesUserRole.assessor),
-  CAS1_MATCHER(ServiceName.approvedPremises, ApprovedPremisesUserRole.matcher),
+enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremisesUserRole?, val permissions: List<UserPermission> = emptyList()) {
+  CAS1_ASSESSOR(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.assessor,
+    listOf(UserPermission.CAS1_ASSESS_APPLICATION, UserPermission.CAS1_ASSESS_APPEALED_APPLICATION, UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS),
+  ),
+  CAS1_MATCHER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.matcher,
+    listOf(UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION, UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST),
+  ),
   CAS1_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.manager),
   CAS1_LEGACY_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.legacyManager),
   CAS1_FUTURE_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.futureManager),
@@ -316,8 +324,16 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromAssessAllocation),
   CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromMatchAllocation),
   CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation),
-  CAS1_APPEALS_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.appealsManager),
-  CAS1_JANITOR(ServiceName.approvedPremises, ApprovedPremisesUserRole.janitor),
+  CAS1_APPEALS_MANAGER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.appealsManager,
+    listOf(UserPermission.CAS1_PROCESS_AN_APPEAL, UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS, UserPermission.CAS1_ASSESS_APPEALED_APPLICATION),
+  ),
+  CAS1_JANITOR(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.janitor,
+    listOf(UserPermission.CAS1_PROCESS_AN_APPEAL, UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS),
+  ),
   CAS1_USER_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.userManager),
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
@@ -328,6 +344,8 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }
 
     fun valueOf(apiValue: ApprovedPremisesUserRole) = UserRole.entries.first { it.cas1ApiValue == apiValue }
+
+    fun getAllRolesForPermission(permission: UserPermission) = UserRole.values().filter { it.permissions.contains(permission) }
   }
 }
 
@@ -374,6 +392,15 @@ enum class UserQualification {
   EMERGENCY,
   RECOVERY_FOCUSED,
   MENTAL_HEALTH_SPECIALIST,
+}
+
+enum class UserPermission {
+  CAS1_VIEW_ASSIGNED_ASSESSMENTS,
+  CAS1_PROCESS_AN_APPEAL,
+  CAS1_ASSESS_PLACEMENT_APPLICATION,
+  CAS1_ASSESS_PLACEMENT_REQUEST,
+  CAS1_ASSESS_APPLICATION,
+  CAS1_ASSESS_APPEALED_APPLICATION,
 }
 
 interface UserWorkload {

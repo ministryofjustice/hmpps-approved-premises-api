@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
@@ -35,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
@@ -57,6 +57,7 @@ class UserService(
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
   private val cas1UserMappingService: Cas1UserMappingService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
+  private val featureFlagService: FeatureFlagService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -139,7 +140,7 @@ class UserService(
   fun getAllocatableUsersForAllocationType(
     crn: String,
     qualifications: List<UserQualification>,
-    allocationType: AllocationType,
+    permission: UserPermission,
   ): List<UserEntity> {
     val userQualifications = mutableListOf<UserQualification>()
     userQualifications.addAll(qualifications)
@@ -148,13 +149,12 @@ class UserService(
       userQualifications.add(UserQualification.LAO)
     }
 
-    val requiredRole = when (allocationType) {
-      AllocationType.Assessment -> UserRole.CAS1_ASSESSOR
-      AllocationType.PlacementRequest -> UserRole.CAS1_MATCHER
-      AllocationType.PlacementApplication -> UserRole.CAS1_MATCHER
+    var requiredRole = UserRole.getAllRolesForPermission(permission)
+    if (!featureFlagService.getBooleanFlag("cas1-appeal-manager-can-assess-applications")) {
+      requiredRole = requiredRole.filter { it != UserRole.CAS1_APPEALS_MANAGER }
     }
 
-    var users = userRepository.findActiveUsersWithRole(requiredRole)
+    var users = userRepository.findActiveUsersWithRoles(requiredRole)
 
     userQualifications.forEach { qualification ->
       users = users.filter { it.hasQualification(qualification) }

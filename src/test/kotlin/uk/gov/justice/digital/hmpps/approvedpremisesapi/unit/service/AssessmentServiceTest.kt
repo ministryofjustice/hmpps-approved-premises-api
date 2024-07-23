@@ -1852,7 +1852,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `reallocateAssessment for Approved Premises returns Field Validation Error when user to assign to is not an ASSESSOR`() {
+    fun `reallocateAssessment for Approved Premises returns Field Validation Error when user to assign to does not have cas1 assess application permission`() {
       assigneeUser.apply {
         roles = mutableListOf()
       }
@@ -1866,7 +1866,29 @@ class AssessmentServiceTest {
 
       assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
       validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingAssessorRole")
+      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lacking assess application or assess appealed application permission")
+    }
+
+    @Test
+    fun `reallocateAssessment for appealed application returns Field Validation Error when user to assign to does not have cas1 assess appealed application permission`() {
+      assigneeUser.apply {
+        roles = mutableListOf()
+      }
+
+      previousAssessment.apply {
+        this.isWithdrawn = true
+      }
+
+      every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+      validationResult as ValidatableActionResult.FieldValidationError
+      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lacking assess application or assess appealed application permission")
     }
 
     @Test
@@ -1988,6 +2010,94 @@ class AssessmentServiceTest {
 
       assertThat(previousAssessment.reallocatedAt).isNotNull
       assertThat(newAssessment.createdFromAppeal).isEqualTo(createdFromAppeal)
+      assertThat(newAssessment.dueAt).isEqualTo(dueAt)
+
+      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+
+      verify(exactly = 1) {
+        cas1AssessmentEmailServiceMock.assessmentAllocated(
+          match { it.id == assigneeUser.id },
+          any<UUID>(),
+          application,
+          dueAt,
+          false,
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1AssessmentEmailServiceMock.assessmentDeallocated(
+          match { it.id == previousAssessment.allocatedToUser!!.id },
+          any<UUID>(),
+          application,
+        )
+      }
+
+      verify {
+        cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+      }
+    }
+
+    @Test
+    fun `reallocateAssessment for appealed application returns Success when user has cas1 assess appealed application permission`() {
+      assigneeUser.apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS1_ASSESSOR)
+          .produce()
+
+        qualifications += UserQualificationAssignmentEntityFactory()
+          .withUser(this)
+          .withQualification(UserQualification.PIPE)
+          .produce()
+      }
+
+      previousAssessment.apply {
+        this.createdFromAppeal = true
+        this.isWithdrawn = true
+      }
+
+      val dueAt = OffsetDateTime.now()
+
+      val actingUser = UserEntityFactory()
+        .withDeliusUsername("Acting User")
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }.produce()
+
+      every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
+        id = UUID.randomUUID(),
+        addedAt = OffsetDateTime.now(),
+        schema = "{}",
+      )
+
+      every { assessmentListener.prePersist(any()) } returns Unit
+      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+
+      every { cas1AssessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
+
+      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
+      every { userServiceMock.getUserForRequest() } returns actingUser
+
+      every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
+
+      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.Success).isTrue
+      val newAssessment = (validationResult as ValidatableActionResult.Success).entity as ApprovedPremisesAssessmentEntity
+
+      assertThat(previousAssessment.reallocatedAt).isNotNull
+      assertThat(newAssessment.createdFromAppeal).isEqualTo(true)
       assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
       verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }

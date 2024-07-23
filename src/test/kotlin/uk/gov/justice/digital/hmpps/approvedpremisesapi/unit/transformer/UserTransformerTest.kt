@@ -8,8 +8,13 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
@@ -27,6 +32,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_APPEALS_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
@@ -123,6 +130,67 @@ class UserTransformerTest {
           matcher,
           workflowManager,
           appealsManager,
+        ),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_APPEALS_MANAGER"])
+    fun `transformJpaToApi CAS1 should return permissions for Approved Premises roles which have permissions defined`(role: UserRole) {
+      val user = buildUserEntity(
+        role = role,
+        apArea = ApAreaEntityFactory().produce(),
+      )
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.permissions).isEqualTo(
+        listOf(
+          processAnAppeal,
+          viewAssignedAssessments,
+          assessAppealedApplication,
+        ),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_APPEALS_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `transformJpaToApi CAS1 should return no permissions for Approved Premises roles which have no permissions defined`(role: UserRole) {
+      val user = buildUserEntity(
+        role = role,
+        apArea = ApAreaEntityFactory().produce(),
+      )
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.permissions).isEmpty()
+    }
+
+    @Test
+    fun `transformJpaToApi CAS1 should return distinct permissions for Approved Premises roles which have the same permissions defined`() {
+      val user = buildUserEntity(
+        role = CAS1_JANITOR,
+        apArea = ApAreaEntityFactory().produce(),
+      )
+      user.addRoleForUnitTest(CAS1_APPEALS_MANAGER)
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.permissions).size().isEqualTo(3)
+      assertThat(result.permissions).isEqualTo(
+        listOf(
+          processAnAppeal,
+          viewAssignedAssessments,
+          assessAppealedApplication,
         ),
       )
     }

@@ -102,6 +102,8 @@ generic-service:
     NOTIFY_MODE: TEST_AND_GUEST_LIST
     CAS3-REPORT_END-DATE-OVERRIDE: 3
 
+    FEATURE-FLAGS_CAS1-APPEAL-MANAGER-CAN-ASSESS-APPLICATIONS: true
+
   namespace_secrets:
     hmpps-approved-premises-api:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"

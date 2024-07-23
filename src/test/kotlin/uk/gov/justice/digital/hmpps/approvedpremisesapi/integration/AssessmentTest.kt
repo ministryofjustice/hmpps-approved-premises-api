@@ -184,6 +184,7 @@ class AssessmentTest : IntegrationTestBase() {
             allocatedToUser = user,
             crn = crn,
             block = block,
+            dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
           )
         }
 

@@ -277,3 +277,4 @@ reports:
   jdbc-fetch-size: 200
 
 feature-flags:
+  cas1-appeal-manager-can-assess-applications: false
