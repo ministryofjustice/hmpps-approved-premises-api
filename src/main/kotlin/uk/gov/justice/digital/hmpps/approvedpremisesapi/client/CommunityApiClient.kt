@@ -38,6 +38,7 @@ class CommunityApiClient(
     hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
   )
 
+  @Deprecated("To get offender details use [OffenderService.getOffenderByCrn] which delegates to ap-delius-context")
   fun getOffenderDetailSummaryWithCall(crn: String) = getRequest<OffenderDetailSummary> {
     path = "/secure/offenders/crn/$crn"
     isPreemptiveCall = true
@@ -45,6 +46,7 @@ class CommunityApiClient(
     preemptiveCacheKey = crn
   }
 
+  @Deprecated("To get offender details use  [OffenderService.getOffenderByCrn] which delegates to ap-delius-context")
   fun getOffenderDetailsCacheEntryStatus(crn: String) = checkPreemptiveCacheStatus(offenderDetailCacheConfig, crn)
 
   @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)

@@ -57,8 +57,6 @@ fun IntegrationTestBase.`Given an Offender`(
       .produce(),
   )
 
-  loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-
   when (mockServerErrorForPrisonApi) {
     true -> PrisonAPI_mockServerErrorInmateDetailsCall(inmateDetails.offenderNo)
     false -> PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
@@ -131,8 +129,6 @@ fun IntegrationTestBase.`Given Some Offenders`(
         .withUserRestricted(offenderDetails.currentRestriction)
         .produce(),
     )
-
-    loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
 
     PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
 
