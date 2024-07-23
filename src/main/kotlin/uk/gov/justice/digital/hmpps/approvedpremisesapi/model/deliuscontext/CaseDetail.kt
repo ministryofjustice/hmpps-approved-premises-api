@@ -47,6 +47,7 @@ data class Ldu(
 data class Profile(
   val ethnicity: String?,
   val genderIdentity: String?,
+  @Deprecated("This is not currently populated by ap-delius-context")
   val selfDescribedGender: String?,
   val nationality: String?,
   val religion: String?,
