@@ -5,42 +5,34 @@
 To process a seed CSV against a non-local environment:
 
 - Ensure nobody is deploying a change (or is going to deploy a change shortly.)
+- Change into the 'script' directory in this project
+- Upload the CSV file to the target environments
 
-- Setup namespace
-
-  ```
-  env=preprod
-  namespace=hmpps-community-accommodation-$env
-  ```
-
-- Run against the namespace for the environment you wish to run the seed job in, e.g:
-  ```
-  kubectl get pod -n $namespace
+  ```shell
+  ./pod_upload_seed_file preprod /path/to/my_csv.csv
   ```
 
-- Copy the name of one of the running `hmpps-approved-premises-api` pods or set it as a variable, e.g:
-  ```
-  pod={pod name}
+- This will output confirmation and provide the name of the pod used e.g.
+
+  ```shell
+  File uploaded to /tmp/seed/refresh_nat_users.csv on pod hmpps-approved-premises-api-69cf9df9b8-g4vp2
   ```
 
-- Transfer the CSV to the `/tmp/seed` directory in the container via kubectl, e.g.
-  ```
-  kubectl cp /local/path/ap_seed_file.csv $pod:/tmp/seed/ap_seed_file.csv -n $namespace
-  ```
+- Connect to the aforementioned pod 
 
-- Log in to the same pod in order to run the script, e.g. 
-  ```
-  kubectl -n $namespace exec --stdin --tty $pod -- /bin/bash 
+  ```shell
+  ./pod_shell preprod hmpps-approved-premises-api-69cf9df9b8-g4vp2
   ```
 
 - Run the helper script from within the container to trigger the seed job:
-  ```
-  /app/run_seed_job {seed type} {file name without extension}
+
+  ```shell
+  /app/run_seed_job {seed type} {file name without path or extension}
   ```
 
-  Where `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/d8dc87aefa0294289a7bcb08048fbd8679b9954c/src/main/resources/static/_shared.yml#L3240) enum in the OpenAPI spec.  e.g.
-  ```
-  kubectl -n $namespace exec --stdin --tty $pod -- /bin/bash
+- `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/d8dc87aefa0294289a7bcb08048fbd8679b9954c/src/main/resources/static/_shared.yml#L3240) enum in the OpenAPI spec.  e.g.
+
+  ```shell 
   /app/run_seed_job approved_premises ap_seed_file
   ```
 
@@ -51,23 +43,9 @@ To process a seed CSV against a non-local environment:
   | project timestamp, message, outerMessage, severityLevel, customDimensions, problemId, operation_Name, operation_Id
    ```
   
-## Run book
+## Local Seeding
 
-For a full seeding, e.g. in a local development environment, you can follow this process:
-
-```sh
-# characteristics for premises
-./script/run_seed_job characteristics premises_characteristics
-
-# characteristics for rooms
-./script/run_seed_job characteristics room_characteristics
-
-# premises and their characteristics
-./script/run_seed_job approved_premises premises_with_characteristics
-
-# rooms and their characteristics, plus beds
-./script/run_seed_job approved_premises_rooms rooms_with_characteristics
-```
+For seeding in a local development environment use ./script/run_seed_job
 
 ## CSV reference
 
