@@ -5,7 +5,7 @@ import java.time.LocalDate
 @Deprecated(
   """This is the community api model. Instead we should be using [CaseSummary] which is the model provided by 
     ap-and-delius, which has been tailored for CAS usage. See APS-1085 for some notes on how to replace usage of this 
-    class in some circumstances. Note that OffenderDetailsUtils provides functions to convert between these two types"""
+    class in some circumstances. Note that OffenderDetailsUtils provides functions to convert between these two types""",
 )
 data class OffenderDetailSummary(
   val offenderId: Long?,
