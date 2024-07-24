@@ -1222,6 +1222,28 @@ components:
       required:
         - apType
         - gender
+    Cas1SpaceSearchRequirements:
+      type: object
+      properties:
+        apTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApType'
+        needCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
+        riskCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+        genders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Gender'
+      required:
+        - apType
+        - gender
     Cas1SpaceNeedCharacteristic:
       type: string
       enum:
@@ -1255,7 +1277,7 @@ components:
           description: The 'target' location, in the form of a postcode district
           example: SE5
         requirements:
-          $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
+          $ref: '#/components/schemas/Cas1SpaceSearchRequirements'
       required:
         - startDate
         - durationInDays
