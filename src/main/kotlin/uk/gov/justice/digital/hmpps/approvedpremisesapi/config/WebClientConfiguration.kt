@@ -25,6 +25,7 @@ class WebClientConfiguration(
   @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
   @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${web-clients.probation-offender-search-api-max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -279,7 +280,7 @@ class WebClientConfiguration(
       .filter(oauth2Client)
       .exchangeStrategies(
         ExchangeStrategies.builder().codecs {
-          it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          it.defaultCodecs().maxInMemorySize(probationOffenderSearchApiMaxResponseInMemorySizeBytes)
         }.build(),
       )
       .build()
