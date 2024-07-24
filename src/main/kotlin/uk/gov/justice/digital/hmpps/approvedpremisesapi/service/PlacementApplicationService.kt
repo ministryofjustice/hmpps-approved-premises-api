@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -142,7 +142,7 @@ class PlacementApplicationService(
       )
     }
 
-    if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
+    if (!assigneeUser.hasPermission(UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(
           ValidationErrors().apply {
