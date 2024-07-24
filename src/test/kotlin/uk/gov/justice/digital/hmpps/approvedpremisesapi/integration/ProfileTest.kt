@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileRespons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -135,7 +137,7 @@ class ProfileTest : IntegrationTestBase() {
               name = userEntity.name,
               telephoneNumber = telephoneNumber,
               roles = listOf(TemporaryAccommodationUserRole.assessor),
-              service = ServiceName.temporaryAccommodation.value,
+              service = "CAS3",
               isActive = true,
             ),
           ),
@@ -195,7 +197,7 @@ class ProfileTest : IntegrationTestBase() {
               name = userEntity.name,
               telephoneNumber = telephoneNumber,
               roles = listOf(TemporaryAccommodationUserRole.reporter),
-              service = ServiceName.temporaryAccommodation.value,
+              service = "CAS3",
               isActive = true,
             ),
           ),
@@ -325,7 +327,7 @@ class ProfileTest : IntegrationTestBase() {
                 name = userEntity.name,
                 telephoneNumber = telephoneNumber,
                 roles = listOf(TemporaryAccommodationUserRole.assessor),
-                service = ServiceName.temporaryAccommodation.value,
+                service = "CAS3",
                 isActive = true,
               ),
             ),
@@ -389,12 +391,84 @@ class ProfileTest : IntegrationTestBase() {
                 name = userEntity.name,
                 telephoneNumber = telephoneNumber,
                 roles = listOf(TemporaryAccommodationUserRole.reporter),
-                service = ServiceName.temporaryAccommodation.value,
+                service = "CAS3",
                 isActive = true,
               ),
             ),
           ),
         )
+    }
+
+    @Test
+    fun `Getting own Temporary Accommodation profile from delius stores and returns updated values from delius`() {
+      val id = UUID.randomUUID()
+      val forename = "JIM"
+      val surname = "JIMMERSON"
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      mockStaffUserInfoCommunityApiCall(
+        StaffUserDetailsFactory()
+          .withForenames(forename)
+          .withSurname(surname)
+          .withUsername(deliusUsername)
+          .withEmail(email)
+          .withTelephoneNumber(telephoneNumber)
+          .produce(),
+      )
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withDeliusCode("A1")
+        withName("TEST")
+        withProbationRegion(region)
+      }
+
+      val userEntity = userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+        withDeliusUsername(deliusUsername)
+        withEmail("oldemail@old.com")
+        withTelephoneNumber(telephoneNumber)
+        withProbationDeliveryUnit { probationDeliveryUnit }
+      }
+
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withRole(UserRole.CAS3_REPORTER)
+      }
+
+      userQualificationAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withQualification(UserQualification.PIPE)
+      }
+
+      val response = webTestClient.get()
+        .uri(profileV2Endpoint + "?fromDelius=true")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!.user!!
+
+      assertThat(response.email).isEqualTo(email)
+      assertThat(response.telephoneNumber).isEqualTo(telephoneNumber)
+      assertThat(response.name).isEqualTo("$forename $surname")
+      assertThat(response.probationDeliveryUnit!!.name).isEqualTo(probationDeliveryUnit.name)
     }
 
     @Test

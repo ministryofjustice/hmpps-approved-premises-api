@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ProfileApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 
@@ -21,9 +23,20 @@ class ProfileController(
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
   }
 
-  override fun profileV2Get(xServiceName: ServiceName): ResponseEntity<ProfileResponse> {
+  override fun profileV2Get(xServiceName: ServiceName, fromDelius: Boolean?): ResponseEntity<ProfileResponse> {
+    if (fromDelius == true) {
+      val user = userService.getUserForRequest()
+      val result = userService.updateUserFromCommunityApiById(user.id, xServiceName)
+
+      if (result is AuthorisableActionResult.Success) {
+        val getUserResponse = GetUserResponse(result.entity, true)
+        return ResponseEntity.ok(userTransformer.transformProfileResponseToApi(user.deliusUsername, getUserResponse, xServiceName))
+      }
+    }
+
     val username = userService.getDeliusUserNameForRequest()
     val userResponse = userService.getUserForProfile(username)
+
     return ResponseEntity(userTransformer.transformProfileResponseToApi(username, userResponse, xServiceName), HttpStatus.OK)
   }
 }

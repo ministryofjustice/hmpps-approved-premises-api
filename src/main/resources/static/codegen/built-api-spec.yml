@@ -3974,6 +3974,12 @@ paths:
           description: Filters the user details to those relevant to the specified service.
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: fromDelius
+          in: query
+          description: Flag to update the details with the latest stored in delius
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: successfully retrieved information on user
