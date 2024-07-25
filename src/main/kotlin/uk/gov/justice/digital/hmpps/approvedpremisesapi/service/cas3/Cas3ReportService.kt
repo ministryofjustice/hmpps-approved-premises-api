@@ -81,18 +81,33 @@ class Cas3ReportService(
     )
 
     val crns = bookingsInScope.map { it.crn }.distinct().sorted()
-    val personInfos = splitAndRetrievePersonInfo(crns.toSet(), "Booking Report")
 
+    log.info("Booking Report. Start retrieve person information")
+    val personInfos = splitAndRetrievePersonInfo(crns.toSet(), "Booking Report")
+    log.info("Booking Report. End retrieve person information")
+
+    log.info("Booking Report. Start generate report data")
     val reportData = bookingsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
       BookingsReportDataAndPersonInfo(it, personInfo)
     }
+    log.info("Booking Report. End generate report data")
 
+    log.info("Booking Report. Start generate report")
     BookingsReportGenerator()
-      .createReport(reportData, BookingsReportProperties(ServiceName.temporaryAccommodation, properties.probationRegionId, properties.startDate, properties.endDate))
+      .createReport(
+        reportData,
+        BookingsReportProperties(
+          ServiceName.temporaryAccommodation,
+          properties.probationRegionId,
+          properties.startDate,
+          properties.endDate,
+        ),
+      )
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
+    log.info("Booking Report. End generate report")
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
@@ -114,11 +129,12 @@ class Cas3ReportService(
       properties.endDate,
     )
 
-    val bedspaceBookingsCancellationInScope = bedUtilisationReportRepository.findAllBookingCancellationsByOverlappingDate(
-      probationRegionId = properties.probationRegionId,
-      properties.startDate,
-      properties.endDate,
-    )
+    val bedspaceBookingsCancellationInScope =
+      bedUtilisationReportRepository.findAllBookingCancellationsByOverlappingDate(
+        probationRegionId = properties.probationRegionId,
+        properties.startDate,
+        properties.endDate,
+      )
 
     val bedspaceBookingsTurnaroundInScope = bedUtilisationReportRepository.findAllBookingTurnaroundByOverlappingDate(
       probationRegionId = properties.probationRegionId,
@@ -138,7 +154,13 @@ class Cas3ReportService(
       val bedspaceBookingsCancellation = bedspaceBookingsCancellationInScope.filter { it.bedId == bedId }
       val bedspaceBookingsTurnaround = bedspaceBookingsTurnaroundInScope.filter { it.bedId == bedId }
       val lostBedspace = lostBedspaceInScope.filter { it.bedId == bedId }
-      BedUtilisationReportData(it, bedspaceBookings, bedspaceBookingsCancellation, bedspaceBookingsTurnaround, lostBedspace)
+      BedUtilisationReportData(
+        it,
+        bedspaceBookings,
+        bedspaceBookingsCancellation,
+        bedspaceBookingsTurnaround,
+        lostBedspace,
+      )
     }
 
     BedUtilisationReportGenerator(workingDayService)
@@ -155,7 +177,7 @@ class Cas3ReportService(
       .stream().map { crns ->
         log.info("Report $reportName. Call get Offender Summaries with CRNs $crns")
         offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy {
-          log.info("Report $reportName. Response Offender Summaries for CRN $it.crn")
+          log.info("Report $reportName. Response Offender Summaries for CRN ${it.crn}")
           it.crn
         }
       }.collect(Collectors.toList())
