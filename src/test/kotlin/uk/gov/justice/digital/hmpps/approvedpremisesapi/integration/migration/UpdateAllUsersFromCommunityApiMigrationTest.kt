@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 
 class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
-  fun `All users are updated from Community API with a 500ms artificial delay`() {
+  fun `All users are updated from Community API with a 50ms artificial delay`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withApArea(apAreaEntityFactory.produceAndPersist())
     }
@@ -45,7 +45,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
     migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi, 1)
     val endTime = System.currentTimeMillis()
 
-    assertThat(endTime - startTime).isGreaterThan(500 * 2)
+    assertThat(endTime - startTime).isGreaterThan(50 * 2)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!

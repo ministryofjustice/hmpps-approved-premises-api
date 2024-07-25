@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
@@ -51,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateUsersPduFromCommunityApiJob
 import javax.persistence.EntityManager
 
 @Service
@@ -98,6 +98,12 @@ class MigrationJobService(
           applicationContext.getBean(EntityManager::class.java),
           applicationContext.getBean(TaskDeadlineService::class.java),
           pageSize,
+        )
+
+        MigrationJobType.usersPduFromCommunityApi -> UpdateUsersPduFromCommunityApiJob(
+          applicationContext.getBean(UserRepository::class.java),
+          applicationContext.getBean(UserService::class.java),
+          applicationContext.getBean(MigrationLogger::class.java),
         )
 
         MigrationJobType.cas2ApplicationsWithAssessments -> Cas2AssessmentMigrationJob(
@@ -167,12 +173,6 @@ class MigrationJobService(
           applicationContext.getBean(OffenderService::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
-          applicationContext.getBean(MigrationLogger::class.java),
-        )
-
-        MigrationJobType.cas3UsersPduFromCommunityApi -> Cas3UpdateUsersPduFromCommunityApiJob(
-          applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(MigrationLogger::class.java),
         )
 
