@@ -110,6 +110,9 @@ class UserTransformer(
     return userRole.role.permissions.map {
       when (it) {
         UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
+        UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
+        UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
+        UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
         UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
         UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
         UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest

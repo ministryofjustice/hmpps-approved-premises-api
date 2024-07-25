@@ -15,6 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewOutOfServiceBeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
@@ -157,7 +160,7 @@ class UserTransformerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_APPEALS_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_APPEALS_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_CRU_MEMBER"], mode = EnumSource.Mode.EXCLUDE)
     fun `transformJpaToApi CAS1 should return no permissions for Approved Premises roles which have no permissions defined`(role: UserRole) {
       val user = buildUserEntity(
         role = role,
@@ -185,12 +188,15 @@ class UserTransformerTest {
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
-      assertThat(result.permissions).size().isEqualTo(3)
-      assertThat(result.permissions).isEqualTo(
+      assertThat(result.permissions).size().isEqualTo(6)
+      assertThat(result.permissions).hasSameElementsAs(
         listOf(
           processAnAppeal,
           viewAssignedAssessments,
           assessAppealedApplication,
+          viewCruDashboard,
+          viewManageTasks,
+          viewOutOfServiceBeds,
         ),
       )
     }

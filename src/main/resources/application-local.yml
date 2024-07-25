@@ -72,4 +72,4 @@ user-allocations:
       priority: 0
 
 feature-flags:
-  cas1-appeal-manager-can-assess-applications: false
+  cas1-appeal-manager-can-assess-applications: true

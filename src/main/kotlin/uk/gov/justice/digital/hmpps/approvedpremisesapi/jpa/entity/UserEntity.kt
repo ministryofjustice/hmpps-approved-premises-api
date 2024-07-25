@@ -330,7 +330,15 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_LEGACY_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.legacyManager),
   CAS1_FUTURE_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.futureManager),
   CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.workflowManager),
-  CAS1_CRU_MEMBER(ServiceName.approvedPremises, ApprovedPremisesUserRole.cruMember),
+  CAS1_CRU_MEMBER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.cruMember,
+    listOf(
+      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
+      UserPermission.CAS1_VIEW_MANAGE_TASKS,
+      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+    ),
+  ),
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
   CAS1_ADMIN(ServiceName.approvedPremises, ApprovedPremisesUserRole.roleAdmin),
   CAS1_REPORT_VIEWER(ServiceName.approvedPremises, ApprovedPremisesUserRole.reportViewer),
@@ -352,6 +360,9 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     listOf(
       UserPermission.CAS1_PROCESS_AN_APPEAL,
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
+      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
+      UserPermission.CAS1_VIEW_MANAGE_TASKS,
+      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
     ),
   ),
   CAS1_USER_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.userManager),
@@ -418,6 +429,9 @@ enum class UserQualification {
 
 enum class UserPermission {
   CAS1_VIEW_ASSIGNED_ASSESSMENTS,
+  CAS1_VIEW_CRU_DASHBOARD,
+  CAS1_VIEW_MANAGE_TASKS,
+  CAS1_VIEW_OUT_OF_SERVICE_BEDS,
   CAS1_PROCESS_AN_APPEAL,
   CAS1_ASSESS_PLACEMENT_APPLICATION,
   CAS1_ASSESS_PLACEMENT_REQUEST,
