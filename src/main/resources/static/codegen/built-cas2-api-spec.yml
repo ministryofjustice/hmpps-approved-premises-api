@@ -907,6 +907,8 @@ components:
           $ref: '#/components/schemas/TaskStatus'
         apArea:
           $ref: '#/components/schemas/ApArea'
+        probationDeliveryUnit:
+          $ref: '#/components/schemas/ProbationDeliveryUnit'
         outcomeRecordedAt:
           type: string
           format: date-time

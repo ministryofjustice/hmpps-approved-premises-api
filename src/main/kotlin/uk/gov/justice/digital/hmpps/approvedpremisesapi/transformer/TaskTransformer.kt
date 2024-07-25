@@ -36,6 +36,7 @@ class TaskTransformer(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val apAreaTransformer: ApAreaTransformer,
   private val assessmentTransformer: AssessmentTransformer,
+  private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
 ) {
 
   fun transformAssessmentToTask(assessment: AssessmentEntity, offenderSummaries: List<PersonSummaryInfoResult>) = AssessmentTask(
@@ -56,6 +57,9 @@ class TaskTransformer(
     },
     outcomeRecordedAt = assessment.submittedAt?.toInstant(),
     outcome = assessment.decision?.let { assessmentTransformer.transformJpaDecisionToApi(assessment.decision) },
+    probationDeliveryUnit = assessment.application.createdByUser.probationDeliveryUnit?.let {
+      probationDeliveryUnitTransformer.transformJpaToApi(it)
+    },
   )
 
   fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, offenderSummaries: List<PersonSummaryInfoResult>): PlacementRequestTask {
@@ -79,6 +83,9 @@ class TaskTransformer(
       apArea = getApArea(placementRequest.application),
       outcomeRecordedAt = outcomeRecordedAt?.toInstant(),
       outcome = outcome,
+      probationDeliveryUnit = placementRequest.application.createdByUser.probationDeliveryUnit?.let {
+        probationDeliveryUnitTransformer.transformJpaToApi(it)
+      },
     )
   }
 
@@ -105,6 +112,9 @@ class TaskTransformer(
     apArea = getApArea(placementApplication.application),
     outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),
     outcome = placementApplication.decision?.apiValue,
+    probationDeliveryUnit = placementApplication.application.createdByUser.probationDeliveryUnit?.let {
+      probationDeliveryUnitTransformer.transformJpaToApi(it)
+    },
   )
 
   private fun getPersonNameFromApplication(

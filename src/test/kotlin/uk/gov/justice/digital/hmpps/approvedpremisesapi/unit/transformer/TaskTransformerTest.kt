@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -51,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -66,15 +69,22 @@ class TaskTransformerTest {
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
   private val mockAssessmentTransformer = mockk<AssessmentTransformer>()
+  private val mockProbationDeliveryUnitTransformer = mockk<ProbationDeliveryUnitTransformer>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
 
+  private val probationRegion = ProbationRegionEntityFactory()
+    .withYieldedApArea { ApAreaEntityFactory().produce() }
+    .produce()
+
+  private val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+    .withProbationRegion(probationRegion)
+    .withName("probation delivery unit")
+    .produce()
+
   private val user = UserEntityFactory()
-    .withYieldedProbationRegion {
-      ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-    }
+    .withYieldedProbationRegion { probationRegion }
+    .withProbationDeliveryUnit { probationDeliveryUnit }
     .produce()
 
   private val applicationFactory = ApprovedPremisesApplicationEntityFactory()
@@ -119,6 +129,7 @@ class TaskTransformerTest {
     .withDueAt(OffsetDateTime.now())
 
   private val mockApArea = ApArea(UUID.randomUUID(), "someIdentifier", "someName")
+  private val mockPdu = ProbationDeliveryUnit(UUID.randomUUID(), "thePduName")
 
   private val taskTransformer = TaskTransformer(
     mockUserTransformer,
@@ -126,12 +137,14 @@ class TaskTransformerTest {
     mockPlacementRequestTransformer,
     mockApAreaTransformer,
     mockAssessmentTransformer,
+    mockProbationDeliveryUnitTransformer,
   )
 
   @BeforeEach
   fun setup() {
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
     every { mockApAreaTransformer.transformJpaToApi(any()) } returns mockApArea
+    every { mockProbationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnit) } returns mockPdu
   }
 
   @Nested
@@ -161,6 +174,7 @@ class TaskTransformerTest {
       assertThat(result.personSummary is FullPersonSummary).isTrue
       assertThat(result.personSummary.crn).isEqualTo(assessment.application.crn)
       assertThat((result.personSummary as FullPersonSummary).name).isEqualTo("First Last")
+      assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
     }
 
     @Test
@@ -321,6 +335,7 @@ class TaskTransformerTest {
       )
       assertThat(result.dueDate).isEqualTo(placementApplication.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(placementApplication.dueAt!!.toInstant())
+      assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
     }
 
     @ParameterizedTest
@@ -436,6 +451,7 @@ class TaskTransformerTest {
       assertThat(result.placementRequestStatus).isEqualTo(placementRequestStatus)
       assertThat(result.dueDate).isEqualTo(placementRequest.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(placementRequest.dueAt!!.toInstant())
+      assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
     }
 
     @Test
