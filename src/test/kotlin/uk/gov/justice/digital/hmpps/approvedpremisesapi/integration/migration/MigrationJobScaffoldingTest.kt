@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
