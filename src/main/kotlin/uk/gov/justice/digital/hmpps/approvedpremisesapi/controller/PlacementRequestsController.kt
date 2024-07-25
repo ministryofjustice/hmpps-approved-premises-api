@@ -228,7 +228,7 @@ class PlacementRequestsController(
     return placementRequests.mapNotNull {
       val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-      if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${it.application.crn}")
+      if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${it.application.crn}. Response type is ${personInfo::class}")
 
       placementRequestTransformer.transformJpaToApi(it, personInfo)
     }
