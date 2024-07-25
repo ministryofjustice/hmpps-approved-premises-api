@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -96,13 +97,17 @@ class AssessmentController(
       .body(summaries)
   }
 
-  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLaoRestrictions: Boolean = false) = summaries.map {
-    val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, ignoreLaoRestrictions)
+  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLaoRestrictions: Boolean = false): List<AssessmentSummary> {
+    val crns = summaries.map { it.crn }
+    val personInfoResults = offenderService.getInfoForPersons(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
 
-    assessmentTransformer.transformDomainToApiSummary(
-      it,
-      personInfo,
-    )
+    return summaries.map {
+      val crn = it.crn
+      assessmentTransformer.transformDomainToApiSummary(
+        it,
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+      )
+    }
   }
 
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Assessment> {

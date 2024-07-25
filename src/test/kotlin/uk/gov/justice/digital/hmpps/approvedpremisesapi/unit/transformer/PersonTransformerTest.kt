@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.OffenderProfile as ProbationOffenderProfile
 
@@ -575,6 +577,118 @@ class PersonTransformerTest {
           isRestricted = false,
         ),
       )
+    }
+  }
+
+  @Nested
+  inner class TransformPersonSummaryInfoToPersonInfo {
+    @Test
+    fun `transformPersonSummaryInfoToPersonInfo transforms correctly for a full person info`() {
+      val gender = "Male"
+      val caseSummary = CaseSummaryFactory()
+        .withGender(gender)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
+        .produce()
+      caseSummary.asOffenderDetailSummary()
+      val offenderDetailSummary = OffenderDetailSummary(
+        offenderId = null,
+        title = null,
+        firstName = caseSummary.name.forename,
+        middleNames = caseSummary.name.middleNames,
+        surname = caseSummary.name.surname,
+        previousSurname = null,
+        preferredName = null,
+        dateOfBirth = caseSummary.dateOfBirth,
+        gender = gender,
+        otherIds = OffenderIds(
+          crn = caseSummary.crn,
+          croNumber = null,
+          immigrationNumber = null,
+          mostRecentPrisonNumber = null,
+          niNumber = null,
+          nomsNumber = caseSummary.nomsId,
+          pncNumber = caseSummary.pnc,
+        ),
+        offenderProfile = OffenderProfile(
+          ethnicity = caseSummary.profile?.ethnicity,
+          nationality = caseSummary.profile?.nationality,
+          secondaryNationality = null,
+          notes = null,
+          immigrationStatus = null,
+          offenderLanguages = OffenderLanguages(
+            primaryLanguage = null,
+            otherLanguages = null,
+            languageConcerns = null,
+            requiresInterpreter = null,
+          ),
+          religion = caseSummary.profile?.religion,
+          sexualOrientation = null,
+          offenderDetails = null,
+          remandStatus = null,
+          riskColour = null,
+          disabilities = null,
+          genderIdentity = caseSummary.profile?.genderIdentity,
+          selfDescribedGender = null,
+        ),
+        softDeleted = false,
+        currentDisposal = null,
+        partitionArea = null,
+        currentRestriction = false,
+        currentExclusion = false,
+        isActiveProbationManagedSentence = null,
+      )
+
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary)
+      val inmateDetail = InmateDetailFactory()
+        .withCustodyStatus(InmateStatus.IN)
+        .produce()
+      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, inmateDetail)
+
+      assertThat(result.crn).isEqualTo(caseSummary.crn)
+      assertThat(result is PersonInfoResult.Success.Full).isTrue
+      assertThat(result).isEqualTo(PersonInfoResult.Success.Full(caseSummary.crn, offenderDetailSummary, inmateDetail))
+    }
+
+    @Test
+    fun `transformPersonSummaryInfoToPersonInfo transforms correctly for a restricted person info`() {
+      val crn = randomStringMultiCaseWithNumbers(10)
+      val nomsNumber = randomStringMultiCaseWithNumbers(6)
+
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
+
+      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, null)
+
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result is PersonInfoResult.Success.Restricted).isTrue
+      assertThat(result).isEqualTo(PersonInfoResult.Success.Restricted(crn, nomsNumber))
+    }
+
+    @Test
+    fun `transformPersonSummaryInfoToPersonInfo transforms correctly for a not found person info`() {
+      val crn = randomStringMultiCaseWithNumbers(10)
+
+      val personSummaryInfoResult = PersonSummaryInfoResult.NotFound(crn)
+
+      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, null)
+
+      assertThat(result is PersonInfoResult.NotFound).isTrue
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result).isEqualTo(PersonInfoResult.NotFound(crn))
+    }
+
+    @Test
+    fun `transformPersonSummaryInfoToPersonInfo transforms correctly for an unknown person info`() {
+      val crn = randomStringMultiCaseWithNumbers(10)
+      val throwable = Throwable("Exception message")
+
+      val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(crn, throwable)
+
+      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, null)
+
+      assertThat(result is PersonInfoResult.Unknown).isTrue
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result).isEqualTo(PersonInfoResult.Unknown(crn, throwable))
     }
   }
 }

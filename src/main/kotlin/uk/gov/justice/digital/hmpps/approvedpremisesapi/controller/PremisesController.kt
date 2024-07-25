@@ -136,13 +136,18 @@ class PremisesController(
 ) : PremisesApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun premisesSummaryGet(xServiceName: ServiceName, probationRegionId: UUID?, apAreaId: UUID?): ResponseEntity<List<PremisesSummary>> {
+  override fun premisesSummaryGet(
+    xServiceName: ServiceName,
+    probationRegionId: UUID?,
+    apAreaId: UUID?,
+  ): ResponseEntity<List<PremisesSummary>> {
     val transformedSummaries = when (xServiceName) {
       ServiceName.approvedPremises -> {
         val summaries = premisesService.getAllApprovedPremisesSummaries(probationRegionId, apAreaId)
 
         summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }
+
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
@@ -197,12 +202,22 @@ class PremisesController(
     val updatedPremises = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validationResult.conflictingEntityId,
+        conflictReason = validationResult.message,
+      )
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
     val totalBeds = premisesService.getBedCount(premises)
-    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(updatedPremises, totalBeds = totalBeds, availableBedsForToday = totalBeds))
+    return ResponseEntity.ok(
+      premisesTransformer.transformJpaToApi(
+        updatedPremises,
+        totalBeds = totalBeds,
+        availableBedsForToday = totalBeds,
+      ),
+    )
   }
 
   override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
@@ -212,7 +227,11 @@ class PremisesController(
 
     val premisesWithRoomCounts = when {
       xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
-      xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(xUserRegion, xServiceName)
+      xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(
+        xUserRegion,
+        xServiceName,
+      )
+
       xServiceName != null -> premisesService.getAllPremisesForService(xServiceName)
       else -> premisesService.getAllPremisesInRegion(xUserRegion!!)
     }
@@ -221,8 +240,9 @@ class PremisesController(
       premisesWithRoomCounts.map {
         val premises = it.getPremises()
         val totalBeds = it.getBedCount()
-        val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-          .values.first().getFreeCapacity(totalBeds)
+        val availableBedsForToday =
+          premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+            .values.first().getFreeCapacity(totalBeds)
 
         premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday)
       },
@@ -260,7 +280,14 @@ class PremisesController(
     )
 
     val totalBeds = premisesService.getBedCount(premises)
-    return ResponseEntity(premisesTransformer.transformJpaToApi(premises, totalBeds = totalBeds, availableBedsForToday = totalBeds), HttpStatus.CREATED)
+    return ResponseEntity(
+      premisesTransformer.transformJpaToApi(
+        premises,
+        totalBeds = totalBeds,
+        availableBedsForToday = totalBeds,
+      ),
+      HttpStatus.CREATED,
+    )
   }
 
   override fun premisesPremisesIdGet(premisesId: UUID): ResponseEntity<Premises> {
@@ -272,8 +299,9 @@ class PremisesController(
     }
 
     val totalBeds = premisesService.getBedCount(premises)
-    val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-      .values.first().getFreeCapacity(totalBeds)
+    val availableBedsForToday =
+      premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+        .values.first().getFreeCapacity(totalBeds)
 
     return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday))
   }
@@ -288,19 +316,21 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
+    val crns = premises.bookings.map { it.crn }
+    val personInfoResults = async {
+      offenderService.getInfoForPersons(
+        crns.toSet(),
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
+    }.await()
+
     return@runBlocking ResponseEntity.ok(
       premises.bookings.map {
-        val personInfo = async {
-          offenderService.getInfoForPerson(
-            it.crn,
-            user.deliusUsername,
-            user.hasQualification(UserQualification.LAO),
-          )
-        }.await()
-
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
           if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
-          val staffMemberResult = async { staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode) }.await()
+          val staffMemberResult =
+            async { staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode) }.await()
 
           if (staffMemberResult !is AuthorisableActionResult.Success) {
             throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
@@ -309,6 +339,8 @@ class PremisesController(
           staffMemberResult.entity
         }
 
+        val crn = it.crn
+        val personInfo = personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn)
         bookingTransformer.transformJpaToApi(it, personInfo, staffMember)
       },
     )
@@ -347,7 +379,8 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val personInfo = offenderService.getInfoForPerson(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personInfo =
+      offenderService.getInfoForPerson(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${body.crn}")
 
@@ -397,7 +430,11 @@ class PremisesController(
     val createdBooking = when (validatableResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validatableResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validatableResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validatableResult.conflictingEntityId, conflictReason = validatableResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validatableResult.conflictingEntityId,
+        conflictReason = validatableResult.message,
+      )
+
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
@@ -435,6 +472,7 @@ class PremisesController(
           user = user,
         )
       }
+
       is NewCas2Arrival -> {
         val bedId = booking.bed?.id
           ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
@@ -451,6 +489,7 @@ class PremisesController(
           user = user,
         )
       }
+
       is NewCas3Arrival -> {
         val bedId = booking.bed?.id
           ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
@@ -467,6 +506,7 @@ class PremisesController(
           user = user,
         )
       }
+
       else -> throw RuntimeException("Unsupported NewArrival type: ${body::class.qualifiedName}")
     }
 
@@ -716,7 +756,12 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(UserRole.CAS1_LEGACY_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER)) {
+    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(
+        UserRole.CAS1_LEGACY_MANAGER,
+        UserRole.CAS1_MANAGER,
+        UserRole.CAS1_MATCHER,
+      )
+    ) {
       throw ForbiddenProblem()
     }
 
@@ -757,7 +802,11 @@ class PremisesController(
     val updatedLostBed = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validationResult.conflictingEntityId,
+        conflictReason = validationResult.message,
+      )
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -784,7 +833,11 @@ class PremisesController(
     val cancellation = when (cancelLostBedResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelLostBedResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelLostBedResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = cancelLostBedResult.conflictingEntityId, conflictReason = cancelLostBedResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = cancelLostBedResult.conflictingEntityId,
+        conflictReason = cancelLostBedResult.message,
+      )
+
       is ValidatableActionResult.Success -> cancelLostBedResult.entity
     }
 
@@ -885,10 +938,17 @@ class PremisesController(
 
     if (premises is TemporaryAccommodationPremisesEntity) {
       if (updateRoom.name != null) {
-        validationResult = extractEntityFromAuthorisableActionResult(roomService.renameRoom(premises, roomId, updateRoom.name))
+        validationResult =
+          extractEntityFromAuthorisableActionResult(roomService.renameRoom(premises, roomId, updateRoom.name))
       }
       if (updateRoom.bedEndDate != null) {
-        validationResult = extractEntityFromAuthorisableActionResult(roomService.updateBedEndDate(premises, roomId, updateRoom.bedEndDate))
+        validationResult = extractEntityFromAuthorisableActionResult(
+          roomService.updateBedEndDate(
+            premises,
+            roomId,
+            updateRoom.bedEndDate,
+          ),
+        )
       }
     }
 
@@ -942,7 +1002,11 @@ class PremisesController(
     return ResponseEntity.ok(bedDetailTransformer.transformToApi(validationResult))
   }
 
-  override fun premisesPremisesIdCalendarGet(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): ResponseEntity<List<BedOccupancyRange>> {
+  override fun premisesPremisesIdCalendarGet(
+    premisesId: UUID,
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): ResponseEntity<List<BedOccupancyRange>> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -980,16 +1044,22 @@ class PremisesController(
 
     val bookingsSummary = premisesService.getPremisesSummary(premisesId)
     val crns = bookingsSummary.map { it.getCrn() }
-    val personSummary = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personSummary = offenderService.getOffenderSummariesByCrns(
+      crns,
+      user.deliusUsername,
+      user.hasQualification(UserQualification.LAO),
+    )
     val totalBeds = premisesService.getBedCount(premises)
 
     val bookingsSummaryMapped = bookingsSummary.map {
-      val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() } ?: PersonSummaryInfoResult.NotFound(it.getCrn())
+      val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() }
+        ?: PersonSummaryInfoResult.NotFound(it.getCrn())
       bookingTransformer.transformBookingSummary(it, personInfo)
     }
 
-    val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-      .values.first().getFreeCapacity(totalBeds)
+    val availableBedsForToday =
+      premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+        .values.first().getFreeCapacity(totalBeds)
 
     val dateCapacities = premisesService.getDateCapacities(premises)
 
@@ -1012,17 +1082,21 @@ class PremisesController(
     )
   }
 
-  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
-    is GetBookingForPremisesResult.Success -> result.booking
-    is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
-    is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
-  }
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) =
+    when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+      is GetBookingForPremisesResult.Success -> result.booking
+      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+    }
 
   private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
     is ValidatableActionResult.Success -> result.entity
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
     is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
-    is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
+    is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+      id = result.conflictingEntityId,
+      conflictReason = result.message,
+    )
   }
 
   private fun throwIfBookingDatesConflict(
@@ -1032,7 +1106,10 @@ class PremisesController(
     bedId: UUID,
   ) {
     bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedId)?.let {
-      throw ConflictProblem(it.id, "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates")
+      throw ConflictProblem(
+        it.id,
+        "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates",
+      )
     }
   }
 
@@ -1043,7 +1120,10 @@ class PremisesController(
     bedId: UUID,
   ) {
     bookingService.getLostBedWithConflictingDates(startDate, endDate, thisEntityId, bedId)?.let {
-      throw ConflictProblem(it.id, "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates")
+      throw ConflictProblem(
+        it.id,
+        "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
+      )
     }
   }
 }
