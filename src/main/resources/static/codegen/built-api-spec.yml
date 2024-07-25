@@ -5053,14 +5053,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApType'
-        needCharacteristics:
+        spaceCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
-        riskCharacteristics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         genders:
           type: array
           items:
@@ -5068,23 +5064,6 @@ components:
       required:
         - apType
         - gender
-    Cas1SpaceNeedCharacteristic:
-      type: string
-      enum:
-        - single
-        - enSuite
-        - wheelchair
-        - limitedMobility
-        - catered
-    Cas1SpaceRiskCharacteristic:
-      type: string
-      enum:
-        - atRiskOfExploitation
-        - arson
-        - hateBasedOffences
-        - posesSexualRiskToAdults
-        - posesSexualRiskToChildren
-        - posesNonSexualRiskToChildren
     Cas1SpaceSearchParameters:
       type: object
       properties:
@@ -5137,14 +5116,10 @@ components:
     Cas1SpaceAvailability:
       type: object
       properties:
-        needCharacteristics:
+        spaceCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
-        riskCharacteristics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         durationInDays:
           type: integer
           example: 77
