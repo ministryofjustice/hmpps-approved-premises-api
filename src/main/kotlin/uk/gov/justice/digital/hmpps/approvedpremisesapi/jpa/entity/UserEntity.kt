@@ -39,6 +39,9 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role in (:roles) and u.isActive = true")
   fun findActiveUsersWithAtLeastOneRole(roles: List<UserRole>): List<UserEntity>
 
+  @Query("SELECT DISTINCT u FROM UserEntity u where u.isActive = true")
+  fun findActiveUsers(): List<UserEntity>
+
   @Query("SELECT DISTINCT u FROM UserEntity u join u.qualifications q where q.qualification = :qualification and u.isActive = true")
   fun findActiveUsersWithQualification(qualification: UserQualification): List<UserEntity>
 

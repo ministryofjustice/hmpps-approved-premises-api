@@ -29,14 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1LostBedsToOutOfServiceBedsMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2NoteMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2StatusUpdateMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateUsersPduFromCommunityApiJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.LostBedMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJob
@@ -44,14 +36,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1LostBedsToOutOfServiceBedsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UserDetailsMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.LostBedMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.TaskDueMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2AssessmentMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import javax.persistence.EntityManager
 
 @Service
@@ -98,6 +98,12 @@ class MigrationJobService(
           applicationContext.getBean(EntityManager::class.java),
           applicationContext.getBean(TaskDeadlineService::class.java),
           pageSize,
+        )
+
+        MigrationJobType.usersPduFromCommunityApi -> UpdateUsersPduFromCommunityApiJob(
+          applicationContext.getBean(UserRepository::class.java),
+          applicationContext.getBean(UserService::class.java),
+          applicationContext.getBean(MigrationLogger::class.java),
         )
 
         MigrationJobType.cas2ApplicationsWithAssessments -> Cas2AssessmentMigrationJob(
@@ -167,12 +173,6 @@ class MigrationJobService(
           applicationContext.getBean(OffenderService::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
-          applicationContext.getBean(MigrationLogger::class.java),
-        )
-
-        MigrationJobType.cas3UsersPduFromCommunityApi -> Cas3UpdateUsersPduFromCommunityApiJob(
-          applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(MigrationLogger::class.java),
         )
 

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
@@ -6,6 +6,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 
 class Cas2StatusUpdateMigrationJob(
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
