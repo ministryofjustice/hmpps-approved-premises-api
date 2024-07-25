@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
@@ -78,6 +79,7 @@ class SeedService(
   private val seedLogger: SeedLogger,
   private val cas1AutoScript: Cas1AutoScript,
   private val cas2AutoScript: Cas2AutoScript,
+  private val cas3AutoScript: Cas3AutoScript,
 ) {
 
   @PostConstruct
@@ -130,6 +132,10 @@ class SeedService(
     if (seedConfig.autoScript.cas2Enabled) {
       autoScriptCas2()
     }
+
+    if (seedConfig.autoScript.cas3Enabled) {
+      autoScriptCas3()
+    }
   }
 
   fun autoScriptCas1() {
@@ -140,6 +146,11 @@ class SeedService(
   fun autoScriptCas2() {
     seedLogger.info("**Auto-scripting CAS2**")
     cas2AutoScript.script()
+  }
+
+  fun autoScriptCas3() {
+    seedLogger.info("**Auto-scripting CAS3**")
+    cas3AutoScript.script()
   }
 
   @Async

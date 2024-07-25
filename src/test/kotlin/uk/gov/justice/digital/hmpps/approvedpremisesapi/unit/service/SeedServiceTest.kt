@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 
@@ -38,6 +39,7 @@ class SeedServiceTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val mockCas1AutoScript = mockk<Cas1AutoScript>()
   private val mockCas2AutoScript = mockk<Cas2AutoScript>()
+  private val mockCas3AutoScript = mockk<Cas3AutoScript>()
   private val logEntries = mutableListOf<LogEntry>()
 
   private val seedService = SeedService(
@@ -47,6 +49,7 @@ class SeedServiceTest {
     mockSeedLogger,
     mockCas1AutoScript,
     mockCas2AutoScript,
+    mockCas3AutoScript,
   )
 
   @BeforeEach
