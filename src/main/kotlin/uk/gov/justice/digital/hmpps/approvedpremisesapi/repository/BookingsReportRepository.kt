@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -87,7 +88,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
 interface BookingsReportData {
   val bookingId: String
   val referralId: String?
-  val referralDate: LocalDate?
+  val referralDate: Instant?
   val riskOfSeriousHarm: String?
   val registeredSexOffender: Boolean?
   val historyOfSexualOffence: Boolean?

@@ -398,7 +398,7 @@ class Cas3ReportServiceTest {
   class TestBookingsReportData(
     override val bookingId: String,
     override val referralId: String?,
-    override val referralDate: LocalDate?,
+    override val referralDate: Instant?,
     override val riskOfSeriousHarm: String?,
     override val registeredSexOffender: Boolean?,
     override val historyOfSexualOffence: Boolean?,

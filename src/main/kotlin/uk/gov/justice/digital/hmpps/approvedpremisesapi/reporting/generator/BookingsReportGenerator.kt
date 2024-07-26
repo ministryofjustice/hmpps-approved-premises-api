@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Bookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -21,7 +22,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
       BookingsReportRow(
         bookingId = booking.bookingId,
         referralId = booking.referralId,
-        referralDate = booking.referralDate,
+        referralDate = booking.referralDate?.toLocalDate(),
         personName = personInfo.tryGetDetails {
           val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
           nameParts.joinToString(" ")
