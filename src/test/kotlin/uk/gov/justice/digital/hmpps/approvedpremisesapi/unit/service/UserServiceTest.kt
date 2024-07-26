@@ -499,6 +499,7 @@ class UserServiceTest {
     @Test
     fun `Throw exception if can't determine PDU, no teams`() {
       val deliusUser = StaffUserDetailsFactory()
+        .withUsername("theusername")
         .withTeams(emptyList())
         .produce()
 
@@ -509,12 +510,13 @@ class UserServiceTest {
 
       assertThatThrownBy {
         userService.updateUserPduFromCommunityApiById(user.id)
-      }.hasMessage("Unable to find community API borough code null in CAS")
+      }.hasMessage("PDU could not be determined for user theusername. Considered 0 teams")
     }
 
     @Test
     fun `Throw exception if can't determine PDU, no teams without end date`() {
       val deliusUser = StaffUserDetailsFactory()
+        .withUsername("theusername")
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory()
@@ -531,15 +533,18 @@ class UserServiceTest {
 
       assertThatThrownBy {
         userService.updateUserPduFromCommunityApiById(user.id)
-      }.hasMessage("Unable to find community API borough code null in CAS")
+      }.hasMessage("PDU could not be determined for user theusername. Considered 0 teams")
     }
 
     @Test
     fun `Throw exception if no mapping for only team's borough`() {
       val deliusUser = StaffUserDetailsFactory()
+        .withUsername("theusername")
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory()
+              .withCode("team1")
+              .withDescription("team 1")
               .withBorough(KeyValue("boroughcode1", "borough1"))
               .withStartDate(LocalDate.of(2024, 1, 1))
               .withEndDate(null)
@@ -557,26 +562,32 @@ class UserServiceTest {
 
       assertThatThrownBy {
         userService.updateUserPduFromCommunityApiById(user.id)
-      }.hasMessage("Unable to find community API borough code boroughcode1 in CAS")
+      }.hasMessage("PDU could not be determined for user theusername. Considered 1 teams team 1 (team1) with borough borough1 (boroughcode1)")
     }
 
     @Test
     fun `Throw exception if no mapping for any active team's borough`() {
       val deliusUser = StaffUserDetailsFactory()
+        .withUsername("theusername")
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory()
-              .withBorough(KeyValue("boroughcode2", "borough2"))
-              .withStartDate(LocalDate.of(2024, 1, 2))
+              .withCode("team3")
+              .withDescription("team 3")
+              .withBorough(KeyValue("boroughcode3", "borough3"))
               .withStartDate(LocalDate.of(2024, 1, 3))
               .withEndDate(LocalDate.of(2024, 1, 4))
               .produce(),
             StaffUserTeamMembershipFactory()
+              .withCode("team2")
+              .withDescription("team 2")
               .withBorough(KeyValue("boroughcode2", "borough2"))
               .withStartDate(LocalDate.of(2024, 1, 2))
               .withEndDate(null)
               .produce(),
             StaffUserTeamMembershipFactory()
+              .withCode("team1")
+              .withDescription("team 1")
               .withBorough(KeyValue("boroughcode1", "borough1"))
               .withStartDate(LocalDate.of(2024, 1, 1))
               .withEndDate(null)
@@ -595,7 +606,7 @@ class UserServiceTest {
 
       assertThatThrownBy {
         userService.updateUserPduFromCommunityApiById(user.id)
-      }.hasMessage("Unable to find community API borough code boroughcode2 in CAS")
+      }.hasMessage("PDU could not be determined for user theusername. Considered 2 teams team 2 (team2) with borough borough2 (boroughcode2), team 1 (team1) with borough borough1 (boroughcode1)")
     }
 
     @Test

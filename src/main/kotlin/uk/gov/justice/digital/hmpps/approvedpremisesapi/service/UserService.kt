@@ -228,8 +228,7 @@ class UserService(
 
     when (val pduResult = findDeliusUserLastPdu(deliusUser)) {
       is CasSimpleResult.Failure -> {
-        val userLastBoroughCode = deliusUser.teams?.filter { it.endDate == null }?.maxByOrNull { it.startDate }?.borough?.code
-        throw Exception("Unable to find community API borough code $userLastBoroughCode in CAS")
+        throw Exception(pduResult.message)
       }
 
       is CasSimpleResult.Success -> {
@@ -366,14 +365,24 @@ class UserService(
   }
 
   private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): CasSimpleResult<ProbationDeliveryUnitEntity> {
-    deliusUser.teams?.filter { t -> t.endDate == null }?.sortedByDescending { t -> t.startDate }?.forEach {
+    val activeTeams = deliusUser.teams?.filter { t -> t.endDate == null } ?: emptyList()
+    val activeTeamsNewestFirst = activeTeams.sortedByDescending { t -> t.startDate }
+
+    activeTeamsNewestFirst.forEach {
       val probationDeliveryUnit = probationDeliveryUnitRepository.findByDeliusCode(it.borough.code)
       if (probationDeliveryUnit != null) {
         return CasSimpleResult.Success(probationDeliveryUnit)
       }
     }
 
-    return CasSimpleResult.Failure("PDU Could not be loaded")
+    val teamsToLog = activeTeamsNewestFirst.joinToString(",") {
+      " ${it.description} (${it.code}) with borough ${it.borough.description} (${it.borough.code})"
+    }
+
+    return CasSimpleResult.Failure(
+      "PDU could not be determined for user ${deliusUser.username}. " +
+        "Considered ${activeTeamsNewestFirst.size} teams$teamsToLog",
+    )
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {
