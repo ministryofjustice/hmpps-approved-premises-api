@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -51,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
@@ -481,6 +483,169 @@ class UserServiceTest {
       every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
 
       assertThat(userService.getUserForRequestOrNull()).isNull()
+    }
+  }
+
+  @Nested
+  inner class UpdateUserPduFromCommunityApiById {
+
+    val user = UserEntityFactory().withDefaults().produce()
+
+    @BeforeEach
+    fun setup() {
+      every { mockUserRepository.findByIdOrNull(user.id) } returns user
+    }
+
+    @Test
+    fun `Throw exception if can't determine PDU, no teams`() {
+      val deliusUser = StaffUserDetailsFactory()
+        .withTeams(emptyList())
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      assertThatThrownBy {
+        userService.updateUserPduFromCommunityApiById(user.id)
+      }.hasMessage("Unable to find community API borough code null in CAS")
+    }
+
+    @Test
+    fun `Throw exception if can't determine PDU, no teams without end date`() {
+      val deliusUser = StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withEndDate(LocalDate.now())
+              .produce(),
+          ),
+        )
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      assertThatThrownBy {
+        userService.updateUserPduFromCommunityApiById(user.id)
+      }.hasMessage("Unable to find community API borough code null in CAS")
+    }
+
+    @Test
+    fun `Throw exception if no mapping for only team's borough`() {
+      val deliusUser = StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode1", "borough1"))
+              .withStartDate(LocalDate.of(2024, 1, 1))
+              .withEndDate(null)
+              .produce(),
+          ),
+        )
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode("boroughcode1") } returns null
+
+      assertThatThrownBy {
+        userService.updateUserPduFromCommunityApiById(user.id)
+      }.hasMessage("Unable to find community API borough code boroughcode1 in CAS")
+    }
+
+    @Test
+    fun `Throw exception if no mapping for any active team's borough`() {
+      val deliusUser = StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode2", "borough2"))
+              .withStartDate(LocalDate.of(2024, 1, 2))
+              .withStartDate(LocalDate.of(2024, 1, 3))
+              .withEndDate(LocalDate.of(2024, 1, 4))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode2", "borough2"))
+              .withStartDate(LocalDate.of(2024, 1, 2))
+              .withEndDate(null)
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode1", "borough1"))
+              .withStartDate(LocalDate.of(2024, 1, 1))
+              .withEndDate(null)
+              .produce(),
+          ),
+        )
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode("boroughcode2") } returns null
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode("boroughcode1") } returns null
+
+      assertThatThrownBy {
+        userService.updateUserPduFromCommunityApiById(user.id)
+      }.hasMessage("Unable to find community API borough code boroughcode2 in CAS")
+    }
+
+    @Test
+    fun `Update PDU using latest team that has a mapping`() {
+      val deliusUser = StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode2", "borough2"))
+              .withStartDate(LocalDate.of(2024, 1, 2))
+              .withStartDate(LocalDate.of(2024, 1, 3))
+              .withEndDate(LocalDate.of(2024, 1, 4))
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("nomapping", "nomapping"))
+              .withStartDate(LocalDate.of(2024, 1, 3))
+              .withEndDate(null)
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode2", "borough2"))
+              .withStartDate(LocalDate.of(2024, 1, 2))
+              .withEndDate(null)
+              .produce(),
+            StaffUserTeamMembershipFactory()
+              .withBorough(KeyValue("boroughcode1", "borough1"))
+              .withStartDate(LocalDate.of(2024, 1, 1))
+              .withEndDate(null)
+              .produce(),
+          ),
+        )
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode("nomapping") } returns null
+
+      val pdu = ProbationDeliveryUnitEntityFactory()
+        .withDefaults()
+        .produce()
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode("boroughcode2") } returns pdu
+
+      val persistedUser = slot<UserEntity>()
+      every { mockUserRepository.save(capture(persistedUser)) } answers { it.invocation.args[0] as UserEntity }
+
+      userService.updateUserPduFromCommunityApiById(user.id)
+
+      assertThat(persistedUser.captured.probationDeliveryUnit).isEqualTo(pdu)
     }
   }
 

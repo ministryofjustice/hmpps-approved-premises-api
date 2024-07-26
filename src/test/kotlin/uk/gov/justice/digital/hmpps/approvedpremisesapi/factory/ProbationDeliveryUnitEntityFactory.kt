@@ -13,6 +13,10 @@ class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> 
   private var deliusCode: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
 
+  fun withDefaults() = apply {
+    this.probationRegion = { ProbationRegionEntityFactory().withDefaults().produce() }
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
