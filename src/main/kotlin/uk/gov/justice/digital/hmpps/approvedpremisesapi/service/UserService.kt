@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -225,15 +226,15 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    when (val probationDeliveryUnit = findDeliusUserLastPdu(deliusUser)) {
-      null -> {
+    when (val pduResult = findDeliusUserLastPdu(deliusUser)) {
+      is CasSimpleResult.Failure -> {
         val userLastBoroughCode = deliusUser.teams?.filter { it.endDate == null }?.maxByOrNull { it.startDate }?.borough?.code
         throw Exception("Unable to find community API borough code $userLastBoroughCode in CAS")
       }
 
-      else -> {
-        if (user.probationDeliveryUnit?.id != probationDeliveryUnit.id) {
-          user.probationDeliveryUnit = probationDeliveryUnit
+      is CasSimpleResult.Success -> {
+        if (user.probationDeliveryUnit?.id != pduResult.value.id) {
+          user.probationDeliveryUnit = pduResult.value
           userRepository.save(user)
         }
       }
@@ -259,8 +260,9 @@ class UserService(
       }
     }
 
-    findDeliusUserLastPdu(deliusUser)?.let { probationDeliveryUnit ->
-      user.probationDeliveryUnit = probationDeliveryUnit
+    val pduResult = findDeliusUserLastPdu(deliusUser)
+    if (pduResult is CasSimpleResult.Success) {
+      user.probationDeliveryUnit = pduResult.value
     }
 
     if (forService == ServiceName.approvedPremises) {
@@ -327,7 +329,7 @@ class UserService(
       }
     }
 
-    val staffProbationDeliveryUnit = findDeliusUserLastPdu(staffUserDetails)
+    val pduResult = findDeliusUserLastPdu(staffUserDetails)
 
     val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
@@ -344,7 +346,10 @@ class UserService(
         roles = mutableListOf(),
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
-        probationDeliveryUnit = staffProbationDeliveryUnit,
+        probationDeliveryUnit = when (pduResult) {
+          is CasSimpleResult.Failure -> null
+          is CasSimpleResult.Success -> pduResult.value
+        },
         isActive = true,
         apArea = apArea,
         teamCodes = staffUserDetails.getTeamCodes(),
@@ -360,15 +365,15 @@ class UserService(
       .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
   }
 
-  private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): ProbationDeliveryUnitEntity? {
+  private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): CasSimpleResult<ProbationDeliveryUnitEntity> {
     deliusUser.teams?.filter { t -> t.endDate == null }?.sortedByDescending { t -> t.startDate }?.forEach {
       val probationDeliveryUnit = probationDeliveryUnitRepository.findByDeliusCode(it.borough.code)
       if (probationDeliveryUnit != null) {
-        return probationDeliveryUnit
+        return CasSimpleResult.Success(probationDeliveryUnit)
       }
     }
 
-    return null
+    return CasSimpleResult.Failure("PDU Could not be loaded")
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {
