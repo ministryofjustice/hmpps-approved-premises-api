@@ -11,6 +11,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asUserOffenderAccess
 
+@Deprecated(
+  """
+    This service was introduced as a 'man in the middle' whilst migration from community-api to ap-and-delius-context, 
+    allowing us to switch between the two backends via configuration. That configuration has been removed and it now
+    always uses ap-and-delius-context.
+    
+    This service now introduces unnecessary complexity and it should no longer be used
+    """,
+  ReplaceWith("[OffenderService]"),
+)
 @Component
 class OffenderDetailsDataSource(
   val apDeliusContextApiClient: ApDeliusContextApiClient,
