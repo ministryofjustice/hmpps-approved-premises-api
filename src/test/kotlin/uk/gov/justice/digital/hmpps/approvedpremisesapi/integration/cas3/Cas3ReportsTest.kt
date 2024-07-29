@@ -2079,7 +2079,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     @Test
     fun `Get bookings report returns OK with correct body and correct duty to refer local authority area name`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+        `Given an Offender` { offenderDetails, _ ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3601,6 +3601,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       withProbationRegion(userEntity.probationRegion)
       withApplicationSchema(applicationSchema)
       withDutyToReferLocalAuthorityAreaName("London")
+      withSubmittedAt(OffsetDateTime.now())
     }
   }
 

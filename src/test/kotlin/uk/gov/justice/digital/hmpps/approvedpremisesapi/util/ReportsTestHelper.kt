@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 
 fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
@@ -18,8 +19,8 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = it.id.toString()
       override val referralId: String?
         get() = application?.id?.toString()
-      override val referralDate: LocalDate?
-        get() = application?.submittedAt?.toLocalDate()
+      override val referralDate: Instant?
+        get() = application?.submittedAt?.toInstant()
       override val riskOfSeriousHarm: String?
         get() = application?.riskRatings?.roshRisks?.value?.overallRisk
       override val registeredSexOffender: Boolean?
