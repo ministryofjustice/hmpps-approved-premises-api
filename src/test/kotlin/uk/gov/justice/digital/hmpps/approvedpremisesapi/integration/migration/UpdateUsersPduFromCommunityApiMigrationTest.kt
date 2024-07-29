@@ -340,12 +340,15 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .withUsername(userTwo.deliusUsername)
         .withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE5",
-                description = "PDUDESCRIPTION5",
-              ),
-            )
+            StaffUserTeamMembershipFactory()
+              .withCode("TEAM1")
+              .withDescription("TEAM 1")
+              .withBorough(
+                KeyValue(
+                  code = "PDUCODE5",
+                  description = "PDUDESCRIPTION5",
+                ),
+              )
               .produce(),
           ),
         )
@@ -366,7 +369,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         it.level == "error" &&
           it.message == "Unable to update user PDU. User id ${userTwo.id}" &&
           it.throwable != null &&
-          it.throwable.message == "Unable to find community API borough code PDUCODE5 in CAS"
+          it.throwable.message == "PDU could not be determined for user USER2. Considered 1 teams TEAM 1 (TEAM1) with borough PDUDESCRIPTION5 (PDUCODE5)"
       }
   }
 }
