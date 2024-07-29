@@ -1211,14 +1211,14 @@ components:
       properties:
         apType:
           $ref: '#/components/schemas/ApType'
-        needCharacteristics:
+        essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
-        riskCharacteristics:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        desirableCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         gender:
           $ref: '#/components/schemas/Gender'
       required:
@@ -1231,14 +1231,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApType'
-        needCharacteristics:
+        spaceCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
-        riskCharacteristics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         genders:
           type: array
           items:
@@ -1246,23 +1242,6 @@ components:
       required:
         - apType
         - gender
-    Cas1SpaceNeedCharacteristic:
-      type: string
-      enum:
-        - single
-        - enSuite
-        - wheelchair
-        - limitedMobility
-        - catered
-    Cas1SpaceRiskCharacteristic:
-      type: string
-      enum:
-        - atRiskOfExploitation
-        - arson
-        - hateBasedOffences
-        - posesSexualRiskToAdults
-        - posesSexualRiskToChildren
-        - posesNonSexualRiskToChildren
     Cas1SpaceSearchParameters:
       type: object
       properties:
@@ -1315,14 +1294,10 @@ components:
     Cas1SpaceAvailability:
       type: object
       properties:
-        needCharacteristics:
+        spaceCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceNeedCharacteristic'
-        riskCharacteristics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceRiskCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         durationInDays:
           type: integer
           example: 77
@@ -4910,6 +4885,46 @@ components:
         - notMatched
         - unableToMatch
         - matched
+    Cas1SpaceCharacteristic:
+      type: string
+      description: All of the characteristics of both premises and rooms
+      enum:
+        - acceptsChildSexOffenders
+        - acceptsHateCrimeOffenders
+        - acceptsNonSexualChildOffenders
+        - acceptsSexOffenders
+        - hasArsonInsuranceConditions
+        - hasBrailleSignage
+        - hasCallForAssistance
+        - hasCrib7Bedding
+        - hasEnSuite
+        - hasFixedMobilityAids
+        - hasHearingLoop
+        - hasLift
+        - hasNearbySprinkler
+        - hasSmokeDetector
+        - hasStepFreeAccess
+        - hasStepFreeAccessToCommunalAreas
+        - hasTactileFlooring
+        - hasTurningSpace
+        - hasWheelChairAccessibleBathrooms
+        - hasWideAccessToCommunalAreas
+        - hasWideDoor
+        - hasWideStepFreeAccess
+        - isArsonDesignated
+        - isArsonSuitable
+        - isCatered
+        - isFullyFm
+        - isGroundFloor
+        - isGroundFloorNrOffice
+        - isIAP
+        - isSingle
+        - isStepFreeDesignated
+        - isSuitableForVulnerable
+        - isSuitedForSexOffenders
+        - isTopFloorVulnerable
+        - isWheelchairAccessible
+        - isWheelchairDesignated
     PlacementCriteria:
       type: string
       enum:
