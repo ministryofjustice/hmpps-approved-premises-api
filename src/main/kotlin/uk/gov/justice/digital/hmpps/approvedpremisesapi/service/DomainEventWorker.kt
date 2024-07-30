@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.amazonaws.services.sns.model.MessageAttributeValue
+import com.amazonaws.services.sns.model.PublishRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
@@ -7,8 +9,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.retry.support.RetryTemplate
 import org.springframework.stereotype.Component
-import software.amazon.awssdk.services.sns.model.MessageAttributeValue
-import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -49,20 +49,17 @@ class SyncDomainEventWorker(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) {
-    val publishRequest =
-      PublishRequest.builder()
-        .topicArn(domainTopic.arn)
-        .message(objectMapper.writeValueAsString(snsEvent))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),
-          ),
-        ).build()
-    val publishResult = domainTopic.snsClient.publish(publishRequest).get()
+    val publishRequest = PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
+      .withMessageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
+        ),
+      )
+    val publishResult = domainTopic.snsClient.publish(publishRequest)
 
     log.info(
-      "Emitted SNS event (Message Id: ${publishResult.messageId()}, " +
-        "Sequence Id: ${publishResult.sequenceNumber()}) for Domain Event:" +
+      "Emitted SNS event (Message Id: ${publishResult.messageId}, " +
+        "Sequence Id: ${publishResult.sequenceNumber}) for Domain Event:" +
         " $domainEventId of type: ${snsEvent.eventType}",
     )
   }
@@ -80,15 +77,12 @@ class AsyncDomainEventWorker(
     .build()
 
   override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) {
-    val publishRequest =
-      PublishRequest.builder()
-        .topicArn(domainTopic.arn)
-        .message(objectMapper.writeValueAsString(snsEvent))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),
-          ),
-        ).build()
+    val publishRequest = PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
+      .withMessageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
+        ),
+      )
     runBlocking {
       publishSnsEventWithRetry(publishRequest, snsEvent, retryTemplate, domainEventId)
     }
@@ -101,10 +95,10 @@ class AsyncDomainEventWorker(
     domainEventId: UUID,
   ) {
     retryTemplate.execute<Any?, RuntimeException> {
-      val publishResult = domainTopic.snsClient.publish(publishRequest).get()
+      val publishResult = domainTopic.snsClient.publish(publishRequest)
       log.info(
-        "Emitted SNS event (Message Id: ${publishResult.messageId()}, " +
-          "Sequence Id: ${publishResult.sequenceNumber()}) for Domain Event: " +
+        "Emitted SNS event (Message Id: ${publishResult.messageId}, " +
+          "Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: " +
           "$domainEventId of type: ${snsEvent.eventType}",
       )
     }

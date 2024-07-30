@@ -25,8 +25,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.ByteArrayOutputStream
+import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class Cas3ReportServiceTest {
@@ -310,10 +312,10 @@ class Cas3ReportServiceTest {
     assessmentDecision = null,
     referralRejectionReason = null,
     referralRejectionReasonDetail = null,
-    assessmentSubmittedDate = Instant.now(),
+    assessmentSubmittedDate = LocalDate.now(),
     referralEligibleForCas3 = true,
     referralEligibilityReason = "reason",
-    accommodationRequiredDate = Instant.now(),
+    accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now()),
     prisonNameOnCreation = null,
     personReleaseDate = null,
     town = null,
@@ -378,10 +380,10 @@ class Cas3ReportServiceTest {
     override val assessmentDecision: String?,
     override val referralRejectionReason: String?,
     override val referralRejectionReasonDetail: String?,
-    override val assessmentSubmittedDate: Instant?,
+    override val assessmentSubmittedDate: LocalDate?,
     override val referralEligibleForCas3: Boolean?,
     override val referralEligibilityReason: String?,
-    override val accommodationRequiredDate: Instant?,
+    override val accommodationRequiredDate: Timestamp?,
     override val prisonNameOnCreation: String?,
     override val personReleaseDate: LocalDate?,
     override val town: String?,
@@ -416,7 +418,7 @@ class Cas3ReportServiceTest {
     override val cancellationReason: String?,
     override val startDate: LocalDate?,
     override val endDate: LocalDate?,
-    override val actualEndDate: Instant?,
+    override val actualEndDate: Timestamp?,
     override val accommodationOutcome: String?,
     override val dutyToReferLocalAuthorityAreaName: String?,
     override val pdu: String?,

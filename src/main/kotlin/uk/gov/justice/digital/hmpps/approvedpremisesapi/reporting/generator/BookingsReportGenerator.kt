@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Bookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -55,7 +54,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         cancellationReason = booking.cancellationReason,
         startDate = booking.startDate,
         endDate = booking.endDate,
-        actualEndDate = booking.actualEndDate?.toLocalDate(),
+        actualEndDate = booking.actualEndDate?.toLocalDateTime()?.toLocalDate(),
         currentNightsStayed = if (booking.actualEndDate != null) {
           null
         } else {

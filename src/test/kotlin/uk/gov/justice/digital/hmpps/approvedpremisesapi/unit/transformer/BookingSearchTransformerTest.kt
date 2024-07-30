@@ -30,7 +30,7 @@ class BookingSearchTransformerTest {
       assertThat(transformedResult.booking.status.value).isEqualTo(domainResult.getBookingStatus())
       assertThat(transformedResult.booking.startDate).isEqualTo(domainResult.getBookingStartDate())
       assertThat(transformedResult.booking.endDate).isEqualTo(domainResult.getBookingEndDate())
-      assertThat(transformedResult.booking.createdAt).isEqualTo(domainResult.getBookingCreatedAt())
+      assertThat(transformedResult.booking.createdAt).isEqualTo(domainResult.getBookingCreatedAt().toInstant())
       assertThat(transformedResult.premises.id).isEqualTo(domainResult.getPremisesId())
       assertThat(transformedResult.premises.name).isEqualTo(domainResult.getPremisesName())
       assertThat(transformedResult.premises.addressLine1).isEqualTo(domainResult.getPremisesAddressLine1())
@@ -73,7 +73,7 @@ class BookingSearchTransformerTest {
         rs.getBookingStatus(),
         rs.getBookingStartDate(),
         rs.getBookingEndDate(),
-        OffsetDateTime.ofInstant(rs.getBookingCreatedAt(), ZoneOffset.UTC),
+        OffsetDateTime.ofInstant(rs.getBookingCreatedAt().toInstant(), ZoneOffset.UTC),
         rs.getPremisesId(),
         rs.getPremisesName(),
         rs.getPremisesAddressLine1(),

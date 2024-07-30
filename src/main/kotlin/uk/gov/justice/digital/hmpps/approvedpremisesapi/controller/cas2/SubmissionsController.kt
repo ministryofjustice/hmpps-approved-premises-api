@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
-import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -25,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service("Cas2SubmissionsController")
 class SubmissionsController(

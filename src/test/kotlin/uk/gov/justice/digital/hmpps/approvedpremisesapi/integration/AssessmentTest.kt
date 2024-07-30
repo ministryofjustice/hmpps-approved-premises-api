@@ -81,7 +81,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestampOrNull
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -3372,7 +3374,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         applicationId = assessment.application.id,
 
-        createdAt = assessment.createdAt.toInstant(),
+        createdAt = assessment.createdAt.toTimestamp(),
 
         riskRatings = when (val reified = assessment.application) {
           is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
@@ -3381,8 +3383,8 @@ class AssessmentTest : IntegrationTestBase() {
         },
 
         arrivalDate = when (val application = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toInstant()
-          is TemporaryAccommodationApplicationEntity -> application.arrivalDate?.toInstant()
+          is ApprovedPremisesApplicationEntity -> application.arrivalDate.toTimestampOrNull()
+          is TemporaryAccommodationApplicationEntity -> application.arrivalDate.toTimestampOrNull()
           else -> null
         },
 
@@ -3394,7 +3396,7 @@ class AssessmentTest : IntegrationTestBase() {
         crn = assessment.application.crn,
         allocated = assessment.allocatedToUser != null,
         status = status,
-        dueAt = assessment.dueAt?.toInstant(),
+        dueAt = assessment.dueAt?.toTimestamp(),
       )
   }
 
@@ -3403,14 +3405,14 @@ class AssessmentTest : IntegrationTestBase() {
     override val type: String,
     override val id: UUID,
     override val applicationId: UUID,
-    override val createdAt: Instant,
+    override val createdAt: Timestamp,
     override val riskRatings: String?,
-    override val arrivalDate: Instant?,
+    override val arrivalDate: Timestamp?,
     override val completed: Boolean,
     override val allocated: Boolean,
     override val decision: String?,
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
-    override val dueAt: Instant?,
+    override val dueAt: Timestamp?,
   ) : DomainAssessmentSummary
 }

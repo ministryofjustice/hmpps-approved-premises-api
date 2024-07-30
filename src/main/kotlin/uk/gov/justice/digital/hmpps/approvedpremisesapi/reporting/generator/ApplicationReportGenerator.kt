@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, Cas1ReportService.MonthSpecificReportParams>(ApplicationReportRow::class) {
   override fun filter(properties: Cas1ReportService.MonthSpecificReportParams): (ApplicationEntityReportRow) -> Boolean = {
@@ -16,7 +15,7 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         id = this.getId(),
         crn = this.getCrn(),
         tier = this.getTier(),
-        lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.toLocalDate(),
+        lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.toLocalDateTime()?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.deriveAssessmentDecision(),

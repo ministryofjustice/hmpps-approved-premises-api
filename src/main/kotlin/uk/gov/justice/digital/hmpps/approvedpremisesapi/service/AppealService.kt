@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
@@ -19,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealE
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class AppealService(

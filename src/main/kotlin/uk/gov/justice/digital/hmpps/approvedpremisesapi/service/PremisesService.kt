@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import arrow.core.Either
-import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
@@ -36,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class PremisesService(
