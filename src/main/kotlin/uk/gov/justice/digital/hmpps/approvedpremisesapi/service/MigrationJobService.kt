@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.sentry.Sentry
+import jakarta.persistence.EntityManager
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
@@ -52,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
-import javax.persistence.EntityManager
 
 @Service
 class MigrationJobService(

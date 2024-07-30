@@ -94,7 +94,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
-import java.sql.Timestamp
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -189,13 +188,13 @@ class ApplicationServiceTest {
         override fun getIsPipeApplication(): Boolean? = true
         override fun getIsEsapApplication() = true
         override fun getIsEmergencyApplication() = true
-        override fun getArrivalDate(): Timestamp? = null
+        override fun getArrivalDate(): Instant? = null
         override fun getRiskRatings(): String? = null
         override fun getId(): UUID = UUID.fromString("8ecbbd9c-3c66-4f0b-8f21-87f537676422")
         override fun getCrn(): String = "CRN123"
         override fun getCreatedByUserId(): UUID = UUID.fromString("60d0a768-1d05-4538-a6fd-78eb723dd310")
-        override fun getCreatedAt(): Timestamp = Timestamp.from(Instant.parse("2023-04-20T10:11:00+01:00"))
-        override fun getSubmittedAt(): Timestamp? = null
+        override fun getCreatedAt(): Instant = Instant.parse("2023-04-20T10:11:00+01:00")
+        override fun getSubmittedAt(): Instant? = null
         override fun getTier(): String? = null
         override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
         override fun getIsWithdrawn(): Boolean = false

@@ -78,7 +78,7 @@ class WebClientCache(
     val path = requestBuilder.path ?: ""
 
     val cacheEntry = PreemptiveCacheMetadata(
-      httpStatus = exception.statusCode,
+      httpStatus = exception.statusCode.toHttpStatus(),
       refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
       method = MarshallableHttpMethod.fromHttpMethod(method),
       path = path,
@@ -106,7 +106,7 @@ class WebClientCache(
     val cacheKeySet = getCacheKeySet(requestBuilder, cacheConfig)
 
     val cacheEntry = PreemptiveCacheMetadata(
-      httpStatus = result.statusCode,
+      httpStatus = result.statusCode.toHttpStatus(),
       refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
       method = null,
       path = null,
@@ -242,7 +242,7 @@ enum class MarshallableHttpMethod {
   ;
 
   companion object {
-    fun fromHttpMethod(value: HttpMethod) = MarshallableHttpMethod.valueOf(value.name)
+    fun fromHttpMethod(value: HttpMethod) = MarshallableHttpMethod.valueOf(value.name())
   }
 
   fun toHttpMethod() = HttpMethod.valueOf(this.name)

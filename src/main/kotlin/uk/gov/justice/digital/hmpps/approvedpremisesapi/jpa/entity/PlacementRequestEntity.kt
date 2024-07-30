@@ -1,5 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -8,23 +18,11 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.OneToOne
-import javax.persistence.Table
-import javax.persistence.Version
 
 @Service
 @Suppress("FunctionNaming")
@@ -93,7 +91,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
           ) > 0 THEN 'unableToMatch'
           ELSE 'notMatched'
         END
-      ) = :#{#status?.toString()})
+      ) = :status)
       AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
       AND (
         :crnOrName IS NULL OR 
@@ -109,9 +107,9 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (
         :requestType IS NULL OR 
         (
-            (:#{#requestType?.toString()} = 'parole' AND pq.is_parole IS TRUE)
+            (:requestType = 'parole' AND pq.is_parole IS TRUE)
             OR
-            (:#{#requestType?.toString()} = 'standardRelease' AND pq.is_parole IS FALSE)
+            (:requestType = 'standardRelease' AND pq.is_parole IS FALSE)
         )
       )
       AND ((CAST(:apAreaId AS pg_catalog.uuid) IS NULL) OR area.id = :apAreaId)
@@ -119,13 +117,13 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     nativeQuery = true,
   )
   fun allForDashboard(
-    status: PlacementRequestStatus? = null,
+    status: String? = null,
     crn: String? = null,
     crnOrName: String? = null,
     tier: String? = null,
     arrivalDateFrom: LocalDate? = null,
     arrivalDateTo: LocalDate? = null,
-    requestType: PlacementRequestRequestType? = null,
+    requestType: String? = null,
     apAreaId: UUID? = null,
     pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>

@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import jakarta.persistence.AttributeConverter
+import jakarta.persistence.Converter
 import java.time.LocalDate
-import javax.persistence.AttributeConverter
-import javax.persistence.Converter
 
 data class RiskWithStatus<T>(val status: RiskStatus, val value: T? = null) {
   constructor(value: T?) : this(RiskStatus.Retrieved, value)

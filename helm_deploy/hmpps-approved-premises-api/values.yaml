@@ -30,8 +30,8 @@ generic-service:
     SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
     SPRING_JPA_DATABASE: postgresql
     SPRING_DATASOURCE_URL: "jdbc:postgresql://${DB_HOST}/${DB_NAME}"
-    SPRING_REDIS_PORT: 6379
-    SPRING_REDIS_SSL: true
+    SPRING_DATA_REDIS_PORT: 6379
+    SPRING_DATA_REDIS_SSL_ENABLED: true
     SENTRY_SAMPLE-RATE: 1
     SENTRY_TRACES-SAMPLE-RATE: 0.01
     HMPPS_SQS_PROVIDER: "aws"
@@ -62,8 +62,8 @@ generic-service:
       DB_HOST: "rds_instance_endpoint"
       DB_NAME: "database_name"
     elasticache-redis:
-      SPRING_REDIS_HOST: "primary_endpoint_address"
-      SPRING_REDIS_PASSWORD: "auth_token"
+      SPRING_DATA_REDIS_HOST: "primary_endpoint_address"
+      SPRING_DATA_REDIS_PASSWORD: "auth_token"
 
   allowlist:
     office: "217.33.148.210/32"

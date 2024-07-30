@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
+import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import javax.persistence.EntityManager
 
 class BookingStatusMigrationJob(
   private val bookingRepository: BookingRepository,
