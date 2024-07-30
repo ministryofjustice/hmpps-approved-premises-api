@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
@@ -180,32 +181,30 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
-    webTestClient.get()
+    val result = webTestClient.get()
       .uri("/users/$id")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody()
-      .json(
-        objectMapper.writeValueAsString(
-          ApprovedPremisesUser(
-            id = id,
-            region = ProbationRegion(region.id, region.name),
-            deliusUsername = deliusUsername,
-            name = name,
-            email = email,
-            telephoneNumber = telephoneNumber,
-            roles = emptyList(),
-            qualifications = emptyList(),
-            service = "CAS1",
-            isActive = true,
-            apArea = ApArea(apArea.id, apArea.identifier, apArea.name),
-            permissions = emptyList(),
-          ),
-        ),
-      )
+      .returnResult(ApprovedPremisesUser::class.java)
+      .responseBody
+      .blockFirst()
+
+    assertThat(result.id).isEqualTo(id)
+    assertThat(result.region).isEqualTo(ProbationRegion(region.id, region.name))
+    assertThat(result.deliusUsername).isEqualTo(deliusUsername)
+    assertThat(result.name).isEqualTo(name)
+    assertThat(result.email).isEqualTo(email)
+    assertThat(result.telephoneNumber).isEqualTo(telephoneNumber)
+    assertThat(result.roles).isEqualTo(emptyList<ApprovedPremisesUserRole>())
+    assertThat(result.qualifications).isEqualTo(emptyList<UserQualification>())
+    assertThat(result.service).isEqualTo("CAS1")
+    assertThat(result.isActive).isEqualTo(true)
+    assertThat(result.apArea).isEqualTo(ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name))
+    assertThat(result.permissions).isEqualTo(emptyList<UserPermission>())
+    assertThat(result.version).isNotZero()
   }
 
   @Test

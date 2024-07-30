@@ -60,6 +60,7 @@ class UserTransformer(
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = "CAS1",
       apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) } ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set"),
+      version = UserEntity.getVersionHashCode((jpa.roles.map { it.role })),
     )
     ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(
       id = jpa.id,

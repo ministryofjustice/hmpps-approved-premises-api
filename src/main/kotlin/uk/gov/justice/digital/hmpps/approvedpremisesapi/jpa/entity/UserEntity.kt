@@ -288,6 +288,13 @@ data class UserEntity(
   fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
 
   override fun toString() = "User $id"
+
+  companion object {
+    fun getVersionHashCode(roles: List<UserRole>) = Objects.hash(
+      roles.map { it.name },
+      roles.map { it.permissions.map { permission -> permission.name } },
+    )
+  }
 }
 
 @Repository

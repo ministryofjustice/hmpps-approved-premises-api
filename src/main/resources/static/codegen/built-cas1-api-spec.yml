@@ -3897,6 +3897,8 @@ components:
                 $ref: '#/components/schemas/ApprovedPremisesUserPermission'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            version:
+              type: integer
           required:
             - qualifications
             - roles
