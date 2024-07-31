@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.repository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -107,7 +108,7 @@ interface BookingsReportData {
   val cancellationReason: String?
   val startDate: LocalDate?
   val endDate: LocalDate?
-  val actualEndDate: Instant?
+  val actualEndDate: Timestamp?
   val accommodationOutcome: String?
   val dutyToReferLocalAuthorityAreaName: String?
   val pdu: String?

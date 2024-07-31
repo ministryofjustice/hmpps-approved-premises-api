@@ -4,7 +4,6 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUtcOffsetDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import javax.persistence.EntityManager
 
 class Cas1FixPlacementApplicationLinksJobTest {
 

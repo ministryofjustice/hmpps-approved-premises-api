@@ -13,7 +13,6 @@ spring:
     url: "dynamically set per test"
   flyway:
     locations: classpath:db/migration/all,classpath:db/migration/integration
-    clean-disabled: false
   jpa:
     database: postgresql
     properties:
@@ -21,11 +20,10 @@ spring:
         enable_lazy_load_no_trans: true
   main:
     allow-bean-definition-overriding: true
-  data:
-    redis:
-      host: localhost
-      port: 6377
-      password: ""
+  redis:
+    host: localhost
+    port: 6377
+    password: ""
   security:
     oauth2:
       client:
@@ -33,17 +31,16 @@ spring:
           delius-backed-apis:
             client-id: approved-premises-api
             client-secret: clientsecret
-            client-authentication-method: client_secret_basic
+            client-authentication-method: client_secret_jwt
             authorization-grant-type: client_credentials
           hmpps-tier:
             provider: hmpps-auth
             client-id: approved-premises-api
             client-secret: clientsecret
-            client-authentication-method: client_secret_basic
+            client-authentication-method: client_secret_jwt
             authorization-grant-type: client_credentials
 
 hmpps.sqs:
-  useWebToken: false
   provider: localstack
   topics:
     domainevents:

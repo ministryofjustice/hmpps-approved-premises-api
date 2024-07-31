@@ -1,15 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
-import jakarta.persistence.OneToOne
-import jakarta.persistence.Table
-import jakarta.persistence.Version
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -19,11 +9,21 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
-import java.time.Instant
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
+import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
+import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
+import javax.persistence.OneToOne
+import javax.persistence.Table
+import javax.persistence.Version
 
 @Repository
 interface BookingRepository : JpaRepository<BookingEntity, UUID> {
@@ -176,14 +176,14 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
       WHERE b.service = :serviceName
-      AND (:status is null or b.status = :status)
+      AND (:status is null or b.status = :#{#status?.toString()})
       AND (:crn is null OR b.crn = :crn)
     """,
     nativeQuery = true,
   )
   fun findBookings(
     serviceName: String,
-    status: String?,
+    status: BookingStatus?,
     crn: String?,
     pageable: Pageable?,
   ): Page<BookingSearchResult>
@@ -219,25 +219,14 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
         ORDER BY crn,a.created_at desc
       ) offenders on b.crn = offenders.crn       
       WHERE b.service = 'temporary-accommodation'
-      AND (:status is null or b.status = :status)
-      AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crn is null OR b.crn = :crn)
-    """,
-    countQuery = """
-      SELECT count(1)
-      FROM bookings b
-      LEFT JOIN beds b2 ON b.bed_id = b2.id
-      LEFT JOIN rooms r ON b2.room_id = r.id
-      LEFT JOIN premises p ON r.premises_id = p.id
-      WHERE b.service = 'temporary-accommodation'
-      AND (:status is null or b.status = :status)
+      AND (:status is null or b.status = :#{#status?.toString()})
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
       AND (:crn is null OR b.crn = :crn)
     """,
     nativeQuery = true,
   )
   fun findTemporaryAccommodationBookings(
-    status: String?,
+    status: BookingStatus?,
     probationRegionId: UUID?,
     crn: String?,
     pageable: Pageable?,
@@ -379,7 +368,7 @@ interface BookingSearchResult {
   fun getBookingId(): UUID
   fun getBookingStartDate(): LocalDate
   fun getBookingEndDate(): LocalDate
-  fun getBookingCreatedAt(): Instant
+  fun getBookingCreatedAt(): Timestamp
   fun getPremisesId(): UUID
   fun getPremisesName(): String
   fun getPremisesAddressLine1(): String

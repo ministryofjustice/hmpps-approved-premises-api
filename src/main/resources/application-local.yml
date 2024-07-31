@@ -8,11 +8,10 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/local,classpath:db/migration/all-except-integration
   jpa:
     database: postgresql
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: ""
+  redis:
+    host: localhost
+    port: 6379
+    password: ""
 
 hmpps.sqs:
   provider: localstack

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
+import com.amazonaws.services.sns.model.PublishResult
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -13,8 +14,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import software.amazon.awssdk.services.sns.model.PublishRequest
-import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
@@ -33,7 +32,6 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
-import java.util.concurrent.CompletableFuture
 
 @SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventServiceTest {
@@ -145,9 +143,7 @@ class DomainEventServiceTest {
         )
 
         every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-        every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(
-          PublishResponse.builder().build(),
-        )
+        every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
         domainEventService.saveCas2ApplicationSubmittedDomainEvent(domainEventToSave)
 
@@ -167,8 +163,8 @@ class DomainEventServiceTest {
 
         verify(exactly = 1) {
           mockHmppsTopic.snsClient.publish(
-            match<PublishRequest> {
-              val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+            match {
+              val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
 
               deserializedMessage.eventType == "applications.cas2.application.submitted" &&
                 deserializedMessage.version == 1 &&
@@ -216,7 +212,7 @@ class DomainEventServiceTest {
         )
 
         every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-        every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
+        every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
         assertThatExceptionOfType(RuntimeException::class.java)
           .isThrownBy { domainEventService.saveCas2ApplicationSubmittedDomainEvent(domainEventToSave) }
@@ -236,7 +232,7 @@ class DomainEventServiceTest {
         }
 
         verify(exactly = 0) {
-          mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+          mockHmppsTopic.snsClient.publish(any())
         }
       }
 
@@ -293,7 +289,7 @@ class DomainEventServiceTest {
         }
 
         verify(exactly = 0) {
-          mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+          mockHmppsTopic.snsClient.publish(any())
         }
       }
     }
@@ -333,9 +329,7 @@ class DomainEventServiceTest {
         )
 
         every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-        every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(
-          PublishResponse.builder().build(),
-        )
+        every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
         domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(domainEventToSave)
 
@@ -355,8 +349,8 @@ class DomainEventServiceTest {
 
         verify(exactly = 1) {
           mockHmppsTopic.snsClient.publish(
-            match<PublishRequest> {
-              val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+            match {
+              val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
 
               deserializedMessage.eventType == "applications.cas2.application.status-updated" &&
                 deserializedMessage.version == 1 &&
@@ -428,7 +422,7 @@ class DomainEventServiceTest {
         }
 
         verify(exactly = 0) {
-          mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+          mockHmppsTopic.snsClient.publish(any())
         }
       }
 
@@ -461,7 +455,7 @@ class DomainEventServiceTest {
         )
 
         every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-        every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
+        every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
         assertThatExceptionOfType(RuntimeException::class.java)
           .isThrownBy { domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(domainEventToSave) }
@@ -481,7 +475,7 @@ class DomainEventServiceTest {
         }
 
         verify(exactly = 0) {
-          mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+          mockHmppsTopic.snsClient.publish(any())
         }
       }
     }

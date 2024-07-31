@@ -45,7 +45,7 @@ class BookingSearchService(
       ServiceName.temporaryAccommodation -> {
         pageSize = cas3BookingSearchPageSize
         findBookings = bookingRepository.findTemporaryAccommodationBookings(
-          status?.name,
+          status,
           user.probationRegion.id,
           crn,
           buildPage(sortOrder, sortField, page, pageSize),
@@ -56,7 +56,7 @@ class BookingSearchService(
         pageSize = defaultSearchPageSize
         findBookings = bookingRepository.findBookings(
           serviceName.value,
-          status?.name,
+          status,
           crn,
           buildPage(sortOrder, sortField, page, pageSize),
         )
@@ -107,7 +107,7 @@ class BookingSearchService(
           rs.getBookingStatus(),
           rs.getBookingStartDate(),
           rs.getBookingEndDate(),
-          OffsetDateTime.ofInstant(rs.getBookingCreatedAt(), ZoneOffset.UTC),
+          OffsetDateTime.ofInstant(rs.getBookingCreatedAt().toInstant(), ZoneOffset.UTC),
           rs.getPremisesId(),
           rs.getPremisesName(),
           rs.getPremisesAddressLine1(),

@@ -35,14 +35,12 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
-  data:
-    redis:
-      database: 5
-      timeout: 60000
-      ssl:
-        enabled: false
+  redis:
+    database: 5
+    timeout: 60000
+    ssl: false
 
   security:
     oauth2:

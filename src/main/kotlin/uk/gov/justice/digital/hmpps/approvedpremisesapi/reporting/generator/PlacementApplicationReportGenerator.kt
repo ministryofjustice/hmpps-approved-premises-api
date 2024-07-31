@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 class PlacementApplicationReportGenerator :
   ReportGenerator<PlacementApplicationEntityReportRow, PlacementApplicationReportRow, MonthSpecificReportParams>(PlacementApplicationReportRow::class) {
@@ -18,12 +17,12 @@ class PlacementApplicationReportGenerator :
         placementRequestId = this.getId(),
         crn = this.getCrn(),
         tier = this.getTier(),
-        placementRequestSubmittedAt = this.getPlacementApplicationSubmittedAt()?.toLocalDate(),
+        placementRequestSubmittedAt = this.getPlacementApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
         requestedArrivalDate = this.getRequestedArrivalDate()?.toLocalDate(),
         requestedDurationDays = this.getRequestedDurationDays(),
         decision = this.getDecision(),
-        decisionMadeAt = this.getDecisionMadeAt()?.toLocalDate(),
-        applicationSubmittedAt = this.getApplicationSubmittedAt()?.toLocalDate(),
+        decisionMadeAt = this.getDecisionMadeAt()?.toLocalDateTime()?.toLocalDate(),
+        applicationSubmittedAt = this.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.deriveAssessmentDecision(),
