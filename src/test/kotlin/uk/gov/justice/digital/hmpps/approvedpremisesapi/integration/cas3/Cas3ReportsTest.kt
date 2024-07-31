@@ -49,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -59,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
@@ -1551,7 +1551,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1655,7 +1655,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1739,7 +1739,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1827,7 +1827,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1948,7 +1948,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               shouldBeIncludedBookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -2052,7 +2052,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -2117,7 +2117,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
