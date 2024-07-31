@@ -228,16 +228,17 @@ class Cas3ReportServiceTest {
 
   @Test
   fun `createBookingsReport successfully generate report with required information`() {
+    val crn = "P131431"
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
-    val bookingsReportData = createBookingReportData("P131431")
+    val bookingsReportData = createBookingReportData(crn)
     val properties = BookingsReportProperties(ServiceName.temporaryAccommodation, probationRegionId, startDate, endDate)
 
     every { mockBookingsReportRepository.findAllByOverlappingDate(startDate, endDate, ServiceName.temporaryAccommodation.value, probationRegionId) } returns listOf(bookingsReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
-      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full(crn, CaseSummaryFactory().produce()),
     )
 
     cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())
@@ -256,6 +257,7 @@ class Cas3ReportServiceTest {
 
   @Test
   fun `createBookingsReport successfully generate report with required information and call offender service 2 times`() {
+    val crns = listOf("P131431", "P131432", "P131433")
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
@@ -269,13 +271,15 @@ class Cas3ReportServiceTest {
         probationRegionId,
       )
     } returns listOf(
-      createBookingReportData("P131431"),
-      createBookingReportData("P131432"),
-      createBookingReportData("P131433"),
+      createBookingReportData(crns[0]),
+      createBookingReportData(crns[1]),
+      createBookingReportData(crns[2]),
     )
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
-      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full(crns[0], CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full(crns[1], CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full(crns[2], CaseSummaryFactory().produce()),
     )
 
     cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())

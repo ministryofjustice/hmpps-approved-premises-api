@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
@@ -16,21 +14,18 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
 
   override val convert: BookingsReportDataAndPersonInfo.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
     val booking = this.bookingsReportData
-    val personInfo = this.personInfoResult
+    val personInfo = this.personInfoReportData
 
     listOf(
       BookingsReportRow(
         bookingId = booking.bookingId,
         referralId = booking.referralId,
         referralDate = booking.referralDate?.toLocalDate(),
-        personName = personInfo.tryGetDetails {
-          val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
-          nameParts.joinToString(" ")
-        },
-        pncNumber = personInfo.tryGetDetails { it.pnc },
-        gender = personInfo.tryGetDetails { it.gender },
-        ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
-        dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
+        personName = personInfo.name?.let { (listOf(it.forename) + it.middleNames + it.surname) }?.joinToString(" "),
+        pncNumber = personInfo.pnc,
+        gender = personInfo.gender,
+        ethnicity = personInfo.ethnicity,
+        dateOfBirth = personInfo.dateOfBirth,
         riskOfSeriousHarm = booking.riskOfSeriousHarm,
         registeredSexOffender = booking.registeredSexOffender.toYesNo(),
         historyOfSexualOffence = booking.historyOfSexualOffence.toYesNo(),
@@ -72,12 +67,5 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
 
   override fun filter(properties: BookingsReportProperties): (BookingsReportDataAndPersonInfo) -> Boolean = {
     true
-  }
-
-  private fun<V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
-    return when (this) {
-      is PersonSummaryInfoResult.Success.Full -> value(this.summary)
-      else -> null
-    }
   }
 }
