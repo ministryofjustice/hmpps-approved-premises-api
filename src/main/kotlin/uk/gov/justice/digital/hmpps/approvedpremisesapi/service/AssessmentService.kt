@@ -841,11 +841,11 @@ class AssessmentService(
       return AuthorisableActionResult.NotFound()
     }
 
-    if (clarificationNoteEntity.createdByUser.id !== user.id) {
+    if (clarificationNoteEntity.createdByUser.id != user.id) {
       return AuthorisableActionResult.Unauthorised()
     }
 
-    if (clarificationNoteEntity.response !== null) {
+    if (clarificationNoteEntity.response != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("A response has already been added to this note"),
       )
