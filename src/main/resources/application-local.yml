@@ -7,6 +7,7 @@ spring:
   flyway:
     locations: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/local,classpath:db/migration/all-except-integration
   jpa:
+    show-sql: true
     database: postgresql
   redis:
     host: localhost
