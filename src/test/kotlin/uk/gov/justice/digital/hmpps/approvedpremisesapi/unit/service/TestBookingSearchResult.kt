@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.time.Instant
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -83,8 +83,8 @@ class TestBookingSearchResult : BookingSearchResult {
     return this.bookingEndDate
   }
 
-  override fun getBookingCreatedAt(): Instant {
-    return this.bookingCreatedAt.toInstant()
+  override fun getBookingCreatedAt(): Timestamp {
+    return Timestamp.from(this.bookingCreatedAt.toInstant())
   }
 
   override fun getPremisesId(): UUID {

@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import javax.servlet.http.HttpServletRequest
 
 @Service
 class RequestContextService(

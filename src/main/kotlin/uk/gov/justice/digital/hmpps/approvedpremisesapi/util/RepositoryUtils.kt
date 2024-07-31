@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
-import jakarta.annotation.PostConstruct
-import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport
 import org.springframework.stereotype.Component
+import javax.annotation.PostConstruct
+import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
 
 inline fun <reified T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>): List<T> {
   return findAllByIdOrdered(ids, T::class.java)

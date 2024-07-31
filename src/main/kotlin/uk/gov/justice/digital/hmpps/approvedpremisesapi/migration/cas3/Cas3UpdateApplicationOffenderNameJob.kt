@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3
 
-import jakarta.persistence.EntityManager
 import org.apache.commons.collections4.ListUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
@@ -11,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogge
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.util.stream.Collectors
+import javax.persistence.EntityManager
 
 class Cas3UpdateApplicationOffenderNameJob(
   private val applicationRepository: ApplicationRepository,

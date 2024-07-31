@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import jakarta.transaction.Transactional
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Lazy
@@ -46,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 @Suppress("TooGenericExceptionThrown")
@@ -98,13 +98,13 @@ class PlacementRequestService(
 
     val pageable = getPageable(pageCriteria.withSortBy(sortField))
     val response = placementRequestRepository.allForDashboard(
-      status = searchCriteria.status?.name,
+      status = searchCriteria.status,
       crn = searchCriteria.crn,
       crnOrName = searchCriteria.crnOrName,
       tier = searchCriteria.tier,
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
-      requestType = searchCriteria.requestType?.name,
+      requestType = searchCriteria.requestType,
       apAreaId = searchCriteria.apAreaId,
       pageable = pageable,
     )

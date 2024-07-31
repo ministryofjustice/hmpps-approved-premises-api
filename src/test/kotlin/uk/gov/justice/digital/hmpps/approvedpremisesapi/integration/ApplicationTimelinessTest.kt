@@ -117,15 +117,15 @@ class ApplicationTimelinessTest : IntegrationTestBase() {
     val submittedAndBookedApplicationTimelinessEntity = result.find { it.getId() == submittedAndBookedApplication.id.toString() }
     assertThat(submittedAndBookedApplicationTimelinessEntity).isNotNull()
     assertThat(submittedAndBookedApplicationTimelinessEntity!!.getTier()).isEqualTo("A1")
-    assertThat(submittedAndBookedApplicationTimelinessEntity.getApplicationSubmittedAt()).isEqualTo(submittedDate.toInstant())
-    assertThat(submittedAndBookedApplicationTimelinessEntity.getBookingMadeAt()).isEqualTo(submittedDate.plusDays(22).toInstant())
+    assertThat(submittedAndBookedApplicationTimelinessEntity.getApplicationSubmittedAt()!!.toInstant()).isEqualTo(submittedDate.toInstant())
+    assertThat(submittedAndBookedApplicationTimelinessEntity.getBookingMadeAt()!!.toInstant()).isEqualTo(submittedDate.plusDays(22).toInstant())
     assertThat(submittedAndBookedApplicationTimelinessEntity.getOverallTimeliness()).isEqualTo(22)
     assertThat(submittedAndBookedApplicationTimelinessEntity.getPlacementMatchingTimeliness()).isEqualTo(19)
 
     val submittedAndAssessedApplicationTimelinessEntity = result.find { it.getId() == submittedAndAssessedApplication.id.toString() }
     assertThat(submittedAndAssessedApplicationTimelinessEntity).isNotNull()
     assertThat(submittedAndAssessedApplicationTimelinessEntity!!.getTier()).isEqualTo("A1")
-    assertThat(submittedAndAssessedApplicationTimelinessEntity.getApplicationSubmittedAt()).isEqualTo(submittedDate.toInstant())
+    assertThat(submittedAndAssessedApplicationTimelinessEntity.getApplicationSubmittedAt()!!.toInstant()).isEqualTo(submittedDate.toInstant())
     assertThat(submittedAndAssessedApplicationTimelinessEntity.getBookingMadeAt()).isNull()
     assertThat(submittedAndAssessedApplicationTimelinessEntity.getOverallTimeliness()).isNull()
     assertThat(submittedAndAssessedApplicationTimelinessEntity.getPlacementMatchingTimeliness()).isNull()
@@ -133,7 +133,7 @@ class ApplicationTimelinessTest : IntegrationTestBase() {
     val submittedAndUnassessedApplicationTimelinessEntity = result.find { it.getId() == submittedAndUnassessedApplication.id.toString() }
     assertThat(submittedAndUnassessedApplicationTimelinessEntity).isNotNull()
     assertThat(submittedAndUnassessedApplicationTimelinessEntity!!.getTier()).isEqualTo("A1")
-    assertThat(submittedAndUnassessedApplicationTimelinessEntity.getApplicationSubmittedAt()).isEqualTo(submittedDate.toInstant())
+    assertThat(submittedAndUnassessedApplicationTimelinessEntity.getApplicationSubmittedAt()!!.toInstant()).isEqualTo(submittedDate.toInstant())
     assertThat(submittedAndUnassessedApplicationTimelinessEntity.getBookingMadeAt()).isNull()
     assertThat(submittedAndUnassessedApplicationTimelinessEntity.getOverallTimeliness()).isNull()
     assertThat(submittedAndUnassessedApplicationTimelinessEntity.getPlacementMatchingTimeliness()).isNull()

@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter
 
-import jakarta.persistence.AttributeConverter
-import jakarta.persistence.Converter
+import javax.persistence.AttributeConverter
+import javax.persistence.Converter
 
 @Converter
 class StringListConverter : AttributeConverter<List<String?>?, String?> {

@@ -1,20 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import jakarta.persistence.DiscriminatorColumn
-import jakarta.persistence.DiscriminatorValue
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Id
-import jakarta.persistence.Inheritance
-import jakarta.persistence.InheritanceType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
-import jakarta.persistence.PrimaryKeyJoinColumn
-import jakarta.persistence.Table
 import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -23,6 +8,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import java.time.LocalDate
 import java.util.UUID
+import javax.persistence.DiscriminatorColumn
+import javax.persistence.DiscriminatorValue
+import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
+import javax.persistence.Id
+import javax.persistence.Inheritance
+import javax.persistence.InheritanceType
+import javax.persistence.JoinColumn
+import javax.persistence.JoinTable
+import javax.persistence.ManyToMany
+import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
+import javax.persistence.PrimaryKeyJoinColumn
+import javax.persistence.Table
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
