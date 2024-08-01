@@ -77,7 +77,6 @@ Required fields:
 - `longitude`
 - `maleOrFemale`
 - `totalBeds`
-- `characteristics`
 - `status`
 - `isIAP`
 - `isPIPE`
