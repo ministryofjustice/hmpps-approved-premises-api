@@ -8,7 +8,7 @@ abstract class SeedJob<RowType> (
   val requiredHeaders: Set<String>? = null,
 ) {
   init {
-    if (fileName.contains("/") || fileName.contains("\\") || fileName.contains(".")) {
+    if (fileName.contains("/") || fileName.contains("\\")) {
       throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
     }
   }

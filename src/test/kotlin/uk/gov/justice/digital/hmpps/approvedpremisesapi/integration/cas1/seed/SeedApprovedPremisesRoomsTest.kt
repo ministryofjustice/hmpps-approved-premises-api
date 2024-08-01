@@ -53,7 +53,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-service-scope")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-service-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -96,7 +96,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-model-scope")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-model-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -121,7 +121,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-missing-premises")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-missing-premises.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -151,7 +151,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-invalid-boolean")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-invalid-boolean.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -171,7 +171,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         "HOPE,NESPU01,1,1,yes,yes,no,no",
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-missing-headers")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-missing-headers.csv")
 
     val expectedErrorMessage = "The headers provided: " +
       "[apCode, bedCode, roomNumber, bedCount, isSingle, isGroundFloor, isFullyFm, hasCrib7Bedding] " +
@@ -241,7 +241,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-rooms")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-rooms.csv")
 
     val persistedRoom5 = roomRepository.findByCode("NEABC-5")
     val persistedRoom4 = roomRepository.findByCode("NEABC-4")
@@ -337,7 +337,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "updated-ap-rooms")
+    seedService.seedData(SeedFileType.approvedPremisesRooms, "updated-ap-rooms.csv")
 
     val updatedRoom = roomRepository.findByCode("NEABC-4")
 

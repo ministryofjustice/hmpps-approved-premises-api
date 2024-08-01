@@ -27,7 +27,7 @@ To process a seed CSV against a non-local environment:
 - Run the helper script from within the container to trigger the seed job:
 
   ```shell
-  /app/run_seed_job {seed type} {file name without path or extension}
+  /app/run_seed_job {seed type} {file name}
   ```
 
 - `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/d8dc87aefa0294289a7bcb08048fbd8679b9954c/src/main/resources/static/_shared.yml#L3240) enum in the OpenAPI spec.  e.g.

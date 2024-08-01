@@ -38,7 +38,7 @@ class SeedCas1DomainEventReplayTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesReplayDomainEvents, "valid-csv")
+    seedService.seedData(SeedFileType.approvedPremisesReplayDomainEvents, "valid-csv.csv")
 
     val message = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
 

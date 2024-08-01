@@ -25,7 +25,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesCancelBookings, "booking-does-not-exist")
+    seedService.seedData(SeedFileType.approvedPremisesCancelBookings, "booking-does-not-exist.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -78,7 +78,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
         ),
       )
 
-      seedService.seedData(SeedFileType.approvedPremisesCancelBookings, "booking-not-for-ap")
+      seedService.seedData(SeedFileType.approvedPremisesCancelBookings, "booking-not-for-ap.csv")
 
       assertThat(logEntries)
         .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -132,7 +132,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
         ),
       )
 
-      seedService.seedData(SeedFileType.approvedPremisesCancelBookings, "booking-for-ap")
+      seedService.seedData(SeedFileType.approvedPremisesCancelBookings, "booking-for-ap.csv")
 
       val savedBooking = bookingRepository.findByIdOrNull(booking.id)
 

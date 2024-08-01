@@ -36,7 +36,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "invalid-user")
+    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "invalid-user.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -77,7 +77,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "unknown-user")
+    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "unknown-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
@@ -128,7 +128,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "pre-existing-user")
+    seedService.seedData(SeedFileType.approvedPremisesApStaffUsers, "pre-existing-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("PRE-EXISTING-USER")
 

@@ -34,7 +34,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "invalid-user")
+    seedService.seedData(SeedFileType.user, "invalid-user.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -77,7 +77,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "unknown-user")
+    seedService.seedData(SeedFileType.user, "unknown-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
@@ -116,7 +116,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "known-user")
+    seedService.seedData(SeedFileType.user, "known-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
@@ -154,7 +154,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "unknown-role")
+    seedService.seedData(SeedFileType.user, "unknown-role.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -188,7 +188,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "unknown-qualification")
+    seedService.seedData(SeedFileType.user, "unknown-qualification.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -223,7 +223,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "known-user")
+    seedService.seedData(SeedFileType.user, "known-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
@@ -273,7 +273,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.temporaryAccommodationUsers, "multi-service-user")
+    seedService.seedData(SeedFileType.temporaryAccommodationUsers, "multi-service-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("MULTI-SERVICE-USER")
 
@@ -340,7 +340,7 @@ class SeedUsersTest : SeedTestBase() {
 
     var iteration = 1
     repeat(20) {
-      seedService.seedData(SeedFileType.user, "users-many-times-base-job")
+      seedService.seedData(SeedFileType.user, "users-many-times-base-job.csv")
 
       seedInfos.forEach {
         val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!!
@@ -421,7 +421,7 @@ class SeedUsersTest : SeedTestBase() {
 
     var iteration = 1
     repeat(20) {
-      seedService.seedData(SeedFileType.approvedPremisesUsers, "users-many-times-ap-job")
+      seedService.seedData(SeedFileType.approvedPremisesUsers, "users-many-times-ap-job.csv")
 
       seedInfos.forEach {
         val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!!
@@ -471,7 +471,7 @@ class SeedUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.user, "known-user")
+    seedService.seedData(SeedFileType.user, "known-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 

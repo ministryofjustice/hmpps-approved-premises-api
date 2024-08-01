@@ -48,7 +48,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
           ),
         )
 
-        seedService.seedData(SeedFileType.approvedPremisesWithdrawPlacementRequest, "valid-csv")
+        seedService.seedData(SeedFileType.approvedPremisesWithdrawPlacementRequest, "valid-csv.csv")
 
         assertThat(logEntries).anyMatch {
           it.level == "error" &&
@@ -96,7 +96,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
           ),
         )
 
-        seedService.seedData(SeedFileType.approvedPremisesWithdrawPlacementRequest, "valid-csv")
+        seedService.seedData(SeedFileType.approvedPremisesWithdrawPlacementRequest, "valid-csv.csv")
 
         assertPlacementApplicationNotWithdrawn(placementApplication)
 

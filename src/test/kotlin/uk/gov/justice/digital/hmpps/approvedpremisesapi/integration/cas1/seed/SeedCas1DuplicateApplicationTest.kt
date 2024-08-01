@@ -70,7 +70,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           ),
         )
 
-        seedService.seedData(SeedFileType.approvedPremisesDuplicateApplication, "valid-csv")
+        seedService.seedData(SeedFileType.approvedPremisesDuplicateApplication, "valid-csv.csv")
 
         val newApplication = approvedPremisesApplicationRepository.findAll()
           .filter { it.crn == sourceApplication.crn }
