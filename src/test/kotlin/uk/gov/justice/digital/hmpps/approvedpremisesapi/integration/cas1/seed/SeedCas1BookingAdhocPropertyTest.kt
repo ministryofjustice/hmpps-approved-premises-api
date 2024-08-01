@@ -21,7 +21,7 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
       bookingIdListToCsvRows(listOf(invalidId to false)),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "invalid-booking-id")
+    seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "invalid-booking-id.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -67,7 +67,7 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "valid-booking-ids")
+    seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "valid-booking-ids.csv")
 
     assertThat(bookingRepository.findByIdOrNull(booking1.id)!!.adhoc).isTrue()
     assertThat(bookingRepository.findByIdOrNull(booking2.id)!!.adhoc).isNull()

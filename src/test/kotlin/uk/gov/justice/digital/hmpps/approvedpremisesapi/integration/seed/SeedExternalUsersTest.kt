@@ -28,7 +28,7 @@ class SeedExternalUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.externalUsers, "unknown-external-user")
+    seedService.seedData(SeedFileType.externalUsers, "unknown-external-user.csv")
 
     val persistedUser = externalUserRepository.findByUsername("CAS2_ASSESSOR_FAKE")
 
@@ -60,7 +60,7 @@ class SeedExternalUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.externalUsers, "existing-external-user")
+    seedService.seedData(SeedFileType.externalUsers, "existing-external-user.csv")
 
     val persistedUser = externalUserRepository.findByUsername("CAS2_ASSESSOR_FAKE")
 

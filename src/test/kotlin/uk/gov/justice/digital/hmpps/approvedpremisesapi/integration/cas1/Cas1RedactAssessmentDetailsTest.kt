@@ -41,7 +41,7 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRedactAssessmentDetails, "valid-csv")
+    seedService.seedData(SeedFileType.approvedPremisesRedactAssessmentDetails, "valid-csv.csv")
 
     val expectedJson = """{"sufficient-information":{"sufficient-information":{"sufficientInformation":"yes","query":""}}}"""
 

@@ -22,7 +22,7 @@ class SeedApprovedPremisesOfflineApplicationsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesOfflineApplications, "offline-applications")
+    seedService.seedData(SeedFileType.approvedPremisesOfflineApplications, "offline-applications.csv")
 
     assertThat(offlineApplicationRepository.findAll()).anyMatch {
       it.crn == "NEWCRN"
@@ -45,7 +45,7 @@ class SeedApprovedPremisesOfflineApplicationsTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesOfflineApplications, "offline-applications")
+    seedService.seedData(SeedFileType.approvedPremisesOfflineApplications, "offline-applications.csv")
 
     val matchingOfflineApplications = offlineApplicationRepository.findAll().filter {
       it.crn == "EXISTINGCRN"

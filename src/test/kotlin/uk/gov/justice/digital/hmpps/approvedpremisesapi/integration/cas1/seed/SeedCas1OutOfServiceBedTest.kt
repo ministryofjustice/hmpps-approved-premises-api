@@ -391,13 +391,13 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
   }
 
   private fun seedWithCsv(name: String? = null, config: CsvBuilder.() -> Unit) {
-    val fileName = name ?: randomStringMultiCaseWithNumbers(64)
+    val fileName = (name ?: randomStringMultiCaseWithNumbers(64))
     generateCsvFile(
       fileName,
       csv(config),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesOutOfServiceBeds, fileName)
+    seedService.seedData(SeedFileType.approvedPremisesOutOfServiceBeds, fileName + ".csv")
   }
 
   private fun csv(config: CsvBuilder.() -> Unit) = CsvBuilder()

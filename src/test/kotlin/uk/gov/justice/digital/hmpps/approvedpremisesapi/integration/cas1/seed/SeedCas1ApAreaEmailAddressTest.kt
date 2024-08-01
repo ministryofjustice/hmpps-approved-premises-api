@@ -23,7 +23,7 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "invalid-ap-area-id")
+    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "invalid-ap-area-id.csv")
 
     Assertions.assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -46,9 +46,9 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "invalid-ap-area-id")
+    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "invalid-ap-area-id.csv")
 
-    Assertions.assertThat(logEntries)
+    assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
       .anyMatch {
         it.level == "error" &&
@@ -66,7 +66,7 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
         "SWSC,me@here.com",
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "missing-headers")
+    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "missing-headers.csv")
 
     val expectedErrorMessage = "The headers provided: " +
       "[totally, wrong_headers] " +
@@ -95,7 +95,7 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "valid-csv")
+    seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "valid-csv.csv")
 
     assertThat(apAreaRepository.findByIdentifier("SWSC")!!.emailAddress).isEqualTo("swsc@test.com")
     assertThat(apAreaRepository.findByIdentifier("Mids")!!.emailAddress).isEqualTo("mids@midlands.com")

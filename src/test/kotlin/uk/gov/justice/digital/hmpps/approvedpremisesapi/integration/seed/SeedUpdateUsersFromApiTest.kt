@@ -48,7 +48,7 @@ class SeedUpdateUsersFromApiTest : SeedTestBase() {
 
     withCsv("known-user-csv", csv)
 
-    seedService.seedData(SeedFileType.updateUsersFromApi, "known-user-csv")
+    seedService.seedData(SeedFileType.updateUsersFromApi, "known-user-csv.csv")
 
     val persistedUser = userRepository.findByDeliusUsername(USERNAME)
 

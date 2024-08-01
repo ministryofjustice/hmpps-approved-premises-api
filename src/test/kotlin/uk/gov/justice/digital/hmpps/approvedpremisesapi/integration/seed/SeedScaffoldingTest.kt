@@ -24,20 +24,6 @@ class SeedScaffoldingTest : SeedTestBase() {
   }
 
   @Test
-  fun `Attempting to process a file containing dots logs an error`() {
-    seedService.seedData(SeedFileType.approvedPremises, "afile.csv")
-
-    assertThat(logEntries).anyMatch {
-      it.level == "error" &&
-        it.message == "Unable to complete Seed Job" &&
-        it.throwable != null &&
-        it.throwable.message!!.contains(
-          "Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied",
-        )
-    }
-  }
-
-  @Test
   fun `Attempting to process a file containing forward slashes logs an error`() {
     seedService.seedData(SeedFileType.approvedPremises, "/afile")
 
@@ -90,7 +76,7 @@ RogerSmith,CAS1_MANAGER,
       """.trimIndent(),
     )
 
-    seedService.seedData(SeedFileType.user, "malformed")
+    seedService.seedData(SeedFileType.user, "malformed.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
