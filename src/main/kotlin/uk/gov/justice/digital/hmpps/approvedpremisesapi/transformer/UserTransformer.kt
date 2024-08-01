@@ -71,7 +71,7 @@ class UserTransformer(
       roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformTemporaryAccommodationRoleToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
-      service = ServiceName.temporaryAccommodation.value,
+      service = "CAS3",
     )
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
   }

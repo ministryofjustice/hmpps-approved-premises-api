@@ -31,7 +31,7 @@ class UsersController(
     val userEntity = when (val result = userService.updateUserFromCommunityApiById(id, xServiceName)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
+      is AuthorisableActionResult.Success -> result.entity.user!!
     }
 
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
