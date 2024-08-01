@@ -1,13 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
+import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonProbationSubjectAccessRequestService
+import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class SubjectAccessRequestService(
@@ -15,7 +20,7 @@ class SubjectAccessRequestService(
   val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
   val cas2SubjectAccessRequestRepository: CAS2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
-) {
+) : HmppsPrisonProbationSubjectAccessRequestService {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -139,8 +144,24 @@ class SubjectAccessRequestService(
       {
          "ApprovedPremises" : ${getCAS1Result(crn, nomsNumber, startDate, endDate)},
          "TemporaryAccommodation": ${getCAS3Result(crn, nomsNumber, startDate, endDate)},
-         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)},
-    
+         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)}
       }
     """.trimIndent()
+
+  override fun getContentFor(
+    prn: String?,
+    crn: String?,
+    fromDate: LocalDate?,
+    toDate: LocalDate?,
+  ): HmppsSubjectAccessRequestContent? =
+    HmppsSubjectAccessRequestContent(
+      content = JSONObject(
+        getSarResult(
+          crn,
+          prn,
+          fromDate?.atStartOfDay(),
+          toDate?.atTime(LocalTime.MAX),
+        ),
+      ),
+    )
 }
