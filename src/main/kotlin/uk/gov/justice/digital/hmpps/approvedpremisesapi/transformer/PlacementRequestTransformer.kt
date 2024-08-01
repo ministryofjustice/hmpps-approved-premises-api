@@ -90,6 +90,7 @@ class PlacementRequestTransformer(
     "notApplicable" -> ReleaseTypeOption.notApplicable
     "extendedDeterminateLicence" -> ReleaseTypeOption.extendedDeterminateLicence
     "paroleDirectedLicence" -> ReleaseTypeOption.paroleDirectedLicence
+    "reReleasedPostRecall" -> ReleaseTypeOption.reReleasedPostRecall
     else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 

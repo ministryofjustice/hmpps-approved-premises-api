@@ -7018,6 +7018,7 @@ components:
         - not_applicable
         - extendedDeterminateLicence
         - paroleDirectedLicence
+        - reReleasedPostRecall
     SentenceTypeOption:
       type: string
       enum:
