@@ -4,7 +4,7 @@ import org.zalando.problem.AbstractThrowableProblem
 import org.zalando.problem.Exceptional
 import org.zalando.problem.Status
 
-class ForbiddenProblem : AbstractThrowableProblem(null, "Forbidden", Status.FORBIDDEN, "You are not authorized to access this endpoint") {
+class ServiceUnavailableProblem(detail: String) : AbstractThrowableProblem(null, "Service Unavailable", Status.SERVICE_UNAVAILABLE, detail) {
   override fun getCause(): Exceptional? {
     return null
   }

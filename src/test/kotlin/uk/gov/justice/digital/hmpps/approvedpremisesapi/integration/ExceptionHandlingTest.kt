@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.exception.JDBCConnectionException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -283,9 +285,45 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
 
     assertThat(validationResult!!.detail).isEqualTo("Invalid type for query parameter requiredProperty expected int")
   }
+
+  @Test
+  fun `JDBC Connection Exception returns a 503`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val validationResult = webTestClient.get()
+      .uri("/jdbc-connection-exception")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus().isEqualTo(503)
+      .returnResult<ValidationError>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(validationResult!!.detail).isEqualTo("Error acquiring a database connection")
+    assertThat(mockSentryService.getRaisedExceptions()).hasSize(1)
+    assertThat(mockSentryService.getRaisedExceptions()[0]).isInstanceOf(JDBCConnectionException::class.java)
+  }
+
+  @Test
+  fun `Exception with cause of JDBC Connection Exception returns a 503`() {
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    val validationResult = webTestClient.get()
+      .uri("/jdbc-connection-exception-in-cause")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus().isEqualTo(503)
+      .returnResult<ValidationError>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(validationResult!!.detail).isEqualTo("Error acquiring a database connection")
+    assertThat(mockSentryService.getRaisedExceptions()).hasSize(1)
+    assertThat(mockSentryService.getRaisedExceptions()[0]).isInstanceOf(RuntimeException::class.java)
+  }
 }
 
-@SuppressWarnings("UnusedParameter")
+@SuppressWarnings("UnusedParameter", "TooGenericExceptionThrown")
 @RestController
 class ExceptionHandlingTestController {
   @PostMapping(path = ["deserialization-test/object"], consumes = ["application/json"])
@@ -308,10 +346,21 @@ class ExceptionHandlingTestController {
     return ResponseEntity.ok(Unit)
   }
 
-  @SuppressWarnings("TooGenericExceptionThrown")
   @GetMapping(path = ["unhandled-exception"])
   fun unhandledException(): ResponseEntity<Unit> {
     throw RuntimeException("I am an unhandled exception")
+  }
+
+  @GetMapping(path = ["jdbc-connection-exception"])
+  fun jdbcConnectionException(): ResponseEntity<Unit> {
+    throw JDBCConnectionException("Oh dear", SQLException(""))
+  }
+
+  @GetMapping(path = ["jdbc-connection-exception-in-cause"])
+  fun jdbcConnectionExceptionInCause(): ResponseEntity<Unit> {
+    throw RuntimeException(
+      JDBCConnectionException("Oh dear", SQLException("")),
+    )
   }
 }
 
