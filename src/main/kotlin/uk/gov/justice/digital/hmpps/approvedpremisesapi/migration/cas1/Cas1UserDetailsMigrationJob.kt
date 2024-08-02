@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1
 
+import jakarta.persistence.EntityManager
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
@@ -11,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import java.util.UUID
-import javax.persistence.EntityManager
 
 class Cas1UserDetailsMigrationJob(
   private val applicationRepository: ApplicationRepository,
