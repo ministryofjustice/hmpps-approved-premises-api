@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import jakarta.transaction.Transactional
 import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
-import javax.transaction.Transactional
 
 @SuppressWarnings("MagicNumber", "MaxLineLength")
 @Component

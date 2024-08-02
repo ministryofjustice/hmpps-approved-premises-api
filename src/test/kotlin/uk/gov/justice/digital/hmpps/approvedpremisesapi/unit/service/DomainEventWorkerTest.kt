@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import com.amazonaws.services.sns.model.MessageAttributeValue
-import com.amazonaws.services.sns.model.PublishRequest
-import com.amazonaws.services.sns.model.PublishResult
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
@@ -13,6 +10,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -25,6 +25,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 
 @Suppress("SwallowedException")
 class DomainEventWorkerTest {
@@ -118,7 +119,7 @@ class DomainEventWorkerTest {
       ),
     )
 
-    every { asyncDomainEventWorker.domainTopic.snsClient.publish(any()) } throws RuntimeException()
+    every { asyncDomainEventWorker.domainTopic.snsClient.publish(any<PublishRequest>()) } throws RuntimeException()
 
     try {
       val backOffPolicy = FixedBackOffPolicy()
@@ -133,7 +134,7 @@ class DomainEventWorkerTest {
     } catch (error: RuntimeException) {
       verify(exactly = AsyncDomainEventWorker.MAX_ATTEMPTS_RETRY) {
         asyncDomainEventWorker.domainTopic.snsClient.publish(
-          match { matchingPublishRequest(it, snsEvent) },
+          match<PublishRequest> { matchingPublishRequest(it, snsEvent) },
         )
       }
     }
@@ -165,21 +166,22 @@ class DomainEventWorkerTest {
       ),
     )
 
-    val publishRequest = PublishRequest("", objectMapper.writeValueAsString(snsEvent))
-      .withMessageAttributes(
+    val publishRequest = PublishRequest.builder()
+      .topicArn("")
+      .message(objectMapper.writeValueAsString(snsEvent))
+      .messageAttributes(
         mapOf(
-          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
+          "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),
         ),
+      ).build()
 
-      )
-
-    every { asyncDomainEventWorker.domainTopic.snsClient.publish(any()) } returns PublishResult()
+    every { asyncDomainEventWorker.domainTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     asyncDomainEventWorker.emitEvent(snsEvent, id)
 
     verify(exactly = 1) {
       asyncDomainEventWorker.domainTopic.snsClient.publish(
-        match { matchingPublishRequest(it, snsEvent) },
+        match<PublishRequest> { matchingPublishRequest(it, snsEvent) },
       )
     }
   }
@@ -210,13 +212,15 @@ class DomainEventWorkerTest {
       ),
     )
 
-    every { syncDomainEventWorker.domainTopic.snsClient.publish(any()) } returns PublishResult()
+    every { syncDomainEventWorker.domainTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(
+      PublishResponse.builder().build(),
+    )
 
     syncDomainEventWorker.emitEvent(snsEvent, id)
 
     verify(exactly = 1) {
       syncDomainEventWorker.domainTopic.snsClient.publish(
-        match { matchingPublishRequest(it, snsEvent) },
+        match<PublishRequest> { matchingPublishRequest(it, snsEvent) },
       )
     }
   }
@@ -246,19 +250,19 @@ class DomainEventWorkerTest {
     )
 
     every { syncDomainEventWorker.domainTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { syncDomainEventWorker.domainTopic.snsClient.publish(any()) } returns PublishResult()
+    every { syncDomainEventWorker.domainTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
     syncDomainEventWorker.emitEvent(snsEvent, id)
 
     verify(exactly = 1) {
       syncDomainEventWorker.domainTopic.snsClient.publish(
-        match { matchingPublishRequest(it, snsEvent) },
+        match<PublishRequest> { matchingPublishRequest(it, snsEvent) },
       )
     }
   }
 
   private fun matchingPublishRequest(publishRequest: PublishRequest, snsEvent: SnsEvent): Boolean {
-    val deserializedMessage = objectMapper.readValue(publishRequest.message, SnsEvent::class.java)
+    val deserializedMessage = objectMapper.readValue(publishRequest.message(), SnsEvent::class.java)
 
     return deserializedMessage.eventType == snsEvent.eventType &&
       deserializedMessage.version == snsEvent.version &&

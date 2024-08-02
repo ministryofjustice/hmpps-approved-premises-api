@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.sentry.Sentry
+import jakarta.persistence.EntityManager
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.scheduling.annotation.Async
@@ -54,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
-import javax.persistence.EntityManager
 import kotlin.reflect.KClass
 
 @Service

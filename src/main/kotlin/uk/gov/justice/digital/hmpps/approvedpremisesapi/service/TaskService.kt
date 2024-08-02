@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
@@ -29,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.util.UUID
-import javax.transaction.Transactional
 
 @Service
 class TaskService(

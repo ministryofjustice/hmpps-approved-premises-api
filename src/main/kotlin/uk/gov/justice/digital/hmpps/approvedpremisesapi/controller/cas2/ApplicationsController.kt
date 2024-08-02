@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
@@ -24,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
-import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
 
 @Service(

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
@@ -7,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.nomisuserroles.NomisUserDetail
 import java.util.UUID
-import javax.transaction.Transactional
 
 @Service
 class NomisUserService(
