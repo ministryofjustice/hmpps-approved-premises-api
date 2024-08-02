@@ -23,6 +23,7 @@ spring:
     hikari:
       maximum-pool-size: 20
       connection-timeout: 15000
+      leakDetectionThreshold: 20000
 
   flyway:
     repeatable-sql-migration-prefix: "R"
