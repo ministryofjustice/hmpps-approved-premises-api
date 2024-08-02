@@ -73,7 +73,7 @@ class UserTransformerTest {
       ) as TemporaryAccommodationUser
 
       assertThat(result.roles).contains(reporter)
-      assertThat(result.service).isEqualTo(temporaryAccommodation.value)
+      assertThat(result.service).isEqualTo("CAS3")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
     }
 
@@ -85,7 +85,7 @@ class UserTransformerTest {
       ) as TemporaryAccommodationUser
 
       assertThat(result.roles).contains(referrer)
-      assertThat(result.service).isEqualTo(temporaryAccommodation.value)
+      assertThat(result.service).isEqualTo("CAS3")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
     }
 

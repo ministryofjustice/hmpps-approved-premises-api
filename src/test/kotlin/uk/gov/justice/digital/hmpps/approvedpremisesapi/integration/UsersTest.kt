@@ -281,7 +281,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
             email = email,
             telephoneNumber = telephoneNumber,
             roles = emptyList(),
-            service = ServiceName.temporaryAccommodation.value,
+            service = "CAS3",
             isActive = true,
           ),
         ),

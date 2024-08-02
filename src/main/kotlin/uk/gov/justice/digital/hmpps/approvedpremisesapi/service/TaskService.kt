@@ -155,10 +155,14 @@ class TaskService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val assigneeUser = when (val assigneeUserResult = userService.updateUserFromCommunityApiById(userToAllocateToId, ServiceName.approvedPremises)) {
-      is AuthorisableActionResult.Success -> assigneeUserResult.entity
-      else -> return AuthorisableActionResult.NotFound()
-    }
+    val assigneeUserResult = userService.updateUserFromCommunityApiById(userToAllocateToId, ServiceName.approvedPremises)
+
+    val assigneeUser =
+      if (assigneeUserResult is AuthorisableActionResult.Success && assigneeUserResult.entity.staffRecordFound) {
+        assigneeUserResult.entity.user!!
+      } else {
+        return AuthorisableActionResult.NotFound()
+      }
 
     val result = when (taskType) {
       TaskType.assessment -> {

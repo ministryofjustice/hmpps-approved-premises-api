@@ -202,19 +202,29 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUserFromCommunityApiById(id: UUID, forService: ServiceName, force: Boolean = false): AuthorisableActionResult<UserEntity> {
-    var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  fun updateUserFromCommunityApiById(
+    id: UUID,
+    forService: ServiceName,
+    force: Boolean = false,
+  ): AuthorisableActionResult<GetUserResponse> {
+    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    return updateUserFromCommunityApiById(user, forService, force)
+  }
 
+  fun updateUserFromCommunityApiById(
+    user: UserEntity,
+    forService: ServiceName,
+    force: Boolean = false,
+  ): AuthorisableActionResult<GetUserResponse> {
     val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
     if (userHasChanged(user, deliusUser) || force) {
-      user = updateUser(user, deliusUser, forService)
+      return AuthorisableActionResult.Success(GetUserResponse(updateUser(user, deliusUser, forService), staffRecordFound = true))
     }
-
-    return AuthorisableActionResult.Success(user)
+    return AuthorisableActionResult.Success(GetUserResponse(user, staffRecordFound = true))
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")

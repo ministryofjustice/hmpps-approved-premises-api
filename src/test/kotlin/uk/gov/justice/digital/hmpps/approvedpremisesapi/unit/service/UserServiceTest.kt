@@ -714,7 +714,7 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val entity = (result as AuthorisableActionResult.Success).entity
+      val entity = (result as AuthorisableActionResult.Success).entity.user!!
 
       assertThat(entity.id).isEqualTo(user.id)
 
@@ -874,7 +874,7 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, forService, force)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val entity = (result as AuthorisableActionResult.Success).entity
+      val entity = (result as AuthorisableActionResult.Success).entity.user!!
 
       assertThat(entity.id).isEqualTo(user.id)
       assertThat(entity.name).isEqualTo(deliusUser.staff.fullName)
@@ -923,7 +923,7 @@ class UserServiceTest {
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
 
-      var entity = result.entity
+      var entity = result.entity.user!!
 
       assertThat(entity.email).isEqualTo("null")
 
