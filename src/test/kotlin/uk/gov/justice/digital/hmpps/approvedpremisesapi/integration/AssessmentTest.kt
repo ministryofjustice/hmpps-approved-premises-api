@@ -66,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.IN_PROGRESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -83,9 +84,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestampOrNull
-import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -1232,7 +1231,7 @@ class AssessmentTest : IntegrationTestBase() {
             withAddedAt(OffsetDateTime.now())
           }
 
-          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4)
+          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity>
           probationDeliveryUnits.addLast(null)
 
           val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
@@ -3534,7 +3533,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         applicationId = assessment.application.id,
 
-        createdAt = assessment.createdAt.toTimestamp(),
+        createdAt = assessment.createdAt.toInstant(),
 
         riskRatings = when (val reified = assessment.application) {
           is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
@@ -3543,8 +3542,8 @@ class AssessmentTest : IntegrationTestBase() {
         },
 
         arrivalDate = when (val application = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> application.arrivalDate.toTimestampOrNull()
-          is TemporaryAccommodationApplicationEntity -> application.arrivalDate.toTimestampOrNull()
+          is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toInstant()
+          is TemporaryAccommodationApplicationEntity -> application.arrivalDate?.toInstant()
           else -> null
         },
 
@@ -3556,7 +3555,7 @@ class AssessmentTest : IntegrationTestBase() {
         crn = assessment.application.crn,
         allocated = assessment.allocatedToUser != null,
         status = status,
-        dueAt = assessment.dueAt?.toTimestamp(),
+        dueAt = assessment.dueAt?.toInstant(),
 
         /*
         If assessment.application is not TemporaryAccommodationApplicationEntity this returns null due to cast failing.
@@ -3572,15 +3571,15 @@ class AssessmentTest : IntegrationTestBase() {
     override val type: String,
     override val id: UUID,
     override val applicationId: UUID,
-    override val createdAt: Timestamp,
+    override val createdAt: Instant,
     override val riskRatings: String?,
-    override val arrivalDate: Timestamp?,
+    override val arrivalDate: Instant?,
     override val completed: Boolean,
     override val allocated: Boolean,
     override val decision: String?,
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
-    override val dueAt: Timestamp?,
+    override val dueAt: Instant?,
     override val probationDeliveryUnitName: String?,
   ) : DomainAssessmentSummary
 }

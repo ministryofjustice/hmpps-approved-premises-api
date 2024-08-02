@@ -10,7 +10,7 @@ services:
       - "5433:5432"
 
   integration_test_redis:
-    image: "bitnami/redis:7.0.11"
+    image: "bitnami/redis:7.2.5"
     container_name: approved-premises-redis-test
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -18,7 +18,7 @@ services:
       - "6377:6379"
 
   localstack:
-    image: localstack/localstack:1.3.1
+    image: localstack/localstack:3.4.0
     container_name: approved-premises-api-test-localstack
     ports:
       - "4566:4566"
