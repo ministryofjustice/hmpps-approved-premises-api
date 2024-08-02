@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.sentry.Sentry
+import org.hibernate.exception.JDBCConnectionException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -64,6 +65,13 @@ class ExceptionHandling(
       )
     }
 
+    if (isTypeInThrowableChain(throwable, JDBCConnectionException::class.java)) {
+      sentryService.captureException(throwable)
+      return ServiceUnavailableProblem(
+        detail = "Error acquiring a database connection",
+      )
+    }
+
     log.error("Unhandled exception type, returning generic 500 response", throwable)
 
     sentryService.captureException(throwable)
@@ -73,6 +81,19 @@ class ExceptionHandling(
     return UnhandledExceptionProblem(
       detail = "There was an unexpected problem",
     )
+  }
+
+  private fun <T> isTypeInThrowableChain(throwable: Throwable, causeType: Class<T>): Boolean {
+    if (throwable.javaClass == causeType) {
+      return true
+    }
+
+    val cause = throwable.cause
+    if (cause != null) {
+      return isTypeInThrowableChain(cause, causeType)
+    } else {
+      return false
+    }
   }
 
   override fun handleMessageNotReadableException(

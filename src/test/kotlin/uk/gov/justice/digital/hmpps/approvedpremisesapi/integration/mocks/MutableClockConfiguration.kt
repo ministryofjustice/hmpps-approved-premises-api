@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
