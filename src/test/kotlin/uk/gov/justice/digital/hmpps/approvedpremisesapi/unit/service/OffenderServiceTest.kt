@@ -42,7 +42,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 
 class OffenderServiceTest {
@@ -53,6 +55,7 @@ class OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockOffenderRisksDataSource = mockk<OffenderRisksDataSource>()
+  private val mockPersonTransformer = mockk<PersonTransformer>()
 
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
@@ -86,6 +89,7 @@ class OffenderServiceTest {
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
     mockOffenderRisksDataSource,
+    mockPersonTransformer,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
   )
@@ -626,29 +630,75 @@ class OffenderServiceTest {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to
+          ClientResult
+            .Failure
+            .StatusCode(
+              HttpMethod.GET,
+              "/secure/offenders/crn/ABC123",
+              HttpStatus.NOT_FOUND,
+              null,
+              true,
+            ),
+      )
+
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
+        crn to
+          ClientResult
+            .Failure
+            .StatusCode(
+              HttpMethod.GET,
+              "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+              HttpStatus.NOT_FOUND,
+              null,
+              true,
+            ),
+      )
+
+      every { mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(PersonSummaryInfoResult.NotFound(crn), null) } returns PersonInfoResult.NotFound(crn)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
-
       assertThat(result is PersonInfoResult.NotFound).isTrue
     }
 
     @Test
-    fun `returns Unknown if Community API responds with a 500`() {
+    fun `getInfoForPerson throws runtime exception when Community API responds with a 500`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to
+          ClientResult
+            .Failure
+            .StatusCode(
+              HttpMethod.GET,
+              "/secure/offenders/crn/ABC123",
+              HttpStatus.INTERNAL_SERVER_ERROR,
+              null,
+              true,
+            ),
+      )
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn))
+      } returns mapOf(
+        crn to
+          ClientResult.Failure.StatusCode(
+            HttpMethod.GET,
+            "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+            HttpStatus.NOT_FOUND,
+            null,
+            false,
+          ),
+      )
 
-      assertThat(result is PersonInfoResult.Unknown).isTrue
-      result as PersonInfoResult.Unknown
-      assertThat(result.throwable).isNotNull()
+      val exception = assertThrows<RuntimeException> { offenderService.getInfoForPerson(crn, deliusUsername, false) }
+      assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/ABC123: 500 INTERNAL_SERVER_ERROR")
     }
 
     @Test
-    fun `getInfoForPerson returns restricted result when LAO calls fail with Forbidden error and without body response`() {
+    fun `getInfoForPerson throws runtime exception when LAO respond is Forbidden`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -658,23 +708,25 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = offenderDetails,
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = offenderDetails,
+        ),
       )
 
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
-        HttpMethod.GET,
-        "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-        HttpStatus.FORBIDDEN,
-        null,
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
+        crn to
+          StatusCode(
+            HttpMethod.GET,
+            "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+            HttpStatus.FORBIDDEN,
+            null,
+          ),
       )
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
-
-      assertThat(result is PersonInfoResult.Success.Restricted).isTrue
-      result as PersonInfoResult.Success.Restricted
-      assertThat(result.crn).isEqualTo(crn)
+      val exception = assertThrows<RuntimeException> { offenderService.getInfoForPerson(crn, deliusUsername, false) }
+      assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/ABC123/user/USER/userAccess: 403 FORBIDDEN")
     }
 
     @Test
@@ -707,27 +759,43 @@ class OffenderServiceTest {
     fun `returns Restricted for LAO Offender where user does not pass check and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
+      val nomsNumber = randomStringMultiCaseWithNumbers(10)
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = OffenderDetailsSummaryFactory()
-          .withCrn(crn)
-          .withCurrentRestriction(true)
-          .produce(),
-      )
-
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
-        status = HttpStatus.FORBIDDEN,
-        method = HttpMethod.GET,
-        path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-        body = objectMapper.writeValueAsString(
-          UserOffenderAccess(
-            userRestricted = true,
-            userExcluded = false,
-            restrictionMessage = null,
-          ),
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = OffenderDetailsSummaryFactory()
+            .withCrn(crn)
+            .withNomsNumber(nomsNumber)
+            .withCurrentRestriction(true)
+            .produce(),
         ),
       )
+
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
+        crn to
+          ClientResult
+            .Failure
+            .StatusCode(
+              status = HttpStatus.FORBIDDEN,
+              method = HttpMethod.GET,
+              path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+              body = objectMapper.writeValueAsString(
+                UserOffenderAccess(
+                  userRestricted = true,
+                  userExcluded = false,
+                  restrictionMessage = null,
+                ),
+              ),
+            ),
+      )
+
+      every {
+        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+          PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber),
+          null,
+        )
+      } returns PersonInfoResult.Success.Restricted(crn, nomsNumber)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, ignoreLaoRestrictions = false)
 
@@ -747,19 +815,28 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = offenderDetails,
-      )
-
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = UserOffenderAccess(
-          userRestricted = false,
-          userExcluded = false,
-          restrictionMessage = null,
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = offenderDetails,
         ),
       )
+
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn))
+      } returns mapOf(
+        crn to clientResultSuccess(false, false),
+      )
+
+      every {
+        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+          PersonSummaryInfoResult.Success.Full(
+            crn,
+            offenderDetails.asCaseSummary(),
+          ),
+          null,
+        )
+      } returns PersonInfoResult.Success.Full(crn, offenderDetails, null)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
 
@@ -781,23 +858,41 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = offenderDetails,
-      )
-
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
-        status = HttpStatus.FORBIDDEN,
-        method = HttpMethod.GET,
-        path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-        body = objectMapper.writeValueAsString(
-          UserOffenderAccess(
-            userRestricted = true,
-            userExcluded = false,
-            restrictionMessage = null,
-          ),
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = offenderDetails,
         ),
       )
+
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
+        crn to
+          ClientResult
+            .Failure
+            .StatusCode(
+              HttpMethod.GET,
+              "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+              HttpStatus.FORBIDDEN,
+              objectMapper.writeValueAsString(
+                UserOffenderAccess(
+                  userRestricted = true,
+                  userExcluded = false,
+                  restrictionMessage = null,
+                ),
+              ),
+              true,
+            ),
+      )
+
+      every {
+        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+          PersonSummaryInfoResult.Success.Full(
+            crn,
+            offenderDetails.asCaseSummary(),
+          ),
+          null,
+        )
+      } returns PersonInfoResult.Success.Full(crn, offenderDetails, null)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, ignoreLaoRestrictions = true)
 
@@ -819,9 +914,15 @@ class OffenderServiceTest {
         .withNomsNumber(nomsNumber)
         .produce()
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = offenderDetails,
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
+        crn to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = offenderDetails,
+        ),
+      )
+
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
+        crn to clientResultSuccess(false, false),
       )
 
       val inmateDetail = InmateDetailFactory()
@@ -832,6 +933,16 @@ class OffenderServiceTest {
         status = HttpStatus.OK,
         body = inmateDetail,
       )
+
+      every {
+        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+          PersonSummaryInfoResult.Success.Full(
+            crn,
+            offenderDetails.asCaseSummary(),
+          ),
+          inmateDetail,
+        )
+      } returns PersonInfoResult.Success.Full(crn, offenderDetails, inmateDetail)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
 
@@ -1004,14 +1115,14 @@ class OffenderServiceTest {
       assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
-
-    private fun clientResultSuccess(
-      userRestricted: Boolean,
-      userExcluded: Boolean,
-    ) = ClientResult.Success(
-      HttpStatus.OK,
-      UserOffenderAccess(userRestricted, userExcluded, restrictionMessage = null),
-      false,
-    )
   }
+
+  private fun clientResultSuccess(
+    userRestricted: Boolean,
+    userExcluded: Boolean,
+  ) = ClientResult.Success(
+    HttpStatus.OK,
+    UserOffenderAccess(userRestricted, userExcluded, restrictionMessage = null),
+    false,
+  )
 }

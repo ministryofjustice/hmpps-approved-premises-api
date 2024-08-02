@@ -98,7 +98,7 @@ class ApplicationsController(
 
     val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
 
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
   }
 
   override fun applicationsAllGet(
@@ -131,13 +131,11 @@ class ApplicationsController(
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
     ).body(
-      applications.map {
-        getPersonDetailAndTransformToSummary(
-          application = it,
-          user = user,
-          ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
-        )
-      },
+      getPersonDetailAndTransformToSummary(
+        applications,
+        user = user,
+        ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
+      ),
     )
   }
 
@@ -623,13 +621,20 @@ class ApplicationsController(
   }
 
   private fun getPersonDetailAndTransformToSummary(
-    application: JPAApplicationSummary,
+    applications: List<JPAApplicationSummary>,
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
-  ): ApplicationSummary {
-    val personInfo = offenderService.getInfoForPerson(application.getCrn(), user.deliusUsername, ignoreLaoRestrictions)
+  ): List<ApplicationSummary> {
+    val crns = applications.map { it.getCrn() }
+    val personInfoResults = offenderService.getInfoForPersons(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
 
-    return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
+    return applications.map {
+      val crn = it.getCrn()
+      applicationsTransformer.transformDomainToApiSummary(
+        it,
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+      )
+    }
   }
 
   private fun getPersonDetailAndTransform(

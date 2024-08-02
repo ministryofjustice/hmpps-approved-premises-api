@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -38,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
@@ -51,6 +51,7 @@ class OffenderService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   private val offenderRisksDataSource: OffenderRisksDataSource,
+  private val personTransformer: PersonTransformer,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
@@ -81,17 +82,19 @@ class OffenderService(
 
   fun getOffenderSummariesByCrns(
     crns: Set<String>,
-    deliusUsername: String,
+    deliusUsername: String?,
     ignoreLaoRestrictions: Boolean = false,
   ): List<PersonSummaryInfoResult> {
+    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
+
     if (crns.isEmpty()) return emptyList()
 
     val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
-    val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns.toList())
+    val userAccessList = deliusUsername?.let { offenderDetailsDataSource.getUserAccessForOffenderCrns(it, crns.toList()) }
 
     return crns.map { crn ->
       val offenderResponse = offenderDetailsList[crn]
-      val accessResponse = userAccessList[crn]
+      val accessResponse = userAccessList?.get(crn)
 
       val offender = getOffender(
         ignoreLaoRestrictions,
@@ -497,59 +500,38 @@ class OffenderService(
     ignoreLaoRestrictions: Boolean,
   ): PersonInfoResult {
     check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
+    return getInfoForPersons(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
+  }
 
-    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
+  fun getInfoForPersons(
+    crns: Set<String>,
+    deliusUsername: String?,
+    ignoreLaoRestrictions: Boolean,
+  ): List<PersonInfoResult> {
+    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided" }
 
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
+    if (crns.isEmpty()) return emptyList()
 
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status.equals(HttpStatus.NOT_FOUND)) {
-        return PersonInfoResult.NotFound(crn)
-      } else {
-        return PersonInfoResult.Unknown(crn, offenderResponse.toException())
-      }
+    val offendersDetails = getOffenderSummariesByCrns(crns, deliusUsername, ignoreLaoRestrictions)
 
-      is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
-    }
-
-    if (!ignoreLaoRestrictions) {
-      if (offender.currentExclusion || offender.currentRestriction) {
-        val access =
-          when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername!!, crn)) {
-            is ClientResult.Success -> accessResponse.body
-            is ClientResult.Failure.StatusCode -> {
-              if (accessResponse.status.equals(HttpStatus.FORBIDDEN)) {
-                try {
-                  accessResponse.deserializeTo<UserOffenderAccess>()
-                  return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
-                } catch (exception: Exception) {
-                  Sentry.captureException(RuntimeException("LAO calls returns but failed to marshal the response", exception))
-                  return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
-                }
-              }
-
-              accessResponse.throwException()
+    return offendersDetails.map {
+      when (it) {
+        is PersonSummaryInfoResult.Success.Full -> {
+          val inmateDetails = it.summary.nomsId?.let { nomsNumber ->
+            when (val inmateDetailsResult = getInmateDetailByNomsNumber(it.crn, nomsNumber)) {
+              is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+              else -> null
             }
-            is ClientResult.Failure -> accessResponse.throwException()
           }
-
-        if (access.userExcluded || access.userRestricted) {
-          return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
+          personTransformer.transformPersonSummaryInfoToPersonInfo(it, inmateDetails)
         }
+
+        is PersonSummaryInfoResult.Success.Restricted,
+        is PersonSummaryInfoResult.NotFound,
+        is PersonSummaryInfoResult.Unknown,
+        ->
+          personTransformer.transformPersonSummaryInfoToPersonInfo(it, null)
       }
     }
-
-    val inmateDetails = offender.otherIds.nomsNumber?.let { nomsNumber ->
-      when (val inmateDetailsResult = getInmateDetailByNomsNumber(offender.otherIds.crn, nomsNumber)) {
-        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-        else -> null
-      }
-    }
-
-    return PersonInfoResult.Success.Full(
-      crn = crn,
-      offenderDetailSummary = offender,
-      inmateDetail = inmateDetails,
-    )
   }
 }

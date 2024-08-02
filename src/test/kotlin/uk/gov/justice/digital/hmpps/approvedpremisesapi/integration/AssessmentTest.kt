@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
@@ -78,6 +79,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -647,6 +649,8 @@ class AssessmentTest : IntegrationTestBase() {
         val (offender4, inmate4) = `Given an Offender`({ withFirstName("Bagatha"); withLastName("") })
         val assessBagatha = createApprovedPremisesAssessmentForStatus(user, offender4, cas1InProgress)
 
+        ApDeliusContext_addListCaseSummaryToBulkResponse(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))
+
         assertAssessmentsReturnedGivenStatus(
           jwt,
           ServiceName.approvedPremises,
@@ -676,6 +680,8 @@ class AssessmentTest : IntegrationTestBase() {
 
         val (offender4, inmate4) = `Given an Offender`({ withCrn("CRN3") })
         val assessCrn3 = createApprovedPremisesAssessmentForStatus(user, offender4, cas1InProgress)
+
+        ApDeliusContext_addListCaseSummaryToBulkResponse(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))
 
         assertAssessmentsReturnedGivenStatus(
           jwt,
@@ -1294,6 +1300,8 @@ class AssessmentTest : IntegrationTestBase() {
             }
           }
 
+          ApDeliusContext_addListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, inmateDetails) -> offenderDetails.asCaseSummary() })
+
           assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
@@ -1401,6 +1409,8 @@ class AssessmentTest : IntegrationTestBase() {
             .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
             .map { assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toSummary(it.assessment) }
 
+          ApDeliusContext_addListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, inmateDetails) -> offenderDetails.asCaseSummary() })
+
           assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
@@ -1505,6 +1515,7 @@ class AssessmentTest : IntegrationTestBase() {
           otherAssessment.schemaUpToDate = true
 
           mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
+          ApDeliusContext_addListCaseSummaryToBulkResponse(listOf(offender.first.asCaseSummary(), otherOffender.first.asCaseSummary()))
 
           assertResponseForUrl(
             jwt,
