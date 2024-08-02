@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.reactive.server.returnResult
@@ -18,54 +19,58 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
-  @Test
-  fun `An invalid request body will return a 400 when the expected body root is an object and an array is provided`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-    val validationResult = webTestClient.post()
-      .uri("/deserialization-test/object")
-      .header("Authorization", "Bearer $jwt")
-      .header("Content-Type", "application/json")
-      .bodyValue("[]")
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .returnResult<ValidationError>()
-      .responseBody
-      .blockFirst()
+  @Nested
+  inner class DeserializationTests {
 
-    assertThat(validationResult.detail).isEqualTo("Expected an object but got an array")
-  }
+    @Test
+    fun `An invalid request body will return a 400 when the expected body root is an object and an array is provided`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-  @Test
-  fun `An invalid request body will return a 400 when the expected body root is an array and an object is provided`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/object")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue("[]")
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .returnResult<ValidationError>()
+        .responseBody
+        .blockFirst()
 
-    val validationResult = webTestClient.post()
-      .uri("/deserialization-test/array")
-      .header("Authorization", "Bearer $jwt")
-      .header("Content-Type", "application/json")
-      .bodyValue("{}")
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .returnResult<ValidationError>()
-      .responseBody
-      .blockFirst()
+      assertThat(validationResult.detail).isEqualTo("Expected an object but got an array")
+    }
 
-    assertThat(validationResult.detail).isEqualTo("Expected an array but got an object")
-  }
+    @Test
+    fun `An invalid request body will return a 400 when the expected body root is an array and an object is provided`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-  @Test
-  fun `An invalid request body will return a 400 with details of all problems when the expected body root is an object and an object is provided`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/array")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue("{}")
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .returnResult<ValidationError>()
+        .responseBody
+        .blockFirst()
 
-    val validationResult = webTestClient.post()
-      .uri("/deserialization-test/object")
-      .header("Authorization", "Bearer $jwt")
-      .header("Content-Type", "application/json")
-      .bodyValue(
-        """
+      assertThat(validationResult.detail).isEqualTo("Expected an array but got an object")
+    }
+
+    @Test
+    fun `An invalid request body will return a 400 with details of all problems when the expected body root is an object and an object is provided`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/object")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue(
+          """
           {
              "requiredInt": null,
              "optionalInt": 123,
@@ -90,48 +95,48 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
              "aUUID": "not a uuid"
           }
         """,
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .returnResult<ValidationError>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(validationResult!!.invalidParams).containsAll(
+        listOf(
+          InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalBoolean", errorType = "expectedBoolean"),
+          InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalLocalDate", errorType = "expectedString"),
+          InvalidParam(propertyName = "$.optionalListOfObjects[0].requiredString", errorType = "empty"),
+          InvalidParam(propertyName = "$.optionalListOfObjects[1]", errorType = "expectedObject"),
+          InvalidParam(propertyName = "$.optionalObject", errorType = "expectedObject"),
+          InvalidParam(propertyName = "$.requiredInt", errorType = "empty"),
+          InvalidParam(propertyName = "$.requiredListOfInts[0]", errorType = "expectedNumber"),
+          InvalidParam(propertyName = "$.requiredListOfInts[1]", errorType = "expectedNumber"),
+          InvalidParam(propertyName = "$.requiredListOfInts[2]", errorType = "expectedNumber"),
+          InvalidParam(propertyName = "$.requiredListOfObjects", errorType = "empty"),
+          InvalidParam(propertyName = "$.requiredObject.optionalBoolean", errorType = "expectedBoolean"),
+          InvalidParam(propertyName = "$.requiredObject.optionalLocalDate", errorType = "expectedString"),
+          InvalidParam(propertyName = "$.requiredObject.requiredString", errorType = "empty"),
+          InvalidParam(propertyName = "$.aLocalDate", errorType = "invalid"),
+          InvalidParam(propertyName = "$.aLocalDateTime", errorType = "invalid"),
+          InvalidParam(propertyName = "$.anOffsetDateTime", errorType = "invalid"),
+          InvalidParam(propertyName = "$.anInstant", errorType = "invalid"),
+          InvalidParam(propertyName = "$.aUUID", errorType = "invalid"),
+        ),
       )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .returnResult<ValidationError>()
-      .responseBody
-      .blockFirst()
+    }
 
-    assertThat(validationResult!!.invalidParams).containsAll(
-      listOf(
-        InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalBoolean", errorType = "expectedBoolean"),
-        InvalidParam(propertyName = "$.optionalListOfObjects[0].optionalLocalDate", errorType = "expectedString"),
-        InvalidParam(propertyName = "$.optionalListOfObjects[0].requiredString", errorType = "empty"),
-        InvalidParam(propertyName = "$.optionalListOfObjects[1]", errorType = "expectedObject"),
-        InvalidParam(propertyName = "$.optionalObject", errorType = "expectedObject"),
-        InvalidParam(propertyName = "$.requiredInt", errorType = "empty"),
-        InvalidParam(propertyName = "$.requiredListOfInts[0]", errorType = "expectedNumber"),
-        InvalidParam(propertyName = "$.requiredListOfInts[1]", errorType = "expectedNumber"),
-        InvalidParam(propertyName = "$.requiredListOfInts[2]", errorType = "expectedNumber"),
-        InvalidParam(propertyName = "$.requiredListOfObjects", errorType = "empty"),
-        InvalidParam(propertyName = "$.requiredObject.optionalBoolean", errorType = "expectedBoolean"),
-        InvalidParam(propertyName = "$.requiredObject.optionalLocalDate", errorType = "expectedString"),
-        InvalidParam(propertyName = "$.requiredObject.requiredString", errorType = "empty"),
-        InvalidParam(propertyName = "$.aLocalDate", errorType = "invalid"),
-        InvalidParam(propertyName = "$.aLocalDateTime", errorType = "invalid"),
-        InvalidParam(propertyName = "$.anOffsetDateTime", errorType = "invalid"),
-        InvalidParam(propertyName = "$.anInstant", errorType = "invalid"),
-        InvalidParam(propertyName = "$.aUUID", errorType = "invalid"),
-      ),
-    )
-  }
+    @Test
+    fun `An invalid request body will return a 400 with details of all problems when the expected body root is an array and an array is provided`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-  @Test
-  fun `An invalid request body will return a 400 with details of all problems when the expected body root is an array and an array is provided`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    val validationResult = webTestClient.post()
-      .uri("/deserialization-test/array")
-      .header("Authorization", "Bearer $jwt")
-      .header("Content-Type", "application/json")
-      .bodyValue(
-        """
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/array")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue(
+          """
           [{
              "requiredInt": null,
              "optionalInt": 123,
@@ -161,48 +166,48 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
              "aUUID": "not a uuid"
           }]
         """,
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .returnResult<ValidationError>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(validationResult!!.invalidParams).containsAll(
+        listOf(
+          InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalBoolean", errorType = "expectedBoolean"),
+          InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalLocalDate", errorType = "expectedString"),
+          InvalidParam(propertyName = "$[0].optionalListOfObjects[0].requiredString", errorType = "empty"),
+          InvalidParam(propertyName = "$[0].optionalListOfObjects[1]", errorType = "expectedObject"),
+          InvalidParam(propertyName = "$[0].optionalObject", errorType = "expectedObject"),
+          InvalidParam(propertyName = "$[0].requiredInt", errorType = "empty"),
+          InvalidParam(propertyName = "$[0].requiredListOfInts[0]", errorType = "expectedNumber"),
+          InvalidParam(propertyName = "$[0].requiredListOfInts[1]", errorType = "expectedNumber"),
+          InvalidParam(propertyName = "$[0].requiredListOfInts[2]", errorType = "expectedNumber"),
+          InvalidParam(propertyName = "$[0].requiredListOfObjects", errorType = "empty"),
+          InvalidParam(propertyName = "$[0].requiredObject.optionalBoolean", errorType = "expectedBoolean"),
+          InvalidParam(propertyName = "$[0].requiredObject.optionalLocalDate", errorType = "expectedString"),
+          InvalidParam(propertyName = "$[0].requiredObject.requiredString", errorType = "empty"),
+          InvalidParam(propertyName = "$[0].aLocalDate", errorType = "invalid"),
+          InvalidParam(propertyName = "$[0].aLocalDateTime", errorType = "invalid"),
+          InvalidParam(propertyName = "$[0].anOffsetDateTime", errorType = "invalid"),
+          InvalidParam(propertyName = "$[0].anInstant", errorType = "invalid"),
+          InvalidParam(propertyName = "$[0].aUUID", errorType = "invalid"),
+        ),
       )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .returnResult<ValidationError>()
-      .responseBody
-      .blockFirst()
+    }
 
-    assertThat(validationResult!!.invalidParams).containsAll(
-      listOf(
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalBoolean", errorType = "expectedBoolean"),
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].optionalLocalDate", errorType = "expectedString"),
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[0].requiredString", errorType = "empty"),
-        InvalidParam(propertyName = "$[0].optionalListOfObjects[1]", errorType = "expectedObject"),
-        InvalidParam(propertyName = "$[0].optionalObject", errorType = "expectedObject"),
-        InvalidParam(propertyName = "$[0].requiredInt", errorType = "empty"),
-        InvalidParam(propertyName = "$[0].requiredListOfInts[0]", errorType = "expectedNumber"),
-        InvalidParam(propertyName = "$[0].requiredListOfInts[1]", errorType = "expectedNumber"),
-        InvalidParam(propertyName = "$[0].requiredListOfInts[2]", errorType = "expectedNumber"),
-        InvalidParam(propertyName = "$[0].requiredListOfObjects", errorType = "empty"),
-        InvalidParam(propertyName = "$[0].requiredObject.optionalBoolean", errorType = "expectedBoolean"),
-        InvalidParam(propertyName = "$[0].requiredObject.optionalLocalDate", errorType = "expectedString"),
-        InvalidParam(propertyName = "$[0].requiredObject.requiredString", errorType = "empty"),
-        InvalidParam(propertyName = "$[0].aLocalDate", errorType = "invalid"),
-        InvalidParam(propertyName = "$[0].aLocalDateTime", errorType = "invalid"),
-        InvalidParam(propertyName = "$[0].anOffsetDateTime", errorType = "invalid"),
-        InvalidParam(propertyName = "$[0].anInstant", errorType = "invalid"),
-        InvalidParam(propertyName = "$[0].aUUID", errorType = "invalid"),
-      ),
-    )
-  }
+    @Test
+    fun `Valid special JSON primitive properties are not listed as errors when appearing alongside an invalid property`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-  @Test
-  fun `Valid special JSON primitive properties are not listed as errors when appearing alongside an invalid property`() {
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    val validationResult = webTestClient.post()
-      .uri("/deserialization-test/special-json-primitives")
-      .header("Authorization", "Bearer $jwt")
-      .header("Content-Type", "application/json")
-      .bodyValue(
-        """
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/special-json-primitives")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue(
+          """
           {
             "missingString": null,
             "localDate": "2023-04-12",
@@ -212,17 +217,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
             "uuid": "61f22c65-4d42-4cc1-8955-e4ea89088194"
           }
         """,
-      )
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-      .returnResult<ValidationError>()
-      .responseBody
-      .blockFirst()
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .returnResult<ValidationError>()
+        .responseBody
+        .blockFirst()
 
-    assertThat(validationResult!!.invalidParams).containsExactly(
-      InvalidParam(propertyName = "$.missingString", errorType = "empty"),
-    )
+      assertThat(validationResult!!.invalidParams).containsExactly(
+        InvalidParam(propertyName = "$.missingString", errorType = "empty"),
+      )
+    }
+
   }
 
   @Test
