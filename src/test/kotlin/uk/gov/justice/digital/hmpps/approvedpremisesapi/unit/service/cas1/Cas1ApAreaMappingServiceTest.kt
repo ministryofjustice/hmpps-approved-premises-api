@@ -13,29 +13,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 
-class Cas1UserMappingServiceTest {
+class Cas1ApAreaMappingServiceTest {
 
   private val apAreaRepository = mockk<ApAreaRepository>()
 
-  private val service = Cas1UserMappingService(apAreaRepository)
-
-  private val usersProbationRegionApArea = ApAreaEntityFactory().produce()
-
-  private val usersProbationRegion = ProbationRegionEntityFactory()
-    .withDefaults()
-    .withApArea(usersProbationRegionApArea)
-    .produce()
+  private val service = Cas1ApAreaMappingService(apAreaRepository)
 
   @Nested
   inner class DetermineApArea {
 
     @Test
-    fun `determineApArea when user not in national probation area, return user's probation region's associated ap area`() {
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withProbationAreaCode("N42")
+    fun `determineApArea when region has ap area defined, return region's associated ap area`() {
+      val usersProbationRegionApArea = ApAreaEntityFactory().produce()
+
+      val usersProbationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .withApArea(usersProbationRegionApArea)
         .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory().produce()
 
       val result = service.determineApArea(
         usersProbationRegion,
@@ -47,80 +45,40 @@ class Cas1UserMappingServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "N43, N07CEU, LON",
-      "N43, N43CP1, NE",
-      "N43, N43CP1, NE",
-      "N43, N43CP2, NE",
-      "N43, N43CPP, NE",
-      "N43, N43LKS, LON",
-      "N43, N43MID, Mids",
-      "N43, N43NTH, NW",
-      "N43, N43SCE, SEE",
-      "N43, N43WSW, SWSC",
-      "N43, N43OMD, Mids",
-      "N43, N43OLK, LON",
-      "N43, N43ONM, NW",
-      "N43, N43OSE, SEE",
-      "N43, N43OWS, SWSC",
-      "N43, N41CRU, NE",
-      "N43, N41EFT, NE",
-      "N43, N41EP2, NE",
-      "N43, N41EXM, NE",
-      "N43, N41EP4, NE",
-      "N43, XXXNAT, NE",
-      "N43, XXXNAT, NE",
-      "N41, N07CEU, LON",
-      "N41, N43CP1, NE",
-      "N41, N43CP1, NE",
-      "N41, N43CP2, NE",
-      "N41, N43CPP, NE",
-      "N41, N43LKS, LON",
-      "N41, N43MID, Mids",
-      "N41, N43NTH, NW",
-      "N41, N43SCE, SEE",
-      "N41, N43WSW, SWSC",
-      "N41, N43OMD, Mids",
-      "N41, N43OLK, LON",
-      "N41, N43ONM, NW",
-      "N41, N43OSE, SEE",
-      "N41, N43OWS, SWSC",
-      "N41, N41CRU, NE",
-      "N41, N41EFT, NE",
-      "N41, N41EP2, NE",
-      "N41, N41EXM, NE",
-      "N41, N41EP4, NE",
-      "N41, XXXNAT, NE",
-      "N41, XXXNAT, NE",
-      "XXX, N07CEU, LON",
-      "XXX, N43CP1, NE",
-      "XXX, N43CP1, NE",
-      "XXX, N43CP2, NE",
-      "XXX, N43CPP, NE",
-      "XXX, N43LKS, LON",
-      "XXX, N43MID, Mids",
-      "XXX, N43NTH, NW",
-      "XXX, N43SCE, SEE",
-      "XXX, N43WSW, SWSC",
-      "XXX, N43OMD, Mids",
-      "XXX, N43OLK, LON",
-      "XXX, N43ONM, NW",
-      "XXX, N43OSE, SEE",
-      "XXX, N43OWS, SWSC",
-      "XXX, N41CRU, NE",
-      "XXX, N41EFT, NE",
-      "XXX, N41EP2, NE",
-      "XXX, N41EXM, NE",
-      "XXX, N41EP4, NE",
-      "XXX, XXXNAT, NE",
-      "XXX, XXXNAT, NE",
+      "N07CEU, LON",
+      "N43CP1, NE",
+      "N43CP1, NE",
+      "N43CP2, NE",
+      "N43CPP, NE",
+      "N43LKS, LON",
+      "N43MID, Mids",
+      "N43NTH, NW",
+      "N43SCE, SEE",
+      "N43WSW, SWSC",
+      "N43OMD, Mids",
+      "N43OLK, LON",
+      "N43ONM, NW",
+      "N43OSE, SEE",
+      "N43OWS, SWSC",
+      "N41CRU, NE",
+      "N41EFT, NE",
+      "N41EP2, NE",
+      "N41EXM, NE",
+      "N41EP4, NE",
+      "XXXNAT, NE",
+      "XXXNAT, NE",
     )
-    fun `determine ApArea from team code when user in national probation area and mapping exists for team`(
-      deliusProbationAreaCode: String,
+    fun `determineApArea when region has no ap area defined using team code`(
       deliusTeamCode: String,
       expectedApArea: String,
     ) {
+      val usersProbationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .withApArea(null)
+        .produce()
+
       val staffUserDetails = StaffUserDetailsFactory()
-        .withProbationAreaCode(deliusProbationAreaCode)
+        .withProbationAreaCode("XYZ")
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory().withCode("CODE_NOT_IN_MAPPING").produce(),
@@ -142,7 +100,12 @@ class Cas1UserMappingServiceTest {
     }
 
     @Test
-    fun `determineApArea when user in national probation area but they are not in any teams use NE`() {
+    fun `determineApArea when region has no ap area defined and user has no team codes, use NE`() {
+      val usersProbationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .withApArea(null)
+        .produce()
+
       val staffUserDetails = StaffUserDetailsFactory()
         .withUsername("J_ALUCARD")
         .withProbationAreaCode("N43")
@@ -161,10 +124,16 @@ class Cas1UserMappingServiceTest {
     }
 
     @Test
-    fun `throws error with details when user in national probation area but mapping is not available for any of their teams`() {
+    fun `throws error with details when region has no ap area defined and mapping is not available for any of their teams`() {
+      val usersProbationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .withDeliusCode("PR1")
+        .withApArea(null)
+        .produce()
+
       val staffUserDetails = StaffUserDetailsFactory()
         .withUsername("J_ALUCARD")
-        .withProbationAreaCode("N43")
+        .withProbationAreaCode("XYZ")
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory().withCode("CODE_NOT_IN_MAPPING").produce(),
@@ -180,15 +149,20 @@ class Cas1UserMappingServiceTest {
         )
       }.hasMessage(
         "Internal Server Error: Could not find a delius team mapping for delius user J_ALUCARD " +
-          "with delius probation area code N43 and teams " +
+          "with probation region PR1 and teams " +
           "[CODE_NOT_IN_MAPPING, OTHER_CODE_NOT_IN_MAPPING]",
       )
     }
 
     @Test
     fun `throws error with details when resolved area id doesnt exist in ap area table`() {
+      val usersProbationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .withApArea(null)
+        .produce()
+
       val staffUserDetails = StaffUserDetailsFactory()
-        .withProbationAreaCode("XXX")
+        .withProbationAreaCode("XYZ")
         .withTeams(
           listOf(
             StaffUserTeamMembershipFactory().withCode("N43MID").produce(),

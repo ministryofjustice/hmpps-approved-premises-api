@@ -1,0 +1,1 @@
+ALTER TABLE probation_regions ALTER COLUMN ap_area_id DROP NOT NULL;

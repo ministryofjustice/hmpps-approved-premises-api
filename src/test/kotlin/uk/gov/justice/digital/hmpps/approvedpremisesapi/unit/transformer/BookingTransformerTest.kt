@@ -109,16 +109,14 @@ class BookingTransformerTest {
       id = UUID.fromString("4eae0059-af28-4436-a4d8-7106523866d9"),
       name = "region",
       deliusCode = "ABC",
-      premises = mutableListOf(),
       apArea = ApAreaEntity(
         id = UUID.fromString("a005f122-a0e9-4d93-b5bb-f7c5bd82a015"),
         identifier = "APA",
         name = "Ap Area",
-        probationRegions = mutableListOf(),
         emailAddress = "email@test.com",
         notifyReplyToEmailId = "1234",
       ),
-    ).apply { apArea.probationRegions.add(this) },
+    ),
     localAuthorityArea = LocalAuthorityAreaEntity(
       id = UUID.fromString("ee39d3bc-e9ad-4408-a21d-cf763aa1d981"),
       identifier = "AUTHORITY",

@@ -202,7 +202,6 @@ user-allocations:
         south-east-eastern: JIMSNOWLDAP
         south-west-south central: JIMSNOWLDAP
         wales: JIMSNOWLDAP
-        nat: JIMSNOWLDAP
     appealed-assessments:
       enabled: true
     female-assessments:

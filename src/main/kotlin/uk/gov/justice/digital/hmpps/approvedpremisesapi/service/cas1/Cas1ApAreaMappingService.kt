@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 
 @Component
-class Cas1UserMappingService(
+class Cas1ApAreaMappingService(
   private val apAreaRepository: ApAreaRepository,
 ) {
   private val deliusTeamMappings = listOf(
@@ -47,9 +47,9 @@ class Cas1UserMappingService(
     usersProbationRegion: ProbationRegionEntity,
     deliusUser: StaffUserDetails,
   ): ApAreaEntity {
-    val deliusProbationAreaCode = deliusUser.probationArea.code
-    val isInNationalProbationArea = listOf("N43", "N41", "XXX").contains(deliusProbationAreaCode)
-    if (isInNationalProbationArea) {
+    if (usersProbationRegion.apArea != null) {
+      return usersProbationRegion.apArea!!
+    } else {
       val deliusUserTeamCodes = deliusUser.getTeamCodes()
 
       if (deliusUserTeamCodes.isEmpty()) {
@@ -63,13 +63,11 @@ class Cas1UserMappingService(
       if (deliusTeamMapping == null) {
         throw InternalServerErrorProblem(
           "Could not find a delius team mapping for delius user ${deliusUser.username} with " +
-            "delius probation area code $deliusProbationAreaCode and teams $deliusUserTeamCodes",
+            "probation region ${usersProbationRegion.deliusCode} and teams $deliusUserTeamCodes",
         )
       }
 
       return apAreaForCode(deliusTeamMapping.apAreaCode)
-    } else {
-      return usersProbationRegion.apArea
     }
   }
 

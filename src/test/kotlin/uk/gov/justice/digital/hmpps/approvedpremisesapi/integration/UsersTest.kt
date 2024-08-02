@@ -153,8 +153,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_PROBATION"),
     )
 
+    val apArea = apAreaEntityFactory.produceAndPersist()
+
     val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      withYieldedApArea { apArea }
     }
 
     userEntityFactory.produceAndPersist {
@@ -199,7 +201,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
             qualifications = emptyList(),
             service = "CAS1",
             isActive = true,
-            apArea = ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name),
+            apArea = ApArea(apArea.id, apArea.identifier, apArea.name),
             permissions = emptyList(),
           ),
         ),

@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
@@ -56,7 +56,7 @@ class UserService(
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
-  private val cas1UserMappingService: Cas1UserMappingService,
+  private val cas1ApAreaMappingService: Cas1ApAreaMappingService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val featureFlagService: FeatureFlagService,
 ) {
@@ -265,7 +265,7 @@ class UserService(
     }
 
     if (forService == ServiceName.approvedPremises) {
-      user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
+      user.apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, deliusUser)
     }
 
     return userRepository.save(user)
@@ -330,7 +330,7 @@ class UserService(
 
     val pduResult = findDeliusUserLastPdu(staffUserDetails)
 
-    val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
+    val apArea = cas1ApAreaMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
     val savedUser = userRepository.save(
       UserEntity(

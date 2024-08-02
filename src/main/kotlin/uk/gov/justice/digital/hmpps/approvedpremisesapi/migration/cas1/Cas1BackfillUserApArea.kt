@@ -59,7 +59,7 @@ class Cas1BackfillUserApArea(
           if (staffDetailsResult.status == HttpStatus.NOT_FOUND) {
             log.warn("Could not find staff details for ${user.id}, will fall back to probationRegion.apArea")
 
-            val apArea = user.probationRegion.apArea
+            val apArea = user.probationRegion.apArea!!
             val teamCodes = emptyList<String>()
 
             log.info("Updating user ${user.id} AP Area to ${apArea.name} and team codes to $teamCodes")
