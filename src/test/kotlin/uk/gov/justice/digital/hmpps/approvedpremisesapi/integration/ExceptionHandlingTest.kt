@@ -229,7 +229,6 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         InvalidParam(propertyName = "$.missingString", errorType = "empty"),
       )
     }
-
   }
 
   @Test
@@ -247,6 +246,8 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
       .blockFirst()
 
     assertThat(validationResult!!.detail).isEqualTo("There was an unexpected problem")
+    assertThat(mockSentryService.getRaisedExceptions()).hasSize(1)
+    assertThat(mockSentryService.getRaisedExceptions()[0]).isInstanceOf(RuntimeException::class.java)
   }
 
   @Test
