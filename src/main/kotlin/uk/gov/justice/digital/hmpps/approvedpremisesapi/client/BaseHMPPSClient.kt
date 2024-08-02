@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.Exceptions
 import reactor.util.retry.Retry
@@ -95,7 +96,7 @@ abstract class BaseHMPPSClient(
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
       }
 
-      return ClientResult.Success(result.statusCode, deserialized, false)
+      return ClientResult.Success(result.statusCode.toHttpStatus(), deserialized, false)
     } catch (exception: WebClientResponseException) {
       return handleWebClientResponseException(
         cacheConfig = cacheConfig,
@@ -141,7 +142,7 @@ abstract class BaseHMPPSClient(
       return ClientResult.Failure.StatusCode(
         method,
         requestBuilder.path ?: "",
-        exception.statusCode,
+        exception.statusCode.toHttpStatus(),
         exception.responseBodyAsString,
         false,
       )
@@ -281,3 +282,5 @@ enum class PreemptiveCacheEntryStatus {
    */
   EXISTS,
 }
+
+fun HttpStatusCode.toHttpStatus(): HttpStatus = HttpStatus.valueOf(this.value())

@@ -118,8 +118,8 @@ class AssessmentTransformer(
         type = "CAS1",
         id = ase.id,
         applicationId = ase.applicationId,
-        createdAt = ase.createdAt.toInstant(),
-        arrivalDate = ase.arrivalDate?.toInstant(),
+        createdAt = ase.createdAt,
+        arrivalDate = ase.arrivalDate,
         status = getStatusForApprovedPremisesAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let {
@@ -129,15 +129,15 @@ class AssessmentTransformer(
           )
         },
         person = personTransformer.transformModelToPersonApi(personInfo),
-        dueAt = ase.dueAt!!.toInstant(),
+        dueAt = ase.dueAt!!,
       )
 
       "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
         type = "CAS3",
         id = ase.id,
         applicationId = ase.applicationId,
-        createdAt = ase.createdAt.toInstant(),
-        arrivalDate = ase.arrivalDate?.toInstant(),
+        createdAt = ase.createdAt,
+        arrivalDate = ase.arrivalDate,
         status = getStatusForTemporaryAccommodationAssessment(ase),
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let {

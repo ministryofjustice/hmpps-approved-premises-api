@@ -1,5 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
+import jakarta.annotation.PostConstruct
+import jakarta.servlet.AsyncEvent
+import jakarta.servlet.AsyncListener
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletException
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -9,13 +16,6 @@ import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.ContentCachingResponseWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.IOException
-import javax.annotation.PostConstruct
-import javax.servlet.AsyncEvent
-import javax.servlet.AsyncListener
-import javax.servlet.FilterChain
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 @Component
 @ConditionalOnProperty(name = ["log-request-response"])
