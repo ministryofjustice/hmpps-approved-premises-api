@@ -201,7 +201,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     val expectedErrorMessage = "The headers provided: " +
       "[name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
       "did not include required headers: " +
-      "[addressLine2, postcode, notes, emailAddress, characteristics, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
+      "[addressLine2, postcode, notes, emailAddress, isIAP, isPIPE, isESAP, isSemiSpecialistMentalHealth, " +
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
@@ -327,7 +327,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.emailAddress).isEqualTo(csvRow.emailAddress)
     assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
     assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
-    assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
     assertThat(persistedApprovedPremises.latitude).isEqualTo(csvRow.latitude!!)
     assertThat(persistedApprovedPremises.longitude).isEqualTo(csvRow.longitude!!)
@@ -351,7 +350,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "emailAddress",
         "probationRegion",
         "localAuthorityArea",
-        "characteristics",
         "isIAP",
         "isPIPE",
         "isESAP",
@@ -390,7 +388,6 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.emailAddress)
         .withQuotedField(it.probationRegion)
         .withQuotedField(it.localAuthorityArea)
-        .withQuotedField(it.characteristics.joinToString(","))
         .withQuotedField(it.isIAP)
         .withQuotedField(it.isPIPE)
         .withQuotedField(it.isESAP)
@@ -432,7 +429,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var emailAddress: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var probationRegion: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var localAuthorityArea: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
-  private var characteristics: Yielded<List<String>> = { listOf() }
   private var isIAP: Yielded<String> = { "no" }
   private var isPIPE: Yielded<String> = { "no" }
   private var isESAP: Yielded<String> = { "no" }
@@ -499,10 +495,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.localAuthorityArea = { localAuthorityArea }
   }
 
-  fun withCharacteristics(characteristics: List<String>) = apply {
-    this.characteristics = { characteristics }
-  }
-
   fun withStatus(status: PropertyStatus) = apply {
     this.status = { status }
   }
@@ -527,7 +519,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     emailAddress = this.emailAddress(),
     probationRegion = this.probationRegion(),
     localAuthorityArea = this.localAuthorityArea(),
-    characteristics = this.characteristics(),
     isIAP = this.isIAP(),
     isPIPE = this.isPIPE(),
     isESAP = this.isESAP(),
