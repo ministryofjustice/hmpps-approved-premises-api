@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -116,10 +117,14 @@ class OffenderService(
   }
 
   @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLaoRestrictions, true)"))
-  @SuppressWarnings("CyclomaticComplexMethod")
+  @SuppressWarnings("CyclomaticComplexMethod", "MagicNumber")
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
+    }
+
+    if (crns.size > 500) {
+      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} has been provided.")
     }
 
     val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
