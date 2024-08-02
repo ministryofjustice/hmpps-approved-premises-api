@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ProblemResponsesTest : InitialiseDatabasePerClassTestBase() {
+class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `An invalid request body will return a 400 when the expected body root is an object and an array is provided`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -277,8 +277,9 @@ class ProblemResponsesTest : InitialiseDatabasePerClassTestBase() {
   }
 }
 
+@SuppressWarnings("UnusedParameter")
 @RestController
-class DeserializationTestController {
+class ExceptionHandlingTestController {
   @PostMapping(path = ["deserialization-test/object"], consumes = ["application/json"])
   fun testDeserialization(@RequestBody body: DeserializationTestBody): ResponseEntity<Unit> {
     return ResponseEntity.ok(Unit)
@@ -299,6 +300,7 @@ class DeserializationTestController {
     return ResponseEntity.ok(Unit)
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   @GetMapping(path = ["unhandled-exception"])
   fun unhandledException(): ResponseEntity<Unit> {
     throw RuntimeException("I am an unhandled exception")
