@@ -40,6 +40,12 @@ while getopts "dcp:s:n:i:" flag; do
     esac
 done
 
+if ! command -v jq &> /dev/null
+then
+    echo "Cannot find 'jq'. Please install using 'brew install jq'"
+    exit 1
+fi
+
 shift $(($OPTIND - 1));
 ENV=$1;
 
