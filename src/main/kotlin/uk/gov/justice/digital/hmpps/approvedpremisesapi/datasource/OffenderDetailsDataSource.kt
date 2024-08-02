@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asUserOffenderAccess
 
@@ -18,8 +19,12 @@ class OffenderDetailsDataSource(
     return getOffenderDetailSummaries(listOf(crn)).values.first()
   }
 
-  @Suppress("UNCHECKED_CAST") // Safe as we only do this for non-success types
+  @Suppress("UNCHECKED_CAST", "MagicNumber") // Safe as we only do this for non-success types
   fun getOffenderDetailSummaries(crns: List<String>): Map<String, ClientResult<OffenderDetailSummary>> {
+    if (crns.size > 500) {
+      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} has been provided.")
+    }
+
     return when (val clientResult = apDeliusContextApiClient.getSummariesForCrns(crns)) {
       is ClientResult.Success -> {
         val crnToAccessResult = clientResult.body.cases.associateBy(
@@ -56,11 +61,15 @@ class OffenderDetailsDataSource(
     return getUserAccessForOffenderCrns(deliusUsername, listOf(crn)).values.first()
   }
 
-  @Suppress("UNCHECKED_CAST") // Safe as we only do this for non-success types
+  @Suppress("UNCHECKED_CAST", "MagicNumber") // Safe as we only do this for non-success types
   fun getUserAccessForOffenderCrns(
     deliusUsername: String,
     crns: List<String>,
   ): Map<String, ClientResult<UserOffenderAccess>> {
+    if (crns.size > 500) {
+      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} has been provided.")
+    }
+
     return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(deliusUsername, crns)) {
       is ClientResult.Success -> {
         val crnToAccessResult = clientResult.body.access.associateBy(
