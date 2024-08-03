@@ -27,7 +27,7 @@ class ProfileController(
     val username = userService.getDeliusUserNameForRequest()
     var getUserResponse = userService.getUserForProfile(username)
     if (getUserResponse.user != null && !getUserResponse.createdOnGet) {
-      val updateResponse = userService.updateUserFromCommunityApiById(getUserResponse.user!!.id, xServiceName)
+      val updateResponse = userService.updateUserFromCommunityApi(getUserResponse.user!!, xServiceName)
       getUserResponse = (updateResponse as AuthorisableActionResult.Success<GetUserResponse>).entity
     }
     return ResponseEntity(userTransformer.transformProfileResponseToApi(username, getUserResponse, xServiceName), HttpStatus.OK)

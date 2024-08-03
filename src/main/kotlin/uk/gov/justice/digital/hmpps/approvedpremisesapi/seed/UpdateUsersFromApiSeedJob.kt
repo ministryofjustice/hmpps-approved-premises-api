@@ -29,7 +29,7 @@ class UpdateUsersFromApiSeedJob(
 
     log.info("Updating user with username $username for service $service")
     val user = userService.getExistingUserOrCreate(username)
-    userService.updateUserFromCommunityApiById(user.id, service)
+    userService.updateUserFromCommunityApi(user, service)
   }
 }
 

@@ -208,10 +208,10 @@ class UserService(
     force: Boolean = false,
   ): AuthorisableActionResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    return updateUserFromCommunityApiById(user, forService, force)
+    return updateUserFromCommunityApi(user, forService, force)
   }
 
-  fun updateUserFromCommunityApiById(
+  fun updateUserFromCommunityApi(
     user: UserEntity,
     forService: ServiceName,
     force: Boolean = false,
