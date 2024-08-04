@@ -936,6 +936,30 @@ class UserServiceTest {
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
+
+    @Test
+    fun `it returns StaffRecordNotFound if staff record not found`() {
+      val user = userFactory
+        .withDefaults()
+        .withDeliusUsername("theUsername")
+        .produce()
+
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+
+      every { mockCommunityApiClient.getStaffUserDetails("theUsername") } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/secure/staff/username",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isEqualTo(GetUserResponse.StaffRecordNotFound)
+    }
   }
 
   @Nested

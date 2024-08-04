@@ -353,7 +353,59 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `User details are updated when staff has been updated in delius`() {
+    fun `Getting existing profile with no Delius staff record returns load error`() {
+      val id = UUID.randomUUID()
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val userEntity = userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+        withDeliusUsername(deliusUsername)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+      }
+
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withRole(UserRole.CAS3_ASSESSOR)
+      }
+
+      userQualificationAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withQualification(UserQualification.PIPE)
+      }
+
+      val response = webTestClient.get()
+        .uri(profileV2Endpoint)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!
+
+      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
+      assertThat(response.loadError).isEqualTo(ProfileResponse.LoadError.staffRecordNotFound)
+    }
+
+    @Test
+    fun `Getting existing profile with Delius staff record updates user details`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -538,7 +590,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting new profile with no Delius staff record returns correct response`() {
+    fun `Getting new profile with no Delius staff record returns load error`() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("nonStaffUser")
       mockOAuth2ClientCredentialsCallIfRequired()
 

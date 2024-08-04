@@ -215,17 +215,25 @@ class UserService(
     user: UserEntity,
     forService: ServiceName,
     force: Boolean = false,
-  ): GetUserResponse {
-    val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
-      is ClientResult.Success -> staffUserDetailsResponse.body
-      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+  ) = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+    is ClientResult.Failure.StatusCode -> {
+      if (staffUserDetailsResponse.status == HttpStatus.NOT_FOUND) {
+        GetUserResponse.StaffRecordNotFound
+      } else {
+        staffUserDetailsResponse.throwException()
+      }
     }
-
-    if (userHasChanged(user, deliusUser) || force) {
-      return GetUserResponse.Success(updateUser(user, deliusUser, forService))
+    is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+    is ClientResult.Success -> {
+      val deliusUser = staffUserDetailsResponse.body
+      GetUserResponse.Success(
+        if (userHasChanged(user, deliusUser) || force) {
+          updateUser(user, deliusUser, forService)
+        } else {
+          user
+        },
+      )
     }
-
-    return GetUserResponse.Success(user)
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
