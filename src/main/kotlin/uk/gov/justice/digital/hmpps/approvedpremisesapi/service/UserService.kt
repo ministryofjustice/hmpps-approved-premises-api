@@ -366,7 +366,8 @@ class UserService(
         updatedAt = null,
       ),
     )
-    return GetUserResponse(savedUser, true)
+
+    return GetUserResponse(savedUser, staffRecordFound = true, createdOnGet = true)
   }
 
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {

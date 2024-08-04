@@ -209,13 +209,15 @@ class UserServiceTest {
         .withDeliusCode(pduDeliusCode)
         .produce()
 
-      val result = userService.getExistingUserOrCreate(username)
+      val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
 
-      assertThat(result.name).isEqualTo("Jim Jimmerson")
-      assertThat(result.teamCodes).isEqualTo(listOf("TC1", "TC2"))
-      assertThat(result.apArea).isEqualTo(apArea)
-      assertThat(result.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
-      assertThat(result.createdAt).isWithinTheLastMinute()
+      assertThat(result.createdOnGet).isEqualTo(true)
+
+      assertThat(result.user!!.name).isEqualTo("Jim Jimmerson")
+      assertThat(result.user!!.teamCodes).isEqualTo(listOf("TC1", "TC2"))
+      assertThat(result.user!!.apArea).isEqualTo(apArea)
+      assertThat(result.user!!.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
+      assertThat(result.user!!.createdAt).isWithinTheLastMinute()
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -223,7 +225,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `getExistingUserOrCreate throws intenal server error problem if can't resolve region`() {
+    fun `getExistingUserOrCreate throws internal server error problem if can't resolve region`() {
       val username = "SOMEPERSON"
       val pduDeliusCode = randomStringMultiCaseWithNumbers(7)
       val brought = KeyValue(
