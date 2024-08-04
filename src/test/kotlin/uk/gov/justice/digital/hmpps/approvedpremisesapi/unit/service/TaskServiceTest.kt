@@ -38,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityTyp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -422,7 +421,7 @@ class TaskServiceTest {
       )
     } returns
       AuthorisableActionResult.Success(
-        GetUserResponse(user, true),
+        UserService.GetUserResponse.Success(user),
       )
 
     return user

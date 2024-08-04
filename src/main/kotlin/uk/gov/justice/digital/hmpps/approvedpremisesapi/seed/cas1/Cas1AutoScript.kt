@@ -56,16 +56,19 @@ class Cas1AutoScript(
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun seedUser(seedUser: SeedUser) {
     try {
-      val user = userService
+      val getUserResponse = userService
         .getExistingUserOrCreate(username = seedUser.username, throwExceptionOnStaffRecordNotFound = true)
-        .user
 
-      user?.let {
-        seedUser.roles.forEach { role ->
-          userService.addRoleToUser(user = user, role = role)
+      when (getUserResponse) {
+        UserService.GetUserResponse.StaffRecordNotFound -> seedLogger.error("Seeding user with ${seedUser.username} failed as staff record not found")
+        is UserService.GetUserResponse.Success -> {
+          val user = getUserResponse.user
+          seedUser.roles.forEach { role ->
+            userService.addRoleToUser(user = user, role = role)
+          }
+          val roles = user.roles.map { it.role }.joinToString(", ")
+          seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
         }
-        val roles = user.roles.map { it.role }.joinToString(", ")
-        seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
       }
     } catch (e: Exception) {
       seedLogger.error("Seeding user with ${seedUser.username} failed", e)

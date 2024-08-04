@@ -28,13 +28,16 @@ class UsersController(
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
-    val userEntity = when (val result = userService.updateUserFromCommunityApiById(id, xServiceName)) {
+    val getUserResponse = when (val result = userService.updateUserFromCommunityApiById(id, xServiceName)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity.user!!
+      is AuthorisableActionResult.Success -> result.entity
     }
 
-    return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
+    return when (getUserResponse) {
+      UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
+      is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName), HttpStatus.OK)
+    }
   }
 
   override fun usersGet(
@@ -114,10 +117,11 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val userEntity = userService.getExistingUserOrCreate(name, throwExceptionOnStaffRecordNotFound = false)
-    if (!userEntity.staffRecordFound) throw NotFoundProblem(name, "user", "username")
-    val userTransformed = userTransformer.transformJpaToApi(userEntity.user!!, xServiceName)
-    return ResponseEntity.ok(userTransformed)
+    val getUserResponse = userService.getExistingUserOrCreate(name, throwExceptionOnStaffRecordNotFound = false)
+    return when (getUserResponse) {
+      UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(name, "user", "username")
+      is UserService.GetUserResponse.Success -> ResponseEntity.ok(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName))
+    }
   }
 
   private fun transformApiQualification(apiQualification: UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =

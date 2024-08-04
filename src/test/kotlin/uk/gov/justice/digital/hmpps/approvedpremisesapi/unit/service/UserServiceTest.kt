@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -117,8 +118,7 @@ class UserServiceTest {
 
       val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
 
-      assertThat(result.staffRecordFound).isFalse()
-      assertThat(result.user).isNull()
+      assertThat(result).isInstanceOf(GetUserResponse.StaffRecordNotFound::class.java)
     }
 
     @Test
@@ -211,13 +211,16 @@ class UserServiceTest {
 
       val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
 
+      assertThat(result).isInstanceOf(GetUserResponse.Success::class.java)
+      result as GetUserResponse.Success
+
       assertThat(result.createdOnGet).isEqualTo(true)
 
-      assertThat(result.user!!.name).isEqualTo("Jim Jimmerson")
-      assertThat(result.user!!.teamCodes).isEqualTo(listOf("TC1", "TC2"))
-      assertThat(result.user!!.apArea).isEqualTo(apArea)
-      assertThat(result.user!!.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
-      assertThat(result.user!!.createdAt).isWithinTheLastMinute()
+      assertThat(result.user.name).isEqualTo("Jim Jimmerson")
+      assertThat(result.user.teamCodes).isEqualTo(listOf("TC1", "TC2"))
+      assertThat(result.user.apArea).isEqualTo(apArea)
+      assertThat(result.user.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
+      assertThat(result.user.createdAt).isWithinTheLastMinute()
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -716,7 +719,10 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val entity = (result as AuthorisableActionResult.Success).entity.user!!
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isInstanceOf(GetUserResponse::class.java)
+      val entity = (getUserResponse as GetUserResponse.Success).user
 
       assertThat(entity.id).isEqualTo(user.id)
 
@@ -876,7 +882,10 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, forService, force)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val entity = (result as AuthorisableActionResult.Success).entity.user!!
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (getUserResponse as GetUserResponse.Success).user
 
       assertThat(entity.id).isEqualTo(user.id)
       assertThat(entity.name).isEqualTo(deliusUser.staff.fullName)
@@ -925,7 +934,8 @@ class UserServiceTest {
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
 
-      var entity = result.entity.user!!
+      assertThat(result.entity).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (result.entity as GetUserResponse.Success).user
 
       assertThat(entity.email).isEqualTo("null")
 
