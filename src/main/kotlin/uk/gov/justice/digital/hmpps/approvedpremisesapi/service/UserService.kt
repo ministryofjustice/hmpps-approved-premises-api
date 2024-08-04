@@ -77,7 +77,7 @@ class UserService(
   }
 
   fun getUserForProfile(username: String): GetUserResponse {
-    val userResponse = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
+    val userResponse = getExistingUserOrCreate(username)
     if (userResponse is GetUserResponse.Success) {
       ensureCas3UserHasCas3ReferrerRole(userResponse.user)
     }
@@ -305,13 +305,13 @@ class UserService(
   }
 
   @Deprecated("Callers should handle GetUserResponse directly", ReplaceWith("getExistingUserOrCreate(username)"))
-  fun getExistingUserOrCreateDeprecated(username: String) = when (val result = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)) {
+  fun getExistingUserOrCreateDeprecated(username: String) = when (val result = getExistingUserOrCreate(username)) {
     GetUserResponse.StaffRecordNotFound -> throw InternalServerErrorProblem("Could not find staff record for user $username")
     is GetUserResponse.Success -> result.user
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun getExistingUserOrCreate(username: String, throwExceptionOnStaffRecordNotFound: Boolean): GetUserResponse {
+  fun getExistingUserOrCreate(username: String): GetUserResponse {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -322,7 +322,7 @@ class UserService(
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure.StatusCode -> {
-        if (!throwExceptionOnStaffRecordNotFound && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
+        if (staffUserDetailsResponse.status == HttpStatus.NOT_FOUND) {
           return GetUserResponse.StaffRecordNotFound
         } else {
           staffUserDetailsResponse.throwException()

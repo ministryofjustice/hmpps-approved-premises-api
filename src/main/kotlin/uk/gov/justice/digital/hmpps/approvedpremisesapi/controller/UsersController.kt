@@ -117,7 +117,7 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val getUserResponse = userService.getExistingUserOrCreate(name, throwExceptionOnStaffRecordNotFound = false)
+    val getUserResponse = userService.getExistingUserOrCreate(name)
     return when (getUserResponse) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(name, "user", "username")
       is UserService.GetUserResponse.Success -> ResponseEntity.ok(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName))

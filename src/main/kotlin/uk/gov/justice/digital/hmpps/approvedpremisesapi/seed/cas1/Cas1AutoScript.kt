@@ -57,7 +57,7 @@ class Cas1AutoScript(
   private fun seedUser(seedUser: SeedUser) {
     try {
       val getUserResponse = userService
-        .getExistingUserOrCreate(username = seedUser.username, throwExceptionOnStaffRecordNotFound = false)
+        .getExistingUserOrCreate(username = seedUser.username)
 
       when (getUserResponse) {
         UserService.GetUserResponse.StaffRecordNotFound -> seedLogger.error("Seeding user with ${seedUser.username} failed as staff record not found")

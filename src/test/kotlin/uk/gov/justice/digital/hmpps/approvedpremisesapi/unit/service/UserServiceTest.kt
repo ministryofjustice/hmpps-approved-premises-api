@@ -91,7 +91,7 @@ class UserServiceTest {
   inner class GetExistingUserOrCreate {
 
     @Test
-    fun `getExistingUserOrCreate calls overloaded function with throwExceptionOnStaffRecordNotFound parameter set false`() {
+    fun `getExistingUserOrCreateDeprecated calls overloaded function with throwExceptionOnStaffRecordNotFound parameter set false`() {
       val username = "SOMEPERSON"
 
       val user = UserEntityFactory()
@@ -101,11 +101,11 @@ class UserServiceTest {
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
       assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
-      verify(exactly = 1) { userService.getExistingUserOrCreate(username, false) }
+      verify(exactly = 1) { userService.getExistingUserOrCreate(username) }
     }
 
     @Test
-    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is false does not throw error`() {
+    fun `getExistingUserOrCreate when user has no delius staff record`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
@@ -116,34 +116,19 @@ class UserServiceTest {
         body = null,
       )
 
-      val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
+      val result = userService.getExistingUserOrCreate(username)
 
       assertThat(result).isInstanceOf(GetUserResponse.StaffRecordNotFound::class.java)
     }
 
     @Test
-    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is true throws error`() {
-      val username = "SOMEPERSON"
-
-      every { mockUserRepository.findByDeliusUsername(username) } returns null
-      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
-        "/secure/staff/username",
-        HttpStatus.NOT_FOUND,
-        body = null,
-      )
-
-      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, true) }
-    }
-
-    @Test
-    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is true and clientResult is failure throws error`() {
+    fun `getExistingUserOrCreate when clientResult is failure throws error`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.PreemptiveCacheTimeout("", "", 0)
 
-      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, true) }
+      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username) }
     }
 
     @Test
@@ -209,7 +194,7 @@ class UserServiceTest {
         .withDeliusCode(pduDeliusCode)
         .produce()
 
-      val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
+      val result = userService.getExistingUserOrCreate(username)
 
       assertThat(result).isInstanceOf(GetUserResponse.Success::class.java)
       result as GetUserResponse.Success
