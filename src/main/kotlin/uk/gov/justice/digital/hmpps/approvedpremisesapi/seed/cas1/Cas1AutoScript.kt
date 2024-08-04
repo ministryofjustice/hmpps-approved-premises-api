@@ -57,7 +57,7 @@ class Cas1AutoScript(
   private fun seedUser(seedUser: SeedUser) {
     try {
       val getUserResponse = userService
-        .getExistingUserOrCreate(username = seedUser.username, throwExceptionOnStaffRecordNotFound = true)
+        .getExistingUserOrCreate(username = seedUser.username, throwExceptionOnStaffRecordNotFound = false)
 
       when (getUserResponse) {
         UserService.GetUserResponse.StaffRecordNotFound -> seedLogger.error("Seeding user with ${seedUser.username} failed as staff record not found")
@@ -154,7 +154,7 @@ class Cas1AutoScript(
         is PersonInfoResult.Success.Full -> personInfoResult
       }
 
-    val createdByUser = userService.getExistingUserOrCreate(deliusUserName)
+    val createdByUser = userService.getExistingUserOrCreateDeprecated(deliusUserName)
 
     val newApplicationEntity = extractEntityFromValidatableActionResult(
       applicationService.createApprovedPremisesApplication(

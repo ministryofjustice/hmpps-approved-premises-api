@@ -100,7 +100,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-      assertThat(userService.getExistingUserOrCreate(username)).isEqualTo(user)
+      assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
       verify(exactly = 1) { userService.getExistingUserOrCreate(username, false) }
     }
 
@@ -156,7 +156,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-      assertThat(userService.getExistingUserOrCreate(username)).isEqualTo(user)
+      assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
 
       verify(exactly = 0) { mockUserRepository.save(any()) }
     }
@@ -260,7 +260,7 @@ class UserServiceTest {
       every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns null
 
       assertThatThrownBy {
-        userService.getExistingUserOrCreate(username)
+        userService.getExistingUserOrCreateDeprecated(username)
       }
         .hasMessage("Unknown probation region code 'AREACODE' for user 'SOMEPERSON'")
         .isInstanceOf(RuntimeException::class.java)

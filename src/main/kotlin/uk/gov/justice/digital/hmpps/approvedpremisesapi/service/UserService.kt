@@ -70,7 +70,7 @@ class UserService(
 
   fun getUserForRequest(): UserEntity {
     val username = getDeliusUserNameForRequest()
-    val user = getExistingUserOrCreate(username)
+    val user = getExistingUserOrCreateDeprecated(username)
     ensureCas3UserHasCas3ReferrerRole(user)
 
     return user
@@ -304,7 +304,8 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String) = when (val result = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)) {
+  @Deprecated("Callers should handle GetUserResponse directly", ReplaceWith("getExistingUserOrCreate(username)"))
+  fun getExistingUserOrCreateDeprecated(username: String) = when (val result = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)) {
     GetUserResponse.StaffRecordNotFound -> throw InternalServerErrorProblem("Could not find staff record for user $username")
     is GetUserResponse.Success -> result.user
   }

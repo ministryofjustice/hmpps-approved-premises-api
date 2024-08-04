@@ -34,7 +34,7 @@ class ApStaffUsersSeedJob(
     seedLogger.info("Processing AP Staff seeding for ${row.deliusUsername}")
 
     val user = try {
-      userService.getExistingUserOrCreate(row.deliusUsername)
+      userService.getExistingUserOrCreateDeprecated(row.deliusUsername)
     } catch (exception: Exception) {
       throw RuntimeException("Could not get user ${row.deliusUsername}", exception)
     }
