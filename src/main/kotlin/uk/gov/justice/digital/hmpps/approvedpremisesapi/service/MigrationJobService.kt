@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import javax.persistence.EntityManager
+import kotlin.reflect.KClass
 
 @Service
 class MigrationJobService(
@@ -71,122 +72,122 @@ class MigrationJobService(
     try {
       val job: MigrationJob = when (migrationJobType) {
         MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
-          applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(UserService::class.java),
+          getBean(UserRepository::class),
+          getBean(UserService::class),
         )
 
         MigrationJobType.sentenceTypeAndSituation -> UpdateSentenceTypeAndSituationJob(
-          applicationContext.getBean(UpdateSentenceTypeAndSituationRepository::class.java),
+          getBean(UpdateSentenceTypeAndSituationRepository::class),
         )
 
         MigrationJobType.bookingStatus -> BookingStatusMigrationJob(
-          applicationContext.getBean(BookingRepository::class.java),
-          applicationContext.getBean(EntityManager::class.java),
+          getBean(BookingRepository::class),
+          getBean(EntityManager::class),
           pageSize,
         )
 
         MigrationJobType.applicationApAreas -> ApAreaMigrationJob(
-          applicationContext.getBean(ApAreaMigrationJobApplicationRepository::class.java),
-          applicationContext.getBean(ApAreaRepository::class.java),
+          getBean(ApAreaMigrationJobApplicationRepository::class),
+          getBean(ApAreaRepository::class),
           transactionTemplate,
         )
 
         MigrationJobType.taskDueDates -> TaskDueMigrationJob(
-          applicationContext.getBean(AssessmentRepository::class.java),
-          applicationContext.getBean(PlacementApplicationRepository::class.java),
-          applicationContext.getBean(PlacementRequestRepository::class.java),
-          applicationContext.getBean(EntityManager::class.java),
-          applicationContext.getBean(TaskDeadlineService::class.java),
+          getBean(AssessmentRepository::class),
+          getBean(PlacementApplicationRepository::class),
+          getBean(PlacementRequestRepository::class),
+          getBean(EntityManager::class),
+          getBean(TaskDeadlineService::class),
           pageSize,
         )
 
         MigrationJobType.usersPduFromCommunityApi -> UpdateUsersPduFromCommunityApiJob(
-          applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(UserService::class.java),
-          applicationContext.getBean(MigrationLogger::class.java),
+          getBean(UserRepository::class),
+          getBean(UserService::class),
+          getBean(MigrationLogger::class),
         )
 
         MigrationJobType.cas2ApplicationsWithAssessments -> Cas2AssessmentMigrationJob(
-          applicationContext.getBean(Cas2AssessmentRepository::class.java),
-          applicationContext.getBean(Cas2ApplicationRepository::class.java),
+          getBean(Cas2AssessmentRepository::class),
+          getBean(Cas2ApplicationRepository::class),
           transactionTemplate,
         )
 
         MigrationJobType.cas2StatusUpdatesWithAssessments -> Cas2StatusUpdateMigrationJob(
-          applicationContext.getBean(Cas2StatusUpdateRepository::class.java),
+          getBean(Cas2StatusUpdateRepository::class),
           transactionTemplate,
           pageSize,
         )
 
         MigrationJobType.cas2NotesWithAssessments -> Cas2NoteMigrationJob(
-          applicationContext.getBean(Cas2ApplicationNoteRepository::class.java),
+          getBean(Cas2ApplicationNoteRepository::class),
           transactionTemplate,
           pageSize,
         )
 
         MigrationJobType.cas1UserDetails -> Cas1UserDetailsMigrationJob(
-          applicationContext.getBean(ApplicationRepository::class.java),
-          applicationContext.getBean(Cas1ApplicationUserDetailsRepository::class.java),
-          applicationContext.getBean(EntityManager::class.java),
+          getBean(ApplicationRepository::class),
+          getBean(Cas1ApplicationUserDetailsRepository::class),
+          getBean(EntityManager::class),
           pageSize,
           transactionTemplate,
         )
 
         MigrationJobType.cas1FixPlacementAppLinks -> Cas1FixPlacementApplicationLinksJob(
-          applicationContext.getBean(PlacementApplicationRepository::class.java),
-          applicationContext.getBean(ApplicationRepository::class.java),
-          applicationContext.getBean(PlacementRequestRepository::class.java),
-          applicationContext.getBean(EntityManager::class.java),
+          getBean(PlacementApplicationRepository::class),
+          getBean(ApplicationRepository::class),
+          getBean(PlacementRequestRepository::class),
+          getBean(EntityManager::class),
           transactionTemplate,
         )
 
         MigrationJobType.cas1NoticeTypes -> NoticeTypeMigrationJob(
-          applicationContext.getBean(NoticeTypeMigrationJobApplicationRepository::class.java),
-          applicationContext.getBean(EntityManager::class.java),
+          getBean(NoticeTypeMigrationJobApplicationRepository::class),
+          getBean(EntityManager::class),
           pageSize,
         )
 
         MigrationJobType.cas1BackfillUserApArea -> Cas1BackfillUserApArea(
-          applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(UserService::class.java),
-          applicationContext.getBean(CommunityApiClient::class.java),
+          getBean(UserRepository::class),
+          getBean(UserService::class),
+          getBean(CommunityApiClient::class),
           transactionTemplate,
         )
 
         MigrationJobType.cas1OutOfServiceBedReasons -> Cas1OutOfServiceBedReasonMigrationJob(
-          applicationContext.getBean(LostBedReasonRepository::class.java),
-          applicationContext.getBean(Cas1OutOfServiceBedReasonRepository::class.java),
+          getBean(LostBedReasonRepository::class),
+          getBean(Cas1OutOfServiceBedReasonRepository::class),
         )
 
         MigrationJobType.cas1LostBedsToOutOfServiceBeds -> Cas1LostBedsToOutOfServiceBedsMigrationJob(
-          applicationContext.getBean(LostBedMigrationRepository::class.java),
-          applicationContext.getBean(Cas1OutOfServiceBedRepository::class.java),
-          applicationContext.getBean(Cas1OutOfServiceBedCancellationRepository::class.java),
-          applicationContext.getBean(Cas1OutOfServiceBedReasonRepository::class.java),
-          applicationContext.getBean(Cas1OutOfServiceBedRevisionRepository::class.java),
+          getBean(LostBedMigrationRepository::class),
+          getBean(Cas1OutOfServiceBedRepository::class),
+          getBean(Cas1OutOfServiceBedCancellationRepository::class),
+          getBean(Cas1OutOfServiceBedReasonRepository::class),
+          getBean(Cas1OutOfServiceBedRevisionRepository::class),
           transactionTemplate,
-          applicationContext.getBean(MigrationLogger::class.java),
+          getBean(MigrationLogger::class),
         )
 
         MigrationJobType.cas3ApplicationOffenderName -> Cas3UpdateApplicationOffenderNameJob(
-          applicationContext.getBean(ApplicationRepository::class.java),
-          applicationContext.getBean(OffenderService::class.java),
-          applicationContext.getBean(EntityManager::class.java),
+          getBean(ApplicationRepository::class),
+          getBean(OffenderService::class),
+          getBean(EntityManager::class),
           pageSize,
-          applicationContext.getBean(MigrationLogger::class.java),
+          getBean(MigrationLogger::class),
         )
 
         MigrationJobType.cas1PopulateAppReasonForShortNoticeMetadata -> Cas1ReasonForShortNoticeMetadataMigrationJob(
-          applicationContext.getBean(ApplicationRepository::class.java),
-          applicationContext.getBean(DomainEventRepository::class.java),
-          applicationContext.getBean(TransactionTemplate::class.java),
-          applicationContext.getBean(JdbcTemplate::class.java),
+          getBean(ApplicationRepository::class),
+          getBean(DomainEventRepository::class),
+          getBean(TransactionTemplate::class),
+          getBean(JdbcTemplate::class),
         )
 
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
-          applicationContext.getBean(DomainEventRepository::class.java),
-          applicationContext.getBean(ObjectMapper::class.java),
-          applicationContext.getBean(MigrationLogger::class.java),
+          getBean(DomainEventRepository::class),
+          getBean(ObjectMapper::class),
+          getBean(MigrationLogger::class),
         )
       }
 
@@ -202,4 +203,6 @@ class MigrationJobService(
       migrationLogger.error("Unable to complete Migration Job", exception)
     }
   }
+
+  private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
 }
