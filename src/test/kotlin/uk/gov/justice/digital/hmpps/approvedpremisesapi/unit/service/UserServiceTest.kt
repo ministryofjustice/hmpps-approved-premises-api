@@ -90,6 +90,11 @@ class UserServiceTest {
     mockApDeliusContextApiClient,
   )
 
+  @BeforeEach
+  fun setup() {
+    every { mockFeatureFlagService.isProfileV2UpdateUserIfAlreadyExistsEnabled() } returns false
+  }
+
   @Nested
   inner class GetExistingUserOrCreate {
 
