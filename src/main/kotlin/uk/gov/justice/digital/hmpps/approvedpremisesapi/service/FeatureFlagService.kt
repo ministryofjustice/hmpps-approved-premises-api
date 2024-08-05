@@ -9,6 +9,7 @@ import javax.annotation.PostConstruct
 
 interface FeatureFlagService {
   fun getBooleanFlag(key: String): Boolean
+  fun isProfileV2UpdateUserIfAlreadyExistsEnabled(): Boolean
 }
 
 @Configuration
@@ -35,5 +36,9 @@ class SpringConfigFeatureFlagService(
   @SuppressWarnings("TooGenericExceptionCaught")
   override fun getBooleanFlag(key: String): Boolean {
     return featureFlags.getOrDefault(key, false)
+  }
+
+  override fun isProfileV2UpdateUserIfAlreadyExistsEnabled(): Boolean {
+    return getBooleanFlag("profile-v2-update-user-if-already-exists")
   }
 }
