@@ -49,6 +49,7 @@ class CommunityApiClient(
   @Deprecated("To get offender details use  [OffenderService.getOffenderByCrn] which delegates to ap-delius-context")
   fun getOffenderDetailsCacheEntryStatus(crn: String) = checkPreemptiveCacheStatus(offenderDetailCacheConfig, crn)
 
+  @Deprecated(message = "Deprecated as part of the move away from the community-api. Use getStaffDetail in the integration service")
   @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {
     path = "/secure/staff/username/$deliusUsername"
