@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
@@ -59,6 +61,7 @@ class UserService(
   private val cas1ApAreaMappingService: Cas1ApAreaMappingService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val featureFlagService: FeatureFlagService,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -216,7 +219,36 @@ class UserService(
     forService: ServiceName,
     force: Boolean = false,
   ): GetUserResponse {
+    if (featureFlagService.isProfileV2UpdateUserIfAlreadyExistsEnabled()) {
+      return updateUserByDeliusIntegration(user, forService, force)
+    }
     return updateUserByCommunityApi(user, forService, force)
+  }
+
+  private fun updateUserByDeliusIntegration(
+    user: UserEntity,
+    forService: ServiceName,
+    force: Boolean = false,
+  ) = when (val staffDetail = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+    is ClientResult.Failure.StatusCode -> {
+      if (staffDetail.status == HttpStatus.NOT_FOUND) {
+        GetUserResponse.StaffRecordNotFound
+      } else {
+        staffDetail.throwException()
+      }
+    }
+
+    is ClientResult.Failure -> staffDetail.throwException()
+    is ClientResult.Success -> {
+      val deliusUser = staffDetail.body
+      GetUserResponse.Success(
+        if (user.isUpdated(deliusUser) || force) {
+          updateUserEntity(user, deliusUser, forService)
+        } else {
+          user
+        },
+      )
+    }
   }
 
   @Deprecated("Do not use the Community API - use updateUserByIntegrationService")
@@ -237,7 +269,7 @@ class UserService(
       val deliusUser = staffUserDetailsResponse.body
       GetUserResponse.Success(
         if (userHasChanged(user, deliusUser) || force) {
-          updateUser(user, deliusUser, forService)
+          updateUserEntity(user, deliusUser, forService)
         } else {
           user
         },
@@ -270,7 +302,31 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUser(
+  fun updateUserEntity(
+    user: UserEntity,
+    staffDetail: StaffDetail,
+    forService: ServiceName,
+  ): UserEntity {
+    user.name = staffDetail.name.toFullName()
+    user.email = staffDetail.email
+    user.telephoneNumber = staffDetail.telephoneNumber
+    user.deliusStaffCode = staffDetail.code
+    user.teamCodes = staffDetail.getTeamCodes()
+
+    user.probationRegion =
+      probationAreaProbationRegionMappingRepository
+        .findByProbationAreaDeliusCode(staffDetail.probationArea.code)
+        ?.probationRegion!!
+
+    if (forService == ServiceName.approvedPremises) {
+      user.apArea =
+        cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.getTeamCodes(), staffDetail.username)
+    }
+    return userRepository.save(user)
+  }
+
+  @Deprecated("This uses the community-api model, use the delius integration instead")
+  fun updateUserEntity(
     user: UserEntity,
     deliusUser: StaffUserDetails,
     forService: ServiceName,
@@ -396,6 +452,28 @@ class UserService(
       .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
   }
 
+  private fun findDeliusUserLastPdu(staffDetail: StaffDetail): CasSimpleResult<ProbationDeliveryUnitEntity> {
+    val activeTeamsNewestFirst = staffDetail.getActiveTeams()
+    activeTeamsNewestFirst.forEach { team ->
+      val pdu =
+        probationDeliveryUnitRepository.findByDeliusCode(team.borough!!.code) // borourgh is not nullable in integration service
+
+      if (pdu != null) {
+        return CasSimpleResult.Success(pdu)
+      }
+    }
+
+    val teamsToLog = activeTeamsNewestFirst.joinToString(",") {
+      " ${it.name} (${it.code}) with borough ${it.borough?.description} (${it.borough?.code})"
+    }
+
+    return CasSimpleResult.Failure(
+      "PDU could not be determined for user ${staffDetail.username}. " +
+        "Considered ${activeTeamsNewestFirst.size} teams$teamsToLog",
+    )
+  }
+
+  @Deprecated(message = "removing as part of the migration away from community API")
   private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): CasSimpleResult<ProbationDeliveryUnitEntity> {
     val activeTeams = deliusUser.teams?.filter { t -> t.endDate == null } ?: emptyList()
     val activeTeamsNewestFirst = activeTeams.sortedByDescending { t -> t.startDate }
@@ -458,6 +536,7 @@ class UserService(
     user.qualifications.clear()
   }
 
+  @Deprecated("This has moved into the UserEntity for use with the StaffDetail")
   private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
     return (deliusUser.email !== user.email) ||
       (deliusUser.telephoneNumber !== user.telephoneNumber) ||
