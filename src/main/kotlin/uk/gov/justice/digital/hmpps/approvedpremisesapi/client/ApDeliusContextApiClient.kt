@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
@@ -46,5 +47,9 @@ class ApDeliusContextApiClient(
 
   fun getReferralDetails(crn: String, bookingId: String) = getRequest<ReferralDetail> {
     path = "/probation-case/$crn/referrals/$bookingId"
+  }
+
+  fun getStaffDetails(userName: String) = getRequest<StaffUserDetails> {
+    path = "/staff/$userName"
   }
 }

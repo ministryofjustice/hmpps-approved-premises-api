@@ -253,6 +253,9 @@ class TeamFactory : Factory<Team> {
     code = this.code(),
     name = this.name(),
     ldu = this.ldu(),
+    borough = null,
+    startDate = null,
+    endDate = null,
   )
 }
 
