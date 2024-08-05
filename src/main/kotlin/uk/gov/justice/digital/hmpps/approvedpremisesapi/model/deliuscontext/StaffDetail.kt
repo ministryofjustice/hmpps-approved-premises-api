@@ -10,13 +10,22 @@ data class StaffDetail(
   val name: PersonName,
   val code: String,
   val active: Boolean,
-)
+) {
+  fun getTeamCodes() = teams.map { it.code }
+
+  fun getActiveTeams() =
+    teams
+      .filter { it.endDate != null }
+      .sortedByDescending { it.startDate }
+}
 
 data class PersonName(
   val forename: String,
   val surname: String,
   val middleName: String?,
-)
+) {
+  fun toSingleName() = this.forename + " " + this.surname
+}
 
 data class ProbationArea(
   val code: String,
