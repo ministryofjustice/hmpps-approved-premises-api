@@ -17,6 +17,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
@@ -70,6 +71,7 @@ class UserServiceTest {
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
+  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   private val userService = UserService(
     false,
@@ -85,6 +87,7 @@ class UserServiceTest {
     mockCas1ApAreaMappingService,
     mockProbationDeliveryUnitRepository,
     mockFeatureFlagService,
+    mockApDeliusContextApiClient,
   )
 
   @Nested
