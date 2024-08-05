@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext
 
+import org.apache.commons.collections4.CollectionUtils
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+
 data class StaffDetail(
   val email: String?,
   val telephoneNumber: String?,
@@ -17,6 +20,14 @@ data class StaffDetail(
     teams
       .filter { it.endDate != null }
       .sortedByDescending { it.startDate }
+
+  fun isUpdated(user: UserEntity): Boolean =
+    (email != user.email) ||
+      (telephoneNumber != user.telephoneNumber) ||
+      (name.toFullName() != user.name) ||
+      (code != user.deliusStaffCode) ||
+      (probationArea.code != user.probationRegion.deliusCode) ||
+      !CollectionUtils.isEqualCollection(getTeamCodes(), user.teamCodes)
 }
 
 data class PersonName(
@@ -24,7 +35,7 @@ data class PersonName(
   val surname: String,
   val middleName: String?,
 ) {
-  fun toFullName() = this.forename + " " + this.surname
+  fun toFullName() = "$forename $surname"
 }
 
 data class ProbationArea(

@@ -536,7 +536,7 @@ class UserService(
     user.qualifications.clear()
   }
 
-  @Deprecated("This has moved into the UserEntity for use with the StaffDetail")
+  @Deprecated("This has moved into the StaffDetail model")
   private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
     return (deliusUser.email !== user.email) ||
       (deliusUser.telephoneNumber !== user.telephoneNumber) ||

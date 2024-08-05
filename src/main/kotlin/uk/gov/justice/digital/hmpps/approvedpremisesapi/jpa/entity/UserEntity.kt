@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import org.apache.commons.collections4.CollectionUtils
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
@@ -288,14 +286,6 @@ data class UserEntity(
   fun hasAllQualifications(requiredQualifications: List<UserQualification>) =
     requiredQualifications.all(::hasQualification)
   fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
-
-  fun isUpdated(staffDetail: StaffDetail): Boolean =
-    (email != staffDetail.email) ||
-      (telephoneNumber != staffDetail.telephoneNumber) ||
-      (name != staffDetail.name.toFullName()) ||
-      (deliusStaffCode != staffDetail.code) ||
-      (probationRegion.deliusCode != staffDetail.probationArea.code) ||
-      !CollectionUtils.isEqualCollection(teamCodes, staffDetail.getTeamCodes())
 
   override fun toString() = "User $id"
 }
