@@ -155,7 +155,7 @@ class TaskService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val assigneeUserResult = userService.updateUserFromCommunityApiById(userToAllocateToId, ServiceName.approvedPremises)
+    val assigneeUserResult = userService.updateUser(userToAllocateToId, ServiceName.approvedPremises)
 
     val assigneeUser =
       if (assigneeUserResult is AuthorisableActionResult.Success &&

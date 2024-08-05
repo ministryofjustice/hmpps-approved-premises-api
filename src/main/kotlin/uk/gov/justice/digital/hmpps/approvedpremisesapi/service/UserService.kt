@@ -202,16 +202,25 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUserFromCommunityApiById(
+  fun updateUser(
     id: UUID,
     forService: ServiceName,
     force: Boolean = false,
   ): AuthorisableActionResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    return AuthorisableActionResult.Success(updateUserFromCommunityApi(user, forService, force))
+    return AuthorisableActionResult.Success(updateUser(user, forService, force))
   }
 
-  fun updateUserFromCommunityApi(
+  fun updateUser(
+    user: UserEntity,
+    forService: ServiceName,
+    force: Boolean = false,
+  ): GetUserResponse {
+    return updateUserByCommunityApi(user, forService, force)
+  }
+
+  @Deprecated("Do not use the Community API - use updateUserByIntegrationService")
+  private fun updateUserByCommunityApi(
     user: UserEntity,
     forService: ServiceName,
     force: Boolean = false,

@@ -701,7 +701,7 @@ class UserServiceTest {
         deliusUser,
       )
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val getUserResponse = (result as AuthorisableActionResult.Success).entity
@@ -864,7 +864,7 @@ class UserServiceTest {
         every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
       }
 
-      val result = userService.updateUserFromCommunityApiById(id, forService, force)
+      val result = userService.updateUser(id, forService, force)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val getUserResponse = (result as AuthorisableActionResult.Success).entity
@@ -914,7 +914,7 @@ class UserServiceTest {
         .withProbationAreaDeliusCode(user.probationRegion.deliusCode)
         .produce()
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.temporaryAccommodation)
+      val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -932,7 +932,7 @@ class UserServiceTest {
     fun `it returns not found when there is no user for that ID`() {
       every { mockUserRepository.findByIdOrNull(id) } returns null
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -953,7 +953,7 @@ class UserServiceTest {
         body = null,
       )
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val getUserResponse = (result as AuthorisableActionResult.Success).entity
