@@ -34,4 +34,8 @@ class MockFeatureFlagService(
   override fun getBooleanFlag(key: String): Boolean {
     return testOverrides.getOrDefault(key, featureFlags.getOrDefault(key, false))
   }
+
+  override fun isProfileV2UpdateUserIfAlreadyExistsEnabled(): Boolean {
+    return testOverrides.get("profile-v2-update-user-if-already-exists")!!
+  }
 }
