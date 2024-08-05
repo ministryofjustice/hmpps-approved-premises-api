@@ -28,11 +28,22 @@ class ProfileController(
     val username = userService.getDeliusUserNameForRequest()
     val getUserResponse = userService.getUserForProfile(username)
 
+    when (getUserResponse) {
+      UserService.GetUserResponse.StaffRecordNotFound -> {
+        log.info("On call to /profile/v2 staff record for $username not found")
+      }
+      is UserService.GetUserResponse.Success -> {
+        if (getUserResponse.createdOnGet) {
+          log.info("On call to /profile/v2 user record for $username created")
+        } else {
+          log.info("On call to /profile/v2 user record for $username already exists")
+        }
+      }
+    }
+
     val responseToReturn = if (getUserResponse is UserService.GetUserResponse.Success && !getUserResponse.createdOnGet) {
-      log.info("On call to /profile/v2 user record for $username already exists, so will update")
       userService.updateUserFromCommunityApi(getUserResponse.user, xServiceName)
     } else {
-      log.info("On call to /profile/v2 user record for $username was created")
       getUserResponse
     }
 
