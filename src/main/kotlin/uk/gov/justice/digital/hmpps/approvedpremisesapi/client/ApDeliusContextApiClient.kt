@@ -49,7 +49,7 @@ class ApDeliusContextApiClient(
     path = "/probation-case/$crn/referrals/$bookingId"
   }
 
-  fun getStaffDetails(userName: String) = getRequest<StaffDetail> {
+  fun getStaffDetail(userName: String) = getRequest<StaffDetail> {
     path = "/staff/$userName"
   }
 }
