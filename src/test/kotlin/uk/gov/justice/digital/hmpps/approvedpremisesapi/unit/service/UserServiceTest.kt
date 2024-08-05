@@ -18,6 +18,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -73,6 +75,7 @@ class UserServiceTest {
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
+  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   private val userService = UserService(
     mockUserServiceConfig,
@@ -88,11 +91,13 @@ class UserServiceTest {
     mockCas1ApAreaMappingService,
     mockProbationDeliveryUnitRepository,
     mockFeatureFlagService,
+    mockApDeliusContextApiClient,
   )
 
   @BeforeEach
   fun setup() {
     every { mockUserServiceConfig.assignDefaultRegionToUsersWithUnknownRegion } returns false
+    every { mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled() } returns false
   }
 
   @Nested
@@ -726,6 +731,171 @@ class UserServiceTest {
   }
 
   @Nested
+  inner class UpdateUserFromApprovedPremisesAndDeliusApi {
+
+    @BeforeEach
+    fun setup() {
+      every { mockUserRepository.save(any()) } returnsArgument 0
+      every { mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled() } returns true
+    }
+
+    private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
+    private val email = "foo@example.com"
+    private val telephoneNumber = "0123456789"
+    private val username = "DeliusAPIUser"
+    private val forename = "Jim"
+    private val surname = "Jimmerson"
+    private val staffIdentifier = 5678
+    private val staffCode = "STAFF1"
+
+    private val staffDetail = StaffDetailFactory.staffDetail().copy(username = username)
+    private val apArea = ApAreaEntityFactory().produce()
+    private val regionName = "RegionName"
+
+    private val probationRegion =
+      ProbationRegionEntityFactory()
+        .withDefaults()
+        .withName(regionName)
+        .produce()
+
+    private val userFactory =
+      UserEntityFactory()
+        .withDefaults()
+        .withDeliusUsername(username)
+        .withName("$forename $surname")
+        .withEmail(email)
+        .withDeliusStaffIdentifier(staffIdentifier.toLong())
+        .withTelephoneNumber(telephoneNumber)
+        .withDeliusStaffCode(staffCode)
+        .withProbationRegion(probationRegion)
+
+    val regionMappingEntity =
+      ProbationAreaProbationRegionMappingEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+    val pdu =
+      ProbationDeliveryUnitEntityFactory()
+        .withId(UUID.fromString("99bc8c9c-ce26-4f0e-b994-a3b566c57b61"))
+        .withDeliusCode("randomStringMultiCaseWithNumbers(8)")
+        .withProbationRegion(probationRegion)
+        .produce()
+
+    val user =
+      userFactory
+        .withProbationRegion(probationRegion)
+        .withTeamCodes(staffDetail.teamCodes())
+        .produce()
+
+    @ParameterizedTest
+    @EnumSource(ServiceName::class)
+    fun `it always calls save when a result is returned from delius`(serviceName: ServiceName) {
+      val clientResultSuccess = ClientResult.Success(HttpStatus.OK, staffDetail)
+
+      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns regionMappingEntity
+      every { mockCas1ApAreaMappingService.determineApArea(any(), any()) } returns apArea
+      every { mockUserRepository.save(any()) } returnsArgument 0
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode(any()) } returns pdu
+
+      val newApAreaForCas1 = ApAreaEntityFactory().produce()
+      if (serviceName == ServiceName.approvedPremises) {
+        every {
+          mockCas1ApAreaMappingService.determineApArea(probationRegion, user.teamCodes!!, user.deliusUsername)
+        } returns newApAreaForCas1
+      }
+
+      val result = userService.updateUser(id, serviceName)
+
+      verify(exactly = 1) { mockApDeliusContextApiClient.getStaffDetail(username) }
+      verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(any()) }
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isInstanceOf(GetUserResponse::class.java)
+      val entity = (getUserResponse as GetUserResponse.Success).user
+
+      assertThat(entity.id).isEqualTo(user.id)
+      assertThat(entity.name).isEqualTo(staffDetail.name.deliusName())
+      assertThat(entity.deliusUsername).isEqualTo(staffDetail.username)
+      assertThat(entity.email).isEqualTo(staffDetail.email)
+      assertThat(entity.telephoneNumber).isEqualTo(staffDetail.telephoneNumber)
+      assertThat(entity.deliusStaffCode).isEqualTo(staffDetail.code)
+      assertThat(entity.probationRegion.name).isEqualTo(probationRegion.name)
+      assertThat(entity.probationDeliveryUnit?.id).isEqualTo(pdu.id)
+      assertThat(entity.teamCodes ?: emptyList()).isEqualTo(staffDetail.teamCodes())
+
+      if (serviceName == ServiceName.approvedPremises) {
+        assertThat(entity.apArea).isEqualTo(newApAreaForCas1)
+      } else {
+        assertThat(entity.apArea).isNull()
+      }
+    }
+
+    @Test
+    fun `it stores a null email address if missing from Approved-premises-and-delius API`() {
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns regionMappingEntity
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode(any()) } returns pdu
+
+      val staffDetailNullEmail = staffDetail.copy(email = null)
+      val clientResultSuccess = ClientResult.Success(HttpStatus.OK, staffDetailNullEmail)
+      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
+
+      val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (result.entity as GetUserResponse.Success).user
+
+      assertThat(entity.email).isNull()
+
+      verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
+      verify(exactly = 1) { mockApDeliusContextApiClient.getStaffDetail(username) }
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+    }
+
+    @Test
+    fun `it returns not found when there is no user for that ID`() {
+      every { mockUserRepository.findByIdOrNull(id) } returns null
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
+      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    }
+
+    @Test
+    fun `it returns StaffRecordNotFound if staff record not found`() {
+      val user =
+        userFactory
+          .withDefaults()
+          .withDeliusUsername("theUsername")
+          .produce()
+
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+
+      every { mockApDeliusContextApiClient.getStaffDetail("theUsername") } returns
+        ClientResult.Failure.StatusCode(
+          HttpMethod.GET,
+          "/secure/staff/username",
+          HttpStatus.NOT_FOUND,
+          body = null,
+        )
+
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isEqualTo(GetUserResponse.StaffRecordNotFound)
+    }
+  }
+
+  @Deprecated(message = "this is being removed as part of the switch to use the integration service")
+  @Nested
   inner class UpdateUserFromCommunityApiById {
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
     private val email = "foo@example.com"
@@ -763,6 +933,7 @@ class UserServiceTest {
     @BeforeEach
     fun setup() {
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+      every { mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled() } returns false
     }
 
     @ParameterizedTest
@@ -819,7 +990,7 @@ class UserServiceTest {
         every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
       }
 
-      val result = userService.updateUserFromCommunityApiById(id, forService)
+      val result = userService.updateUser(id, forService)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val getUserResponse = (result as AuthorisableActionResult.Success).entity
@@ -869,7 +1040,7 @@ class UserServiceTest {
         .withProbationAreaDeliusCode(user.probationRegion.deliusCode)
         .produce()
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.temporaryAccommodation)
+      val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -887,7 +1058,7 @@ class UserServiceTest {
     fun `it returns not found when there is no user for that ID`() {
       every { mockUserRepository.findByIdOrNull(id) } returns null
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -908,7 +1079,7 @@ class UserServiceTest {
         body = null,
       )
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+      val result = userService.updateUser(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val getUserResponse = (result as AuthorisableActionResult.Success).entity

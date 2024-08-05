@@ -46,10 +46,10 @@ class ProfileController(
     val responseToReturn = if (
       getUserResponse is UserService.GetUserResponse.Success &&
       !getUserResponse.createdOnGet &&
-      featureFlagService.getBooleanFlag("profile-v2-update-user-if-already-exists")
+      featureFlagService.isUseApAndDeliusToUpdateUsersEnabled()
     ) {
       log.info("Updating user record for $username")
-      userService.updateUserFromCommunityApi(getUserResponse.user, xServiceName)
+      userService.updateUser(getUserResponse.user, xServiceName)
     } else {
       getUserResponse
     }
