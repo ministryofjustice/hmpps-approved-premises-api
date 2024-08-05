@@ -12,8 +12,29 @@ import reactor.core.publisher.Mono
 import java.net.URLEncoder
 import java.nio.charset.Charset
 
-fun authorizeUser(): ChainBuilder {
-  val jwt = getJwt()
+fun authorizeUser(serviceName: String): ChainBuilder {
+  var username: String
+  var password: String
+
+  when (serviceName) {
+    "cas1" -> {
+      username = CAS1_USERNAME
+      password = CAS1_PASSWORD
+    }
+    "cas2" -> {
+      username = CAS2_USERNAME
+      password = CAS2_PASSWORD
+    }
+    "cas3" -> {
+      username = CAS3_USERNAME
+      password = CAS3_PASSWORD
+    }
+    else -> {
+      throw IllegalArgumentException("Invalid service name: $serviceName")
+    }
+  }
+
+  val jwt = getJwt(username, password)
 
   return exec { session ->
     session.set("access_token", jwt)
@@ -30,7 +51,7 @@ fun Simulation.SetUp.withAuthorizedUserHttpProtocol() = apply {
   this.protocols(protocol)
 }
 
-private fun getJwt(): String {
+private fun getJwt(username: String, password: String): String {
   println("Setting up auth ($HMPPS_AUTH_BASE_URL)...")
   val webClient = WebClient.create()
 
@@ -52,8 +73,8 @@ private fun getJwt(): String {
     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
     .bodyValue(
       "redirect_url=${URLEncoder.encode("http://example.org", Charset.defaultCharset())}" +
-        "&username=${URLEncoder.encode(USERNAME, Charset.defaultCharset())}" +
-        "&password=${URLEncoder.encode(PASSWORD, Charset.defaultCharset())}",
+        "&username=${URLEncoder.encode(username, Charset.defaultCharset())}" +
+        "&password=${URLEncoder.encode(password, Charset.defaultCharset())}",
     )
     .exchangeToMono {
       it.printIfError("sign in")

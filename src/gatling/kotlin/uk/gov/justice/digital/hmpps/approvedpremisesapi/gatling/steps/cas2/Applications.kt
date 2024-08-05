@@ -1,25 +1,25 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas2
 
 import io.gatling.javaapi.core.CoreDsl
 import io.gatling.javaapi.core.Session
 import io.gatling.javaapi.http.HttpDsl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
 import java.time.LocalDate
 import java.util.UUID
 
-fun createTemporaryAccommodationApplication(
+fun createCas2Application(
   crn: (Session) -> String = { _ -> CRN },
   saveApplicationIdAs: String? = null,
 ) = CoreDsl.exec(
-  HttpDsl.http("Create Application")
-    .post("/applications")
-    .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+  HttpDsl.http("Create CAS2 Application")
+    .post("/cas2/applications")
+    .header("X-Service-Name", ServiceName.cas2.value)
     .body(
       toJson { session ->
         NewApplication(
@@ -39,37 +39,44 @@ fun createTemporaryAccommodationApplication(
     },
 )
 
-fun updateTemporaryAccommodationApplication(
+fun updateCas2Application(
   applicationId: (Session) -> UUID,
 ) = CoreDsl.exec(
   HttpDsl.http("Update Application")
-    .put { session -> "/applications/${applicationId(session)}" }
-    .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+    .put { session -> "/cas2/applications/${applicationId(session)}" }
+    .header("X-Service-Name", ServiceName.cas2.value)
     .body(
       toJson(
-        UpdateTemporaryAccommodationApplication(
-          type = UpdateApplicationType.CAS3,
+        UpdateCas2Application(
+          type = UpdateApplicationType.CAS2,
           data = mapOf(),
         ),
       ),
     ),
 )
 
-fun submitTemporaryAccommodationApplication(
+fun submitCas2Application(
   applicationId: (Session) -> UUID,
-  arrivalDate: (Session) -> LocalDate = { _ -> LocalDate.now() },
 ) = CoreDsl.exec(
   HttpDsl.http("Submit Application")
-    .post { session -> "/applications/${applicationId(session)}/submission" }
-    .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+    .post { session -> "/cas2/submissions" }
+    .header("X-Service-Name", ServiceName.cas2.value)
     .body(
       toJson { session ->
-        SubmitTemporaryAccommodationApplication(
-          arrivalDate = arrivalDate(session),
-          type = "CAS3",
-          translatedDocument = "{}",
-          summaryData = "{}",
+        SubmitCas2Application(
+          applicationId = applicationId(session),
+          translatedDocument = {},
+          telephoneNumber = "123 456 7891",
+          preferredAreas = "Leeds | Bradford",
+          hdcEligibilityDate = LocalDate.parse("2023-03-30"),
+          conditionalReleaseDate = LocalDate.parse("2023-04-29"),
         )
       },
     ),
+)
+
+fun viewAllMyCas2Applications() = CoreDsl.exec(
+  HttpDsl.http("Get Applications")
+    .get { session -> "/cas2/applications" }
+    .header("X-Service-Name", ServiceName.cas2.value),
 )
