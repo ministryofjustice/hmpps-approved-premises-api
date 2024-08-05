@@ -43,7 +43,7 @@ class Cas1BackfillUserApArea(
         is ClientResult.Success -> {
           log.info("Updating user ${user.id} using the user update service")
 
-          val updatedUser = userService.updateUser(
+          val updatedUser = userService.updateUserEntity(
             user,
             staffDetailsResult.body,
             ServiceName.approvedPremises,
