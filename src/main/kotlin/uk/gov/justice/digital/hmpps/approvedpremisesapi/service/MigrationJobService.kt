@@ -44,9 +44,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1LostBedsToOutOfServiceBedsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.LostBedMigrationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
@@ -92,7 +92,7 @@ class MigrationJobService(
           transactionTemplate,
         )
 
-        MigrationJobType.taskDueDates -> TaskDueMigrationJob(
+        MigrationJobType.taskDueDates -> Cas1TaskDueMigrationJob(
           getBean(AssessmentRepository::class),
           getBean(PlacementApplicationRepository::class),
           getBean(PlacementRequestRepository::class),
