@@ -1,0 +1,3 @@
+CREATE INDEX approved_premises_applications_name_idx ON approved_premises_applications (name);
+
+CREATE INDEX booking_not_mades_placement_request_id_idx ON booking_not_mades (placement_request_id);
