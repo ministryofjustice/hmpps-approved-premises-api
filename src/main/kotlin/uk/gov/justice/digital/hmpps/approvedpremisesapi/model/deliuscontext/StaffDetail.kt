@@ -24,7 +24,7 @@ data class PersonName(
   val surname: String,
   val middleName: String?,
 ) {
-  fun toSingleName() = this.forename + " " + this.surname
+  fun toFullName() = this.forename + " " + this.surname
 }
 
 data class ProbationArea(
