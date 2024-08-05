@@ -29,11 +29,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
@@ -70,16 +70,16 @@ class UserService(
 
   fun getUserForRequest(): UserEntity {
     val username = getDeliusUserNameForRequest()
-    val user = getExistingUserOrCreate(username)
+    val user = getExistingUserOrCreateDeprecated(username)
     ensureCas3UserHasCas3ReferrerRole(user)
 
     return user
   }
 
   fun getUserForProfile(username: String): GetUserResponse {
-    val userResponse = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
-    if (userResponse.staffRecordFound) {
-      ensureCas3UserHasCas3ReferrerRole(userResponse.user!!)
+    val userResponse = getExistingUserOrCreate(username)
+    if (userResponse is GetUserResponse.Success) {
+      ensureCas3UserHasCas3ReferrerRole(userResponse.user)
     }
     return userResponse
   }
@@ -208,23 +208,32 @@ class UserService(
     force: Boolean = false,
   ): AuthorisableActionResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    return updateUserFromCommunityApiById(user, forService, force)
+    return AuthorisableActionResult.Success(updateUserFromCommunityApi(user, forService, force))
   }
 
-  fun updateUserFromCommunityApiById(
+  fun updateUserFromCommunityApi(
     user: UserEntity,
     forService: ServiceName,
     force: Boolean = false,
-  ): AuthorisableActionResult<GetUserResponse> {
-    val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
-      is ClientResult.Success -> staffUserDetailsResponse.body
-      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+  ) = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+    is ClientResult.Failure.StatusCode -> {
+      if (staffUserDetailsResponse.status == HttpStatus.NOT_FOUND) {
+        GetUserResponse.StaffRecordNotFound
+      } else {
+        staffUserDetailsResponse.throwException()
+      }
     }
-
-    if (userHasChanged(user, deliusUser) || force) {
-      return AuthorisableActionResult.Success(GetUserResponse(updateUser(user, deliusUser, forService), staffRecordFound = true))
+    is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+    is ClientResult.Success -> {
+      val deliusUser = staffUserDetailsResponse.body
+      GetUserResponse.Success(
+        if (userHasChanged(user, deliusUser) || force) {
+          updateUser(user, deliusUser, forService)
+        } else {
+          user
+        },
+      )
     }
-    return AuthorisableActionResult.Success(GetUserResponse(user, staffRecordFound = true))
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -303,22 +312,26 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String) = getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = true).user!!
+  @Deprecated("Callers should handle GetUserResponse directly", ReplaceWith("getExistingUserOrCreate(username)"))
+  fun getExistingUserOrCreateDeprecated(username: String) = when (val result = getExistingUserOrCreate(username)) {
+    GetUserResponse.StaffRecordNotFound -> throw InternalServerErrorProblem("Could not find staff record for user $username")
+    is GetUserResponse.Success -> result.user
+  }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun getExistingUserOrCreate(username: String, throwExceptionOnStaffRecordNotFound: Boolean): GetUserResponse {
+  fun getExistingUserOrCreate(username: String): GetUserResponse {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
-    if (existingUser != null) return GetUserResponse(existingUser, true)
+    if (existingUser != null) return GetUserResponse.Success(existingUser)
 
     val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(normalisedUsername)
 
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure.StatusCode -> {
-        if (!throwExceptionOnStaffRecordNotFound && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
-          return GetUserResponse(null, false)
+        if (staffUserDetailsResponse.status == HttpStatus.NOT_FOUND) {
+          return GetUserResponse.StaffRecordNotFound
         } else {
           staffUserDetailsResponse.throwException()
         }
@@ -366,7 +379,7 @@ class UserService(
         updatedAt = null,
       ),
     )
-    return GetUserResponse(savedUser, true)
+    return GetUserResponse.Success(savedUser, createdOnGet = true)
   }
 
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
@@ -443,6 +456,11 @@ class UserService(
       (deliusUser.staffCode != user.deliusStaffCode) ||
       (deliusUser.probationArea.code != user.probationRegion.deliusCode) ||
       !CollectionUtils.isEqualCollection(deliusUser.getTeamCodes(), user.teamCodes ?: emptyList<String>())
+  }
+
+  sealed interface GetUserResponse {
+    data object StaffRecordNotFound : GetUserResponse
+    data class Success(val user: UserEntity, val createdOnGet: Boolean = false) : GetUserResponse
   }
 }
 

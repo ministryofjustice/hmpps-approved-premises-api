@@ -38,8 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
@@ -289,7 +289,7 @@ class UserTransformerTest {
     fun `transformProfileResponseToApi Should successfully transfer user response when staff record not found`() {
       val result = userTransformer.transformProfileResponseToApi(
         "userName",
-        GetUserResponse(null, false),
+        UserService.GetUserResponse.StaffRecordNotFound,
         approvedPremises,
       )
 
@@ -311,7 +311,7 @@ class UserTransformerTest {
 
       val result = userTransformer.transformProfileResponseToApi(
         "userName",
-        GetUserResponse(user, true),
+        UserService.GetUserResponse.Success(user),
         approvedPremises,
       )
 

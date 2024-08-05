@@ -16,7 +16,10 @@ class UpdateAllUsersFromCommunityApiJob(
     userRepository.findAll().forEach {
       log.info("Updating user ${it.id}")
       try {
-        userService.updateUserFromCommunityApiById(it.id, ServiceName.approvedPremises)
+        when (userService.updateUserFromCommunityApi(it, ServiceName.approvedPremises)) {
+          UserService.GetUserResponse.StaffRecordNotFound -> log.error("Unable to update ${it.id}, no staff record")
+          is UserService.GetUserResponse.Success -> {}
+        }
       } catch (exception: Exception) {
         log.error("Unable to update user ${it.id}", exception)
       }

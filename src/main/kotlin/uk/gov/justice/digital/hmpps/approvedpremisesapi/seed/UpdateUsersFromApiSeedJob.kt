@@ -28,8 +28,11 @@ class UpdateUsersFromApiSeedJob(
     val service = row.serviceName
 
     log.info("Updating user with username $username for service $service")
-    val user = userService.getExistingUserOrCreate(username)
-    userService.updateUserFromCommunityApiById(user.id, service)
+    val user = userService.getExistingUserOrCreateDeprecated(username)
+    when (userService.updateUserFromCommunityApi(user, service)) {
+      UserService.GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
+      is UserService.GetUserResponse.Success -> { }
+    }
   }
 }
 

@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -90,7 +91,7 @@ class UserServiceTest {
   inner class GetExistingUserOrCreate {
 
     @Test
-    fun `getExistingUserOrCreate calls overloaded function with throwExceptionOnStaffRecordNotFound parameter set false`() {
+    fun `getExistingUserOrCreateDeprecated calls overloaded function with throwExceptionOnStaffRecordNotFound parameter set false`() {
       val username = "SOMEPERSON"
 
       val user = UserEntityFactory()
@@ -99,12 +100,12 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-      assertThat(userService.getExistingUserOrCreate(username)).isEqualTo(user)
-      verify(exactly = 1) { userService.getExistingUserOrCreate(username, false) }
+      assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
+      verify(exactly = 1) { userService.getExistingUserOrCreate(username) }
     }
 
     @Test
-    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is false does not throw error`() {
+    fun `getExistingUserOrCreate when user has no delius staff record`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
@@ -115,35 +116,19 @@ class UserServiceTest {
         body = null,
       )
 
-      val result = userService.getExistingUserOrCreate(username, throwExceptionOnStaffRecordNotFound = false)
+      val result = userService.getExistingUserOrCreate(username)
 
-      assertThat(result.staffRecordFound).isFalse()
-      assertThat(result.user).isNull()
+      assertThat(result).isInstanceOf(GetUserResponse.StaffRecordNotFound::class.java)
     }
 
     @Test
-    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is true throws error`() {
-      val username = "SOMEPERSON"
-
-      every { mockUserRepository.findByDeliusUsername(username) } returns null
-      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
-        "/secure/staff/username",
-        HttpStatus.NOT_FOUND,
-        body = null,
-      )
-
-      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, true) }
-    }
-
-    @Test
-    fun `getExistingUserOrCreate when user has no delius staff record and throwExceptionOnStaffRecordNotFound is true and clientResult is failure throws error`() {
+    fun `getExistingUserOrCreate when clientResult is failure throws error`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Failure.PreemptiveCacheTimeout("", "", 0)
 
-      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username, true) }
+      assertThrows<RuntimeException> { userService.getExistingUserOrCreate(username) }
     }
 
     @Test
@@ -156,7 +141,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-      assertThat(userService.getExistingUserOrCreate(username)).isEqualTo(user)
+      assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
 
       verify(exactly = 0) { mockUserRepository.save(any()) }
     }
@@ -211,11 +196,16 @@ class UserServiceTest {
 
       val result = userService.getExistingUserOrCreate(username)
 
-      assertThat(result.name).isEqualTo("Jim Jimmerson")
-      assertThat(result.teamCodes).isEqualTo(listOf("TC1", "TC2"))
-      assertThat(result.apArea).isEqualTo(apArea)
-      assertThat(result.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
-      assertThat(result.createdAt).isWithinTheLastMinute()
+      assertThat(result).isInstanceOf(GetUserResponse.Success::class.java)
+      result as GetUserResponse.Success
+
+      assertThat(result.createdOnGet).isEqualTo(true)
+
+      assertThat(result.user.name).isEqualTo("Jim Jimmerson")
+      assertThat(result.user.teamCodes).isEqualTo(listOf("TC1", "TC2"))
+      assertThat(result.user.apArea).isEqualTo(apArea)
+      assertThat(result.user.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
+      assertThat(result.user.createdAt).isWithinTheLastMinute()
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -223,7 +213,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `getExistingUserOrCreate throws intenal server error problem if can't resolve region`() {
+    fun `getExistingUserOrCreate throws internal server error problem if can't resolve region`() {
       val username = "SOMEPERSON"
       val pduDeliusCode = randomStringMultiCaseWithNumbers(7)
       val brought = KeyValue(
@@ -255,7 +245,7 @@ class UserServiceTest {
       every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns null
 
       assertThatThrownBy {
-        userService.getExistingUserOrCreate(username)
+        userService.getExistingUserOrCreateDeprecated(username)
       }
         .hasMessage("Unknown probation region code 'AREACODE' for user 'SOMEPERSON'")
         .isInstanceOf(RuntimeException::class.java)
@@ -714,7 +704,10 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val entity = (result as AuthorisableActionResult.Success).entity.user!!
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isInstanceOf(GetUserResponse::class.java)
+      val entity = (getUserResponse as GetUserResponse.Success).user
 
       assertThat(entity.id).isEqualTo(user.id)
 
@@ -874,7 +867,10 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, forService, force)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val entity = (result as AuthorisableActionResult.Success).entity.user!!
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (getUserResponse as GetUserResponse.Success).user
 
       assertThat(entity.id).isEqualTo(user.id)
       assertThat(entity.name).isEqualTo(deliusUser.staff.fullName)
@@ -923,7 +919,8 @@ class UserServiceTest {
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
 
-      var entity = result.entity.user!!
+      assertThat(result.entity).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (result.entity as GetUserResponse.Success).user
 
       assertThat(entity.email).isEqualTo("null")
 
@@ -938,6 +935,30 @@ class UserServiceTest {
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    }
+
+    @Test
+    fun `it returns StaffRecordNotFound if staff record not found`() {
+      val user = userFactory
+        .withDefaults()
+        .withDeliusUsername("theUsername")
+        .produce()
+
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+
+      every { mockCommunityApiClient.getStaffUserDetails("theUsername") } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/secure/staff/username",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(getUserResponse).isEqualTo(GetUserResponse.StaffRecordNotFound)
     }
   }
 

@@ -158,8 +158,10 @@ class TaskService(
     val assigneeUserResult = userService.updateUserFromCommunityApiById(userToAllocateToId, ServiceName.approvedPremises)
 
     val assigneeUser =
-      if (assigneeUserResult is AuthorisableActionResult.Success && assigneeUserResult.entity.staffRecordFound) {
-        assigneeUserResult.entity.user!!
+      if (assigneeUserResult is AuthorisableActionResult.Success &&
+        assigneeUserResult.entity is UserService.GetUserResponse.Success
+      ) {
+        assigneeUserResult.entity.user
       } else {
         return AuthorisableActionResult.NotFound()
       }

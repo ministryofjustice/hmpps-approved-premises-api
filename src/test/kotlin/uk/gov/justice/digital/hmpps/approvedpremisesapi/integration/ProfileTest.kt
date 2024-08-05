@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
@@ -210,7 +212,7 @@ class ProfileTest : IntegrationTestBase() {
     val profileV2Endpoint = "/profile/v2"
 
     @Test
-    fun `Getting own Approved Premises profile returns OK with correct body`() {
+    fun `Getting existing CAS1 profile returns OK with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -272,7 +274,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting own Temporary Accommodation profile returns OK with correct body`() {
+    fun `Getting existing CAS3 profile returns OK with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -351,7 +353,59 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `user details are updated when staff has been updated in delius`() {
+    fun `Getting existing profile with no Delius staff record returns load error`() {
+      val id = UUID.randomUUID()
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val userEntity = userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+        withDeliusUsername(deliusUsername)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+      }
+
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withRole(UserRole.CAS3_ASSESSOR)
+      }
+
+      userQualificationAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withQualification(UserQualification.PIPE)
+      }
+
+      val response = webTestClient.get()
+        .uri(profileV2Endpoint)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!
+
+      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
+      assertThat(response.loadError).isEqualTo(ProfileResponse.LoadError.staffRecordNotFound)
+    }
+
+    @Test
+    fun `Getting existing profile with Delius staff record updates user details`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -413,7 +467,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting own Temporary Accommodation profile returns OK for CAS3_REPORTER with correct body`() {
+    fun `Getting existing CAS3 profile returns OK for CAS3_REPORTER with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -492,7 +546,51 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting profile with no Delius staff record returns correct response`() {
+    fun `Getting new profile persists new user`() {
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      probationAreaProbationRegionMappingFactory.produceAndPersist {
+        withProbationRegion(region)
+        withProbationAreaDeliusCode(region.deliusCode)
+      }
+
+      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+        StaffUserDetailsFactory()
+          .withUsername(deliusUsername)
+          .withEmail(email)
+          .withTelephoneNumber(telephoneNumber)
+          .withProbationAreaCode(region.deliusCode)
+          .produce(),
+      )
+
+      val response = webTestClient.get()
+        .uri(profileV2Endpoint)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<ProfileResponse>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(response!!.user!!.deliusUsername).isEqualTo(deliusUsername)
+    }
+
+    @Test
+    fun `Getting new profile with no Delius staff record returns load error`() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("nonStaffUser")
       mockOAuth2ClientCredentialsCallIfRequired()
 
