@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ProfileApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 class ProfileController(
   private val userService: UserService,
   private val userTransformer: UserTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) : ProfileApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -28,11 +30,27 @@ class ProfileController(
     val username = userService.getDeliusUserNameForRequest()
     val getUserResponse = userService.getUserForProfile(username)
 
-    val responseToReturn = if (getUserResponse is UserService.GetUserResponse.Success && !getUserResponse.createdOnGet) {
-      log.info("On call to /profile/v2 user record for $username already exists, so will update")
+    when (getUserResponse) {
+      UserService.GetUserResponse.StaffRecordNotFound -> {
+        log.info("On call to /profile/v2 staff record for $username not found")
+      }
+      is UserService.GetUserResponse.Success -> {
+        if (getUserResponse.createdOnGet) {
+          log.info("On call to /profile/v2 user record for $username created")
+        } else {
+          log.info("On call to /profile/v2 user record for $username already exists")
+        }
+      }
+    }
+
+    val responseToReturn = if (
+      getUserResponse is UserService.GetUserResponse.Success &&
+      !getUserResponse.createdOnGet &&
+      featureFlagService.getBooleanFlag("profile-v2-update-user-if-already-exists")
+    ) {
+      log.info("Updating user record for $username")
       userService.updateUserFromCommunityApi(getUserResponse.user, xServiceName)
     } else {
-      log.info("On call to /profile/v2 user record for $username was created")
       getUserResponse
     }
 

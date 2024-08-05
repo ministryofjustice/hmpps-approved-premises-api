@@ -102,6 +102,7 @@ generic-service:
     CAS3-REPORT_END-DATE-OVERRIDE: 3
 
     FEATURE-FLAGS_CAS1-APPEAL-MANAGER-CAN-ASSESS-APPLICATIONS: true
+    FEATURE-FLAGS_PROFILE-V2-UPDATE-USER-IF-ALREADY-EXISTS: false
 
   namespace_secrets:
     hmpps-approved-premises-api:

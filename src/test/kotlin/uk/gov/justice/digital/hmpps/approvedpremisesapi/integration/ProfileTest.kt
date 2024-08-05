@@ -353,7 +353,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting existing profile with no Delius staff record returns load error`() {
+    fun `Getting existing profile with no Delius staff record returns load error if profile-v2-update-user-if-already-exists is true`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -389,6 +389,8 @@ class ProfileTest : IntegrationTestBase() {
         withQualification(UserQualification.PIPE)
       }
 
+      mockFeatureFlagService.setFlag("profile-v2-update-user-if-already-exists", true)
+
       val response = webTestClient.get()
         .uri(profileV2Endpoint)
         .header("Authorization", "Bearer $jwt")
@@ -405,7 +407,63 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting existing profile with Delius staff record updates user details`() {
+    fun `Getting existing profile with no Delius staff record returns stale user info profile-v2-update-user-if-already-exists is false`() {
+      val id = UUID.randomUUID()
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val userEntity = userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+        withDeliusUsername(deliusUsername)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+        withName("Original Name")
+      }
+
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withRole(UserRole.CAS3_ASSESSOR)
+      }
+
+      userQualificationAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withQualification(UserQualification.PIPE)
+      }
+
+      mockFeatureFlagService.setFlag("profile-v2-update-user-if-already-exists", false)
+
+      val response = webTestClient.get()
+        .uri(profileV2Endpoint)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!
+
+      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
+      assertThat(response.loadError).isNull()
+      assertThat(response.user!!.name).isEqualTo("Original Name")
+    }
+
+    @Test
+    fun `Getting existing profile with Delius staff record updates user details if profile-v2-update-user-if-already-exists is true`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -439,6 +497,7 @@ class ProfileTest : IntegrationTestBase() {
         withDeliusUsername(deliusUsername)
         withEmail(email)
         withTelephoneNumber(telephoneNumber)
+        withName("Original Name")
       }
 
       userRoleAssignmentEntityFactory.produceAndPersist {
@@ -450,6 +509,8 @@ class ProfileTest : IntegrationTestBase() {
         withUser(userEntity)
         withQualification(UserQualification.PIPE)
       }
+
+      mockFeatureFlagService.setFlag("profile-v2-update-user-if-already-exists", true)
 
       val response = webTestClient.get()
         .uri(profileV2Endpoint)
@@ -464,6 +525,61 @@ class ProfileTest : IntegrationTestBase() {
 
       assertThat(response.deliusUsername).isEqualTo(deliusUsername)
       assertThat(response.user!!.name).isEqualTo("Up Dated")
+    }
+
+    @Test
+    fun `Getting existing profile with Delius staff record doesn't update user details if profile-v2-update-user-if-already-exists is false`() {
+      val id = UUID.randomUUID()
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+      }
+
+      val userEntity = userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+        withDeliusUsername(deliusUsername)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+        withName("Original Name")
+      }
+
+      userRoleAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withRole(UserRole.CAS3_ASSESSOR)
+      }
+
+      userQualificationAssignmentEntityFactory.produceAndPersist {
+        withUser(userEntity)
+        withQualification(UserQualification.PIPE)
+      }
+
+      mockFeatureFlagService.setFlag("profile-v2-update-user-if-already-exists", false)
+
+      val response = webTestClient.get()
+        .uri(profileV2Endpoint)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!
+
+      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
+      assertThat(response.user!!.name).isEqualTo("Original Name")
     }
 
     @Test

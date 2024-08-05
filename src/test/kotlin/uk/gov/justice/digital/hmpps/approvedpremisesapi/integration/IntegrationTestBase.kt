@@ -100,6 +100,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.DomainEventAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MockFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MutableClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.NoOpSentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -523,6 +524,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var mockSentryService: NoOpSentryService
+
+  @Autowired
+  lateinit var mockFeatureFlagService: MockFeatureFlagService
 
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
