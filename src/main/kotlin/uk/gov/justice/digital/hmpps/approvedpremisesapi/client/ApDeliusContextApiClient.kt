@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 
 @Component
@@ -49,7 +49,7 @@ class ApDeliusContextApiClient(
     path = "/probation-case/$crn/referrals/$bookingId"
   }
 
-  fun getStaffDetails(userName: String) = getRequest<StaffResponse> {
+  fun getStaffDetails(userName: String) = getRequest<StaffDetail> {
     path = "/staff/$userName"
   }
 }
