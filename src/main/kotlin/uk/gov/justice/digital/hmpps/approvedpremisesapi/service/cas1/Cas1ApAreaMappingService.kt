@@ -46,12 +46,16 @@ class Cas1ApAreaMappingService(
   fun determineApArea(
     usersProbationRegion: ProbationRegionEntity,
     deliusUser: StaffUserDetails,
+  ): ApAreaEntity = determineApArea(usersProbationRegion, deliusUser.getTeamCodes(), deliusUser.username)
+
+  fun determineApArea(
+    usersProbationRegion: ProbationRegionEntity,
+    deliusUserTeamCodes: List<String>,
+    username: String,
   ): ApAreaEntity {
     if (usersProbationRegion.apArea != null) {
       return usersProbationRegion.apArea!!
     } else {
-      val deliusUserTeamCodes = deliusUser.getTeamCodes()
-
       if (deliusUserTeamCodes.isEmpty()) {
         return apAreaForCode(noTeamsApArea)
       }
@@ -62,7 +66,7 @@ class Cas1ApAreaMappingService(
 
       if (deliusTeamMapping == null) {
         throw InternalServerErrorProblem(
-          "Could not find a delius team mapping for delius user ${deliusUser.username} with " +
+          "Could not find a delius team mapping for delius user $username with " +
             "probation region ${usersProbationRegion.deliusCode} and teams $deliusUserTeamCodes",
         )
       }
