@@ -229,21 +229,21 @@ class UserService(
     user: UserEntity,
     forService: ServiceName,
     force: Boolean = false,
-  ) = when (val staffDetail = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+  ) = when (val clientResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
     is ClientResult.Failure.StatusCode -> {
-      if (staffDetail.status == HttpStatus.NOT_FOUND) {
+      if (clientResult.status == HttpStatus.NOT_FOUND) {
         GetUserResponse.StaffRecordNotFound
       } else {
-        staffDetail.throwException()
+        clientResult.throwException()
       }
     }
 
-    is ClientResult.Failure -> staffDetail.throwException()
+    is ClientResult.Failure -> clientResult.throwException()
     is ClientResult.Success -> {
-      val deliusUser = staffDetail.body
+      val staffDetail = clientResult.body
       GetUserResponse.Success(
-        if (user.isUpdated(deliusUser) || force) {
-          updateUserEntity(user, deliusUser, forService)
+        if (staffDetail.isUpdated(user) || force) {
+          updateUserEntity(user, staffDetail, forService)
         } else {
           user
         },
@@ -456,7 +456,7 @@ class UserService(
     val activeTeamsNewestFirst = staffDetail.getActiveTeams()
     activeTeamsNewestFirst.forEach { team ->
       val pdu =
-        probationDeliveryUnitRepository.findByDeliusCode(team.borough!!.code) // borourgh is not nullable in integration service
+        probationDeliveryUnitRepository.findByDeliusCode(team.borough!!.code) // borough is not nullable in integration service
 
       if (pdu != null) {
         return CasSimpleResult.Success(pdu)
