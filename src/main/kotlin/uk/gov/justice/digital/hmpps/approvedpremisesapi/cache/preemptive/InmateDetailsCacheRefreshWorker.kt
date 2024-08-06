@@ -51,7 +51,7 @@ Refresh started at $refreshStarted"""
         return
       }
 
-      interruptableSleep(50)
+      interruptableSleep(25)
 
       val cacheEntryStatus = prisonsApiClient.getInmateDetailsCacheEntryStatus(nomsNumber)
 
@@ -64,6 +64,8 @@ Refresh started at $refreshStarted"""
 
         return@forEachIndexed
       }
+
+      interruptableSleep(25)
 
       val prisonsApiResult = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
 

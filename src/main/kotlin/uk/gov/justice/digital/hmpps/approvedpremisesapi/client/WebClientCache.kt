@@ -208,8 +208,14 @@ class WebClientCache(
 
   data class PreemptiveCacheConfig(
     val cacheName: String,
+    /**
+     * When the redis entry should be considered for refresh
+     */
     val successSoftTtlSeconds: Int,
     val failureSoftTtlBackoffSeconds: List<Int>,
+    /**
+     * Used to determine the expiry value of the redis record
+     */
     val hardTtlSeconds: Int,
   )
 
