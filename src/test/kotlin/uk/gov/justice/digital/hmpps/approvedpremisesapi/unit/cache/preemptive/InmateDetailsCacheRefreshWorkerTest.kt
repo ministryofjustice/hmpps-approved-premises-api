@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 class InmateDetailsCacheRefreshWorkerTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
@@ -21,12 +22,14 @@ class InmateDetailsCacheRefreshWorkerTest {
   private val mockCacheRefreshExclusionsInmateDetailsRepository = mockk<CacheRefreshExclusionsInmateDetailsRepository>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockRedLock = mockk<RedLock>()
+  private val mockSentryService = mockk<SentryService>()
 
   private val offenderDetailsCacheRefreshWorker = InmateDetailsCacheRefreshWorker(
     mockApplicationRepository,
     mockBookingRepository,
     mockCacheRefreshExclusionsInmateDetailsRepository,
     mockPrisonsApiClient,
+    mockSentryService,
     false,
     0,
     mockRedLock,
