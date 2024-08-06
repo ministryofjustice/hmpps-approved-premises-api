@@ -28,6 +28,7 @@ class CommunityApiClient(
   private val offenderDetailCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "offenderDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
+    successSoftTtlJitterSeconds = Duration.ofHours(1).toSeconds(),
     failureSoftTtlBackoffSeconds =
     listOf(
       30,

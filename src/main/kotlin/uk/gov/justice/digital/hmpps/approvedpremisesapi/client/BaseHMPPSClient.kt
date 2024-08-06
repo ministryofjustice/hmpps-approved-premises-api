@@ -187,5 +187,18 @@ class CacheKeySet(
 }
 
 enum class PreemptiveCacheEntryStatus {
-  MISS, REQUIRES_REFRESH, EXISTS
+  /**
+   * No corresponding entry in the cache
+   */
+  MISS,
+
+  /**
+   * An entry exists in the cache, but it needs a refresh
+   */
+  REQUIRES_REFRESH,
+
+  /**
+   * An entry exists in the cache and it doesn't need a refresh
+   */
+  EXISTS,
 }

@@ -271,6 +271,7 @@ class PreemptivelyCachedClient(
   private val cacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "offenderDetailSummary",
     successSoftTtlSeconds = 5,
+    successSoftTtlJitterSeconds = 2,
     failureSoftTtlBackoffSeconds = listOf(5, 10, 20),
     hardTtlSeconds = 30,
   )

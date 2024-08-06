@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusRandomSeconds
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,15 +24,20 @@ class WebClientCache(
   @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
   private val sentryService: SentryService,
 ) {
+
   fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
     val cacheKeySet = CacheKeySet(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
 
     val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
+      ?: return PreemptiveCacheEntryStatus.MISS
 
-    return when {
-      cacheEntryMetadata == null -> PreemptiveCacheEntryStatus.MISS
-      cacheEntryMetadata.refreshableAfter < Instant.now() -> PreemptiveCacheEntryStatus.REQUIRES_REFRESH
-      else -> PreemptiveCacheEntryStatus.EXISTS
+    val refreshableAfter = cacheEntryMetadata.refreshableAfter
+    val refreshableAfterWithJitter = refreshableAfter.minusRandomSeconds(cacheConfig.successSoftTtlJitterSeconds)
+
+    if (refreshableAfterWithJitter < Instant.now()) {
+      return PreemptiveCacheEntryStatus.REQUIRES_REFRESH
+    } else {
+      return PreemptiveCacheEntryStatus.EXISTS
     }
   }
 
@@ -209,14 +215,27 @@ class WebClientCache(
   data class PreemptiveCacheConfig(
     val cacheName: String,
     /**
-     * When the redis entry should be considered for refresh
+     * The maximum TTL at which the redis entry will always be considered for refresh
+     *
+     * Also see successSoftTtlJitterSeconds
      */
     val successSoftTtlSeconds: Int,
+    /**
+     * Jitter applied when checking a records soft TTL
+     *
+     * successSoftTtlSeconds is the ceiling from which a random number between
+     * 0 and this configuration is subtracted.
+     *
+     * For example, if successSoftTtlJitterSeconds is 10, and successSoftTtlSeconds is 30
+     * the calculated soft TTL is between 20 and 30 seconds
+     */
+    val successSoftTtlJitterSeconds: Long,
     val failureSoftTtlBackoffSeconds: List<Int>,
     /**
      * Used to determine the expiry value of the redis record
      */
     val hardTtlSeconds: Int,
+
   )
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
