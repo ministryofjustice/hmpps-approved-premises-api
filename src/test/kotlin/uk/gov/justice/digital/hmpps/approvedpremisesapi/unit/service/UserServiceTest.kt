@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserServiceConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -59,6 +60,7 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 class UserServiceTest {
+  private val mockUserServiceConfig = mockk<UserServiceConfig>()
   private val mockRequestContextService = mockk<RequestContextService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockOffenderService = mockk<OffenderService>()
@@ -73,7 +75,7 @@ class UserServiceTest {
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
 
   private val userService = UserService(
-    false,
+    mockUserServiceConfig,
     mockRequestContextService,
     mockHttpAuthService,
     mockOffenderService,
@@ -87,6 +89,11 @@ class UserServiceTest {
     mockProbationDeliveryUnitRepository,
     mockFeatureFlagService,
   )
+
+  @BeforeEach
+  fun setup() {
+    every { mockUserServiceConfig.assignDefaultRegionToUsersWithUnknownRegion } returns false
+  }
 
   @Nested
   inner class GetExistingUserOrCreate {
