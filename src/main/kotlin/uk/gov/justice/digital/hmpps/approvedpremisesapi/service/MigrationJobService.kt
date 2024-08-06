@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1LostBedsToOutOfServiceBedsMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1MigrateManagerToFutureManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
@@ -188,6 +189,11 @@ class MigrationJobService(
           getBean(DomainEventRepository::class),
           getBean(ObjectMapper::class),
           getBean(MigrationLogger::class),
+        )
+
+        MigrationJobType.cas1ManagerToFutureManager -> Cas1MigrateManagerToFutureManager(
+          getBean(UserService::class),
+          getBean(UserRepository::class),
         )
       }
 
