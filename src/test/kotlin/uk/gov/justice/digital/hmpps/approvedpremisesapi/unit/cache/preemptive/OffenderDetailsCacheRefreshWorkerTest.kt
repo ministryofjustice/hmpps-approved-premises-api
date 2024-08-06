@@ -78,7 +78,7 @@ class OffenderDetailsCacheRefreshWorkerTest {
       every { mockCommunityApiClient.getOffenderDetailsCacheEntryStatus(it.otherIds.crn) } returns PreemptiveCacheEntryStatus.EXISTS
     }
 
-    offenderDetailsCacheRefreshWorker.work { false }
+    offenderDetailsCacheRefreshWorker.work { null }
 
     (offenderDetailsNotCached + offenderDetailsCachedButNeedingRefresh).forEach {
       verify(exactly = 1) {

@@ -22,7 +22,7 @@ class InmateDetailsCacheRefreshWorker(
   redLock: RedLock,
   lockDurationMs: Int,
 ) : CacheRefreshWorker(redLock, "inmateDetails", lockDurationMs) {
-  override fun work(checkShouldStop: () -> Boolean) {
+  override fun work(checkShouldStop: () -> PrematureStopReason?) {
     val distinctNomsNumbers =
       (
         applicationRepository.getDistinctNomsNumbers() +
@@ -38,14 +38,16 @@ class InmateDetailsCacheRefreshWorker(
     distinctNomsNumbers.shuffled().forEachIndexed { index, nomsNumber ->
       logConspicuously("Current NOMS number: $nomsNumber")
 
-      if (checkShouldStop()) {
-        val message = """
-          Inmate details refresh has stopped prematurely.  Is the lock timeout to short? 
-          Have processed $index of ${distinctNomsNumbers.size} candidates
-          Refresh started at $refreshStarted
-          """
-        logConspicuously(message)
-        sentryService.captureErrorMessage(message)
+      val prematureStopReason = checkShouldStop()
+      if (prematureStopReason != null) {
+        if (prematureStopReason == PrematureStopReason.LockExpired) {
+          val message =
+            """Inmate details refresh has stopped prematurely because the lock has expired
+Have processed $index of ${distinctNomsNumbers.size} candidates
+Refresh started at $refreshStarted"""
+          logConspicuously(message)
+          sentryService.captureErrorMessage(message)
+        }
         return
       }
 

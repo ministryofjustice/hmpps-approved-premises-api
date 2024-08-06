@@ -84,7 +84,7 @@ class InmateDetailsCacheRefreshWorkerTest {
       every { mockPrisonsApiClient.getInmateDetailsCacheEntryStatus(it.offenderNo) } returns PreemptiveCacheEntryStatus.EXISTS
     }
 
-    offenderDetailsCacheRefreshWorker.work { false }
+    offenderDetailsCacheRefreshWorker.work { null }
 
     (inmateDetailsNotCached + offenderDetailsCachedButNeedingRefresh).forEach {
       verify(exactly = 1) {

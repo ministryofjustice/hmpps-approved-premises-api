@@ -123,7 +123,7 @@ abstract class CacheRefreshWorker(
           log.error("Unhandled exception refreshing cache $cacheName", exception)
         }
 
-        while (!shouldStop(lockExpiresAt)) {
+        while (shouldStop(lockExpiresAt) == null) {
           interruptableSleep(1000)
         }
 
@@ -137,7 +137,15 @@ abstract class CacheRefreshWorker(
     }
   }
 
-  private fun shouldStop(lockExpiresAt: Double) = shuttingDown || System.currentTimeMillis() > lockExpiresAt
+  private fun shouldStop(lockExpiresAt: Double): PrematureStopReason? {
+    return if (shuttingDown) {
+      PrematureStopReason.Shutdown
+    } else if (System.currentTimeMillis() > lockExpiresAt) {
+      PrematureStopReason.LockExpired
+    } else {
+      null
+    }
+  }
 
   private fun attemptToReleaseLock(lock: LockResult?) {
     if (lock == null) return
@@ -150,5 +158,10 @@ abstract class CacheRefreshWorker(
     }
   }
 
-  abstract fun work(checkShouldStop: () -> Boolean)
+  abstract fun work(checkShouldStop: () -> PrematureStopReason?)
+
+  enum class PrematureStopReason {
+    Shutdown,
+    LockExpired,
+  }
 }
