@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @Component
 class PreemptiveCacheRefresher(
@@ -22,6 +23,7 @@ class PreemptiveCacheRefresher(
   private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
   private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
+  private val sentryService: SentryService,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
   @Value("\${preemptive-cache-lock-duration-ms}") private val lockDurationMs: Int,
@@ -55,6 +57,7 @@ class PreemptiveCacheRefresher(
         bookingRepository,
         cacheRefreshExclusionsInmateDetailsRepository,
         prisonsApiClient,
+        sentryService,
         loggingEnabled,
         delayMs,
         redLock,
@@ -120,7 +123,7 @@ abstract class CacheRefreshWorker(
           log.error("Unhandled exception refreshing cache $cacheName", exception)
         }
 
-        while (!shouldStop(lockExpiresAt)) {
+        while (shouldStop(lockExpiresAt) == null) {
           interruptableSleep(1000)
         }
 
@@ -134,7 +137,15 @@ abstract class CacheRefreshWorker(
     }
   }
 
-  private fun shouldStop(lockExpiresAt: Double) = shuttingDown || System.currentTimeMillis() > lockExpiresAt
+  private fun shouldStop(lockExpiresAt: Double): PrematureStopReason? {
+    return if (shuttingDown) {
+      PrematureStopReason.Shutdown
+    } else if (System.currentTimeMillis() > lockExpiresAt) {
+      PrematureStopReason.LockExpired
+    } else {
+      null
+    }
+  }
 
   private fun attemptToReleaseLock(lock: LockResult?) {
     if (lock == null) return
@@ -147,5 +158,10 @@ abstract class CacheRefreshWorker(
     }
   }
 
-  abstract fun work(checkShouldStop: () -> Boolean)
+  abstract fun work(checkShouldStop: () -> PrematureStopReason?)
+
+  enum class PrematureStopReason {
+    Shutdown,
+    LockExpired,
+  }
 }

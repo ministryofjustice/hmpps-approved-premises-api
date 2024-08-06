@@ -17,13 +17,13 @@ class OffenderDetailsCacheRefreshWorker(
   redLock: RedLock,
   lockDurationMs: Int,
 ) : CacheRefreshWorker(redLock, "offenderDetails", lockDurationMs) {
-  override fun work(checkShouldStop: () -> Boolean) {
+  override fun work(checkShouldStop: () -> PrematureStopReason?) {
     val distinctCrns = (applicationRepository.getDistinctCrns() + bookingRepository.getDistinctCrns()).distinct()
 
     if (loggingEnabled) { log.info("Got $distinctCrns to refresh for Offender Details") }
 
     distinctCrns.forEach {
-      if (checkShouldStop()) return
+      if (checkShouldStop() != null) return
 
       interruptableSleep(50)
 
