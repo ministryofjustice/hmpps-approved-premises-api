@@ -114,7 +114,7 @@ abstract class CacheRefreshWorker(
       try {
         lock = redLock.lock(cacheName, lockDurationMs) ?: continue
 
-        log.info("Got cache refresh lock for $cacheName")
+        log.info("Got cache refresh lock for $cacheName for $lockDurationMs ms")
         val lockExpiresAt = System.currentTimeMillis() + lock.validity
 
         try {

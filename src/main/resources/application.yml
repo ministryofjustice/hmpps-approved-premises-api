@@ -254,7 +254,8 @@ url-templates:
 preemptive-cache-key-prefix: ""
 preemptive-cache-logging-enabled: false
 preemptive-cache-delay-ms: 10000
-preemptive-cache-lock-duration-ms: 120000
+# 10 minutes
+preemptive-cache-lock-duration-ms: 600000
 
 arrived-departed-domain-events-disabled: true
 
