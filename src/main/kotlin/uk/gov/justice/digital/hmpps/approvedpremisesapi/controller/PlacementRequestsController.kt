@@ -22,11 +22,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -225,10 +223,8 @@ class PlacementRequestsController(
   }
 
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
-    return placementRequests.mapNotNull {
+    return placementRequests.map {
       val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-
-      if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${it.application.crn}. Response type is ${personInfo::class}")
 
       placementRequestTransformer.transformJpaToApi(it, personInfo)
     }
