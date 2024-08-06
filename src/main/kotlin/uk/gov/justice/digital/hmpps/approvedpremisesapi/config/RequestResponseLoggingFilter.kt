@@ -53,6 +53,7 @@ class RequestResponseLoggingFilter(val sentryService: SentryService) : OncePerRe
     } else {
       log.info("Response Body not logged as content type is $contentType")
     }
+    log.info("Response Headers {}", responseWrapper.headerNames.map { "$it:  ${responseWrapper.getHeaders(it)}" })
 
     if (requestWrapper.isAsyncStarted) {
       requestWrapper.asyncContext.addListener(

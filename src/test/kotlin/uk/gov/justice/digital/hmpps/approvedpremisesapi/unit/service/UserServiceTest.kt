@@ -477,6 +477,43 @@ class UserServiceTest {
   }
 
   @Nested
+  inner class GetUserForRequestVersion {
+
+    @Test
+    fun `getUserForRequestVersion returns userVersion when user exists`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
+
+      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
+
+      assertThat(userService.getUserForRequestVersion()).isEqualTo(1725728026)
+    }
+
+    @Test
+    fun `getUserForRequestOrNull returns null when User has no roles`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
+      every { mockPrincipal.name } returns username
+
+      every { mockUserRepository.findRolesByUsername(username) } returns emptyList<UserRole>()
+
+      assertThat(userService.getUserForRequestVersion()).isNull()
+    }
+
+    @Test
+    fun `getUserForRequestOrNull returns null when no principal is available`() {
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
+
+      assertThat(userService.getUserForRequestVersion()).isNull()
+    }
+  }
+
+  @Nested
   inner class UpdateUserPduFromCommunityApiById {
 
     val user = UserEntityFactory().withDefaults().produce()
