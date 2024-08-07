@@ -7,12 +7,12 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
-  private val webClient: WebClient,
+  private val webClientConfig: WebClientConfig,
   private val objectMapper: ObjectMapper,
   private val webClientCache: WebClientCache,
 ) {
@@ -54,6 +54,8 @@ abstract class BaseHMPPSClient(
           return it
         }
       }
+
+      val webClient = webClientConfig.webClient
 
       val request = webClient.method(method)
         .uri(requestBuilder.path ?: "")
