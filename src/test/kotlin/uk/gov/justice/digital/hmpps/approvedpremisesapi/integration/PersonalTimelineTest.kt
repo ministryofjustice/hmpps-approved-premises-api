@@ -170,6 +170,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         email = userEntity.email,
                         telephoneNumber = userEntity.telephoneNumber,
                         isActive = userEntity.isActive,
+                        version = 993,
                       ),
                       timelineEvents = listOf(
                         TimelineEvent(
@@ -295,6 +296,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         email = userEntity.email,
                         telephoneNumber = userEntity.telephoneNumber,
                         isActive = userEntity.isActive,
+                        version = 993,
                       ),
                       timelineEvents = listOf(
                         TimelineEvent(

@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationReg
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addQualificationForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import java.time.OffsetDateTime
 import java.util.UUID.randomUUID
 
 class UserTransformerTest {
@@ -196,6 +197,22 @@ class UserTransformerTest {
     }
 
     @Test
+    fun `transformJpaToApi CAS1 should return version`() {
+      val user = buildUserEntity(
+        role = CAS1_JANITOR,
+        apArea = ApAreaEntityFactory().produce(),
+      )
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.version).isNotNull()
+      assertThat(result.version).isEqualTo(-298303991)
+    }
+
+    @Test
     fun `transformJpaToApi CAS3 should return distinct roles for Temporary Accommodation`() {
       val user = buildUserEntity(CAS3_REFERRER)
       user.addRoleForUnitTest(CAS3_REFERRER)
@@ -324,6 +341,7 @@ class UserTransformerTest {
   private fun buildUserEntity(
     role: UserRole,
     apArea: ApAreaEntity? = null,
+    updatedAt: OffsetDateTime? = null,
   ) = UserEntityFactory()
     .withId(randomUUID())
     .withName("username")
@@ -333,6 +351,7 @@ class UserTransformerTest {
     .withIsActive(true)
     .withProbationRegion(buildProbationRegionEntity())
     .withApArea(apArea)
+    .withUpdatedAt(updatedAt)
     .produce()
     .addRoleForUnitTest(role)
     .addQualificationForUnitTest(WOMENS)

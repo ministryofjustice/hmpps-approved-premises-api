@@ -21,6 +21,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
+@Suppress("TooManyFunctions")
 @Repository
 interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
   @Query(
@@ -44,6 +45,11 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.qualifications q where q.qualification = :qualification and u.isActive = true")
   fun findActiveUsersWithQualification(qualification: UserQualification): List<UserEntity>
+
+  @Query(
+    "SELECT DISTINCT r.role FROM UserEntity u join u.roles r where u.deliusUsername = :deliusUsername",
+  )
+  fun findRolesByUsername(deliusUsername: String): List<UserRole>
 
   @Query(
     """
@@ -288,6 +294,13 @@ data class UserEntity(
   fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
 
   override fun toString() = "User $id"
+
+  companion object {
+    fun getVersionHashCode(roles: List<UserRole>) = Objects.hash(
+      roles.map { it.name },
+      roles.map { it.permissions.map { permission -> permission.name } },
+    )
+  }
 }
 
 @Repository
