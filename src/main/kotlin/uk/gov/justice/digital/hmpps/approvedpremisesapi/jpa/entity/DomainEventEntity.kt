@@ -122,6 +122,16 @@ data class DomainEventEntity(
   @Column(name = "value")
   @CollectionTable(name = "domain_events_metadata", joinColumns = [ JoinColumn(name = "domain_event_id") ])
   val metadata: Map<MetaDataName, String?> = emptyMap(),
+  /**
+   * Use to track the schema version used for the [data] property. The schema version
+   * will be specific to the corresponding [type]
+   *
+   * This will be null for any domain events recorded before this concept was introduced.
+   *
+   * The domain event schema version used for a given domain event record is only required when the
+   * initial domain event schema changes in a way that we need to start tracking which schema a domain event uses.
+   */
+  val schemaVersion: Int?,
 ) {
   final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
     val data = when {

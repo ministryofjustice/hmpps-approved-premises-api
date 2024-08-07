@@ -234,6 +234,7 @@ class DomainEventService(
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
         nomsNumber = domainEvent.nomsNumber,
         metadata = domainEvent.metadata,
+        schemaVersion = domainEvent.schemaVersion,
       ),
     )
 
