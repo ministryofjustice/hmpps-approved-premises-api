@@ -160,7 +160,7 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val personInfo = offenderService.getInfoForPerson(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personInfo = offenderService.getPersonInfoResult(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
       val premises = booking.premises

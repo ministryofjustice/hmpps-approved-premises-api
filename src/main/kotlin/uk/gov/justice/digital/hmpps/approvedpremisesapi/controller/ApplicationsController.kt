@@ -185,7 +185,7 @@ class ApplicationsController(
     val user = userService.getUserForRequest()
 
     val personInfo =
-      when (val personInfoResult = offenderService.getInfoForPerson(body.crn, user.deliusUsername, false)) {
+      when (val personInfoResult = offenderService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
@@ -534,7 +534,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
+    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
   }
@@ -615,7 +615,7 @@ class ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
   ): Application {
-    val personInfo = offenderService.getInfoForPerson(application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
@@ -626,7 +626,7 @@ class ApplicationsController(
     ignoreLaoRestrictions: Boolean = false,
   ): List<ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getInfoForPersons(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
 
     return applications.map {
       val crn = it.getCrn()
@@ -642,7 +642,7 @@ class ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
   ): Application {
-    val personInfo = offenderService.getInfoForPerson(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderService.getPersonInfoResult(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }

@@ -318,7 +318,7 @@ class PremisesController(
 
     val crns = premises.bookings.map { it.crn }
     val personInfoResults = async {
-      offenderService.getInfoForPersons(
+      offenderService.getPersonInfoResults(
         crns.toSet(),
         user.deliusUsername,
         user.hasQualification(UserQualification.LAO),
@@ -380,7 +380,7 @@ class PremisesController(
     }
 
     val personInfo =
-      offenderService.getInfoForPerson(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      offenderService.getPersonInfoResult(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${body.crn}")
 

@@ -467,7 +467,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     application: ApplicationEntity,
     deliusUsername: String,
   ): OffenderDetailSummary {
-    return when (val personInfo = realOffenderService.getInfoForPerson(application.crn, deliusUsername, true)) {
+    return when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
       is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
       else -> error("No offender found for CRN ${application.crn}")
     }

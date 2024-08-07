@@ -499,16 +499,16 @@ class OffenderService(
   ) = communityApiClient.getDocument(crn, documentId, outputStream)
 
   @SuppressWarnings("CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
-  fun getInfoForPerson(
+  fun getPersonInfoResult(
     crn: String,
     deliusUsername: String?,
     ignoreLaoRestrictions: Boolean,
   ): PersonInfoResult {
     check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-    return getInfoForPersons(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
+    return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
   }
 
-  fun getInfoForPersons(
+  fun getPersonInfoResults(
     crns: Set<String>,
     deliusUsername: String?,
     ignoreLaoRestrictions: Boolean,
