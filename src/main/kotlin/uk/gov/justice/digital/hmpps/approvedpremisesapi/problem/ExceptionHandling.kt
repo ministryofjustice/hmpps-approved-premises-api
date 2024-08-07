@@ -27,6 +27,7 @@ import org.zalando.problem.spring.web.advice.ProblemHandling
 import org.zalando.problem.spring.web.advice.io.MessageNotReadableAdviceTrait
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationValidationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableChain
 
 @ControllerAdvice
 class ExceptionHandling(
@@ -81,19 +82,6 @@ class ExceptionHandling(
     return UnhandledExceptionProblem(
       detail = "There was an unexpected problem",
     )
-  }
-
-  private fun <T> isTypeInThrowableChain(throwable: Throwable, causeType: Class<T>): Boolean {
-    if (throwable.javaClass == causeType) {
-      return true
-    }
-
-    val cause = throwable.cause
-    if (cause != null) {
-      return isTypeInThrowableChain(cause, causeType)
-    } else {
-      return false
-    }
   }
 
   override fun handleMessageNotReadableException(
