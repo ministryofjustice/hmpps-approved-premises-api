@@ -21,7 +21,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
-@Suppress("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions")
 @Repository
 interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
   @Query(
@@ -36,6 +36,9 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role and u.isActive = true")
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
+
+  @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role")
+  fun findUsersWithRole(role: UserRole): List<UserEntity>
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role in (:roles) and u.isActive = true")
   fun findActiveUsersWithAtLeastOneRole(roles: List<UserRole>): List<UserEntity>

@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import javax.persistence.EntityManager
 
-class TaskDueMigrationJob(
+class Cas1TaskDueMigrationJob(
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val placementRequestRepository: PlacementRequestRepository,

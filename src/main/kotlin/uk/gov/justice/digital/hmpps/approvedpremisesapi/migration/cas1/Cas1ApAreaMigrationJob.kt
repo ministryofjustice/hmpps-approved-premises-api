@@ -78,6 +78,7 @@ class ApAreaMigrationJob(
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun process() {
     val midlands = apAreaRepository.findByName("Midlands") ?: throw RuntimeException("Cannot find probation region - Midlands")
     val southEastAndEastern = apAreaRepository.findByName("South East & Eastern") ?: throw RuntimeException("Cannot find probation region - South East & Eastern")

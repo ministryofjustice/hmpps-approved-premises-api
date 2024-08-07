@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisT
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class TaskDueMigrationJobTest : IntegrationTestBase() {
+class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
   @Autowired
   lateinit var migrationJobService: MigrationJobService
 

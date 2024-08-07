@@ -429,6 +429,13 @@ class UserService(
     )
   }
 
+  fun removeRoleFromUser(user: UserEntity, role: UserRole) {
+    user.roles.firstOrNull { it.role == role }?.let { roleAssignment ->
+      user.roles.remove(roleAssignment)
+      userRoleAssignmentRepository.delete(roleAssignment)
+    }
+  }
+
   fun addQualificationToUser(user: UserEntity, qualification: UserQualification) {
     if (user.hasQualification(qualification)) return
 

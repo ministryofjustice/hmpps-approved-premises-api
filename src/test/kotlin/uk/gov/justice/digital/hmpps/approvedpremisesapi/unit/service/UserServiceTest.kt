@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -1163,6 +1164,42 @@ class UserServiceTest {
       )
 
       verify(exactly = 1) { mockUserRepository.findActiveUsersWithAtLeastOneRole(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER)) }
+    }
+  }
+
+  @Nested
+  inner class RemoveRoleFromUser {
+
+    @Test
+    fun `do nothing if user doesnt have role`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      userService.removeRoleFromUser(user, UserRole.CAS1_MANAGER)
+
+      verify { mockUserRoleAssignmentRepository wasNot Called }
+    }
+
+    @Test
+    fun `remove role if user has role`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val managerRoleAssignment = UserRoleAssignmentEntityFactory()
+        .withUser(user)
+        .withRole(UserRole.CAS1_MANAGER)
+        .withId(UUID.randomUUID())
+        .produce()
+
+      user.roles.add(managerRoleAssignment)
+
+      every { mockUserRoleAssignmentRepository.delete(managerRoleAssignment) } returns Unit
+
+      userService.removeRoleFromUser(user, UserRole.CAS1_MANAGER)
+
+      verify { mockUserRoleAssignmentRepository.delete(managerRoleAssignment) }
     }
   }
 }
