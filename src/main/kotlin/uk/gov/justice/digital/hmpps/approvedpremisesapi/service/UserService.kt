@@ -98,7 +98,7 @@ class UserService(
 
   fun getUserForRequestVersion(): Int? {
     return httpAuthService.getDeliusPrincipalOrNull()?.let { deliusPrincipal ->
-      val roles = userRepository.findRolesByUsername(deliusPrincipal.name)
+      val roles = userRepository.findRolesByUsername(deliusPrincipal.name.uppercase())
       return UserEntity.getVersionHashCode(roles)
     }
   }
