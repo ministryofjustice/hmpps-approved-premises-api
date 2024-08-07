@@ -765,8 +765,9 @@ class UserServiceTest {
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
     }
 
-    @Test
-    fun `it does not update the user entity if fields of interest are the same as delius`() {
+    @ParameterizedTest
+    @EnumSource(ServiceName::class)
+    fun `it saves the user entity after a call to delius`(serviceName: ServiceName) {
       val user = userFactory.produce()
       val deliusUser = staffUserDetailsFactory.produce()
 
@@ -776,129 +777,9 @@ class UserServiceTest {
         deliusUser,
       )
 
-      val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
+      assertUserUpdated(user, deliusUser, probationRegion, serviceName)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val getUserResponse = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(getUserResponse).isInstanceOf(GetUserResponse::class.java)
-      val entity = (getUserResponse as GetUserResponse.Success).user
-
-      assertThat(entity.id).isEqualTo(user.id)
-
-      verify(exactly = 0) { mockUserRepository.save(any()) }
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it will update the user entity if fields of interest are the same as delius if force = true`(forService: ServiceName) {
-      val user = userFactory.produce()
-      val deliusUser = staffUserDetailsFactory.produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService, force = true)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the email has been updated in delius`(forService: ServiceName) {
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withEmail(email + "updated")
-        .produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the full name has been updated in delius`(forService: ServiceName) {
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withForenames(forename)
-        .withSurname(surname + "updated")
-        .produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the telephone number has been updated in delius`(forService: ServiceName) {
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withTelephoneNumber(telephoneNumber + "updated")
-        .produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the staff code number has been updated in delius`(forService: ServiceName) {
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withStaffCode(staffCode + "updated")
-        .produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the probation area code has been updated in delius`(forService: ServiceName) {
-      val newProbationRegion = ProbationRegionEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withProbationAreaCode(newProbationRegion.deliusCode)
-        .produce()
-
-      assertUserUpdated(user, deliusUser, newProbationRegion, forService)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the team codes have been updated in delius`(forService: ServiceName) {
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withCode("new1").produce(),
-            StaffUserTeamMembershipFactory().withCode("new2").produce(),
-          ),
-        )
-        .produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService)
-    }
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class)
-    fun `it updates the user entity if the probation delivery unit have been updated in delius`(forService: ServiceName) {
-      val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = randomStringMultiCaseWithNumbers(7),
-                description = randomStringMultiCaseWithNumbers(10),
-              ),
-            ).produce(),
-          ),
-        )
-        .produce()
-
-      assertUserUpdated(user, deliusUser, probationRegion, forService)
+      verify(exactly = 1) { mockUserRepository.save(any()) }
     }
 
     private fun assertUserUpdated(
@@ -906,7 +787,6 @@ class UserServiceTest {
       deliusUser: StaffUserDetails,
       probationRegion: ProbationRegionEntity,
       forService: ServiceName,
-      force: Boolean = false,
     ) {
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
@@ -915,7 +795,7 @@ class UserServiceTest {
       )
 
       every {
-        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(probationRegion.deliusCode)
+        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any())
       } returns ProbationAreaProbationRegionMappingEntityFactory()
         .withProbationRegion(probationRegion)
         .withProbationAreaDeliusCode(probationRegion.deliusCode)
@@ -939,7 +819,7 @@ class UserServiceTest {
         every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
       }
 
-      val result = userService.updateUserFromCommunityApiById(id, forService, force)
+      val result = userService.updateUserFromCommunityApiById(id, forService)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val getUserResponse = (result as AuthorisableActionResult.Success).entity
