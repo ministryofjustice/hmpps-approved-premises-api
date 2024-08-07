@@ -1196,7 +1196,7 @@ class BookingService(
     cancellation: CancellationEntity,
     reason: CancellationReasonEntity,
   ) {
-    val dateTime = OffsetDateTime.now()
+    val now = OffsetDateTime.now()
 
     val domainEventId = UUID.randomUUID()
 
@@ -1228,11 +1228,12 @@ class BookingService(
         applicationId = applicationId,
         crn = booking.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
-        occurredAt = dateTime.toInstant(),
+        occurredAt = now.toInstant(),
         bookingId = booking.id,
+        schemaVersion = 2,
         data = BookingCancelledEnvelope(
           id = domainEventId,
-          timestamp = dateTime.toInstant(),
+          timestamp = now.toInstant(),
           eventType = EventType.bookingCancelled,
           eventDetails = BookingCancelled(
             applicationId = applicationId,
@@ -1252,7 +1253,9 @@ class BookingService(
             ),
             cancelledBy = staffDetails.toStaffMember(),
             cancelledAt = cancellation.date.atTime(0, 0).toInstant(ZoneOffset.UTC),
+            cancelledAtDate = cancellation.date,
             cancellationReason = reason.name,
+            cancellationRecordedAt = now.toInstant(),
           ),
         ),
         metadata = mapOf(

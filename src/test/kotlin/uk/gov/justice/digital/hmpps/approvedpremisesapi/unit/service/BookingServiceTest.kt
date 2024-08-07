@@ -140,6 +140,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -2555,7 +2556,7 @@ class BookingServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo(application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
-      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
       val data = domainEvent.data.eventDetails
       assertThat(data.applicationId).isEqualTo(application.id)
@@ -2571,7 +2572,9 @@ class BookingServiceTest {
       assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
 
       assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
+      assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(data.cancellationReason).isEqualTo(reason.name)
+      assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
       assertThat(data.bookingId).isEqualTo(bookingEntity.id)
 
       verify(exactly = 1) {
