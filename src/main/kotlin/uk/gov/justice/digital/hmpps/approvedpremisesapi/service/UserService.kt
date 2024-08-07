@@ -45,8 +45,13 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 @Service
+class UserServiceConfig(
+  @Value("\${assign-default-region-to-users-with-unknown-region}") val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
+)
+
+@Service
 class UserService(
-  @Value("\${assign-default-region-to-users-with-unknown-region}") private val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
+  private val userServiceConfig: UserServiceConfig,
   private val requestContextService: RequestContextService,
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
@@ -350,7 +355,7 @@ class UserService(
     var staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea)
 
     if (staffProbationRegion == null) {
-      if (assignDefaultRegionToUsersWithUnknownRegion) {
+      if (userServiceConfig.assignDefaultRegionToUsersWithUnknownRegion) {
         log.warn("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername', assigning a default region of 'North West'.")
         staffProbationRegion = probationRegionRepository.findByName("North West")!!
       } else {
