@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.Duration
 import java.time.Instant
