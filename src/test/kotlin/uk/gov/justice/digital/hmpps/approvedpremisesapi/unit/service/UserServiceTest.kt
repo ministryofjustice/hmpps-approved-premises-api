@@ -1200,13 +1200,57 @@ class UserServiceTest {
         .withId(UUID.randomUUID())
         .produce()
 
+      val appealsRoleAssignment = UserRoleAssignmentEntityFactory()
+        .withUser(user)
+        .withRole(UserRole.CAS1_APPEALS_MANAGER)
+        .withId(UUID.randomUUID())
+        .produce()
+
       user.roles.add(managerRoleAssignment)
+      user.roles.add(appealsRoleAssignment)
 
       every { mockUserRoleAssignmentRepository.delete(managerRoleAssignment) } returns Unit
 
       userService.removeRoleFromUser(user, UserRole.CAS1_MANAGER)
 
       verify { mockUserRoleAssignmentRepository.delete(managerRoleAssignment) }
+    }
+
+    @Test
+    fun `remove roles if user has role multiple times`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val managerRoleAssignment = UserRoleAssignmentEntityFactory()
+        .withUser(user)
+        .withRole(UserRole.CAS1_MANAGER)
+        .withId(UUID.randomUUID())
+        .produce()
+
+      val appealsRoleAssignment1 = UserRoleAssignmentEntityFactory()
+        .withUser(user)
+        .withRole(UserRole.CAS1_APPEALS_MANAGER)
+        .withId(UUID.randomUUID())
+        .produce()
+
+      val appealsRoleAssignment2 = UserRoleAssignmentEntityFactory()
+        .withUser(user)
+        .withRole(UserRole.CAS1_APPEALS_MANAGER)
+        .withId(UUID.randomUUID())
+        .produce()
+
+      user.roles.add(managerRoleAssignment)
+      user.roles.add(appealsRoleAssignment1)
+      user.roles.add(appealsRoleAssignment2)
+
+      every { mockUserRoleAssignmentRepository.delete(appealsRoleAssignment1) } returns Unit
+      every { mockUserRoleAssignmentRepository.delete(appealsRoleAssignment2) } returns Unit
+
+      userService.removeRoleFromUser(user, UserRole.CAS1_APPEALS_MANAGER)
+
+      verify { mockUserRoleAssignmentRepository.delete(appealsRoleAssignment1) }
+      verify { mockUserRoleAssignmentRepository.delete(appealsRoleAssignment2) }
     }
   }
 }
