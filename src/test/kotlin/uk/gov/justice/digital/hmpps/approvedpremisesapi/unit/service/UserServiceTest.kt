@@ -488,6 +488,36 @@ class UserServiceTest {
   inner class GetUserForRequestVersion {
 
     @Test
+    fun `getUserForRequestVersion returns same value for version when roles are duplicated`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
+
+      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
+      val nonDuplicatRoleValue = userService.getUserForRequestVersion()
+      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
+      val duplicateRoleValue = userService.getUserForRequestVersion()
+      assertThat(nonDuplicatRoleValue).isEqualTo(duplicateRoleValue)
+    }
+
+    @Test
+    fun `getUserForRequestVersion returns same value for version when roles are in different order`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
+
+      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_ASSESSOR)
+      val unorderedRoleValue = userService.getUserForRequestVersion()
+      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_USER_MANAGER)
+      val orderedRoleValue = userService.getUserForRequestVersion()
+      assertThat(unorderedRoleValue).isEqualTo(orderedRoleValue)
+    }
+
+    @Test
     fun `getUserForRequestVersion returns userVersion when user exists`() {
       val username = "SOMEPERSON"
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
@@ -497,7 +527,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
 
-      assertThat(userService.getUserForRequestVersion()).isEqualTo(1725728026)
+      assertThat(userService.getUserForRequestVersion()).isEqualTo(1496059656)
     }
 
     @Test

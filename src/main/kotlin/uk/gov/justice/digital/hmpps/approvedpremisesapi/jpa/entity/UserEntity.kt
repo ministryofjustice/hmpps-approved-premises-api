@@ -299,10 +299,13 @@ data class UserEntity(
   override fun toString() = "User $id"
 
   companion object {
-    fun getVersionHashCode(roles: List<UserRole>) = Objects.hash(
-      roles.map { it.name },
-      roles.map { it.permissions.map { permission -> permission.name } },
-    )
+    fun getVersionHashCode(roles: List<UserRole>): Int? {
+      val normalisedRoles = roles.toSet().sortedBy { it.name }
+      return Objects.hash(
+        normalisedRoles.map { it.name },
+        normalisedRoles.map { it.permissions.map { permission -> permission.name } },
+      )
+    }
   }
 }
 
