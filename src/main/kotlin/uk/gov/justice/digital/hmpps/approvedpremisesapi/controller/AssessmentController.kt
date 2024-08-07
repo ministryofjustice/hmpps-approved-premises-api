@@ -99,7 +99,7 @@ class AssessmentController(
 
   private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLaoRestrictions: Boolean = false): List<AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderService.getInfoForPersons(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
 
     return summaries.map {
       val crn = it.crn
@@ -122,7 +122,7 @@ class AssessmentController(
 
     val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),
@@ -165,7 +165,7 @@ class AssessmentController(
     val ignoreLao =
       (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLao)
+    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLao)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),

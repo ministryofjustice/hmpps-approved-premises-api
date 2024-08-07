@@ -354,7 +354,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
       every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Success(keyWorker)
 
       val result = bookingService.getBooking(bookingEntity.id)
@@ -394,7 +394,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
       every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound("Staff Code", keyWorker.code)
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
@@ -414,7 +414,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
       every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound("QCode", premises.qCode)
 
       assertThatExceptionOfType(InternalServerErrorProblem::class.java)
@@ -427,7 +427,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getInfoForPerson(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
       every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Unauthorised()
 
       assertThatExceptionOfType(ForbiddenProblem::class.java)
@@ -454,7 +454,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns otherBooking
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, otherBooking) } returns true
-      every { mockOffenderService.getInfoForPerson(otherBooking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderService.getPersonInfoResult(otherBooking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
 
       assertThatExceptionOfType(IllegalStateException::class.java)
         .isThrownBy { bookingService.getBooking(bookingEntity.id) }

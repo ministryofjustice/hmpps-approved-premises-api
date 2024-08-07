@@ -139,7 +139,7 @@ class Cas1AutoScript(
 
     val personInfo =
       when (
-        val personInfoResult = offenderService.getInfoForPerson(
+        val personInfoResult = offenderService.getPersonInfoResult(
           crn = crn,
           deliusUsername = null,
           ignoreLaoRestrictions = true,

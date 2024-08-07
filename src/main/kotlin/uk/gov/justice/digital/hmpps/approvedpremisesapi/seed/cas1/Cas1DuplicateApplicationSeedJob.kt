@@ -60,7 +60,7 @@ class Cas1DuplicateApplicationSeedJob(
 
     val personInfo =
       when (
-        val personInfoResult = offenderService.getInfoForPerson(
+        val personInfoResult = offenderService.getPersonInfoResult(
           crn = sourceApplication.crn,
           deliusUsername = null,
           ignoreLaoRestrictions = true,

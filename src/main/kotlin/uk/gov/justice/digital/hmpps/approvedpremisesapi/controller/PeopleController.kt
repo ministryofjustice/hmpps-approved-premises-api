@@ -62,7 +62,7 @@ class PeopleController(
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personInfo = offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
@@ -249,7 +249,7 @@ class PeopleController(
   override fun peopleCrnTimelineGet(crn: String): ResponseEntity<PersonalTimeline> {
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personInfo = offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     val personalTimeline = when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")

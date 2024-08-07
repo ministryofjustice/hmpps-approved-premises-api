@@ -658,7 +658,7 @@ class OffenderServiceTest {
 
       every { mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(PersonSummaryInfoResult.NotFound(crn), null) } returns PersonInfoResult.NotFound(crn)
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+      val result = offenderService.getPersonInfoResult(crn, deliusUsername, false)
       assertThat(result is PersonInfoResult.NotFound).isTrue
     }
 
@@ -693,7 +693,7 @@ class OffenderServiceTest {
           ),
       )
 
-      val exception = assertThrows<RuntimeException> { offenderService.getInfoForPerson(crn, deliusUsername, false) }
+      val exception = assertThrows<RuntimeException> { offenderService.getPersonInfoResult(crn, deliusUsername, false) }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/ABC123: 500 INTERNAL_SERVER_ERROR")
     }
 
@@ -725,7 +725,7 @@ class OffenderServiceTest {
           ),
       )
 
-      val exception = assertThrows<RuntimeException> { offenderService.getInfoForPerson(crn, deliusUsername, false) }
+      val exception = assertThrows<RuntimeException> { offenderService.getPersonInfoResult(crn, deliusUsername, false) }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/ABC123/user/USER/userAccess: 403 FORBIDDEN")
     }
 
@@ -752,7 +752,7 @@ class OffenderServiceTest {
         null,
       )
 
-      assertThrows<RuntimeException> { offenderService.getInfoForPerson(crn, deliusUsername, false) }
+      assertThrows<RuntimeException> { offenderService.getPersonInfoResult(crn, deliusUsername, false) }
     }
 
     @Test
@@ -797,7 +797,7 @@ class OffenderServiceTest {
         )
       } returns PersonInfoResult.Success.Restricted(crn, nomsNumber)
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, ignoreLaoRestrictions = false)
+      val result = offenderService.getPersonInfoResult(crn, deliusUsername, ignoreLaoRestrictions = false)
 
       assertThat(result is PersonInfoResult.Success.Restricted).isTrue
       result as PersonInfoResult.Success.Restricted
@@ -838,7 +838,7 @@ class OffenderServiceTest {
         )
       } returns PersonInfoResult.Success.Full(crn, offenderDetails, null)
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+      val result = offenderService.getPersonInfoResult(crn, deliusUsername, false)
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
       result as PersonInfoResult.Success.Full
@@ -894,7 +894,7 @@ class OffenderServiceTest {
         )
       } returns PersonInfoResult.Success.Full(crn, offenderDetails, null)
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, ignoreLaoRestrictions = true)
+      val result = offenderService.getPersonInfoResult(crn, deliusUsername, ignoreLaoRestrictions = true)
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
       result as PersonInfoResult.Success.Full
@@ -944,7 +944,7 @@ class OffenderServiceTest {
         )
       } returns PersonInfoResult.Success.Full(crn, offenderDetails, inmateDetail)
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+      val result = offenderService.getPersonInfoResult(crn, deliusUsername, false)
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
       result as PersonInfoResult.Success.Full
