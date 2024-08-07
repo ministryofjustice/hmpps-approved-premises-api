@@ -13,11 +13,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import java.io.OutputStream
-import java.time.Duration
 
 @Component
 class CommunityApiClient(
@@ -25,30 +23,6 @@ class CommunityApiClient(
   objectMapper: ObjectMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
-  private val offenderDetailCacheConfig = WebClientCache.PreemptiveCacheConfig(
-    cacheName = "offenderDetails",
-    successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
-    successSoftTtlJitterSeconds = Duration.ofHours(1).toSeconds(),
-    failureSoftTtlBackoffSeconds =
-    listOf(
-      30,
-      Duration.ofMinutes(5).toSeconds().toInt(),
-      Duration.ofMinutes(10).toSeconds().toInt(),
-      Duration.ofMinutes(30).toSeconds().toInt(),
-    ),
-    hardTtlSeconds = Duration.ofHours(12).toSeconds().toInt(),
-  )
-
-  @Deprecated("To get offender details use [OffenderService.getOffenderByCrn] which delegates to ap-delius-context")
-  fun getOffenderDetailSummaryWithCall(crn: String) = getRequest<OffenderDetailSummary> {
-    path = "/secure/offenders/crn/$crn"
-    isPreemptiveCall = true
-    preemptiveCacheConfig = offenderDetailCacheConfig
-    preemptiveCacheKey = crn
-  }
-
-  @Deprecated("To get offender details use  [OffenderService.getOffenderByCrn] which delegates to ap-delius-context")
-  fun getOffenderDetailsCacheEntryStatus(crn: String) = checkPreemptiveCacheStatus(offenderDetailCacheConfig, crn)
 
   @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import redis.lock.redlock.LockResult
 import redis.lock.redlock.RedLock
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -21,7 +20,6 @@ class PreemptiveCacheRefresher(
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,
   private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
-  private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val sentryService: SentryService,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
@@ -41,16 +39,6 @@ class PreemptiveCacheRefresher(
         if (shuttingDown) return@Thread
         interruptableSleep(100)
       }
-
-      preemptiveCacheThreads += OffenderDetailsCacheRefreshWorker(
-        applicationRepository,
-        bookingRepository,
-        communityApiClient,
-        loggingEnabled,
-        delayMs,
-        redLock,
-        lockDurationMs,
-      )
 
       preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
         applicationRepository,
