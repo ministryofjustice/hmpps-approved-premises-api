@@ -30,9 +30,9 @@ class InmateDetailsCacheRefreshWorker(
           bookingRepository.getDistinctNomsNumbers()
         ).distinct() - cacheRefreshExclusionsInmateDetailsRepository.getDistinctNomsNumbers().toSet()
 
-    logConspicuously("${distinctNomsNumbers.count()} cache fields to update")
+    logConspicuously("${distinctNomsNumbers.count()} cache records to check")
 
-    if (loggingEnabled) { log.info("Got $distinctNomsNumbers to refresh for Inmate Details") }
+    if (loggingEnabled) { log.info("Got $distinctNomsNumbers to consider updating for Inmate Details") }
 
     val started = LocalDateTime.now()
     val refreshStarted = LocalDateTime.now()
@@ -94,8 +94,8 @@ ${stats()}"""
       if (prisonsApiResult is ClientResult.Success) {
         if (loggingEnabled) {
           log.info("Successfully refreshed Inmate Details for $nomsNumber")
-          entryUpdates += 1
         }
+        entryUpdates += 1
       }
     }
 
