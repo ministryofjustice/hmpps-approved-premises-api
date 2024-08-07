@@ -18,6 +18,7 @@ class PrisonsApiClient(
   private val inmateDetailsCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "inmateDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
+    successSoftTtlJitterSeconds = Duration.ofHours(1).toSeconds(),
     failureSoftTtlBackoffSeconds = listOf(
       30,
       Duration.ofMinutes(5).toSeconds().toInt(),

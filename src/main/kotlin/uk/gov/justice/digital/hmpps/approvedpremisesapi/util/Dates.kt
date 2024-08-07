@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import io.netty.util.internal.ThreadLocalRandom
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaZoneId
 import java.time.Instant
@@ -138,3 +139,11 @@ private fun toWeeksString(weeks: Int) = if (weeks != 1) {
 
 fun Instant.toLocalDate(): LocalDate = this.toLocalDateTime().toLocalDate()
 fun Instant.toLocalDateTime(): LocalDateTime = this.atZone(TimeZone.currentSystemDefault().toJavaZoneId()).toLocalDateTime()
+
+fun Instant.minusRandomSeconds(maxOffset: Long): Instant {
+  val randomOffset = ThreadLocalRandom
+    .current()
+    .nextLong(-maxOffset, 0)
+
+  return this.plusSeconds(randomOffset)
+}

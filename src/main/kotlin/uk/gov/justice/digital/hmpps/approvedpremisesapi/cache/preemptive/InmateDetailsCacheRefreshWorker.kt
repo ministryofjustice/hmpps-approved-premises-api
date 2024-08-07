@@ -9,8 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "MagicNumber")
 class InmateDetailsCacheRefreshWorker(
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,
@@ -33,9 +34,16 @@ class InmateDetailsCacheRefreshWorker(
 
     if (loggingEnabled) { log.info("Got $distinctNomsNumbers to refresh for Inmate Details") }
 
+    val started = LocalDateTime.now()
     val refreshStarted = LocalDateTime.now()
+    val candidatesCount = distinctNomsNumbers.size
+    var entryUpdates = 0
+    var entryUpdateFails = 0
 
-    distinctNomsNumbers.shuffled().forEachIndexed { index, nomsNumber ->
+    fun stats() = "Of $candidatesCount candidates we have successfully updated $entryUpdates with $entryUpdateFails update failures. " +
+      "Total time taken ${ChronoUnit.SECONDS.between(started,LocalDateTime.now())} seconds"
+
+    distinctNomsNumbers.shuffled().forEach { nomsNumber ->
       logConspicuously("Current NOMS number: $nomsNumber")
 
       val prematureStopReason = checkShouldStop()
@@ -43,15 +51,15 @@ class InmateDetailsCacheRefreshWorker(
         if (prematureStopReason == PrematureStopReason.LockExpired) {
           val message =
             """Inmate details refresh has stopped prematurely because the lock has expired
-Have processed $index of ${distinctNomsNumbers.size} candidates
-Refresh started at $refreshStarted"""
+Refresh started at $refreshStarted
+${stats()}"""
           logConspicuously(message)
           sentryService.captureErrorMessage(message)
         }
         return
       }
 
-      interruptableSleep(50)
+      interruptableSleep(25)
 
       val cacheEntryStatus = prisonsApiClient.getInmateDetailsCacheEntryStatus(nomsNumber)
 
@@ -62,8 +70,10 @@ Refresh started at $refreshStarted"""
           log.info("No upstream call made when refreshing Inmate Details for $nomsNumber, stored result still within soft TTL")
         }
 
-        return@forEachIndexed
+        return@forEach
       }
+
+      interruptableSleep(25)
 
       val prisonsApiResult = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
 
@@ -72,21 +82,24 @@ Refresh started at $refreshStarted"""
       if (prisonsApiResult is ClientResult.Failure.StatusCode) {
         if (!prisonsApiResult.isPreemptivelyCachedResponse) {
           log.error("Unable to refresh Inmate Details for $nomsNumber, response status: ${prisonsApiResult.status}")
+          entryUpdateFails += 1
         }
       }
 
       if (prisonsApiResult is ClientResult.Failure.Other) {
         log.error("Unable to refresh Inmate Details for $nomsNumber: ${prisonsApiResult.exception.message}")
+        entryUpdateFails += 1
       }
 
       if (prisonsApiResult is ClientResult.Success) {
         if (loggingEnabled) {
           log.info("Successfully refreshed Inmate Details for $nomsNumber")
+          entryUpdates += 1
         }
       }
     }
 
-    logConspicuously("Have completed refreshing inmate details cache")
+    logConspicuously("Have completed refreshing inmate details cache. ${stats()}")
 
     interruptableSleep(delayMs)
   }
