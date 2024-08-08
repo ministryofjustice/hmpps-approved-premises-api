@@ -80,7 +80,13 @@ abstract class BaseHMPPSClient(
       }
 
       if (!exception.statusCode.is2xxSuccessful) {
-        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
+        return ClientResult.Failure.StatusCode(
+          method,
+          requestBuilder.path ?: "",
+          exception.statusCode,
+          exception.responseBodyAsString,
+          false,
+        )
       } else {
         throw exception
       }
