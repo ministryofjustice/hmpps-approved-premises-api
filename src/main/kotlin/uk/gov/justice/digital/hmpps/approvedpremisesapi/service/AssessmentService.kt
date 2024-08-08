@@ -121,7 +121,7 @@ class AssessmentService(
 
   fun getAssessmentSummariesForUserCAS3(
     user: UserEntity,
-    crn: String?,
+    crnOrName: String?,
     serviceName: ServiceName,
     statuses: List<DomainAssessmentSummaryStatus>,
     pageCriteria: PageCriteria<AssessmentSortField>,
@@ -137,7 +137,7 @@ class AssessmentService(
         }
         val response = assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
           user.probationRegion.id,
-          crn,
+          crnOrName,
           statuses.map { it.name },
           getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString)),
         )
