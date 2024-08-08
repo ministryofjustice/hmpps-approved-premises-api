@@ -620,7 +620,7 @@ abstract class IntegrationTestBase {
       .responseTimeout(Duration.ofMinutes(20))
       .build()
 
-    wiremockManager.setupTests()
+    wiremockManager.beforeTest()
 
     cacheManager.cacheNames.forEach {
       cacheManager.getCache(it)!!.clear()
@@ -631,7 +631,7 @@ abstract class IntegrationTestBase {
   }
 
   fun teardownTests() {
-    wiremockManager.teardownTests()
+    wiremockManager.afterTest()
   }
 
   fun setupFactories() {
