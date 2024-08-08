@@ -13,9 +13,9 @@ fun <T> isTypeInThrowableChain(throwable: Throwable, causeType: Class<T>): Boole
   }
 
   val cause = throwable.cause
-  if (cause != null) {
-    return isTypeInThrowableChain(cause, causeType)
+  return if (cause != null) {
+    isTypeInThrowableChain(cause, causeType)
   } else {
-    return false
+    false
   }
 }

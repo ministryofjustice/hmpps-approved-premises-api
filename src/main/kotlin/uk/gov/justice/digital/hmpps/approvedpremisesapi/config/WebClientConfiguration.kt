@@ -21,6 +21,7 @@ import java.time.Duration
 
 data class WebClientConfig(
   val webClient: WebClient,
+  val maxRetryAttempts: Long = 1,
 )
 
 @Configuration
