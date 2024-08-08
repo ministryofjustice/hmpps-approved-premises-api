@@ -1422,7 +1422,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments for Temporary Accommodation filters correctly when 'crn' query parameter is provided`() {
+    fun `Get all assessments for Temporary Accommodation filters correctly when a crn is used in the 'query' parameter`() {
       `Given a User` { user, jwt ->
         `Given Some Offenders` { offenderSequence ->
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1461,10 +1461,139 @@ class AssessmentTest : IntegrationTestBase() {
           assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
-            "/assessments?crn=${offender.first.otherIds.crn}",
+            "/assessments?crnOrName=${offender.first.otherIds.crn}",
             ExpectedResponse.OK(
               assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
             ),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when a name is used in the 'query' parameter`() {
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val (offender, otherOffender) = offenderSequence.take(2).toList()
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offender.first.otherIds.crn)
+            withName("${offender.first.firstName} ${offender.first.surname}")
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
+
+          val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(otherOffender.first.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
+
+          assessment.schemaUpToDate = true
+
+          val otherAssessment = temporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
+
+          otherAssessment.schemaUpToDate = true
+
+          // first name match
+          assertResponseForUrl(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crnOrName=${offender.first.firstName}",
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ),
+          )
+
+          // surname match
+          assertResponseForUrl(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crnOrName=${offender.first.surname}",
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ),
+          )
+
+          // full name match
+          assertResponseForUrl(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crnOrName=${offender.first.firstName} ${offender.first.surname}",
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ),
+          )
+
+          // partial match, last letter of first name, first letter of last name
+          assertResponseForUrl(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crnOrName=${offender.first.firstName.last()} ${offender.first.surname.first()}",
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments returns empty when name and crn do not match`() {
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val (offender, otherOffender) = offenderSequence.take(2).toList()
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offender.first.otherIds.crn)
+            withName("${offender.first.firstName} ${offender.first.surname}")
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
+
+          val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(otherOffender.first.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
+
+          assessment.schemaUpToDate = true
+
+          val otherAssessment = temporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
+
+          otherAssessment.schemaUpToDate = true
+
+          assertResponseForUrl(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crnOrName=someone else",
+            ExpectedResponse.OK(emptyList()),
           )
         }
       }

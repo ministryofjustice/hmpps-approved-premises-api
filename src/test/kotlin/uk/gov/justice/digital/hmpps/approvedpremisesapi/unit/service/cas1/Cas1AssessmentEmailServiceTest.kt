@@ -195,7 +195,7 @@ class Cas1AssessmentEmailServiceTest {
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of today`() {
-      val deadline = OffsetDateTime.now().minusHours(2)
+      val deadline = OffsetDateTime.now()
       service.assessmentAllocated(applicant, assessmentID, application, deadline, true)
 
       mockEmailNotificationService.assertEmailRequestCount(1)

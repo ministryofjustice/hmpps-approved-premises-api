@@ -128,7 +128,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
              join applications ap on a.application_id = ap.id
              left outer join temporary_accommodation_applications taa on ap.id = taa.id
        where taa.probation_region_id = ?1
-             and (?2 is null OR ap.crn = ?2)
+             and (?2 is null OR ap.crn = ?2 OR lower(taa.name) LIKE CONCAT('%', lower(?2),'%'))
              and a.reallocated_at is null
              and ((?3) is null OR
                                 (
@@ -167,7 +167,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   )
   fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
     probationRegionId: UUID,
-    crn: String?,
+    crnOrName: String?,
     statuses: List<String> = emptyList(),
     page: Pageable? = null,
   ): Page<DomainAssessmentSummary>
