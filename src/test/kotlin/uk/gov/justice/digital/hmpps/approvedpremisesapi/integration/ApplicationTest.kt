@@ -2409,7 +2409,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Submit Temporary Accommodation application returns 200 with optionl elements in the request`() {
+    fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`() {
       `Given a User`(
         staffUserDetailsConfigBlock = {
           withTeams(
@@ -2446,6 +2446,14 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
+            val pdu = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(
+                probationRegionEntityFactory.produceAndPersist {
+                  withId(submittingUser.probationRegion.id)
+                },
+              )
+            }
+
             webTestClient.post()
               .uri("/applications/$applicationId/submission")
               .header("Authorization", "Bearer $jwt")
@@ -2469,6 +2477,7 @@ class ApplicationTest : IntegrationTestBase() {
                     "Parole",
                     "CRD licence",
                   ),
+                  probationDeliveryUnitId = pdu.id,
                 ),
               )
               .exchange()
@@ -2483,6 +2492,8 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
             assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
             assertThat(persistedApplication.prisonReleaseTypes).isEqualTo("Parole,CRD licence")
+            assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(pdu.id)
+            assertThat(persistedApplication.probationDeliveryUnit!!.name).isEqualTo(pdu.name)
           }
         }
       }
