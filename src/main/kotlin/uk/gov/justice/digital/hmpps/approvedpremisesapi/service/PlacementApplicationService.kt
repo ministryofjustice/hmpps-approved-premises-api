@@ -61,12 +61,6 @@ class PlacementApplicationService(
     return placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
   }
 
-  fun getAllActivePlacementApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
-      applicationId,
-    )
-  }
-
   fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,

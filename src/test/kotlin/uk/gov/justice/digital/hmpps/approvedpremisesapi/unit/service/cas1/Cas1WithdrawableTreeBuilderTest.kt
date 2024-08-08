@@ -103,7 +103,7 @@ class Cas1WithdrawableTreeBuilderTest {
     setupWithdrawableState(placementApplication2, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true))
 
     every {
-      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id)
+      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApplication2)
 
     val adhocBooking1 = createBooking(adhoc = true)
@@ -170,7 +170,7 @@ Notes: []
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
 
     every {
-      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id)
+      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApp2)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
@@ -231,7 +231,7 @@ Notes: []
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true))
 
     every {
-      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id)
+      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApp2)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
@@ -276,7 +276,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInDelius))
 
     every {
-      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id)
+      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()

@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -50,8 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -60,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.WithdrawableTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
@@ -74,10 +70,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val placementApplicationService: PlacementApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val assessmentTransformer: AssessmentTransformer,
-  private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
@@ -86,7 +80,6 @@ class ApplicationsController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val appealService: AppealService,
   private val appealTransformer: AppealTransformer,
-  private val placementRequestService: PlacementRequestService,
   private val requestForPlacementService: RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
 ) : ApplicationsApiDelegate {
@@ -537,31 +530,6 @@ class ApplicationsController(
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
-  }
-
-  @Deprecated("Should use RequestForPlacementController endpoints")
-  override fun applicationsApplicationIdPlacementApplicationsGet(
-    applicationId: UUID,
-    xServiceName: ServiceName,
-    includeInitialRequestForPlacement: Boolean?,
-  ): ResponseEntity<List<PlacementApplication>> {
-    if (xServiceName != ServiceName.approvedPremises) {
-      throw ForbiddenProblem()
-    }
-
-    val initialPlacementRequests = if (includeInitialRequestForPlacement == true) {
-      placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId).map {
-        placementApplicationTransformer.transformPlacementRequestJpaToApi(it)
-      }
-    } else { emptyList() }
-
-    val placementApplicationEntities =
-      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(applicationId)
-    val additionalPlacementRequests = placementApplicationEntities.map {
-      placementApplicationTransformer.transformJpaToApi(it)
-    }
-
-    return ResponseEntity.ok(initialPlacementRequests.plus(additionalPlacementRequests))
   }
 
   override fun applicationsApplicationIdWithdrawablesWithNotesGet(
