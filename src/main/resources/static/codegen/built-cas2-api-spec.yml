@@ -5389,7 +5389,6 @@ components:
         - staffDetails
         - teamsManagingCase
         - ukBankHolidays
-        - offenderDetails
         - inmateDetails
     BedOccupancyRange:
       type: object
