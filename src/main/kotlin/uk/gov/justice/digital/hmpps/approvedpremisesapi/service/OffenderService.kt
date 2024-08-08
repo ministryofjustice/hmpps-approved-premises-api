@@ -23,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Convicti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -81,6 +83,108 @@ class OffenderService(
     )
   }
 
+  sealed interface LimitedAccessStrategy {
+    /**
+     * Even if the calling user has exclusions or restrictions for a given offender,
+     * return [PersonSummaryInfoResult.Success.Full] regardless.
+     *
+     * This strategy should be used with care, typically when the calling user
+     * has a specific qualification that indicates they can always view limited
+     * access offender information
+     */
+    data object IgnoreLimitedAccess : LimitedAccessStrategy
+
+    /**
+     * If the offender has restrictions or exclusions (i.e. limited access), retrieve
+     * the access information for the calling user. If the calling user has limited
+     * access to this offender (either restricted or excluded), return
+     * [PersonSummaryInfoResult.Success.Restricted]
+     */
+    data class ReturnRestrictedIfLimitedAccess(val deliusUsername: String) : LimitedAccessStrategy
+  }
+
+  fun getPersonSummaryInfoResults(
+    crns: Set<String>,
+    limitedAccessStrategy: LimitedAccessStrategy,
+  ): List<PersonSummaryInfoResult> {
+    if (crns.isEmpty()) {
+      return emptyList()
+    }
+
+    val crnsList = crns.toList()
+
+    val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getSummariesForCrns(crnsList)) {
+      is ClientResult.Success -> result.body
+      is ClientResult.Failure -> result.throwException()
+    }.cases.associateBy(
+      keySelector = { it.crn },
+      valueTransform = { it },
+    )
+
+   /*
+    * this could be more efficient by only retrieving access information for CRNs where
+    * the corresponding [CaseSummary.hasLimitedAccess()] is true
+    */
+    val caseAccessByCrn = when (limitedAccessStrategy) {
+      is LimitedAccessStrategy.IgnoreLimitedAccess -> emptyMap()
+      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess ->
+        when (val result = apDeliusContextApiClient.getUserAccessForCrns(limitedAccessStrategy.deliusUsername, crnsList)) {
+          is ClientResult.Success -> result.body
+          is ClientResult.Failure -> result.throwException()
+        }.access.associateBy(
+          keySelector = { it.crn },
+          valueTransform = { it },
+        )
+    }
+
+    return crns.map { crn ->
+      toPersonSummaryInfo(
+        crn,
+        caseSummariesByCrn[crn],
+        caseAccessByCrn[crn],
+        limitedAccessStrategy,
+      )
+    }
+  }
+
+  fun toPersonSummaryInfo(
+    crn: String,
+    caseSummary: CaseSummary?,
+    caseAccess: CaseAccess?,
+    limitedAccessStrategy: LimitedAccessStrategy,
+  ): PersonSummaryInfoResult {
+    if (caseSummary == null) {
+      log.debug("Could not find case summary for '$crn'. Returning not found")
+      return PersonSummaryInfoResult.NotFound(crn)
+    }
+
+    return if (!caseSummary.hasLimitedAccess() || limitedAccessStrategy is LimitedAccessStrategy.IgnoreLimitedAccess) {
+      log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
+      PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+    } else {
+      if (caseAccess == null) {
+        // This shouldn't happen
+        log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
+        PersonSummaryInfoResult.NotFound(crn)
+      } else {
+        if (caseAccess.hasLimitedAccess()) {
+          log.debug("Caller cannot access LAO '$crn'. Returning restricted")
+          PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
+        } else {
+          log.debug("Caller can access LAO '$crn'. Returning full details")
+          PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+        }
+      }
+    }
+  }
+
+  private fun CaseSummary.hasLimitedAccess() = this.currentExclusion == true || this.currentRestriction == true
+  private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
+
+  @Deprecated(
+    "This function uses the now deprecated [OffenderDetailsDataSource]",
+    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
+  )
   fun getOffenderSummariesByCrns(
     crns: Set<String>,
     deliusUsername: String?,
@@ -116,7 +220,13 @@ class OffenderService(
     }
   }
 
-  @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLaoRestrictions, true)"))
+  @Deprecated(
+    """
+      This function uses the now deprecated [OffenderDetailsDataSource]. 
+      It also throws an exception if an offender isn't found, instead of returning PersonSummaryInfoResult.NotFound
+    """,
+    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
+  )
   @SuppressWarnings("CyclomaticComplexMethod", "MagicNumber")
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
@@ -161,6 +271,10 @@ class OffenderService(
     }
   }
 
+  @Deprecated(
+    " This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model",
+    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
+  )
   fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
     return getOffender(
       ignoreLaoRestrictions,
@@ -169,6 +283,12 @@ class OffenderService(
     )
   }
 
+  @Deprecated(
+    """
+      This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
+    """,
+    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
+  )
   @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth", "detekt:ReturnCount")
   private fun getOffender(
     ignoreLaoRestrictions: Boolean,
@@ -191,6 +311,10 @@ class OffenderService(
           is ClientResult.Success -> accessResponse.body
           is ClientResult.Failure.StatusCode -> {
             if (accessResponse.status == HttpStatus.FORBIDDEN) {
+              // This is legacy behaviour to differentiate between the community api get access for
+              // a single CRN endpoint returning 403 (meaning the client can't access the endpoint),
+              // and the endpoint returning a response indicating the user can't access the offender
+              // This isn't required if directly calling apDeliusContextApiClient.getUserAccessForCrns
               try {
                 accessResponse.deserializeTo<UserOffenderAccess>()
                 return AuthorisableActionResult.Unauthorised()
@@ -214,6 +338,9 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
+  /*
+   * This should call apDeliusContextApiClient.getSummariesForCrns(crns) directly
+   */
   fun isLao(crn: String): Boolean {
     val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
@@ -225,10 +352,17 @@ class OffenderService(
     return offender.currentExclusion || offender.currentRestriction
   }
 
+  /*
+   * This should call apDeliusContextApiClient.getUserAccessForCrns directly
+   */
   fun canAccessOffender(username: String, crn: String): Boolean {
     return when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(username, crn)) {
       is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
       is ClientResult.Failure.StatusCode -> {
+        // This is legacy behaviour to differentiate between the community api get access for
+        // a single CRN endpoint returning 403 (meaning the client can't access the endpoint),
+        // and the endpoint returning a response indicating the user can't access the offender
+        // This isn't required if directly calling apDeliusContextApiClient.getUserAccessForCrns
         if (accessResponse.status.equals(HttpStatus.FORBIDDEN)) {
           try {
             accessResponse.deserializeTo<UserOffenderAccess>()
