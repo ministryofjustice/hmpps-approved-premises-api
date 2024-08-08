@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
@@ -217,16 +216,14 @@ class UserService(
   fun updateUserFromCommunityApiById(
     id: UUID,
     forService: ServiceName,
-    force: Boolean = false,
   ): AuthorisableActionResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    return AuthorisableActionResult.Success(updateUserFromCommunityApi(user, forService, force))
+    return AuthorisableActionResult.Success(updateUserFromCommunityApi(user, forService))
   }
 
   fun updateUserFromCommunityApi(
     user: UserEntity,
     forService: ServiceName,
-    force: Boolean = false,
   ) = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
     is ClientResult.Failure.StatusCode -> {
       if (staffUserDetailsResponse.status == HttpStatus.NOT_FOUND) {
@@ -238,13 +235,7 @@ class UserService(
     is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     is ClientResult.Success -> {
       val deliusUser = staffUserDetailsResponse.body
-      GetUserResponse.Success(
-        if (userHasChanged(user, deliusUser) || force) {
-          updateUser(user, deliusUser, forService)
-        } else {
-          user
-        },
-      )
+      GetUserResponse.Success(updateUser(user, deliusUser, forService))
     }
   }
 
@@ -466,15 +457,6 @@ class UserService(
   fun clearQualifications(user: UserEntity) {
     userQualificationAssignmentRepository.deleteAllById(user.qualifications.map(UserQualificationAssignmentEntity::id))
     user.qualifications.clear()
-  }
-
-  private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
-    return (deliusUser.email !== user.email) ||
-      (deliusUser.telephoneNumber !== user.telephoneNumber) ||
-      (deliusUser.staff.fullName != user.name) ||
-      (deliusUser.staffCode != user.deliusStaffCode) ||
-      (deliusUser.probationArea.code != user.probationRegion.deliusCode) ||
-      !CollectionUtils.isEqualCollection(deliusUser.getTeamCodes(), user.teamCodes ?: emptyList<String>())
   }
 
   sealed interface GetUserResponse {
