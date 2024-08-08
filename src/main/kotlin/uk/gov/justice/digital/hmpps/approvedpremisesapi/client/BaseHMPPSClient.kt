@@ -46,11 +46,11 @@ abstract class BaseHMPPSClient(
 
     val cacheConfig = requestBuilder.preemptiveCacheConfig
 
-    val attempt = AtomicInteger(1)
+    val preemptiveCacheRefreshAttempt = AtomicInteger(1)
 
     try {
       if (cacheConfig != null) {
-        webClientCache.tryGetCachedValue(typeReference, requestBuilder, cacheConfig, attempt)?.let {
+        webClientCache.tryGetCachedValue(typeReference, requestBuilder, cacheConfig, preemptiveCacheRefreshAttempt)?.let {
           return it
         }
       }
@@ -76,7 +76,7 @@ abstract class BaseHMPPSClient(
       return ClientResult.Success(result.statusCode, deserialized, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
-        webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, attempt.get(), method)
+        webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, preemptiveCacheRefreshAttempt.get(), method)
       }
 
       if (!exception.statusCode.is2xxSuccessful) {
