@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestFo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventSchemaVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -67,7 +68,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeAndJson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelope
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -95,14 +97,26 @@ class DomainEventServiceTest {
     userService = userService,
     emitDomainEventsEnabled = emitDomainEventsEnabled,
     mockDomainEventUrlConfig,
+    Cas1DomainEventMigrationService(objectMapper),
   )
 
   private val detailUrl = "http://example.com/1234"
 
   companion object {
     @JvmStatic
-    fun allCas1DomainEventTypes() = DomainEventType.values().filter { it.cas == DomainEventCas.CAS1 }
+    fun allDomainEventTypeAndVersions() = DomainEventType
+      .entries
+      .filter { it.cas == DomainEventCas.CAS1 }
+      .flatMap { type -> type.schemaVersions.map { DomainEventTypeAndVersion(type, it) } }
+
+    @JvmStatic
+    fun allDomainEventTypesPersistedVersionOnly() = DomainEventType
+      .entries
+      .filter { it.cas == DomainEventCas.CAS1 }
+      .map { type -> DomainEventTypeAndVersion(type, type.schemaVersions.maxBy { it.versionNo ?: -1 }) }
   }
+
+  data class DomainEventTypeAndVersion(val type: DomainEventType, val version: DomainEventSchemaVersion)
 
   @BeforeEach
   fun setupUserService() {
@@ -114,8 +128,9 @@ class DomainEventServiceTest {
   inner class GetDomainEvents {
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `getDomainEvent returns null when event not found`(domainEventType: DomainEventType) {
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allDomainEventTypeAndVersions")
+    fun `getDomainEvent returns null when event not found`(typeAndVersion: DomainEventTypeAndVersion) {
+      val domainEventType = typeAndVersion.type
       val id = UUID.randomUUID()
       val method = fetchGetterForType(domainEventType)
 
@@ -125,26 +140,34 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `getDomainEvent returns event`(domainEventType: DomainEventType) {
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allDomainEventTypeAndVersions")
+    fun `getDomainEvent returns event`(typeAndVersion: DomainEventTypeAndVersion) {
+      val type = typeAndVersion.type
+      val version = typeAndVersion.version
+
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val occurredAt = OffsetDateTime.now()
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
 
-      val method = fetchGetterForType(domainEventType)
-      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
+      val method = fetchGetterForType(type)
+      val domainEventAndJson = createCas1DomainEventEnvelope(
+        type = type,
+        objectMapper = objectMapper,
+        schemaVersion = version,
+        occurredAt = occurredAt.toInstant(),
+      )
 
       every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
         .withId(id)
         .withApplicationId(applicationId)
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
-        .withType(domainEventType)
+        .withType(type)
         .withData(domainEventAndJson.persistedJson)
         .withOccurredAt(occurredAt)
-        .withSchemaVersion(null)
+        .withSchemaVersion(version.versionNo)
         .produce()
 
       val event = method.invoke(id)
@@ -189,15 +212,18 @@ class DomainEventServiceTest {
   inner class SaveAndEmit {
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `saveAndEmit persists event and emits event to SNS`(domainEventType: DomainEventType) {
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allDomainEventTypesPersistedVersionOnly")
+    fun `saveAndEmit persists event and emits event to SNS`(typeAndVersion: DomainEventTypeAndVersion) {
+      val type = typeAndVersion.type
+      val version = typeAndVersion.version
+
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
-      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
+      val domainEventAndJson = createCas1DomainEventEnvelope(type, objectMapper, version)
       val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to "value1")
 
       every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
@@ -211,17 +237,18 @@ class DomainEventServiceTest {
         data = domainEventAndJson.envelope,
         bookingId = bookingId,
         metadata = metadata,
+        schemaVersion = version.versionNo,
       )
 
       every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-      domainEventService.saveAndEmit(domainEventToSave, domainEventType, true)
+      domainEventService.saveAndEmit(domainEventToSave, type, true)
 
       verify(exactly = 1) {
         domainEventRespositoryMock.save(
           withArg {
             assertThat(it.id).isEqualTo(id)
-            assertThat(it.type).isEqualTo(domainEventType)
+            assertThat(it.type).isEqualTo(type)
             assertThat(it.crn).isEqualTo(crn)
             assertThat(it.nomsNumber).isEqualTo(nomsNumber)
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
@@ -236,9 +263,9 @@ class DomainEventServiceTest {
       verify(exactly = 1) {
         domainEventWorkerMock.emitEvent(
           match {
-            it.eventType == domainEventType.typeName &&
+            it.eventType == type.typeName &&
               it.version == 1 &&
-              it.description == domainEventType.typeDescription &&
+              it.description == type.typeDescription &&
               it.detailUrl == detailUrl &&
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
               it.additionalInformation.applicationId == applicationId &&
@@ -250,20 +277,23 @@ class DomainEventServiceTest {
       }
 
       verify(exactly = 1) {
-        mockDomainEventUrlConfig.getUrlForDomainEventId(domainEventType, domainEventToSave.id)
+        mockDomainEventUrlConfig.getUrlForDomainEventId(type, domainEventToSave.id)
       }
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `saveAndEmit persists event and does not emit event if emit is false`(domainEventType: DomainEventType) {
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allDomainEventTypesPersistedVersionOnly")
+    fun `saveAndEmit persists event and does not emit event if emit is false`(typeAndVersion: DomainEventTypeAndVersion) {
+      val type = typeAndVersion.type
+      val version = typeAndVersion.version
+
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
-      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
+      val domainEventAndJson = createCas1DomainEventEnvelope(type, objectMapper, version)
 
       every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -275,15 +305,16 @@ class DomainEventServiceTest {
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope,
         bookingId = bookingId,
+        schemaVersion = version.versionNo,
       )
 
-      domainEventService.saveAndEmit(domainEventToSave, domainEventType, false)
+      domainEventService.saveAndEmit(domainEventToSave, type, false)
 
       verify(exactly = 1) {
         domainEventRespositoryMock.save(
           withArg {
             assertThat(it.id).isEqualTo(id)
-            assertThat(it.type).isEqualTo(domainEventType)
+            assertThat(it.type).isEqualTo(type)
             assertThat(it.crn).isEqualTo(crn)
             assertThat(it.nomsNumber).isEqualTo(nomsNumber)
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
@@ -300,15 +331,16 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(domainEventType: DomainEventType) {
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allDomainEventTypeAndVersions")
+    fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(typeAndVersion: DomainEventTypeAndVersion) {
+      val domainEventType = typeAndVersion.type
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
-      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
+      val domainEventAndJson = createCas1DomainEventEnvelope(domainEventType, objectMapper)
 
       every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
