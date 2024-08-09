@@ -1279,10 +1279,8 @@ components:
         - bookingId
         - premises
         - cancelledAt
-        - cancelledAtDate
         - cancelledBy
         - cancellationReason
-        - cancellationRecordedAt
     BookingExtendedEnvelope:
       type: object
       properties:
