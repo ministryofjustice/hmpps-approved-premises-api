@@ -19,7 +19,6 @@ interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID>
 data class ProbationRegionEntity(
   @Id
   val id: UUID,
-  @Deprecated(message = "There can be multiple codes to a region, so use probation_area_probation_region_mappings to get the correct code")
   val name: String,
   /**
    * If the AP Area for a user is required, instead use [UserEntity.apArea]
@@ -32,6 +31,7 @@ data class ProbationRegionEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   val apArea: ApAreaEntity?,
+  @Deprecated(message = "There can be multiple codes to a region, so use probation_area_probation_region_mappings instead")
   val deliusCode: String,
 ) {
   override fun toString() = "ProbationRegionEntity:$id"
