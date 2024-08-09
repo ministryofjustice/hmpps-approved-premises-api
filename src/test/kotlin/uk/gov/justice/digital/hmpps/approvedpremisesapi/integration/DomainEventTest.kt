@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createDomainEventOfType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeOfType
 import java.util.UUID
 
 class DomainEventTest : InitialiseDatabasePerClassTestBase() {
@@ -59,7 +59,7 @@ class DomainEventTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
-    val envelopedData = createDomainEventOfType(domainEventType)
+    val envelopedData = createCas1DomainEventEnvelopeOfType(domainEventType)
 
     val event = domainEventFactory.produceAndPersist {
       withType(domainEventType)

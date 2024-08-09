@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createDomainEventOfType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeOfType
 
 class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -162,9 +162,9 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
         withCreatedBy(userEntity)
       }
 
-      createDomainEventOfType(type, clarificationNote.id)
+      createCas1DomainEventEnvelopeOfType(type, clarificationNote.id)
     } else {
-      createDomainEventOfType(type)
+      createCas1DomainEventEnvelopeOfType(type)
     }
 
     return domainEventFactory.produceAndPersist {
