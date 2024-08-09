@@ -74,6 +74,10 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
     this.cancellationReason = { cancellationReason }
   }
 
+  fun withCancellationRecordedAt(cancellationRecordedAt: Instant) = apply {
+    this.cancellationRecordedAt = { cancellationRecordedAt }
+  }
+
   override fun produce() = BookingCancelled(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),

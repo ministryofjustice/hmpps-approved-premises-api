@@ -97,6 +97,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.metadata = { metadata }
   }
 
+  fun withSchemaVersion(schemaVersion: Int?) = apply {
+    this.schemaVersion = { schemaVersion }
+  }
+
   override fun produce(): DomainEventEntity = DomainEventEntity(
     id = this.id(),
     applicationId = this.applicationId(),
