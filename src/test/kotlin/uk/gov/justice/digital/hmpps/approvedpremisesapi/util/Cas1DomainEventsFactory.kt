@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -41,7 +42,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-fun createCas1DomainEventEnvelopeOfType(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any {
+fun createCas1DomainEventEnvelopeAndJson(
+  type: DomainEventType,
+  objectMapper: ObjectMapper,
+  requestId: UUID = UUID.randomUUID(),
+): DomainEventJsonAndEnvelope {
+  val expectedEnvelope = createCas1DomainEventEnvelope(type, requestId)
+  return DomainEventJsonAndEnvelope(
+    persistedJson = objectMapper.writeValueAsString(expectedEnvelope),
+    envelope = expectedEnvelope,
+  )
+}
+
+data class DomainEventJsonAndEnvelope(
+  val persistedJson: String,
+  val envelope: Any,
+)
+
+@SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
+fun createCas1DomainEventEnvelope(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any {
   val id = UUID.randomUUID()
   val timestamp = Instant.now()
   val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeOfType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeAndJson
 import java.util.UUID
 
 class DomainEventTest : InitialiseDatabasePerClassTestBase() {
@@ -59,11 +59,11 @@ class DomainEventTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
     )
 
-    val envelopedData = createCas1DomainEventEnvelopeOfType(domainEventType)
+    val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
 
     val event = domainEventFactory.produceAndPersist {
       withType(domainEventType)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(domainEventAndJson.persistedJson)
     }
 
     val url = generateUrlForDomainEventType(domainEventType, event.id)
@@ -74,9 +74,9 @@ class DomainEventTest : InitialiseDatabasePerClassTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody(envelopedData::class.java)
+      .expectBody(domainEventAndJson.envelope::class.java)
       .returnResult()
 
-    assertThat(response.responseBody).isEqualTo(envelopedData)
+    assertThat(response.responseBody).isEqualTo(domainEventAndJson.envelope)
   }
 }

@@ -67,7 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeOfType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeAndJson
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -134,7 +134,7 @@ class DomainEventServiceTest {
       val nomsNumber = "theNomsNumber"
 
       val method = fetchGetterForType(domainEventType)
-      val data = createCas1DomainEventEnvelopeOfType(domainEventType)
+      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
 
       every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
         .withId(id)
@@ -142,7 +142,7 @@ class DomainEventServiceTest {
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .withType(domainEventType)
-        .withData(objectMapper.writeValueAsString(data))
+        .withData(domainEventAndJson.persistedJson)
         .withOccurredAt(occurredAt)
         .withSchemaVersion(null)
         .produce()
@@ -156,7 +156,7 @@ class DomainEventServiceTest {
           crn = crn,
           nomsNumber = nomsNumber,
           occurredAt = occurredAt.toInstant(),
-          data = data,
+          data = domainEventAndJson.envelope,
         ),
       )
     }
@@ -197,7 +197,7 @@ class DomainEventServiceTest {
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
-      val data = createCas1DomainEventEnvelopeOfType(domainEventType)
+      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
       val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to "value1")
 
       every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
@@ -208,7 +208,7 @@ class DomainEventServiceTest {
         crn = crn,
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
-        data = data,
+        data = domainEventAndJson.envelope,
         bookingId = bookingId,
         metadata = metadata,
       )
@@ -225,7 +225,7 @@ class DomainEventServiceTest {
             assertThat(it.crn).isEqualTo(crn)
             assertThat(it.nomsNumber).isEqualTo(nomsNumber)
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
-            assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
+            assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
             assertThat(it.metadata).isEqualTo(metadata)
@@ -263,7 +263,7 @@ class DomainEventServiceTest {
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
-      val data = createCas1DomainEventEnvelopeOfType(domainEventType)
+      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
 
       every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -273,7 +273,7 @@ class DomainEventServiceTest {
         crn = crn,
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
-        data = data,
+        data = domainEventAndJson.envelope,
         bookingId = bookingId,
       )
 
@@ -287,7 +287,7 @@ class DomainEventServiceTest {
             assertThat(it.crn).isEqualTo(crn)
             assertThat(it.nomsNumber).isEqualTo(nomsNumber)
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
-            assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
+            assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
           },
@@ -308,7 +308,7 @@ class DomainEventServiceTest {
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
-      val data = createCas1DomainEventEnvelopeOfType(domainEventType)
+      val domainEventAndJson = createCas1DomainEventEnvelopeAndJson(domainEventType, objectMapper)
 
       every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
@@ -318,7 +318,7 @@ class DomainEventServiceTest {
         crn = crn,
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
-        data = data,
+        data = domainEventAndJson.envelope,
         bookingId = bookingId,
       )
 
@@ -335,7 +335,7 @@ class DomainEventServiceTest {
               it.crn == crn &&
               it.nomsNumber == nomsNumber &&
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-              it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+              it.data == domainEventAndJson.persistedJson &&
               it.triggeredByUserId == user.id &&
               it.bookingId == bookingId
           },
