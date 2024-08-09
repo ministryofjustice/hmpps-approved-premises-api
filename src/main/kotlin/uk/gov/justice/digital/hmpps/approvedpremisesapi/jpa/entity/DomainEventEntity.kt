@@ -104,7 +104,8 @@ data class DomainEventEntity(
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   /**
    * Use to track the schema version used for the [data] property. The schema version
-   * will be specific to the corresponding [type]
+   * will be specific to the corresponding [type]. This version number relates to
+   * [DomainEventSchemaVersion.versionNo]
    *
    * This will be null for any domain events recorded before this concept was introduced.
    *
@@ -131,7 +132,20 @@ enum class DomainEventCas {
   CAS3,
 }
 
-enum class DomainEventType(val cas: DomainEventCas, val typeName: String, val typeDescription: String, val timelineEventType: TimelineEventType?) {
+data class DomainEventSchemaVersion(val versionNo: Int?, val description: String?)
+
+val DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION = DomainEventSchemaVersion(
+  versionNo = null,
+  description = "The initial version of this domain event",
+)
+
+enum class DomainEventType(
+  val cas: DomainEventCas,
+  val typeName: String,
+  val typeDescription: String,
+  val timelineEventType: TimelineEventType?,
+  val schemaVersions: List<DomainEventSchemaVersion> = listOf(DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION),
+) {
   APPROVED_PREMISES_APPLICATION_SUBMITTED(
     DomainEventCas.CAS1,
     Cas1EventType.applicationSubmitted.value,
@@ -179,6 +193,10 @@ enum class DomainEventType(val cas: DomainEventCas, val typeName: String, val ty
     Cas1EventType.bookingCancelled.value,
     "An Approved Premises Booking has been cancelled",
     TimelineEventType.approvedPremisesBookingCancelled,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Added mandatory cancelledAtDate and cancellationRecordedAt fields"),
+    ),
   ),
   APPROVED_PREMISES_BOOKING_CHANGED(
     DomainEventCas.CAS1,
