@@ -30,10 +30,17 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMemb
     ),
   )
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String, response: CaseDetail) =
+fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/probation-cases/$crn/details",
     responseBody = response,
+    responseStatus = responseStatus,
+  )
+
+fun IntegrationTestBase.APDeliusContext_mockUnsuccesfullCaseDetailCall(crn: String, responseStatus: Int) =
+  mockUnsuccessfulGetCall(
+    url = "/probation-cases/$crn/details",
+    responseStatus = responseStatus,
   )
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulTeamsManagingCaseCall(crn: String, response: ManagingTeamsResponse) =

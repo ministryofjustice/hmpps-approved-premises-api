@@ -64,7 +64,7 @@ class WiremockManager {
   @Value("\${wiremock.port}")
   lateinit var wiremockPort: Number
 
-  fun setupTests() {
+  fun beforeTest() {
     if (!this::wiremockServer.isInitialized || !wiremockServer.isRunning) {
       log.info("Starting wiremock on port $wiremockPort")
       wiremockServer = WireMockServer(wiremockPort.toInt())
@@ -72,7 +72,11 @@ class WiremockManager {
     }
   }
 
-  fun teardownTests() {
+  fun afterTest() {
     wiremockServer.resetAll()
+  }
+
+  fun resetRequestJournal() {
+    wiremockServer.resetRequests()
   }
 }

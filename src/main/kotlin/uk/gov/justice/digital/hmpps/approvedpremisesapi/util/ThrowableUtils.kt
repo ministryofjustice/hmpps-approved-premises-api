@@ -6,3 +6,16 @@ fun findRootCause(throwable: Throwable, topMost: Boolean = true): Throwable? {
 
   return findRootCause(throwable.cause!!, false)
 }
+
+fun <T> isTypeInThrowableChain(throwable: Throwable, causeType: Class<T>): Boolean {
+  if (throwable.javaClass == causeType) {
+    return true
+  }
+
+  val cause = throwable.cause
+  return if (cause != null) {
+    isTypeInThrowableChain(cause, causeType)
+  } else {
+    false
+  }
+}

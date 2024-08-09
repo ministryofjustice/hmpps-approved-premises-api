@@ -174,7 +174,7 @@ preemptive-cache-lock-duration-ms: 10000
 arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
 
-upstream-timeout-ms: 2000
+upstream-timeout-ms: 500
 
 migration-job:
   throttle-enabled: false

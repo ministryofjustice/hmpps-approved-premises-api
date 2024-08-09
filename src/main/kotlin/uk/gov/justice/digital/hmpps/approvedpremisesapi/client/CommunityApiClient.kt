@@ -8,9 +8,9 @@ import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
@@ -19,10 +19,10 @@ import java.io.OutputStream
 
 @Component
 class CommunityApiClient(
-  @Qualifier("communityApiWebClient") private val webClient: WebClient,
+  @Qualifier("communityApiWebClient") private val webClientConfig: WebClientConfig,
   objectMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
 
   @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {
@@ -45,7 +45,7 @@ class CommunityApiClient(
     val path = "/secure/offenders/crn/$crn/documents/$documentId"
 
     return try {
-      val bodyDataBuffer = webClient.get().uri(path)
+      val bodyDataBuffer = webClientConfig.webClient.get().uri(path)
         .retrieve()
         .bodyToFlux(DataBuffer::class.java)
 

@@ -4,18 +4,31 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.netty.channel.ConnectTimeoutException
+import io.netty.handler.timeout.ReadTimeoutException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.Exceptions
+import reactor.util.retry.Retry
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableChain
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
-  private val webClient: WebClient,
+  private val webClientConfig: WebClientConfig,
   private val objectMapper: ObjectMapper,
   private val webClientCache: WebClientCache,
 ) {
+
+  companion object Constants {
+    val RETRY_ERROR_CODES = listOf(500, 501, 502, 503)
+  }
+
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
     request(HttpMethod.GET, requestBuilderConfiguration)
 
@@ -46,14 +59,17 @@ abstract class BaseHMPPSClient(
 
     val cacheConfig = requestBuilder.preemptiveCacheConfig
 
-    val attempt = AtomicInteger(1)
+    val preemptiveCacheRefreshAttempt = AtomicInteger(1)
 
     try {
       if (cacheConfig != null) {
-        webClientCache.tryGetCachedValue(typeReference, requestBuilder, cacheConfig, attempt)?.let {
-          return it
-        }
+        webClientCache.tryGetCachedValue(typeReference, requestBuilder, cacheConfig, preemptiveCacheRefreshAttempt)
+          ?.let {
+            return it
+          }
       }
+
+      val webClient = webClientConfig.webClient
 
       val request = webClient.method(method)
         .uri(requestBuilder.path ?: "")
@@ -63,7 +79,15 @@ abstract class BaseHMPPSClient(
         request.bodyValue(requestBuilder.body!!)
       }
 
-      val result = request.retrieve().toEntity(String::class.java).block()!!
+      val result = request
+        .retrieve()
+        .toEntity(String::class.java)
+        .retryWhen(
+          Retry.max(webClientConfig.maxRetryAttempts)
+            .filter { isStatusCodeApplicableForRetry(it) || !isTimeoutException(it) }
+            .doBeforeRetry { logRetrySignal(it) },
+        )
+        .block()!!
 
       val deserialized = objectMapper.readValue(result.body, typeReference)
 
@@ -73,18 +97,71 @@ abstract class BaseHMPPSClient(
 
       return ClientResult.Success(result.statusCode, deserialized, false)
     } catch (exception: WebClientResponseException) {
-      if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
-        webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, attempt.get(), method)
-      }
-
-      if (!exception.statusCode.is2xxSuccessful) {
-        return ClientResult.Failure.StatusCode(method, requestBuilder.path ?: "", exception.statusCode, exception.responseBodyAsString, false)
-      } else {
-        throw exception
-      }
+      return handleWebClientResponseException(
+        cacheConfig = cacheConfig,
+        requestBuilder = requestBuilder,
+        exception = exception,
+        preemptiveCacheRefreshAttempt = preemptiveCacheRefreshAttempt,
+        method = method,
+      )
     } catch (exception: Exception) {
-      return ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
+      val cause = exception.cause
+      return if (Exceptions.isRetryExhausted(exception) && cause is WebClientResponseException) {
+        handleWebClientResponseException(
+          cacheConfig = cacheConfig,
+          requestBuilder = requestBuilder,
+          exception = cause,
+          preemptiveCacheRefreshAttempt = preemptiveCacheRefreshAttempt,
+          method = method,
+        )
+      } else {
+        ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
+      }
     }
+  }
+
+  private fun <ResponseType : Any> handleWebClientResponseException(
+    cacheConfig: WebClientCache.PreemptiveCacheConfig?,
+    requestBuilder: HMPPSRequestConfiguration,
+    exception: WebClientResponseException,
+    preemptiveCacheRefreshAttempt: AtomicInteger,
+    method: HttpMethod,
+  ): ClientResult.Failure.StatusCode<ResponseType> {
+    if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
+      webClientCache.cacheFailedWebClientResponse(
+        requestBuilder,
+        cacheConfig,
+        exception,
+        preemptiveCacheRefreshAttempt.get(),
+        method,
+      )
+    }
+
+    if (!exception.statusCode.is2xxSuccessful) {
+      return ClientResult.Failure.StatusCode(
+        method,
+        requestBuilder.path ?: "",
+        exception.statusCode,
+        exception.responseBodyAsString,
+        false,
+      )
+    } else {
+      throw exception
+    }
+  }
+
+  private fun isStatusCodeApplicableForRetry(throwable: Throwable) =
+    throwable is WebClientResponseException && RETRY_ERROR_CODES.contains(throwable.statusCode.value())
+
+  // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException
+  private fun isTimeoutException(throwable: Throwable): Boolean =
+    isTypeInThrowableChain(throwable, ReadTimeoutException::class.java) ||
+      isTypeInThrowableChain(throwable, ConnectTimeoutException::class.java)
+
+  private fun logRetrySignal(retrySignal: Retry.RetrySignal) {
+    val exception = retrySignal.failure()?.cause ?: retrySignal.failure()
+    val message = exception.message ?: exception.javaClass.canonicalName
+    log.debug("Retrying due to {}, totalRetries: {}", message, retrySignal.totalRetries())
   }
 
   class HMPPSRequestConfiguration {
