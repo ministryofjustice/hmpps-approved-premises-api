@@ -66,7 +66,7 @@ private fun getJwt(): String {
 
 private fun ClientResponse.printIfError(name: String) {
   if (this.statusCode().isError) {
-    println("Could not call '$name' endpoint: ${this.statusCode().value()} ${this.statusCode().reasonPhrase}")
+    println("Could not call '$name' endpoint: ${this.statusCode().value()}")
     println()
     println(this.bodyToMono<String>().block())
   }

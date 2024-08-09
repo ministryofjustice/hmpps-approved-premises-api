@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 
@@ -59,8 +58,8 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = it.arrival?.arrivalDate
       override val endDate: LocalDate?
         get() = it.arrival?.expectedDepartureDate
-      override val actualEndDate: Timestamp?
-        get() = it.departure?.dateTime?.let { time -> Timestamp.from(time.toInstant()) }
+      override val actualEndDate: Instant?
+        get() = it.departure?.dateTime?.toInstant()
       override val accommodationOutcome: String?
         get() = it.departure?.moveOnCategory?.name
       override val dutyToReferLocalAuthorityAreaName: String?

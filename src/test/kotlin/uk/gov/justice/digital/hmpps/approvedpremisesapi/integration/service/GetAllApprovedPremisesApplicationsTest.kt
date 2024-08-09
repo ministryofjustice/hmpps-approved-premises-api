@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -459,13 +458,13 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
       (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
       (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
       (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
-      (this.getArrivalDate() == Timestamp(Instant.parse(applicationEntity.arrivalDate.toString()).toEpochMilli())) &&
+      (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&
       (this.getRiskRatings() == objectMapper.writeValueAsString(applicationEntity.riskRatings)) &&
       (this.getId() == applicationEntity.id) &&
       (this.getCrn() == applicationEntity.crn) &&
       (this.getCreatedByUserId() == applicationEntity.createdByUser.id) &&
-      (this.getCreatedAt() == Timestamp(Instant.parse(applicationEntity.createdAt.toString()).toEpochMilli())) &&
-      (this.getSubmittedAt() == Timestamp(Instant.parse(applicationEntity.submittedAt.toString()).toEpochMilli())) &&
+      (this.getCreatedAt() == Instant.parse(applicationEntity.createdAt.toString())) &&
+      (this.getSubmittedAt() == Instant.parse(applicationEntity.submittedAt.toString())) &&
       this.getTier() == applicationEntity.riskRatings?.tier?.value.toString() &&
       this.getStatus() == applicationEntity.status.toString() &&
       this.getIsWithdrawn() == applicationEntity.isWithdrawn &&

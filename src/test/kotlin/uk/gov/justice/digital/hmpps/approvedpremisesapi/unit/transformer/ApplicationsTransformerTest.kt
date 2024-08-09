@@ -46,7 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -337,13 +336,13 @@ class ApplicationsTransformerTest {
       override fun getIsEmergencyApplication() = true
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
+      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getTier(): String? = null
       override fun getStatus(): String = jpaStatus.toString()
       override fun getIsWithdrawn(): Boolean = true
@@ -360,11 +359,11 @@ class ApplicationsTransformerTest {
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.person).isEqualTo(mockPerson)
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.createdAt).isEqualTo(application.getCreatedAt().toInstant())
-    assertThat(result.submittedAt).isEqualTo(application.getSubmittedAt().toInstant())
+    assertThat(result.createdAt).isEqualTo(application.getCreatedAt())
+    assertThat(result.submittedAt).isEqualTo(application.getSubmittedAt())
     assertThat(result.isWomensApplication).isEqualTo(application.getIsWomensApplication())
     assertThat(result.isPipeApplication).isEqualTo(application.getIsPipeApplication())
-    assertThat(result.arrivalDate).isEqualTo(application.getArrivalDate().toInstant())
+    assertThat(result.arrivalDate).isEqualTo(application.getArrivalDate())
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.type).isEqualTo("CAS1")
     assertThat(result.tier).isEqualTo(application.getTier())
@@ -384,13 +383,13 @@ class ApplicationsTransformerTest {
       override fun getIsEmergencyApplication() = true
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
+      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
       override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getTier(): String? = null
       override fun getStatus(): String = ApprovedPremisesApplicationStatus.SUBMITTED.toString()
       override fun getIsWithdrawn(): Boolean = true
@@ -415,7 +414,7 @@ class ApplicationsTransformerTest {
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getSubmittedAt() = null
       override fun getLatestAssessmentSubmittedAt() = null
       override fun getLatestAssessmentDecision() = null
@@ -441,8 +440,8 @@ class ApplicationsTransformerTest {
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
-      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:30+01:00")
       override fun getLatestAssessmentSubmittedAt() = null
       override fun getLatestAssessmentDecision() = null
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false

@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import io.sentry.IScope
 import io.sentry.Sentry
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
@@ -10,8 +12,6 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 @Component
 class MDCHandlerInterceptor(

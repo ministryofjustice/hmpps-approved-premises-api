@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Approved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.YearMonth
@@ -84,7 +85,7 @@ class Cas1ReportService(
   fun createDailyMetricsReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
-        it.getCreatedAt().toLocalDateTime().toLocalDate(),
+        it.getCreatedAt().toLocalDate(),
         it.getCreatedByUserId(),
       )
     }

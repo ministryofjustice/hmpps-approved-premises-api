@@ -64,11 +64,11 @@ class RedisConfiguration {
 
   @Bean
   fun redLock(
-    @Value("\${spring.redis.host}") host: String,
-    @Value("\${spring.redis.port}") port: Int,
-    @Value("\${spring.redis.password}") password: String,
-    @Value("\${spring.redis.database}") database: Int,
-    @Value("\${spring.redis.ssl}") ssl: Boolean,
+    @Value("\${spring.data.redis.host}") host: String,
+    @Value("\${spring.data.redis.port}") port: Int,
+    @Value("\${spring.data.redis.password}") password: String,
+    @Value("\${spring.data.redis.database}") database: Int,
+    @Value("\${spring.data.redis.ssl.enabled}") ssl: Boolean,
   ): RedLock {
     val scheme = if (ssl) "rediss" else "redis"
     val passwordString = if (password.isNotEmpty()) ":$password@" else ""
