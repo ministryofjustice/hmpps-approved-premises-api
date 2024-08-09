@@ -17,7 +17,6 @@ class CacheService(
 
   fun clearCache(cacheName: CacheType) {
     when (cacheName) {
-      CacheType.offenderDetails -> clearPreemptiveCache("offenderDetails")
       CacheType.inmateDetails -> clearPreemptiveCache("inmateDetails")
       CacheType.qCodeStaffMembers -> clearRegularCache("qCodeStaffMembersCache")
       CacheType.userAccess -> clearRegularCache("userAccessCache")
