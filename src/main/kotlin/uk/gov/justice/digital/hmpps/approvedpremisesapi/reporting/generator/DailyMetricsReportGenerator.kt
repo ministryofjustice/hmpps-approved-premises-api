@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -8,13 +7,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.DailyMetricReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import java.time.LocalDate
 
 class DailyMetricsReportGenerator(
   private val domainEvents: List<DomainEventEntity>,
   private val applications: List<ApprovedPremisesApplicationMetricsSummaryDto>,
-  private val objectMapper: ObjectMapper,
+  private val domainEventService: DomainEventService,
 ) : ReportGenerator<LocalDate, DailyMetricReportRow, Cas1ReportService.MonthSpecificReportParams>(DailyMetricReportRow::class) {
   override fun filter(properties: Cas1ReportService.MonthSpecificReportParams): (LocalDate) -> Boolean = {
     true
@@ -34,17 +34,17 @@ class DailyMetricsReportGenerator(
     val applicationsSubmittedToday = domainEventsToday.filter {
         domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
-    }.map { it.toDomainEvent<ApplicationSubmittedEnvelope>(objectMapper) }
+    }.map { domainEventService.toDomainEvent(it, ApplicationSubmittedEnvelope::class) }
 
     val assessmentsCompletedToday = domainEventsToday.filter {
         domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
-    }.map { it.toDomainEvent<ApplicationAssessedEnvelope>(objectMapper) }
+    }.map { domainEventService.toDomainEvent(it, ApplicationAssessedEnvelope::class) }
 
     val bookingsMadeToday = domainEventsToday.filter {
         domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE
-    }.map { it.toDomainEvent<BookingMadeEnvelope>(objectMapper) }
+    }.map { domainEventService.toDomainEvent(it, BookingMadeEnvelope::class) }
 
     listOf(
       DailyMetricReportRow(
