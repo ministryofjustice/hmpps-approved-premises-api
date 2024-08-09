@@ -56,6 +56,10 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
     this.postcodeDistrict = { postCodeDistrictEntity }
   }
 
+  fun withYieldedPostcodeDistrict(postcodeDistrict: Yielded<PostCodeDistrictEntity>) = apply {
+    this.postcodeDistrict = postcodeDistrict
+  }
+
   fun withEssentialCriteria(essentialCriteria: List<CharacteristicEntity>) = apply {
     this.essentialCriteria = { essentialCriteria }
   }
