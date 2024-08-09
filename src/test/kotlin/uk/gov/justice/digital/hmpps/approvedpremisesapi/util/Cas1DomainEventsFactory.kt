@@ -59,7 +59,7 @@ data class DomainEventJsonAndEnvelope(
   val envelope: Any,
 )
 
-@SuppressWarnings("CyclomaticComplexMethod")
+@SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
 fun createCas1DomainEventEnvelope(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any {
   val id = UUID.randomUUID()
   val timestamp = Instant.now()
