@@ -42,7 +42,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
     fun errorHttpStatusCodeThatDontRetry(): List<Int> {
       return HttpStatus.entries
         .filter { it.is4xxClientError || it.is5xxServerError }
-        .filter { errorHttpStatusCodesForRetries().contains(it.value()) }
+        .filter { !errorHttpStatusCodesForRetries().contains(it.value()) }
         .map { it.value() }
     }
   }
@@ -141,7 +141,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
     result as ClientResult.Failure.StatusCode
     assertThat(result.status.value()).isEqualTo(httpStatusCode)
 
-    wiremockManager.wiremockServer.verify(3, getRequestedFor(urlEqualTo("/probation-cases/$CRN/details")))
+    wiremockManager.wiremockServer.verify(1, getRequestedFor(urlEqualTo("/probation-cases/$CRN/details")))
   }
 
   @Test

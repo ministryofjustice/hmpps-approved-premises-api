@@ -84,7 +84,7 @@ abstract class BaseHMPPSClient(
         .toEntity(String::class.java)
         .retryWhen(
           Retry.max(webClientConfig.maxRetryAttempts)
-            .filter { isStatusCodeApplicableForRetry(it) || !isTimeoutException(it) }
+            .filter { isApplicableForRetry(it) }
             .doBeforeRetry { logRetrySignal(it) },
         )
         .block()!!
@@ -150,8 +150,10 @@ abstract class BaseHMPPSClient(
     }
   }
 
-  private fun isStatusCodeApplicableForRetry(throwable: Throwable) =
-    throwable is WebClientResponseException && RETRY_ERROR_CODES.contains(throwable.statusCode.value())
+  private fun isApplicableForRetry(throwable: Throwable): Boolean {
+    return !isTimeoutException(throwable) &&
+      (throwable !is WebClientResponseException || RETRY_ERROR_CODES.contains(throwable.statusCode.value()))
+  }
 
   // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException
   private fun isTimeoutException(throwable: Throwable): Boolean =
