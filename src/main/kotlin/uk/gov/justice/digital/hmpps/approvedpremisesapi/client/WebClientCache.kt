@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
@@ -107,20 +106,26 @@ class WebClientCache(
   fun cacheSuccessfulWebClientResponse(
     requestBuilder: BaseHMPPSClient.HMPPSRequestConfiguration,
     cacheConfig: PreemptiveCacheConfig,
-    result: ResponseEntity<String>,
+    statusCode: HttpStatus,
+    body: Any?,
   ) {
     val cacheKeySet = getCacheKeySet(requestBuilder, cacheConfig)
 
     val cacheEntry = PreemptiveCacheMetadata(
-      httpStatus = result.statusCode,
+      httpStatus = statusCode,
       refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
       method = null,
       path = null,
-      hasResponseBody = result.body != null,
+      hasResponseBody = body != null,
       attempt = null,
     )
 
-    writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
+    writeToRedis(
+      cacheKeySet,
+      cacheEntry,
+      body?.let { objectMapper.writeValueAsString(it) },
+      cacheConfig.hardTtlSeconds.toLong(),
+    )
   }
 
   private fun <ResponseType : Any> pollCacheWithBlockingWait(
