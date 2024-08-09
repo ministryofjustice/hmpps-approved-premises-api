@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-fun createDomainEventOfType(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any {
+fun createCas1DomainEventEnvelopeOfType(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any {
   val id = UUID.randomUUID()
   val timestamp = Instant.now()
   val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
@@ -89,12 +89,14 @@ fun createDomainEventOfType(type: DomainEventType, requestId: UUID = UUID.random
       eventType = eventType,
       eventDetails = BookingNotMadeFactory().produce(),
     )
-    DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> BookingCancelledEnvelope(
-      id = id,
-      timestamp = timestamp,
-      eventType = eventType,
-      eventDetails = BookingCancelledFactory().produce(),
-    )
+    DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> {
+      return BookingCancelledEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = BookingCancelledFactory().produce(),
+      )
+    }
     DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> BookingChangedEnvelope(
       id = id,
       timestamp = timestamp,
