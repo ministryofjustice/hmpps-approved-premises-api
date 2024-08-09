@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -100,6 +101,7 @@ class ApplicationService(
   private val applicationListener: ApplicationListener,
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
+  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -487,6 +489,7 @@ class ApplicationService(
       isConcerningSexualBehaviour = null,
       isConcerningArsonBehaviour = null,
       prisonReleaseTypes = null,
+      probationDeliveryUnit = null,
     )
   }
 
@@ -914,6 +917,9 @@ class ApplicationService(
       personReleaseDate = submitApplication.personReleaseDate
       pdu = submitApplication.pdu
       prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
+      probationDeliveryUnit = submitApplication.probationDeliveryUnitId?.let {
+        probationDeliveryUnitRepository.findByIdOrNull(it)
+      }
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData!!)

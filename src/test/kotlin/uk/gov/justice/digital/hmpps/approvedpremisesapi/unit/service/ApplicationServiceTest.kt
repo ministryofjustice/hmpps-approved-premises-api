@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -128,6 +129,7 @@ class ApplicationServiceTest {
   private val mockPlacementApplicationAutomaticRepository = mockk<PlacementApplicationAutomaticRepository>()
   private val mockApplicationListener = mockk<ApplicationListener>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
+  private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -154,6 +156,7 @@ class ApplicationServiceTest {
     mockApplicationListener,
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
+    mockProbationDeliveryUnitRepository,
   )
 
   @Test
@@ -2326,6 +2329,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockProbationDeliveryUnitRepository.findByIdOrNull(any()) } returns null
       every {
         mockAssessmentService.createTemporaryAccommodationAssessment(
           application,
@@ -2392,6 +2396,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockProbationDeliveryUnitRepository.findByIdOrNull(any()) } returns null
       every {
         mockAssessmentService.createTemporaryAccommodationAssessment(
           application,

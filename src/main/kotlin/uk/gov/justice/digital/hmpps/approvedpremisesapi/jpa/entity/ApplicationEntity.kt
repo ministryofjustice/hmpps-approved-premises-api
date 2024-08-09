@@ -25,6 +25,7 @@ import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
@@ -510,6 +511,9 @@ class TemporaryAccommodationApplicationEntity(
   var pdu: String?,
   var name: String?,
   var prisonReleaseTypes: String?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "probation_delivery_unit_id")
+  var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
 ) : ApplicationEntity(
   id,
   crn,

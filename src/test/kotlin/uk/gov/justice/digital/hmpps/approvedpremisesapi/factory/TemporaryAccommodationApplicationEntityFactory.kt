@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -54,6 +55,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
   private var dutyToReferOutcome: Yielded<String?> = { null }
   private var prisonReleaseTypes: Yielded<String?> = { null }
+  private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity?> = { null }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -233,5 +235,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     pdu = this.pdu(),
     name = this.name(),
     prisonReleaseTypes = this.prisonReleaseTypes(),
+    probationDeliveryUnit = this.probationDeliveryUnit(),
   )
 }

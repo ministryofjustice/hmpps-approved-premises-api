@@ -2578,6 +2578,9 @@ components:
               example: '2024-02-21'
             pdu:
               type: string
+            probationDeliveryUnitId:
+              type: string
+              format: uuid
             isHistoryOfSexualOffence:
               type: boolean
             isConcerningSexualBehaviour:
