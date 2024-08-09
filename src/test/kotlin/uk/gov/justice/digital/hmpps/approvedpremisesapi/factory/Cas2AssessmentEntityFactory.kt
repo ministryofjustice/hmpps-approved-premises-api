@@ -40,6 +40,10 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
     this.assessorName = name
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): Cas2AssessmentEntity = Cas2AssessmentEntity(
     id = this.id(),
     createdAt = this.createdAt(),
