@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
@@ -111,6 +112,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -138,6 +140,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -2540,34 +2543,40 @@ class BookingServiceTest {
       assertThat(result.value.notes).isEqualTo("notes")
       assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
 
+      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+
       verify(exactly = 1) {
         mockDomainEventService.saveBookingCancelledEvent(
-          match {
-            val data = it.data.eventDetails
-
-            it.applicationId == application.id &&
-              it.crn == application.crn &&
-              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
-              data.cancelledAt == Instant.parse("2022-08-25T00:00:00.00Z") &&
-              data.cancellationReason == reason.name &&
-              data.bookingId == bookingEntity.id
-          },
+          capture(domainEventArgument),
         )
       }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.crn).isEqualTo(application.crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(application.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
+      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
+
+      assertThat(data.premises.id).isEqualTo(premises.id)
+      assertThat(data.premises.name).isEqualTo(premises.name)
+      assertThat(data.premises.apCode).isEqualTo(premises.apCode)
+      assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
+      assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
+
+      assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
+      assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(data.cancellationReason).isEqualTo(reason.name)
+      assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
+      assertThat(data.bookingId).isEqualTo(bookingEntity.id)
+
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
       }

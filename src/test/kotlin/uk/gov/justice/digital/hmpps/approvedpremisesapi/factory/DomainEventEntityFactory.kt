@@ -29,6 +29,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var triggeredByUserId: Yielded<UUID?> = { null }
   private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
   private var metadata: Yielded<Map<MetaDataName, String?>> = { emptyMap() }
+  private var schemaVersion: Yielded<Int?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -111,5 +112,6 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     triggeredByUserId = this.triggeredByUserId(),
     nomsNumber = this.nomsNumber(),
     metadata = this.metadata(),
+    schemaVersion = this.schemaVersion(),
   )
 }

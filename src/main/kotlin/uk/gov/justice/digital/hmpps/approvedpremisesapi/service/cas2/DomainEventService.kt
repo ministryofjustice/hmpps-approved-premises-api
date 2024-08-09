@@ -106,6 +106,7 @@ class DomainEventService(
         service = "CAS2",
         triggerSource = null,
         triggeredByUserId = null,
+        schemaVersion = domainEvent.schemaVersion,
       ),
     )
 

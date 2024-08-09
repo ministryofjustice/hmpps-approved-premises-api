@@ -1255,13 +1255,22 @@ components:
         premises:
           $ref: '#/components/schemas/Premises'
         cancelledAt:
+          deprecated: true
+          description: cancelledAtDate should be used instead
           type: string
           example: '2022-11-30T14:51:30'
           format: date-time
+        cancelledAtDate:
+          type: string
+          format: date
         cancelledBy:
           $ref: '#/components/schemas/StaffMember'
         cancellationReason:
           type: string
+        cancellationRecordedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
       required:
         - personReference
         - deliusEventNumber
@@ -1270,8 +1279,10 @@ components:
         - bookingId
         - premises
         - cancelledAt
+        - cancelledAtDate
         - cancelledBy
         - cancellationReason
+        - cancellationRecordedAt
     BookingExtendedEnvelope:
       type: object
       properties:

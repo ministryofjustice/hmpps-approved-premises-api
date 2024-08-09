@@ -14,4 +14,5 @@ data class DomainEvent<T> (
   val occurredAt: Instant,
   val data: T,
   val metadata: Map<MetaDataName, String?> = emptyMap(),
+  val schemaVersion: Int? = null,
 )

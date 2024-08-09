@@ -18,11 +18,13 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
   private var cancelledAt: Yielded<Instant> = { Instant.now() }
+  private var cancelledAtDate: Yielded<LocalDate> = { LocalDate.now() }
   private var cancelledBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
   private var cancellationReason: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var cancellationRecordedAt: Yielded<Instant> = { Instant.now() }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -46,6 +48,10 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
 
   fun withCancelledAt(cancelledAt: Instant) = apply {
     this.cancelledAt = { cancelledAt }
+  }
+
+  fun withCancelledAtDate(cancelledAtDate: LocalDate) = apply {
+    this.cancelledAtDate = { cancelledAtDate }
   }
 
   fun withCancelledBy(cancelledBy: StaffMember) = apply {
@@ -75,8 +81,10 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
     deliusEventNumber = this.deliusEventNumber(),
     bookingId = this.bookingId(),
     cancelledAt = this.cancelledAt(),
+    cancelledAtDate = this.cancelledAtDate(),
     cancelledBy = this.cancelledBy(),
     premises = this.premises(),
     cancellationReason = this.cancellationReason(),
+    cancellationRecordedAt = this.cancellationRecordedAt(),
   )
 }
