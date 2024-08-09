@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Placement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -98,6 +99,11 @@ class DomainEventServiceTest {
 
   private val detailUrl = "http://example.com/1234"
 
+  companion object {
+    @JvmStatic
+    fun allCas1DomainEventTypes() = DomainEventType.values().filter { it.cas == DomainEventCas.CAS1 }
+  }
+
   @BeforeEach
   fun setupUserService() {
     every { userService.getUserForRequestOrNull() } returns user
@@ -108,7 +114,7 @@ class DomainEventServiceTest {
   inner class GetDomainEvents {
 
     @ParameterizedTest
-    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
     fun `getDomainEvent returns null when event not found`(domainEventType: DomainEventType) {
       val id = UUID.randomUUID()
       val method = fetchGetterForType(domainEventType)
@@ -119,7 +125,7 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
     fun `getDomainEvent returns event`(domainEventType: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
@@ -138,6 +144,7 @@ class DomainEventServiceTest {
         .withType(domainEventType)
         .withData(objectMapper.writeValueAsString(data))
         .withOccurredAt(occurredAt)
+        .withSchemaVersion(null)
         .produce()
 
       val event = method.invoke(id)
@@ -182,7 +189,7 @@ class DomainEventServiceTest {
   inner class SaveAndEmit {
 
     @ParameterizedTest
-    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
     fun `saveAndEmit persists event and emits event to SNS`(domainEventType: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
@@ -248,7 +255,7 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
     fun `saveAndEmit persists event and does not emit event if emit is false`(domainEventType: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
@@ -293,7 +300,7 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
     fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(domainEventType: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()

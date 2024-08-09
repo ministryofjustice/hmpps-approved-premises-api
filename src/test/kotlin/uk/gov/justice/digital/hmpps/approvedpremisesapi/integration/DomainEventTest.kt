@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createDomainEventOfType
 import java.util.UUID
@@ -44,8 +46,13 @@ class DomainEventTest : InitialiseDatabasePerClassTestBase() {
       .isForbidden
   }
 
+  companion object {
+    @JvmStatic
+    fun allCas1DomainEventTypes() = DomainEventType.values().filter { it.cas == DomainEventCas.CAS1 }
+  }
+
   @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  @MethodSource("allCas1DomainEventTypes")
   fun `Get event returns 200 with correct body`(domainEventType: DomainEventType) {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
