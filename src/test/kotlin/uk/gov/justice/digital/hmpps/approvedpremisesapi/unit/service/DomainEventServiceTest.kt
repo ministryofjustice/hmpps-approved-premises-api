@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
@@ -67,6 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeAndJson
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -76,11 +73,7 @@ import java.util.UUID
 class DomainEventServiceTest {
   private val domainEventRespositoryMock = mockk<DomainEventRepository>()
   private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
-  private val objectMapper = ObjectMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
   private val userService = mockk<UserService>()
   private val user = UserEntityFactory().withDefaultProbationRegion().produce()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()

@@ -1,16 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.config
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ClientResultRedisSerializer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 
 class ClientResultRedisSerializerTest {
-  private val objectMapper = jacksonObjectMapper()
+  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
   private val clientResponseRedisSerializer = ClientResultRedisSerializer(objectMapper, object : TypeReference<ClientResponseBody>() {})
 
   @Test

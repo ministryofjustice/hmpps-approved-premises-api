@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -13,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
 
 class JsonSchemaServiceTest {
@@ -20,7 +20,7 @@ class JsonSchemaServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
 
   private val jsonSchemaService = JsonSchemaService(
-    objectMapper = jacksonObjectMapper(),
+    objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
     applicationRepository = mockApplicationRepository,
   )
