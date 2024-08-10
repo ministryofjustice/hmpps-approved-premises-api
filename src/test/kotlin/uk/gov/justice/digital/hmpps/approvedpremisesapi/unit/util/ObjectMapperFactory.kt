@@ -15,5 +15,4 @@ object ObjectMapperFactory {
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
-
 }

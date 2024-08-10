@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -48,6 +49,7 @@ class DomainEventService(
   private val userService: UserService,
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   private val domainEventUrlConfig: DomainEventUrlConfig,
+  private val cas1DomainEventMigrationService: Cas1DomainEventMigrationService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -93,7 +95,7 @@ class DomainEventService(
       type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
         objectMapper.readValue(entity.data, type.java)
       type == BookingCancelledEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
-        objectMapper.readValue(entity.data, type.java)
+        objectMapper.readValue(cas1DomainEventMigrationService.bookingCancelledJson(entity), type.java)
       type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
         objectMapper.readValue(entity.data, type.java)
       type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->

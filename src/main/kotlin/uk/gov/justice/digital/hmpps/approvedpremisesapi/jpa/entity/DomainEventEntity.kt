@@ -111,6 +111,8 @@ data class DomainEventEntity(
    *
    * The domain event schema version used for a given domain event record is only required when the
    * initial domain event schema changes in a way that we need to start tracking which schema a domain event uses.
+   *
+   * For information on introducing new schema versions, see the 'modifying_domain_event_schemas.md' file
    */
   val schemaVersion: Int?,
 )
