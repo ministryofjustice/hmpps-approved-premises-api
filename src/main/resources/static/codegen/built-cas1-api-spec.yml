@@ -1255,10 +1255,6 @@ components:
           type: string
           format: uuid
           example: 290fa58c-77b2-47e2-b729-4cd6b2ed1a78
-        placementRequestId:
-          type: string
-          format: uuid
-          example: 6d924fdf-4a79-41b6-a251-89edbf369479
         requirements:
           type: object
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
@@ -1266,7 +1262,6 @@ components:
         - arrivalDate
         - departureDate
         - premisesId
-        - placementRequestId
         - requirements
     Cas1SpaceBookingRequirements:
       type: object
