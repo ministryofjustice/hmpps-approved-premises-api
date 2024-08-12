@@ -15,7 +15,7 @@ import java.util.UUID
 
 class DepartureEntityFactory : Factory<DepartureEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter() }
+  private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter(14) }
   private var reason: Yielded<DepartureReasonEntity>? = null
   private var moveOnCategory: Yielded<MoveOnCategoryEntity>? = null
   private var destinationProvider: Yielded<DestinationProviderEntity>? = null
