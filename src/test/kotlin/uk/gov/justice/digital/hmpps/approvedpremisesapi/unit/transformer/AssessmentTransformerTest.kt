@@ -421,7 +421,7 @@ class AssessmentTransformerTest {
         applicationId = UUID.randomUUID(),
         createdAt = OffsetDateTime.now().toTimestamp(),
         riskRatings = objectMapper.writeValueAsString(personRisks),
-        arrivalDate = OffsetDateTime.now().randomDateTimeBefore().toTimestamp(),
+        arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toTimestamp(),
         completed = false,
         decision = "ACCEPTED",
         crn = randomStringMultiCaseWithNumbers(6),

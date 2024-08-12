@@ -12,7 +12,7 @@ import java.util.UUID
 public class TurnaroundEntityFactory : Factory<TurnaroundEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var workingDayCount: Yielded<Int> = { randomInt(0, 14) }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var booking: Yielded<BookingEntity>? = null
 
   fun withId(id: UUID) = apply {

@@ -17,7 +17,7 @@ class ExtensionEntityFactory : Factory<ExtensionEntity> {
   private var newDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

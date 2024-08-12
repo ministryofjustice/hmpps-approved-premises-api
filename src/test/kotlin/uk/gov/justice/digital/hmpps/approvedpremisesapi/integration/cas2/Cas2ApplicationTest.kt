@@ -419,7 +419,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
-                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
               }
             }
 
@@ -535,7 +535,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedByUser(userAPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
-                    withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                     withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                   }.id,
                 )
@@ -602,7 +602,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCreatedByUser(userCPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
-                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode(userCPrisonB.activeCaseloadId!!)
               }
 
@@ -682,7 +682,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                     withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                     withConditionalReleaseDate(LocalDate.now().randomDateAfter())
                   }.id,
@@ -767,7 +767,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withCreatedByUser(userAPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
-                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                   withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                 }.id,
               )
@@ -786,8 +786,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withCreatedByUser(userBPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
-                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
-                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                   withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                 }.id,
               )
@@ -857,7 +857,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                     withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
                     withConditionalReleaseDate(LocalDate.now().randomDateAfter())
                   }.id,
@@ -873,7 +873,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                     withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
                     withConditionalReleaseDate(LocalDate.now())
                   }.id,
@@ -887,7 +887,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore())
               }.id
@@ -902,7 +902,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now())
-                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode("other_prison")
               }
 

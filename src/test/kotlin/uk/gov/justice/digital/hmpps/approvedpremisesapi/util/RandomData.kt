@@ -40,7 +40,7 @@ fun LocalDateTime.randomDateTimeAfter(maxDays: Int = 14): LocalDateTime = this.p
 fun LocalDateTime.randomDateTimeBefore(maxDays: Int = 14): LocalDateTime = this.minusDays(randomInt(1, maxDays).toLong())
 
 fun OffsetDateTime.randomDateTimeAfter(maxDays: Int = 14): OffsetDateTime = this.plusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
-fun OffsetDateTime.randomDateTimeBefore(maxDays: Int = 14): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
+fun OffsetDateTime.randomDateTimeBefore(maxDays: Int): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
 
 fun Instant.randomDateTimeAfter(maxDays: Int = 14): Instant = this.plus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
 fun Instant.randomDateTimeBefore(maxDays: Int = 14): Instant = this.minus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
