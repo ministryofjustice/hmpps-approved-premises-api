@@ -33,7 +33,7 @@ fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
 fun randomDouble(min: Double, max: Double) = Random.nextDouble(min, max)
 
 fun LocalDate.randomDateAfter(maxDays: Int = 14): LocalDate = this.plusDays(randomInt(1, maxDays).toLong())
-fun LocalDate.randomDateBefore(maxDays: Int = 14): LocalDate = this.minusDays(randomInt(1, maxDays).toLong())
+fun LocalDate.randomDateBefore(maxDays: Int): LocalDate = this.minusDays(randomInt(1, maxDays).toLong())
 fun LocalDate.randomDateAround(maxDays: Int): LocalDate = this.minusDays(maxDays.toLong()).randomDateAfter(maxDays * 2)
 
 fun LocalDateTime.randomDateTimeAfter(maxDays: Int): LocalDateTime = this.plusDays(randomInt(1, maxDays).toLong())

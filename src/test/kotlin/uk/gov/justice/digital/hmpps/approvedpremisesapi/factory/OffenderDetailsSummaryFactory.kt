@@ -21,7 +21,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var pncNumber: Yielded<String?> = { null }
   private var gender: Yielded<String> = { randomOf(listOf("Male", "Female", "Other")) }
-  private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
+  private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore(14) }
   private var currentRestriction: Yielded<Boolean> = { false }
   private var currentExclusion: Yielded<Boolean> = { false }
   private var ethnicity: Yielded<String> = { randomStringUpperCase(6) }

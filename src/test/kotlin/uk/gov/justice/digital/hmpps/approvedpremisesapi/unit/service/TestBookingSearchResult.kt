@@ -29,7 +29,7 @@ class TestBookingSearchResult : BookingSearchResult {
       ),
     )
 
-  private var bookingStartDate: LocalDate = LocalDate.now().randomDateBefore()
+  private var bookingStartDate: LocalDate = LocalDate.now().randomDateBefore(14)
   private var bookingEndDate: LocalDate = LocalDate.now().randomDateAfter()
   private var bookingCreatedAt: OffsetDateTime = OffsetDateTime.now().minusDays(30).randomDateTimeBefore(14)
   private var premisesId: UUID = UUID.randomUUID()

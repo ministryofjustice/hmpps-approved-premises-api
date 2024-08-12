@@ -588,7 +588,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
                 withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                 withSubmittedAt(OffsetDateTime.now())
-                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }.id
 
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
@@ -714,7 +714,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
                 withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                 withSubmittedAt(OffsetDateTime.now())
-                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }.id
 
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
@@ -889,7 +889,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }.id
 
               val pomUserPrisonB = nomisUserEntityFactory.produceAndPersist {
@@ -1012,7 +1012,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
-                withConditionalReleaseDate(LocalDate.now().randomDateBefore())
+                withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }.id
 
               addStatusUpdates(submittedIds.first(), assessor)

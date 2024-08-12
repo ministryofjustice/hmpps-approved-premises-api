@@ -16,7 +16,7 @@ import java.util.UUID
 
 class AppealEntityFactory : Factory<AppealEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var appealDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
+  private var appealDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
   private var appealDetail: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var decision: Yielded<String> = { randomOf(AppealDecision.entries).value }
   private var decisionDetail: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }

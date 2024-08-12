@@ -14,7 +14,7 @@ import java.util.UUID
 
 class NonArrivalEntityFactory : Factory<NonArrivalEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
+  private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
   private var reason: Yielded<NonArrivalReasonEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null

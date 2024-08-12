@@ -15,7 +15,7 @@ import java.util.UUID
 
 class ArrivalEntityFactory : Factory<ArrivalEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
+  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
   private var arrivalDateTime: Yielded<Instant> = { Instant.now().randomDateTimeBefore(14) }
   private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }

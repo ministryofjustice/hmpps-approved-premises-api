@@ -18,7 +18,7 @@ class CAS3BookingCancelledEventDetailsFactory : Factory<CAS3BookingCancelledEven
   private var cancellationReason: Yielded<String> = { randomStringMultiCaseWithNumbers(12) }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(12) }
   private var applicationId: Yielded<UUID?> = { null }
-  private var cancelledAt: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore() }
+  private var cancelledAt: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore(14) }
   private var cancelledBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {

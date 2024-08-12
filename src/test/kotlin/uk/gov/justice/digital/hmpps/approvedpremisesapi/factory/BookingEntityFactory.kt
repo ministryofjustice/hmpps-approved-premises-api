@@ -30,7 +30,7 @@ import java.util.UUID
 class BookingEntityFactory : Factory<BookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
-  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
+  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
   private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
   private var originalArrivalDate: Yielded<LocalDate>? = null
   private var originalDepartureDate: Yielded<LocalDate>? = null

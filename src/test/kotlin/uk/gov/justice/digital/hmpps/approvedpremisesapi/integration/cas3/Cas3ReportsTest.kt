@@ -1601,7 +1601,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           bookings[2].let {
             val firstArrivalUpdate = arrivalEntityFactory.produceAndPersist {
               withBooking(it)
-              withArrivalDate(LocalDate.now().randomDateBefore())
+              withArrivalDate(LocalDate.now().randomDateBefore(14))
             }
             val secondArrivalUpdate = arrivalEntityFactory.produceAndPersist {
               withBooking(it)
