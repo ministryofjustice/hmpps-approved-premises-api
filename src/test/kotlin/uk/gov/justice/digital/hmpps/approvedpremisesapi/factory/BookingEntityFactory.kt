@@ -30,8 +30,8 @@ import java.util.UUID
 class BookingEntityFactory : Factory<BookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
-  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
-  private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
+  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
+  private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(14) }
   private var originalArrivalDate: Yielded<LocalDate>? = null
   private var originalDepartureDate: Yielded<LocalDate>? = null
   private var keyWorkerStaffCode: Yielded<String?> = { null }
@@ -45,7 +45,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bed: Yielded<BedEntity?> = { null }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
   private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null

@@ -15,7 +15,7 @@ class ProbationOffenderDetailFactory : Factory<ProbationOffenderDetail> {
   private var offenderId: Yielded<Long> = { randomInt(100000, 900000).toLong() }
   private var firstName: Yielded<String> = { randomStringUpperCase(8) }
   private var surname: Yielded<String> = { randomStringUpperCase(8) }
-  private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
+  private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore(14) }
   private var gender: Yielded<String?> = { randomOf(listOf("Male", "Female", "Other")) }
   private var otherIds: Yielded<IDs> = { IDs(crn = "CRN") }
   private var offenderProfile: Yielded<OffenderProfile> = { OffenderProfile() }

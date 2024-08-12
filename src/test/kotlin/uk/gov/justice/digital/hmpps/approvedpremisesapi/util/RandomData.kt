@@ -32,17 +32,17 @@ fun randomPostCode() = randomStringUpperCase(2) + randomNumberChars(1) + " " +
 fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
 fun randomDouble(min: Double, max: Double) = Random.nextDouble(min, max)
 
-fun LocalDate.randomDateAfter(maxDays: Int = 14): LocalDate = this.plusDays(randomInt(1, maxDays).toLong())
-fun LocalDate.randomDateBefore(maxDays: Int = 14): LocalDate = this.minusDays(randomInt(1, maxDays).toLong())
-fun LocalDate.randomDateAround(maxDays: Int = 14): LocalDate = this.minusDays(maxDays.toLong()).randomDateAfter(maxDays * 2)
+fun LocalDate.randomDateAfter(maxDays: Int): LocalDate = this.plusDays(randomInt(1, maxDays).toLong())
+fun LocalDate.randomDateBefore(maxDays: Int): LocalDate = this.minusDays(randomInt(1, maxDays).toLong())
+fun LocalDate.randomDateAround(maxDays: Int): LocalDate = this.minusDays(maxDays.toLong()).randomDateAfter(maxDays * 2)
 
-fun LocalDateTime.randomDateTimeAfter(maxDays: Int = 14): LocalDateTime = this.plusDays(randomInt(1, maxDays).toLong())
-fun LocalDateTime.randomDateTimeBefore(maxDays: Int = 14): LocalDateTime = this.minusDays(randomInt(1, maxDays).toLong())
+fun LocalDateTime.randomDateTimeAfter(maxDays: Int): LocalDateTime = this.plusDays(randomInt(1, maxDays).toLong())
+fun LocalDateTime.randomDateTimeBefore(maxDays: Int): LocalDateTime = this.minusDays(randomInt(1, maxDays).toLong())
 
-fun OffsetDateTime.randomDateTimeAfter(maxDays: Int = 14): OffsetDateTime = this.plusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
-fun OffsetDateTime.randomDateTimeBefore(maxDays: Int = 14): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
+fun OffsetDateTime.randomDateTimeAfter(maxDays: Int): OffsetDateTime = this.plusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
+fun OffsetDateTime.randomDateTimeBefore(maxDays: Int): OffsetDateTime = this.minusMinutes(randomInt(1, 60 * 24 * maxDays).toLong()).truncatedTo(ChronoUnit.SECONDS)
 
-fun Instant.randomDateTimeAfter(maxDays: Int = 14): Instant = this.plus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
-fun Instant.randomDateTimeBefore(maxDays: Int = 14): Instant = this.minus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
+fun Instant.randomDateTimeAfter(maxDays: Int): Instant = this.plus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
+fun Instant.randomDateTimeBefore(maxDays: Int): Instant = this.minus(randomInt(1, 60 * 24 * maxDays).toLong(), ChronoUnit.MINUTES).truncatedTo(ChronoUnit.SECONDS)
 
 fun <T> randomOf(options: List<T>) = options[randomInt(0, options.size - 1)]

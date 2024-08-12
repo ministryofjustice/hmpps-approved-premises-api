@@ -15,13 +15,13 @@ import java.util.UUID
 
 class DepartureEntityFactory : Factory<DepartureEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter() }
+  private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter(14) }
   private var reason: Yielded<DepartureReasonEntity>? = null
   private var moveOnCategory: Yielded<MoveOnCategoryEntity>? = null
   private var destinationProvider: Yielded<DestinationProviderEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

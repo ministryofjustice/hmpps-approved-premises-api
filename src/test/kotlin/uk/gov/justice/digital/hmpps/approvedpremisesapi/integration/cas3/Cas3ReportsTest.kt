@@ -1601,7 +1601,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           bookings[2].let {
             val firstArrivalUpdate = arrivalEntityFactory.produceAndPersist {
               withBooking(it)
-              withArrivalDate(LocalDate.now().randomDateBefore())
+              withArrivalDate(LocalDate.now().randomDateBefore(14))
             }
             val secondArrivalUpdate = arrivalEntityFactory.produceAndPersist {
               withBooking(it)
@@ -1612,7 +1612,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
 
             val firstDepartureUpdate = departureEntityFactory.produceAndPersist {
-              withDateTime(OffsetDateTime.now().randomDateTimeBefore())
+              withDateTime(OffsetDateTime.now().randomDateTimeBefore(14))
               withBooking(it)
               withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
               withYieldedReason { departureReasonEntityFactory.produceAndPersist() }

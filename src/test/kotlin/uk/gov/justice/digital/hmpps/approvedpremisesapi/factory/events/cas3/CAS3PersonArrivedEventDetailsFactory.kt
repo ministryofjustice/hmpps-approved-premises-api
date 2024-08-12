@@ -21,7 +21,7 @@ class CAS3PersonArrivedEventDetailsFactory : Factory<CAS3PersonArrivedEventDetai
   private var premisesId: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<Premises> = { PremisesFactory().produce() }
   private var arrivedAt: Yielded<Instant> = { Instant.now() }
-  private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
+  private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(14) }
   private var notes: Yielded<String> = { randomStringLowerCase(20) }
   private var applicationId: Yielded<UUID?> = { null }
   private var recordedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }

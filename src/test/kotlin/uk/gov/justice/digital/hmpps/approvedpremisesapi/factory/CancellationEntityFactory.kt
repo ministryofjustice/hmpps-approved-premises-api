@@ -14,11 +14,11 @@ import java.util.UUID
 
 class CancellationEntityFactory : Factory<CancellationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
+  private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
   private var reason: Yielded<CancellationReasonEntity>? = null
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var otherReason: Yielded<String?> = { null }
 
   fun withDefaults() = apply {

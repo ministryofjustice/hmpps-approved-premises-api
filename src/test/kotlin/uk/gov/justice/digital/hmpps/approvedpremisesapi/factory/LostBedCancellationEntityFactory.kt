@@ -10,7 +10,7 @@ import java.util.UUID
 
 class LostBedCancellationEntityFactory : Factory<LostBedCancellationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(14) }
   private var notes: Yielded<String>? = null
   private var lostBed: Yielded<LostBedsEntity>? = null
 

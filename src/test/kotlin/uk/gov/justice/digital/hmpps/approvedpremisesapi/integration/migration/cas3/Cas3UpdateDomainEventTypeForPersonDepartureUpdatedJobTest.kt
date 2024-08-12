@@ -27,7 +27,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
           objectMapper.writeValueAsString(
             CAS3PersonDepartureUpdatedEvent(
               id = UUID.randomUUID(),
-              timestamp = Instant.now().randomDateTimeBefore(),
+              timestamp = Instant.now().randomDateTimeBefore(14),
               eventType = EventType.personDeparted,
               eventDetails = CAS3PersonDepartedEventDetailsFactory().produce(),
             ),
@@ -43,7 +43,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
           objectMapper.writeValueAsString(
             CAS3PersonDepartureUpdatedEvent(
               id = UUID.randomUUID(),
-              timestamp = Instant.now().randomDateTimeBefore(),
+              timestamp = Instant.now().randomDateTimeBefore(14),
               eventType = EventType.personDepartureUpdated,
               eventDetails = CAS3PersonDepartedEventDetailsFactory().produce(),
             ),
@@ -59,7 +59,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
           objectMapper.writeValueAsString(
             BookingChangedEnvelope(
               id = UUID.randomUUID(),
-              timestamp = Instant.now().randomDateTimeBefore(),
+              timestamp = Instant.now().randomDateTimeBefore(14),
               eventType = bookingChanged,
               eventDetails = BookingChangedFactory().produce(),
             ),
