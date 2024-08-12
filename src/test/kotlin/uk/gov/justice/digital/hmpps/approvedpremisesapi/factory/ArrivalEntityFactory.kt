@@ -17,7 +17,7 @@ class ArrivalEntityFactory : Factory<ArrivalEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }
   private var arrivalDateTime: Yielded<Instant> = { Instant.now().randomDateTimeBefore(14) }
-  private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
+  private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(14) }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }

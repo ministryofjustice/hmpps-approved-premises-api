@@ -558,7 +558,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                   }.id,
                 )
               }
@@ -684,7 +684,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                     withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                   }.id,
                 )
               }
@@ -859,7 +859,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                     withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                   }.id,
                 )
               }
@@ -983,7 +983,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter())
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                   }.id,
                 )
               }
