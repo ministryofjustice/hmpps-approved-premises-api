@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
@@ -33,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
@@ -165,7 +165,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -267,7 +267,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -349,7 +349,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -435,7 +435,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -556,7 +556,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               shouldBeIncludedBookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -652,7 +652,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -754,7 +754,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -817,7 +817,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )

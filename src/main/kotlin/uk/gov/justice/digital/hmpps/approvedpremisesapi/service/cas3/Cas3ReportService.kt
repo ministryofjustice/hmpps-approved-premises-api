@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
@@ -59,7 +60,7 @@ class Cas3ReportService(
     )
 
     val crns = referralsInScope.map { it.crn }.sorted().toSet()
-    val personInfos = splitAndRetrievePersonInfo(crns, "Referral Report")
+    val personInfos = splitAndRetrievePersonInfo(crns)
     val reportData = referralsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
       TransitionalAccommodationReferralReportDataAndPersonInfo(it, personInfo)
@@ -88,8 +89,7 @@ class Cas3ReportService(
 
     log.info("Booking Report. Start generate report data")
     val reportData = bookingsInScope.map {
-      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
-      BookingsReportDataAndPersonInfo(it, personInfo)
+      BookingsReportDataAndPersonInfo(it, personInfos[it.crn]!!)
     }
     log.info("Booking Report. End generate report data")
 
@@ -170,19 +170,48 @@ class Cas3ReportService(
       }
   }
 
-  private fun splitAndRetrievePersonInfo(crns: Set<String>, reportName: String): Map<String, PersonSummaryInfoResult> {
+  private fun splitAndRetrievePersonInfo(
+    crns: Set<String>,
+    reportName: String,
+  ): Map<String, PersonInformationReportData> {
     val deliusUsername = userService.getUserForRequest().deliusUsername
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
         log.info("Report $reportName. Call get Offender Summaries with CRNs $crns")
-        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy {
-          log.info("Report $reportName. Response Offender Summaries for CRN ${it.crn}")
-          it.crn
+        val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername)
+        offenderSummaries.map {
+          when (it) {
+            is PersonSummaryInfoResult.Success.Full -> {
+              val personInfo = PersonInformationReportData(
+                it.summary.pnc,
+                it.summary.name,
+                it.summary.dateOfBirth,
+                it.summary.gender,
+                it.summary.profile?.ethnicity,
+              )
+              (it.crn to personInfo)
+            }
+            else -> {
+              val personInfo = PersonInformationReportData(null, null, null, null, null)
+              (it.crn to personInfo)
+            }
+          }
         }
       }.collect(Collectors.toList())
 
     log.info("Report $reportName. Return the offender personal information")
+    return crnMap.flatMap { it.toList() }.toMap()
+  }
+
+  private fun splitAndRetrievePersonInfo(crns: Set<String>): Map<String, PersonSummaryInfoResult> {
+    val deliusUsername = userService.getUserForRequest().deliusUsername
+
+    val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
+      .stream().map { crns ->
+        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy { it.crn }
+      }.toList()
+
     return crnMap.flatMap { it.toList() }.toMap()
   }
 }
