@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -88,6 +89,7 @@ class AssessmentService(
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val clock: Clock,
+  private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
 
   fun getVisibleAssessmentSummariesForUserCAS1(
@@ -630,6 +632,8 @@ class AssessmentService(
     assigneeUser: UserEntity,
     id: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+    lockableAssessmentRepository.acquirePessimisticLock(id)
+
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 

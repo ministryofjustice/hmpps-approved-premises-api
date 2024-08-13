@@ -44,6 +44,8 @@ script/development_database
 Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
 `application` and right click on `bootRunLocal` and select either Run or Debug.
 
+Note that setting a breakpoint will block the handling of any subsequent web requests (don't use breakpoints to test what happens when subsequent request are received that are in contention).
+
 ### Linting
 
 There is a linting check stage in the pipeline, so to ensure this passes run the linting check locally before pushing:

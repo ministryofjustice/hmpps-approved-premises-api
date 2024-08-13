@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -91,6 +92,7 @@ class AcceptAssessmentTest {
   private val cas1AssessmentDomainEventServiceMock = mockk<Cas1AssessmentDomainEventService>()
   private val assessmentListener = mockk<AssessmentListener>()
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
+  private val lockableAssessmentRepository = mockk<LockableAssessmentRepository>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -115,6 +117,7 @@ class AcceptAssessmentTest {
     assessmentListener,
     assessmentClarificationNoteListener,
     Clock.systemDefaultZone(),
+    lockableAssessmentRepository,
   )
 
   lateinit var user: UserEntity

@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.findByIdOrNull
@@ -22,6 +24,7 @@ import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
+import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
@@ -188,6 +191,13 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun updateData(id: UUID, updatedJson: Any)
 }
 
+@Repository
+interface LockableAssessmentRepository : JpaRepository<LockableAssessmentEntity, UUID> {
+  @Query("SELECT a FROM LockableAssessmentEntity a WHERE a.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): LockableAssessmentEntity?
+}
+
 fun <T : AssessmentEntity> AssessmentRepository.findAssessmentById(id: UUID): T? = findByIdOrNull(id) as T?
 
 @Entity
@@ -246,6 +256,19 @@ abstract class AssessmentEntity(
   @Suppress("unchecked")
   fun <T : ApplicationEntity> typedApplication(): T = application as T
 }
+
+/**
+ * Provides a version of the AssessmentEntity with no relationships, allowing
+ * us to lock the applications table only without JPA/Hibernate attempting to
+ * lock all eagerly loaded relationships
+ */
+@Entity
+@Table(name = "assessments")
+@Immutable
+class LockableAssessmentEntity(
+  @Id
+  val id: UUID,
+)
 
 @Entity
 @DiscriminatorValue("approved-premises")
