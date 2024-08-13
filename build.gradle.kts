@@ -108,6 +108,11 @@ tasks {
       dependsOn(":ktlintCheck", "detekt")
     }
   }
+
+  compileJava { enabled = false }
+  compileTestJava { enabled = false }
+  compileScala { enabled = false }
+  compileTestScala { enabled = false }
 }
 
 tasks.register("bootRunLocal") {
@@ -152,12 +157,12 @@ tasks.register<Test>("unitTest") {
   }
 }
 
-// Skip OpenAPI generation for test tasks run inside IntelliJ
-tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
-  onlyIf {
-    val currentTask = project.tasks.getByName(project.gradle.startParameter.taskNames.first().replace(":", ""))
-
-    !(currentTask is Test && System.getProperty("idea.active") !== null)
+// Skip OpenAPI generation if running tests from intellij
+val entryPointTask = project.tasks.getByName(project.gradle.startParameter.taskNames.first().replace(":", ""))
+val isTestInvokedFromIntellij = (entryPointTask is Test && System.getProperty("idea.active") !== null)
+if (isTestInvokedFromIntellij) {
+  tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
+    enabled = false
   }
 }
 
