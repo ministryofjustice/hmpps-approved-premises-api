@@ -88,9 +88,11 @@ class UserService(
     return userResponse
   }
 
+  fun getDeliusUserNameForRequestOrNull(): String? =
+    httpAuthService.getDeliusPrincipalOrNull()?.name
+
   fun getUserForRequestOrNull(): UserEntity? {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrNull() ?: return null
-    val username = deliusPrincipal.name
+    val username = getDeliusUserNameForRequestOrNull() ?: return null
 
     return userRepository.findByDeliusUsername(username.uppercase())
   }

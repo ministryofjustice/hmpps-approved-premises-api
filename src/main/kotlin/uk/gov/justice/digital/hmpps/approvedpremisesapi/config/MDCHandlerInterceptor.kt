@@ -39,7 +39,7 @@ class MDCHandlerInterceptor(
 
     Sentry.configureScope { scope: IScope -> scope.setTag("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified") }
 
-    MDC.put("request.user", userService.getUserForRequestOrNull()?.deliusUsername ?: "Anonymous")
+    MDC.put("request.user", userService.getDeliusUserNameForRequestOrNull() ?: "Anonymous")
   }
 
   private fun HttpServletRequest.getPathPattern() =
