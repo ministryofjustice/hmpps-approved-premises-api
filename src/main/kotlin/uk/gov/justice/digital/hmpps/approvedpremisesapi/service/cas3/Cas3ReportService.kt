@@ -210,7 +210,7 @@ class Cas3ReportService(
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
         offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy { it.crn }
-      }.collect(Collectors.toList())
+      }.toList()
 
     return crnMap.flatMap { it.toList() }.toMap()
   }
