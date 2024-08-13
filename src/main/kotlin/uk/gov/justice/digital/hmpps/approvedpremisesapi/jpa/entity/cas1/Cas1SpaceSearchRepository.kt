@@ -22,25 +22,25 @@ private const val GENDER_FILTER = """
 """
 
 private const val PREMISES_CHARACTERISTICS_FILTER = """
-  AND EXISTS (
-    SELECT 1
+  AND (
+    SELECT COUNT(*)
     FROM premises_characteristics pc
     WHERE
       pc.premises_id = result.premises_id
       AND pc.characteristic_id IN (:premisesCharacteristics)
-  )
+  ) = :premisesCharacteristicCount
 """
 
 private const val ROOM_CHARACTERISTICS_FILTER = """
-  AND EXISTS (
-    SELECT 1
+  AND (
+    SELECT COUNT(*)
     FROM room_characteristics rc
     JOIN rooms r
     ON rc.room_id = r.id
     WHERE
       r.premises_id = result.premises_id
       AND rc.characteristic_id IN (:roomCharacteristics)
-  )
+  ) = :roomCharacteristicCount
 """
 
 private const val CANDIDATE_PREMISES_QUERY_TEMPLATE = """
@@ -153,12 +153,17 @@ class Cas1SpaceSearchRepository(
     )
 
     return jdbcTemplate.query(query, parameters) { rs, _ ->
+      val apType = when (val apType = rs.getString("ap_type")) {
+        "MHAP" -> ApprovedPremisesType.MHAP_ST_JOSEPHS
+        else -> ApprovedPremisesType.valueOf(apType)
+      }
+
       CandidatePremises(
         rs.getUUID("premises_id"),
         rs.getFloat("distance_in_miles"),
         rs.getString("ap_code"),
         rs.getString("delius_q_code"),
-        ApprovedPremisesType.valueOf(rs.getString("ap_type")),
+        apType,
         rs.getString("name"),
         rs.getString("address_line1"),
         rs.getString("address_line2"),
@@ -212,6 +217,7 @@ class Cas1SpaceSearchRepository(
       else -> {
         query = query.replace("#PREMISES_CHARACTERISTICS_FILTER#", PREMISES_CHARACTERISTICS_FILTER)
         params["premisesCharacteristics"] = premisesCharacteristics
+        params["premisesCharacteristicCount"] = premisesCharacteristics.count()
       }
     }
 
@@ -222,6 +228,7 @@ class Cas1SpaceSearchRepository(
       else -> {
         query = query.replace("#ROOM_CHARACTERISTICS_FILTER#", ROOM_CHARACTERISTICS_FILTER)
         params["roomCharacteristics"] = roomCharacteristics
+        params["roomCharacteristicCount"] = roomCharacteristics.count()
       }
     }
 
