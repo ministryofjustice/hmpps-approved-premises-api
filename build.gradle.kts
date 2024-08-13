@@ -108,6 +108,11 @@ tasks {
       dependsOn(":ktlintCheck", "detekt")
     }
   }
+
+  compileJava { enabled = false }
+  compileTestJava { enabled = false }
+  compileScala { enabled = false }
+  compileTestScala { enabled = false }
 }
 
 tasks.register("bootRunLocal") {
