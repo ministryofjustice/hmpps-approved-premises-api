@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
@@ -187,5 +188,12 @@ fun IntegrationTestBase.ApDeliusContext_addListCaseSummaryToBulkResponse(casesSu
     responseBody = CaseSummaries(
       cases = casesSummary,
     ),
+  )
+}
+
+fun IntegrationTestBase.ApDeliusContext_addStaffDetailResponse(staffDetail: StaffDetail) {
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/staff/${staffDetail.username}",
+    responseBody = staffDetail,
   )
 }

@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
@@ -30,8 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
@@ -63,6 +64,7 @@ class UserService(
   private val cas1ApAreaMappingService: Cas1ApAreaMappingService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val featureFlagService: FeatureFlagService,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -215,15 +217,49 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUserFromCommunityApiById(
+  fun updateUser(
     id: UUID,
     forService: ServiceName,
   ): AuthorisableActionResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    return AuthorisableActionResult.Success(updateUserFromCommunityApi(user, forService))
+    return AuthorisableActionResult.Success(updateUser(user, forService))
   }
 
-  fun updateUserFromCommunityApi(
+  fun updateUser(
+    user: UserEntity,
+    forService: ServiceName,
+  ): GetUserResponse {
+    if (featureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) {
+      return updateUserByApprovedPremisesAndDeliusApi(user, forService)
+    } else {
+      return updateUserByCommunityApi(user, forService)
+    }
+  }
+
+  private fun updateUserByApprovedPremisesAndDeliusApi(
+    user: UserEntity,
+    forService: ServiceName,
+  ) = when (val clientResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+    is ClientResult.Failure.StatusCode -> {
+      if (clientResult.status == HttpStatus.NOT_FOUND) {
+        GetUserResponse.StaffRecordNotFound
+      } else {
+        clientResult.throwException()
+      }
+    }
+
+    is ClientResult.Failure -> clientResult.throwException()
+    is ClientResult.Success -> {
+      val staffDetail = clientResult.body
+      GetUserResponse.Success(updateUserEntity(user, staffDetail, forService))
+    }
+  }
+
+  @Deprecated(
+    message = "Deprecated as part of the move away from the community-api",
+    replaceWith = ReplaceWith("updateUserByApprovedPremisesAndDeliusApi"),
+  )
+  private fun updateUserByCommunityApi(
     user: UserEntity,
     forService: ServiceName,
   ) = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
@@ -237,7 +273,7 @@ class UserService(
     is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     is ClientResult.Success -> {
       val deliusUser = staffUserDetailsResponse.body
-      GetUserResponse.Success(updateUser(user, deliusUser, forService))
+      GetUserResponse.Success(updateUserEntity(user, deliusUser, forService))
     }
   }
 
@@ -266,7 +302,40 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUser(
+  fun updateUserEntity(
+    user: UserEntity,
+    staffDetail: StaffDetail,
+    forService: ServiceName,
+  ): UserEntity {
+    user.name = staffDetail.name.deliusName()
+    user.email = staffDetail.email
+    user.telephoneNumber = staffDetail.telephoneNumber
+    user.deliusStaffCode = staffDetail.code
+    user.teamCodes = staffDetail.teamCodes()
+
+    staffDetail.probationArea.let { probationArea ->
+      findProbationRegionFromArea(probationArea.code)?.let { probationRegion ->
+        user.probationRegion = probationRegion
+      }
+    }
+
+    val pduResult = findDeliusUserLastPdu(staffDetail)
+    if (pduResult is CasSimpleResult.Success) {
+      user.probationDeliveryUnit = pduResult.value
+    }
+
+    if (forService == ServiceName.approvedPremises) {
+      user.apArea =
+        cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), staffDetail.username)
+    }
+    return userRepository.save(user)
+  }
+
+  @Deprecated(
+    message = "Deprecated as part of the move away from the community-api",
+    replaceWith = ReplaceWith("updateUserEntity(user, staffDetail, service)"),
+  )
+  fun updateUserEntity(
     user: UserEntity,
     deliusUser: StaffUserDetails,
     forService: ServiceName,
@@ -278,7 +347,7 @@ class UserService(
     user.teamCodes = deliusUser.getTeamCodes()
 
     deliusUser.probationArea.let { probationArea ->
-      findProbationRegionFromArea(probationArea)?.let { probationRegion ->
+      findProbationRegionFromArea(probationArea.code)?.let { probationRegion ->
         user.probationRegion = probationRegion
       }
     }
@@ -345,7 +414,7 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    var staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea)
+    var staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea.code)
 
     if (staffProbationRegion == null) {
       if (userServiceConfig.assignDefaultRegionToUsersWithUnknownRegion) {
@@ -387,11 +456,36 @@ class UserService(
     return GetUserResponse.Success(savedUser, createdOnGet = true)
   }
 
-  private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
+  private fun findProbationRegionFromArea(code: String): ProbationRegionEntity? {
     return probationAreaProbationRegionMappingRepository
-      .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
+      .findByProbationAreaDeliusCode(code)?.probationRegion
   }
 
+  private fun findDeliusUserLastPdu(staffDetail: StaffDetail): CasSimpleResult<ProbationDeliveryUnitEntity> {
+    val activeTeamsNewestFirst = staffDetail.activeTeamsNewestFirst()
+    activeTeamsNewestFirst.forEach { team ->
+      val pdu =
+        team.borough?.let { probationDeliveryUnitRepository.findByDeliusCode(it.code) }
+
+      if (pdu != null) {
+        return CasSimpleResult.Success(pdu)
+      }
+    }
+
+    val teamsToLog = activeTeamsNewestFirst.joinToString(",") {
+      " ${it.name} (${it.code}) with borough ${it.borough?.description} (${it.borough?.code})"
+    }
+
+    return CasSimpleResult.Failure(
+      "PDU could not be determined for user ${staffDetail.username}. " +
+        "Considered ${activeTeamsNewestFirst.size} teams$teamsToLog",
+    )
+  }
+
+  @Deprecated(
+    message = "Deprecated as part of the move away from the community-api",
+    replaceWith = ReplaceWith("findDeliusUserLastPdu(staffDetails)"),
+  )
   private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): CasSimpleResult<ProbationDeliveryUnitEntity> {
     val activeTeams = deliusUser.teams?.filter { t -> t.endDate == null } ?: emptyList()
     val activeTeamsNewestFirst = activeTeams.sortedByDescending { t -> t.startDate }

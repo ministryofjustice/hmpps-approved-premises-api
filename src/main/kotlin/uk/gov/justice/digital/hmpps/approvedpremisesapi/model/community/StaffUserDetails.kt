@@ -3,6 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import java.time.LocalDate
 
+@Deprecated(
+  message = "Deprecated as part of the move away from the community-api",
+  replaceWith = ReplaceWith("StaffDetail"),
+)
 data class StaffUserDetails(
   val username: String,
   val email: String?,

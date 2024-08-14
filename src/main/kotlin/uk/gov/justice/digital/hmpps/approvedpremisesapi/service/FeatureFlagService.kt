@@ -9,6 +9,7 @@ import javax.annotation.PostConstruct
 
 interface FeatureFlagService {
   fun getBooleanFlag(key: String): Boolean
+  fun isUseApAndDeliusToUpdateUsersEnabled(): Boolean
 }
 
 @Configuration
@@ -35,5 +36,9 @@ class SpringConfigFeatureFlagService(
   @SuppressWarnings("TooGenericExceptionCaught")
   override fun getBooleanFlag(key: String): Boolean {
     return featureFlags.getOrDefault(key, false)
+  }
+
+  override fun isUseApAndDeliusToUpdateUsersEnabled(): Boolean {
+    return getBooleanFlag("use-ap-and-delius-to-update-users")
   }
 }

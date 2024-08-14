@@ -23,7 +23,10 @@ class CommunityApiClient(
   objectMapper: ObjectMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
-
+  @Deprecated(
+    message = "Deprecated as part of the move away from the community-api",
+    replaceWith = ReplaceWith("ApDeliusContextApiClient.getStaffDetail(username)"),
+  )
   @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {
     path = "/secure/staff/username/$deliusUsername"
