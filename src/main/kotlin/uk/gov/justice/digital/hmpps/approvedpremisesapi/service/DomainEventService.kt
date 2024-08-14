@@ -79,47 +79,33 @@ class DomainEventService(
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
   fun <T : Any> toDomainEvent(entity: DomainEventEntity, type: KClass<T>): DomainEvent<T> {
-    val data = when {
-      type == ApplicationSubmittedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == ApplicationAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == BookingMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE ->
-        objectMapper.readValue(entity.data, type.java)
-      type == PersonArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == PersonNotArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == PersonDepartedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
-        objectMapper.readValue(entity.data, type.java)
+    checkNotNull(entity.applicationId) { "application id should not be null" }
+
+    val dataJson = when {
       type == BookingCancelledEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
-        objectMapper.readValue(cas1DomainEventMigrationService.bookingCancelledJson(entity), type.java)
-      type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
-        objectMapper.readValue(entity.data, type.java)
-      type == AssessmentAppealedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == PlacementApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN ->
-        objectMapper.readValue(entity.data, type.java)
-      type == PlacementApplicationAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == MatchRequestWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN ->
-        objectMapper.readValue(entity.data, type.java)
-      type == AssessmentAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == RequestForPlacementCreatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == RequestForPlacementAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED ->
-        objectMapper.readValue(entity.data, type.java)
-      type == FurtherInformationRequestedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED ->
-        objectMapper.readValue(entity.data, type.java)
+        cas1DomainEventMigrationService.bookingCancelledJson(entity)
+      (type == ApplicationSubmittedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED) ||
+        (type == ApplicationAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED) ||
+        (type == BookingMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE) ||
+        (type == PersonArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED) ||
+        (type == PersonNotArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED) ||
+        (type == PersonDepartedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED) ||
+        (type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE) ||
+        (type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED) ||
+        (type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN) ||
+        (type == AssessmentAppealedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) ||
+        (type == PlacementApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN) ||
+        (type == PlacementApplicationAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED) ||
+        (type == MatchRequestWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN) ||
+        (type == AssessmentAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED) ||
+        (type == RequestForPlacementCreatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED) ||
+        (type == RequestForPlacementAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED) ||
+        (type == FurtherInformationRequestedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) ->
+        entity.data
       else -> throw RuntimeException("Unsupported DomainEventData type ${type.qualifiedName}/${entity.type.name}")
     }
 
-    checkNotNull(entity.applicationId) { "application id should not be null" }
+    val data = objectMapper.readValue(dataJson, type.java)
 
     return DomainEvent(
       id = entity.id,
