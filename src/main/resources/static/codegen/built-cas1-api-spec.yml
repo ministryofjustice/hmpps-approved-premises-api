@@ -2999,6 +2999,7 @@ components:
         - pendingPlacementRequest
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
+      type: object
     ApplicationTimelineNote:
       type: object
       properties:
