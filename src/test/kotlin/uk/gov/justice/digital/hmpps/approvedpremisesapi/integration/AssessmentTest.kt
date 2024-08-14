@@ -1233,13 +1233,19 @@ class AssessmentTest : IntegrationTestBase() {
             withAddedAt(OffsetDateTime.now())
           }
 
-          val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4)
+          probationDeliveryUnits.addLast(null)
+
+          val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
             val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withProbationRegion(user.probationRegion)
               withApplicationSchema(applicationSchema)
               withArrivalDate(LocalDate.now().randomDateAfter(14))
+              withProbationDeliveryUnit(
+                probationDeliveryUnits[i],
+              )
             }
 
             val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
@@ -1297,6 +1303,21 @@ class AssessmentTest : IntegrationTestBase() {
 
             AssessmentSortField.assessmentDueAt -> {
               ExpectedResponse.Error(HttpStatus.BAD_REQUEST, "Sorting by due date is not supported for CAS3")
+            }
+
+            AssessmentSortField.applicationProbationDeliveryUnit -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedWith(
+                    compareByDescending(nullsLast()) {
+                      (
+                        it.assessment.application as
+                          TemporaryAccommodationApplicationEntity
+                        ).probationDeliveryUnit?.name
+                    },
+                  )
+                  .map(toSummary),
+              )
             }
           }
 
@@ -3537,6 +3558,7 @@ class AssessmentTest : IntegrationTestBase() {
         allocated = assessment.allocatedToUser != null,
         status = status,
         dueAt = assessment.dueAt?.toTimestamp(),
+        probationDeliveryUnitName = (assessment.application as? TemporaryAccommodationApplicationEntity)?.probationDeliveryUnit?.name,
       )
   }
 
@@ -3554,5 +3576,6 @@ class AssessmentTest : IntegrationTestBase() {
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Timestamp?,
+    override val probationDeliveryUnitName: String?,
   ) : DomainAssessmentSummary
 }

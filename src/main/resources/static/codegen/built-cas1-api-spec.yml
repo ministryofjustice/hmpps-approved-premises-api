@@ -3544,6 +3544,8 @@ components:
           properties:
             status:
               $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
+            probationDeliveryUnitName:
+              type: string
           required:
             - status
     AssessmentSortField:
@@ -3555,6 +3557,7 @@ components:
         - status
         - createdAt
         - dueAt
+        - probationDeliveryUnit
       x-enum-varnames:
         - personName
         - personCrn
@@ -3562,6 +3565,7 @@ components:
         - assessmentStatus
         - assessmentCreatedAt
         - assessmentDueAt
+        - applicationProbationDeliveryUnit
     AssessmentDecision:
       type: string
       enum:

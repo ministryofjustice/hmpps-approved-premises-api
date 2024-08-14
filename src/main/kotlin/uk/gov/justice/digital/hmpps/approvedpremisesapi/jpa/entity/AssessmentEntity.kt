@@ -122,11 +122,13 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                   WHEN a.decision='ACCEPTED' AND aa.completed_at is null THEN 'READY_TO_PLACE'
                   WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
                   WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
-             END  as status
+             END  as status,
+             pdu.name as probationDeliveryUnitName
         from temporary_accommodation_assessments aa
              join assessments a on aa.assessment_id = a.id
              join applications ap on a.application_id = ap.id
              left outer join temporary_accommodation_applications taa on ap.id = taa.id
+             left outer join probation_delivery_units pdu on taa.probation_delivery_unit_id = pdu.id
        where taa.probation_region_id = ?1
              and (?2 is null OR ap.crn = ?2 OR lower(taa.name) LIKE CONCAT('%', lower(?2),'%'))
              and a.reallocated_at is null
@@ -148,6 +150,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                join assessments a on aa.assessment_id = a.id
                join applications ap on a.application_id = ap.id
                left outer join temporary_accommodation_applications taa on ap.id = taa.id
+               left outer join probation_delivery_units pdu on taa.probation_delivery_unit_id = pdu.id
          where taa.probation_region_id = ?1
                and (?2 is null OR ap.crn = ?2)
                and a.reallocated_at is null
@@ -362,6 +365,7 @@ interface DomainAssessmentSummary {
   val crn: String
   val status: DomainAssessmentSummaryStatus?
   val dueAt: Timestamp?
+  val probationDeliveryUnitName: String?
 }
 
 enum class DomainAssessmentSummaryStatus {

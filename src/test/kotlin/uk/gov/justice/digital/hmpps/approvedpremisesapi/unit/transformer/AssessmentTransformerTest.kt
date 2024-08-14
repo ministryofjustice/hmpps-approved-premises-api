@@ -392,6 +392,7 @@ class AssessmentTransformerTest {
         allocated = true,
         status = null,
         dueAt = null,
+        probationDeliveryUnitName = null,
       )
 
       every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -428,6 +429,7 @@ class AssessmentTransformerTest {
         allocated = true,
         status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
         dueAt = Timestamp.from(Instant.now()),
+        probationDeliveryUnitName = null,
       )
 
       every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -459,5 +461,6 @@ class AssessmentTransformerTest {
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Timestamp?,
+    override val probationDeliveryUnitName: String?,
   ) : DomainAssessmentSummary
 }

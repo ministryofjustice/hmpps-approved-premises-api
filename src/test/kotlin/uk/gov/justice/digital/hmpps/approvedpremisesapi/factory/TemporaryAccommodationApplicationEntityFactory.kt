@@ -200,6 +200,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.prisonReleaseTypes = { prisonReleaseTypes }
   }
 
+  fun withProbationDeliveryUnit(probationDeliveryUnit: ProbationDeliveryUnitEntity?) = apply {
+    this.probationDeliveryUnit = { probationDeliveryUnit }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
