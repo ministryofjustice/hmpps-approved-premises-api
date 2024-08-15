@@ -110,12 +110,19 @@ class UserTransformer(
   private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
     return userRole.role.permissions.map {
       when (it) {
-        UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
-        UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
+        UserPermission.CAS1_ADHOC_BOOKING_CREATE -> ApiUserPermission.adhocBookingCreate
+        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
+        UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
         UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
         UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
-        UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
-        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
+        UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
+        UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
+        UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
+        UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
+        UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
+        UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
+        UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
+        UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
       }
     }
   }

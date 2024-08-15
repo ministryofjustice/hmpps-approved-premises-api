@@ -12,9 +12,16 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.adhocBookingCreate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.bookingCreate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.bookingWithdraw
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.outOfServiceBedCreate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewOutOfServiceBeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
@@ -150,15 +157,15 @@ class UserTransformerTest {
 
       assertThat(result.permissions).isEqualTo(
         listOf(
+          assessAppealedApplication,
           processAnAppeal,
           viewAssignedAssessments,
-          assessAppealedApplication,
         ),
       )
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_APPEALS_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_APPEALS_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_CRU_MEMBER", "CAS1_FUTURE_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `transformJpaToApi CAS1 should return no permissions for Approved Premises roles which have no permissions defined`(role: UserRole) {
       val user = buildUserEntity(
         role = role,
@@ -186,12 +193,19 @@ class UserTransformerTest {
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
-      assertThat(result.permissions).size().isEqualTo(3)
-      assertThat(result.permissions).isEqualTo(
+      assertThat(result.permissions).size().isEqualTo(10)
+      assertThat(result.permissions).hasSameElementsAs(
         listOf(
-          processAnAppeal,
-          viewAssignedAssessments,
+          adhocBookingCreate,
           assessAppealedApplication,
+          bookingCreate,
+          bookingWithdraw,
+          processAnAppeal,
+          outOfServiceBedCreate,
+          viewAssignedAssessments,
+          viewCruDashboard,
+          viewManageTasks,
+          viewOutOfServiceBeds,
         ),
       )
     }
@@ -209,7 +223,7 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.version).isNotNull()
-      assertThat(result.version).isEqualTo(-298303991)
+      assertThat(result.version).isEqualTo(-159026997)
     }
 
     @Test

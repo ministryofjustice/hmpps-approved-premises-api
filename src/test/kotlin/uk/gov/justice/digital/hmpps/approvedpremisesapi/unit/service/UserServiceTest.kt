@@ -532,7 +532,7 @@ class UserServiceTest {
 
       every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
 
-      assertThat(userService.getUserForRequestVersion()).isEqualTo(1496059656)
+      assertThat(userService.getUserForRequestVersion()).isEqualTo(1081659926)
     }
 
     @Test

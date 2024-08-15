@@ -84,7 +84,7 @@ class ProfileTest : IntegrationTestBase() {
                   ApprovedPremisesUserPermission.assessPlacementApplication,
                   ApprovedPremisesUserPermission.viewAssignedAssessments,
                 ),
-                version = 885605168,
+                version = 1950528466,
               ),
             ),
           )
@@ -306,7 +306,7 @@ class ProfileTest : IntegrationTestBase() {
                     ApprovedPremisesUserPermission.assessPlacementApplication,
                     ApprovedPremisesUserPermission.viewAssignedAssessments,
                   ),
-                  version = 885605168,
+                  version = 1950528466,
                 ),
               ),
             ),
