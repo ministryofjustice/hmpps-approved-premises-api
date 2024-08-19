@@ -6,6 +6,8 @@ import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 
@@ -28,12 +30,13 @@ class SeedUpdateUsersFromApiTest : SeedTestBase() {
       }
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-      StaffUserDetailsFactory()
-        .withUsername(USERNAME)
-        .withEmail("updatedemail@localhost")
-        .produce(),
-    )
+    val staffUserDetails = StaffUserDetailsFactory()
+      .withUsername(USERNAME)
+      .withEmail("updatedemail@localhost")
+      .produce()
+
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails)
+    ApDeliusContext_addStaffDetailResponse(staffUserDetails.toStaffDetail())
 
     val csv = CsvBuilder()
       .withUnquotedFields(

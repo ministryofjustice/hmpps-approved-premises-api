@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -18,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
@@ -230,11 +230,6 @@ class ProfileTest : IntegrationTestBase() {
           probationArea = probationArea,
         )
 
-    @BeforeEach
-    fun setup() {
-      ApDeliusContext_addStaffDetailResponse(staffDetail = staffDetail)
-    }
-
     fun setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag: Boolean) {
       mockFeatureFlagService.setFlag("use-ap-and-delius-to-update-users", flag)
     }
@@ -271,6 +266,8 @@ class ProfileTest : IntegrationTestBase() {
         probationRegion = region,
       ) { userEntity, jwt ->
         val userApArea = userEntity.apArea!!
+
+        ApDeliusContext_addStaffDetailResponse(staffDetail = staffDetail)
 
         val expectedName =
           if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) staffDetail.name.deliusName() else userEntity.name
@@ -351,15 +348,16 @@ class ProfileTest : IntegrationTestBase() {
         withTelephoneNumber(telephoneNumber)
       }
 
-      mockStaffUserInfoCommunityApiCall(
+      val staffUserDetail =
         StaffUserDetailsFactory()
           .withForenames(userEntity.name.split(" ")[0])
           .withSurname(userEntity.name.split(" ")[1])
           .withUsername(deliusUsername)
           .withEmail(email)
           .withTelephoneNumber(telephoneNumber)
-          .produce(),
-      )
+          .produce()
+      mockStaffUserInfoCommunityApiCall(staffUserDetail)
+      ApDeliusContext_addStaffDetailResponse(staffUserDetail.toStaffDetail())
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -374,7 +372,11 @@ class ProfileTest : IntegrationTestBase() {
       }
 
       val expectedName =
-        if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) staffDetail.name.deliusName() else userEntity.name
+        if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) {
+          staffUserDetail.toStaffDetail().name.deliusName()
+        } else {
+          userEntity.name
+        }
 
       webTestClient.get()
         .uri(profileV2Endpoint)
@@ -686,15 +688,16 @@ class ProfileTest : IntegrationTestBase() {
         withTelephoneNumber(telephoneNumber)
       }
 
-      mockStaffUserInfoCommunityApiCall(
+      val staffUserDetail =
         StaffUserDetailsFactory()
           .withForenames(userEntity.name.split(" ")[0])
           .withSurname(userEntity.name.split(" ")[1])
           .withUsername(deliusUsername)
           .withEmail(email)
           .withTelephoneNumber(telephoneNumber)
-          .produce(),
-      )
+          .produce()
+      mockStaffUserInfoCommunityApiCall(staffUserDetail)
+      ApDeliusContext_addStaffDetailResponse(staffUserDetail.toStaffDetail())
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -709,7 +712,11 @@ class ProfileTest : IntegrationTestBase() {
       }
 
       val expectedName =
-        if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) staffDetail.name.deliusName() else userEntity.name
+        if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) {
+          staffUserDetail.toStaffDetail().name.deliusName()
+        } else {
+          userEntity.name
+        }
 
       webTestClient.get()
         .uri(profileV2Endpoint)

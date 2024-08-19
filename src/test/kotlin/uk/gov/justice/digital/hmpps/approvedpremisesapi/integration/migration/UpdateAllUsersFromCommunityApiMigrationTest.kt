@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 
@@ -27,19 +29,20 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    val staffuserDetail1 =
       StaffUserDetailsFactory()
         .withUsername(userOne.deliusUsername)
         .withStaffCode("STAFFCODE1")
-        .produce(),
-    )
+        .produce()
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffuserDetail1)
+    ApDeliusContext_addStaffDetailResponse(staffuserDetail1.toStaffDetail())
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-      StaffUserDetailsFactory()
-        .withUsername(userTwo.deliusUsername)
-        .withStaffCode("STAFFCODE2")
-        .produce(),
-    )
+    val staffUserDetail2 = StaffUserDetailsFactory()
+      .withUsername(userTwo.deliusUsername)
+      .withStaffCode("STAFFCODE2")
+      .produce()
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetail2)
+    ApDeliusContext_addStaffDetailResponse(staffUserDetail2.toStaffDetail())
 
     val startTime = System.currentTimeMillis()
     migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi, 1)
@@ -74,12 +77,13 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
     CommunityAPI_mockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-      StaffUserDetailsFactory()
-        .withUsername(userTwo.deliusUsername)
-        .withStaffCode("STAFFCODE2")
-        .produce(),
-    )
+    val staffUserDetail = StaffUserDetailsFactory()
+      .withUsername(userTwo.deliusUsername)
+      .withStaffCode("STAFFCODE2")
+      .produce()
+
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetail)
+    ApDeliusContext_addStaffDetailResponse(staffUserDetail.toStaffDetail())
 
     migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi)
 
