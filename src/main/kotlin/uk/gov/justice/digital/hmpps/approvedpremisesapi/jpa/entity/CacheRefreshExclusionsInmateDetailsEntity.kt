@@ -9,7 +9,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Repository
-interface CacheRefreshExclusionsInmateDetailsRepository : JpaRepository<ExternalUserEntity, UUID> {
+interface CacheRefreshExclusionsInmateDetailsRepository : JpaRepository<CacheRefreshExclusionsInmateDetailsEntity, UUID> {
   @Query("SELECT DISTINCT(nomsNumber) FROM CacheRefreshExclusionsInmateDetailsEntity")
   fun getDistinctNomsNumbers(): List<String>
 }

@@ -1,17 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cache.preemptive
 
+import org.springframework.http.HttpStatus
 import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PreemptiveCacheEntryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-@SuppressWarnings("LongParameterList", "MagicNumber")
+@SuppressWarnings("LongParameterList", "MagicNumber", "CyclomaticComplexMethod")
 class InmateDetailsCacheRefreshWorker(
   private val applicationRepository: ApplicationRepository,
   private val bookingRepository: BookingRepository,
@@ -81,8 +83,18 @@ ${stats()}"""
 
       if (prisonsApiResult is ClientResult.Failure.StatusCode) {
         if (!prisonsApiResult.isPreemptivelyCachedResponse) {
-          log.error("Unable to refresh Inmate Details for $nomsNumber, response status: ${prisonsApiResult.status}")
-          entryUpdateFails += 1
+          if (prisonsApiResult.status == HttpStatus.NOT_FOUND && entryUpdateFails > 1) {
+            log.error("Multiple ${prisonsApiResult.status} responses when updating offender details. Adding $nomsNumber, adding cache refresh exclusion.")
+            cacheRefreshExclusionsInmateDetailsRepository.save(
+              CacheRefreshExclusionsInmateDetailsEntity(
+                nomsNumber,
+                "$entryUpdateFails attempts to update cached offender resulted in ${prisonsApiResult.status}",
+              ),
+            )
+          } else {
+            log.error("Unable to refresh Inmate Details for $nomsNumber, response status: ${prisonsApiResult.status}")
+            entryUpdateFails += 1
+          }
         }
       }
 
