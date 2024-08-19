@@ -283,4 +283,4 @@ reports:
 
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
-  use-ap-and-delius-to-update-users: false
+  use-ap-and-delius-to-update-users: true
