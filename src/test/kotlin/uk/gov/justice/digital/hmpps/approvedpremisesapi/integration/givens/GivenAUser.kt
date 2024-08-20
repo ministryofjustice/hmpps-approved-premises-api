@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.NomisUserRoles_mockSuccessfulGetUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -74,9 +76,8 @@ fun IntegrationTestBase.`Given a User`(
   val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffUserDetails.username)
 
   if (mockStaffUserDetailsCall) {
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-      staffUserDetails,
-    )
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails)
+    ApDeliusContext_addStaffDetailResponse(staffUserDetails.toStaffDetail())
   } else {
     mockOAuth2ClientCredentialsCallIfRequired {}
   }

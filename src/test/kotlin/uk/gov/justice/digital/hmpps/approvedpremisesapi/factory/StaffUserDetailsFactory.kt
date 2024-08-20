@@ -6,10 +6,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
+@Deprecated(message = "StaffUserDetails are being removed with the community api", replaceWith = ReplaceWith("StaffDetailsFactory"))
 class StaffUserDetailsFactory : Factory<StaffUserDetails> {
   private var username: Yielded<String> = { randomStringUpperCase(10) }
   private var email: Yielded<String?> = { randomStringUpperCase(8) }
@@ -81,5 +88,30 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
       code = this.probationAreaCode(),
       description = this.probationAreaDescription(),
     ),
+  )
+}
+
+fun StaffUserDetails.toStaffDetail(): StaffDetail {
+  return StaffDetail(
+    email,
+    telephoneNumber,
+    staffIdentifier,
+    teams?.let {
+      it.map { team ->
+        Team(
+          team.code,
+          team.description,
+          Ldu(team.localDeliveryUnit.code, team.localDeliveryUnit.description),
+          Borough(team.borough.code, team.borough.description),
+          team.startDate,
+          team.endDate,
+        )
+      }
+    } ?: emptyList(),
+    ProbationArea(probationArea.code, probationArea.description),
+    username,
+    PersonName(staff.forenames, staff.surname, ""),
+    staffCode,
+    true,
   )
 }
