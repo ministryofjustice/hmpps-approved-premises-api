@@ -2995,7 +2995,7 @@ components:
         - status
         - createdAt
         - dueAt
-        - probationDeliveryUnit
+        - probationDeliveryUnitName
       x-enum-varnames:
         - personName
         - personCrn
@@ -3003,7 +3003,7 @@ components:
         - assessmentStatus
         - assessmentCreatedAt
         - assessmentDueAt
-        - applicationProbationDeliveryUnit
+        - applicationProbationDeliveryUnitName
     AssessmentDecision:
       type: string
       enum:

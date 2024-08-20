@@ -150,7 +150,6 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                join assessments a on aa.assessment_id = a.id
                join applications ap on a.application_id = ap.id
                left outer join temporary_accommodation_applications taa on ap.id = taa.id
-               left outer join probation_delivery_units pdu on taa.probation_delivery_unit_id = pdu.id
          where taa.probation_region_id = ?1
                and (?2 is null OR ap.crn = ?2)
                and a.reallocated_at is null

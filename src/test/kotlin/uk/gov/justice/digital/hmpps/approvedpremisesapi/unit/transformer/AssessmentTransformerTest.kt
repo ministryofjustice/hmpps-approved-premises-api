@@ -392,7 +392,7 @@ class AssessmentTransformerTest {
         allocated = true,
         status = null,
         dueAt = null,
-        probationDeliveryUnitName = null,
+        probationDeliveryUnitName = "test pdu name",
       )
 
       every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -407,6 +407,7 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.decision).isNull()
       assertThat(apiSummary.risks).isNull()
       assertThat(apiSummary.person).isNotNull
+      assertThat(apiSummary.probationDeliveryUnitName).isEqualTo("test pdu name")
     }
   }
 

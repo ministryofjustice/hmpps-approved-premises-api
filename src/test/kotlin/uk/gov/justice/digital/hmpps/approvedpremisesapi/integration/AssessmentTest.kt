@@ -1217,7 +1217,6 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given Some Offenders` { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
-
           data class AssessmentParams(
             val assessment: TemporaryAccommodationAssessmentEntity,
             val offenderDetails: OffenderDetailSummary,
@@ -1305,7 +1304,7 @@ class AssessmentTest : IntegrationTestBase() {
               ExpectedResponse.Error(HttpStatus.BAD_REQUEST, "Sorting by due date is not supported for CAS3")
             }
 
-            AssessmentSortField.applicationProbationDeliveryUnit -> {
+            AssessmentSortField.applicationProbationDeliveryUnitName -> {
               ExpectedResponse.OK(
                 assessments
                   .sortedWith(
@@ -3558,6 +3557,12 @@ class AssessmentTest : IntegrationTestBase() {
         allocated = assessment.allocatedToUser != null,
         status = status,
         dueAt = assessment.dueAt?.toTimestamp(),
+
+        /*
+        If assessment.application is not TemporaryAccommodationApplicationEntity this returns null due to cast failing.
+        If assessment.application is not null but probationDeliveryUnit is null, then null is also returned,
+        which makes sense for applications for which the PDU hasn't been specified (and would therefore need to be null
+         */
         probationDeliveryUnitName = (assessment.application as? TemporaryAccommodationApplicationEntity)?.probationDeliveryUnit?.name,
       )
   }
