@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Tra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -30,6 +32,8 @@ class ReportsController(
   private val userAccessService: UserAccessService,
   private val cas3ReportService: Cas3ReportService,
 ) : ReportsCas3Delegate {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun reportsReferralsGet(
     xServiceName: ServiceName,
@@ -62,9 +66,11 @@ class ReportsController(
     endDate: LocalDate,
     probationRegionId: UUID?,
   ): ResponseEntity<StreamingResponseBody> {
+    log.info("Start validate user can view the report. Run time ${LocalDateTime.now()}")
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
     }
+    log.info("End validate user can view the report. Run time ${LocalDateTime.now()}")
     validateRequestParameters(probationRegionId, startDate, endDate)
 
     return when (reportName) {
