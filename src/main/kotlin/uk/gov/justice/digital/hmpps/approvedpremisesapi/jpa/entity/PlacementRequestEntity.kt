@@ -78,7 +78,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
               1
             from
               cancellations c
-              right join bookings booking on c.booking_id = booking.id -- 2.15s
+              right join bookings booking on c.booking_id = booking.id
             WHERE
               booking.id = pq.booking_id
               AND c.id IS NULL
