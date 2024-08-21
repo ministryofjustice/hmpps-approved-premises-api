@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -53,6 +54,7 @@ class PlacementApplicationService(
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
   private val taskDeadlineService: TaskDeadlineService,
   private val clock: Clock,
+  private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -118,6 +120,8 @@ class PlacementApplicationService(
     assigneeUser: UserEntity,
     id: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+    lockablePlacementApplicationRepository.acquirePessimisticLock(id)
+
     val currentPlacementApplication = placementApplicationRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
