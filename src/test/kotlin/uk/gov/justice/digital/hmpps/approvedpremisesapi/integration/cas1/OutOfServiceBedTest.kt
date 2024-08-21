@@ -1467,7 +1467,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Update Out-Of-Service Beds returns 409 Conflict when a booking for the same bed overlaps`() {
+    fun `Update Out-Of-Service Beds succeeds even if overlapping with Booking`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1528,11 +1528,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           )
           .exchange()
           .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
+          .isOk
       }
     }
 
