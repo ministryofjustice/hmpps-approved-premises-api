@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
@@ -33,7 +32,6 @@ import java.util.UUID
 class OutOfServiceBedsController(
   private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
-  private val bookingService: BookingService,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,
   private val outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer,
   private val outOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,
@@ -140,7 +138,6 @@ class OutOfServiceBedsController(
       throw ForbiddenProblem()
     }
 
-    throwIfBookingDatesConflict(body.startDate, body.endDate, outOfServiceBed.bed.id)
     throwIfOutOfServiceBedDatesConflict(body.startDate, body.endDate, outOfServiceBedId, outOfServiceBed.bed.id)
 
     val updateOutOfServiceBedResult = outOfServiceBedService.updateOutOfServiceBed(
@@ -206,16 +203,6 @@ class OutOfServiceBedsController(
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
     is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
     is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
-  }
-
-  private fun throwIfBookingDatesConflict(
-    arrivalDate: LocalDate,
-    departureDate: LocalDate,
-    bedId: UUID,
-  ) {
-    bookingService.getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-      throw ConflictProblem(it.id, "A booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates")
-    }
   }
 
   private fun throwIfOutOfServiceBedDatesConflict(
