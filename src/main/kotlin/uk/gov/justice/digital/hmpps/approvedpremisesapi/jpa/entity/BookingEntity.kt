@@ -17,6 +17,7 @@ import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -128,15 +129,32 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   )
   fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
 
+  /*
+    This query is to find the closest booking to the start date for the current bedspace search
+    The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
+  */
   @Query(
-    "SELECT b FROM BookingEntity b WHERE (b.bed, b.departureDate) IN (" +
-      "  SELECT b2.bed, MAX(b2.departureDate)" +
-      "  FROM BookingEntity b2 " +
-      "  WHERE b2.departureDate <= :date " +
-      "  AND b2.bed.id IN :bedIds " +
-      "  AND SIZE(b2.cancellations) = 0 " +
-      "  GROUP BY b2.bed " +
-      ")",
+    """
+      WITH ClosestBooking AS
+         (SELECT b.bed_id, MAX(b.departure_date) departure_date
+          FROM bookings b
+          LEFT JOIN cancellations c ON b.id = c.booking_id
+          WHERE b.departure_date <= :date
+            AND b.bed_id IN :bedIds
+            AND c.id IS NULL
+          GROUP BY b.bed_id)
+          
+      SELECT b.*,
+      beds.name as bed_name,
+      beds.room_id as bed_room_id,
+      beds.code as bed_code,
+      beds.created_at as bed_created_at,
+      beds.end_date as bed_end_date
+      FROM bookings b
+      LEFT JOIN beds ON  b.bed_id = beds.id  
+      INNER JOIN ClosestBooking  cb ON b.bed_id = cb.bed_id AND b.departure_date = cb.departure_date
+      """,
+    nativeQuery = true,
   )
   fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
 
@@ -265,13 +283,13 @@ data class BookingEntity(
   var arrivalDate: LocalDate,
   var departureDate: LocalDate,
   var keyWorkerStaffCode: String?,
-  @OneToMany(mappedBy = "booking")
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var arrivals: MutableList<ArrivalEntity>,
-  @OneToMany(mappedBy = "booking")
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var departures: MutableList<DepartureEntity>,
   @OneToOne(mappedBy = "booking")
   var nonArrival: NonArrivalEntity?,
-  @OneToMany(mappedBy = "booking")
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var cancellations: MutableList<CancellationEntity>,
   @OneToOne(mappedBy = "booking")
   var confirmation: ConfirmationEntity?,
@@ -281,9 +299,9 @@ data class BookingEntity(
   @OneToOne
   @JoinColumn(name = "offline_application_id")
   var offlineApplication: OfflineApplicationEntity?,
-  @OneToMany(mappedBy = "booking")
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var extensions: MutableList<ExtensionEntity>,
-  @OneToMany(mappedBy = "booking")
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var dateChanges: MutableList<DateChangeEntity>,
   @ManyToOne
   @JoinColumn(name = "premises_id")
@@ -295,7 +313,7 @@ data class BookingEntity(
   var originalArrivalDate: LocalDate,
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
-  @OneToMany(mappedBy = "booking")
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var turnarounds: MutableList<TurnaroundEntity>,
   var nomsNumber: String?,
   @OneToOne(mappedBy = "booking")
