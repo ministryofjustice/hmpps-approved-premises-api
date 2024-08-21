@@ -158,7 +158,9 @@ tasks.register<Test>("unitTest") {
 }
 
 // Skip OpenAPI generation if running tests from intellij
-val entryPointTask = project.tasks.getByName(project.gradle.startParameter.taskNames.first().replace(":", ""))
+val entryPointTask = project.gradle.startParameter.taskNames.firstOrNull()?.let {
+  project.tasks.getByName(it.replace(":", ""))
+}
 val isTestInvokedFromIntellij = (entryPointTask is Test && System.getProperty("idea.active") !== null)
 if (isTestInvokedFromIntellij) {
   tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
