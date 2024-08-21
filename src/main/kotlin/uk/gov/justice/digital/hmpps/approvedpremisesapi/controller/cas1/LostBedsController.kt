@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTran
 import java.time.LocalDate
 import java.util.UUID
 
+@Deprecated(message = "List Beds functionality has been replaced with Out of Service Beds", replaceWith = ReplaceWith("OutOfServiceBedsController"))
 @Service
 class LostBedsController(
   private val userAccessService: UserAccessService,
