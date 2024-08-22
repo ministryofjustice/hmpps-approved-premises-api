@@ -392,6 +392,7 @@ class AssessmentTransformerTest {
         allocated = true,
         status = null,
         dueAt = null,
+        probationDeliveryUnitName = "test pdu name",
       )
 
       every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -406,6 +407,7 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.decision).isNull()
       assertThat(apiSummary.risks).isNull()
       assertThat(apiSummary.person).isNotNull
+      assertThat(apiSummary.probationDeliveryUnitName).isEqualTo("test pdu name")
     }
   }
 
@@ -428,6 +430,7 @@ class AssessmentTransformerTest {
         allocated = true,
         status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
         dueAt = Timestamp.from(Instant.now()),
+        probationDeliveryUnitName = null,
       )
 
       every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -459,5 +462,6 @@ class AssessmentTransformerTest {
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Timestamp?,
+    override val probationDeliveryUnitName: String?,
   ) : DomainAssessmentSummary
 }

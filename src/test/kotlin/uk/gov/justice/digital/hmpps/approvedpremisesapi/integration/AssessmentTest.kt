@@ -1217,7 +1217,6 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given Some Offenders` { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
-
           data class AssessmentParams(
             val assessment: TemporaryAccommodationAssessmentEntity,
             val offenderDetails: OffenderDetailSummary,
@@ -1233,13 +1232,19 @@ class AssessmentTest : IntegrationTestBase() {
             withAddedAt(OffsetDateTime.now())
           }
 
-          val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4)
+          probationDeliveryUnits.addLast(null)
+
+          val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
             val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withProbationRegion(user.probationRegion)
               withApplicationSchema(applicationSchema)
               withArrivalDate(LocalDate.now().randomDateAfter(14))
+              withProbationDeliveryUnit(
+                probationDeliveryUnits[i],
+              )
             }
 
             val assessment = temporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
@@ -1297,6 +1302,21 @@ class AssessmentTest : IntegrationTestBase() {
 
             AssessmentSortField.assessmentDueAt -> {
               ExpectedResponse.Error(HttpStatus.BAD_REQUEST, "Sorting by due date is not supported for CAS3")
+            }
+
+            AssessmentSortField.applicationProbationDeliveryUnitName -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedWith(
+                    compareByDescending(nullsLast()) {
+                      (
+                        it.assessment.application as
+                          TemporaryAccommodationApplicationEntity
+                        ).probationDeliveryUnit?.name
+                    },
+                  )
+                  .map(toSummary),
+              )
             }
           }
 
@@ -3537,6 +3557,13 @@ class AssessmentTest : IntegrationTestBase() {
         allocated = assessment.allocatedToUser != null,
         status = status,
         dueAt = assessment.dueAt?.toTimestamp(),
+
+        /*
+        If assessment.application is not TemporaryAccommodationApplicationEntity this returns null due to cast failing.
+        If assessment.application is not null but probationDeliveryUnit is null, then null is also returned,
+        which makes sense for applications for which the PDU hasn't been specified (and would therefore need to be null
+         */
+        probationDeliveryUnitName = (assessment.application as? TemporaryAccommodationApplicationEntity)?.probationDeliveryUnit?.name,
       )
   }
 
@@ -3554,5 +3581,6 @@ class AssessmentTest : IntegrationTestBase() {
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Timestamp?,
+    override val probationDeliveryUnitName: String?,
   ) : DomainAssessmentSummary
 }

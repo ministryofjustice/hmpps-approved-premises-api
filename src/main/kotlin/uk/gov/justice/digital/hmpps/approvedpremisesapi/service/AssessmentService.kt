@@ -114,6 +114,7 @@ class AssessmentService(
       AssessmentSortField.assessmentDueAt -> "dueAt"
       AssessmentSortField.personCrn -> "crn"
       AssessmentSortField.personName -> "personName"
+      AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnit"
     }
 
     return getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString))
@@ -133,6 +134,7 @@ class AssessmentService(
           AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
           AssessmentSortField.assessmentCreatedAt -> "createdAt"
           AssessmentSortField.personCrn -> "crn"
+          AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnitName"
           else -> "arrivalDate"
         }
         val response = assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(

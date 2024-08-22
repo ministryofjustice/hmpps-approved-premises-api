@@ -147,6 +147,7 @@ class AssessmentTransformer(
           )
         },
         person = personTransformer.transformModelToPersonApi(personInfo),
+        probationDeliveryUnitName = ase.probationDeliveryUnitName,
       )
 
       else -> throw RuntimeException("Unsupported type: ${ase.type}")
