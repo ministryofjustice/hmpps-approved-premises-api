@@ -4,6 +4,13 @@
 generic-service:
   serviceAccountName: hmpps-community-accommodation-api-service-account
 
+  resources:
+    limits:
+      memory: 3Gi
+    requests:
+      memory: 2.5Gi
+
+
   ingress:
     host: approved-premises-api-preprod.hmpps.service.justice.gov.uk
     tlsSecretName: hmpps-approved-premises-api-preprod-cert
