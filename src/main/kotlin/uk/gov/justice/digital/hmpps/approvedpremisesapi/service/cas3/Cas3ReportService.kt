@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 import org.apache.commons.collections4.ListUtils
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -31,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
-import java.time.LocalDateTime
 import java.util.stream.Collectors
 
 @Service
@@ -48,7 +46,6 @@ class Cas3ReportService(
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
   @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun createCas3ApplicationReferralsReport(
     properties: TransitionalAccommodationReferralReportProperties,
@@ -84,17 +81,12 @@ class Cas3ReportService(
 
     val crns = bookingsInScope.map { it.crn }.distinct().sorted()
 
-    log.info("Booking Report. Start retrieve person information. Run time ${LocalDateTime.now()}")
-    val personInfos = splitAndRetrievePersonInfo(crns.toSet(), "Booking Report")
-    log.info("Booking Report. End retrieve person information. Run time ${LocalDateTime.now()}")
+    val personInfos = splitAndRetrievePersonInfoReportData(crns.toSet())
 
-    log.info("Booking Report. Start generate report data. Run time ${LocalDateTime.now()}")
     val reportData = bookingsInScope.map {
       BookingsReportDataAndPersonInfo(it, personInfos[it.crn]!!)
     }
-    log.info("Booking Report. End generate report data. Run time ${LocalDateTime.now()}")
 
-    log.info("Booking Report. Start generate report. Run time ${LocalDateTime.now()}")
     BookingsReportGenerator()
       .createReport(
         reportData,
@@ -108,7 +100,6 @@ class Cas3ReportService(
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
-    log.info("Booking Report. End generate report. Run time ${LocalDateTime.now()}")
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
@@ -171,15 +162,11 @@ class Cas3ReportService(
       }
   }
 
-  private fun splitAndRetrievePersonInfo(
-    crns: Set<String>,
-    reportName: String,
-  ): Map<String, PersonInformationReportData> {
+  private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
     val deliusUsername = userService.getUserForRequest().deliusUsername
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
-        log.info("Report $reportName. Call get Offender Summaries with CRNs. Run time ${LocalDateTime.now()}")
         val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername)
         offenderSummaries.map {
           when (it) {
@@ -201,7 +188,6 @@ class Cas3ReportService(
         }
       }.collect(Collectors.toList())
 
-    log.info("Report $reportName. Return the offender personal information. Run time ${LocalDateTime.now()}")
     return crnMap.flatMap { it.toList() }.toMap()
   }
 
