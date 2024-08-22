@@ -1,31 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -124,68 +104,19 @@ data class DomainEventEntity(
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   /**
    * Use to track the schema version used for the [data] property. The schema version
-   * will be specific to the corresponding [type]
+   * will be specific to the corresponding [type]. This version number relates to
+   * [DomainEventSchemaVersion.versionNo]
    *
    * This will be null for any domain events recorded before this concept was introduced.
    *
    * The domain event schema version used for a given domain event record is only required when the
    * initial domain event schema changes in a way that we need to start tracking which schema a domain event uses.
+   *
+   * For information on introducing new schema versions, see the 'modifying_domain_event_schemas.md' file
    */
   val schemaVersion: Int?,
-) {
-  final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
-    val data = when {
-      T::class == ApplicationSubmittedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == ApplicationAssessedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == BookingMadeEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == PersonArrivedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == PersonNotArrivedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == PersonDepartedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == BookingNotMadeEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == BookingCancelledEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == BookingChangedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == ApplicationWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == AssessmentAppealedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == PlacementApplicationWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == PlacementApplicationAllocatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == MatchRequestWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == AssessmentAllocatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == RequestForPlacementCreatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == RequestForPlacementAssessedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED ->
-        objectMapper.readValue(this.data, T::class.java)
-      T::class == FurtherInformationRequestedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED ->
-        objectMapper.readValue(this.data, T::class.java)
-      else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
-    }
+)
 
-    checkNotNull(this.applicationId) { "application id should not be null" }
-
-    return DomainEvent(
-      id = this.id,
-      applicationId = this.applicationId,
-      crn = this.crn,
-      nomsNumber = this.nomsNumber,
-      occurredAt = this.occurredAt.toInstant(),
-      data = data,
-    )
-  }
-}
 enum class TriggerSourceType { USER, SYSTEM }
 
 enum class MetaDataName {
@@ -197,148 +128,200 @@ enum class MetaDataName {
   CAS1_CANCELLATION_ID,
 }
 
-enum class DomainEventType(val typeName: String, val typeDescription: String, val timelineEventType: TimelineEventType?) {
+enum class DomainEventCas {
+  CAS1,
+  CAS2,
+  CAS3,
+}
+
+data class DomainEventSchemaVersion(val versionNo: Int?, val description: String?)
+
+val DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION = DomainEventSchemaVersion(
+  versionNo = null,
+  description = "The initial version of this domain event",
+)
+
+enum class DomainEventType(
+  val cas: DomainEventCas,
+  val typeName: String,
+  val typeDescription: String,
+  val timelineEventType: TimelineEventType?,
+  val schemaVersions: List<DomainEventSchemaVersion> = listOf(DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION),
+) {
   APPROVED_PREMISES_APPLICATION_SUBMITTED(
+    DomainEventCas.CAS1,
     Cas1EventType.applicationSubmitted.value,
     "An application has been submitted for an Approved Premises placement",
     TimelineEventType.approvedPremisesApplicationSubmitted,
   ),
   APPROVED_PREMISES_APPLICATION_ASSESSED(
+    DomainEventCas.CAS1,
     Cas1EventType.applicationAssessed.value,
     "An application has been assessed for an Approved Premises placement",
     TimelineEventType.approvedPremisesApplicationAssessed,
   ),
   APPROVED_PREMISES_BOOKING_MADE(
+    DomainEventCas.CAS1,
     Cas1EventType.bookingMade.value,
     "An Approved Premises booking has been made",
     TimelineEventType.approvedPremisesBookingMade,
   ),
   APPROVED_PREMISES_PERSON_ARRIVED(
+    DomainEventCas.CAS1,
     Cas1EventType.personArrived.value,
     "Someone has arrived at an Approved Premises for their Booking",
     TimelineEventType.approvedPremisesPersonArrived,
   ),
   APPROVED_PREMISES_PERSON_NOT_ARRIVED(
+    DomainEventCas.CAS1,
     Cas1EventType.personNotArrived.value,
     "Someone has failed to arrive at an Approved Premises for their Booking",
     TimelineEventType.approvedPremisesPersonNotArrived,
   ),
   APPROVED_PREMISES_PERSON_DEPARTED(
+    DomainEventCas.CAS1,
     Cas1EventType.personDeparted.value,
     "Someone has left an Approved Premises",
     TimelineEventType.approvedPremisesPersonDeparted,
   ),
   APPROVED_PREMISES_BOOKING_NOT_MADE(
+    DomainEventCas.CAS1,
     Cas1EventType.bookingNotMade.value,
     "It was not possible to create a Booking on this attempt",
     TimelineEventType.approvedPremisesBookingNotMade,
   ),
   APPROVED_PREMISES_BOOKING_CANCELLED(
+    DomainEventCas.CAS1,
     Cas1EventType.bookingCancelled.value,
     "An Approved Premises Booking has been cancelled",
     TimelineEventType.approvedPremisesBookingCancelled,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Added mandatory cancelledAtDate and cancellationRecordedAt fields"),
+    ),
   ),
   APPROVED_PREMISES_BOOKING_CHANGED(
+    DomainEventCas.CAS1,
     Cas1EventType.bookingChanged.value,
     "An Approved Premises Booking has been changed",
     TimelineEventType.approvedPremisesBookingChanged,
   ),
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(
+    DomainEventCas.CAS1,
     Cas1EventType.applicationWithdrawn.value,
     "An Approved Premises Application has been withdrawn",
     TimelineEventType.approvedPremisesApplicationWithdrawn,
   ),
   APPROVED_PREMISES_ASSESSMENT_APPEALED(
+    DomainEventCas.CAS1,
     Cas1EventType.assessmentAppealed.value,
     "An Approved Premises Assessment has been appealed",
     TimelineEventType.approvedPremisesAssessmentAppealed,
   ),
   APPROVED_PREMISES_ASSESSMENT_ALLOCATED(
+    DomainEventCas.CAS1,
     Cas1EventType.assessmentAllocated.value,
     "An Approved Premises Assessment has been allocated",
     TimelineEventType.approvedPremisesAssessmentAllocated,
   ),
   APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED(
+    DomainEventCas.CAS1,
     Cas1EventType.informationRequestMade.value,
     "An information request has been made for an Approved Premises Assessment",
     TimelineEventType.approvedPremisesInformationRequest,
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN(
+    DomainEventCas.CAS1,
     Cas1EventType.placementApplicationWithdrawn.value,
     "An Approved Premises Request for Placement has been withdrawn",
     TimelineEventType.approvedPremisesPlacementApplicationWithdrawn,
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(
+    DomainEventCas.CAS1,
     Cas1EventType.placementApplicationAllocated.value,
     "An Approved Premises Request for Placement has been allocated",
     TimelineEventType.approvedPremisesPlacementApplicationAllocated,
   ),
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(
+    DomainEventCas.CAS1,
     Cas1EventType.matchRequestWithdrawn.value,
     "An Approved Premises Match Request has been withdrawn",
     TimelineEventType.approvedPremisesMatchRequestWithdrawn,
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED(
+    DomainEventCas.CAS1,
     Cas1EventType.requestForPlacementCreated.value,
     "An Approved Premises Request for Placement has been created",
     TimelineEventType.approvedPremisesRequestForPlacementCreated,
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED(
+    DomainEventCas.CAS1,
     Cas1EventType.requestForPlacementAssessed.value,
     "An request for placement has been assessed",
     TimelineEventType.approvedPremisesRequestForPlacementAssessed,
   ),
   CAS2_APPLICATION_SUBMITTED(
+    DomainEventCas.CAS2,
     Cas2EventType.applicationSubmitted.value,
     "An application has been submitted for a CAS2 placement",
     null,
   ),
   CAS2_APPLICATION_STATUS_UPDATED(
+    DomainEventCas.CAS2,
     Cas2EventType.applicationStatusUpdated.value,
     "An assessor has updated the status of a CAS2 application",
     null,
   ),
   CAS3_BOOKING_CANCELLED(
+    DomainEventCas.CAS3,
     Cas3EventType.bookingCancelled.value,
     "A booking for a Transitional Accommodation premises has been cancelled",
     null,
   ),
   CAS3_BOOKING_CONFIRMED(
+    DomainEventCas.CAS3,
     Cas3EventType.bookingConfirmed.value,
     "A booking has been confirmed for a Transitional Accommodation premises",
     null,
   ),
   CAS3_BOOKING_PROVISIONALLY_MADE(
+    DomainEventCas.CAS3,
     Cas3EventType.bookingProvisionallyMade.value,
     "A booking has been provisionally made for a Transitional Accommodation premises",
     null,
   ),
   CAS3_PERSON_ARRIVED(
+    DomainEventCas.CAS3,
     Cas3EventType.personArrived.value,
     "Someone has arrived at a Transitional Accommodation premises for their booking",
     null,
   ),
   CAS3_PERSON_ARRIVED_UPDATED(
+    DomainEventCas.CAS3,
     Cas3EventType.personArrivedUpdated.value,
     "Someone has changed arrival date at a Transitional Accommodation premises for their booking",
     null,
   ),
   CAS3_PERSON_DEPARTED(
+    DomainEventCas.CAS3,
     Cas3EventType.personDeparted.value,
     "Someone has left a Transitional Accommodation premises",
     null,
   ),
   CAS3_REFERRAL_SUBMITTED(
+    DomainEventCas.CAS3,
     Cas3EventType.referralSubmitted.value,
     "A referral for Transitional Accommodation has been submitted",
     null,
   ),
   CAS3_PERSON_DEPARTURE_UPDATED(
+    DomainEventCas.CAS3,
     Cas3EventType.personDepartureUpdated.value,
     "Person has updated departure date of Transitional Accommodation premises",
     null,
   ),
   CAS3_BOOKING_CANCELLED_UPDATED(
+    DomainEventCas.CAS3,
     Cas3EventType.bookingCancelledUpdated.value,
     "A cancelled booking for a Transitional Accommodation premises has been updated",
     null,

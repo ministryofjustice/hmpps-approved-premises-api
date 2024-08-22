@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -20,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createDomainEventOfType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeWithLatestJson
 
 class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -71,7 +72,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
       withAssessmentSchema(assessmentSchema)
     }
 
-    domainEvents = DomainEventType.entries.filter { it.name.startsWith("APPROVED_PREMISES") }.map {
+    domainEvents = DomainEventType.entries.filter { it.cas == DomainEventCas.CAS1 }.map {
       createDomainEvent(it, otherApplication, otherAssessment, user)
       return@map createDomainEvent(it, application, assessment, user)
     }
@@ -161,9 +162,9 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
         withCreatedBy(userEntity)
       }
 
-      createDomainEventOfType(type, clarificationNote.id)
+      createCas1DomainEventEnvelopeWithLatestJson(type, clarificationNote.id)
     } else {
-      createDomainEventOfType(type)
+      createCas1DomainEventEnvelopeWithLatestJson(type)
     }
 
     return domainEventFactory.produceAndPersist {

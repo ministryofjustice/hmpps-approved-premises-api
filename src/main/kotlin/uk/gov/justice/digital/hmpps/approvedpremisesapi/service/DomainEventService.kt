@@ -34,10 +34,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
+import kotlin.reflect.KClass
 
 @Service
 class DomainEventService(
@@ -47,32 +49,72 @@ class DomainEventService(
   private val userService: UserService,
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   private val domainEventUrlConfig: DomainEventUrlConfig,
+  private val cas1DomainEventMigrationService: Cas1DomainEventMigrationService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)
-  fun getApplicationAssessedDomainEvent(id: UUID) = get<ApplicationAssessedEnvelope>(id)
-  fun getBookingMadeEvent(id: UUID) = get<BookingMadeEnvelope>(id)
-  fun getPersonArrivedEvent(id: UUID) = get<PersonArrivedEnvelope>(id)
-  fun getPersonNotArrivedEvent(id: UUID) = get<PersonNotArrivedEnvelope>(id)
-  fun getPersonDepartedEvent(id: UUID) = get<PersonDepartedEnvelope>(id)
-  fun getBookingNotMadeEvent(id: UUID) = get<BookingNotMadeEnvelope>(id)
-  fun getBookingCancelledEvent(id: UUID) = get<BookingCancelledEnvelope>(id)
-  fun getBookingChangedEvent(id: UUID) = get<BookingChangedEnvelope>(id)
-  fun getApplicationWithdrawnEvent(id: UUID) = get<ApplicationWithdrawnEnvelope>(id)
-  fun getPlacementApplicationWithdrawnEvent(id: UUID) = get<PlacementApplicationWithdrawnEnvelope>(id)
-  fun getPlacementApplicationAllocatedEvent(id: UUID) = get<PlacementApplicationAllocatedEnvelope>(id)
-  fun getMatchRequestWithdrawnEvent(id: UUID) = get<MatchRequestWithdrawnEnvelope>(id)
-  fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
-  fun getAssessmentAllocatedEvent(id: UUID) = get<AssessmentAllocatedEnvelope>(id)
-  fun getRequestForPlacementCreatedEvent(id: UUID) = get<RequestForPlacementCreatedEnvelope>(id)
-  fun getRequestForPlacementAssessedEvent(id: UUID) = get<RequestForPlacementAssessedEnvelope>(id)
-  fun getFurtherInformationRequestMadeEvent(id: UUID) = get<FurtherInformationRequestedEnvelope>(id)
+  fun getApplicationSubmittedDomainEvent(id: UUID) = get(id, ApplicationSubmittedEnvelope::class)
+  fun getApplicationAssessedDomainEvent(id: UUID) = get(id, ApplicationAssessedEnvelope::class)
+  fun getBookingMadeEvent(id: UUID) = get(id, BookingMadeEnvelope::class)
+  fun getPersonArrivedEvent(id: UUID) = get(id, PersonArrivedEnvelope::class)
+  fun getPersonNotArrivedEvent(id: UUID) = get(id, PersonNotArrivedEnvelope::class)
+  fun getPersonDepartedEvent(id: UUID) = get(id, PersonDepartedEnvelope::class)
+  fun getBookingNotMadeEvent(id: UUID) = get(id, BookingNotMadeEnvelope::class)
+  fun getBookingCancelledEvent(id: UUID) = get(id, BookingCancelledEnvelope::class)
+  fun getBookingChangedEvent(id: UUID) = get(id, BookingChangedEnvelope::class)
+  fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawnEnvelope::class)
+  fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawnEnvelope::class)
+  fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocatedEnvelope::class)
+  fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawnEnvelope::class)
+  fun getAssessmentAppealedEvent(id: UUID) = get(id, AssessmentAppealedEnvelope::class)
+  fun getAssessmentAllocatedEvent(id: UUID) = get(id, AssessmentAllocatedEnvelope::class)
+  fun getRequestForPlacementCreatedEvent(id: UUID) = get(id, RequestForPlacementCreatedEnvelope::class)
+  fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessedEnvelope::class)
+  fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequestedEnvelope::class)
 
-  private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
-    val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
+  private fun <T : Any> get(id: UUID, type: KClass<T>): DomainEvent<T>? {
+    val entity = domainEventRepository.findByIdOrNull(id) ?: return null
+    return toDomainEvent(entity, type)
+  }
 
-    return domainEventEntity.toDomainEvent(objectMapper)
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
+  fun <T : Any> toDomainEvent(entity: DomainEventEntity, type: KClass<T>): DomainEvent<T> {
+    checkNotNull(entity.applicationId) { "application id should not be null" }
+
+    val dataJson = when {
+      type == BookingCancelledEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
+        cas1DomainEventMigrationService.bookingCancelledJson(entity)
+      (type == ApplicationSubmittedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED) ||
+        (type == ApplicationAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED) ||
+        (type == BookingMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE) ||
+        (type == PersonArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED) ||
+        (type == PersonNotArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED) ||
+        (type == PersonDepartedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED) ||
+        (type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE) ||
+        (type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED) ||
+        (type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN) ||
+        (type == AssessmentAppealedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) ||
+        (type == PlacementApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN) ||
+        (type == PlacementApplicationAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED) ||
+        (type == MatchRequestWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN) ||
+        (type == AssessmentAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED) ||
+        (type == RequestForPlacementCreatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED) ||
+        (type == RequestForPlacementAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED) ||
+        (type == FurtherInformationRequestedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) ->
+        entity.data
+      else -> throw RuntimeException("Unsupported DomainEventData type ${type.qualifiedName}/${entity.type.name}")
+    }
+
+    val data = objectMapper.readValue(dataJson, type.java)
+
+    return DomainEvent(
+      id = entity.id,
+      applicationId = entity.applicationId,
+      crn = entity.crn,
+      nomsNumber = entity.nomsNumber,
+      occurredAt = entity.occurredAt.toInstant(),
+      data = data,
+    )
   }
 
   @Transactional

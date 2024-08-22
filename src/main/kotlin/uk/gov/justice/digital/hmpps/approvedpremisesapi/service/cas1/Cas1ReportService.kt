@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
@@ -24,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Approved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.YearMonth
@@ -41,7 +41,7 @@ class Cas1ReportService(
   private val domainEventRepository: DomainEventRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
-  private val objectMapper: ObjectMapper,
+  private val domainEventService: DomainEventService,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
 ) {
 
@@ -95,7 +95,7 @@ class Cas1ReportService(
 
     val dates = startDate.datesUntil(endDate).toList()
 
-    DailyMetricsReportGenerator(domainEvents, applications, objectMapper)
+    DailyMetricsReportGenerator(domainEvents, applications, domainEventService)
       .createReport(dates, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

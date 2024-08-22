@@ -1,19 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.seed.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 
 class Cas1RedactAssessmentDetailsSeedJobTest {
 
   val service = Cas1RemoveAssessmentDetailsSeedJob(
     fileName = "theFileName",
     assessmentRepository = mockk<AssessmentRepository>(),
-    objectMapper = ObjectMapper(),
+    objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     applicationService = mockk<ApplicationService>(),
   )
 
