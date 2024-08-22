@@ -83,6 +83,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds:
     post:
+      deprecated: true
+      description: Use /premises/{premisesId}/out-of-service-beds
       tags:
         - lost beds
       summary: Posts a lost bed to a specified approved premises
@@ -128,6 +130,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
     get:
+      deprecated: true
+      description: Use /premises/{premisesId}/out-of-service-beds
       tags:
         - lost beds
       summary: Lists all Lost Beds entries for the Premises
@@ -156,6 +160,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/lost-beds/{lostBedId}:
     get:
+      deprecated: true
+      description: Use /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}
       tags:
         - lost beds
       summary: Returns a specific lost bed for a premises
@@ -194,6 +200,8 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
     put:
+      deprecated: true
+      description: Use /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}
       tags:
         - lost beds
       summary: Updates a lost bed for a premises
@@ -247,6 +255,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/lost-beds/{lostBedId}/cancellations:
     post:
+      deprecated: true
+      description: Use /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations
       tags:
         - lost beds
       summary: Posts a cancellation to a specified lost bed
