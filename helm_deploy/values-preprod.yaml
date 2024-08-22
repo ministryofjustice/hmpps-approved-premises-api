@@ -9,6 +9,7 @@ generic-service:
     tlsSecretName: hmpps-approved-premises-api-preprod-cert
 
   env:
+    JAVA_OPTS: "-Xmx2000m"
     SPRING_PROFILES_ACTIVE: preprod
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-preprod.hmpps.service.justice.gov.uk/auth
