@@ -139,6 +139,56 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
+        val expectedJson = objectMapper.writeValueAsString(
+          listOf(
+            outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
+    fun `Get All Out-Of-Service Beds ignores cancelled out-of-service-bed records`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { user, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withBed(bed)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(user)
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.now().plusDays(2))
+            withEndDate(LocalDate.now().plusDays(4))
+            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+          }
+        }
+
         val cancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
           withBed(bed)
@@ -163,7 +213,6 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         val expectedJson = objectMapper.writeValueAsString(
           listOf(
             outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
-            outOfServiceBedTransformer.transformJpaToApi(cancelledOutOfServiceBed),
           ),
         )
 

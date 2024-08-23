@@ -48,12 +48,15 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     ON b.room_id = r.id
     LEFT JOIN cas1_out_of_service_bed_reasons oosr
     ON d.out_of_service_bed_reason_id = oosr.id
+    LEFT JOIN cas1_out_of_service_bed_cancellations oosb_cancellations
+    ON oosb.id = oosb_cancellations.out_of_service_bed_id
     WHERE
       (CAST(:premisesId AS UUID) IS NULL OR oosb.premises_id = :premisesId) AND
       (CAST(:apAreaId AS UUID) IS NULL OR apa.id = :apAreaId) AND 
       (FALSE = :excludePast OR dd.end_date >= CURRENT_DATE) AND
       (FALSE = :excludeCurrent OR CURRENT_DATE NOT BETWEEN dd.start_date AND dd.end_date) AND
-      (FALSE = :excludeFuture OR dd.start_date <= CURRENT_DATE)
+      (FALSE = :excludeFuture OR dd.start_date <= CURRENT_DATE) AND 
+      (oosb_cancellations IS NULL)
     """,
     nativeQuery = true,
   )
