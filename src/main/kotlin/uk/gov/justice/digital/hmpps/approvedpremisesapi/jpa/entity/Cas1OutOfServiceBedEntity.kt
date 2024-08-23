@@ -24,15 +24,13 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
       CAST(oosb.id AS TEXT)
     FROM cas1_out_of_service_beds oosb
     INNER JOIN (
-      SELECT
-        out_of_service_bed_id,
-        MAX(created_at) AS max_created_at
+      SELECT DISTINCT ON (out_of_service_bed_id)
+         out_of_service_bed_id,
+         start_date,
+         end_date,
+         created_at as max_created_at
       FROM cas1_out_of_service_bed_revisions
-      WHERE
-        (FALSE = :excludePast OR end_date >= CURRENT_DATE) AND
-        (FALSE = :excludeCurrent OR CURRENT_DATE NOT BETWEEN start_date AND end_date) AND
-        (FALSE = :excludeFuture OR start_date <= CURRENT_DATE)
-      GROUP BY out_of_service_bed_id
+      ORDER BY out_of_service_bed_id, created_at DESC      
     ) dd
     ON oosb.id = dd.out_of_service_bed_id
     LEFT JOIN cas1_out_of_service_bed_revisions d
@@ -52,7 +50,10 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     ON d.out_of_service_bed_reason_id = oosr.id
     WHERE
       (CAST(:premisesId AS UUID) IS NULL OR oosb.premises_id = :premisesId) AND
-      (CAST(:apAreaId AS UUID) IS NULL OR apa.id = :apAreaId)
+      (CAST(:apAreaId AS UUID) IS NULL OR apa.id = :apAreaId) AND 
+      (FALSE = :excludePast OR dd.end_date >= CURRENT_DATE) AND
+      (FALSE = :excludeCurrent OR CURRENT_DATE NOT BETWEEN dd.start_date AND dd.end_date) AND
+      (FALSE = :excludeFuture OR dd.start_date <= CURRENT_DATE)
     """,
     nativeQuery = true,
   )
