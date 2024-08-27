@@ -155,7 +155,7 @@ data class PlacementRequestEntity(
   @JoinColumn(name = "application_id")
   val application: ApprovedPremisesApplicationEntity,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "assessment_id")
   val assessment: AssessmentEntity,
 

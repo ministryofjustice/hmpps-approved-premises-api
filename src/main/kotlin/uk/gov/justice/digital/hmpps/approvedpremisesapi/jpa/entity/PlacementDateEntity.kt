@@ -7,6 +7,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.OneToOne
@@ -27,11 +28,11 @@ data class PlacementDateEntity(
 
   val createdAt: OffsetDateTime,
 
-  @OneToOne
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_application_id")
   val placementApplication: PlacementApplicationEntity,
 
-  @OneToOne
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
   var placementRequest: PlacementRequestEntity? = null,
 
@@ -49,8 +50,6 @@ data class PlacementDateEntity(
 
     if (id != other.id) return false
     if (createdAt != other.createdAt) return false
-    if (placementApplication.id != other.placementApplication.id) return false
-    if (placementRequest != other.placementRequest) return false
     if (expectedArrival != other.expectedArrival) return false
     if (duration != other.duration) return false
 
@@ -60,8 +59,6 @@ data class PlacementDateEntity(
   override fun hashCode(): Int {
     var result = id.hashCode()
     result = 31 * result + createdAt.hashCode()
-    result = 31 * result + placementApplication.id.hashCode()
-    result = 31 * result + (placementRequest?.hashCode() ?: 0)
     result = 31 * result + expectedArrival.hashCode()
     result = 31 * result + duration
     return result

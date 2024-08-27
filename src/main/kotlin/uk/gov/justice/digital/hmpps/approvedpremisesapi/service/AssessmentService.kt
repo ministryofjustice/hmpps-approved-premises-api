@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.hibernate.Hibernate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
@@ -894,7 +895,7 @@ class AssessmentService(
   }
 
   fun updateCas1AssessmentWithdrawn(assessmentId: UUID, withdrawingUser: UserEntity) {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+    val assessment = Hibernate.unproxy(assessmentRepository.findByIdOrNull(assessmentId))
     if (assessment is ApprovedPremisesAssessmentEntity) {
       val isPendingAssessment = assessment.isPendingAssessment()
 
