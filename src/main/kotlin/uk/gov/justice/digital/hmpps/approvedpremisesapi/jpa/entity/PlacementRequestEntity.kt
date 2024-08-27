@@ -66,45 +66,45 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as person_risks_tier
     from
       placement_requests pq
-      left join applications application on application.id = pq.application_id
       left join approved_premises_applications apa on apa.id = pq.application_id
       left join ap_areas area on area.id = apa.ap_area_id
+      left join applications application on application.id = pq.application_id
     where
       pq.reallocated_at IS NULL 
       AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
       AND (:status IS NULL OR (
         CASE
-          WHEN (
+          WHEN EXISTS (
             SELECT
-              COUNT(booking)
+              1
             from
-              bookings booking
-              left join cancellations c on c.booking_id = booking.id
+              cancellations c
+              right join bookings booking on c.booking_id = booking.id
             WHERE
               booking.id = pq.booking_id
               AND c.id IS NULL
-          ) > 0 THEN 'matched'
-          WHEN (
+          ) THEN 'matched'
+          WHEN EXISTS (
             SELECT
-              COUNT(bnm)
+              1
             from
               booking_not_mades bnm
             WHERE
               bnm.placement_request_id = pq.id
-          ) > 0 THEN 'unableToMatch'
+          ) THEN 'unableToMatch'
           ELSE 'notMatched'
         END
       ) = :#{#status?.toString()})
-      AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
+      AND (:crn IS NULL OR EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)))
       AND (
         :crnOrName IS NULL OR 
         (
-            ((SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName)) = 1)
+            (EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName)))
             OR
-            ((SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%')) = 1)
+            (EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%')))
         )
       )
-      AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
+      AND (:tier IS NULL OR EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)) 
       AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
       AND (
