@@ -4,7 +4,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -43,5 +47,25 @@ class SpaceBookingController(
     )
 
     return ResponseEntity.ok(spaceBookingTransformer.transformJpaToApi(person, booking))
+  }
+
+  override fun premisesPremisesIdSpaceBookingsGet(
+    premisesId: UUID,
+    residency: Cas1SpaceBookingResidency?,
+    crnOrName: String?,
+    sortDirection: SortDirection?,
+    sortBy: Cas1SpaceBookingSummarySortField?,
+    page: Int?,
+    perPage: Int?,
+  ): ResponseEntity<List<Cas1SpaceBookingSummary>> {
+    return super.premisesPremisesIdSpaceBookingsGet(
+      premisesId,
+      residency,
+      crnOrName,
+      sortDirection,
+      sortBy,
+      page,
+      perPage,
+    )
   }
 }

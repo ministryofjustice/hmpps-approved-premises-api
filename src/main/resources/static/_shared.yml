@@ -782,6 +782,32 @@ components:
         - arrivalDate
         - departureDate
         - createdAt
+    Cas1SpaceBookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
+        canonicalArrivalDate:
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          description: actual departure date or, if not known, the expected departure date
+          type: string
+          format: date
+        tier:
+          description: Risk rating tier level of corresponding application
+          type: string
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+      required:
+        - id
+        - person
+        - canonicalArrivalDate
+        - canonicalDepartureDate
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -5307,6 +5333,19 @@ components:
         - updatedReferenceNumber
         - updatedReason
         - updatedNotes
+    Cas1SpaceBookingSummarySortField:
+      type: string
+      enum:
+        - personName
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - keyworkerName
+        - tier
+    Cas1SpaceBookingResidency:
+      type: string
+      enum:
+        - upcoming
+        - current
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
