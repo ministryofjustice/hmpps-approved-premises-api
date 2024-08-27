@@ -525,6 +525,79 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
+
+  /premises/{premisesId}/space-bookings:
+    get:
+      tags:
+        - space bookings
+      summary: Lists space bookings for the premises, given optional filtering criteria
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to show out-of-service beds for
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: residency
+          in: query
+          required: false
+          description: Residency status to filter results on
+          schema:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingResidency'
+        - name: crnOrName
+          in: query
+          required: false
+          description: Partial search on CRN or Name
+          schema:
+            type: string
+        - name: sortDirection
+          in: query
+          required: false
+          description: The direction to sort the results by. If not defined, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: sortBy
+          in: query
+          required: false
+          description: The field to sort the results by. If not defined, will sort on person name
+          schema:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummarySortField'
+        - name: page
+          in: query
+          required: false
+          description: Page number of results to return. If not provided results will not be paged
+          schema:
+            type: integer
+        - name: perPage
+          in: query
+          description: Number of items to return per page (defaults to 20)
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
