@@ -18,6 +18,7 @@ import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -166,7 +167,7 @@ data class PlacementRequestEntity(
 
   val notes: String?,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity?,
 
@@ -174,7 +175,7 @@ data class PlacementRequestEntity(
   @JoinColumn(name = "allocated_to_user_id")
   var allocatedToUser: UserEntity?,
 
-  @OneToMany(mappedBy = "placementRequest")
+  @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var bookingNotMades: MutableList<BookingNotMadeEntity>,
 
   var reallocatedAt: OffsetDateTime?,

@@ -15,6 +15,7 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -108,14 +109,14 @@ data class PlacementApplicationEntity(
    * Supporting multiple dates in a single Placement Application is legacy behaviour. Any new
    * placement application will have one and only one date in this collection
    */
-  @OneToMany(mappedBy = "placementApplication")
+  @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
   var placementDates: MutableList<PlacementDateEntity>,
 
   /**
    * Supporting multiple placements requests in a single Placement Application is legacy behaviour. Any new
    * placement application will have one and only one Placement Request in this collection
    */
-  @OneToMany(mappedBy = "placementApplication")
+  @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
   var placementRequests: MutableList<PlacementRequestEntity>,
 
   @Enumerated(value = EnumType.STRING)
