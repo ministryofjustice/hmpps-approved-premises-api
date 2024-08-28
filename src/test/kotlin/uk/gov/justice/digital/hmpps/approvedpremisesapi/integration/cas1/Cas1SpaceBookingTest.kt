@@ -252,8 +252,8 @@ class Cas1SpaceBookingTest : InitialiseDatabasePerClassTestBase() {
         assertThat(result.bookedBy.id).isEqualTo(user.id)
         assertThat(result.bookedBy.name).isEqualTo(user.name)
         assertThat(result.bookedBy.deliusUsername).isEqualTo(user.deliusUsername)
-        assertThat(result.arrivalDate).isEqualTo(LocalDate.now().plusDays(1))
-        assertThat(result.departureDate).isEqualTo(LocalDate.now().plusDays(8))
+        assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
+        assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
         assertThat(result.createdAt).satisfies(
           { it.isAfter(Instant.now().minusSeconds(10)) },
         )

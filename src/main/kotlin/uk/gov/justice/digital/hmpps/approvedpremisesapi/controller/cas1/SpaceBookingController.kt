@@ -68,4 +68,11 @@ class SpaceBookingController(
       perPage,
     )
   }
+
+  override fun premisesPremisesIdSpaceBookingsBookingIdGet(
+    premisesId: UUID,
+    bookingId: UUID,
+  ): ResponseEntity<Cas1SpaceBooking> {
+    return super.premisesPremisesIdSpaceBookingsBookingIdGet(premisesId, bookingId)
+  }
 }

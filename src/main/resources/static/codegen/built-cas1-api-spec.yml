@@ -536,7 +536,7 @@ paths:
       parameters:
         - name: premisesId
           in: path
-          description: ID of the premises to show out-of-service beds for
+          description: ID of the premises to show space bookings for
           required: true
           schema:
             type: string
@@ -600,6 +600,41 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+
+  /premises/{premisesId}/space-bookings/{bookingId}:
+    get:
+      tags:
+        - space bookings
+      summary: Returns space booking information for a given id
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1SpaceBooking'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
@@ -1491,6 +1526,8 @@ components:
           format: uuid
         person:
           $ref: '#/components/schemas/Person'
+        tier:
+          type: string
         requirements:
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
         premises:
@@ -1499,15 +1536,35 @@ components:
           $ref: '#/components/schemas/NamedId'
         bookedBy:
           $ref: '#/components/schemas/User'
-        arrivalDate:
+        expectedArrivalDate:
           type: string
           format: date
-        departureDate:
+        expectedDepartureDate:
+          type: string
+          format: date
+        actualArrivalDate:
+          type: string
+          format: date
+        actualDepartureDate:
+          type: string
+          format: date
+        canonicalArrivalDate:
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
         createdAt:
           type: string
           format: date-time
+        keyWorker:
+          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+        otherBookingsInPremises:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceBookingDates'
       required:
         - id
         - person
@@ -1515,9 +1572,12 @@ components:
         - premises
         - apArea
         - bookedBy
-        - arrivalDate
-        - departureDate
+        - expectedArrivalDate
+        - expectedDepartureDate
+        - canonicalArrivalDate
+        - canonicalDepartureDate
         - createdAt
+        - otherBookingsInPremises
     Cas1SpaceBookingSummary:
       type: object
       properties:
@@ -1538,12 +1598,41 @@ components:
           description: Risk rating tier level of corresponding application
           type: string
         keyWorker:
-          $ref: '#/components/schemas/StaffMember'
+          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
       required:
         - id
         - person
         - canonicalArrivalDate
         - canonicalDepartureDate
+    Cas1SpaceBookingDates:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        canonicalArrivalDate:
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          description: actual departure date or, if not known, the expected departure date
+          type: string
+          format: date
+      required:
+        - id
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+    Cas1KeyWorkerAllocation:
+      type: object
+      properties:
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+        allocatedAt:
+          type: string
+          format: date
+      required:
+        - keyworker
+        - allocatedAt
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

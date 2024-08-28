@@ -98,8 +98,10 @@ class Cas1SpaceBookingTransformerTest {
     assertThat(result.apArea.id).isEqualTo(spaceBooking.premises.probationRegion.apArea!!.id)
     assertThat(result.apArea.name).isEqualTo(spaceBooking.premises.probationRegion.apArea!!.name)
     assertThat(result.bookedBy).isEqualTo(expectedUser)
-    assertThat(result.arrivalDate).isEqualTo(spaceBooking.arrivalDate)
-    assertThat(result.departureDate).isEqualTo(spaceBooking.departureDate)
+    assertThat(result.expectedArrivalDate).isEqualTo(spaceBooking.arrivalDate)
+    assertThat(result.expectedDepartureDate).isEqualTo(spaceBooking.departureDate)
+    assertThat(result.canonicalArrivalDate).isEqualTo(spaceBooking.arrivalDate)
+    assertThat(result.canonicalDepartureDate).isEqualTo(spaceBooking.departureDate)
     assertThat(result.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
   }
 }
