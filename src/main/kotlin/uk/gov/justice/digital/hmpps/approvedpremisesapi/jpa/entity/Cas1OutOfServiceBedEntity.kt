@@ -18,10 +18,9 @@ import javax.persistence.Table
 
 @Repository
 interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntity, UUID> {
-  @Query(
-    """
-    SELECT
-      CAST(oosb.id AS TEXT)
+
+  companion object {
+    const val OOSB_QUERY = """
     FROM cas1_out_of_service_beds oosb
     INNER JOIN (
       SELECT DISTINCT ON (out_of_service_bed_id)
@@ -57,6 +56,17 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
       (FALSE = :excludeCurrent OR CURRENT_DATE NOT BETWEEN dd.start_date AND dd.end_date) AND
       (FALSE = :excludeFuture OR dd.start_date <= CURRENT_DATE) AND 
       (oosb_cancellations IS NULL)
+    """
+  }
+
+  @Query(
+    """
+    SELECT CAST(oosb.id AS TEXT)
+    $OOSB_QUERY
+    """,
+    countQuery = """
+    SELECT COUNT(1) as count
+    $OOSB_QUERY
     """,
     nativeQuery = true,
   )
