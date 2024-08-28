@@ -323,3 +323,15 @@ components:
       required:
         - keyworker
         - allocatedAt
+    Cas1NewArrival:
+      type: object
+      properties:
+        expectedDepartureDate:
+          type: string
+          format: date
+        arrivalDateTime:
+          type: string
+          format: date-time
+      required:
+        - expectedDepartureDate
+        - arrivalDateTime

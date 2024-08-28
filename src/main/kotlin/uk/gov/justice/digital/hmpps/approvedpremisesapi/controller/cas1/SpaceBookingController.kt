@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
@@ -74,5 +75,13 @@ class SpaceBookingController(
     bookingId: UUID,
   ): ResponseEntity<Cas1SpaceBooking> {
     return super.premisesPremisesIdSpaceBookingsBookingIdGet(premisesId, bookingId)
+  }
+
+  override fun premisesPremisesIdSpaceBookingsBookingIdArrivalPost(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1NewArrival: Cas1NewArrival,
+  ): ResponseEntity<Unit> {
+    return super.premisesPremisesIdSpaceBookingsBookingIdArrivalPost(premisesId, bookingId, cas1NewArrival)
   }
 }
