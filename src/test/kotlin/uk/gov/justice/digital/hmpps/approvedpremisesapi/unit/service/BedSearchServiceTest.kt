@@ -493,6 +493,8 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
       probationDeliveryUnit = "PDU-1",
+      filterBySharedProperty = false,
+      filterBySingleOccupancy = false,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -552,6 +554,8 @@ class BedSearchServiceTest {
         endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnit = "PDU-1",
         probationRegionId = user.probationRegion.id,
+        filterBySharedProperty = false,
+        filterBySingleOccupancy = false,
       )
     } returns repositorySearchResults
 
@@ -564,6 +568,8 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
       probationDeliveryUnit = "PDU-1",
+      filterBySharedProperty = false,
+      filterBySingleOccupancy = false,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -647,6 +653,8 @@ class BedSearchServiceTest {
         endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnit = "PDU-1",
         probationRegionId = user.probationRegion.id,
+        filterBySharedProperty = false,
+        filterBySingleOccupancy = false,
       )
     } returns repositorySearchResults
 
@@ -737,6 +745,8 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
       probationDeliveryUnit = "PDU-1",
+      filterBySharedProperty = false,
+      filterBySingleOccupancy = false,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue

@@ -165,52 +165,68 @@ ORDER BY distance_miles;
     return result ?: emptyList()
   }
 
+  /*
+    The FilteredPremisesIds is to get premises Ids that match the search property attributes criteria
+    In the where condition is checking (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy)
+    another time to include the properties that don't have property attributes
+  */
   private val temporaryAccommodationSearchQuery =
     """
-SELECT p.id as premises_id,
-       p.name as premises_name,
-       p.address_line1 as premises_address_line1,
-       p.address_line2 as premises_address_line2,
-       p.town as premises_town,
-       p.postcode as premises_postcode,
-       c.property_name as premises_characteristic_property_name,
-       c.name as premises_characteristic_name,
-       r.id as room_id,
-       r.name as room_name,
-       c2.property_name as room_characteristic_property_name,
-       (SELECT count(1) FROM beds b2 WHERE b2.room_id IN (SELECT id FROM rooms r2 WHERE r2.premises_id = p.id) AND ( b2.end_date IS NULL OR b2.end_date > :end_date ) ) as premises_bed_count,
-       c2.name as room_characteristic_name,
-       b.id as bed_id,
-       b.name as bed_name
-FROM premises p  
-JOIN temporary_accommodation_premises tap ON tap.premises_id = p.id 
-LEFT JOIN premises_characteristics pc ON p.id = pc.premises_id
-LEFT JOIN characteristics c ON pc.characteristic_id = c.id
-LEFT JOIN rooms r ON r.premises_id = p.id
-LEFT JOIN room_characteristics rc on rc.room_id = r.id
-LEFT JOIN characteristics c2 ON rc.characteristic_id = c2.id
-LEFT JOIN beds b ON b.room_id = r.id
-LEFT JOIN probation_delivery_units pdu on pdu.id = tap.probation_delivery_unit_id
-WHERE
-    (SELECT COUNT(1) FROM bookings books
-         LEFT JOIN cancellations books_cancel ON books_cancel.booking_id = books.id
-     WHERE
-         books.bed_id = b.id AND
-         (books.arrival_date, books.departure_date) OVERLAPS (:start_date, :end_date) AND
-         books_cancel.id IS NULL
-     ) = 0 AND
-    (SELECT COUNT(1) FROM lost_beds lostbeds
-         LEFT JOIN lost_bed_cancellations lostbeds_cancel ON lostbeds_cancel.lost_bed_id = lostbeds.id
-     WHERE
-         lostbeds.bed_id = b.id AND
-         (lostbeds.start_date, lostbeds.end_date) OVERLAPS (:start_date, :end_date) AND
-         lostbeds_cancel.id IS NULL
-     ) = 0 AND 
-    pdu.name = :probation_delivery_unit AND
-    p.probation_region_id = :probation_region_id AND 
-    p.status = 'active' AND 
-    p.service = 'temporary-accommodation' AND
-    (b.end_date IS NULL OR b.end_date > :end_date);
+    WITH FilteredPremisesIds AS
+        (SELECT distinct pc2.premises_id
+             FROM premises_characteristics pc2
+             INNER JOIN characteristics c2 on pc2.characteristic_id = c2.id
+             INNER JOIN premises p2 ON pc2.premises_id = p2.id
+             WHERE service_scope = 'temporary-accommodation'
+                      AND p2.probation_region_id = :probation_region_id 
+                      AND (c2.is_active = true AND c2.name = 'Single occupancy' OR FALSE = :filter_by_single_occupancy)
+                      AND (c2.is_active = true AND c2.name = 'Shared property' OR FALSE = :filter_by_shared_property))
+                             
+    SELECT p.id as premises_id,
+           p.name as premises_name,
+           p.address_line1 as premises_address_line1,
+           p.address_line2 as premises_address_line2,
+           p.town as premises_town,
+           p.postcode as premises_postcode,
+           c.property_name as premises_characteristic_property_name,
+           c.name as premises_characteristic_name,
+           r.id as room_id,
+           r.name as room_name,
+           c2.property_name as room_characteristic_property_name,
+           (SELECT count(1) FROM beds b2 WHERE b2.room_id IN (SELECT id FROM rooms r2 WHERE r2.premises_id = p.id) AND ( b2.end_date IS NULL OR b2.end_date > :end_date ) ) as premises_bed_count,
+           c2.name as room_characteristic_name,
+           b.id as bed_id,
+           b.name as bed_name
+    FROM premises p  
+    JOIN temporary_accommodation_premises tap ON tap.premises_id = p.id
+    LEFT JOIN premises_characteristics pc ON p.id = pc.premises_id
+    LEFT JOIN characteristics c ON pc.characteristic_id = c.id
+    LEFT JOIN rooms r ON r.premises_id = p.id
+    LEFT JOIN room_characteristics rc on rc.room_id = r.id
+    LEFT JOIN characteristics c2 ON rc.characteristic_id = c2.id
+    LEFT JOIN beds b ON b.room_id = r.id
+    LEFT JOIN probation_delivery_units pdu on pdu.id = tap.probation_delivery_unit_id
+    WHERE
+        NOT EXISTS (SELECT books.bed_id FROM bookings books
+             LEFT JOIN cancellations books_cancel ON books_cancel.booking_id = books.id
+         WHERE
+             books.bed_id = b.id AND
+             (books.arrival_date, books.departure_date) OVERLAPS (:start_date, :end_date) AND
+             books_cancel.id IS NULL
+        ) AND
+        NOT EXISTS (SELECT lostbeds.bed_id FROM lost_beds lostbeds
+             LEFT JOIN lost_bed_cancellations lostbeds_cancel ON lostbeds_cancel.lost_bed_id = lostbeds.id
+         WHERE
+             lostbeds.bed_id = b.id AND
+             (lostbeds.start_date, lostbeds.end_date) OVERLAPS (:start_date, :end_date) AND
+             lostbeds_cancel.id IS NULL
+        ) AND 
+        (p.id in (SELECT premises_id FROM FilteredPremisesIds) OR (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy)) AND
+        pdu.name = :probation_delivery_unit AND
+        p.probation_region_id = :probation_region_id AND 
+        p.status = 'active' AND 
+        p.service = 'temporary-accommodation' AND
+        (b.end_date IS NULL OR b.end_date > :end_date);
 """
 
   fun findTemporaryAccommodationBeds(
@@ -218,12 +234,16 @@ WHERE
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID,
+    filterBySharedProperty: Boolean,
+    filterBySingleOccupancy: Boolean,
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
       addValue("probation_delivery_unit", probationDeliveryUnit)
       addValue("start_date", startDate)
       addValue("end_date", endDate)
+      addValue("filter_by_shared_property", filterBySharedProperty)
+      addValue("filter_by_single_occupancy", filterBySingleOccupancy)
     }
 
     val result = namedParameterJdbcTemplate.query(

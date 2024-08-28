@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -29,6 +30,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
   private var turnaroundWorkingDayCount: Yielded<Int>? = null
+  private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -94,8 +96,8 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.turnaroundWorkingDayCount = { turnaroundWorkingDayCount }
   }
 
-  fun withYieldedRooms(probationRegion: Yielded<ProbationRegionEntity>) = apply {
-    this.probationRegion = probationRegion
+  fun withCharacteristics(characteristics: MutableList<CharacteristicEntity>) = apply {
+    this.characteristics = { characteristics }
   }
 
   fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {
@@ -133,7 +135,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     notes = this.notes(),
     emailAddress = this.emailAddress(),
     rooms = mutableListOf(),
-    characteristics = mutableListOf(),
+    characteristics = this.characteristics(),
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
     turnaroundWorkingDayCount = this.turnaroundWorkingDayCount?.invoke() ?: 2,
