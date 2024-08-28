@@ -14,7 +14,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/Cas1SpaceSearchParameters'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceSearchParameters'
         required: true
       responses:
         200:
@@ -22,7 +22,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas1SpaceSearchResults'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceSearchResults'
         400:
           description: invalid params
           content:
@@ -53,7 +53,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/NewCas1SpaceBooking'
+              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1SpaceBooking'
         required: true
       responses:
         200:
@@ -61,7 +61,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas1SpaceBooking'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBooking'
         400:
           description: invalid params
           content:
@@ -582,7 +582,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummary'
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBookingSummary'
           headers:
             X-Pagination-CurrentPage:
               $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
@@ -625,7 +625,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas1SpaceBooking'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBooking'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
