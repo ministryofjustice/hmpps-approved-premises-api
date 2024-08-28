@@ -4,14 +4,17 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
@@ -19,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.util.UUID
 
@@ -176,17 +180,22 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .produce()
+
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
+        .withApplication(application)
         .produce()
 
       val user = UserEntityFactory()
         .withDefaults()
         .produce()
 
-      val startDate = LocalDate.now()
+      val arrivalDate = LocalDate.now()
       val durationInDays = 1
-      val departureDate = startDate.plusDays(durationInDays.toLong())
+      val departureDate = arrivalDate.plusDays(durationInDays.toLong())
 
       val spaceAvailability = SpaceAvailability(
         premisesId = premises.id,
@@ -197,15 +206,16 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns null
 
       every {
-        spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), startDate, durationInDays)
+        spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
       } returns listOf(spaceAvailability)
 
-      every { spaceBookingRepository.save(any()) } returnsArgument 0
+      val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
 
       val result = service.createNewBooking(
         premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = startDate,
+        arrivalDate = arrivalDate,
         departureDate = departureDate,
         createdBy = user,
       )
@@ -213,10 +223,20 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
       result as ValidatableActionResult.Success
 
-      assertThat(result.entity.premises).isEqualTo(premises)
-      assertThat(result.entity.placementRequest).isEqualTo(placementRequest)
-      assertThat(result.entity.arrivalDate).isEqualTo(startDate)
-      assertThat(result.entity.departureDate).isEqualTo(departureDate)
+      val persistedBooking = persistedBookingCaptor.captured
+      assertThat(persistedBooking.premises).isEqualTo(premises)
+      assertThat(persistedBooking.placementRequest).isEqualTo(placementRequest)
+      assertThat(persistedBooking.createdAt).isWithinTheLastMinute()
+      assertThat(persistedBooking.createdBy).isEqualTo(user)
+      assertThat(persistedBooking.expectedArrivalDate).isEqualTo(arrivalDate)
+      assertThat(persistedBooking.expectedDepartureDate).isEqualTo(departureDate)
+      assertThat(persistedBooking.actualArrivalDateTime).isNull()
+      assertThat(persistedBooking.actualDepartureDateTime).isNull()
+      assertThat(persistedBooking.canonicalArrivalDate).isEqualTo(arrivalDate)
+      assertThat(persistedBooking.canonicalDepartureDate).isEqualTo(departureDate)
+      assertThat(persistedBooking.crn).isEqualTo(application.crn)
+      assertThat(persistedBooking.keyWorkerStaffCode).isNull()
+      assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
     }
   }
 }
