@@ -61,6 +61,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -114,6 +116,7 @@ class AssessmentServiceTest {
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val assessmentListener = mockk<AssessmentListener>()
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
+  private val lockableAssessmentRepository = mockk<LockableAssessmentRepository>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -138,6 +141,7 @@ class AssessmentServiceTest {
     assessmentListener,
     assessmentClarificationNoteListener,
     Clock.systemDefaultZone(),
+    lockableAssessmentRepository,
   )
 
   @Test
@@ -1839,6 +1843,7 @@ class AssessmentServiceTest {
         submittedAt = OffsetDateTime.now()
       }
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
@@ -1857,6 +1862,7 @@ class AssessmentServiceTest {
         roles = mutableListOf()
       }
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
@@ -1879,6 +1885,7 @@ class AssessmentServiceTest {
         this.isWithdrawn = true
       }
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
@@ -1918,6 +1925,7 @@ class AssessmentServiceTest {
         apType = ApprovedPremisesType.PIPE
       }
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
@@ -1936,6 +1944,7 @@ class AssessmentServiceTest {
         reallocatedAt = OffsetDateTime.now()
       }
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
@@ -1978,6 +1987,7 @@ class AssessmentServiceTest {
             .produce()
         }.produce()
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -2066,6 +2076,7 @@ class AssessmentServiceTest {
             .produce()
         }.produce()
 
+      every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
       every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -2154,6 +2165,8 @@ class AssessmentServiceTest {
       )
       .produce()
 
+    every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity((previousAssessment.id))
+
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
     val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
@@ -2200,6 +2213,7 @@ class AssessmentServiceTest {
       )
       .produce()
 
+    every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
     every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntity(
@@ -2371,6 +2385,7 @@ class AssessmentServiceTest {
       assessmentListener,
       assessmentClarificationNoteListener,
       Clock.systemDefaultZone(),
+      lockableAssessmentRepository,
     )
 
     private val user = UserEntityFactory()
