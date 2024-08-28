@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.ConvictionDocuments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
@@ -38,31 +40,36 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
 
-        val groupedDocuments = GroupedDocumentsFactory()
-          .withOffenderLevelDocument(
-            DocumentFactory()
-              .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
-              .withDocumentName("offender_level_doc.pdf")
-              .withTypeCode("TYPE-1")
-              .withTypeDescription("Type 1 Description")
-              .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
-              .withExtendedDescription("Extended Description 1")
-              .produce(),
-          )
-          .withConvictionLevelDocument(
-            "12345",
-            DocumentFactory()
-              .withId("457af8a5-82b1-449a-ad03-032b39435865")
-              .withDocumentName("conviction_level_doc.pdf")
-              .withTypeCode("TYPE-2")
-              .withTypeDescription("Type 2 Description")
-              .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-              .withExtendedDescription("Extended Description 2")
-              .produce(),
-          )
-          .produce()
+        val offenderDocument =
+          DocumentFactory()
+            .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
+            .withDocumentName("offender_level_doc.pdf")
+            .withTypeCode("TYPE-1")
+            .withTypeDescription("Type 1 Description")
+            .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
+            .withExtendedDescription("Extended Description 1")
+            .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        val convictionDocuments =
+          ConvictionDocuments(
+            "12345",
+            listOf(
+              DocumentFactory()
+                .withId("457af8a5-82b1-449a-ad03-032b39435865")
+                .withDocumentName("conviction_level_doc.pdf")
+                .withTypeCode("TYPE-2")
+                .withTypeDescription("Type 2 Description")
+                .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
+                .withExtendedDescription("Extended Description 2")
+                .produce(),
+            ),
+          )
+
+        val offenderAndConvictionDocuments = GroupedDocuments(listOf(offenderDocument), listOf(convictionDocuments))
+
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, offenderAndConvictionDocuments)
+
+        val convictionOnlyDocuments = GroupedDocuments(emptyList(), listOf(convictionDocuments))
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -73,7 +80,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApiUnfiltered(groupedDocuments),
+              documentTransformer.transformToApi(convictionOnlyDocuments, onlyConvictionDocuments = true),
             ),
           )
       }
@@ -128,7 +135,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApiUnfiltered(groupedDocuments),
+              documentTransformer.transformToApi(groupedDocuments, onlyConvictionDocuments = false),
             ),
           )
       }

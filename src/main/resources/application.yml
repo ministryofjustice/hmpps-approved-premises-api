@@ -283,4 +283,5 @@ reports:
 
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
+  cas1_only_list_conviction_documents: false
   use-ap-and-delius-to-update-users: true

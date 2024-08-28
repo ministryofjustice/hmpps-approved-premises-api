@@ -215,3 +215,4 @@ logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 
 feature-flags:
   cas1-appeal-manager-can-assess-applications: true
+  cas1_only_list_conviction_documents: true
