@@ -3591,12 +3591,6 @@ paths:
             type: array
             items:
               $ref: "_shared.yml#/components/schemas/AssessmentStatus"
-        - name: crn
-          in: query
-          description: If provided, return only results for the given CRN
-          required: false
-          schema:
-            type: string
         - name: crnOrName
           in: query
           description: Filters results using an exact match or CRN, or partial match on name
