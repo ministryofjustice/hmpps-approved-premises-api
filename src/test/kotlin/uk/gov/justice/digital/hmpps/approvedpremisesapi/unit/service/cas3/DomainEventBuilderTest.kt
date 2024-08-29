@@ -20,8 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventBuilder
@@ -33,52 +38,30 @@ import java.util.UUID
 
 @SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventBuilderTest {
-  private val domainEventBuilder = DomainEventBuilder(
-    applicationUrlTemplate = "http://api/applications/#applicationId",
-    bookingUrlTemplate = "http://api/premises/#premisesId/bookings/#bookingId",
-  )
+  private val domainEventBuilder =
+    DomainEventBuilder(
+      applicationUrlTemplate = "http://api/applications/#applicationId",
+      bookingUrlTemplate = "http://api/premises/#premisesId/bookings/#bookingId",
+    )
 
   @Test
   fun `getBookingCancelledDomainEvent transforms the booking information correctly`() {
     val cancellationReasonName = "Some cancellation reason"
     val cancellationNotes = "Some notes about the cancellation"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    val cancellationReason = CancellationReasonEntityFactory()
-      .withName(cancellationReasonName)
-      .produce()
+    val cancellationReason = cancellationReasonEntity(cancellationReasonName)
 
-    booking.cancellations += CancellationEntityFactory()
-      .withBooking(booking)
-      .withReason(cancellationReason)
-      .withNotes(cancellationNotes)
-      .produce()
+    booking.cancellations += cancellationEntity(booking, cancellationReason, cancellationNotes)
 
     val event = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
@@ -110,42 +93,19 @@ class DomainEventBuilderTest {
     val cancellationReasonName = "Some cancellation reason"
     val cancellationNotes = "Some notes about the cancellation"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    val cancellationReason = CancellationReasonEntityFactory()
-      .withName(cancellationReasonName)
-      .produce()
+    val cancellationReason = cancellationReasonEntity(cancellationReasonName)
 
-    booking.cancellations += CancellationEntityFactory()
-      .withBooking(booking)
-      .withReason(cancellationReason)
-      .withNotes(cancellationNotes)
-      .produce()
+    booking.cancellations += cancellationEntity(booking, cancellationReason, cancellationNotes)
 
     val event = domainEventBuilder.getBookingCancelledDomainEvent(booking, null)
 
@@ -174,33 +134,20 @@ class DomainEventBuilderTest {
   fun `getBookingConfirmedDomainEvent transforms the booking information correctly`() {
     val expectedArrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
-      .produce()
+    val booking =
+      BookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(application)
+        .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
+        .produce()
 
     val event = domainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
 
@@ -230,33 +177,20 @@ class DomainEventBuilderTest {
   fun `getBookingProvisionallyMadeDomainEvent transforms the booking information correctly`() {
     val expectedArrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
-      .produce()
+    val booking =
+      BookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(application)
+        .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
+        .produce()
 
     val event = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
@@ -288,39 +222,17 @@ class DomainEventBuilderTest {
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
     val notes = "Some notes about the arrival"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    booking.arrivals += ArrivalEntityFactory()
-      .withBooking(booking)
-      .withArrivalDateTime(arrivalDateTime)
-      .withExpectedDepartureDate(expectedDepartureDate)
-      .withNotes(notes)
-      .produce()
+    booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
     val event = domainEventBuilder.getPersonArrivedDomainEvent(booking, user)
 
@@ -359,39 +271,17 @@ class DomainEventBuilderTest {
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
     val notes = "Some notes about the arrival"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    booking.arrivals += ArrivalEntityFactory()
-      .withBooking(booking)
-      .withArrivalDateTime(arrivalDateTime)
-      .withExpectedDepartureDate(expectedDepartureDate)
-      .withNotes(notes)
-      .produce()
+    booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
     val event = domainEventBuilder.getPersonArrivedDomainEvent(booking, null)
 
@@ -423,49 +313,21 @@ class DomainEventBuilderTest {
     val moveOnCategoryDescription = "Returned to custody"
     val moveOnCategoryLabel = "RTC"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    val reason = DepartureReasonEntityFactory()
-      .withName(reasonName)
-      .produce()
+    val reason = departureReasonEntity(reasonName)
 
-    val moveOnCategory = MoveOnCategoryEntityFactory()
-      .withName(moveOnCategoryDescription)
-      .withLegacyDeliusCategoryCode(moveOnCategoryLabel)
-      .produce()
+    val moveOnCategory = moveOnCategoryEntity(moveOnCategoryDescription, moveOnCategoryLabel)
 
-    booking.departures += DepartureEntityFactory()
-      .withBooking(booking)
-      .withDateTime(departureDateTime)
-      .withReason(reason)
-      .withMoveOnCategory(moveOnCategory)
-      .withNotes(notes)
-      .produce()
+    booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
 
     val event = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
@@ -504,49 +366,21 @@ class DomainEventBuilderTest {
     val moveOnCategoryDescription = "Returned to custody"
     val moveOnCategoryLabel = "RTC"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    val reason = DepartureReasonEntityFactory()
-      .withName(reasonName)
-      .produce()
+    val reason = departureReasonEntity(reasonName)
 
-    val moveOnCategory = MoveOnCategoryEntityFactory()
-      .withName(moveOnCategoryDescription)
-      .withLegacyDeliusCategoryCode(moveOnCategoryLabel)
-      .produce()
+    val moveOnCategory = moveOnCategoryEntity(moveOnCategoryDescription, moveOnCategoryLabel)
 
-    booking.departures += DepartureEntityFactory()
-      .withBooking(booking)
-      .withDateTime(departureDateTime)
-      .withReason(reason)
-      .withMoveOnCategory(moveOnCategory)
-      .withNotes(notes)
-      .produce()
+    booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
 
     val event = domainEventBuilder.getPersonDepartedDomainEvent(booking, null)
 
@@ -572,20 +406,11 @@ class DomainEventBuilderTest {
 
   @Test
   fun `getReferralSubmittedDomainEvent transforms the application correctly`() {
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
     val event = domainEventBuilder.getReferralSubmittedDomainEvent(application)
 
@@ -612,49 +437,21 @@ class DomainEventBuilderTest {
     val moveOnCategoryDescription = "Returned to custody"
     val moveOnCategoryLabel = "RTC"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    val reason = DepartureReasonEntityFactory()
-      .withName(reasonName)
-      .produce()
+    val reason = departureReasonEntity(reasonName)
 
-    val moveOnCategory = MoveOnCategoryEntityFactory()
-      .withName(moveOnCategoryDescription)
-      .withLegacyDeliusCategoryCode(moveOnCategoryLabel)
-      .produce()
+    val moveOnCategory = moveOnCategoryEntity(moveOnCategoryDescription, moveOnCategoryLabel)
 
-    booking.departures += DepartureEntityFactory()
-      .withBooking(booking)
-      .withDateTime(departureDateTime)
-      .withReason(reason)
-      .withMoveOnCategory(moveOnCategory)
-      .withNotes(notes)
-      .produce()
+    booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
 
     val event = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
@@ -675,42 +472,19 @@ class DomainEventBuilderTest {
     val cancellationReasonName = "Some cancellation reason"
     val cancellationNotes = "Some notes about the cancellation"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    val cancellationReason = CancellationReasonEntityFactory()
-      .withName(cancellationReasonName)
-      .produce()
+    val cancellationReason = cancellationReasonEntity(cancellationReasonName)
 
-    booking.cancellations += CancellationEntityFactory()
-      .withBooking(booking)
-      .withReason(cancellationReason)
-      .withNotes(cancellationNotes)
-      .produce()
+    booking.cancellations += cancellationEntity(booking, cancellationReason, cancellationNotes)
 
     val event = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
@@ -740,39 +514,17 @@ class DomainEventBuilderTest {
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
     val notes = "Some notes about the arrival"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    booking.arrivals += ArrivalEntityFactory()
-      .withBooking(booking)
-      .withArrivalDateTime(arrivalDateTime)
-      .withExpectedDepartureDate(expectedDepartureDate)
-      .withNotes(notes)
-      .produce()
+    booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
     val event = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
 
@@ -804,39 +556,17 @@ class DomainEventBuilderTest {
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
     val notes = "Some notes about the arrival"
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      )
-      .produce()
+    val probationRegion = probationRegionEntity()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      )
-      .produce()
+    val premises = temporaryAccommodationPremisesEntity(probationRegion)
 
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+    val user = userEntity(probationRegion)
 
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withApplication(application)
-      .produce()
+    val booking = bookingEntity(premises, application)
 
-    booking.arrivals += ArrivalEntityFactory()
-      .withBooking(booking)
-      .withArrivalDateTime(arrivalDateTime)
-      .withExpectedDepartureDate(expectedDepartureDate)
-      .withNotes(notes)
-      .produce()
+    booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
     val event = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, null)
 
@@ -861,6 +591,94 @@ class DomainEventBuilderTest {
     }
   }
 
+  private fun departureEntity(
+    booking: BookingEntity,
+    departureDateTime: OffsetDateTime,
+    reason: DepartureReasonEntity,
+    moveOnCategory: MoveOnCategoryEntity,
+    notes: String,
+  ) = DepartureEntityFactory()
+    .withBooking(booking)
+    .withDateTime(departureDateTime)
+    .withReason(reason)
+    .withMoveOnCategory(moveOnCategory)
+    .withNotes(notes)
+    .produce()
+
+  private fun moveOnCategoryEntity(
+    moveOnCategoryDescription: String,
+    moveOnCategoryLabel: String,
+  ) = MoveOnCategoryEntityFactory()
+    .withName(moveOnCategoryDescription)
+    .withLegacyDeliusCategoryCode(moveOnCategoryLabel)
+    .produce()
+
+  private fun departureReasonEntity(reasonName: String) =
+    DepartureReasonEntityFactory()
+      .withName(reasonName)
+      .produce()
+
+  private fun arrivalEntity(
+    booking: BookingEntity,
+    arrivalDateTime: Instant,
+    expectedDepartureDate: LocalDate,
+    notes: String,
+  ) = ArrivalEntityFactory()
+    .withBooking(booking)
+    .withArrivalDateTime(arrivalDateTime)
+    .withExpectedDepartureDate(expectedDepartureDate)
+    .withNotes(notes)
+    .produce()
+
+  private fun bookingEntity(
+    premises: TemporaryAccommodationPremisesEntity,
+    application: TemporaryAccommodationApplicationEntity,
+  ) = BookingEntityFactory()
+    .withPremises(premises)
+    .withApplication(application)
+    .produce()
+
+  private fun temporaryAccommodationApplicationEntity(
+    user: UserEntity,
+    probationRegion: ProbationRegionEntity,
+  ) = TemporaryAccommodationApplicationEntityFactory()
+    .withCreatedByUser(user)
+    .withProbationRegion(probationRegion)
+    .produce()
+
+  private fun userEntity(probationRegion: ProbationRegionEntity) =
+    UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+  private fun temporaryAccommodationPremisesEntity(probationRegion: ProbationRegionEntity) =
+    TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(probationRegion)
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory().produce(),
+      ).produce()
+
+  private fun probationRegionEntity() =
+    ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      ).produce()
+
+  private fun cancellationReasonEntity(cancellationReasonName: String) =
+    CancellationReasonEntityFactory()
+      .withName(cancellationReasonName)
+      .produce()
+
+  private fun cancellationEntity(
+    booking: BookingEntity,
+    cancellationReason: CancellationReasonEntity,
+    cancellationNotes: String,
+  ) = CancellationEntityFactory()
+    .withBooking(booking)
+    .withReason(cancellationReason)
+    .withNotes(cancellationNotes)
+    .produce()
+
   private fun assertCAS3PersonArrivedUpdatedEventPremisesEventData(
     eventData: DomainEvent<CAS3PersonArrivedUpdatedEvent>,
     premises: PremisesEntity,
@@ -873,11 +691,13 @@ class DomainEventBuilderTest {
       data.premises.region == premises.probationRegion.name
   }
 
-  private fun assertStaffDetails(staffMember: StaffMember?, user: UserEntity?): Boolean {
-    return staffMember!!.staffCode == user!!.deliusStaffCode &&
-      staffMember!!.username == user.deliusUsername &&
-      staffMember!!.probationRegionCode == user.probationRegion.deliusCode
-  }
+  private fun assertStaffDetails(
+    staffMember: StaffMember?,
+    user: UserEntity?,
+  ): Boolean =
+    staffMember!!.staffCode == user!!.deliusStaffCode &&
+      staffMember.username == user.deliusUsername &&
+      staffMember.probationRegionCode == user.probationRegion.deliusCode
 
   private fun assertBookingEventData(
     eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
