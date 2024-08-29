@@ -25,6 +25,7 @@ class ValidatedScope<EntityType> {
   infix fun UUID.hasConflictError(message: String) = ValidatableActionResult.ConflictError<EntityType>(this, message)
 }
 
+@Deprecated("Use of ValidatableActionResult is deprecated. Callers should use CasResult and validatedCasResult", ReplaceWith("validatedCasResult"))
 inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> ValidatableActionResult<EntityType>): ValidatableActionResult<EntityType> {
   return scope(ValidatedScope())
 }

@@ -8,12 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 
+@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableActionResult<EntityType>) = when (result) {
   is AuthorisableActionResult.Success -> result.entity
   is AuthorisableActionResult.NotFound -> throw NotFoundProblem(result.id.toString(), result.entityType.toString())
   is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
 }
 
+@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableActionResult<EntityType>) = when (result) {
   is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
   is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
@@ -21,18 +23,17 @@ fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableAct
   is ValidatableActionResult.Success -> result.entity
 }
 
+@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>) {
   extractEntityFromNestedAuthorisableValidatableActionResult(result)
 }
 
-fun <EntityType> ensureEntityFromAuthorisableActionResultIsSuccess(result: AuthorisableActionResult<EntityType>) {
-  extractEntityFromAuthorisableActionResult(result)
-}
-
+@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> ensureEntityFromValidatableActionResultIsSuccess(result: ValidatableActionResult<EntityType>) {
   extractEntityFromValidatableActionResult(result)
 }
 
+@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> extractEntityFromNestedAuthorisableValidatableActionResult(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>): EntityType {
   val validatableResult = extractEntityFromAuthorisableActionResult(result)
   return extractEntityFromValidatableActionResult(validatableResult)
