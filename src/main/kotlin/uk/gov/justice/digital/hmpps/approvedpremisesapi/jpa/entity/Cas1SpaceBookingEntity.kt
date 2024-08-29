@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -32,6 +33,13 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdBy: UserEntity,
   val createdAt: OffsetDateTime,
-  val arrivalDate: LocalDate,
-  val departureDate: LocalDate,
+  val expectedArrivalDate: LocalDate,
+  val expectedDepartureDate: LocalDate,
+  val actualArrivalDateTime: Instant?,
+  val actualDepartureDateTime: Instant?,
+  val canonicalArrivalDate: LocalDate,
+  val canonicalDepartureDate: LocalDate,
+  val crn: String,
+  val keyWorkerStaffCode: String?,
+  val keyWorkerAssignedAt: Instant?,
 )

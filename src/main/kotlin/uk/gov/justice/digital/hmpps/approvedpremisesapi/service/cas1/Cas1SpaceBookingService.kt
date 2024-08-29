@@ -65,8 +65,15 @@ class Cas1SpaceBookingService(
         placementRequest = placementRequest,
         createdBy = createdBy,
         createdAt = OffsetDateTime.now(),
-        arrivalDate = arrivalDate,
-        departureDate = departureDate,
+        expectedArrivalDate = arrivalDate,
+        expectedDepartureDate = departureDate,
+        actualArrivalDateTime = null,
+        actualDepartureDateTime = null,
+        canonicalArrivalDate = arrivalDate,
+        canonicalDepartureDate = departureDate,
+        crn = placementRequest.application.crn,
+        keyWorkerStaffCode = null,
+        keyWorkerAssignedAt = null,
       ),
     )
 

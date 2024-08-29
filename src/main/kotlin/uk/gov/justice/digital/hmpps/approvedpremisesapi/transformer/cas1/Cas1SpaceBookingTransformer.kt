@@ -30,15 +30,15 @@ class Cas1SpaceBookingTransformer(
       )
     },
     bookedBy = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),
-    expectedArrivalDate = jpa.arrivalDate,
-    expectedDepartureDate = jpa.departureDate,
+    expectedArrivalDate = jpa.expectedArrivalDate,
+    expectedDepartureDate = jpa.expectedDepartureDate,
     createdAt = jpa.createdAt.toInstant(),
     tier = null,
     keyWorker = null,
     actualDepartureDate = null,
     actualArrivalDate = null,
-    canonicalArrivalDate = jpa.arrivalDate,
-    canonicalDepartureDate = jpa.departureDate,
+    canonicalArrivalDate = jpa.canonicalArrivalDate,
+    canonicalDepartureDate = jpa.canonicalDepartureDate,
     otherBookingsInPremises = listOf(),
   )
 }

@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -18,6 +19,13 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now() }
   private var departureDate: Yielded<LocalDate> = { LocalDate.now() }
+  private val actualArrivalDateTime = { null }
+  private val actualDepartureDateTime = { null }
+  private val canonicalArrivalDate = { LocalDate.now() }
+  private val canonicalDepartureDate = { LocalDate.now() }
+  private val crn = { randomStringUpperCase(6) }
+  private val keyWorkerStaffCode = { null }
+  private val keyWorkerAssignedAt = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -77,7 +85,15 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     placementRequest = this.placementRequest(),
     createdBy = this.createdBy(),
     createdAt = this.createdAt(),
-    arrivalDate = this.arrivalDate(),
-    departureDate = this.departureDate(),
+    expectedArrivalDate = this.arrivalDate(),
+    expectedDepartureDate = this.departureDate(),
+    actualArrivalDateTime = this.actualArrivalDateTime(),
+    actualDepartureDateTime = this.actualDepartureDateTime(),
+    canonicalArrivalDate = this.canonicalArrivalDate(),
+    canonicalDepartureDate = this.canonicalDepartureDate(),
+    crn = this.crn(),
+    keyWorkerStaffCode = this.keyWorkerStaffCode(),
+    keyWorkerAssignedAt = this.keyWorkerAssignedAt(),
+
   )
 }
