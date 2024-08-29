@@ -3,12 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 import com.amazonaws.services.sns.model.InternalErrorException
 import com.amazonaws.services.sns.model.PublishResult
 import io.mockk.every
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledUpdatedEvent
@@ -45,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventServiceConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -52,12 +57,26 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@ExtendWith(MockKExtension::class)
 @SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventServiceTest {
-  private val domainEventRepositoryMock = mockk<DomainEventRepository>()
-  private val domainEventBuilderMock = mockk<DomainEventBuilder>()
-  private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
-  private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
+  @MockK
+  lateinit var domainEventRepositoryMock: DomainEventRepository
+
+  @MockK
+  lateinit var domainEventBuilderMock: DomainEventBuilder
+
+  @MockK
+  lateinit var hmppsQueueServiceMock: HmppsQueueService
+
+  @MockK
+  lateinit var mockDomainEventUrlConfig: DomainEventUrlConfig
+
+  @MockK
+  lateinit var domainEventServiceConfig: DomainEventServiceConfig
+
+  @InjectMockKs
+  private lateinit var domainEventService: DomainEventService
 
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
@@ -71,22 +90,11 @@ class DomainEventServiceTest {
 
   private val detailUrl = "http://example.com/123"
 
-  private val domainEventService = buildService(emitDomainEventsEnabled = EventType.entries)
-  private val domainEventServiceEmittingDisabled = buildService(emitDomainEventsEnabled = listOf())
-
   @BeforeEach
   fun setup() {
+    every { domainEventServiceConfig.emitForEvent(any()) } returns true
     every { mockDomainEventUrlConfig.getUrlForDomainEventId(any(), any()) } returns detailUrl
   }
-
-  private fun buildService(emitDomainEventsEnabled: List<EventType>) = DomainEventService(
-    objectMapper = objectMapper,
-    domainEventRepository = domainEventRepositoryMock,
-    domainEventBuilder = domainEventBuilderMock,
-    hmppsQueueService = hmppsQueueServiceMock,
-    emitDomainEventsEnabled = emitDomainEventsEnabled,
-    mockDomainEventUrlConfig,
-  )
 
   @Test
   fun `getBookingCancelledEvent returns null when event does not exist`() {
@@ -281,7 +289,8 @@ class DomainEventServiceTest {
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.saveBookingCancelledEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.saveBookingCancelledEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -550,7 +559,8 @@ class DomainEventServiceTest {
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.saveBookingConfirmedEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.saveBookingConfirmedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -825,7 +835,8 @@ class DomainEventServiceTest {
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.saveBookingProvisionallyMadeEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.saveBookingProvisionallyMadeEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1100,7 +1111,8 @@ class DomainEventServiceTest {
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.savePersonArrivedEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.savePersonArrivedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1333,7 +1345,8 @@ class DomainEventServiceTest {
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.savePersonDepartedEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.savePersonDepartedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1588,7 +1601,8 @@ class DomainEventServiceTest {
       .withProbationRegion(probationRegion)
       .produce()
 
-    domainEventServiceEmittingDisabled.saveReferralSubmittedEvent(applicationEntity)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.saveReferralSubmittedEvent(applicationEntity)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1882,7 +1896,8 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.buildDepartureUpdatedDomainEvent(any(), user) } returns domainEventToSave
 
-    domainEventServiceEmittingDisabled.savePersonDepartureUpdatedEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.savePersonDepartureUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2028,7 +2043,8 @@ class DomainEventServiceTest {
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
     every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
 
-    domainEventServiceEmittingDisabled.saveBookingCancelledUpdatedEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2204,7 +2220,8 @@ class DomainEventServiceTest {
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    domainEventServiceEmittingDisabled.savePersonArrivedUpdatedEvent(bookingEntity, user)
+    every { domainEventServiceConfig.emitForEvent(any()) } returns false
+    domainEventService.savePersonArrivedUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(

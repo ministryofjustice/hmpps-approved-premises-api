@@ -38,15 +38,20 @@ import java.util.UUID
 import javax.transaction.Transactional
 import kotlin.reflect.KClass
 
-@Service(
-  "uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService",
-)
+@Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventServiceConfig")
+class DomainEventServiceConfig(
+  @Value("\${domain-events.cas3.emit-enabled}") val domainEventsWithEmitEnabled: List<EventType>,
+) {
+  fun emitForEvent(eventType: EventType) = domainEventsWithEmitEnabled.contains(eventType)
+}
+
+@Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService")
 class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   private val domainEventBuilder: DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
-  @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: List<EventType>,
+  private val domainEventServiceConfig: DomainEventServiceConfig,
   private val domainEventUrlConfig: DomainEventUrlConfig,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -210,7 +215,7 @@ class DomainEventService(
       ),
     )
 
-    if (emitDomainEventsEnabled.contains(domainEvent.data.eventType)) {
+    if (domainEventServiceConfig.emitForEvent(domainEvent.data.eventType)) {
       val personReferenceIdentifiers = when (nomsNumber) {
         null -> listOf(
           SnsEventPersonReference("CRN", crn),
