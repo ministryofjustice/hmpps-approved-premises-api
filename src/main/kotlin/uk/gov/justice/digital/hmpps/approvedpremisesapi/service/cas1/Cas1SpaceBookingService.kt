@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import java.time.LocalDate
@@ -28,7 +28,7 @@ class Cas1SpaceBookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     createdBy: UserEntity,
-  ): ValidatableActionResult<Cas1SpaceBookingEntity> = validated {
+  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
     val premises = premisesService.getPremises(premisesId) as? ApprovedPremisesEntity
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
