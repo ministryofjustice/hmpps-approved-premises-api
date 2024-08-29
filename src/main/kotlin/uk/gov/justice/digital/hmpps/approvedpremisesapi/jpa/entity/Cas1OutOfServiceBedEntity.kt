@@ -88,16 +88,15 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
       CAST(oosb.id AS TEXT)
     FROM cas1_out_of_service_beds oosb
     INNER JOIN (
-      SELECT
-        out_of_service_bed_id,
-        MAX(created_at) AS max_created_at
+      SELECT DISTINCT ON (out_of_service_bed_id)
+         out_of_service_bed_id,
+         start_date,
+         end_date,
+         created_at as max_created_at
       FROM cas1_out_of_service_bed_revisions
-      WHERE
-        start_date <= :endDate AND
-        end_date >= :startDate
-      GROUP BY out_of_service_bed_id
-    ) d
-    ON oosb.id = d.out_of_service_bed_id
+      ORDER BY out_of_service_bed_id, created_at DESC      
+    ) latest_revision
+    ON oosb.id = latest_revision.out_of_service_bed_id
     LEFT JOIN cas1_out_of_service_bed_cancellations c
     ON oosb.id = c.out_of_service_bed_id
     LEFT JOIN beds b
@@ -105,6 +104,8 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     WHERE
       b.id = :bedId AND
       (CAST(:thisEntityId AS UUID) IS NULL OR oosb.id != :thisEntityId) AND
+      latest_revision.start_date <= :endDate AND
+      latest_revision.end_date >= :startDate AND
       c IS NULL
     """,
     nativeQuery = true,
