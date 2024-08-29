@@ -284,34 +284,67 @@ tasks.register("openApiPreCompilation") {
     "UTF-8"
   )
 
-  fun buildSpecWithSharedComponentsAppended(specName: String): File {
-    val spec = FileUtils.readFileToString(
-      File("$rootDir/src/main/resources/static/$specName.yml"),
-      "UTF-8"
-    )
-    val compiledSpecFile = File("$rootDir/src/main/resources/static/codegen/built-$specName-spec.yml")
-    val notice = "# DO NOT EDIT.\n# This is a build artefact for use in code generation.\n"
-
-    FileUtils.writeStringToFile(
-      compiledSpecFile,
-      (notice + spec + sharedComponents),
-      "UTF-8"
-    )
-
-    return compiledSpecFile
-  }
-
   fun rewriteRefsForLocalComponents(file: File) {
     val updatedContents = FileUtils
       .readFileToString(file, "UTF-8")
       .replace("_shared.yml#/components", "#/components")
+      .replace("cas1-schemas.yml#/components", "#/components")
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
 
-  listOf("api", "cas1-api", "cas2-api", "cas3-api").forEach {
-    buildSpecWithSharedComponentsAppended(it)
-      .run(::rewriteRefsForLocalComponents)
+  fun buildSpecWithSharedComponentsAppended(
+    outputFileName: String,
+    inputSpec: String,
+    inputSchemas: String? = null
+  ) {
+    val apiFileName = "$rootDir/src/main/resources/static/$inputSpec"
+    val api = FileUtils.readFileToString(
+      File(apiFileName),
+      "UTF-8"
+    )
+
+    val schemas = if (inputSchemas != null) {
+      val schemasFileName = "$rootDir/src/main/resources/static/$inputSchemas"
+      FileUtils.readFileToString(
+        File(schemasFileName),
+        "UTF-8"
+      ).lines().filter {
+        !it.matches(""".*components\:.*""".toRegex()) &&
+          !it.matches(""".*schemas\:.*""".toRegex())
+      }.joinToString("\n")
+    } else {
+      ""
+    }
+
+    val compiledSpecFile = File("$rootDir/src/main/resources/static/codegen/$outputFileName")
+    val notice = "# DO NOT EDIT.\n# This is a build artefact for use in code generation.\n"
+
+    FileUtils.writeStringToFile(
+      compiledSpecFile,
+      (notice + api + sharedComponents + schemas),
+      "UTF-8"
+    )
+
+    rewriteRefsForLocalComponents(compiledSpecFile)
   }
+
+  buildSpecWithSharedComponentsAppended(
+    outputFileName = "built-api-spec.yml",
+    inputSpec = "api.yml"
+  )
+  buildSpecWithSharedComponentsAppended(
+    outputFileName = "built-cas1-api-spec.yml",
+    inputSpec = "cas1-api.yml",
+    inputSchemas = "cas1-schemas.yml"
+  )
+  buildSpecWithSharedComponentsAppended(
+    outputFileName = "built-cas2-api-spec.yml",
+    inputSpec = "cas2-api.yml"
+  )
+  buildSpecWithSharedComponentsAppended(
+    outputFileName = "built-cas3-api-spec.yml",
+    inputSpec = "cas3-api.yml"
+  )
 }
 
 tasks.get("openApiGenerate").dependsOn(
