@@ -60,7 +60,6 @@ class AssessmentController(
     sortDirection: SortDirection?,
     sortBy: AssessmentSortField?,
     statuses: List<AssessmentStatus>?,
-    crn: String?,
     crnOrName: String?,
     page: Int?,
     perPage: Int?,
@@ -75,7 +74,7 @@ class AssessmentController(
       ServiceName.temporaryAccommodation -> {
         val (summaries, metadata) = assessmentService.getAssessmentSummariesForUserCAS3(
           user,
-          crn ?: crnOrName,
+          crnOrName,
           xServiceName,
           domainSummaryStatuses,
           PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
