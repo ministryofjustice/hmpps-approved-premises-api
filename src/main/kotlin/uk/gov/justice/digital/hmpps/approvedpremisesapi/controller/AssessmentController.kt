@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentCl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortByName
 import java.util.UUID
 import javax.transaction.Transactional
@@ -136,31 +137,40 @@ class AssessmentController(
     xServiceName: ServiceName?,
   ): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
-    val assessmentAuthResult = when (xServiceName) {
-      ServiceName.temporaryAccommodation -> cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment)
-      else -> assessmentService.updateAssessment(
-        user,
-        assessmentId,
-        objectMapper.writeValueAsString(updateAssessment.data),
-      )
-    }
+    val assessment =
+      when (xServiceName) {
+        ServiceName.temporaryAccommodation -> {
+          extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment))
+        }
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+        else -> {
+          val updated =
+            assessmentService.updateAssessment(
+              user,
+              assessmentId,
+              objectMapper.writeValueAsString(updateAssessment.data),
+            )
+          val assessmentValidationResult =
+            when (updated) {
+              is AuthorisableActionResult.Success -> updated.entity
+              is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
+              is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+            }
 
-    val assessment = when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-        id = assessmentValidationResult.conflictingEntityId,
-        conflictReason = assessmentValidationResult.message,
-      )
+          when (assessmentValidationResult) {
+            is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
+            is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
+              invalidParams = assessmentValidationResult.validationMessages,
+            )
+            is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+              id = assessmentValidationResult.conflictingEntityId,
+              conflictReason = assessmentValidationResult.message,
+            )
 
-      is ValidatableActionResult.Success -> assessmentValidationResult.entity
-    }
+            is ValidatableActionResult.Success -> assessmentValidationResult.entity
+          }
+        }
+      }
 
     val ignoreLao =
       (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
