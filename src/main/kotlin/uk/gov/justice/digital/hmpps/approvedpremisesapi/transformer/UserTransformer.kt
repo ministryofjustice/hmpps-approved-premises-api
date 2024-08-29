@@ -107,6 +107,7 @@ class UserTransformer(
     UserQualification.RECOVERY_FOCUSED -> ApiUserQualification.recoveryFocused
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
     return userRole.role.permissions.map {
       when (it) {
@@ -123,6 +124,7 @@ class UserTransformer(
         UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
         UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
         UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
+        UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
       }
     }
   }

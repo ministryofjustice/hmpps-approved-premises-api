@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.util.UUID
 
@@ -26,4 +27,20 @@ class ValidatedScope<EntityType> {
 
 inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> ValidatableActionResult<EntityType>): ValidatableActionResult<EntityType> {
   return scope(ValidatedScope())
+}
+
+class CasResultValidatedScope<EntityType> {
+  val validationErrors = ValidationErrors()
+
+  val fieldValidationError: CasResult.FieldValidationError<EntityType> = CasResult.FieldValidationError(validationErrors)
+
+  infix fun success(entity: EntityType) = CasResult.Success(entity)
+  infix fun generalError(message: String) = CasResult.GeneralValidationError<EntityType>(message)
+  infix fun String.hasValidationError(message: String) = validationErrors.put(this, message)
+  infix fun String.hasSingleValidationError(message: String) = CasResult.FieldValidationError<EntityType>(singleValidationErrorOf(this to message))
+  infix fun UUID.hasConflictError(message: String) = CasResult.ConflictError<EntityType>(this, message)
+}
+
+inline fun <EntityType> validatedCasResult(scope: CasResultValidatedScope<EntityType>.() -> CasResult<EntityType>): CasResult<EntityType> {
+  return scope(CasResultValidatedScope())
 }

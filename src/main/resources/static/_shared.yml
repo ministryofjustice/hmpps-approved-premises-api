@@ -3123,6 +3123,7 @@ components:
         - cas1_view_cru_dashboard
         - cas1_view_manage_tasks
         - cas1_view_out_of_service_beds
+        - cas1_space_booking_list
     TemporaryAccommodationUserRole:
       type: string
       enum:

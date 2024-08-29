@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
@@ -66,8 +66,8 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      result as ValidatableActionResult.FieldValidationError
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
 
       assertThat(result.validationMessages).anySatisfy { key, value ->
         key == "$.premisesId" && value == "doesNotExist"
@@ -95,8 +95,8 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      result as ValidatableActionResult.FieldValidationError
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
 
       assertThat(result.validationMessages).anySatisfy { key, value ->
         key == "$.placementRequestId" && value == "doesNotExist"
@@ -128,8 +128,8 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      result as ValidatableActionResult.FieldValidationError
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
 
       assertThat(result.validationMessages).anySatisfy { key, value ->
         key == "$.departureDate" && value == "shouldBeAfterArrivalDate"
@@ -167,8 +167,8 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.ConflictError::class.java)
-      result as ValidatableActionResult.ConflictError
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
 
       assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
       assertThat(result.message).contains("A Space Booking already exists")
@@ -220,8 +220,8 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
       val persistedBooking = persistedBookingCaptor.captured
       assertThat(persistedBooking.premises).isEqualTo(premises)

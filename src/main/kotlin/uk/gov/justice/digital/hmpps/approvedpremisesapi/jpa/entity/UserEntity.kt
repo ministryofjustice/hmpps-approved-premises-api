@@ -353,6 +353,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     listOf(
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
+      UserPermission.CAS1_SPACE_BOOKING_LIST,
     ),
   ),
   CAS1_WORKFLOW_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.workflowManager),
@@ -475,6 +476,7 @@ enum class UserPermission {
   CAS1_VIEW_CRU_DASHBOARD,
   CAS1_VIEW_MANAGE_TASKS,
   CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+  CAS1_SPACE_BOOKING_LIST,
 }
 
 interface UserWorkload {

@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service
@@ -31,7 +31,7 @@ class SpaceBookingController(
   ): ResponseEntity<Cas1SpaceBooking> {
     val user = userService.getUserForRequest()
 
-    val booking = extractEntityFromValidatableActionResult(
+    val booking = extractEntityFromCasResult(
       spaceBookingService.createNewBooking(
         body.premisesId,
         placementRequestId,
