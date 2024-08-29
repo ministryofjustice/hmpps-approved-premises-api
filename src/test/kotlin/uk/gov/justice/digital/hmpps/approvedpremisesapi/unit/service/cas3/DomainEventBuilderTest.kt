@@ -89,48 +89,6 @@ class DomainEventBuilderTest {
   }
 
   @Test
-  fun `getBookingCancelledDomainEvent transforms the booking information correctly without optional staff detail`() {
-    val cancellationReasonName = "Some cancellation reason"
-    val cancellationNotes = "Some notes about the cancellation"
-
-    val probationRegion = probationRegionEntity()
-
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
-
-    val user = userEntity(probationRegion)
-
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-
-    val booking = bookingEntity(premises, application)
-
-    val cancellationReason = cancellationReasonEntity(cancellationReasonName)
-
-    booking.cancellations += cancellationEntity(booking, cancellationReason, cancellationNotes)
-
-    val event = domainEventBuilder.getBookingCancelledDomainEvent(booking, null)
-
-    assertThat(event).matches {
-      val data = it.data.eventDetails
-
-      it.applicationId == application.id &&
-        it.bookingId == booking.id &&
-        it.crn == booking.crn &&
-        it.nomsNumber == booking.nomsNumber &&
-        data.personReference.crn == booking.crn &&
-        data.personReference.noms == booking.nomsNumber &&
-        data.bookingId == booking.id &&
-        data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
-        data.cancellationReason == cancellationReasonName &&
-        data.notes == cancellationNotes &&
-        data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
-        data.cancelledAt == booking.cancellation?.date &&
-        data.cancelledBy == null &&
-        it.data.eventType == EventType.bookingCancelled
-    }
-  }
-
-  @Test
   fun `getBookingConfirmedDomainEvent transforms the booking information correctly`() {
     val expectedArrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
 

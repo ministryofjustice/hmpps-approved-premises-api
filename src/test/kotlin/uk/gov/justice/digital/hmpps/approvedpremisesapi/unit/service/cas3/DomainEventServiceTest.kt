@@ -45,8 +45,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventServiceConfig
@@ -75,6 +77,9 @@ class DomainEventServiceTest {
   @MockK
   lateinit var domainEventServiceConfig: DomainEventServiceConfig
 
+  @MockK
+  lateinit var userService: UserService
+
   @InjectMockKs
   private lateinit var domainEventService: DomainEventService
 
@@ -94,6 +99,7 @@ class DomainEventServiceTest {
   fun setup() {
     every { domainEventServiceConfig.emitForEvent(any()) } returns true
     every { mockDomainEventUrlConfig.getUrlForDomainEventId(any(), any()) } returns detailUrl
+    every { userService.getUserForRequestOrNull() } returns user
   }
 
   @Test
@@ -355,7 +361,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -497,7 +504,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -570,7 +578,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -626,7 +635,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -771,7 +781,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -847,7 +858,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -906,7 +918,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1049,7 +1062,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1123,7 +1137,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1180,7 +1195,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1283,7 +1299,7 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1357,7 +1373,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1414,7 +1431,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1528,7 +1546,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1613,7 +1632,7 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1681,7 +1700,7 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1718,7 +1737,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1773,7 +1793,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1810,7 +1831,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1908,7 +1930,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1946,7 +1969,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -1986,11 +2010,11 @@ class DomainEventServiceTest {
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), null) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), any()) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, null)
+    domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2001,7 +2025,7 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -2055,7 +2079,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -2091,7 +2116,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -2176,7 +2202,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber
           it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -2232,7 +2259,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
@@ -2266,7 +2294,8 @@ class DomainEventServiceTest {
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == null
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
         },
       )
     }
