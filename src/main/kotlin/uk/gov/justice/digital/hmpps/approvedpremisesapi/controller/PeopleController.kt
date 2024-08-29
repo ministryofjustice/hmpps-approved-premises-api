@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringConfigFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
@@ -57,6 +58,7 @@ class PeopleController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
+  private val featureFlagService: SpringConfigFeatureFlagService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -104,7 +106,7 @@ class PeopleController(
     return ResponseEntity.ok(prisonCaseNotes.map(prisonCaseNoteTransformer::transformModelToApi))
   }
 
-  override fun peopleCrnAdjudicationsGet(crn: String): ResponseEntity<List<Adjudication>> {
+  override fun peopleCrnAdjudicationsGet(crn: String, xServiceName: ServiceName): ResponseEntity<List<Adjudication>> {
     val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
@@ -120,7 +122,12 @@ class PeopleController(
       is AuthorisableActionResult.Success -> adjudicationsResult.entity
     }
 
-    return ResponseEntity.ok(adjudicationTransformer.transformToApi(adjudications))
+    val getLast12MonthsOnly = (
+      xServiceName == ServiceName.approvedPremises &&
+        featureFlagService.getBooleanFlag("cas1_only_list_adjudications_up_to_12_months")
+      )
+
+    return ResponseEntity.ok(adjudicationTransformer.transformToApi(adjudications, getLast12MonthsOnly))
   }
 
   override fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
