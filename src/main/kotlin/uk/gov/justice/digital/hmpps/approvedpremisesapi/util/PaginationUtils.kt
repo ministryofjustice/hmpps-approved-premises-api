@@ -55,7 +55,15 @@ fun <SortType> PageCriteria<SortType>.toPageable(sortByConverter: (SortType) -> 
   this.perPage,
 )
 
-fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable? {
+fun <SortType> PageCriteria<SortType>.toPageableOrAllPages(unsafe: Boolean = false, sortByConverter: (SortType) -> String) = getPageableOrAllPages(
+  sortByConverter(this.sortBy),
+  this.sortDirection,
+  this.page,
+  this.perPage,
+  unsafe = unsafe,
+)
+
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
   return if (page != null) {
     PageRequest.of(
       page - 1,

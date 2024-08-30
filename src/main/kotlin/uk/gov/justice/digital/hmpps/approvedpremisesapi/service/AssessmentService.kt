@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
@@ -59,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toPageableOrAllPages
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -108,8 +108,8 @@ class AssessmentService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
-  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>): Pageable? {
-    val sortFieldString = when (pageCriteria.sortBy) {
+  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>) = pageCriteria.toPageableOrAllPages {
+    when (pageCriteria.sortBy) {
       AssessmentSortField.assessmentStatus -> "status"
       AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
       AssessmentSortField.assessmentCreatedAt -> "createdAt"
@@ -118,8 +118,6 @@ class AssessmentService(
       AssessmentSortField.personName -> "personName"
       AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnit"
     }
-
-    return getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString))
   }
 
   fun getAssessmentSummariesForUserCAS3(
