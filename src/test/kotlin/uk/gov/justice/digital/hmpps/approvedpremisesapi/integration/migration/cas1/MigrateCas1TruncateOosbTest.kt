@@ -67,7 +67,7 @@ class MigrateCas1TruncateOosbTest : MigrationJobTestBase() {
     assertThat(updatedOosbRecordAfterBedEndDate.endDate).isEqualTo(LocalDate.parse("2023-02-28"))
     assertThat(updatedOosbRecordAfterBedEndDate.reason).isEqualTo(activeOosbRecordAfterBedEndDate.reason)
     assertThat(updatedOosbRecordAfterBedEndDate.referenceNumber).isNull()
-    assertThat(updatedOosbRecordAfterBedEndDate.notes).isEqualTo("End date has been automatically updated by application support to as the bed has been removed as of 2023-03-01")
+    assertThat(updatedOosbRecordAfterBedEndDate.notes).isEqualTo("End date has been automatically updated by application support as the bed has been removed as of 2023-03-01")
 
     assertThat(cas1OutOfServiceBedTestRepository.findByIdOrNull(cancelledOosbRecordAfterBedEndDate.id)!!.revisionHistory).hasSize(1)
   }
