@@ -5014,6 +5014,12 @@ components:
             probationDeliveryUnit:
               type: string
               description: The pdu to search within
+            sharedProperty:
+              type: boolean
+              description: Is a shared property
+            singleOccupancy:
+              type: boolean
+              description: Is the property for single occupancy
           required:
             - probationDeliveryUnit
     BedSearchResults:

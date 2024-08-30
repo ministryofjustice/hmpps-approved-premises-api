@@ -96,6 +96,8 @@ class BedSearchService(
     probationDeliveryUnit: String,
     startDate: LocalDate,
     durationInDays: Int,
+    filterBySharedProperty: Boolean,
+    filterBySingleOccupancy: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<List<TemporaryAccommodationBedSearchResult>>> {
     return AuthorisableActionResult.Success(
       validated {
@@ -114,6 +116,8 @@ class BedSearchService(
           startDate = startDate,
           endDate = endDate,
           probationRegionId = user.probationRegion.id,
+          filterBySharedProperty = filterBySharedProperty,
+          filterBySingleOccupancy = filterBySingleOccupancy,
         )
 
         val bedIds = candidateResults.map { it.bedId }
