@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1Migra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TruncateOosbMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.LostBedMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2AssessmentMigrationJob
@@ -52,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import javax.persistence.EntityManager
 import kotlin.reflect.KClass
 
@@ -192,6 +194,11 @@ class MigrationJobService(
         MigrationJobType.cas1ManagerToFutureManager -> Cas1MigrateManagerToFutureManager(
           getBean(UserService::class),
           getBean(UserRepository::class),
+        )
+
+        MigrationJobType.cas1TruncateOosbForBedsWithEndDate -> Cas1TruncateOosbMigrationJob(
+          getBean(Cas1OutOfServiceBedRepository::class),
+          getBean(Cas1OutOfServiceBedService::class),
         )
       }
 

@@ -314,7 +314,7 @@ class Cas1OutOfServiceBedServiceTest {
       every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
       every { outOfServiceBedReasonRepository.findByIdOrNull(reasonId) } returns null
 
-      every { userService.getUserForRequest() } returns UserEntityFactory()
+      every { userService.getUserForRequestOrNull() } returns UserEntityFactory()
         .withDefaults()
         .produce()
 
@@ -365,7 +365,7 @@ class Cas1OutOfServiceBedServiceTest {
       every { outOfServiceBedRepository.save(any()) } returnsArgument 0
       every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
 
-      every { userService.getUserForRequest() } returns user
+      every { userService.getUserForRequestOrNull() } returns user
 
       val result = outOfServiceBedService.updateOutOfServiceBed(
         outOfServiceBedId = outOfServiceBed.id,

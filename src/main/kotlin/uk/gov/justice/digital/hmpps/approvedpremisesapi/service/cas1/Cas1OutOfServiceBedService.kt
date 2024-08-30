@@ -137,7 +137,7 @@ class Cas1OutOfServiceBedService(
     reasonId,
     referenceNumber,
     notes,
-    userService.getUserForRequest(),
+    userService.getUserForRequestOrNull(),
   )
 
   fun updateOutOfServiceBed(
