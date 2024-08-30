@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.sentry.Sentry
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.scheduling.annotation.Async
@@ -61,7 +60,6 @@ class MigrationJobService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val migrationLogger: MigrationLogger,
-  @Value("\${migration-job.throttle-enabled}") private val throttle: Boolean,
 ) {
   @Async
   fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)

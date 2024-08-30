@@ -176,9 +176,6 @@ manual-bookings-domain-events-disabled: false
 
 upstream-timeout-ms: 500
 
-migration-job:
-  throttle-enabled: false
-
 pagination:
   default-page-size: 10
   cas3:
