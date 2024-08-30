@@ -34,6 +34,7 @@ data class PageCriteria<S>(
   }
 }
 
+@Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
 fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null, unsafe: Boolean = false): Pageable? {
   return if (page != null) {
     PageRequest.of(
@@ -46,6 +47,7 @@ fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageS
   }
 }
 
+@Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
 fun <SortType> PageCriteria<SortType>.toPageable(sortByConverter: (SortType) -> String) = getPageable(
   sortByConverter(this.sortBy),
   this.sortDirection,
@@ -55,7 +57,11 @@ fun <SortType> PageCriteria<SortType>.toPageable(sortByConverter: (SortType) -> 
 
 fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable? {
   return if (page != null) {
-    getPageable(sortBy, sortDirection, page, pageSize, unsafe)
+    PageRequest.of(
+      page - 1,
+      resolvePageSize(pageSize),
+      toSort(sortBy, sortDirection, unsafe),
+    )
   } else {
     PageRequest.of(
       0,
