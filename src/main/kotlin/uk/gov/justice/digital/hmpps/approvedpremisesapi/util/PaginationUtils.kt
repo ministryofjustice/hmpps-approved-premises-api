@@ -34,6 +34,7 @@ data class PageCriteria<S>(
   }
 }
 
+@Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
 fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null, unsafe: Boolean = false): Pageable? {
   return if (page != null) {
     PageRequest.of(
@@ -46,16 +47,29 @@ fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageS
   }
 }
 
-fun getPageable(criteria: PageCriteria<String>): Pageable? = getPageable(
-  criteria.sortBy,
-  criteria.sortDirection,
-  criteria.page,
-  criteria.perPage,
+@Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
+fun <SortType> PageCriteria<SortType>.toPageable(sortByConverter: (SortType) -> String) = getPageable(
+  sortByConverter(this.sortBy),
+  this.sortDirection,
+  this.page,
+  this.perPage,
 )
 
-fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable? {
+fun <SortType> PageCriteria<SortType>.toPageableOrAllPages(unsafe: Boolean = false, sortByConverter: (SortType) -> String) = getPageableOrAllPages(
+  sortByConverter(this.sortBy),
+  this.sortDirection,
+  this.page,
+  this.perPage,
+  unsafe = unsafe,
+)
+
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
   return if (page != null) {
-    getPageable(sortBy, sortDirection, page, pageSize, unsafe)
+    PageRequest.of(
+      page - 1,
+      resolvePageSize(pageSize),
+      toSort(sortBy, sortDirection, unsafe),
+    )
   } else {
     PageRequest.of(
       0,
@@ -73,10 +87,6 @@ fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = fals
     criteria.perPage,
     unsafe,
   )
-
-fun <T> wrapWithMetadata(page: Page<T>, pageCriteria: PageCriteria<*>): Pair<List<T>, PaginationMetadata?> {
-  return Pair(page.content, getMetadata(page, pageCriteria))
-}
 
 fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? =
   getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
