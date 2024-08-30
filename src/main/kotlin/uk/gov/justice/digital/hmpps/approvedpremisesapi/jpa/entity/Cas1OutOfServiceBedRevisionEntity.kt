@@ -10,6 +10,7 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -32,18 +33,20 @@ data class Cas1OutOfServiceBedRevisionEntity(
   var endDate: LocalDate,
   var referenceNumber: String?,
   var notes: String?,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "out_of_service_bed_reason_id")
   var reason: Cas1OutOfServiceBedReasonEntity,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "out_of_service_bed_id")
   val outOfServiceBed: Cas1OutOfServiceBedEntity,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_user_id")
   val createdBy: UserEntity?,
   @Column(name = "change_type")
   val changeTypePacked: Long,
-)
+) {
+  override fun toString() = "Cas1OutOfServiceBedRevisionEntity: $id"
+}
 
 enum class Cas1OutOfServiceBedRevisionType {
   INITIAL,

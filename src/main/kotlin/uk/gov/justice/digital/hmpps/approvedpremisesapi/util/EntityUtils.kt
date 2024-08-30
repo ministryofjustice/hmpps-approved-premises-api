@@ -23,12 +23,12 @@ fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableAct
   is ValidatableActionResult.Success -> result.entity
 }
 
-@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
+@Deprecated("Update calling code to use CasResult", ReplaceWith("ensureEntityFromCasResultIsSuccess"))
 fun <EntityType> ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>) {
   extractEntityFromNestedAuthorisableValidatableActionResult(result)
 }
 
-@Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
+@Deprecated("Update calling code to use CasResult", ReplaceWith("ensureEntityFromCasResultIsSuccess"))
 fun <EntityType> ensureEntityFromValidatableActionResultIsSuccess(result: ValidatableActionResult<EntityType>) {
   extractEntityFromValidatableActionResult(result)
 }
@@ -37,6 +37,10 @@ fun <EntityType> ensureEntityFromValidatableActionResultIsSuccess(result: Valida
 fun <EntityType> extractEntityFromNestedAuthorisableValidatableActionResult(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>): EntityType {
   val validatableResult = extractEntityFromAuthorisableActionResult(result)
   return extractEntityFromValidatableActionResult(validatableResult)
+}
+
+fun <EntityType> ensureEntityFromCasResultIsSuccess(result: CasResult<EntityType>) {
+  extractEntityFromCasResult(result)
 }
 
 fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = when (result) {

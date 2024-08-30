@@ -17,9 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findAllByIdOrdered
@@ -68,8 +67,8 @@ class Cas1OutOfServiceBedService(
     notes: String?,
     bedId: UUID,
     createdBy: UserEntity?,
-  ): ValidatableActionResult<Cas1OutOfServiceBedEntity> =
-    validated {
+  ): CasResult<Cas1OutOfServiceBedEntity> =
+    validatedCasResult {
       if (endDate.isBefore(startDate)) {
         "$.endDate" hasValidationError "beforeStartDate"
       }
@@ -138,7 +137,7 @@ class Cas1OutOfServiceBedService(
     reasonId,
     referenceNumber,
     notes,
-    userService.getUserForRequest(),
+    userService.getUserForRequestOrNull(),
   )
 
   fun updateOutOfServiceBed(
@@ -149,54 +148,59 @@ class Cas1OutOfServiceBedService(
     referenceNumber: String?,
     notes: String?,
     createdBy: UserEntity?,
-  ): AuthorisableActionResult<ValidatableActionResult<Cas1OutOfServiceBedEntity>> {
+  ): CasResult<Cas1OutOfServiceBedEntity> {
     val outOfServiceBed = outOfServiceBedRepository.findByIdOrNull(outOfServiceBedId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("OutOfServiceBed", outOfServiceBedId.toString())
 
-    return AuthorisableActionResult.Success(
-      validated {
-        if (endDate.isBefore(startDate)) {
-          "$.endDate" hasValidationError "beforeStartDate"
-        }
+    return validatedCasResult {
+      if (endDate.isBefore(startDate)) {
+        "$.endDate" hasValidationError "beforeStartDate"
+      }
 
-        val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
-        if (reason == null) {
-          "$.reason" hasValidationError "doesNotExist"
-        }
+      val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
+      if (reason == null) {
+        "$.reason" hasValidationError "doesNotExist"
+      }
 
-        if (notes.isNullOrEmpty()) {
-          "$.notes" hasValidationError "empty"
-        }
+      if (notes.isNullOrEmpty()) {
+        "$.notes" hasValidationError "empty"
+      }
 
-        if (validationErrors.any()) {
-          return@validated fieldValidationError
-        }
+      if (validationErrors.any()) {
+        return fieldValidationError
+      }
 
-        val details = outOfServiceBedDetailsRepository.saveAndFlush(
-          Cas1OutOfServiceBedRevisionEntity(
-            id = UUID.randomUUID(),
-            createdAt = OffsetDateTime.now(),
-            revisionType = Cas1OutOfServiceBedRevisionType.UPDATE,
-            startDate = startDate,
-            endDate = endDate,
-            referenceNumber = referenceNumber,
-            notes = notes,
-            reason = reason!!,
-            outOfServiceBed = outOfServiceBed,
-            createdBy = createdBy,
-            changeTypePacked = getChangeType(outOfServiceBed.latestRevision, startDate, endDate, referenceNumber, notes, reason),
+      val details = outOfServiceBedDetailsRepository.saveAndFlush(
+        Cas1OutOfServiceBedRevisionEntity(
+          id = UUID.randomUUID(),
+          createdAt = OffsetDateTime.now(),
+          revisionType = Cas1OutOfServiceBedRevisionType.UPDATE,
+          startDate = startDate,
+          endDate = endDate,
+          referenceNumber = referenceNumber,
+          notes = notes,
+          reason = reason!!,
+          outOfServiceBed = outOfServiceBed,
+          createdBy = createdBy,
+          changeTypePacked = getChangeType(
+            outOfServiceBed.latestRevision,
+            startDate,
+            endDate,
+            referenceNumber,
+            notes,
+            reason,
           ),
-        )
+        ),
+      )
 
-        val updatedOutOfServiceBed = outOfServiceBedRepository.save(
-          outOfServiceBed.apply {
-            this.revisionHistory += details
-          },
-        )
+      val updatedOutOfServiceBed = outOfServiceBedRepository.save(
+        outOfServiceBed.apply {
+          this.revisionHistory += details
+        },
+      )
 
-        success(updatedOutOfServiceBed)
-      },
-    )
+      CasResult.Success(updatedOutOfServiceBed)
+    }
   }
 
   private fun getChangeType(
@@ -235,7 +239,7 @@ class Cas1OutOfServiceBedService(
   fun cancelOutOfServiceBed(
     outOfServiceBed: Cas1OutOfServiceBedEntity,
     notes: String?,
-  ) = validated<Cas1OutOfServiceBedCancellationEntity> {
+  ) = validatedCasResult<Cas1OutOfServiceBedCancellationEntity> {
     if (outOfServiceBed.cancellation != null) {
       return generalError("This out-of-service bed has already been cancelled.")
     }

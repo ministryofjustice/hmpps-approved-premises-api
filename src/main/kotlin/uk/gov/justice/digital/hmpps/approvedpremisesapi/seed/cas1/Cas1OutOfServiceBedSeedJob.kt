@@ -6,9 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.trimToNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromValidatableActionResultIsSuccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.util.UUID
 
@@ -66,12 +65,12 @@ class Cas1OutOfServiceBedSeedJob(
       createdBy = null,
     )
 
-    val outOfServiceBed = extractEntityFromValidatableActionResult(creationResult)
+    val outOfServiceBed = extractEntityFromCasResult(creationResult)
 
     if (row.isCancelled) {
       val cancellationResult = cas1OutOfServiceBedService.cancelOutOfServiceBed(outOfServiceBed, row.cancellationNotes)
 
-      ensureEntityFromValidatableActionResultIsSuccess(cancellationResult)
+      ensureEntityFromCasResultIsSuccess(cancellationResult)
     }
 
     rowKeys[row.key] = outOfServiceBed.id
@@ -88,7 +87,7 @@ class Cas1OutOfServiceBedSeedJob(
       createdBy = null,
     )
 
-    ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess(result)
+    ensureEntityFromCasResultIsSuccess(result)
   }
 }
 

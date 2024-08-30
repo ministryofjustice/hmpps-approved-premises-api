@@ -65,7 +65,7 @@ class BedEntityFactory : Factory<BedEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var room: Yielded<RoomEntity>? = null
-  private var endDate: Yielded<LocalDate>? = null
+  private var endDate: Yielded<LocalDate?>? = null
   private var createdAt: Yielded<OffsetDateTime>? = { OffsetDateTime.now() }
 
   fun withId(id: UUID) = apply {
@@ -91,7 +91,7 @@ class BedEntityFactory : Factory<BedEntity> {
   fun withYieldedRoom(room: Yielded<RoomEntity>) = apply {
     this.room = room
   }
-  fun withEndDate(endDate: Yielded<LocalDate>) = apply {
+  fun withEndDate(endDate: Yielded<LocalDate?>) = apply {
     this.endDate = endDate
   }
 

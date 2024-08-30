@@ -24,7 +24,7 @@ class Cas1OutOfServiceBedRevisionEntityFactory : Factory<Cas1OutOfServiceBedRevi
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var reason: Yielded<Cas1OutOfServiceBedReasonEntity> = { Cas1OutOfServiceBedReasonEntityFactory().produce() }
   private var outOfServiceBed: Yielded<Cas1OutOfServiceBedEntity> = { Cas1OutOfServiceBedEntityFactory().produce() }
-  private var createdBy: Yielded<UserEntity> = { UserEntityFactory().withDefaults().produce() }
+  private var createdBy: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
   private var changeType: Yielded<EnumSet<Cas1OutOfServiceBedRevisionChangeType>> =
     { EnumSet.noneOf(Cas1OutOfServiceBedRevisionChangeType::class.java) }
 
@@ -76,7 +76,7 @@ class Cas1OutOfServiceBedRevisionEntityFactory : Factory<Cas1OutOfServiceBedRevi
     this.outOfServiceBed = { Cas1OutOfServiceBedEntityFactory().apply(configuration).produce() }
   }
 
-  fun withCreatedBy(createdBy: UserEntity) = apply {
+  fun withCreatedBy(createdBy: UserEntity?) = apply {
     this.createdBy = { createdBy }
   }
 
