@@ -1273,6 +1273,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Create Out-Of-Service Bed returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
@@ -1294,7 +1295,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
-          val existingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          val existingCancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
           }.apply {
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
@@ -1309,9 +1310,34 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             }
           }
 
-          existingOutOfServiceBed.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
-            withOutOfServiceBed(existingOutOfServiceBed)
+          existingCancelledOutOfServiceBed.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
+            withOutOfServiceBed(existingCancelledOutOfServiceBed)
             withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+          }
+
+          val existingOutOfServiceBedWithConflictingDateInHistory = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+            withBed(bed)
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-07-15"))
+              withEndDate(LocalDate.parse("2022-08-10"))
+              withReason(
+                cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
+              )
+            }
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-07-15"))
+              withEndDate(LocalDate.parse("2022-07-29"))
+              withReason(
+                cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
+              )
+            }
           }
 
           webTestClient.post()
@@ -1860,6 +1886,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
@@ -1898,7 +1925,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             this.revisionHistory += originalDetails
           }
 
-          val existingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          val existingCancelledOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
           }.apply {
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
@@ -1913,9 +1940,34 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             }
           }
 
-          existingOutOfServiceBed.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
-            withOutOfServiceBed(existingOutOfServiceBed)
+          existingCancelledOutOfServiceBed.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
+            withOutOfServiceBed(existingCancelledOutOfServiceBed)
             withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+          }
+
+          val existingOutOfServiceBedWithConflictingDateInHistory = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+            withBed(bed)
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-08-10"))
+              withEndDate(LocalDate.parse("2022-09-10"))
+              withReason(
+                cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
+              )
+            }
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(user)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.parse("2022-08-16"))
+              withEndDate(LocalDate.parse("2022-09-10"))
+              withReason(
+                cas1OutOfServiceBedReasonEntityFactory.produceAndPersist(),
+              )
+            }
           }
 
           webTestClient.put()
