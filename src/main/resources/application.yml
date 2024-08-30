@@ -283,5 +283,6 @@ reports:
 
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
+  cas1_only_list_adjudications_up_to_12_months: false
   cas1_only_list_conviction_documents: false
   use-ap-and-delius-to-update-users: true

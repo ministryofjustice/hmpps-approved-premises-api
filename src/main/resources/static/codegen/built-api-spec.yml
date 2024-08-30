@@ -1268,6 +1268,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: CAS1 requests may be limited to adjudications for last 12 months only
+          schema:
+            $ref: '#/components/schemas/ServiceName'
       responses:
         200:
           description: successful operation
