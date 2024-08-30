@@ -14,8 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServiceBedSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServiceBedSeedCsvRowKey
@@ -189,7 +188,7 @@ class Cas1OutOfServiceBedSeedJobTest {
       every { premisesService.getPremises(any()) } returns expectedPremises
 
       every { cas1OutOfServiceBedService.createOutOfServiceBed(any(), any(), any(), any(), any(), any(), any(), any()) } returns
-        ValidatableActionResult.Success(
+        CasResult.Success(
           Cas1OutOfServiceBedEntityFactory()
             .withBed {
               withRoom {
@@ -250,10 +249,10 @@ class Cas1OutOfServiceBedSeedJobTest {
         .produce()
 
       every { cas1OutOfServiceBedService.createOutOfServiceBed(any(), any(), any(), any(), any(), any(), any(), any()) } returns
-        ValidatableActionResult.Success(expectedOutOfServiceBed)
+        CasResult.Success(expectedOutOfServiceBed)
 
       every { cas1OutOfServiceBedService.cancelOutOfServiceBed(any(), any()) } returns
-        ValidatableActionResult.Success(
+        CasResult.Success(
           Cas1OutOfServiceBedCancellationEntityFactory()
             .withOutOfServiceBed(expectedOutOfServiceBed)
             .produce(),
@@ -326,10 +325,10 @@ class Cas1OutOfServiceBedSeedJobTest {
         .produce()
 
       every { cas1OutOfServiceBedService.createOutOfServiceBed(any(), any(), any(), any(), any(), any(), any(), any()) } returns
-        ValidatableActionResult.Success(expectedOutOfServiceBed)
+        CasResult.Success(expectedOutOfServiceBed)
 
       every { cas1OutOfServiceBedService.updateOutOfServiceBed(any(), any(), any(), any(), any(), any(), any()) } returns
-        AuthorisableActionResult.Success(ValidatableActionResult.Success(expectedOutOfServiceBed))
+        CasResult.Success(expectedOutOfServiceBed)
 
       seedJob.processRow(firstRow)
 
@@ -427,14 +426,14 @@ class Cas1OutOfServiceBedSeedJobTest {
 
       every { cas1OutOfServiceBedService.createOutOfServiceBed(any(), any(), any(), any(), any(), any(), any(), any()) } returnsMany
         listOf(
-          ValidatableActionResult.Success(firstOutOfServiceBed),
-          ValidatableActionResult.Success(secondOutOfServiceBed),
+          CasResult.Success(firstOutOfServiceBed),
+          CasResult.Success(secondOutOfServiceBed),
         )
 
       every { cas1OutOfServiceBedService.updateOutOfServiceBed(any(), any(), any(), any(), any(), any(), any()) } returnsMany
         listOf(
-          AuthorisableActionResult.Success(ValidatableActionResult.Success(firstOutOfServiceBed)),
-          AuthorisableActionResult.Success(ValidatableActionResult.Success(secondOutOfServiceBed)),
+          CasResult.Success(firstOutOfServiceBed),
+          CasResult.Success(secondOutOfServiceBed),
         )
 
       seedJob.processRow(firstRow)

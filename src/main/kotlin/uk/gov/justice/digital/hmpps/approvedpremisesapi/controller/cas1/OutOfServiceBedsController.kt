@@ -13,18 +13,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.util.UUID
 
@@ -100,14 +98,11 @@ class OutOfServiceBedsController(
       notes = body.notes,
     )
 
-    val cancellation = when (cancelOutOfServiceBedResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelOutOfServiceBedResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelOutOfServiceBedResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = cancelOutOfServiceBedResult.conflictingEntityId, conflictReason = cancelOutOfServiceBedResult.message)
-      is ValidatableActionResult.Success -> cancelOutOfServiceBedResult.entity
-    }
-
-    return ResponseEntity.ok(outOfServiceBedCancellationTransformer.transformJpaToApi(cancellation))
+    return ResponseEntity.ok(
+      outOfServiceBedCancellationTransformer.transformJpaToApi(
+        extractEntityFromCasResult(cancelOutOfServiceBedResult),
+      ),
+    )
   }
 
   override fun premisesPremisesIdOutOfServiceBedsOutOfServiceBedIdGet(
@@ -149,20 +144,11 @@ class OutOfServiceBedsController(
       body.notes,
     )
 
-    val validationResult = when (updateOutOfServiceBedResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(outOfServiceBedId, "OutOfServiceBed")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> updateOutOfServiceBedResult.entity
-    }
-
-    val updatedOutOfServiceBed = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
-    return ResponseEntity.ok(outOfServiceBedTransformer.transformJpaToApi(updatedOutOfServiceBed))
+    return ResponseEntity.ok(
+      outOfServiceBedTransformer.transformJpaToApi(
+        extractEntityFromCasResult(updateOutOfServiceBedResult),
+      ),
+    )
   }
 
   override fun premisesPremisesIdOutOfServiceBedsPost(
@@ -187,7 +173,7 @@ class OutOfServiceBedsController(
       bedId = body.bedId,
     )
 
-    val outOfServiceBed = extractResultEntityOrThrow(result)
+    val outOfServiceBed = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
   }
@@ -197,13 +183,6 @@ class OutOfServiceBedsController(
 
   private val ApprovedPremisesEntity.outOfServiceBeds: List<Cas1OutOfServiceBedEntity>
     get() = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(this.id)
-
-  private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
-    is ValidatableActionResult.Success -> result.entity
-    is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
-    is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
-  }
 
   private fun throwIfOutOfServiceBedDatesConflict(
     startDate: LocalDate,

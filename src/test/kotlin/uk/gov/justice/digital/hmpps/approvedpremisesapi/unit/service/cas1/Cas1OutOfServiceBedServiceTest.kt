@@ -30,8 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -134,8 +133,8 @@ class Cas1OutOfServiceBedServiceTest {
         bedId = UUID.randomUUID(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.endDate", "beforeStartDate"),
         entry("$.reason", "doesNotExist"),
         entry("$.notes", "empty"),
@@ -181,14 +180,14 @@ class Cas1OutOfServiceBedServiceTest {
         bedId = bed.id,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.premises).isEqualTo(premisesEntity)
-      assertThat(result.entity.reason).isEqualTo(outOfServiceBedReason)
-      assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-      assertThat(result.entity.referenceNumber).isEqualTo("12345")
-      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.premises).isEqualTo(premisesEntity)
+      assertThat(result.value.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.value.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.value.referenceNumber).isEqualTo("12345")
+      assertThat(result.value.notes).isEqualTo("notes")
     }
 
     @Test
@@ -225,16 +224,16 @@ class Cas1OutOfServiceBedServiceTest {
         createdBy = null,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(result.entity.premises).isEqualTo(premisesEntity)
-      assertThat(result.entity.reason).isEqualTo(outOfServiceBedReason)
-      assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-      assertThat(result.entity.referenceNumber).isEqualTo("12345")
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.latestRevision.createdBy).isNull()
+      assertThat(result.value.premises).isEqualTo(premisesEntity)
+      assertThat(result.value.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.value.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.value.referenceNumber).isEqualTo("12345")
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.latestRevision.createdBy).isNull()
 
       verify(exactly = 0) {
         userService.getUserForRequest()
@@ -279,16 +278,16 @@ class Cas1OutOfServiceBedServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(result.entity.premises).isEqualTo(premisesEntity)
-      assertThat(result.entity.reason).isEqualTo(outOfServiceBedReason)
-      assertThat(result.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-      assertThat(result.entity.referenceNumber).isEqualTo("12345")
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.latestRevision.createdBy).isEqualTo(user)
+      assertThat(result.value.premises).isEqualTo(premisesEntity)
+      assertThat(result.value.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.value.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.value.referenceNumber).isEqualTo("12345")
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.latestRevision.createdBy).isEqualTo(user)
 
       verify(exactly = 0) {
         userService.getUserForRequest()
@@ -328,10 +327,8 @@ class Cas1OutOfServiceBedServiceTest {
         notes = "",
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val resultEntity = (result as AuthorisableActionResult.Success).entity
-      assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.endDate", "beforeStartDate"),
         entry("$.reason", "doesNotExist"),
         entry("$.notes", "empty"),
@@ -378,16 +375,14 @@ class Cas1OutOfServiceBedServiceTest {
         referenceNumber = "12345",
         notes = "notes",
       )
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val resultEntity = (result as AuthorisableActionResult.Success).entity
-      assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
-      resultEntity as ValidatableActionResult.Success
-      assertThat(resultEntity.entity.premises).isEqualTo(premisesEntity)
-      assertThat(resultEntity.entity.reason).isEqualTo(outOfServiceBedReason)
-      assertThat(resultEntity.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-      assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
-      assertThat(resultEntity.entity.notes).isEqualTo("notes")
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.premises).isEqualTo(premisesEntity)
+      assertThat(result.value.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.value.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.value.referenceNumber).isEqualTo("12345")
+      assertThat(result.value.notes).isEqualTo("notes")
     }
 
     @Test
@@ -426,19 +421,16 @@ class Cas1OutOfServiceBedServiceTest {
         createdBy = null,
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val resultEntity = (result as AuthorisableActionResult.Success).entity
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
-      resultEntity as ValidatableActionResult.Success
-
-      assertThat(resultEntity.entity.premises).isEqualTo(premisesEntity)
-      assertThat(resultEntity.entity.reason).isEqualTo(outOfServiceBedReason)
-      assertThat(resultEntity.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-      assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
-      assertThat(resultEntity.entity.notes).isEqualTo("notes")
-      assertThat(resultEntity.entity.latestRevision.createdBy).isNull()
+      assertThat(result.value.premises).isEqualTo(premisesEntity)
+      assertThat(result.value.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.value.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.value.referenceNumber).isEqualTo("12345")
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.latestRevision.createdBy).isNull()
 
       verify(exactly = 0) {
         userService.getUserForRequest()
@@ -485,19 +477,16 @@ class Cas1OutOfServiceBedServiceTest {
         createdBy = user,
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val resultEntity = (result as AuthorisableActionResult.Success).entity
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(resultEntity).isInstanceOf(ValidatableActionResult.Success::class.java)
-      resultEntity as ValidatableActionResult.Success
-
-      assertThat(resultEntity.entity.premises).isEqualTo(premisesEntity)
-      assertThat(resultEntity.entity.reason).isEqualTo(outOfServiceBedReason)
-      assertThat(resultEntity.entity.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
-      assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
-      assertThat(resultEntity.entity.notes).isEqualTo("notes")
-      assertThat(resultEntity.entity.latestRevision.createdBy).isEqualTo(user)
+      assertThat(result.value.premises).isEqualTo(premisesEntity)
+      assertThat(result.value.reason).isEqualTo(outOfServiceBedReason)
+      assertThat(result.value.startDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
+      assertThat(result.value.referenceNumber).isEqualTo("12345")
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.latestRevision.createdBy).isEqualTo(user)
 
       verify(exactly = 0) {
         userService.getUserForRequest()
@@ -526,8 +515,8 @@ class Cas1OutOfServiceBedServiceTest {
 
       val result = outOfServiceBedService.cancelOutOfServiceBed(outOfServiceBed, notes = null)
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      result as ValidatableActionResult.GeneralValidationError
+      assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java)
+      result as CasResult.GeneralValidationError
       assertThat(result.message).isEqualTo("This out-of-service bed has already been cancelled.")
     }
 
@@ -549,10 +538,10 @@ class Cas1OutOfServiceBedServiceTest {
 
       val result = outOfServiceBedService.cancelOutOfServiceBed(outOfServiceBed, notes)
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.outOfServiceBed).isEqualTo(outOfServiceBed)
-      assertThat(result.entity.notes).isEqualTo(notes)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.outOfServiceBed).isEqualTo(outOfServiceBed)
+      assertThat(result.value.notes).isEqualTo(notes)
     }
   }
 
