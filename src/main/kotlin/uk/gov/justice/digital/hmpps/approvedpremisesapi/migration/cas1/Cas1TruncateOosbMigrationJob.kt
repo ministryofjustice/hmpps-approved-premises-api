@@ -43,7 +43,7 @@ class Cas1TruncateOosbMigrationJob(
       endDate = newEndDate,
       reasonId = oosb.reason.id,
       referenceNumber = null,
-      notes = "End date has been automatically updated by application support to as the bed has been removed as of ${bed.endDate}",
+      notes = "End date has been automatically updated by application support as the bed has been removed as of ${bed.endDate}",
     )
 
     try {
