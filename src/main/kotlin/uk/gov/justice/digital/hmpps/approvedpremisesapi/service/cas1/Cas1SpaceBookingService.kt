@@ -62,6 +62,7 @@ class Cas1SpaceBookingService(
       Cas1SpaceBookingEntity(
         id = UUID.randomUUID(),
         premises = premises,
+        application = placementRequest.application,
         placementRequest = placementRequest,
         createdBy = createdBy,
         createdAt = OffsetDateTime.now(),
@@ -73,6 +74,7 @@ class Cas1SpaceBookingService(
         canonicalDepartureDate = departureDate,
         crn = placementRequest.application.crn,
         keyWorkerStaffCode = null,
+        keyWorkerName = null,
         keyWorkerAssignedAt = null,
       ),
     )
