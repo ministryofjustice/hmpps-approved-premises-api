@@ -46,11 +46,11 @@ fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageS
   }
 }
 
-fun getPageable(criteria: PageCriteria<String>): Pageable? = getPageable(
-  criteria.sortBy,
-  criteria.sortDirection,
-  criteria.page,
-  criteria.perPage,
+fun <SortType> PageCriteria<SortType>.toPageable(sortByConverter: (SortType) -> String) = getPageable(
+  sortByConverter(this.sortBy),
+  this.sortDirection,
+  this.page,
+  this.perPage,
 )
 
 fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable? {
@@ -73,10 +73,6 @@ fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = fals
     criteria.perPage,
     unsafe,
   )
-
-fun <T> wrapWithMetadata(page: Page<T>, pageCriteria: PageCriteria<*>): Pair<List<T>, PaginationMetadata?> {
-  return Pair(page.content, getMetadata(page, pageCriteria))
-}
 
 fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? =
   getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)

@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toPageable
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -106,19 +106,17 @@ class TaskService(
     pageCriteria: PageCriteria<TaskSortField>,
     taskTypes: List<TaskEntityType>,
   ): Page<Task> {
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "created_at"
-          TaskSortField.dueAt -> "due_at"
-          TaskSortField.allocatedTo -> "allocated_to"
-          TaskSortField.person -> "person"
-          TaskSortField.completedAt -> "completed_at"
-          TaskSortField.taskType -> "type"
-          TaskSortField.decision -> "decision"
-        },
-      ),
-    )
+    val pageable = pageCriteria.toPageable {
+      when (pageCriteria.sortBy) {
+        TaskSortField.createdAt -> "created_at"
+        TaskSortField.dueAt -> "due_at"
+        TaskSortField.allocatedTo -> "allocated_to"
+        TaskSortField.person -> "person"
+        TaskSortField.completedAt -> "completed_at"
+        TaskSortField.taskType -> "type"
+        TaskSortField.decision -> "decision"
+      }
+    }
 
     val allocatedFilter = filterCriteria.allocatedFilter
 
