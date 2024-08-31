@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -54,7 +54,7 @@ class Cas1DuplicateApplicationSeedJob(
     val sourceApplication = applicationService.getApplication(applicationIdToDuplicate)
       ?: error("Could not find application if id $applicationIdToDuplicate")
 
-    if (sourceApplication !is ApprovedPremisesApplicationEntity) {
+    if (!isCas1(sourceApplication)) {
       error("Application $applicationIdToDuplicate is not cas 1")
     }
 

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
@@ -517,7 +518,7 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (application !is ApprovedPremisesApplicationEntity) {
+    if (!isCas1(application)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
       )
@@ -613,7 +614,7 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound()
 
-    if (application !is ApprovedPremisesApplicationEntity) {
+    if (!isCas1(application)) {
       return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
@@ -717,7 +718,7 @@ class ApplicationService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    if (application !is ApprovedPremisesApplicationEntity) {
+    if (!isCas1(application)) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
       )

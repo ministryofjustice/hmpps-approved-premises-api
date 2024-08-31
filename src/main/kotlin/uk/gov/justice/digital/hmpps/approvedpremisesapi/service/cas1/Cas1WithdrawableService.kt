@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -77,7 +78,7 @@ class Cas1WithdrawableService(
     otherReason: String?,
   ): CasResult<Unit> {
     val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound()
-    if (application !is ApprovedPremisesApplicationEntity) {
+    if (!isCas1(application)) {
       return CasResult.GeneralValidationError("Only CAS1 Apps are supported")
     }
 

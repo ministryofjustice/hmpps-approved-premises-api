@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
@@ -36,6 +37,8 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toKotlinDuration
 
@@ -339,6 +342,18 @@ abstract class ApplicationEntity(
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
   abstract fun getRequiredQualifications(): List<UserQualification>
+
+  companion object {
+    @OptIn(ExperimentalContracts::class)
+    fun isCas1(entity: ApplicationEntity): Boolean {
+      contract {
+        returns(true) implies (entity is ApprovedPremisesApplicationEntity)
+      }
+      return ApprovedPremisesApplicationEntity::class.java.isAssignableFrom(
+        Hibernate.getClass(entity),
+      )
+    }
+  }
 }
 
 @Entity

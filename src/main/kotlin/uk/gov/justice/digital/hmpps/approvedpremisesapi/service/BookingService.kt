@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -1076,7 +1077,8 @@ class BookingService(
     otherReason: String?,
     withdrawalContext: WithdrawalContext,
   ): CasResult<CancellationEntity> {
-    if (booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
+    val application = booking.application
+    if (application != null && !isCas1(application)) {
       return CasResult.GeneralValidationError("Application is not for CAS1")
     }
 
@@ -1128,10 +1130,9 @@ class BookingService(
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking,
     )
 
-    val application = booking.application as ApprovedPremisesApplicationEntity?
     application?.let {
       cas1BookingEmailService.bookingWithdrawn(
-        application = it,
+        application = it as ApprovedPremisesApplicationEntity,
         booking = booking,
         withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
       )

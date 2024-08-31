@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -437,7 +438,7 @@ class AssessmentService(
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
       }
 
-    if (application is ApprovedPremisesApplicationEntity) {
+    if (isCas1(application)) {
       cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, userService.getUserForRequest())
       cas1AssessmentEmailService.assessmentAccepted(application)
 
@@ -541,7 +542,7 @@ class AssessmentService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    if (application is ApprovedPremisesApplicationEntity) {
+    if (isCas1(application)) {
       domainEventService.saveApplicationAssessedDomainEvent(
         DomainEvent(
           id = domainEventId,
@@ -721,7 +722,7 @@ class AssessmentService(
     prePersistAssessment(newAssessment)
     assessmentRepository.save(newAssessment)
 
-    if (application is ApprovedPremisesApplicationEntity) {
+    if (isCas1(application)) {
       cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {

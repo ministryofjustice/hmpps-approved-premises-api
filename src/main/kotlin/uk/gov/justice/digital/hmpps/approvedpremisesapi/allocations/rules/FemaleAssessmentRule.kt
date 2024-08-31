@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 
@@ -21,7 +21,7 @@ class FemaleAssessmentRule(
   override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome {
     val application = assessmentEntity.application
 
-    if (application !is ApprovedPremisesApplicationEntity) return UserAllocatorRuleOutcome.Skip
+    if (!isCas1(application)) return UserAllocatorRuleOutcome.Skip
     if (application.submittedAt == null) return UserAllocatorRuleOutcome.Skip
 
     return when (application.isWomensApplication) {

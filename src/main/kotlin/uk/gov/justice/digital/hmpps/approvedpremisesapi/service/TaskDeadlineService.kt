@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -20,18 +20,14 @@ class TaskDeadlineService(
     val application = assessment.application
     val effectiveAssessmentCreatedAt = assessment.createdAt.slewedToWorkingPattern()
 
-    return when {
-      application !is ApprovedPremisesApplicationEntity ->
-        null
-
-      application.noticeType == Cas1ApplicationTimelinessCategory.emergency ->
-        effectiveAssessmentCreatedAt.plusHours(ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS)
-
-      application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice ->
-        addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
-
-      else ->
-        addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS)
+    return if (!isCas1(application)) {
+      null
+    } else if (application.noticeType == Cas1ApplicationTimelinessCategory.emergency) {
+      effectiveAssessmentCreatedAt.plusHours(ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS)
+    } else if (application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+      addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
+    } else {
+      addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS)
     }
   }
 

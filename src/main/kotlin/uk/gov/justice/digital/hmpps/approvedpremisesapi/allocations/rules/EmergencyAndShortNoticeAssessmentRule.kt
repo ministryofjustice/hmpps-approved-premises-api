@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocato
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 
 @Component
@@ -28,7 +28,7 @@ class EmergencyAndShortNoticeAssessmentRule(
   override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome {
     val application = assessmentEntity.application
 
-    if (application !is ApprovedPremisesApplicationEntity) return UserAllocatorRuleOutcome.Skip
+    if (!isCas1(application)) return UserAllocatorRuleOutcome.Skip
     if (application.submittedAt == null) return UserAllocatorRuleOutcome.Skip
 
     return when (

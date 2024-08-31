@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -151,7 +151,7 @@ class ApplicationsController(
         getPersonDetailAndTransform(
           application = application,
           user = user,
-          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity && user.hasQualification(UserQualification.LAO),
+          ignoreLaoRestrictions = isCas1(application) && user.hasQualification(UserQualification.LAO),
         ),
       )
     }
@@ -440,16 +440,18 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> documentsResult.entity
     }
 
-    val transformedDocuments = when (application) {
-      is ApprovedPremisesApplicationEntity -> documentTransformer.transformToApi(
+    val transformedDocuments = if (isCas1(application)) {
+      documentTransformer.transformToApi(
         groupedDocuments = documents,
         onlyConvictionDocuments = featureFlagService.getBooleanFlag("cas1_only_list_conviction_documents"),
       )
-      is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApi(
+    } else if (application is TemporaryAccommodationApplicationEntity) {
+      documentTransformer.transformToApi(
         groupedDocuments = documents,
         convictionId = application.convictionId,
       )
-      else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
+    } else {
+      throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
     return ResponseEntity(transformedDocuments, HttpStatus.OK)
@@ -579,7 +581,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    if (application !is ApprovedPremisesApplicationEntity) {
+    if (!isCas1(application)) {
       throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -162,10 +163,12 @@ class UserAccessService(
       return true
     }
 
-    return when (application) {
-      is ApprovedPremisesApplicationEntity -> userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(user, application)
-      is TemporaryAccommodationApplicationEntity -> userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(user, application)
-      else -> false
+    return if (isCas1(application)) {
+      userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(user, application)
+    } else if (application is TemporaryAccommodationApplicationEntity) {
+      userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(user, application)
+    } else {
+      false
     }
   }
 
@@ -230,13 +233,11 @@ class UserAccessService(
    *
    * It doesn't consider if the application is in a withdrawable state
    */
-  fun userMayWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
-    is ApprovedPremisesApplicationEntity ->
-      application.createdByUser == user || (
-        application.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
-        )
-    else -> false
-  }
+  fun userMayWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = if (isCas1(application)) {
+    application.createdByUser == user || (
+      application.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
+      )
+  } else { false }
 
   /**
    * This function only checks if the user has the correct permissions to withdraw the given placement request.

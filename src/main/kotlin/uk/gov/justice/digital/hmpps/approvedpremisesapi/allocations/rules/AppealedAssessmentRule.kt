@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocato
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 
@@ -25,7 +25,7 @@ class AppealedAssessmentRule(
     val application = assessmentEntity.application
 
     if (assessmentEntity !is ApprovedPremisesAssessmentEntity) return UserAllocatorRuleOutcome.Skip
-    if (application !is ApprovedPremisesApplicationEntity) return UserAllocatorRuleOutcome.Skip
+    if (!isCas1(application)) return UserAllocatorRuleOutcome.Skip
     if (application.submittedAt == null) return UserAllocatorRuleOutcome.Skip
 
     return when (assessmentEntity.createdFromAppeal) {

@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -41,8 +41,8 @@ class ApplicationsTransformer(
   fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = jpa.getLatestAssessment()
 
-    return when (jpa) {
-      is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
+    return if (isCas1(jpa)) {
+      ApprovedPremisesApplication(
         id = jpa.id,
         person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
@@ -72,14 +72,22 @@ class ApplicationsTransformer(
         ),
         type = "CAS1",
         apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
-        applicantUserDetails = jpa.applicantUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
+        applicantUserDetails = jpa.applicantUserDetails?.let {
+          cas1ApplicationUserDetailsTransformer.transformJpaToApi(
+            it,
+          )
+        },
         caseManagerIsNotApplicant = jpa.caseManagerIsNotApplicant,
-        caseManagerUserDetails = jpa.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
+        caseManagerUserDetails = jpa.caseManagerUserDetails?.let {
+          cas1ApplicationUserDetailsTransformer.transformJpaToApi(
+            it,
+          )
+        },
         apType = jpa.apType.asApiType(),
         genderForAp = GenderForAp.male,
       )
-
-      is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
+    } else if (jpa is DomainTemporaryAccommodationApplicationEntity) {
+      TemporaryAccommodationApplication(
         id = jpa.id,
         person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpa.createdByUser.id,
@@ -102,8 +110,8 @@ class ApplicationsTransformer(
         type = "CAS3",
         offenceId = jpa.offenceId,
       )
-
-      else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
+    } else {
+      throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
     }
   }
 

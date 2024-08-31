@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity.Companion.isCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -24,7 +24,7 @@ class RequestForPlacementService(
     val application = applicationService.getApplication(applicationId)
       ?: return AuthorisableActionResult.NotFound("Application", applicationId.toString())
 
-    check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
+    check(isCas1(application)) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
     val placementApplications = placementApplicationService.getAllSubmittedNonReallocatedApplications(applicationId)
     val placementRequests = placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)
@@ -37,7 +37,7 @@ class RequestForPlacementService(
   }
 
   fun getRequestForPlacement(application: ApplicationEntity, requestForPlacementId: UUID, requestingUser: UserEntity): AuthorisableActionResult<RequestForPlacement> {
-    check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
+    check(isCas1(application)) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
     val placementApplication = placementApplicationService.getApplicationOrNull(requestForPlacementId)
     val placementRequest = placementRequestService.getPlacementRequestOrNull(requestForPlacementId)
