@@ -692,6 +692,307 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Nested
+  inner class GetUsersSummary {
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+    )
+    fun `GET to users with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/summary")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `GET to users with an unapproved role is forbidden`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/users/summary")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+      `Given a User` { _, jwt ->
+        webTestClient.get()
+          .uri("/users/summary")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role returns full list ordered by name`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+              webTestClient.get()
+                .uri("/users/summary")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+                .expectHeader().doesNotExist("X-Pagination-TotalPages")
+                .expectHeader().doesNotExist("X-Pagination-TotalResults")
+                .expectHeader().doesNotExist("X-Pagination-PageSize")
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(requestUser, userWithNoRole, matcher, manager).map {
+                      userTransformer.transformJpaToSummaryApi(it)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role returns list filtered by region`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+              val apArea = apAreaEntityFactory.produceAndPersist()
+              val probationRegion = probationRegionEntityFactory.produceAndPersist {
+                withApArea(apArea)
+              }
+
+              val userOne = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+              }
+
+              val userTwo = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+              }
+
+              webTestClient.get()
+                .uri("/users/summary?probationRegionId=${probationRegion.id}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+                .expectHeader().doesNotExist("X-Pagination-TotalPages")
+                .expectHeader().doesNotExist("X-Pagination-TotalResults")
+                .expectHeader().doesNotExist("X-Pagination-PageSize")
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(userOne, userTwo).map {
+                      userTransformer.transformJpaToSummaryApi(it)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role returns list filtered by user's AP area`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+              val apArea = apAreaEntityFactory.produceAndPersist()
+
+              val probationRegionApArea = apAreaEntityFactory.produceAndPersist()
+              val probationRegion = probationRegionEntityFactory.produceAndPersist {
+                withApArea(probationRegionApArea)
+              }
+
+              val userOne = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+              }
+
+              val userTwo = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+              }
+
+              webTestClient.get()
+                .uri("/users/summary?apAreaId=${apArea.id}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+                .expectHeader().doesNotExist("X-Pagination-TotalPages")
+                .expectHeader().doesNotExist("X-Pagination-TotalResults")
+                .expectHeader().doesNotExist("X-Pagination-PageSize")
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(userOne, userTwo).map {
+                      userTransformer.transformJpaToSummaryApi(it)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+              webTestClient.get()
+                .uri("/users/summary?page=1")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+                .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+                .expectHeader().valueEquals("X-Pagination-TotalResults", 4)
+                .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(requestUser, userWithNoRole, matcher, manager).map {
+                      userTransformer.transformJpaToSummaryApi(it)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role allows filtering by roles`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { _, _ ->
+            `Given a User`(roles = listOf(role)) { _, jwt ->
+              webTestClient.get()
+                .uri("/users/summary?roles=matcher,manager")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(matcher, manager).map {
+                      userTransformer.transformJpaToSummaryApi(it)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
+      `Given a User`(qualifications = listOf(UserQualification.WOMENS)) { womensUser, _ ->
+        `Given a User`(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
+          `Given a User` { _, _ ->
+            `Given a User`(roles = listOf(role)) { _, jwt ->
+              webTestClient.get()
+                .uri("/users/summary?qualifications=womens")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(womensUser).map {
+                      userTransformer.transformJpaToSummaryApi(it)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role allows filtering by role and qualifications`(
+      role: UserRole,
+    ) {
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        qualifications = listOf(UserQualification.WOMENS),
+      ) { womensAssessor1, _ ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.WOMENS),
+        ) { womensAssessor2, _ ->
+          `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
+            `Given a User` { _, _ ->
+              `Given a User`(roles = listOf(role)) { _, jwt ->
+                webTestClient.get()
+                  .uri("/users/summary?roles=assessor&qualifications=womens")
+                  .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.approvedPremises.value)
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      listOf(womensAssessor1, womensAssessor2).map {
+                        userTransformer.transformJpaToSummaryApi(it)
+                      },
+                    ),
+                  )
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class SearchByUserName {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])

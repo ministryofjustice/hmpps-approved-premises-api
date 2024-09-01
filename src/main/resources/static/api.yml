@@ -3949,7 +3949,7 @@ paths:
     get:
       tags:
         - Auth
-      summary: Returns a list of users
+      summary: Returns a list of users. If only the user's ID and Name are required, use /users/summary
       parameters:
         - in: query
           name: roles
@@ -4122,6 +4122,93 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /users/summary:
+    get:
+      tags:
+        - Auth
+      summary: Returns a list of user summaries (i.e. id and name only)
+      parameters:
+        - in: query
+          name: roles
+          required: false
+          description: Only return users with the provided role(s)
+          schema:
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/ApprovedPremisesUserRole'
+        - in: query
+          name: qualifications
+          required: false
+          description: Only return users with the provided qualification(s)
+          schema:
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/UserQualification'
+        - name: probationRegionId
+          in: query
+          description: Probation region ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: apAreaId
+          in: query
+          description: Approved premises area ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Filters the user details to those relevant to the specified service.
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '_shared.yml#/components/schemas/UserSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+      responses:
+        200:
+          description: successfully retrieved users
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/UserSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              schema:
+                type: integer
+              description: The current page number
+            X-Pagination-TotalPages:
+              schema:
+                type: integer
+              description: The total number of pages
+            X-Pagination-TotalResults:
+              schema:
+                type: integer
+              description: The total number of results
+            X-Pagination-PageSize:
+              schema:
+                type: integer
+              description: The size of each page
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

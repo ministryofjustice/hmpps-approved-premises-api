@@ -64,6 +64,29 @@ class UsersController(
       userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
     }
 
+  override fun usersSummaryGet(
+    xServiceName: ServiceName,
+    roles: List<ApprovedPremisesUserRole>?,
+    qualifications: List<UserQualification>?,
+    probationRegionId: UUID?,
+    apAreaId: UUID?,
+    page: Int?,
+    sortBy: UserSortField?,
+    sortDirection: SortDirection?,
+  ) =
+    getUsers(
+      xServiceName,
+      roles,
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      page,
+      sortBy,
+      sortDirection,
+    ) { user ->
+      userTransformer.transformJpaToSummaryApi(user)
+    }
+
   private fun <T> getUsers(
     xServiceName: ServiceName,
     roles: List<ApprovedPremisesUserRole>?,
