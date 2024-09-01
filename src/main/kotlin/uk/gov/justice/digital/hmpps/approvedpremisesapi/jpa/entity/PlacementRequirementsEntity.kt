@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.JoinTable
@@ -33,11 +34,11 @@ data class PlacementRequirementsEntity(
 
   val radius: Int,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "application_id")
   val application: ApprovedPremisesApplicationEntity,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "assessment_id")
   val assessment: ApprovedPremisesAssessmentEntity,
 

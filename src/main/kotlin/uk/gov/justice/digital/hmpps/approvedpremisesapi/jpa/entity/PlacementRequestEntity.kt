@@ -151,11 +151,11 @@ data class PlacementRequestEntity(
   val expectedArrival: LocalDate,
   val duration: Int,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "application_id")
   val application: ApprovedPremisesApplicationEntity,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "assessment_id")
   val assessment: ApprovedPremisesAssessmentEntity,
 
@@ -180,7 +180,7 @@ data class PlacementRequestEntity(
 
   var reallocatedAt: OffsetDateTime?,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_requirements_id")
   var placementRequirements: PlacementRequirementsEntity,
 
