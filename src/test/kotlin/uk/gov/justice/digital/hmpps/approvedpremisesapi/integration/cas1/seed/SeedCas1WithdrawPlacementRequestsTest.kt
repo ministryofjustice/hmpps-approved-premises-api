@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
@@ -237,7 +238,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
     configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
   ) =
     placementRequestFactory.produceAndPersist {
-      val assessment = application.assessments[0]
+      val assessment = application.assessments[0] as ApprovedPremisesAssessmentEntity
 
       val placementRequirements = placementRequirementsFactory.produceAndPersist {
         withApplication(application)

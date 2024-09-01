@@ -4,9 +4,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -34,7 +35,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   createdFromAppeal: Boolean = false,
-): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
+): Pair<ApprovedPremisesAssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }
@@ -111,7 +112,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   submittedAt: OffsetDateTime? = null,
   dueAt: OffsetDateTime? = null,
   createdFromAppeal: Boolean = false,
-  block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
+  block: (assessment: ApprovedPremisesAssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
 ) {
   val (assessment, application) = `Given an Assessment for Approved Premises`(
     allocatedToUser = allocatedToUser,
@@ -128,6 +129,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   block(assessment, application)
 }
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
@@ -135,7 +137,7 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   reallocated: Boolean = false,
   data: String? = "{ \"some\": \"data\"}",
   createdAt: OffsetDateTime? = null,
-  block: ((assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null,
+  block: ((assessment: TemporaryAccommodationAssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null,
 ) {
   val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()

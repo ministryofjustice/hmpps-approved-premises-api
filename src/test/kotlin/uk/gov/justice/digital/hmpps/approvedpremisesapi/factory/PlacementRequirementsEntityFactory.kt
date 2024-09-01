@@ -5,7 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
@@ -25,7 +25,7 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
   private var apType: Yielded<ApType> = { ApType.normal }
   private var postcodeDistrict: Yielded<PostCodeDistrictEntity> = { PostCodeDistrictEntityFactory().produce() }
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
-  private var assessment: Yielded<AssessmentEntity>? = null
+  private var assessment: Yielded<ApprovedPremisesAssessmentEntity>? = null
   private var radius: Yielded<Int> = { 50 }
   private var essentialCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce()) }
   private var desirableCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce(), CharacteristicEntityFactory().produce()) }
@@ -48,7 +48,7 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
     this.apType = { apType }
   }
 
-  fun withAssessment(assessment: AssessmentEntity) = apply {
+  fun withAssessment(assessment: ApprovedPremisesAssessmentEntity) = apply {
     this.assessment = { assessment }
   }
 

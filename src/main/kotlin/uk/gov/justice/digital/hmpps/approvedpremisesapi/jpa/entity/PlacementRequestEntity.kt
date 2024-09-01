@@ -157,7 +157,7 @@ data class PlacementRequestEntity(
 
   @ManyToOne
   @JoinColumn(name = "assessment_id")
-  val assessment: AssessmentEntity,
+  val assessment: ApprovedPremisesAssessmentEntity,
 
   @OneToOne
   @JoinColumn(name = "placement_application_id")

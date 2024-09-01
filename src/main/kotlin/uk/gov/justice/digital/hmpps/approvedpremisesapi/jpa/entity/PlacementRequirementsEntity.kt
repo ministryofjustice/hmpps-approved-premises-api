@@ -39,7 +39,7 @@ data class PlacementRequirementsEntity(
 
   @ManyToOne
   @JoinColumn(name = "assessment_id")
-  val assessment: AssessmentEntity,
+  val assessment: ApprovedPremisesAssessmentEntity,
 
   @ManyToMany
   @JoinTable(

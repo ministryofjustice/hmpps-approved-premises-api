@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -22,7 +22,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var duration: Yielded<Int> = { 12 }
   private var placementRequirements: Yielded<PlacementRequirementsEntity>? = null
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
-  private var assessment: Yielded<AssessmentEntity>? = null
+  private var assessment: Yielded<ApprovedPremisesAssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var booking: Yielded<BookingEntity?> = { null }
@@ -65,7 +65,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.application = { application }
   }
 
-  fun withAssessment(assessment: AssessmentEntity) = apply {
+  fun withAssessment(assessment: ApprovedPremisesAssessmentEntity) = apply {
     this.assessment = { assessment }
   }
 
