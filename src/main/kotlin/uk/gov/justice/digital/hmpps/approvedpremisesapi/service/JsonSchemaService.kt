@@ -47,5 +47,5 @@ class JsonSchemaService(
     return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
   }
 
-  fun <T : JsonSchemaEntity> getNewestSchema(type: Class<T>): JsonSchemaEntity = jsonSchemaRepository.getSchemasForType(type).maxBy { it.addedAt }
+  fun <T : JsonSchemaEntity> getNewestSchema(type: Class<T>): T = jsonSchemaRepository.getSchemasForType(type).maxBy { it.addedAt } as T
 }

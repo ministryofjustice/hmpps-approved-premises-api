@@ -29,21 +29,23 @@ class PlacementDatesQueryTest : IntegrationTestBase() {
         withApplicationSchema(jsonSchema)
       }
 
+      val placementAppJsonSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist()
+
       val placementApplication1 = placementApplicationFactory.produceAndPersist {
         withCreatedByUser(user)
-        withSchemaVersion(jsonSchema)
+        withSchemaVersion(placementAppJsonSchema)
         withApplication(application1)
       }
 
       val placementApplication2 = placementApplicationFactory.produceAndPersist {
         withCreatedByUser(user)
-        withSchemaVersion(jsonSchema)
+        withSchemaVersion(placementAppJsonSchema)
         withApplication(application1)
       }
 
       val placementApplication3 = placementApplicationFactory.produceAndPersist {
         withCreatedByUser(user)
-        withSchemaVersion(jsonSchema)
+        withSchemaVersion(placementAppJsonSchema)
         withApplication(application2)
       }
 
