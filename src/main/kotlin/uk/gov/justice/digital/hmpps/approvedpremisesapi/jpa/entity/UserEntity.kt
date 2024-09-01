@@ -15,6 +15,7 @@ import javax.persistence.Convert
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -273,11 +274,11 @@ data class UserEntity(
   var roles: MutableList<UserRoleAssignmentEntity>,
   @OneToMany(mappedBy = "user")
   val qualifications: MutableList<UserQualificationAssignmentEntity>,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   var probationRegion: ProbationRegionEntity,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
   @Convert(converter = StringListConverter::class)
