@@ -42,7 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toPageable
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -87,7 +86,7 @@ class PlacementRequestService(
     searchCriteria: AllActiveSearchCriteria,
     pageCriteria: PageCriteria<PlacementRequestSortField>,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val pageable = pageCriteria.toPageable {
+    val pageable = pageCriteria.toPageable(
       when (pageCriteria.sortBy) {
         PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
         PlacementRequestSortField.createdAt -> "created_at"
@@ -96,8 +95,8 @@ class PlacementRequestService(
         PlacementRequestSortField.requestType -> "request_type"
         PlacementRequestSortField.personName -> "person_name"
         PlacementRequestSortField.personRisksTier -> "person_risks_tier"
-      }
-    }
+      },
+    )
 
     val response = placementRequestRepository.allForDashboard(
       status = searchCriteria.status,

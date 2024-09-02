@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import javax.annotation.PostConstruct
 
+@Suppress("TooManyFunctions")
 private lateinit var config: PaginationConfig
 
 @Component
@@ -32,6 +33,22 @@ data class PageCriteria<S>(
   fun <S2> withSortBy(sortBy: S2): PageCriteria<S2> {
     return PageCriteria(sortBy, this.sortDirection, this.page, this.perPage)
   }
+
+  @Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
+  fun toPageable(sortByConverter: String) = getPageable(
+    sortByConverter,
+    this.sortDirection,
+    this.page,
+    this.perPage,
+  )
+
+  fun toPageableOrAllPages(unsafe: Boolean = false, sortByConverter: String) = getPageableOrAllPages(
+    sortByConverter,
+    this.sortDirection,
+    this.page,
+    this.perPage,
+    unsafe = unsafe,
+  )
 }
 
 @Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
@@ -47,34 +64,38 @@ fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageS
   }
 }
 
-@Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
-fun <SortType> PageCriteria<SortType>.toPageable(sortByConverter: (SortType) -> String) = getPageable(
-  sortByConverter(this.sortBy),
-  this.sortDirection,
-  this.page,
-  this.perPage,
-)
-
-fun <SortType> PageCriteria<SortType>.toPageableOrAllPages(unsafe: Boolean = false, sortByConverter: (SortType) -> String) = getPageableOrAllPages(
-  sortByConverter(this.sortBy),
-  this.sortDirection,
-  this.page,
-  this.perPage,
-  unsafe = unsafe,
-)
-
 fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
+  return getPageableOrAllPages(listOf(sortBy), sortDirection, page, pageSize, unsafe)
+}
+
+fun getPageableOrAllPages(sortBy: List<String>, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
+  val direction = sortDirection(sortDirection)
+  var sort: Sort? = null
+  sortBy.mapIndexed { index, entity ->
+    sort = if (index == 0) {
+      when {
+        unsafe -> JpaSort.unsafe(direction, entity)
+        else -> Sort.by(direction, entity)
+      }
+    } else {
+      when {
+        unsafe -> sort!!.and(JpaSort.unsafe(direction, entity))
+        else -> sort!!.and(Sort.by(direction, entity))
+      }
+    }
+  }
+
   return if (page != null) {
     PageRequest.of(
       page - 1,
       resolvePageSize(pageSize),
-      toSort(sortBy, sortDirection, unsafe),
+      sort,
     )
   } else {
     PageRequest.of(
       0,
       Int.MAX_VALUE,
-      toSort(sortBy, sortDirection, unsafe),
+      sort,
     )
   }
 }
@@ -106,10 +127,12 @@ fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): Pagi
 private fun resolvePageSize(perPage: Int?) = perPage ?: config.defaultPageSize
 
 private fun toSort(sortBy: String, sortDirection: SortDirection?, unsafe: Boolean): Sort {
-  val direction = when (sortDirection) {
-    SortDirection.desc -> DESC
-    else -> ASC
-  }
+  val direction = sortDirection(sortDirection)
 
   return if (unsafe) JpaSort.unsafe(direction, sortBy) else Sort.by(direction, sortBy)
+}
+
+private fun sortDirection(sortDirection: SortDirection?) = when (sortDirection) {
+  SortDirection.desc -> DESC
+  else -> ASC
 }
