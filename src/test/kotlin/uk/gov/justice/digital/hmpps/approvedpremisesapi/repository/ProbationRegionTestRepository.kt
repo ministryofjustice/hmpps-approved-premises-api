@@ -6,4 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import java.util.UUID
 
 @Repository
-interface ProbationRegionTestRepository : JpaRepository<ProbationRegionEntity, UUID>
+interface ProbationRegionTestRepository : JpaRepository<ProbationRegionEntity, UUID> {
+  fun findByName(name: String): ProbationRegionEntity?
+}
