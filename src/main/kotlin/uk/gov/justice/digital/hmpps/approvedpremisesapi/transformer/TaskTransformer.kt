@@ -4,17 +4,12 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -37,13 +32,14 @@ class TaskTransformer(
   private val apAreaTransformer: ApAreaTransformer,
   private val assessmentTransformer: AssessmentTransformer,
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
+  private val personTransformer: PersonTransformer,
 ) {
 
   fun transformAssessmentToTask(assessment: AssessmentEntity, offenderSummaries: List<PersonSummaryInfoResult>) = AssessmentTask(
     id = assessment.id,
     applicationId = assessment.application.id,
     personName = getPersonNameFromApplication(assessment.application, offenderSummaries),
-    personSummary = getPersonSummaryFromApplication(assessment.application, offenderSummaries),
+    personSummary = getPersonSummary(assessment.application, offenderSummaries),
     crn = assessment.application.crn,
     dueDate = transformDueAtToDate(assessment.dueAt),
     dueAt = transformDueAtToInstant(assessment.dueAt),
@@ -68,7 +64,7 @@ class TaskTransformer(
       id = placementRequest.id,
       applicationId = placementRequest.application.id,
       personName = getPersonNameFromApplication(placementRequest.application, offenderSummaries),
-      personSummary = getPersonSummaryFromApplication(placementRequest.application, offenderSummaries),
+      personSummary = getPersonSummary(placementRequest.application, offenderSummaries),
       crn = placementRequest.application.crn,
       dueDate = transformDueAtToDate(placementRequest.dueAt),
       dueAt = transformDueAtToInstant(placementRequest.dueAt),
@@ -93,7 +89,7 @@ class TaskTransformer(
     id = placementApplication.id,
     applicationId = placementApplication.application.id,
     personName = getPersonNameFromApplication(placementApplication.application, offenderSummaries),
-    personSummary = getPersonSummaryFromApplication(placementApplication.application, offenderSummaries),
+    personSummary = getPersonSummary(placementApplication.application, offenderSummaries),
     crn = placementApplication.application.crn,
     dueDate = transformDueAtToDate(placementApplication.dueAt),
     dueAt = transformDueAtToInstant(placementApplication.dueAt),
@@ -117,6 +113,9 @@ class TaskTransformer(
     },
   )
 
+  private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>) =
+    personTransformer.personSummaryInfoToPersonSummary(offenderSummaries.first { it.crn == application.crn })
+
   private fun getPersonNameFromApplication(
     application: ApplicationEntity,
     offenderSummaries: List<PersonSummaryInfoResult>,
@@ -124,34 +123,6 @@ class TaskTransformer(
     val crn = application.crn
     val offenderSummary = offenderSummaries.first { it.crn == crn }
     return getNameFromPersonSummaryInfoResult(offenderSummary)
-  }
-
-  private fun getPersonSummaryFromApplication(
-    application: ApplicationEntity,
-    offenderSummaries: List<PersonSummaryInfoResult>,
-  ): PersonSummary {
-    val offenderSummary = offenderSummaries.first { it.crn == application.crn }
-    when (offenderSummary) {
-      is PersonSummaryInfoResult.Success.Full -> {
-        return FullPersonSummary(
-          crn = application.crn,
-          personType = PersonSummaryDiscriminator.fullPersonSummary,
-          name = getNameFromPersonSummaryInfoResult(offenderSummary),
-        )
-      }
-      is PersonSummaryInfoResult.Success.Restricted -> {
-        return RestrictedPersonSummary(
-          crn = application.crn,
-          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
-        )
-      }
-      is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
-        return UnknownPersonSummary(
-          crn = application.crn,
-          personType = PersonSummaryDiscriminator.unknownPersonSummary,
-        )
-      }
-    }
   }
 
   private fun getApArea(application: ApplicationEntity): ApArea? {

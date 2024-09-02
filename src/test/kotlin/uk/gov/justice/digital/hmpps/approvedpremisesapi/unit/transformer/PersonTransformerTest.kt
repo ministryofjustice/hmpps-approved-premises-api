@@ -4,10 +4,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -19,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
@@ -31,6 +36,66 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffenders
 
 class PersonTransformerTest {
   private val personTransformer = PersonTransformer()
+
+  @Nested
+  inner class PersonSummaryInfoToPersonSummary {
+
+    fun `map full person`() {
+      val result = personTransformer.personSummaryInfoToPersonSummary(
+        PersonSummaryInfoResult.Success.Full(
+          crn = "the crn",
+          summary = CaseSummaryFactory()
+            .withName(Name("max", "power", emptyList()))
+            .produce(),
+        ),
+      )
+
+      assertThat(result.crn).isEqualTo("the crn")
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(result).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((result as FullPersonSummary).name).isEqualTo("max power")
+    }
+
+    @Test
+    fun `map restricted person`() {
+      val result = personTransformer.personSummaryInfoToPersonSummary(
+        PersonSummaryInfoResult.Success.Restricted(
+          crn = "the crn",
+          nomsNumber = "the noms number",
+        ),
+      )
+
+      assertThat(result.crn).isEqualTo("the crn")
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.restrictedPersonSummary)
+      assertThat(result).isInstanceOf(RestrictedPersonSummary::class.java)
+    }
+
+    @Test
+    fun `map not found person`() {
+      val result = personTransformer.personSummaryInfoToPersonSummary(
+        PersonSummaryInfoResult.NotFound(
+          crn = "the crn",
+        ),
+      )
+
+      assertThat(result.crn).isEqualTo("the crn")
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
+      assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
+    }
+
+    @Test
+    fun `map unknown person`() {
+      val result = personTransformer.personSummaryInfoToPersonSummary(
+        PersonSummaryInfoResult.Unknown(
+          crn = "the crn",
+        ),
+      )
+
+      assertThat(result.crn).isEqualTo("the crn")
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
+      assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
+    }
+  }
 
   @Nested
   inner class TransformModelToPersonInfoApi {
