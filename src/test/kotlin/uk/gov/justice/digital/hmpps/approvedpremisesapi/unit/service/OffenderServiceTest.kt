@@ -2,10 +2,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
+import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.kotlin.times
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -23,7 +28,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -31,14 +38,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -1106,6 +1118,353 @@ class OffenderServiceTest {
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))
       assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
+    }
+  }
+
+  companion object {
+    const val OFFENDER_1_CRN = "CRN1"
+    const val OFFENDER_1_NOMS: String = "NOMS1"
+    const val OFFENDER_2_CRN = "CRN2"
+    const val OFFENDER_2_NOMS = "NOMS2"
+    const val OFFENDER_3_CRN = "CRN3"
+    const val USERNAME = "deliusUsername"
+  }
+
+  @Nested
+  inner class GetPersonSummaryInfoResults {
+
+    @Test
+    fun `if no crns provided immediately return empty list`() {
+      val result = offenderService.getPersonSummaryInfoResults(
+        crns = emptySet(),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
+    fun `any error retrieving case summaries is rethrown`(response: ClientResult.Failure<CaseSummaries>) {
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns response
+
+      assertThrows<Throwable> {
+        offenderService.getPersonSummaryInfoResults(
+          crns = setOf(OFFENDER_1_CRN),
+          limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        )
+      }
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
+    fun `any error retrieving case access is rethrown`(response: ClientResult.Failure<UserAccess>) {
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns response
+
+      assertThrows<Throwable> {
+        offenderService.getPersonSummaryInfoResults(
+          crns = setOf(OFFENDER_1_CRN),
+          limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        )
+      }
+    }
+
+    @Test
+    fun `single crn, case summary not found, return NotFound`() {
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.NotFound
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+    }
+
+    @Test
+    fun `single crn with no limited access, return Success`() {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Full
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result0.summary).isSameAs(offender1CaseSummary)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "true,false",
+      "false,true",
+      "true,true",
+    )
+    fun `single crn with limited access, no limited access record returned, return NotFound`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+    ) {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.NotFound
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "true,false",
+      "false,true",
+      "true,true",
+    )
+    fun `single crn with limited access, user is not limited, return Success`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+    ) {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        UserAccess(
+          listOf(
+            CaseAccessFactory()
+              .withCrn(OFFENDER_1_CRN)
+              .withUserExcluded(false)
+              .withUserRestricted(false)
+              .produce(),
+          ),
+        ),
+      )
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Full
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result0.summary).isSameAs(offender1CaseSummary)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "true,false",
+      "false,true",
+      "true,true",
+    )
+    fun `single crn with limited access, user is limited, return Restricted`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+    ) {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        UserAccess(
+          listOf(
+            CaseAccessFactory()
+              .withCrn(OFFENDER_1_CRN)
+              .withUserExcluded(currentExclusion)
+              .withUserRestricted(currentRestriction)
+              .produce(),
+          ),
+        ),
+      )
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Restricted::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Restricted
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result0.nomsNumber).isEqualTo(OFFENDER_1_NOMS)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "true,false",
+      "false,true",
+      "true,true",
+    )
+    fun `single crn with limited access, ignore lao restrictions, return Success`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+    ) {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        limitedAccessStrategy = IgnoreLimitedAccess,
+      )
+
+      verify(exactly = 0) { mockApDeliusContextApiClient.getUserAccessForCrns(any(), any()) }
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Full
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result0.summary).isSameAs(offender1CaseSummary)
+    }
+
+    @Test
+    fun `multiple crns with all possible return types`() {
+      val offender1Success = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
+        .produce()
+
+      val offender2Restricted = CaseSummaryFactory()
+        .withCrn(OFFENDER_2_CRN)
+        .withNomsId(OFFENDER_2_NOMS)
+        .withCurrentExclusion(true)
+        .withCurrentRestriction(false)
+        .produce()
+
+      CaseSummaryFactory()
+        .withCrn(OFFENDER_3_CRN)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            offender1Success,
+            offender2Restricted,
+          ),
+        ),
+      )
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        UserAccess(
+          listOf(
+            CaseAccessFactory()
+              .withCrn(OFFENDER_1_CRN)
+              .withUserRestricted(false)
+              .withUserExcluded(false)
+              .produce(),
+            CaseAccessFactory()
+              .withCrn(OFFENDER_2_CRN)
+              .withUserRestricted(false)
+              .withUserExcluded(true)
+              .produce(),
+          ),
+        ),
+      )
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN),
+        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(3)
+
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Full
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result0.summary).isSameAs(offender1Success)
+
+      assertThat(results[1]).isInstanceOf(PersonSummaryInfoResult.Success.Restricted::class.java)
+      val result1 = results[1] as PersonSummaryInfoResult.Success.Restricted
+      assertThat(result1.crn).isEqualTo(OFFENDER_2_CRN)
+      assertThat(result1.nomsNumber).isEqualTo(OFFENDER_2_NOMS)
+
+      assertThat(results[2]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
+      val result2 = results[2] as PersonSummaryInfoResult.NotFound
+      assertThat(result2.crn).isEqualTo(OFFENDER_3_CRN)
     }
   }
 
