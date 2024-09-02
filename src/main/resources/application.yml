@@ -32,12 +32,26 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/all-except-integration
     placeholderReplacement: true
 
+  cache:
+    # we explicitly define redis as the cache provided as we have
+    # ehcache on the classpath for JPA/hibernate, and spring will
+    # that by default instead
+    type: redis
+
   jpa:
     hibernate:
       ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        cache:
+          use_second_level_cache: true
+      javax.cache:
+        provider: org.ehcache.jsr107.EhcacheCachingProvider
+        uri: hibernate-ehcache.xml
+        persistence:
+          sharedCache:
+            mode: ENABLE_SELECTIVE
 
   data:
     redis:
