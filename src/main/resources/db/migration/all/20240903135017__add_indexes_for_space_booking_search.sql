@@ -1,0 +1,2 @@
+CREATE INDEX cas1_space_bookings_premises_id_idx ON cas1_space_bookings (premises_id);
+CREATE INDEX cas1_space_bookings_actual_arrival_date_time_idx ON cas1_space_bookings (actual_arrival_date_time,crn);

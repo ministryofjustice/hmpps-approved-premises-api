@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesCo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -40,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
@@ -673,4 +676,10 @@ class OffenderService(
       }
     }
   }
+}
+
+fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
+  LimitedAccessStrategy.IgnoreLimitedAccess
+} else {
+  LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
 }

@@ -10,16 +10,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service
 class SpaceBookingController(
+  private val userAccessService: UserAccessService,
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val spaceBookingService: Cas1SpaceBookingService,
@@ -59,15 +66,40 @@ class SpaceBookingController(
     page: Int?,
     perPage: Int?,
   ): ResponseEntity<List<Cas1SpaceBookingSummary>> {
-    return super.premisesPremisesIdSpaceBookingsGet(
+    userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_LIST)
+
+    val result = spaceBookingService.search(
       premisesId,
-      residency,
-      crnOrName,
-      sortDirection,
-      sortBy,
-      page,
-      perPage,
+      SpaceBookingFilterCriteria(
+        residency = residency,
+        crnOrName = crnOrName,
+      ),
+      PageCriteria(
+        sortBy = sortBy ?: Cas1SpaceBookingSummarySortField.personName,
+        sortDirection = sortDirection ?: SortDirection.desc,
+        page = page,
+        perPage = perPage,
+      ),
     )
+
+    val (searchResults, metadata) = extractEntityFromCasResult(result)
+
+    val user = userService.getUserForRequest()
+    val offenderSummaries = offenderService.getPersonSummaryInfoResults(
+      crns = searchResults.map { it.crn }.toSet(),
+      limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
+    )
+
+    val summaries = searchResults.map {
+      spaceBookingTransformer.transformSearchResultToSummary(
+        it,
+        offenderSummaries.forCrn(it.crn),
+      )
+    }
+
+    return ResponseEntity.ok()
+      .headers(metadata?.toHeaders())
+      .body(summaries)
   }
 
   override fun premisesPremisesIdSpaceBookingsBookingIdGet(

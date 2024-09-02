@@ -13,3 +13,5 @@ sealed interface PersonSummaryInfoResult {
   data class NotFound(override val crn: String) : PersonSummaryInfoResult
   data class Unknown(override val crn: String, val throwable: Throwable? = null) : PersonSummaryInfoResult
 }
+
+fun List<PersonSummaryInfoResult>.forCrn(crn: String) = this.first { it.crn == crn }

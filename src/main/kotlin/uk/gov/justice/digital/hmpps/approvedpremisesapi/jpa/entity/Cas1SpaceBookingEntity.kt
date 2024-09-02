@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.time.LocalDate
@@ -16,6 +19,57 @@ import javax.persistence.Table
 @Repository
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
   fun findByPremisesIdAndPlacementRequestId(premisesId: UUID, placementRequestId: UUID): Cas1SpaceBookingEntity?
+
+  @Query(
+    value = """
+      SELECT 
+      Cast(b.id as varchar),
+      b.crn as crn,
+      b.canonical_arrival_date as canonicalArrivalDate,
+      b.canonical_departure_date as canonicalDepartureDate,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+      b.key_worker_staff_code as keyWorkerStaffCode,
+      b.key_worker_assigned_at as keyWorkerAssignedAt,
+      b.key_worker_name as keyWorkerName,
+      apa.name as personName
+      FROM cas1_space_bookings b
+      INNER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      WHERE 
+      b.premises_id = :premisesId AND 
+      b.actual_departure_date_time IS NULL AND
+      (
+        :residency IS NULL OR (
+          (:residency = 'upcoming' AND b.actual_arrival_date_time IS NULL) OR
+          (:residency = 'current' AND b.actual_arrival_date_time IS NOT NULL and b.actual_departure_date_time IS NULL)
+        ) 
+      ) AND
+      (
+        :crnOrName IS NULL OR 
+        (
+            (b.crn ILIKE :crnOrName) OR
+            (apa.name ILIKE '%' || :crnOrName || '%')
+        ) 
+      )
+    """,
+    nativeQuery = true,
+  )
+  fun search(
+    residency: String?,
+    crnOrName: String?,
+    premisesId: UUID,
+    pageable: Pageable?,
+  ): Page<Cas1SpaceBookingSearchResult>
+}
+
+interface Cas1SpaceBookingSearchResult {
+  val id: UUID
+  val crn: String
+  val canonicalArrivalDate: LocalDate
+  val canonicalDepartureDate: LocalDate
+  val tier: String?
+  val keyWorkerStaffCode: String?
+  val keyWorkerAssignedAt: Instant?
+  val keyWorkerName: String?
 }
 
 @Entity

@@ -6285,7 +6285,7 @@ components:
         tier:
           description: Risk rating tier level of corresponding application
           type: string
-        keyWorker:
+        keyWorkerAllocation:
           $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
       required:
         - id
@@ -6298,7 +6298,7 @@ components:
         - personName
         - canonicalArrivalDate
         - canonicalDepartureDate
-        - keyworkerName
+        - keyWorkerName
         - tier
     Cas1SpaceBookingResidency:
       type: string
@@ -6314,7 +6314,7 @@ components:
           type: string
           format: date
       required:
-        - keyworker
+        - keyWorker
         - allocatedAt
     Cas1NewArrival:
       type: object
