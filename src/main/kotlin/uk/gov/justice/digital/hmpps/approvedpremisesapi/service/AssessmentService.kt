@@ -58,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toPageableOrAllPages
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -108,8 +107,8 @@ class AssessmentService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
-  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>) = pageCriteria.toPageableOrAllPages {
-    when (pageCriteria.sortBy) {
+  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>) = pageCriteria.toPageableOrAllPages(
+    sortByConverter = when (pageCriteria.sortBy) {
       AssessmentSortField.assessmentStatus -> "status"
       AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
       AssessmentSortField.assessmentCreatedAt -> "createdAt"
@@ -117,8 +116,8 @@ class AssessmentService(
       AssessmentSortField.personCrn -> "crn"
       AssessmentSortField.personName -> "personName"
       AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnit"
-    }
-  }
+    },
+  )
 
   fun getAssessmentSummariesForUserCAS3(
     user: UserEntity,

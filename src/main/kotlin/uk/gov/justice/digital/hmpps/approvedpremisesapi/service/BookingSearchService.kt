@@ -137,12 +137,12 @@ class BookingSearchService(
 
   private fun convertSortFieldToDBField(sortField: BookingSearchSortField) =
     when (sortField) {
-      BookingSearchSortField.bookingEndDate -> "departure_date"
-      BookingSearchSortField.bookingStartDate -> "arrival_date"
-      BookingSearchSortField.bookingCreatedAt -> "created_at"
-      BookingSearchSortField.personCrn -> "crn"
-      BookingSearchSortField.personName -> "personName"
-      else -> "created_at"
+      BookingSearchSortField.bookingEndDate -> listOf("departure_date", "personName")
+      BookingSearchSortField.bookingStartDate -> listOf("arrival_date", "personName")
+      BookingSearchSortField.bookingCreatedAt -> listOf("created_at")
+      BookingSearchSortField.personCrn -> listOf("crn")
+      BookingSearchSortField.personName -> listOf("personName")
+      else -> listOf("created_at")
     }
 
   private fun sortBookingResultByPersonName(
