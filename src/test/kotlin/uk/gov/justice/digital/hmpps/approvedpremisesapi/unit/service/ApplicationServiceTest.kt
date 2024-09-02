@@ -577,7 +577,7 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -660,7 +660,7 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -742,7 +742,7 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -824,7 +824,7 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -1433,7 +1433,6 @@ class ApplicationServiceTest {
     every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
     every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 

@@ -38,16 +38,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -389,7 +389,7 @@ class AssessmentServiceTest {
     every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns true
 
     every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -444,7 +444,7 @@ class AssessmentServiceTest {
     every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns false
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getAssessmentForUser(user, assessmentId)
 
@@ -464,7 +464,7 @@ class AssessmentServiceTest {
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.getAssessmentForUser(user, assessmentId)
 
@@ -486,7 +486,7 @@ class AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
       val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
@@ -533,7 +533,7 @@ class AssessmentServiceTest {
 
       every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
 
-      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
       val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
@@ -591,7 +591,7 @@ class AssessmentServiceTest {
         it.invocation.args[0] as AssessmentClarificationNoteEntity
       }
 
-      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
         OffenderDetailsSummaryFactory().produce(),
@@ -657,7 +657,7 @@ class AssessmentServiceTest {
         it.invocation.args[0] as AssessmentClarificationNoteEntity
       }
 
-      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
         OffenderDetailsSummaryFactory().produce(),
@@ -701,7 +701,7 @@ class AssessmentServiceTest {
       .produce()
 
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, "referral history note")
 
@@ -748,7 +748,7 @@ class AssessmentServiceTest {
 
     every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.updateAssessment(user, assessmentId, "{}")
 
@@ -788,7 +788,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -838,7 +838,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -1109,7 +1109,7 @@ class AssessmentServiceTest {
 
     every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
 
@@ -1149,7 +1149,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -1630,7 +1630,7 @@ class AssessmentServiceTest {
 
     every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
 
-    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntityFactory().produce()
 
     val result = assessmentService.closeAssessment(user, assessmentId)
 
@@ -1667,7 +1667,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntityFactory().produce()
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),

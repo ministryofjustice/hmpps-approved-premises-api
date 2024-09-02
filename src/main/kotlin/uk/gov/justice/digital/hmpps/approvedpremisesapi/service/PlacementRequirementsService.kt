@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
@@ -31,6 +32,10 @@ class PlacementRequirementsService(
       characteristicRepository.findAllWherePropertyNameIn(requirements.desirableCriteria.map { it.toString() })
     val essentialCriteria =
       characteristicRepository.findAllWherePropertyNameIn(requirements.essentialCriteria.map { it.toString() })
+
+    if (assessment !is ApprovedPremisesAssessmentEntity) {
+      throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")
+    }
 
     val application = (assessment.application as? ApprovedPremisesApplicationEntity)
       ?: throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")

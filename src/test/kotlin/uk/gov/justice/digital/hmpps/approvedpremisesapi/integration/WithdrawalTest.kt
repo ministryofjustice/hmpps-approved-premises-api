@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
@@ -1628,7 +1629,7 @@ class WithdrawalTest : IntegrationTestBase() {
     placementApplication: PlacementApplicationEntity? = null,
   ) =
     placementRequestFactory.produceAndPersist {
-      val assessment = application.assessments[0]
+      val assessment = application.assessments[0] as ApprovedPremisesAssessmentEntity
 
       val placementRequirements = placementRequirementsFactory.produceAndPersist {
         withApplication(application)

@@ -76,7 +76,7 @@ data class PlacementApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "schema_version")
-  var schemaVersion: JsonSchemaEntity,
+  var schemaVersion: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
 
   @Transient
   var schemaUpToDate: Boolean,

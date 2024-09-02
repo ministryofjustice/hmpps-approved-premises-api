@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -1144,7 +1145,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     ) {
       val placementRequirements = placementRequirementsFactory.produceAndPersist {
         withApplication(placementApplicationEntity.application)
-        withAssessment(placementApplicationEntity.application.getLatestAssessment()!!)
+        withAssessment(placementApplicationEntity.application.getLatestAssessment()!! as ApprovedPremisesAssessmentEntity)
         withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
         withDesirableCriteria(
           characteristicEntityFactory.produceAndPersistMultiple(5),
