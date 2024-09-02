@@ -27,6 +27,9 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "premises_id")
   val premises: ApprovedPremisesEntity,
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "approved_premises_application_id")
+  val application: ApprovedPremisesApplicationEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
   val placementRequest: PlacementRequestEntity,
   @ManyToOne(fetch = FetchType.LAZY)
@@ -41,5 +44,6 @@ data class Cas1SpaceBookingEntity(
   val canonicalDepartureDate: LocalDate,
   val crn: String,
   val keyWorkerStaffCode: String?,
+  val keyWorkerName: String?,
   val keyWorkerAssignedAt: Instant?,
 )

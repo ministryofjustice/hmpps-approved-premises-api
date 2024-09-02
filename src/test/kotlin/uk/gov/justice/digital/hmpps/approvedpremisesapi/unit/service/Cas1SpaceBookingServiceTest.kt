@@ -226,6 +226,7 @@ class Cas1SpaceBookingServiceTest {
       val persistedBooking = persistedBookingCaptor.captured
       assertThat(persistedBooking.premises).isEqualTo(premises)
       assertThat(persistedBooking.placementRequest).isEqualTo(placementRequest)
+      assertThat(persistedBooking.application).isEqualTo(application)
       assertThat(persistedBooking.createdAt).isWithinTheLastMinute()
       assertThat(persistedBooking.createdBy).isEqualTo(user)
       assertThat(persistedBooking.expectedArrivalDate).isEqualTo(arrivalDate)

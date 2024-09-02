@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -15,6 +16,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<ApprovedPremisesEntity> = { ApprovedPremisesEntityFactory().withDefaults().produce() }
   private var placementRequest: Yielded<PlacementRequestEntity> = { PlacementRequestEntityFactory().withDefaults().produce() }
+  private var application: Yielded<ApprovedPremisesApplicationEntity?> = { null }
   private var createdBy: Yielded<UserEntity> = { UserEntityFactory().withDefaults().produce() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var arrivalDate: Yielded<LocalDate> = { LocalDate.now() }
@@ -25,6 +27,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private val canonicalDepartureDate = { LocalDate.now() }
   private val crn = { randomStringUpperCase(6) }
   private val keyWorkerStaffCode = { null }
+  private val keyWorkerName = { null }
   private val keyWorkerAssignedAt = { null }
 
   fun withId(id: UUID) = apply {
@@ -93,7 +96,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     canonicalDepartureDate = this.canonicalDepartureDate(),
     crn = this.crn(),
     keyWorkerStaffCode = this.keyWorkerStaffCode(),
+    keyWorkerName = this.keyWorkerName(),
     keyWorkerAssignedAt = this.keyWorkerAssignedAt(),
-
+    application = this.application(),
   )
 }
