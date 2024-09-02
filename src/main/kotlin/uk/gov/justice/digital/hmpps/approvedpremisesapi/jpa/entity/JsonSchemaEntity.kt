@@ -8,6 +8,7 @@ import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -24,6 +25,7 @@ interface JsonSchemaRepository : JpaRepository<JsonSchemaEntity, UUID> {
 @Table(name = "json_schemas")
 @DiscriminatorColumn(name = "type")
 @Inheritance(strategy = InheritanceType.JOINED)
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 abstract class JsonSchemaEntity(
   @Id
   val id: UUID,

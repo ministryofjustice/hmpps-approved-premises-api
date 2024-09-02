@@ -4,6 +4,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -14,6 +15,7 @@ interface LocalAuthorityAreaRepository : JpaRepository<LocalAuthorityAreaEntity,
 
 @Entity
 @Table(name = "local_authority_areas")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class LocalAuthorityAreaEntity(
   @Id
   var id: UUID,

@@ -5,6 +5,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -16,6 +17,7 @@ interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID>
 
 @Entity
 @Table(name = "probation_regions")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class ProbationRegionEntity(
   @Id
   val id: UUID,
