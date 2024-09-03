@@ -4,7 +4,13 @@ import org.zalando.problem.AbstractThrowableProblem
 import org.zalando.problem.Exceptional
 import org.zalando.problem.Status
 
-class ForbiddenProblem : AbstractThrowableProblem(null, "Forbidden", Status.FORBIDDEN, "You are not authorized to access this endpoint") {
+class ForbiddenProblem(detail: String? = null) :
+  AbstractThrowableProblem(
+    null,
+    "Forbidden",
+    Status.FORBIDDEN,
+    "You are not authorized to access this endpoint" + if (detail != null) { " $detail" } else { "" },
+  ) {
   override fun getCause(): Exceptional? {
     return null
   }

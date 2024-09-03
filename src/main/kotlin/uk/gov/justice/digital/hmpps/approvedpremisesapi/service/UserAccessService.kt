@@ -15,9 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 
@@ -27,6 +29,12 @@ class UserAccessService(
   private val offenderService: OffenderService,
   private val requestContextService: RequestContextService,
 ) {
+  fun ensureCurrentUserHasPermission(permission: UserPermission) {
+    if (!userService.getUserForRequest().hasPermission(permission)) {
+      throw ForbiddenProblem("Permission ${permission.name} is required")
+    }
+  }
+
   fun currentUserCanAccessRegion(probationRegionId: UUID?) =
     userCanAccessRegion(userService.getUserForRequest(), probationRegionId)
 
