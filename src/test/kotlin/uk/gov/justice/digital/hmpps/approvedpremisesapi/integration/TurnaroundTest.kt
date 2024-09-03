@@ -85,7 +85,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewTurnaround(
-            workingDays = 0,
+            workingDays = -1,
           ),
         )
         .exchange()

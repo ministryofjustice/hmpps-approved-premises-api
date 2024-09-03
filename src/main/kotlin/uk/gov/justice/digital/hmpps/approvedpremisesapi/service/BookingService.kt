@@ -683,7 +683,7 @@ class BookingService(
     booking: BookingEntity,
     workingDays: Int,
   ) = validated {
-    if (workingDays <= 0) {
+    if (workingDays < 0) {
       "$.workingDays" hasValidationError "isNotAPositiveInteger"
     }
 

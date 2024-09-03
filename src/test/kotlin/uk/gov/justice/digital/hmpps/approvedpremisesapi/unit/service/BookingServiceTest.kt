@@ -6668,7 +6668,7 @@ class BookingServiceTest {
   }
 
   @Test
-  fun `createTurnaround returns FieldValidationError if the number of working days is not a positive integer`() {
+  fun `createTurnaround returns FieldValidationError if the number of working days is a negative integer`() {
     val premises = TemporaryAccommodationPremisesEntityFactory()
       .withProbationRegion(
         ProbationRegionEntityFactory()
@@ -6703,15 +6703,9 @@ class BookingServiceTest {
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
     val negativeDaysResult = bookingService.createTurnaround(booking, -1)
-    val zeroDaysResult = bookingService.createTurnaround(booking, 0)
 
     assertThat(negativeDaysResult).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((negativeDaysResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.workingDays", "isNotAPositiveInteger"),
-    )
-
-    assertThat(zeroDaysResult).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((zeroDaysResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
       entry("$.workingDays", "isNotAPositiveInteger"),
     )
   }
