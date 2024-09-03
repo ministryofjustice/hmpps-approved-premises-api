@@ -32,6 +32,11 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var turnaroundWorkingDayCount: Yielded<Int>? = null
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
 
+  fun withDefaults() = apply {
+    withProbationRegion(ProbationRegionEntityFactory().withDefaults().produce())
+    withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().produce())
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

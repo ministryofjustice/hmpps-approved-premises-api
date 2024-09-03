@@ -3135,6 +3135,7 @@ components:
         - cas1_view_manage_tasks
         - cas1_view_out_of_service_beds
         - cas1_space_booking_list
+        - cas1_premises_view_summary
     TemporaryAccommodationUserRole:
       type: string
       enum:

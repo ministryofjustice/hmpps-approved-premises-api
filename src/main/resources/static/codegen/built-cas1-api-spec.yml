@@ -83,6 +83,7 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+
   /premises/{premisesId}/lost-beds:
     post:
       deprecated: true
@@ -310,6 +311,7 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+
   /premises/{premisesId}/out-of-service-beds:
     post:
       tags:
@@ -527,6 +529,38 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+
+  /premises/{premisesId}:
+    get:
+      tags:
+        - premises
+      summary: Returns premises information
+      parameters:
+        - name: premisesId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1PremisesSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings:
     get:
@@ -3955,6 +3989,7 @@ components:
         - cas1_view_manage_tasks
         - cas1_view_out_of_service_beds
         - cas1_space_booking_list
+        - cas1_premises_view_summary
     TemporaryAccommodationUserRole:
       type: string
       enum:
@@ -5978,6 +6013,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CharacteristicPair'
+    Cas1PremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apCode:
+          type: string
+          example: NEHOPE1
+        postcode:
+          type: string
+          example: LS1 3AD
+        bedCount:
+          type: integer
+          description: The total number of spaces in this premises
+          example: 22
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
