@@ -367,6 +367,28 @@ components:
       required:
         - expectedDepartureDate
         - arrivalDateTime
+    Cas1NewDeparture:
+      type: object
+      properties:
+        departureDateTime:
+          type: string
+          format: date-time
+        reasonId:
+          type: string
+          format: uuid
+        moveOnCategoryId:
+          type: string
+          format: uuid
+        destinationProviderId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+      required:
+        - departureDateTime
+        - depatureReason
+        - moveOnCategory
+        - destinationProvider
     Cas1AssignKeyWorker:
       type: object
       properties:
