@@ -71,6 +71,25 @@ class UserTransformerTest {
   }
 
   @Nested
+  inner class TransformJapToSummaryApi {
+
+    @Test
+    fun `successfully transform user`() {
+      val id = randomUUID()
+      val user = UserEntityFactory()
+        .withDefaults()
+        .withId(id)
+        .withName("the name")
+        .produce()
+
+      val result = userTransformer.transformJpaToSummaryApi(user)
+
+      assertThat(result.id).isEqualTo(id)
+      assertThat(result.name).isEqualTo("the name")
+    }
+  }
+
+  @Nested
   inner class TransformJpaToApi {
 
     @Test

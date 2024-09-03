@@ -3824,6 +3824,17 @@ components:
         - name
         - deliusUsername
         - region
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
     UserWithWorkload:
       allOf:
         - $ref: '#/components/schemas/User'

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileRespons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -45,6 +46,12 @@ class UserTransformer(
       apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
     )
   }
+
+  fun transformJpaToSummaryApi(jpa: UserEntity) =
+    UserSummary(
+      id = jpa.id,
+      name = jpa.name,
+    )
 
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
     ServiceName.approvedPremises -> ApprovedPremisesUser(

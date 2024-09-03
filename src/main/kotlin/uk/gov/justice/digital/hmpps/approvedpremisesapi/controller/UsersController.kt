@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -49,17 +50,61 @@ class UsersController(
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
-  ): ResponseEntity<List<User>> {
+  ) =
+    getUsers(
+      xServiceName,
+      roles,
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      page,
+      sortBy,
+      sortDirection,
+    ) { user ->
+      userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
+    }
+
+  override fun usersSummaryGet(
+    xServiceName: ServiceName,
+    roles: List<ApprovedPremisesUserRole>?,
+    qualifications: List<UserQualification>?,
+    probationRegionId: UUID?,
+    apAreaId: UUID?,
+    page: Int?,
+    sortBy: UserSortField?,
+    sortDirection: SortDirection?,
+  ) =
+    getUsers(
+      xServiceName,
+      roles,
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      page,
+      sortBy,
+      sortDirection,
+    ) { user ->
+      userTransformer.transformJpaToSummaryApi(user)
+    }
+
+  private fun <T> getUsers(
+    xServiceName: ServiceName,
+    roles: List<ApprovedPremisesUserRole>?,
+    qualifications: List<UserQualification>?,
+    probationRegionId: UUID?,
+    apAreaId: UUID?,
+    page: Int?,
+    sortBy: UserSortField?,
+    sortDirection: SortDirection?,
+    resultTransformer: (UserEntity) -> T,
+  ): ResponseEntity<List<T>> {
     if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
-    var roles = roles?.map(UserRole::valueOf)
-    var qualifications = qualifications?.map(::transformApiQualification)
-
     val (users, metadata) = userService.getUsersWithQualificationsAndRoles(
-      qualifications,
-      roles,
+      qualifications?.map(::transformApiQualification),
+      roles?.map(UserRole::valueOf),
       sortBy,
       sortDirection,
       page,
@@ -70,13 +115,13 @@ class UsersController(
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
     ).body(
-      users.map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+      users.map { resultTransformer(it) },
     )
   }
 
   override fun usersIdPut(
     xServiceName: ServiceName,
-    id: java.util.UUID,
+    id: UUID,
     userRolesAndQualifications: UserRolesAndQualifications,
   ): ResponseEntity<User> {
     if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
