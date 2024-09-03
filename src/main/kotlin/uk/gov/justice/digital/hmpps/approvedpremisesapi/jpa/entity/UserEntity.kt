@@ -21,15 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.Str
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
-import javax.persistence.Convert
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.Table
 
 @SuppressWarnings("TooManyFunctions")
 @Repository

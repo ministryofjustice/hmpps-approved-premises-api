@@ -379,6 +379,7 @@ workflows:
             branches:
               only:
                 - main
+                - feature/cas-365-upgrade-spring-boot-da
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -390,6 +391,7 @@ workflows:
             branches:
               only:
                 - main
+                - feature/cas-365-upgrade-spring-boot-da
           requires:
             - build_docker
             - helm_lint
