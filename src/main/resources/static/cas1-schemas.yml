@@ -39,6 +39,25 @@ components:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/CharacteristicPair'
+    Cas1PremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apCode:
+          type: string
+          example: NEHOPE1
+        postcode:
+          type: string
+          example: LS1 3AD
+        bedCount:
+          type: integer
+          description: The total number of spaces in this premises
+          example: 22
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms

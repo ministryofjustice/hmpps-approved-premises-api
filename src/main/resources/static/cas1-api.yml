@@ -81,6 +81,7 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
+
   /premises/{premisesId}/lost-beds:
     post:
       deprecated: true
@@ -308,6 +309,7 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
+
   /premises/{premisesId}/out-of-service-beds:
     post:
       tags:
@@ -525,6 +527,38 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
+
+  /premises/{premisesId}:
+    get:
+      tags:
+        - premises
+      summary: Returns premises information
+      parameters:
+        - name: premisesId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesSummary'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings:
     get:
