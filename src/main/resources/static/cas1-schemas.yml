@@ -331,6 +331,19 @@ components:
         - person
         - canonicalArrivalDate
         - canonicalDepartureDate
+    Cas1SpaceBookingSummarySortField:
+      type: string
+      enum:
+        - personName
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - keyworkerName
+        - tier
+    Cas1SpaceBookingResidency:
+      type: string
+      enum:
+        - upcoming
+        - current
     Cas1KeyWorkerAllocation:
       type: object
       properties:
