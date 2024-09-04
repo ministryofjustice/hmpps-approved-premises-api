@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -19,16 +20,16 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var application: Yielded<ApprovedPremisesApplicationEntity?> = { null }
   private var createdBy: Yielded<UserEntity> = { UserEntityFactory().withDefaults().produce() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
-  private var arrivalDate: Yielded<LocalDate> = { LocalDate.now() }
-  private var departureDate: Yielded<LocalDate> = { LocalDate.now() }
-  private val actualArrivalDateTime = { null }
-  private val actualDepartureDateTime = { null }
-  private val canonicalArrivalDate = { LocalDate.now() }
-  private val canonicalDepartureDate = { LocalDate.now() }
-  private val crn = { randomStringUpperCase(6) }
-  private val keyWorkerStaffCode = { null }
-  private val keyWorkerName = { null }
-  private val keyWorkerAssignedAt = { null }
+  private var expectedArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var actualArrivalDateTime: Yielded<Instant?> = { null }
+  private var actualDepartureDateTime: Yielded<Instant?> = { null }
+  private var canonicalArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var canonicalDepartureDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var crn: Yielded<String> = { randomStringUpperCase(6) }
+  private var keyWorkerStaffCode: Yielded<String?> = { null }
+  private var keyWorkerName: Yielded<String?> = { null }
+  private var keyWorkerAssignedAt: Yielded<Instant?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -74,12 +75,58 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.createdAt = { createdAt }
   }
 
-  fun withArrivalDate(arrivalDate: LocalDate) = apply {
-    this.arrivalDate = { arrivalDate }
+  fun withExpectedArrivalDate(expectedArrivalDate: LocalDate) = apply {
+    this.expectedArrivalDate = { expectedArrivalDate }
   }
 
-  fun withDepartureDate(departureDate: LocalDate) = apply {
-    this.departureDate = { departureDate }
+  fun withExpectedDepartureDate(expectedDepartureDate: LocalDate) = apply {
+    this.expectedDepartureDate = { expectedDepartureDate }
+  }
+
+  fun withCanonicalArrivalDate(canonicalArrivalDate: LocalDate) = apply {
+    this.canonicalArrivalDate = { canonicalArrivalDate }
+  }
+
+  fun withCanonicalDepartureDate(canonicalDepartureDate: LocalDate) = apply {
+    this.canonicalDepartureDate = { canonicalDepartureDate }
+  }
+
+  @Deprecated(message = "Use more specific expected arrival date", replaceWith = ReplaceWith("withExpectedArrivalDate(expectedArrivalDate)"))
+  fun withArrivalDate(expectedArrivalDate: LocalDate) = apply {
+    this.expectedArrivalDate = { expectedArrivalDate }
+  }
+
+  @Deprecated(message = "Use more specific expected departure date", replaceWith = ReplaceWith("withExpectedDepartureDate(expectedDepartureDate)"))
+  fun withDepartureDate(expectedDepartureDate: LocalDate) = apply {
+    this.expectedDepartureDate = { expectedDepartureDate }
+  }
+
+  fun withActualArrivalDateTime(actualArrivalDateTime: Instant?) = apply {
+    this.actualArrivalDateTime = { actualArrivalDateTime }
+  }
+
+  fun withActualDepartureDateTime(actualDepartureDateTime: Instant?) = apply {
+    this.actualDepartureDateTime = { actualDepartureDateTime }
+  }
+
+  fun withApplication(application: ApprovedPremisesApplicationEntity) = apply {
+    this.application = { application }
+  }
+
+  fun withCrn(crn: String) = apply {
+    this.crn = { crn }
+  }
+
+  fun withKeyworkerName(keyWorkerName: String?) = apply {
+    this.keyWorkerName = { keyWorkerName }
+  }
+
+  fun withKeyworkerStaffCode(keyWorkerStaffCode: String?) = apply {
+    this.keyWorkerStaffCode = { keyWorkerStaffCode }
+  }
+
+  fun withKeyworkerAssignedAt(keyWorkerAssignedAt: Instant?) = apply {
+    this.keyWorkerAssignedAt = { keyWorkerAssignedAt }
   }
 
   override fun produce() = Cas1SpaceBookingEntity(
@@ -88,8 +135,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     placementRequest = this.placementRequest(),
     createdBy = this.createdBy(),
     createdAt = this.createdAt(),
-    expectedArrivalDate = this.arrivalDate(),
-    expectedDepartureDate = this.departureDate(),
+    expectedArrivalDate = this.expectedArrivalDate(),
+    expectedDepartureDate = this.expectedDepartureDate(),
     actualArrivalDateTime = this.actualArrivalDateTime(),
     actualDepartureDateTime = this.actualDepartureDateTime(),
     canonicalArrivalDate = this.canonicalArrivalDate(),

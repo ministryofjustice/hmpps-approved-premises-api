@@ -4,18 +4,28 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -42,6 +52,10 @@ class Cas1SpaceBookingServiceTest {
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
+
+  companion object CONSTANTS {
+    val PREMISES_ID = UUID.randomUUID()
+  }
 
   @Nested
   inner class CreateNewBooking {
@@ -238,6 +252,94 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.crn).isEqualTo(application.crn)
       assertThat(persistedBooking.keyWorkerStaffCode).isNull()
       assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
+    }
+  }
+
+  @Nested
+  inner class Search {
+
+    @Test
+    fun `premises not found return error`() {
+      every { premisesService.getPremises(PREMISES_ID) } returns null
+
+      val result = service.search(
+        PREMISES_ID,
+        Cas1SpaceBookingService.SpaceBookingFilterCriteria(
+          residency = null,
+          crnOrName = null,
+        ),
+        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
+          .produce(),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+    }
+
+    @Test
+    fun `premises not approved premises return error`() {
+      every { premisesService.getPremises(PREMISES_ID) } returns TemporaryAccommodationPremisesEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val result = service.search(
+        PREMISES_ID,
+        Cas1SpaceBookingService.SpaceBookingFilterCriteria(
+          residency = null,
+          crnOrName = null,
+        ),
+        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
+          .produce(),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "personName,personName",
+      "canonicalArrivalDate,canonicalArrivalDate",
+      "canonicalDepartureDate,canonicalDepartureDate",
+      "keyWorkerName,keyWorkerName",
+      "tier,tier",
+    )
+    fun `delegate to repository, defining correct sort column`(
+      inputSortField: Cas1SpaceBookingSummarySortField,
+      sqlSortField: String,
+    ) {
+      every { premisesService.getPremises(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
+
+      val results = PageImpl(
+        listOf(
+          mockk<Cas1SpaceBookingSearchResult>(),
+          mockk<Cas1SpaceBookingSearchResult>(),
+          mockk<Cas1SpaceBookingSearchResult>(),
+        ),
+      )
+      val pageableCaptor = slot<Pageable>()
+
+      every {
+        spaceBookingRepository.search(
+          "current",
+          "theCrnOrName",
+          PREMISES_ID,
+          capture(pageableCaptor),
+        )
+      } returns results
+
+      val result = service.search(
+        PREMISES_ID,
+        Cas1SpaceBookingService.SpaceBookingFilterCriteria(
+          residency = Cas1SpaceBookingResidency.current,
+          crnOrName = "theCrnOrName",
+        ),
+        PageCriteriaFactory(inputSortField).produce(),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.first).hasSize(3)
+
+      assertThat(pageableCaptor.captured.sort.toList()[0].property).isEqualTo(sqlSortField)
     }
   }
 }

@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
@@ -133,6 +134,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -262,6 +265,8 @@ import java.util.UUID
 @ActiveProfiles("test")
 @Tag("integration")
 abstract class IntegrationTestBase {
+  @Autowired
+  private lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
@@ -596,6 +601,7 @@ abstract class IntegrationTestBase {
   lateinit var cas1OutOfServiceBedReasonEntityFactory: PersistedFactory<Cas1OutOfServiceBedReasonEntity, UUID, Cas1OutOfServiceBedReasonEntityFactory>
   lateinit var cas1OutOfServiceBedCancellationEntityFactory: PersistedFactory<Cas1OutOfServiceBedCancellationEntity, UUID, Cas1OutOfServiceBedCancellationEntityFactory>
   lateinit var cas1OutOfServiceBedRevisionEntityFactory: PersistedFactory<Cas1OutOfServiceBedRevisionEntity, UUID, Cas1OutOfServiceBedRevisionEntityFactory>
+  lateinit var cas1SpaceBookingEntityFactory: PersistedFactory<Cas1SpaceBookingEntity, UUID, Cas1SpaceBookingEntityFactory>
 
   private var clientCredentialsCallMocked = false
 
@@ -703,6 +709,7 @@ abstract class IntegrationTestBase {
     cas1OutOfServiceBedReasonEntityFactory = PersistedFactory({ Cas1OutOfServiceBedReasonEntityFactory() }, cas1OutOfServiceBedReasonTestRepository)
     cas1OutOfServiceBedCancellationEntityFactory = PersistedFactory({ Cas1OutOfServiceBedCancellationEntityFactory() }, cas1OutOfServiceBedCancellationTestRepository)
     cas1OutOfServiceBedRevisionEntityFactory = PersistedFactory({ Cas1OutOfServiceBedRevisionEntityFactory() }, cas1OutOfServiceBedDetailsTestRepository)
+    cas1SpaceBookingEntityFactory = PersistedFactory({ Cas1SpaceBookingEntityFactory() }, cas1SpaceBookingRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

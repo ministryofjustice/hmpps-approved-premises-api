@@ -5084,19 +5084,6 @@ components:
         - updatedReferenceNumber
         - updatedReason
         - updatedNotes
-    Cas1SpaceBookingSummarySortField:
-      type: string
-      enum:
-        - personName
-        - canonicalArrivalDate
-        - canonicalDepartureDate
-        - keyworkerName
-        - tier
-    Cas1SpaceBookingResidency:
-      type: string
-      enum:
-        - upcoming
-        - current
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.

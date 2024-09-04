@@ -2,20 +2,53 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 
 @Component
 class PersonTransformer {
+
+  fun personSummaryInfoToPersonSummary(
+    personSummaryInfo: PersonSummaryInfoResult,
+  ): PersonSummary {
+    when (personSummaryInfo) {
+      is PersonSummaryInfoResult.Success.Full -> {
+        return FullPersonSummary(
+          crn = personSummaryInfo.crn,
+          personType = PersonSummaryDiscriminator.fullPersonSummary,
+          name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
+        )
+      }
+      is PersonSummaryInfoResult.Success.Restricted -> {
+        return RestrictedPersonSummary(
+          crn = personSummaryInfo.crn,
+          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+        )
+      }
+      is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
+        return UnknownPersonSummary(
+          crn = personSummaryInfo.crn,
+          personType = PersonSummaryDiscriminator.unknownPersonSummary,
+        )
+      }
+    }
+  }
+
   fun transformModelToPersonApi(personInfoResult: PersonInfoResult): Person {
     return when (personInfoResult) {
       is PersonInfoResult.Success.Full -> {

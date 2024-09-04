@@ -578,7 +578,7 @@ paths:
         - name: residency
           in: query
           required: false
-          description: Residency status to filter results on
+          description: Residency status to filter results on. 'Current' means marked as arrived and not departed. 'Upcoming' means not marked as arrived.
           schema:
             $ref: '#/components/schemas/Cas1SpaceBookingResidency'
         - name: crnOrName
@@ -5938,19 +5938,6 @@ components:
         - updatedReferenceNumber
         - updatedReason
         - updatedNotes
-    Cas1SpaceBookingSummarySortField:
-      type: string
-      enum:
-        - personName
-        - canonicalArrivalDate
-        - canonicalDepartureDate
-        - keyworkerName
-        - tier
-    Cas1SpaceBookingResidency:
-      type: string
-      enum:
-        - upcoming
-        - current
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
@@ -6298,13 +6285,26 @@ components:
         tier:
           description: Risk rating tier level of corresponding application
           type: string
-        keyWorker:
+        keyWorkerAllocation:
           $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
       required:
         - id
         - person
         - canonicalArrivalDate
         - canonicalDepartureDate
+    Cas1SpaceBookingSummarySortField:
+      type: string
+      enum:
+        - personName
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - keyWorkerName
+        - tier
+    Cas1SpaceBookingResidency:
+      type: string
+      enum:
+        - upcoming
+        - current
     Cas1KeyWorkerAllocation:
       type: object
       properties:
@@ -6314,7 +6314,7 @@ components:
           type: string
           format: date
       required:
-        - keyworker
+        - keyWorker
         - allocatedAt
     Cas1NewArrival:
       type: object

@@ -1,104 +1,85 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas1SpaceBookingTest : InitialiseDatabasePerClassTestBase() {
-  @Autowired
-  lateinit var transformer: Cas1SpaceBookingTransformer
+class Cas1SpaceBookingTest {
 
-  @Test
-  fun `Booking a space without JWT returns 401`() {
-    `Given a User` { user, _ ->
-      `Given a Placement Request`(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-      ) { placementRequest, _ ->
-        webTestClient.post()
-          .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
-          .exchange()
-          .expectStatus()
-          .isUnauthorized
+  @Nested
+  inner class CreateABooking : InitialiseDatabasePerClassTestBase() {
+
+    @Autowired
+    lateinit var transformer: Cas1SpaceBookingTransformer
+
+    @Test
+    fun `Booking a space without JWT returns 401`() {
+      `Given a User` { user, _ ->
+        `Given a Placement Request`(
+          placementRequestAllocatedTo = user,
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+        ) { placementRequest, _ ->
+          webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        }
       }
     }
-  }
 
-  @Test
-  fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
-    `Given a User` { _, jwt ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
+    @Test
+    fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
+      `Given a User` { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea {
+                apAreaEntityFactory.produceAndPersist()
+              }
             }
           }
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
         }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-      }
 
-      val placementRequestId = UUID.randomUUID()
+        val placementRequestId = UUID.randomUUID()
 
-      webTestClient.post()
-        .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewCas1SpaceBooking(
-            arrivalDate = LocalDate.now().plusDays(1),
-            departureDate = LocalDate.now().plusDays(8),
-            premisesId = premises.id,
-            requirements = Cas1SpaceBookingRequirements(
-              apType = ApType.esap,
-              gender = Gender.male,
-              essentialCharacteristics = listOf(),
-              desirableCharacteristics = listOf(),
-            ),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isBadRequest
-        .expectBody()
-        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.placementRequestId")
-        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-    }
-  }
-
-  @Test
-  fun `Booking a space for an unknown premises returns 400 Bad Request`() {
-    `Given a User` { user, jwt ->
-      `Given a Placement Request`(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-      ) { placementRequest, _ ->
         webTestClient.post()
-          .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+          .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewCas1SpaceBooking(
               arrivalDate = LocalDate.now().plusDays(1),
               departureDate = LocalDate.now().plusDays(8),
-              premisesId = UUID.randomUUID(),
+              premisesId = premises.id,
               requirements = Cas1SpaceBookingRequirements(
                 apType = ApType.esap,
                 gender = Gender.male,
@@ -111,160 +92,540 @@ class Cas1SpaceBookingTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isBadRequest
           .expectBody()
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.premisesId")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.placementRequestId")
           .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
       }
     }
-  }
 
-  @Test
-  fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
-    `Given a User` { user, jwt ->
-      `Given a Placement Request`(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-      ) { placementRequest, _ ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
+    @Test
+    fun `Booking a space for an unknown premises returns 400 Bad Request`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Request`(
+          placementRequestAllocatedTo = user,
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+        ) { placementRequest, _ ->
+          webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewCas1SpaceBooking(
+                arrivalDate = LocalDate.now().plusDays(1),
+                departureDate = LocalDate.now().plusDays(8),
+                premisesId = UUID.randomUUID(),
+                requirements = Cas1SpaceBookingRequirements(
+                  apType = ApType.esap,
+                  gender = Gender.male,
+                  essentialCharacteristics = listOf(),
+                  desirableCharacteristics = listOf(),
+                ),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("invalid-params[0].propertyName").isEqualTo("$.premisesId")
+            .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+        }
+      }
+    }
+
+    @Test
+    fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Request`(
+          placementRequestAllocatedTo = user,
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+        ) { placementRequest, _ ->
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withYieldedApArea {
+                  apAreaEntityFactory.produceAndPersist()
+                }
               }
             }
+            withYieldedLocalAuthorityArea {
+              localAuthorityEntityFactory.produceAndPersist()
+            }
           }
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
 
-        webTestClient.post()
-          .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewCas1SpaceBooking(
-              arrivalDate = LocalDate.now().plusDays(1),
-              departureDate = LocalDate.now(),
-              premisesId = premises.id,
-              requirements = Cas1SpaceBookingRequirements(
-                apType = ApType.esap,
-                gender = Gender.male,
-                essentialCharacteristics = listOf(),
-                desirableCharacteristics = listOf(),
+          webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewCas1SpaceBooking(
+                arrivalDate = LocalDate.now().plusDays(1),
+                departureDate = LocalDate.now(),
+                premisesId = premises.id,
+                requirements = Cas1SpaceBookingRequirements(
+                  apType = ApType.esap,
+                  gender = Gender.male,
+                  essentialCharacteristics = listOf(),
+                  desirableCharacteristics = listOf(),
+                ),
               ),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-          .expectBody()
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.departureDate")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("shouldBeAfterArrivalDate")
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("invalid-params[0].propertyName").isEqualTo("$.departureDate")
+            .jsonPath("invalid-params[0].errorType").isEqualTo("shouldBeAfterArrivalDate")
+        }
       }
+    }
+
+    @Test
+    fun `Booking a space returns OK with the correct data`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Request`(
+          placementRequestAllocatedTo = user,
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+        ) { placementRequest, application ->
+          val essentialCharacteristics = listOf(
+            Cas1SpaceCharacteristic.hasBrailleSignage,
+            Cas1SpaceCharacteristic.hasTactileFlooring,
+          )
+
+          val desirableCharacteristics = listOf(
+            Cas1SpaceCharacteristic.hasEnSuite,
+            Cas1SpaceCharacteristic.hasCallForAssistance,
+            Cas1SpaceCharacteristic.isGroundFloor,
+            Cas1SpaceCharacteristic.isCatered,
+          )
+
+          val essentialCriteria = essentialCharacteristics.map {
+            it.asCharacteristicEntity()
+          }
+
+          val desirableCriteria = desirableCharacteristics.map {
+            it.asCharacteristicEntity()
+          }
+
+          placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withYieldedPostcodeDistrict {
+              postCodeDistrictFactory.produceAndPersist()
+            }
+            withApplication(application as ApprovedPremisesApplicationEntity)
+            withAssessment(placementRequest.assessment)
+            withEssentialCriteria(essentialCriteria)
+            withDesirableCriteria(desirableCriteria)
+          }
+
+          placementRequestRepository.saveAndFlush(placementRequest)
+
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withYieldedApArea {
+                  apAreaEntityFactory.produceAndPersist()
+                }
+              }
+            }
+            withYieldedLocalAuthorityArea {
+              localAuthorityEntityFactory.produceAndPersist()
+            }
+          }
+
+          val response = webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewCas1SpaceBooking(
+                arrivalDate = LocalDate.now().plusDays(1),
+                departureDate = LocalDate.now().plusDays(8),
+                premisesId = premises.id,
+                requirements = Cas1SpaceBookingRequirements(
+                  apType = placementRequest.placementRequirements.apType,
+                  gender = Gender.male,
+                  essentialCharacteristics = essentialCharacteristics,
+                  desirableCharacteristics = desirableCharacteristics,
+                ),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(Cas1SpaceBooking::class.java)
+
+          val result = response.responseBody.blockFirst()!!
+
+          assertThat(result.person)
+          assertThat(result.requirements.apType).isEqualTo(placementRequest.placementRequirements.apType)
+          assertThat(result.requirements.gender).isEqualTo(placementRequest.placementRequirements.gender)
+          assertThat(result.requirements.essentialCharacteristics).containsExactlyInAnyOrderElementsOf(
+            essentialCharacteristics,
+          )
+          assertThat(result.requirements.desirableCharacteristics).containsExactlyInAnyOrderElementsOf(
+            desirableCharacteristics,
+          )
+          assertThat(result.premises.id).isEqualTo(premises.id)
+          assertThat(result.premises.name).isEqualTo(premises.name)
+          assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)
+          assertThat(result.apArea.name).isEqualTo(premises.probationRegion.apArea!!.name)
+          assertThat(result.bookedBy.id).isEqualTo(user.id)
+          assertThat(result.bookedBy.name).isEqualTo(user.name)
+          assertThat(result.bookedBy.deliusUsername).isEqualTo(user.deliusUsername)
+          assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
+          assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
+          assertThat(result.createdAt).satisfies(
+            { it.isAfter(Instant.now().minusSeconds(10)) },
+          )
+        }
+      }
+    }
+
+    private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicEntityFactory.produceAndPersist {
+      withName(this@asCharacteristicEntity.value)
+      withPropertyName(this@asCharacteristicEntity.value)
+      withServiceScope(ServiceName.approvedPremises.value)
+      withModelScope("*")
     }
   }
 
-  @Test
-  fun `Booking a space returns OK with the correct data`() {
-    `Given a User` { user, jwt ->
-      `Given a Placement Request`(
+  @Nested
+  inner class SearchForSpaceBookings : InitialiseDatabasePerClassTestBase() {
+    lateinit var premisesWithNoBooking: ApprovedPremisesEntity
+    lateinit var premisesWithBookings: ApprovedPremisesEntity
+
+    lateinit var currentSpaceBooking1: Cas1SpaceBookingEntity
+    lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
+    lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
+    lateinit var upcomingSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      val region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
+      premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      premisesWithBookings = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      currentSpaceBooking1 = createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tier = "A") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2022-01-02"))
+        withExpectedDepartureDate(LocalDate.parse("2022-02-02"))
+        withActualArrivalDateTime(Instant.parse("2022-01-02T12:45:00.00Z"))
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2022-01-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2022-02-02"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      currentSpaceBooking2 = createSpaceBooking(crn = "CRN_CURRENT2", firstName = "curt", lastName = "rent 2", tier = "C") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2022-02-02"))
+        withExpectedDepartureDate(LocalDate.parse("2022-09-02"))
+        withActualArrivalDateTime(Instant.parse("2022-01-02T12:45:00.00Z"))
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2022-02-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2022-03-02"))
+        withKeyworkerName("Kathy Keyworker")
+        withKeyworkerStaffCode("kathyk")
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      currentSpaceBooking3 = createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tier = "B") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2022-03-02"))
+        withExpectedDepartureDate(LocalDate.parse("2022-04-02"))
+        withActualArrivalDateTime(Instant.parse("2022-01-02T12:45:00.00Z"))
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2022-04-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2022-05-02"))
+        withKeyworkerName("Clive Keyworker")
+        withKeyworkerStaffCode("clivek")
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      departedSpaceBooking = createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tier = "D") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2022-01-03"))
+        withExpectedDepartureDate(LocalDate.parse("2022-02-03"))
+        withActualArrivalDateTime(Instant.parse("2022-01-03T12:45:00.00Z"))
+        withActualDepartureDateTime(Instant.parse("2022-02-03T12:45:00.00Z"))
+        withCanonicalArrivalDate(LocalDate.parse("2022-01-03"))
+        withCanonicalDepartureDate(LocalDate.parse("2022-02-03"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(null)
+      }
+
+      upcomingSpaceBooking = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming", tier = "U") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2023-01-01"))
+        withExpectedDepartureDate(LocalDate.parse("2023-02-01"))
+        withActualArrivalDateTime(null)
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2023-01-01"))
+        withCanonicalDepartureDate(LocalDate.parse("2023-02-01"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(null)
+      }
+    }
+
+    private fun createSpaceBooking(
+      crn: String,
+      firstName: String,
+      lastName: String,
+      tier: String,
+      configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
+    ): Cas1SpaceBookingEntity {
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`(offenderDetailsConfigBlock = {
+        withCrn(crn)
+        withFirstName(firstName)
+        withLastName(lastName)
+      },)
+      val (placementRequest) = `Given a Placement Request`(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
-      ) { placementRequest, application ->
-        val essentialCharacteristics = listOf(
-          Cas1SpaceCharacteristic.hasBrailleSignage,
-          Cas1SpaceCharacteristic.hasTactileFlooring,
-        )
+        crn = offender.otherIds.crn,
+        name = "$firstName $lastName",
+        tier = tier,
+      )
 
-        val desirableCharacteristics = listOf(
-          Cas1SpaceCharacteristic.hasEnSuite,
-          Cas1SpaceCharacteristic.hasCallForAssistance,
-          Cas1SpaceCharacteristic.isGroundFloor,
-          Cas1SpaceCharacteristic.isCatered,
-        )
+      return cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premisesWithBookings)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
 
-        val essentialCriteria = essentialCharacteristics.map {
-          it.asCharacteristicEntity()
-        }
-
-        val desirableCriteria = desirableCharacteristics.map {
-          it.asCharacteristicEntity()
-        }
-
-        placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
-          withYieldedPostcodeDistrict {
-            postCodeDistrictFactory.produceAndPersist()
-          }
-          withApplication(application as ApprovedPremisesApplicationEntity)
-          withAssessment(placementRequest.assessment)
-          withEssentialCriteria(essentialCriteria)
-          withDesirableCriteria(desirableCriteria)
-        }
-
-        placementRequestRepository.saveAndFlush(placementRequest)
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val response = webTestClient.post()
-          .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewCas1SpaceBooking(
-              arrivalDate = LocalDate.now().plusDays(1),
-              departureDate = LocalDate.now().plusDays(8),
-              premisesId = premises.id,
-              requirements = Cas1SpaceBookingRequirements(
-                apType = placementRequest.placementRequirements.apType,
-                gender = Gender.male,
-                essentialCharacteristics = essentialCharacteristics,
-                desirableCharacteristics = desirableCharacteristics,
-              ),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult(Cas1SpaceBooking::class.java)
-
-        val result = response.responseBody.blockFirst()!!
-
-        assertThat(result.person)
-        assertThat(result.requirements.apType).isEqualTo(placementRequest.placementRequirements.apType)
-        assertThat(result.requirements.gender).isEqualTo(placementRequest.placementRequirements.gender)
-        assertThat(result.requirements.essentialCharacteristics).containsExactlyInAnyOrderElementsOf(essentialCharacteristics)
-        assertThat(result.requirements.desirableCharacteristics).containsExactlyInAnyOrderElementsOf(desirableCharacteristics)
-        assertThat(result.premises.id).isEqualTo(premises.id)
-        assertThat(result.premises.name).isEqualTo(premises.name)
-        assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)
-        assertThat(result.apArea.name).isEqualTo(premises.probationRegion.apArea!!.name)
-        assertThat(result.bookedBy.id).isEqualTo(user.id)
-        assertThat(result.bookedBy.name).isEqualTo(user.name)
-        assertThat(result.bookedBy.deliusUsername).isEqualTo(user.deliusUsername)
-        assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
-        assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
-        assertThat(result.createdAt).satisfies(
-          { it.isAfter(Instant.now().minusSeconds(10)) },
-        )
+        configuration.invoke(this)
       }
     }
-  }
 
-  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicEntityFactory.produceAndPersist {
-    withName(this@asCharacteristicEntity.value)
-    withPropertyName(this@asCharacteristicEntity.value)
-    withServiceScope(ServiceName.approvedPremises.value)
-    withModelScope("*")
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.get()
+        .uri("/cas1/premises/${premisesWithNoBooking.id}/space-bookings")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Empty list returned if no results for given premises`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithNoBooking.id}/space-bookings")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).isEmpty()
+    }
+
+    @Test
+    fun `Search with no filters excludes departed bookings`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(4)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[3].person.crn).isEqualTo("CRN_UPCOMING")
+    }
+
+    @Test
+    fun `Filter on residency upcoming`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=upcoming&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(1)
+      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+    }
+
+    @Test
+    fun `Filter on residency current`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=current&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(3)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
+    }
+
+    @Test
+    fun `Filter on CRN`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CRN_CURRENT2&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(1)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2")
+    }
+
+    @Test
+    fun `Filter on Name`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=comING&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(1)
+      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+    }
+
+    @Test
+    fun `Sort on Name`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CUrt&sortBy=personName&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(3)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT1")
+    }
+
+    @Test
+    fun `Sort on Canonical Arrival Date`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(4)
+      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+    }
+
+    @Test
+    fun `Sort on Canonical Departure Date`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalDepartureDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(4)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[3].person.crn).isEqualTo("CRN_UPCOMING")
+    }
+
+    @Test
+    fun `Sort on Keyworker`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=current&sortBy=keyWorkerName&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(3)
+      assertThat(response[0].keyWorkerAllocation!!.keyWorker.name).isEqualTo("Clive Keyworker")
+      assertThat(response[1].keyWorkerAllocation!!.keyWorker.name).isEqualTo("Kathy Keyworker")
+      assertThat(response[2].keyWorkerAllocation).isNull()
+    }
+
+    @Test
+    fun `Sort on Tier`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=tier&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(4)
+
+      assertThat(response[0].tier).isEqualTo("U")
+      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+
+      assertThat(response[1].tier).isEqualTo("C")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
+
+      assertThat(response[2].tier).isEqualTo("B")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
+
+      assertThat(response[3].tier).isEqualTo("A")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+    }
   }
 }

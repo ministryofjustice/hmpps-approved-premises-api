@@ -100,7 +100,7 @@ fun getPageableOrAllPages(sortBy: List<String>, sortDirection: SortDirection?, p
   }
 }
 
-fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = false): Pageable? =
+fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = false): Pageable =
   getPageableOrAllPages(
     criteria.sortBy,
     criteria.sortDirection,
