@@ -284,7 +284,7 @@ class PremisesService(
       property hasValidationError err
     }
 
-    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount <= 0) {
+    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
       "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
     }
 
@@ -405,8 +405,16 @@ class PremisesService(
       entity
     }
 
-    if (turnaroundWorkingDayCount != null && premises is ApprovedPremisesEntity) {
-      validationErrors["$.turnaroundWorkingDayCount"] = "onlyAppliesToTemporaryAccommodationPremises"
+    if (turnaroundWorkingDayCount != null) {
+      when (premises) {
+        is TemporaryAccommodationPremisesEntity -> {
+          if (turnaroundWorkingDayCount < 0) {
+            validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
+          }
+        }
+
+        else -> validationErrors["$.turnaroundWorkingDayCount"] = "onlyAppliesToTemporaryAccommodationPremises"
+      }
     }
 
     if (validationErrors.any()) {

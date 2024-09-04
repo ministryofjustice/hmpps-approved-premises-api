@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
@@ -248,7 +249,7 @@ class PremisesTest {
 
     @ParameterizedTest(name = "Trying to create a new Temporary Accommodation premises with turnaround working day count = {0} returns 400 and errorType = {1}")
     @CsvSource(
-      "0,isNotAPositiveInteger",
+      "-1,isNotAPositiveInteger",
       "-4,isNotAPositiveInteger",
     )
     fun `Trying to create a new Temporary Accommodation premises with turnaround working day count less than 1 returns 400`(
@@ -1118,9 +1119,60 @@ class PremisesTest {
       }
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = [-1, -5, -10])
+    fun `Trying to update a Temporary Accommodation Premises with invalid turnaround working day count = {0} returns 400 and errorType is isNotAPositiveInteger`(
+      turnaroundWorkingDayCount: Int,
+    ) {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(user.probationRegion)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
+        }
+
+        val premisesToGet = premises[0]
+
+        webTestClient.put()
+          .uri("/premises/${premisesToGet.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdatePremises(
+              addressLine1 = "1 somewhere updated",
+              addressLine2 = "Some other district",
+              town = "Somewhere Else",
+              postcode = "AB456CD",
+              notes = "some arbitrary notes updated",
+              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+              probationRegionId = user.probationRegion.id,
+              characteristicIds = mutableListOf(),
+              status = PropertyStatus.archived,
+              probationDeliveryUnitId = probationDeliveryUnit.id,
+              turnaroundWorkingDayCount = turnaroundWorkingDayCount,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.turnaroundWorkingDayCount")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("isNotAPositiveInteger")
+      }
+    }
+
     @Test
     fun `Trying to update a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
