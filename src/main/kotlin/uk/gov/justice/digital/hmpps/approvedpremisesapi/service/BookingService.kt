@@ -879,10 +879,6 @@ class BookingService(
 
     booking.arrivals += arrivalEntity
 
-    if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      cas3DomainEventService.savePersonArrivedEvent(booking, user)
-    }
-
     return success(arrivalEntity)
   }
 
