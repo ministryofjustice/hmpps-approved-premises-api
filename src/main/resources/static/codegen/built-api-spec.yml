@@ -8667,12 +8667,11 @@ components:
             probationDeliveryUnit:
               type: string
               description: The pdu to search within
-            sharedProperty:
-              type: boolean
-              description: Is a shared property
-            singleOccupancy:
-              type: boolean
-              description: Is the property for single occupancy
+            attributes:
+              type: array
+              description: Bedspace and property attributes to filter on
+              items:
+                $ref: "#/components/schemas/BedSearchAttributes"
           required:
             - probationDeliveryUnit
     BedSearchResults:
@@ -9567,3 +9566,8 @@ components:
       enum:
         - male
         - female
+    BedSearchAttributes:
+      type: string
+      enum:
+        - sharedProperty
+        - singleOccupancy
