@@ -354,3 +354,10 @@ components:
       required:
         - expectedDepartureDate
         - arrivalDateTime
+    Cas1AssignKeyWorker:
+      type: object
+      properties:
+        staffCode:
+          type: string
+      required:
+        - staffCode
