@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultRoomSummary
@@ -1009,8 +1010,7 @@ class BedSearchTest : IntegrationTestBase() {
               durationDays = 84,
               serviceName = "temporary-accommodation",
               probationDeliveryUnit = searchPdu.name,
-              sharedProperty = true,
-              singleOccupancy = false,
+              attributes = listOf(BedSearchAttributes.sharedProperty),
             ),
           )
           .exchange()
@@ -1167,8 +1167,7 @@ class BedSearchTest : IntegrationTestBase() {
               durationDays = 84,
               serviceName = "temporary-accommodation",
               probationDeliveryUnit = searchPdu.name,
-              sharedProperty = false,
-              singleOccupancy = true,
+              attributes = listOf(BedSearchAttributes.singleOccupancy),
             ),
           )
           .exchange()

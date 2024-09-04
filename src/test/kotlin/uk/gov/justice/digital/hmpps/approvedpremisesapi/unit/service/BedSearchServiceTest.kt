@@ -493,8 +493,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
       probationDeliveryUnit = "PDU-1",
-      filterBySharedProperty = false,
-      filterBySingleOccupancy = false,
+      propertyBedAttributes = null,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -568,8 +567,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
       probationDeliveryUnit = "PDU-1",
-      filterBySharedProperty = false,
-      filterBySingleOccupancy = false,
+      propertyBedAttributes = null,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -745,8 +743,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
       probationDeliveryUnit = "PDU-1",
-      filterBySharedProperty = false,
-      filterBySingleOccupancy = false,
+      propertyBedAttributes = null,
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue

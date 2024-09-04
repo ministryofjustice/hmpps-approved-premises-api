@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -96,8 +97,7 @@ class BedSearchService(
     probationDeliveryUnit: String,
     startDate: LocalDate,
     durationInDays: Int,
-    filterBySharedProperty: Boolean,
-    filterBySingleOccupancy: Boolean,
+    propertyBedAttributes: List<BedSearchAttributes>?,
   ): AuthorisableActionResult<ValidatableActionResult<List<TemporaryAccommodationBedSearchResult>>> {
     return AuthorisableActionResult.Success(
       validated {
@@ -116,8 +116,8 @@ class BedSearchService(
           startDate = startDate,
           endDate = endDate,
           probationRegionId = user.probationRegion.id,
-          filterBySharedProperty = filterBySharedProperty,
-          filterBySingleOccupancy = filterBySingleOccupancy,
+          filterBySharedProperty = propertyBedAttributes?.contains(BedSearchAttributes.sharedProperty) ?: false,
+          filterBySingleOccupancy = propertyBedAttributes?.contains(BedSearchAttributes.singleOccupancy) ?: false,
         )
 
         val bedIds = candidateResults.map { it.bedId }
