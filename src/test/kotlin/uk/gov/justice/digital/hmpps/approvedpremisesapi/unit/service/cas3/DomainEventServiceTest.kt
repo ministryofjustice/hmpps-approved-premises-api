@@ -15,6 +15,7 @@ import org.springframework.data.repository.findByIdOrNull
 import software.amazon.awssdk.services.sns.model.InternalErrorException
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sns.model.PublishResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3BookingCancelledEventDetailsFactory
@@ -2390,6 +2392,26 @@ class DomainEventServiceTest {
         data = data,
       ),
     )
+  }
+
+  @Test
+  fun `saveAssessmentUpdatedEvent saves the domain event and does not emit to delius`() {
+    every {
+      domainEventBuilderMock.buildAssessmentUpdatedDomainEvent(any(), any())
+    } answers { callOriginal() }
+
+    val uuid = UUID.randomUUID()
+    val application = TemporaryAccommodationApplicationEntityFactory().withDefaults().withCrn("C123456").produce()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory().withId(uuid).withApplication(application).produce()
+
+    every { domainEventRepositoryMock.save(any()) } returnsArgument 0
+
+    val updatedField = CAS3AssessmentUpdatedField("testField", "A", "B")
+    val event = domainEventBuilderMock.buildAssessmentUpdatedDomainEvent(assessment, listOf(updatedField))
+
+    domainEventService.saveAssessmentUpdatedEvent(event)
+
+    verify(exactly = 1) { domainEventRepositoryMock.save(any(DomainEventEntity::class)) }
   }
 
   private fun createArrivedUpdatedDomainEvent(

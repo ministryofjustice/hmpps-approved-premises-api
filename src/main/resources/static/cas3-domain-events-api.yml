@@ -551,7 +551,30 @@ components:
         - personReference
         - applicationId
         - applicationUrl
-
+    CAS3AssessmentUpdatedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+      type: object
+      properties:
+        updatedFields:
+          type: array
+          items:
+           $ref: '#/components/schemas/CAS3AssessmentUpdatedField'
+      required:
+        - updatedFields
+    CAS3AssessmentUpdatedField:
+      type: object
+      properties:
+        fieldName:
+          type: string
+        updatedFrom:
+          type: string
+        updatedTo:
+          type: string
+      required:
+        - fieldName
+        - updatedFrom
+        - updatedTo
     # Common domain schemas
     PersonReference:
       type: object
@@ -600,6 +623,7 @@ components:
         - accommodation.cas3.person.departed
         - accommodation.cas3.referral.submitted
         - accommodation.cas3.person.departed.updated
+        - accommodation.cas3.assessment.updated
       x-enum-varnames:
         - bookingCancelled
         - bookingCancelledUpdated
@@ -610,6 +634,7 @@ components:
         - personDeparted
         - referralSubmitted
         - personDepartureUpdated
+        - assessmentUpdated
     Problem:
       type: object
       properties:

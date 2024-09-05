@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledUpdatedEvent
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
@@ -40,7 +43,7 @@ class DomainEventBuilder(
 ) {
   fun getBookingCancelledDomainEvent(
     booking: BookingEntity,
-    user: UserEntity?,
+    user: UserEntity,
   ): DomainEvent<CAS3BookingCancelledEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -210,6 +213,27 @@ class DomainEventBuilder(
           applicationUrl = application.toUrl()!!,
         ),
       ),
+    )
+  }
+
+  fun buildAssessmentUpdatedDomainEvent(
+    assessment: TemporaryAccommodationAssessmentEntity,
+    updatedFields: List<CAS3AssessmentUpdatedField>,
+  ): DomainEvent<CAS3AssessmentUpdatedEvent> {
+    val id = UUID.randomUUID()
+    val now = Instant.now()
+    return DomainEvent(
+      id = id,
+      crn = assessment.application.crn,
+      occurredAt = now,
+      data = CAS3AssessmentUpdatedEvent(
+        id = id,
+        updatedFields = updatedFields,
+        eventType = EventType.assessmentUpdated,
+        timestamp = now,
+      ),
+      assessmentId = assessment.id,
+      nomsNumber = null,
     )
   }
 

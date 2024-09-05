@@ -249,4 +249,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     prisonReleaseTypes = this.prisonReleaseTypes(),
     probationDeliveryUnit = this.probationDeliveryUnit(),
   )
+
+  fun withDefaults() = TemporaryAccommodationApplicationEntityFactory()
+    .withCreatedByUser(UserEntityFactory.DEFAULT)
+    .withProbationRegion(ProbationRegionEntityFactory().withDefaults().produce())
 }

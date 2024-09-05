@@ -44,6 +44,7 @@ class DomainEventUrlConfig {
       DomainEventType.CAS3_REFERRAL_SUBMITTED -> cas3["referral-submitted-event-detail"]
       DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED -> cas3["person-departure-updated-event-detail"]
       DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED -> cas3["booking-cancelled-updated-event-detail"]
+      DomainEventType.CAS3_ASSESSMENT_UPDATED -> throw IllegalArgumentException("Don't emit for $domainEventType")
     } ?: throw IllegalStateException("Missing URL for $domainEventType")
 
     return template.resolve("eventId", eventId.toString())
