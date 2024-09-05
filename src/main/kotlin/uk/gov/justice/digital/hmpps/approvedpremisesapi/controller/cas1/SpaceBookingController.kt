@@ -104,11 +104,8 @@ class SpaceBookingController(
       .body(summaries)
   }
 
-  override fun premisesPremisesIdSpaceBookingsBookingIdGet(
-    premisesId: UUID,
-    bookingId: UUID,
-  ): ResponseEntity<Cas1SpaceBooking> {
-    return super.premisesPremisesIdSpaceBookingsBookingIdGet(premisesId, bookingId)
+  override fun getSpaceBookingById(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
+    return super.getSpaceBookingById(premisesId, bookingId)
   }
 
   override fun premisesPremisesIdSpaceBookingsBookingIdArrivalPost(

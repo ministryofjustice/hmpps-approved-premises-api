@@ -640,6 +640,7 @@ paths:
     get:
       tags:
         - space bookings
+      operationId: "getSpaceBookingById"
       summary: Returns space booking information for a given id
       parameters:
         - name: premisesId
