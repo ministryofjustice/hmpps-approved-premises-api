@@ -532,6 +532,7 @@ paths:
     get:
       tags:
         - premises
+      operationId: "getPremisesById"
       summary: Returns premises information
       parameters:
         - name: premisesId

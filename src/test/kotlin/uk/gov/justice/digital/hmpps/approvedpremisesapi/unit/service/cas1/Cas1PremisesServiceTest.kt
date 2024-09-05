@@ -14,17 +14,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class Cas1PremiseServiceTest {
+class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var premisesRepository: PremisesRepository
 
   @MockK
   lateinit var premisesService: PremisesService
+
+  @MockK
+  lateinit var cas1OutOfServiceBedService: Cas1OutOfServiceBedService
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService
@@ -70,6 +74,7 @@ class Cas1PremiseServiceTest {
       every { premisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
       every { premisesService.getBedCount(premises) } returns 56
+      every { cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
 
       val result = service.getPremisesSummary(PREMISES_ID)
 
@@ -82,6 +87,8 @@ class Cas1PremiseServiceTest {
       assertThat(premisesSummary.apCode).isEqualTo("the ap code")
       assertThat(premisesSummary.postcode).isEqualTo("LE11 1PO")
       assertThat(premisesSummary.bedCount).isEqualTo(56)
+      assertThat(premisesSummary.availableBeds).isEqualTo(52)
+      assertThat(premisesSummary.outOfServiceBeds).isEqualTo(4)
     }
   }
 }

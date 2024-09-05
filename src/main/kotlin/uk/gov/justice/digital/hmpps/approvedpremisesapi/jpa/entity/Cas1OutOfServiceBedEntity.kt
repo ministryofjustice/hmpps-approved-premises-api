@@ -82,6 +82,9 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
   @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE c is NULL")
   fun findAllActive(): List<Cas1OutOfServiceBedEntity>
 
+  @Query("SELECT count(*) FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
+  fun countAllActiveForPremisesId(premisesId: UUID): Int
+
   @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
   fun findAllActiveForPremisesId(premisesId: UUID): List<Cas1OutOfServiceBedEntity>
 
