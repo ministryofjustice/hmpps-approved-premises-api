@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -47,7 +48,7 @@ class Cas1BookingDomainEventService(
     bookingMade(
       applicationId = application.id,
       eventNumber = application.eventNumber,
-      booking = booking,
+      bookingInfo = booking.toBookingInfo(),
       user = user,
       applicationSubmittedOn = application.submittedAt,
       releaseType = application.releaseType,
@@ -71,7 +72,7 @@ class Cas1BookingDomainEventService(
     bookingMade(
       applicationId = applicationId!!,
       eventNumber = eventNumberForDomainEvent!!,
-      booking = booking,
+      bookingInfo = booking.toBookingInfo(),
       user = user,
       applicationSubmittedOn = onlineApplication?.submittedAt,
       releaseType = onlineApplication?.releaseType,
@@ -80,6 +81,15 @@ class Cas1BookingDomainEventService(
       placementRequestId = null,
     )
   }
+
+  private fun BookingEntity.toBookingInfo() = BookingInfo(
+    id = id,
+    createdAt = createdAt,
+    crn = crn,
+    premises = premises as ApprovedPremisesEntity,
+    arrivalDate = arrivalDate,
+    departureDate = departureDate,
+  )
 
   fun bookingNotMade(
     user: UserEntity,
@@ -150,10 +160,19 @@ class Cas1BookingDomainEventService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
+  data class BookingInfo(
+    val id: UUID,
+    val createdAt: OffsetDateTime,
+    val crn: String,
+    val premises: ApprovedPremisesEntity,
+    val arrivalDate: LocalDate,
+    val departureDate: LocalDate,
+  )
+
   private fun bookingMade(
     applicationId: UUID,
     eventNumber: String,
-    booking: BookingEntity,
+    bookingInfo: BookingInfo,
     user: UserEntity,
     applicationSubmittedOn: OffsetDateTime?,
     sentenceType: String?,
@@ -162,26 +181,27 @@ class Cas1BookingDomainEventService(
     placementRequestId: UUID?,
   ) {
     val domainEventId = UUID.randomUUID()
+    val crn = bookingInfo.crn
 
     val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         else -> null
       }
 
     val staffDetails = getStaffDetails(user.deliusUsername)
 
-    val approvedPremises = booking.premises as ApprovedPremisesEntity
-    val bookingCreatedAt = booking.createdAt
+    val approvedPremises = bookingInfo.premises
+    val bookingCreatedAt = bookingInfo.createdAt
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
-        crn = booking.crn,
+        crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = bookingCreatedAt.toInstant(),
-        bookingId = booking.id,
+        bookingId = bookingInfo.id,
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
@@ -189,9 +209,9 @@ class Cas1BookingDomainEventService(
           eventDetails = BookingMade(
             applicationId = applicationId,
             applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = booking.id,
+            bookingId = bookingInfo.id,
             personReference = PersonReference(
-              crn = booking.crn,
+              crn = crn,
               noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = eventNumber,
@@ -209,8 +229,8 @@ class Cas1BookingDomainEventService(
               legacyApCode = approvedPremises.qCode,
               localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
             ),
-            arrivalOn = booking.arrivalDate,
-            departureOn = booking.departureDate,
+            arrivalOn = bookingInfo.arrivalDate,
+            departureOn = bookingInfo.departureDate,
             applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
             releaseType = releaseType,
             sentenceType = sentenceType,
