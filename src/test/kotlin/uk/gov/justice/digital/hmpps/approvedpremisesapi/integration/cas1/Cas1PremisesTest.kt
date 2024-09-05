@@ -10,6 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class Cas1PremisesTest : IntegrationTestBase() {
 
@@ -28,6 +31,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withName("the premises name")
+        withApCode("the ap code")
+        withPostcode("the postcode")
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -47,7 +52,29 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns premises summary`() {
-      val (_, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (user, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+
+      val beds = bedEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedRoom {
+          roomEntityFactory.produceAndPersist {
+            withYieldedPremises { premises }
+          }
+        }
+      }
+
+      cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withBed(beds[0])
+      }.apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withCreatedBy(user)
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.now().plusDays(2))
+          withEndDate(LocalDate.now().plusDays(4))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+        }
+      }
 
       val summary = webTestClient.get()
         .uri("/cas1/premises/${premises.id}")
@@ -57,7 +84,13 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .isOk
         .returnResult(Cas1PremisesSummary::class.java).responseBody.blockFirst()!!
 
+      assertThat(summary.id).isEqualTo(premises.id)
       assertThat(summary.name).isEqualTo("the premises name")
+      assertThat(summary.apCode).isEqualTo("the ap code")
+      assertThat(summary.postcode).isEqualTo("the postcode")
+      assertThat(summary.bedCount).isEqualTo(5)
+      assertThat(summary.availableBeds).isEqualTo(4)
+      assertThat(summary.outOfServiceBeds).isEqualTo(1)
     }
   }
 }

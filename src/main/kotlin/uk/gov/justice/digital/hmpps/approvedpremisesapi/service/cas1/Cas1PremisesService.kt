@@ -13,10 +13,14 @@ import java.util.UUID
 class Cas1PremisesService(
   val premisesRepository: PremisesRepository,
   val premisesService: PremisesService,
+  val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
 ) {
   fun getPremisesSummary(premisesId: UUID): CasResult<Cas1PremisesSummary> {
     val premise = premisesRepository.findByIdOrNull(premisesId)
     if (premise !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+
+    val bedCount = premisesService.getBedCount(premise)
+    val outOfServiceBedsCount = cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(premisesId)
 
     return CasResult.Success(
       Cas1PremisesSummary(
@@ -24,7 +28,9 @@ class Cas1PremisesService(
         name = premise.name,
         apCode = premise.apCode,
         postcode = premise.postcode,
-        bedCount = premisesService.getBedCount(premise),
+        bedCount = bedCount,
+        availableBeds = bedCount - outOfServiceBedsCount,
+        outOfServiceBeds = outOfServiceBedsCount,
       ),
     )
   }

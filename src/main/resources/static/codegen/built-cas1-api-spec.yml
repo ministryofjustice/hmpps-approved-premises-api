@@ -534,6 +534,7 @@ paths:
     get:
       tags:
         - premises
+      operationId: "getPremisesById"
       summary: Returns premises information
       parameters:
         - name: premisesId
@@ -6120,6 +6121,14 @@ components:
           type: integer
           description: The total number of spaces in this premises
           example: 22
+        availableBeds:
+          type: integer
+          description: The total number of spaces available right now
+          example: 20
+        outOfServiceBeds:
+          type: integer
+          description: The total number of out of service beds
+          example: 2
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms

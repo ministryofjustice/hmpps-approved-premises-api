@@ -292,6 +292,8 @@ class Cas1OutOfServiceBedService(
 
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 
+  fun getActiveOutOfServiceBedsCountForPremisesId(premisesId: UUID) = outOfServiceBedRepository.countAllActiveForPremisesId(premisesId)
+
   fun getOutOfServiceBedWithConflictingDates(
     startDate: LocalDate,
     endDate: LocalDate,

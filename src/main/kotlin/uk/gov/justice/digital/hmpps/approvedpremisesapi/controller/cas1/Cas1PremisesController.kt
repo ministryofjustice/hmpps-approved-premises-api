@@ -16,7 +16,7 @@ class Cas1PremisesController(
   val cas1PremisesService: Cas1PremisesService,
 ) : PremisesCas1Delegate {
 
-  override fun premisesPremisesIdGet(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
+  override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW_SUMMARY)
 
     return ResponseEntity
