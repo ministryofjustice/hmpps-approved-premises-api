@@ -241,6 +241,12 @@ components:
         id:
           type: string
           format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
         person:
           $ref: '_shared.yml#/components/schemas/Person'
         tier:
@@ -261,10 +267,10 @@ components:
           format: date
         actualArrivalDate:
           type: string
-          format: date
+          format: date-time
         actualDepartureDate:
           type: string
-          format: date
+          format: date-time
         canonicalArrivalDate:
           description: actual arrival date or, if not known, the expected arrival date
           type: string
@@ -276,14 +282,16 @@ components:
         createdAt:
           type: string
           format: date-time
-        keyWorker:
+        keyWorkerAllocation:
           $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
-        otherBookingsInPremises:
+        otherBookingsInPremisesForCrn:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingDates'
       required:
         - id
+        - applicationId
+        - assessmentId
         - person
         - requirements
         - premises
@@ -294,7 +302,7 @@ components:
         - canonicalArrivalDate
         - canonicalDepartureDate
         - createdAt
-        - otherBookingsInPremises
+        - otherBookingsInPremisesForCrn
     Cas1SpaceBookingDates:
       type: object
       properties:
