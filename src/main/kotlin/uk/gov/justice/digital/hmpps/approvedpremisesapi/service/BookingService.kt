@@ -841,7 +841,7 @@ class BookingService(
 
   @Transactional
   fun createArrival(
-    user: UserEntity? = null,
+    user: UserEntity,
     booking: BookingEntity,
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
@@ -884,7 +884,7 @@ class BookingService(
 
   @Transactional
   fun createCas3Arrival(
-    user: UserEntity? = null,
+    user: UserEntity,
     booking: BookingEntity,
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
@@ -1340,7 +1340,7 @@ class BookingService(
   }
 
   fun createDeparture(
-    user: UserEntity?,
+    user: UserEntity,
     booking: BookingEntity,
     dateTime: OffsetDateTime,
     reasonId: UUID,
@@ -1523,7 +1523,7 @@ class BookingService(
     reasonId: UUID,
     moveOnCategoryId: UUID,
     notes: String?,
-    user: UserEntity?,
+    user: UserEntity,
   ) = validated<DepartureEntity> {
     if (booking.premises !is TemporaryAccommodationPremisesEntity) {
       throw RuntimeException("Only CAS3 bookings are supported")

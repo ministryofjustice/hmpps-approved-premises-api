@@ -24,12 +24,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.OffsetDateTime
@@ -53,6 +55,7 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   private val domainEventServiceConfig: DomainEventServiceConfig,
   private val domainEventUrlConfig: DomainEventUrlConfig,
+  private val userService: UserService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -99,13 +102,14 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingCancelledEvent(booking: BookingEntity, user: UserEntity?) {
+  fun saveBookingCancelledEvent(booking: BookingEntity, user: UserEntity) {
     val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
@@ -117,6 +121,7 @@ class DomainEventService(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
@@ -128,39 +133,43 @@ class DomainEventService(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
   @Transactional
-  fun savePersonArrivedEvent(booking: BookingEntity, user: UserEntity?) {
+  fun savePersonArrivedEvent(booking: BookingEntity, user: UserEntity) {
     val domainEvent = domainEventBuilder.getPersonArrivedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
   @Transactional
-  fun savePersonArrivedUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+  fun savePersonArrivedUpdatedEvent(booking: BookingEntity, user: UserEntity) {
     val domainEvent = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
   @Transactional
-  fun savePersonDepartedEvent(booking: BookingEntity, user: UserEntity?) {
+  fun savePersonDepartedEvent(booking: BookingEntity, user: UserEntity) {
     val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
@@ -172,17 +181,19 @@ class DomainEventService(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
   @Transactional
-  fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+  fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity) {
     val domainEvent = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 
@@ -190,11 +201,14 @@ class DomainEventService(
     domainEvent: DomainEvent<T>,
     crn: String,
     nomsNumber: String?,
+    triggerSourceType: TriggerSourceType,
   ) {
     val enumType = enumTypeFromDataType(domainEvent.data::class)
     val typeName = enumType.typeName
     val typeDescription = enumType.typeDescription
     val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(enumType, domainEvent.id)
+
+    val user = userService.getUserForRequestOrNull()
 
     domainEventRepository.save(
       DomainEventEntity(
@@ -209,8 +223,8 @@ class DomainEventService(
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS3",
-        triggerSource = null,
-        triggeredByUserId = null,
+        triggeredByUserId = user?.id,
+        triggerSource = triggerSourceType,
         schemaVersion = domainEvent.schemaVersion,
         cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
       ),
@@ -266,13 +280,14 @@ class DomainEventService(
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
-  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity, user: UserEntity) {
     val domainEvent = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
     )
   }
 }
