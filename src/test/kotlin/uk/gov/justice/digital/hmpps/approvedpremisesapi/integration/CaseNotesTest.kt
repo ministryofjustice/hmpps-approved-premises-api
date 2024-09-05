@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -71,6 +72,7 @@ class CaseNotesTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/people/$crn/prison-case-notes")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isNotFound
@@ -89,6 +91,7 @@ class CaseNotesTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isNotFound
@@ -121,6 +124,7 @@ class CaseNotesTest : IntegrationTestBase() {
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -128,6 +132,54 @@ class CaseNotesTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi)),
+          )
+      }
+    }
+  }
+
+  @Test
+  fun `Getting case notes returns filtered results when call is for cas1 and cas1_only_list_specific_prison_note_types flag is set`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+
+        val caseNoteWithType = CaseNoteFactory()
+          .withTypeDescription(null)
+          .withType("Enforcement")
+          .produce()
+        val caseNoteWithTypeDescription = CaseNoteFactory()
+          .withTypeDescription("Alert")
+          .produce()
+
+        val caseNotes = listOf(
+          CaseNoteFactory().produce(),
+          CaseNoteFactory().produce(),
+          caseNoteWithType,
+          CaseNoteFactory().produce(),
+          caseNoteWithTypeDescription,
+        )
+
+        CaseNotesAPI_mockSuccessfulCaseNotesCall(
+          0,
+          LocalDate.now().minusDays(365),
+          offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesPage(
+            totalElements = 5,
+            totalPages = 1,
+            number = 1,
+            content = caseNotes,
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(listOf(caseNoteWithType, caseNoteWithTypeDescription).map(caseNoteTransformer::transformModelToApi)),
           )
       }
     }
