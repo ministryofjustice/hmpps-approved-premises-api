@@ -765,6 +765,54 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
 
+  /premises/{premisesId}/space-bookings/{bookingId}/departure:
+    post:
+      tags:
+        - space bookings
+      summary: Posts a departure to a specified space booking
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewDeparture'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
