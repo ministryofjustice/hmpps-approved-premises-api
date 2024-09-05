@@ -668,6 +668,40 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
 
+  /premises/{premisesId}/space-bookings/{bookingId}/timeline:
+    get:
+      tags:
+        - space bookings
+      operationId: "getSpaceBookingTimeline"
+      summary: Returns timeline of a specific space booking with a given ID
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/TimelineEvent'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/arrival:
     post:
