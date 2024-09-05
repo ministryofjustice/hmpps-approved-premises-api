@@ -37,11 +37,17 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
         d.assessmentId as assessmentId,
         d.bookingId as bookingId,
         d.triggerSource as triggerSource,
-        b.premises.id as premisesId,
+        CASE
+            WHEN b.id IS NOT NULL THEN b.premises.id
+            WHEN sb.id IS NOT NULL THEN sb.premises.id
+            ELSE NULL
+        END as premisesId,
         a.id as appealId,
+        d.cas1SpaceBookingId as cas1SpaceBookingId,
         u as triggeredByUser
       FROM DomainEventEntity d 
       LEFT OUTER JOIN BookingEntity b ON b.id = d.bookingId
+      LEFT OUTER JOIN Cas1SpaceBookingEntity sb ON sb.id = d.cas1SpaceBookingId
       LEFT OUTER JOIN AppealEntity a ON a.application.id = d.applicationId 
       LEFT OUTER JOIN UserEntity u ON u.id = d.triggeredByUserId
       WHERE d.applicationId = :applicationId

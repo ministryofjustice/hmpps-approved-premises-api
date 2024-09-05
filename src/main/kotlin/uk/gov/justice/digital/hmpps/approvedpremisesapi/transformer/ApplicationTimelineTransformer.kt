@@ -17,6 +17,7 @@ class ApplicationTimelineTransformer(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.cas1.space-booking-made}") private val cas1SpaceBookingUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
   private val domainEventDescriber: DomainEventDescriber,
   private val userTransformer: UserTransformer,
@@ -84,6 +85,20 @@ class ApplicationTimelineTransformer(
     }
   }
 
+  private fun cas1SpaceBookingUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.cas1SpaceBookingId?.let {
+    domainEventSummary.premisesId?.let {
+      TimelineEventAssociatedUrl(
+        TimelineEventUrlType.cas1SpaceBooking,
+        cas1SpaceBookingUrlTemplate.resolve(
+          mapOf(
+            "premisesId" to domainEventSummary.premisesId.toString(),
+            "bookingId" to domainEventSummary.cas1SpaceBookingId.toString(),
+          ),
+        ),
+      )
+    }
+  }
+
   fun generateUrlsForTimelineEventType(domainEventSummary: DomainEventSummary): List<TimelineEventAssociatedUrl> {
     return when (domainEventSummary.type) {
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> listOfNotNull(
@@ -98,6 +113,7 @@ class ApplicationTimelineTransformer(
         applicationUrlOrNull(domainEventSummary),
         assessmentUrlOrNull(domainEventSummary),
         bookingUrlOrNull(domainEventSummary),
+        cas1SpaceBookingUrlOrNull(domainEventSummary),
       )
     }
   }
