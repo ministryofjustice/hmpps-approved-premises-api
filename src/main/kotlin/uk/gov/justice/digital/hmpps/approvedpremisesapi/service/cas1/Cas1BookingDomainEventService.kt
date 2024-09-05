@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -38,6 +39,25 @@ class Cas1BookingDomainEventService(
   val communityApiClient: CommunityApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
+
+  fun spaceBookingMade(
+    application: ApprovedPremisesApplicationEntity,
+    booking: Cas1SpaceBookingEntity,
+    user: UserEntity,
+    placementRequest: PlacementRequestEntity,
+  ) {
+    bookingMade(
+      applicationId = application.id,
+      eventNumber = application.eventNumber,
+      bookingInfo = booking.toBookingInfo(),
+      user = user,
+      applicationSubmittedOn = application.submittedAt,
+      releaseType = application.releaseType,
+      sentenceType = application.sentenceType,
+      situation = application.situation,
+      placementRequestId = placementRequest.id,
+    )
+  }
 
   fun bookingMade(
     application: ApprovedPremisesApplicationEntity,
@@ -89,6 +109,17 @@ class Cas1BookingDomainEventService(
     premises = premises as ApprovedPremisesEntity,
     arrivalDate = arrivalDate,
     departureDate = departureDate,
+    isSpaceBooking = false,
+  )
+
+  private fun Cas1SpaceBookingEntity.toBookingInfo() = BookingInfo(
+    id = id,
+    createdAt = createdAt,
+    crn = crn,
+    premises = premises,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    isSpaceBooking = true,
   )
 
   fun bookingNotMade(
@@ -167,6 +198,7 @@ class Cas1BookingDomainEventService(
     val premises: ApprovedPremisesEntity,
     val arrivalDate: LocalDate,
     val departureDate: LocalDate,
+    val isSpaceBooking: Boolean,
   )
 
   private fun bookingMade(
@@ -193,6 +225,7 @@ class Cas1BookingDomainEventService(
 
     val approvedPremises = bookingInfo.premises
     val bookingCreatedAt = bookingInfo.createdAt
+    val isSpaceBooking = bookingInfo.isSpaceBooking
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(
@@ -201,7 +234,8 @@ class Cas1BookingDomainEventService(
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = bookingCreatedAt.toInstant(),
-        bookingId = bookingInfo.id,
+        bookingId = if (isSpaceBooking) { null } else { bookingInfo.id },
+        cas1SpaceBookingId = if (isSpaceBooking) { bookingInfo.id } else { null },
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
