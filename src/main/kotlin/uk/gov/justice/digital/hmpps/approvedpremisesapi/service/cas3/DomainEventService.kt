@@ -212,6 +212,7 @@ class DomainEventService(
         triggerSource = null,
         triggeredByUserId = null,
         schemaVersion = domainEvent.schemaVersion,
+        cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
       ),
     )
 

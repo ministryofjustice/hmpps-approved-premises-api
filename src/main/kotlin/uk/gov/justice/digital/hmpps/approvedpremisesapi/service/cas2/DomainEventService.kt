@@ -97,6 +97,7 @@ class DomainEventService(
         applicationId = domainEvent.applicationId,
         assessmentId = domainEvent.assessmentId,
         bookingId = domainEvent.bookingId,
+        cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
         crn = domainEvent.crn,
         nomsNumber = domainEvent.nomsNumber,
         type = enumTypeFromDataType(domainEvent.data::class),
