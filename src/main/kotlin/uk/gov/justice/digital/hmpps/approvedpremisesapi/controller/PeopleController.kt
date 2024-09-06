@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonalTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Service
 class PeopleController(
@@ -87,23 +88,25 @@ class PeopleController(
     return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
 
-  override fun peopleCrnPrisonCaseNotesGet(crn: String): ResponseEntity<List<PrisonCaseNote>> {
+  override fun peopleCrnPrisonCaseNotesGet(
+    crn: String,
+    xServiceName: ServiceName,
+  ): ResponseEntity<List<PrisonCaseNote>> {
     val offenderDetails = getOffenderDetails(crn)
 
     if (offenderDetails.otherIds.nomsNumber == null) {
       throw NotFoundProblem(crn, "Case Notes")
     }
 
+    val getCas1SpecificNoteTypes = (
+      xServiceName == ServiceName.approvedPremises &&
+        featureFlagService.getBooleanFlag("cas1_only_list_specific_prison_note_types")
+      )
     val nomsNumber = offenderDetails.otherIds.nomsNumber
 
-    val prisonCaseNotesResult = offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber)
-    val prisonCaseNotes = when (prisonCaseNotesResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Inmate")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> prisonCaseNotesResult.entity
-    }
+    val prisonCaseNotesResult = offenderService.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, getCas1SpecificNoteTypes)
 
-    return ResponseEntity.ok(prisonCaseNotes.map(prisonCaseNoteTransformer::transformModelToApi))
+    return ResponseEntity.ok(extractEntityFromCasResult(prisonCaseNotesResult).map(prisonCaseNoteTransformer::transformModelToApi))
   }
 
   override fun peopleCrnAdjudicationsGet(crn: String, xServiceName: ServiceName): ResponseEntity<List<Adjudication>> {
