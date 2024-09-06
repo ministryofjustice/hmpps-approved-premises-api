@@ -466,9 +466,10 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+    val result = assessmentService.getAssessmentForUser(user, assessmentId) as AuthorisableActionResult.NotFound
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+    assertThat(result.id).isEqualTo(assessmentId.toString())
+    assertThat(result.entityType).isEqualTo(AssessmentEntity::class.simpleName)
   }
 
   @Nested

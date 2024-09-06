@@ -6,6 +6,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -42,8 +43,13 @@ class Cas3AssessmentServiceTest {
 
     every { assessmentRepository.findById(assessmentId) } returns (Optional.empty())
 
-    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment)
-    assertThat(result is CasResult.NotFound).isTrue
+    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.NotFound
+    assertAll(
+      {
+        assertThat(result.id).isEqualTo(assessmentId.toString())
+        assertThat(result.entityType).isEqualTo(TemporaryAccommodationAssessmentEntity::class.simpleName)
+      },
+    )
   }
 
   @Test
