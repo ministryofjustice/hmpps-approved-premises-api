@@ -31,10 +31,11 @@ class ApplicationTimelineTransformerTest {
   private val mockUserTransformer = mockk<UserTransformer>()
 
   private val applicationTimelineTransformer = ApplicationTimelineTransformer(
-    UrlTemplate("http://somehost:3000/applications/#id"),
-    UrlTemplate("http://somehost:3000/assessments/#id"),
-    UrlTemplate("http://somehost:3000/premises/#premisesId/bookings/#bookingId"),
-    UrlTemplate("http://somehost:3000/applications/#applicationId/appeals/#appealId"),
+    applicationUrlTemplate = UrlTemplate("http://somehost:3000/applications/#id"),
+    assessmentUrlTemplate = UrlTemplate("http://somehost:3000/assessments/#id"),
+    bookingUrlTemplate = UrlTemplate("http://somehost:3000/premises/#premisesId/bookings/#bookingId"),
+    cas1SpaceBookingUrlTemplate = UrlTemplate("http://somehost:3000/manage/premises/#premisesId/bookings/#bookingId"),
+    appealUrlTemplate = UrlTemplate("http://somehost:3000/applications/#applicationId/appeals/#appealId"),
     mockDomainEventDescriber,
     mockUserTransformer,
   )
@@ -48,6 +49,7 @@ class ApplicationTimelineTransformerTest {
     override val bookingId: UUID?,
     override val premisesId: UUID?,
     override val appealId: UUID?,
+    override val cas1SpaceBookingId: UUID?,
     override val triggerSource: TriggerSourceType?,
     override val triggeredByUser: UserEntity?,
   ) : DomainEventSummary
@@ -66,6 +68,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = userJpa,
     )
@@ -97,6 +100,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = userJpa,
     )
@@ -119,6 +123,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -152,6 +157,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
       appealId = appealId,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -190,6 +196,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = premisesId,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -210,6 +217,39 @@ class ApplicationTimelineTransformerTest {
   }
 
   @Test
+  fun `transformDomainEventSummaryToTimelineEvent adds cas1SpaceBookingUrl if cas1 space booking id defined`() {
+    val spaceBookingId = UUID.randomUUID()
+    val premisesId = UUID.randomUUID()
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+      occurredAt = OffsetDateTime.now(),
+      bookingId = null,
+      applicationId = null,
+      assessmentId = null,
+      premisesId = premisesId,
+      appealId = null,
+      cas1SpaceBookingId = spaceBookingId,
+      triggerSource = null,
+      triggeredByUser = null,
+    )
+
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
+    assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
+      TimelineEvent(
+        id = domainEvent.id,
+        type = TimelineEventType.approvedPremisesBookingMade,
+        occurredAt = domainEvent.occurredAt.toInstant(),
+        associatedUrls = listOf(
+          TimelineEventAssociatedUrl(TimelineEventUrlType.cas1SpaceBooking, "http://somehost:3000/manage/premises/$premisesId/bookings/$spaceBookingId"),
+        ),
+        content = "Some event",
+      ),
+    )
+  }
+
+  @Test
   fun `transformDomainEventSummaryToTimelineEvent adds assessmentUrl if assessment id defined`() {
     val assessmentId = UUID.randomUUID()
     val domainEvent = DomainEventSummaryImpl(
@@ -221,6 +261,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -254,6 +295,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -287,6 +329,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -327,6 +370,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = premisesId,
       appealId = appealId,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )
@@ -361,6 +405,7 @@ class ApplicationTimelineTransformerTest {
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = triggerSource,
       triggeredByUser = null,
     )

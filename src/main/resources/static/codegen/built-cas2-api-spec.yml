@@ -4304,6 +4304,7 @@ components:
         - booking
         - assessment
         - assessmentAppeal
+        - cas1SpaceBooking
     Cas2TimelineEvent:
       type: object
       properties:

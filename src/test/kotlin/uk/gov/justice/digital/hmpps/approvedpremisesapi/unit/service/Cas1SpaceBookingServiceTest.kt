@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAva
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -49,6 +50,9 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var spaceSearchRepository: Cas1SpaceSearchRepository
+
+  @MockK
+  private lateinit var cas1BookingDomainEventService: Cas1BookingDomainEventService
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -189,7 +193,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Returns new booking if all data is valid`() {
+    fun `Creates new booking if all data is valid and raises domain event`() {
       val premises = ApprovedPremisesEntityFactory()
         .withDefaults()
         .produce()
@@ -222,6 +226,15 @@ class Cas1SpaceBookingServiceTest {
       every {
         spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
       } returns listOf(spaceAvailability)
+
+      every {
+        cas1BookingDomainEventService.spaceBookingMade(
+          application,
+          any(),
+          user,
+          placementRequest,
+        )
+      } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0

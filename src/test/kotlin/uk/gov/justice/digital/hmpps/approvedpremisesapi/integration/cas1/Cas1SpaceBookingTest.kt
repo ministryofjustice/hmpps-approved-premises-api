@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
@@ -179,7 +180,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Booking a space returns OK with the correct data`() {
+    fun `Booking a space returns OK with the correct data and creates a domain event`() {
       `Given a User` { user, jwt ->
         `Given a Placement Request`(
           placementRequestAllocatedTo = user,
@@ -275,6 +276,8 @@ class Cas1SpaceBookingTest {
           assertThat(result.createdAt).satisfies(
             { it.isAfter(Instant.now().minusSeconds(10)) },
           )
+
+          domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
         }
       }
     }

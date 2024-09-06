@@ -137,6 +137,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
               null,
               null,
               null,
+              null,
               it.triggerSource,
               user,
             ),

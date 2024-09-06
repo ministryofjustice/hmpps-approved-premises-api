@@ -27,6 +27,7 @@ class Cas1SpaceBookingService(
   private val placementRequestService: PlacementRequestService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceSearchRepository: Cas1SpaceSearchRepository,
+  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
 ) {
   fun createNewBooking(
     premisesId: UUID,
@@ -64,11 +65,13 @@ class Cas1SpaceBookingService(
     val durationInDays = arrivalDate.until(departureDate).toKotlinDatePeriod().days
     cas1SpaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premisesId), arrivalDate, durationInDays)
 
-    val result = cas1SpaceBookingRepository.save(
+    val application = placementRequest.application
+
+    val spaceBooking = cas1SpaceBookingRepository.save(
       Cas1SpaceBookingEntity(
         id = UUID.randomUUID(),
         premises = premises,
-        application = placementRequest.application,
+        application = application,
         placementRequest = placementRequest,
         createdBy = createdBy,
         createdAt = OffsetDateTime.now(),
@@ -85,7 +88,14 @@ class Cas1SpaceBookingService(
       ),
     )
 
-    success(result)
+    cas1BookingDomainEventService.spaceBookingMade(
+      application = application,
+      booking = spaceBooking,
+      user = createdBy,
+      placementRequest = placementRequest,
+    )
+
+    success(spaceBooking)
   }
 
   fun search(
