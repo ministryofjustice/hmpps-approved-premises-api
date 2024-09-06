@@ -1317,7 +1317,7 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_WORKFLOW_MANAGER role`() {
+  fun `currentUserCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has a role with the CAS1_VIEW_MANAGE_TASKS permission`() {
     currentRequestIsFor(ServiceName.approvedPremises)
 
     user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
