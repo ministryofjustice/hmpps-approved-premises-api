@@ -31,14 +31,17 @@ class Cas1BookingEmailService(
       booking,
     )
 
-    if (applicationSubmittedByUser.email != null) {
-      emailNotifier.sendEmail(
-        recipientEmailAddress = applicationSubmittedByUser.email!!,
-        templateId = notifyConfig.templates.bookingMade,
-        personalisation = emailPersonalisation,
-        application = application,
-      )
-    }
+    val applicants = setOfNotNull(
+      applicationSubmittedByUser.email,
+      booking.placementRequest?.placementApplication?.createdByUser?.email,
+    )
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = applicants,
+      templateId = notifyConfig.templates.bookingMade,
+      personalisation = emailPersonalisation,
+      application = application,
+    )
 
     if (booking.premises.emailAddress != null) {
       emailNotifier.sendEmail(

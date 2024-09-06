@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.AP_AREA_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PLACEMENT_APPLICATION_CREATOR_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.REGION_NAME
@@ -36,6 +39,7 @@ class Cas1BookingEmailServiceTest {
   private object TestConstants {
     const val AP_AREA_EMAIL = "apAreaEmail@test.com"
     const val APPLICANT_EMAIL = "applicantEmail@test.com"
+    const val PLACEMENT_APPLICATION_CREATOR_EMAIL = "placementAppCreatorEmail@test.com"
     const val CRN = "CRN123"
     const val PREMISES_EMAIL = "premisesEmail@test.com"
     const val PREMISES_NAME = "The Premises Name"
@@ -111,7 +115,7 @@ class Cas1BookingEmailServiceTest {
 
     @SuppressWarnings("CyclomaticComplexMethod")
     @Test
-    fun `bookingMade sends email to applicant and premises email addresses when defined, when length of stay whole number of weeks`() {
+    fun `bookingMade sends email to applicant, premises email addresses when defined, when length of stay whole number of weeks`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(APPLICANT_EMAIL)
@@ -188,6 +192,73 @@ class Cas1BookingEmailServiceTest {
         PREMISES_EMAIL,
         notifyConfig.templates.bookingMadePremises,
         expectedPersonalisation,
+        application,
+      )
+    }
+
+    @SuppressWarnings("CyclomaticComplexMethod")
+    @Test
+    fun `bookingMade sends email to applicant, placement application creator and premises email addresses for request for placements`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
+
+      booking.placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(
+          PlacementApplicationEntityFactory()
+            .withDefaults()
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withUnitTestControlProbationRegion()
+                .withEmail(PLACEMENT_APPLICATION_CREATOR_EMAIL)
+                .produce(),
+            )
+            .produce(),
+        )
+        .produce()
+
+      service.bookingMade(application, booking)
+
+      mockEmailNotificationService.assertEmailRequestCount(3)
+
+      val personalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "lengthStay" to 2,
+        "lengthStayUnit" to "weeks",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingMade,
+        personalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PLACEMENT_APPLICATION_CREATOR_EMAIL,
+        notifyConfig.templates.bookingMade,
+        personalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingMadePremises,
+        personalisation,
         application,
       )
     }

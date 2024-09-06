@@ -39,6 +39,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
+    this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
   }
 
   fun withId(id: UUID) = apply {
