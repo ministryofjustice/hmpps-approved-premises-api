@@ -151,7 +151,7 @@ class AssessmentService(
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return AuthorisableActionResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
 
     val latestSchema = when (assessment) {
       is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(

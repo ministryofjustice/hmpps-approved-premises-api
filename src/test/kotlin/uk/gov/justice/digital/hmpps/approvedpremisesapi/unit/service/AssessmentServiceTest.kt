@@ -15,7 +15,6 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
@@ -467,9 +466,10 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+    val result = assessmentService.getAssessmentForUser(user, assessmentId) as AuthorisableActionResult.NotFound
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+    assertThat(result.id).isEqualTo(assessmentId.toString())
+    assertThat(result.entityType).isEqualTo(AssessmentEntity::class.simpleName)
   }
 
   @Nested
@@ -2281,13 +2281,9 @@ class AssessmentServiceTest {
   fun `deallocateAssessment returns a NotFound error if the assessment could not be found`() {
     every { assessmentRepositoryMock.findByIdOrNull(any()) } returns null
 
-    val uuid = UUID.randomUUID()
-    val result = assessmentService.deallocateAssessment(uuid) as AuthorisableActionResult.NotFound
+    val result = assessmentService.deallocateAssessment(UUID.randomUUID())
 
-    assertAll({
-      assertThat(result.id).isEqualTo(uuid.toString())
-      assertThat(result.entityType).isEqualTo(AssessmentEntity::class.simpleName)
-    },)
+    assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
