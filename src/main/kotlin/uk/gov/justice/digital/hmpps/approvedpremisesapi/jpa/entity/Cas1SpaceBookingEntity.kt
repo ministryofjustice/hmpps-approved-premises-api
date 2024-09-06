@@ -59,6 +59,22 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     premisesId: UUID,
     pageable: Pageable?,
   ): Page<Cas1SpaceBookingSearchResult>
+
+  @Query(
+    value = """
+      SELECT 
+      Cast(b.id as varchar),
+      b.canonical_arrival_date as canonicalArrivalDate,
+      b.canonical_departure_date as canonicalDepartureDate
+      FROM cas1_space_bookings b
+      WHERE b.premises_id = :premisesId AND b.crn = :crn
+    """,
+    nativeQuery = true,
+  )
+  fun findByPremisesIdAndCrn(
+    premisesId: UUID,
+    crn: String,
+  ): List<Cas1SpaceBookingAtPremises>
 }
 
 interface Cas1SpaceBookingSearchResult {
@@ -72,6 +88,12 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerName: String?
 }
 
+interface Cas1SpaceBookingAtPremises {
+  val id: UUID
+  val canonicalArrivalDate: LocalDate
+  val canonicalDepartureDate: LocalDate
+}
+
 @Entity
 @Table(name = "cas1_space_bookings")
 data class Cas1SpaceBookingEntity(
@@ -82,7 +104,7 @@ data class Cas1SpaceBookingEntity(
   val premises: ApprovedPremisesEntity,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "approved_premises_application_id")
-  val application: ApprovedPremisesApplicationEntity?,
+  val application: ApprovedPremisesApplicationEntity,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
   val placementRequest: PlacementRequestEntity,

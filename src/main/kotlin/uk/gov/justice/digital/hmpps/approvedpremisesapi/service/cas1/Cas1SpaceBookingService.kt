@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import kotlinx.datetime.toKotlinDatePeriod
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -29,6 +31,7 @@ class Cas1SpaceBookingService(
   private val cas1SpaceSearchRepository: Cas1SpaceSearchRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
 ) {
+  @Transactional
   fun createNewBooking(
     premisesId: UUID,
     placementRequestId: UUID,
@@ -36,7 +39,7 @@ class Cas1SpaceBookingService(
     departureDate: LocalDate,
     createdBy: UserEntity,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = premisesService.getPremises(premisesId) as? ApprovedPremisesEntity
+    val premises = premisesService.getApprovedPremises(premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
@@ -103,7 +106,7 @@ class Cas1SpaceBookingService(
     filterCriteria: SpaceBookingFilterCriteria,
     pageCriteria: PageCriteria<Cas1SpaceBookingSummarySortField>,
   ): CasResult<Pair<List<Cas1SpaceBookingSearchResult>, PaginationMetadata?>> {
-    if (premisesService.getPremises(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+    if (premisesService.getApprovedPremises(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
 
     val page = cas1SpaceBookingRepository.search(
       filterCriteria.residency?.name,
@@ -127,6 +130,19 @@ class Cas1SpaceBookingService(
       ),
     )
   }
+
+  fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
+    if (premisesService.getApprovedPremises(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+
+    val booking = cas1SpaceBookingRepository.findByIdOrNull(bookingId) ?: return CasResult.NotFound("booking", bookingId.toString())
+
+    return CasResult.Success(booking)
+  }
+
+  fun getBookingsForPremisesAndCrn(premisesId: UUID, crn: String) = cas1SpaceBookingRepository.findByPremisesIdAndCrn(
+    premisesId = premisesId,
+    crn = crn,
+  )
 
   data class SpaceBookingFilterCriteria(
     val residency: Cas1SpaceBookingResidency?,

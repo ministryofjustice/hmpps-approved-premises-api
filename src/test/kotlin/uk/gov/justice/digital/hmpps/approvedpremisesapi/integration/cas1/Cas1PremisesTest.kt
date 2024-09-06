@@ -9,10 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class Cas1PremisesTest : IntegrationTestBase() {
 
@@ -40,7 +42,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR))
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.get()
         .uri("/cas1/premises/${premises.id}")
@@ -51,8 +53,20 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Returns 404 if premise doesn't exist`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      webTestClient.get()
+        .uri("/cas1/premises/${UUID.randomUUID()}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
     fun `Returns premises summary`() {
-      val (user, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (user, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {

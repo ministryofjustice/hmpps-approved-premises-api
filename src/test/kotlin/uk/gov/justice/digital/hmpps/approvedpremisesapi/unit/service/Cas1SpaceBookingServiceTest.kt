@@ -14,6 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -21,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -73,7 +73,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getPremises(any()) } returns null
+      every { premisesService.getApprovedPremises(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val result = service.createNewBooking(
@@ -102,7 +102,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getPremises(premises.id) } returns premises
+      every { premisesService.getApprovedPremises(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
 
       val result = service.createNewBooking(
@@ -135,7 +135,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getPremises(premises.id) } returns premises
+      every { premisesService.getApprovedPremises(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val result = service.createNewBooking(
@@ -173,7 +173,7 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementRequest(placementRequest)
         .produce()
 
-      every { premisesService.getPremises(premises.id) } returns premises
+      every { premisesService.getApprovedPremises(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns existingSpaceBooking
 
@@ -219,7 +219,7 @@ class Cas1SpaceBookingServiceTest {
         premisesId = premises.id,
       )
 
-      every { premisesService.getPremises(premises.id) } returns premises
+      every { premisesService.getApprovedPremises(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns null
 
@@ -272,27 +272,8 @@ class Cas1SpaceBookingServiceTest {
   inner class Search {
 
     @Test
-    fun `premises not found return error`() {
-      every { premisesService.getPremises(PREMISES_ID) } returns null
-
-      val result = service.search(
-        PREMISES_ID,
-        Cas1SpaceBookingService.SpaceBookingFilterCriteria(
-          residency = null,
-          crnOrName = null,
-        ),
-        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
-          .produce(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
-    }
-
-    @Test
-    fun `premises not approved premises return error`() {
-      every { premisesService.getPremises(PREMISES_ID) } returns TemporaryAccommodationPremisesEntityFactory()
-        .withDefaults()
-        .produce()
+    fun `approved premises not found return error`() {
+      every { premisesService.getApprovedPremises(PREMISES_ID) } returns null
 
       val result = service.search(
         PREMISES_ID,
@@ -319,7 +300,7 @@ class Cas1SpaceBookingServiceTest {
       inputSortField: Cas1SpaceBookingSummarySortField,
       sqlSortField: String,
     ) {
-      every { premisesService.getPremises(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
+      every { premisesService.getApprovedPremises(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
 
       val results = PageImpl(
         listOf(
@@ -353,6 +334,53 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result.value.first).hasSize(3)
 
       assertThat(pageableCaptor.captured.sort.toList()[0].property).isEqualTo(sqlSortField)
+    }
+  }
+
+  @Nested
+  inner class GetBooking {
+
+    @Test
+    fun `Returns not found error if premises with the given ID doesn't exist`() {
+      every { premisesService.getApprovedPremises(any()) } returns null
+
+      val result = service.getBooking(UUID.randomUUID(), UUID.randomUUID())
+
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+      assertThat((result as CasResult.NotFound).entityType).isEqualTo("premises")
+    }
+
+    @Test
+    fun `Returns not found error if booking with the given ID doesn't exist`() {
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .produce()
+
+      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.getBooking(premises.id, UUID.randomUUID())
+
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+      assertThat((result as CasResult.NotFound).entityType).isEqualTo("booking")
+    }
+
+    @Test
+    fun `Returns booking info if exists`() {
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(spaceBooking.id) } returns spaceBooking
+
+      val result = service.getBooking(premises.id, spaceBooking.id)
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThat((result as CasResult.Success).value).isEqualTo(spaceBooking)
     }
   }
 }
