@@ -92,14 +92,11 @@ class Cas1BookingEmailService(
   }
 
   fun buildCommonPersonalisation(application: ApplicationEntity, booking: BookingEntity): Map<String, Any> {
-    val applicationSubmittedByUser = application.createdByUser
-
     val lengthOfStayDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size
     val lengthOfStayWeeks = lengthOfStayDays.toDouble() / DAYS_IN_WEEK
     val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % DAYS_IN_WEEK) == 0.0
 
     return mapOf(
-      "name" to applicationSubmittedByUser.name,
       "apName" to booking.premises.name,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),

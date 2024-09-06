@@ -96,7 +96,6 @@ class Cas1BookingEmailServiceTest {
         PREMISES_EMAIL,
         notifyConfig.templates.bookingMadePremises,
         mapOf(
-          "name" to applicant.name,
           "apName" to PREMISES_NAME,
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
@@ -130,7 +129,6 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(2)
 
       val personalisation = mapOf(
-        "name" to applicant.name,
         "apName" to PREMISES_NAME,
         "applicationUrl" to "http://frontend/applications/${application.id}",
         "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
