@@ -295,7 +295,7 @@ class AssessmentService(
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
     }
 
     if (assessment.isWithdrawn) {

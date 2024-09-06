@@ -15,6 +15,7 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
@@ -2280,9 +2281,13 @@ class AssessmentServiceTest {
   fun `deallocateAssessment returns a NotFound error if the assessment could not be found`() {
     every { assessmentRepositoryMock.findByIdOrNull(any()) } returns null
 
-    val result = assessmentService.deallocateAssessment(UUID.randomUUID())
+    val uuid = UUID.randomUUID()
+    val result = assessmentService.deallocateAssessment(uuid) as AuthorisableActionResult.NotFound
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
+    assertAll({
+      assertThat(result.id).isEqualTo(uuid.toString())
+      assertThat(result.entityType).isEqualTo(AssessmentEntity::class.simpleName)
+    },)
   }
 
   @Test

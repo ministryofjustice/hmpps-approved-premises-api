@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.toCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -144,31 +145,14 @@ class AssessmentController(
         }
 
         else -> {
-          val updated =
-            assessmentService.updateAssessment(
-              user,
-              assessmentId,
-              objectMapper.writeValueAsString(updateAssessment.data),
-            )
-          val assessmentValidationResult =
-            when (updated) {
-              is AuthorisableActionResult.Success -> updated.entity
-              is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-              is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-            }
-
-          when (assessmentValidationResult) {
-            is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-            is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
-              invalidParams = assessmentValidationResult.validationMessages,
-            )
-            is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-              id = assessmentValidationResult.conflictingEntityId,
-              conflictReason = assessmentValidationResult.message,
-            )
-
-            is ValidatableActionResult.Success -> assessmentValidationResult.entity
-          }
+          extractEntityFromCasResult(
+            assessmentService
+              .updateAssessment(
+                user,
+                assessmentId,
+                objectMapper.writeValueAsString(updateAssessment.data),
+              ).toCasResult(),
+          )
         }
       }
 
