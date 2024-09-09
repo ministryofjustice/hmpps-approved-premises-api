@@ -1,7 +1,16 @@
 import org.apache.commons.io.FileUtils
 
+// temporary plugin downgrades. should be removed via CAS-453
+buildscript {
+  configurations.all {
+    resolutionStrategy {
+      force("org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin:11.6.1")
+    }
+  }
+}
+
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.14.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.22"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
@@ -22,37 +31,39 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 val springDocVersion = "1.7.0"
-val sentryVersion = "7.3.0"
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  implementation("com.vladmihalcea:hibernate-types-55:2.21.1")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
   implementation("org.locationtech.jts:jts-core:1.19.0")
-  implementation("org.hibernate:hibernate-spatial")
+  implementation("org.hibernate:hibernate-spatial:6.4.4.Final")
+  implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.0.0-jre")
+  implementation("org.postgresql:postgresql:42.7.3")
 
-  runtimeOnly("org.postgresql:postgresql:42.7.3")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-starter-common:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-ui:1.8.0")
+  implementation("org.springdoc:springdoc-openapi-kotlin:1.8.0")
+  implementation("org.springdoc:springdoc-openapi-data-rest:1.8.0")
 
-  implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
-  implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
-  implementation("org.springdoc:springdoc-openapi-kotlin:$springDocVersion")
-  implementation("org.springdoc:springdoc-openapi-data-rest:$springDocVersion")
-
-  implementation("org.zalando:problem-spring-web-starter:0.27.0")
+  implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.11.0")
+  implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("io.sentry:sentry-spring-boot-starter:$sentryVersion")
-  implementation("io.sentry:sentry-logback:$sentryVersion")
+  runtimeOnly("org.ehcache:ehcache")
 
   implementation(kotlin("reflect"))
 
@@ -81,7 +92,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.3.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.3")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.0.0-RELEASE")
 
@@ -128,7 +139,7 @@ tasks.register("bootRunLocal") {
 }
 
 tasks.withType<Test> {
-  jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
 
   afterEvaluate {
     if (environment["CI"] != null) {
@@ -184,7 +195,7 @@ fun addOpenApiConfigOptions(
       put("apiSuffix", it)
     }
     put("dateLibrary", "custom")
-    put("useSpringBoot3", "false")
+    put("useSpringBoot3", "true")
     put("enumPropertyNaming", "camelCase")
   }
 }
@@ -377,7 +388,7 @@ ktlint {
 }
 
 allOpen {
-  annotations("javax.persistence.Entity")
+  annotations("jakarta.persistence.Entity")
 }
 
 tasks {

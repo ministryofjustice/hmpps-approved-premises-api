@@ -32,10 +32,10 @@ class Cas1FurtherInfoBugFixSeedJob(
     )
 
     if (updatedJson != null) {
-      assessmentRepository.updateData(assessment.id, updatedJson)
+      assessment.data = updatedJson
+      assessmentRepository.save(assessment)
+      log.info("Updated JSON for assessment ${assessment.id}")
     }
-
-    log.info("Updated JSON for assessment ${assessment.id}")
   }
 }
 
