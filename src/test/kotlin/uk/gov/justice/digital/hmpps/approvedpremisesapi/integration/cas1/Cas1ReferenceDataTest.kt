@@ -11,6 +11,8 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `All available out-of-service bed reasons are returned`() {
+    cas1OutOfServiceBedReasonTestRepository.deleteAll()
+
     val activeReason1 = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
       withIsActive(true)
       withName("Active reason 1")
