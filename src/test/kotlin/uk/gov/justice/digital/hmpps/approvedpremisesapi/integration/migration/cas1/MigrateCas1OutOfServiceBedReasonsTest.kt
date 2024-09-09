@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.Mi
 class MigrateCas1OutOfServiceBedReasonsTest : MigrationJobTestBase() {
   @Test
   fun `Job migrates expected set of lost bed reasons`() {
+    cas1OutOfServiceBedReasonTestRepository.deleteAll()
+
     val approvedPremisesLostBedReasons = lostBedReasonRepository
       .findAll()
       .filter { listOf("*", ServiceName.approvedPremises.value).contains(it.serviceScope) }
