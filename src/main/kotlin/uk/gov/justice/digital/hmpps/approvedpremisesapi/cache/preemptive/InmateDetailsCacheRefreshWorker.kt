@@ -37,13 +37,16 @@ class InmateDetailsCacheRefreshWorker(
     val started = LocalDateTime.now()
     val refreshStarted = LocalDateTime.now()
     val candidatesCount = distinctNomsNumbers.size
+    var entriesProcessed = 0
     var entryUpdates = 0
     var entryUpdateFails = 0
 
-    fun stats() = "Of $candidatesCount candidates we have successfully updated $entryUpdates with $entryUpdateFails update failures. " +
+    fun stats() = "Of $candidatesCount candidates we have processed $entriesProcessed and successfully updated $entryUpdates with $entryUpdateFails update failures. " +
       "Total time taken ${ChronoUnit.SECONDS.between(started,LocalDateTime.now())} seconds"
 
     distinctNomsNumbers.shuffled().forEach { nomsNumber ->
+      entriesProcessed += 1
+
       logConspicuously("Current NOMS number: $nomsNumber")
 
       val prematureStopReason = checkShouldStop()
