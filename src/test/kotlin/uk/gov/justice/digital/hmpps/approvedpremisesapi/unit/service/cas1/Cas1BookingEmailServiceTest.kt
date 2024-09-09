@@ -93,7 +93,11 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
       )
 
-      service.bookingMade(application, booking)
+      service.bookingMade(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -128,7 +132,11 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
       )
 
-      service.bookingMade(application, booking)
+      service.bookingMade(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(2)
 
@@ -172,7 +180,11 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 27),
       )
 
-      service.bookingMade(application, booking)
+      service.bookingMade(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(2)
 
@@ -211,22 +223,25 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
       )
 
-      booking.placementRequest = PlacementRequestEntityFactory()
+      val placementApplication = PlacementApplicationEntityFactory()
         .withDefaults()
-        .withPlacementApplication(
-          PlacementApplicationEntityFactory()
-            .withDefaults()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withUnitTestControlProbationRegion()
-                .withEmail(PLACEMENT_APPLICATION_CREATOR_EMAIL)
-                .produce(),
-            )
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withUnitTestControlProbationRegion()
+            .withEmail(PLACEMENT_APPLICATION_CREATOR_EMAIL)
             .produce(),
         )
         .produce()
 
-      service.bookingMade(application, booking)
+      booking.placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .produce()
+
+      service.bookingMade(
+        application = application,
+        booking = booking,
+        placementApplication = placementApplication,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(3)
 

@@ -4328,7 +4328,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { bookingEntity }
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
       every { mockCas1BookingDomainEventService.adhocBookingMade(any(), any(), any(), any(), any()) } just Runs
-      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any(), any()) } just Runs
     }
 
     @Test
@@ -4507,7 +4507,7 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(application, booking) }
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(application, booking, placementApplication = null) }
     }
 
     @ParameterizedTest
@@ -4554,7 +4554,7 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(existingApplication, booking) }
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(existingApplication, booking, placementApplication = null) }
     }
 
     @Test
@@ -4601,7 +4601,7 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(existingApplication, booking) }
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(existingApplication, booking, placementApplication = null) }
     }
 
     @ParameterizedTest
@@ -6402,7 +6402,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
-      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6456,7 +6456,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
-      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6535,7 +6535,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
-      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6600,7 +6600,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
-      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = workflowManager,
@@ -6663,7 +6663,13 @@ class BookingServiceTest {
     }
 
     private fun assertEmailsSent(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(application, booking) }
+      verify(exactly = 1) {
+        mockCas1BookingEmailService.bookingMade(
+          application = application,
+          booking = booking,
+          placementApplication = null,
+        )
+      }
     }
   }
 

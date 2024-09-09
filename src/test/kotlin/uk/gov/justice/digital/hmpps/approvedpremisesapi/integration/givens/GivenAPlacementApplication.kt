@@ -18,7 +18,7 @@ import java.time.OffsetDateTime
 fun IntegrationTestBase.`Given a Placement Application`(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
-  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
+  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
   crn: String = randomStringMultiCaseWithNumbers(8),
   allocatedToUser: UserEntity? = null,
   submittedAt: OffsetDateTime? = null,
@@ -69,7 +69,11 @@ fun IntegrationTestBase.`Given a Placement Application`(
     withCreatedByUser(createdByUser)
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
-    withSchemaVersion(schema)
+    withSchemaVersion(
+      schema ?: approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      },
+    )
     withSubmittedAt(submittedAt)
     withDecision(decision)
     withDecisionMadeAt(decisionMadeAt)
@@ -82,10 +86,11 @@ fun IntegrationTestBase.`Given a Placement Application`(
   }
 }
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a Placement Application`(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
-  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
+  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
   crn: String = randomStringMultiCaseWithNumbers(8),
   allocatedToUser: UserEntity? = null,
   submittedAt: OffsetDateTime? = null,
@@ -98,7 +103,9 @@ fun IntegrationTestBase.`Given a Placement Application`(
   val placementApplication = `Given a Placement Application`(
     assessmentDecision = assessmentDecision,
     createdByUser = createdByUser,
-    schema = schema,
+    schema = schema ?: approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    },
     crn = crn,
     allocatedToUser = allocatedToUser,
     submittedAt = submittedAt,

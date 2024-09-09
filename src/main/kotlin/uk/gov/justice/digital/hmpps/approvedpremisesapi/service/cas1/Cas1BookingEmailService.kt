@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
@@ -23,7 +24,11 @@ class Cas1BookingEmailService(
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
 ) {
 
-  fun bookingMade(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
+  fun bookingMade(
+    application: ApprovedPremisesApplicationEntity,
+    booking: BookingEntity,
+    placementApplication: PlacementApplicationEntity?,
+  ) {
     val applicationSubmittedByUser = application.createdByUser
 
     val emailPersonalisation = buildCommonPersonalisation(
@@ -33,7 +38,7 @@ class Cas1BookingEmailService(
 
     val applicants = setOfNotNull(
       applicationSubmittedByUser.email,
-      booking.placementRequest?.placementApplication?.createdByUser?.email,
+      placementApplication?.createdByUser?.email,
     )
 
     emailNotifier.sendEmails(

@@ -177,6 +177,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   duration: Int? = null,
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
+  placementApplication: PlacementApplicationEntity? = null,
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
   val result = `Given a Placement Request`(
@@ -194,6 +195,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     duration = duration,
     applicationSubmittedAt = applicationSubmittedAt,
     assessmentSubmittedAt = assessmentSubmittedAt,
+    placementApplication = placementApplication,
   )
 
   block(result.first, result.second)
