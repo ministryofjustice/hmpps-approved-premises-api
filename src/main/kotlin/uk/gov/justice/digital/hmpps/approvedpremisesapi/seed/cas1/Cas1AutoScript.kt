@@ -93,7 +93,6 @@ class Cas1AutoScript(
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
-          UserRole.CAS1_MANAGER,
           UserRole.CAS1_ADMIN,
           UserRole.CAS1_REPORT_VIEWER,
           UserRole.CAS1_APPEALS_MANAGER,
