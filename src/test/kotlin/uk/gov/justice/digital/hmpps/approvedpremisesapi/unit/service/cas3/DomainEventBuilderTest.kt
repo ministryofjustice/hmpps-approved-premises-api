@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
@@ -17,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -30,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -43,6 +47,33 @@ class DomainEventBuilderTest {
       applicationUrlTemplate = "http://api/applications/#applicationId",
       bookingUrlTemplate = "http://api/premises/#premisesId/bookings/#bookingId",
     )
+
+  @Test
+  fun `buildAssessmentUpdatedDomainEvent builds correct domain event`() {
+    val id = UUID.randomUUID()
+    val application = TemporaryAccommodationApplicationEntityFactory().withDefaults().withCrn("A123456").produce()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory().withApplication(application).withId(id).produce()
+    val updatedField = CAS3AssessmentUpdatedField("TESTFIELD", "A", "B")
+    val event = domainEventBuilder.buildAssessmentUpdatedDomainEvent(assessment, listOf(updatedField))
+
+    assertThat(event.applicationId).isNull()
+    assertThat(event.assessmentId).isEqualTo(assessment.id)
+    assertThat(event.bookingId).isNull()
+    assertThat(event.cas1SpaceBookingId).isNull()
+    assertThat(event.crn).isEqualTo("A123456")
+    assertThat(event.nomsNumber).isNull()
+    assertThat(event.occurredAt).isWithinTheLastMinute()
+    assertThat(event.metadata).isEmpty()
+    assertThat(event.schemaVersion).isNull()
+
+    val data = event.data
+
+    assertThat(data::class).isEqualTo(CAS3AssessmentUpdatedEvent::class)
+    assertThat(data.updatedFields.size).isEqualTo(1)
+    assertThat(data.updatedFields.get(0)).isEqualTo(updatedField)
+
+    assertThat(data.eventType).isEqualTo(EventType.assessmentUpdated)
+  }
 
   @Test
   fun `getBookingCancelledDomainEvent transforms the booking information correctly`() {

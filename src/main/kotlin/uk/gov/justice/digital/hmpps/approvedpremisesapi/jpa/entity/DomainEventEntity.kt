@@ -335,4 +335,10 @@ enum class DomainEventType(
     "A cancelled booking for a Transitional Accommodation premises has been updated",
     null,
   ),
+  CAS3_ASSESSMENT_UPDATED(
+    DomainEventCas.CAS3,
+    Cas3EventType.assessmentUpdated.value,
+    "A field has been updated on an assessment",
+    null,
+  ),
 }

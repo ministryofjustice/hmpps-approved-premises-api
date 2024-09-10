@@ -8,6 +8,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
@@ -202,11 +203,11 @@ class DomainEventService(
     crn: String,
     nomsNumber: String?,
     triggerSourceType: TriggerSourceType,
+    emit: Boolean = domainEventServiceConfig.emitForEvent(domainEvent.data.eventType),
   ) {
     val enumType = enumTypeFromDataType(domainEvent.data::class)
     val typeName = enumType.typeName
     val typeDescription = enumType.typeDescription
-    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(enumType, domainEvent.id)
 
     val user = userService.getUserForRequestOrNull()
 
@@ -230,7 +231,7 @@ class DomainEventService(
       ),
     )
 
-    if (domainEventServiceConfig.emitForEvent(domainEvent.data.eventType)) {
+    if (emit) {
       val personReferenceIdentifiers = when (nomsNumber) {
         null -> listOf(
           SnsEventPersonReference("CRN", crn),
@@ -240,6 +241,8 @@ class DomainEventService(
           SnsEventPersonReference("NOMS", nomsNumber),
         )
       }
+
+      val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(enumType, domainEvent.id)
 
       val snsEvent = SnsEvent(
         eventType = typeName,
@@ -283,6 +286,7 @@ class DomainEventService(
     CAS3PersonDepartedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTED
     CAS3ReferralSubmittedEvent::class -> DomainEventType.CAS3_REFERRAL_SUBMITTED
     CAS3PersonDepartureUpdatedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED
+    CAS3AssessmentUpdatedEvent::class -> DomainEventType.CAS3_ASSESSMENT_UPDATED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
@@ -294,6 +298,16 @@ class DomainEventService(
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       triggerSourceType = TriggerSourceType.USER,
+    )
+  }
+
+  fun saveAssessmentUpdatedEvent(event: DomainEvent<CAS3AssessmentUpdatedEvent>) {
+    saveAndEmit(
+      domainEvent = event,
+      crn = event.crn,
+      nomsNumber = null,
+      triggerSourceType = TriggerSourceType.USER,
+      emit = false,
     )
   }
 }

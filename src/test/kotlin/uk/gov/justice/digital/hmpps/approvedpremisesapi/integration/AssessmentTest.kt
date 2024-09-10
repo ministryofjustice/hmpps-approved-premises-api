@@ -2857,12 +2857,20 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$.releaseDate").isEqualTo(newReleaseDate.toString())
           .jsonPath("$.accommodationRequiredFromDate").isEqualTo(accommodationDateFromApplication.toString())
+
+        val domainEvents =
+          domainEventRepository.findByAssessmentIdAndType(
+            assessmentId = assessment.id,
+            type = DomainEventType.CAS3_ASSESSMENT_UPDATED,
+          )
+
+        assertThat(domainEvents.size).isEqualTo(1)
       }
     }
   }
 
   @Test
-  fun `PUT Update accommodation required from date on temporary accommodation assessment `() {
+  fun `PUT Update accommodation required from date on temporary accommodation assessment`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
 
@@ -2909,6 +2917,14 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$.releaseDate").isEqualTo(releaseDateFromApplication.toString())
           .jsonPath("$.accommodationRequiredFromDate").isEqualTo(newAccommodationDate.toString())
+
+        val domainEvents =
+          domainEventRepository.findByAssessmentIdAndType(
+            assessmentId = assessment.id,
+            type = DomainEventType.CAS3_ASSESSMENT_UPDATED,
+          )
+
+        assertThat(domainEvents.size).isEqualTo(1)
       }
     }
   }
