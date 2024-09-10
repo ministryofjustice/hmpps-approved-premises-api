@@ -734,7 +734,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bedsThatShouldNotAppearInSearchResults += bedOneInRoomInPremisesInOtherProbationRegion
 
     val results = bedSearchRepository.findTemporaryAccommodationBeds(
-      probationDeliveryUnit = searchPdu.name,
+      probationDeliveryUnits = listOf(searchPdu.id),
       startDate = LocalDate.parse("2023-03-09"),
       endDate = LocalDate.parse("2023-03-15"),
       probationRegionId = probationRegion.id,
@@ -931,7 +931,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bedsThatShouldNotAppearInSearchResults += bedOneInRoomOneInNonActivePremises
 
     val results = bedSearchRepository.findTemporaryAccommodationBeds(
-      probationDeliveryUnit = searchPdu.name,
+      probationDeliveryUnits = listOf(searchPdu.id),
       startDate = LocalDate.parse("2024-08-29"),
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
@@ -1129,7 +1129,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     bedsThatShouldNotAppearInSearchResults += bedOneInRoomOneInNonActivePremises
 
     val results = bedSearchRepository.findTemporaryAccommodationBeds(
-      probationDeliveryUnit = searchPdu.name,
+      probationDeliveryUnits = listOf(searchPdu.id),
       startDate = LocalDate.parse("2024-08-29"),
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,

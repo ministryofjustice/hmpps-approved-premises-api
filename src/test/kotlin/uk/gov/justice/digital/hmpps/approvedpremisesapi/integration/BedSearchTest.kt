@@ -236,6 +236,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -472,6 +473,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -616,6 +618,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesOne.name,
                       addressLine1 = premisesOne.addressLine1,
                       postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premisesOne.addressLine2,
                       town = premisesOne.town,
@@ -646,6 +649,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesTwo.name,
                       addressLine1 = premisesTwo.addressLine1,
                       postcode = premisesTwo.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premisesTwo.addressLine2,
                       town = premisesTwo.town,
@@ -753,6 +757,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -776,6 +781,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -885,6 +891,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -908,6 +915,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -1030,6 +1038,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesOne.name,
                       addressLine1 = premisesOne.addressLine1,
                       postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(
                         CharacteristicPair(
                           propertyName = sharedPropertyPropertyName,
@@ -1058,6 +1067,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesThree.name,
                       addressLine1 = premisesThree.addressLine1,
                       postcode = premisesThree.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(
                         CharacteristicPair(
                           propertyName = sharedPropertyPropertyName,
@@ -1187,6 +1197,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesOne.name,
                       addressLine1 = premisesOne.addressLine1,
                       postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(
                         CharacteristicPair(
                           propertyName = singleOccupancyPropertyName,
@@ -1219,6 +1230,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesTwo.name,
                       addressLine1 = premisesTwo.addressLine1,
                       postcode = premisesTwo.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(
                         CharacteristicPair(
                           propertyName = singleOccupancyPropertyName,
@@ -1369,6 +1381,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -1458,6 +1471,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premises.name,
                       addressLine1 = premises.addressLine1,
                       postcode = premises.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premises.addressLine2,
                       town = premises.town,
@@ -1601,6 +1615,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesOne.name,
                       addressLine1 = premisesOne.addressLine1,
                       postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premisesOne.addressLine2,
                       town = premisesOne.town,
@@ -1624,6 +1639,7 @@ class BedSearchTest : IntegrationTestBase() {
                       name = premisesOne.name,
                       addressLine1 = premisesOne.addressLine1,
                       postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = searchPdu.name,
                       characteristics = listOf(),
                       addressLine2 = premisesOne.addressLine2,
                       town = premisesOne.town,
@@ -1637,6 +1653,169 @@ class BedSearchTest : IntegrationTestBase() {
                     bed = BedSearchResultBedSummary(
                       id = bedTwo.id,
                       name = bedTwo.name,
+                    ),
+                    serviceName = ServiceName.temporaryAccommodation,
+                    overlaps = listOf(),
+                  ),
+                ),
+              ),
+            ),
+          )
+      }
+    }
+
+    @Test
+    fun `Searching for a Temporary Accommodation Bed in multiple pdus should return bed matches searching pdus`() {
+      val probationRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
+      val pduOne = probationDeliveryUnitFactory.produceAndPersist {
+        withName(randomStringLowerCase(8))
+        withProbationRegion(probationRegion)
+      }
+
+      val pduTwo = probationDeliveryUnitFactory.produceAndPersist {
+        withName(randomStringLowerCase(8))
+        withProbationRegion(probationRegion)
+      }
+
+      val pduThree = probationDeliveryUnitFactory.produceAndPersist {
+        withName(randomStringLowerCase(8))
+        withProbationRegion(probationRegion)
+      }
+
+      `Given a User`(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val searchStartDate = LocalDate.parse("2024-08-12")
+        val durationDays = 7
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val premisesOne = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(pduOne)
+          withProbationRegion(probationRegion)
+          withStatus(PropertyStatus.active)
+        }
+
+        val (roomOnePremisesOne, bedOnePremisesOne) = createBedspace(premisesOne)
+        val (roomTwoPremisesOne, bedTwoPremisesOne) = createBedspace(premisesOne)
+
+        val premisesTwo = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(pduTwo)
+          withProbationRegion(probationRegion)
+          withStatus(PropertyStatus.active)
+        }
+
+        val (roomOnePremisesTwo, bedOnePremisesTwo) = createBedspace(premisesTwo)
+
+        val premisesThree = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(pduThree)
+          withProbationRegion(probationRegion)
+          withStatus(PropertyStatus.active)
+        }
+
+        val (roomOnePremisesThree, bedOnePremisesThree) = createBedspace(premisesThree)
+
+        webTestClient.post()
+          .uri("/beds/search")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            TemporaryAccommodationBedSearchParameters(
+              startDate = searchStartDate,
+              durationDays = durationDays,
+              serviceName = "temporary-accommodation",
+              probationDeliveryUnit = null,
+              probationDeliveryUnits = listOf(pduOne.id, pduThree.id),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              BedSearchResults(
+                resultsRoomCount = 3,
+                resultsPremisesCount = 2,
+                resultsBedCount = 3,
+                results = listOf(
+                  TemporaryAccommodationBedSearchResult(
+                    premises = BedSearchResultPremisesSummary(
+                      id = premisesOne.id,
+                      name = premisesOne.name,
+                      addressLine1 = premisesOne.addressLine1,
+                      postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = pduOne.name,
+                      characteristics = listOf(),
+                      addressLine2 = premisesOne.addressLine2,
+                      town = premisesOne.town,
+                      bedCount = 2,
+                    ),
+                    room = BedSearchResultRoomSummary(
+                      id = roomOnePremisesOne.id,
+                      name = roomOnePremisesOne.name,
+                      characteristics = listOf(),
+                    ),
+                    bed = BedSearchResultBedSummary(
+                      id = bedOnePremisesOne.id,
+                      name = bedOnePremisesOne.name,
+                    ),
+                    serviceName = ServiceName.temporaryAccommodation,
+                    overlaps = listOf(),
+                  ),
+                  TemporaryAccommodationBedSearchResult(
+                    premises = BedSearchResultPremisesSummary(
+                      id = premisesOne.id,
+                      name = premisesOne.name,
+                      addressLine1 = premisesOne.addressLine1,
+                      postcode = premisesOne.postcode,
+                      probationDeliveryUnitName = pduOne.name,
+                      characteristics = listOf(),
+                      addressLine2 = premisesOne.addressLine2,
+                      town = premisesOne.town,
+                      bedCount = 2,
+                    ),
+                    room = BedSearchResultRoomSummary(
+                      id = roomTwoPremisesOne.id,
+                      name = roomTwoPremisesOne.name,
+                      characteristics = listOf(),
+                    ),
+                    bed = BedSearchResultBedSummary(
+                      id = bedTwoPremisesOne.id,
+                      name = bedTwoPremisesOne.name,
+                    ),
+                    serviceName = ServiceName.temporaryAccommodation,
+                    overlaps = listOf(),
+                  ),
+                  TemporaryAccommodationBedSearchResult(
+                    premises = BedSearchResultPremisesSummary(
+                      id = premisesThree.id,
+                      name = premisesThree.name,
+                      addressLine1 = premisesThree.addressLine1,
+                      postcode = premisesThree.postcode,
+                      probationDeliveryUnitName = pduThree.name,
+                      characteristics = listOf(),
+                      addressLine2 = premisesThree.addressLine2,
+                      town = premisesThree.town,
+                      bedCount = 1,
+                    ),
+                    room = BedSearchResultRoomSummary(
+                      id = roomOnePremisesThree.id,
+                      name = roomOnePremisesThree.name,
+                      characteristics = listOf(),
+                    ),
+                    bed = BedSearchResultBedSummary(
+                      id = bedOnePremisesThree.id,
+                      name = bedOnePremisesThree.name,
                     ),
                     serviceName = ServiceName.temporaryAccommodation,
                     overlaps = listOf(),
