@@ -346,6 +346,8 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
     ),
   ),
+
+  @Deprecated("This role is no longer available for assignment on the UI and should be removed")
   CAS1_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.manager,
@@ -353,6 +355,8 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_BOOKING_CHANGE_DATES,
     ),
   ),
+
+  @Deprecated("This role is no longer available for assignment on the UI and should be removed. It has been superseded by CAS1_FUTURE_MANAGER")
   CAS1_LEGACY_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.legacyManager,
