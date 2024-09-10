@@ -368,7 +368,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,
     listOf(
-      UserPermission.CAS1_BOOKING_CHANGE_DATES,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_SPACE_BOOKING_LIST,
@@ -389,6 +388,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     listOf(
       UserPermission.CAS1_ADHOC_BOOKING_CREATE,
       UserPermission.CAS1_BOOKING_CREATE,
+      UserPermission.CAS1_BOOKING_CHANGE_DATES,
       UserPermission.CAS1_BOOKING_WITHDRAW,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
