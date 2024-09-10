@@ -17,7 +17,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<ApprovedPremisesEntity> = { ApprovedPremisesEntityFactory().withDefaults().produce() }
   private var placementRequest: Yielded<PlacementRequestEntity> = { PlacementRequestEntityFactory().withDefaults().produce() }
-  private var application: Yielded<ApprovedPremisesApplicationEntity?> = { null }
+  private var application: Yielded<ApprovedPremisesApplicationEntity> = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
   private var createdBy: Yielded<UserEntity> = { UserEntityFactory().withDefaults().produce() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var expectedArrivalDate: Yielded<LocalDate> = { LocalDate.now() }

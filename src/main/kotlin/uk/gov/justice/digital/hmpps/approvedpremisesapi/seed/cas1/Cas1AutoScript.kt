@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import jakarta.transaction.Transactional
 import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
-import javax.transaction.Transactional
 
 @SuppressWarnings("MagicNumber", "MaxLineLength")
 @Component
@@ -92,11 +92,12 @@ class Cas1AutoScript(
         roles = listOf(
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
-          UserRole.CAS1_MANAGER,
           UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_MANAGER,
           UserRole.CAS1_ADMIN,
           UserRole.CAS1_REPORT_VIEWER,
           UserRole.CAS1_APPEALS_MANAGER,
+          UserRole.CAS1_CRU_MEMBER,
         ),
         documentation = "For local use in development and testing",
       ),
@@ -105,11 +106,11 @@ class Cas1AutoScript(
         roles = listOf(
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
-          UserRole.CAS1_MANAGER,
           UserRole.CAS1_WORKFLOW_MANAGER,
           UserRole.CAS1_ADMIN,
           UserRole.CAS1_REPORT_VIEWER,
           UserRole.CAS1_APPEALS_MANAGER,
+          UserRole.CAS1_FUTURE_MANAGER,
         ),
         documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
       ),
@@ -118,11 +119,11 @@ class Cas1AutoScript(
         roles = listOf(
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
-          UserRole.CAS1_MANAGER,
           UserRole.CAS1_WORKFLOW_MANAGER,
           UserRole.CAS1_ADMIN,
           UserRole.CAS1_REPORT_VIEWER,
           UserRole.CAS1_APPEALS_MANAGER,
+          UserRole.CAS1_FUTURE_MANAGER,
         ),
         documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
       ),

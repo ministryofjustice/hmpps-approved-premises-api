@@ -3127,6 +3127,7 @@ components:
         - cas1_assess_placement_application
         - cas1_assess_placement_request
         - cas1_booking_create
+        - cas1_booking_change_dates
         - cas1_booking_withdraw
         - cas1_out_of_service_bed_create
         - cas1_process_an_appeal
@@ -3135,6 +3136,7 @@ components:
         - cas1_view_manage_tasks
         - cas1_view_out_of_service_beds
         - cas1_space_booking_list
+        - cas1_space_booking_view
         - cas1_premises_view_summary
     TemporaryAccommodationUserRole:
       type: string
@@ -3713,6 +3715,7 @@ components:
         - booking
         - assessment
         - assessmentAppeal
+        - cas1SpaceBooking
     Cas2TimelineEvent:
       type: object
       properties:

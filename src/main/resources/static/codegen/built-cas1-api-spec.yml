@@ -640,6 +640,7 @@ paths:
     get:
       tags:
         - space bookings
+      operationId: "getSpaceBookingById"
       summary: Returns space booking information for a given id
       parameters:
         - name: premisesId
@@ -4113,6 +4114,7 @@ components:
         - cas1_assess_placement_application
         - cas1_assess_placement_request
         - cas1_booking_create
+        - cas1_booking_change_dates
         - cas1_booking_withdraw
         - cas1_out_of_service_bed_create
         - cas1_process_an_appeal
@@ -4121,6 +4123,7 @@ components:
         - cas1_view_manage_tasks
         - cas1_view_out_of_service_beds
         - cas1_space_booking_list
+        - cas1_space_booking_view
         - cas1_premises_view_summary
     TemporaryAccommodationUserRole:
       type: string
@@ -4699,6 +4702,7 @@ components:
         - booking
         - assessment
         - assessmentAppeal
+        - cas1SpaceBooking
     Cas2TimelineEvent:
       type: object
       properties:
@@ -6338,6 +6342,12 @@ components:
         id:
           type: string
           format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
         person:
           $ref: '#/components/schemas/Person'
         tier:
@@ -6358,10 +6368,10 @@ components:
           format: date
         actualArrivalDate:
           type: string
-          format: date
+          format: date-time
         actualDepartureDate:
           type: string
-          format: date
+          format: date-time
         canonicalArrivalDate:
           description: actual arrival date or, if not known, the expected arrival date
           type: string
@@ -6373,14 +6383,16 @@ components:
         createdAt:
           type: string
           format: date-time
-        keyWorker:
+        keyWorkerAllocation:
           $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
-        otherBookingsInPremises:
+        otherBookingsInPremisesForCrn:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingDates'
       required:
         - id
+        - applicationId
+        - assessmentId
         - person
         - requirements
         - premises
@@ -6391,7 +6403,7 @@ components:
         - canonicalArrivalDate
         - canonicalDepartureDate
         - createdAt
-        - otherBookingsInPremises
+        - otherBookingsInPremisesForCrn
     Cas1SpaceBookingDates:
       type: object
       properties:

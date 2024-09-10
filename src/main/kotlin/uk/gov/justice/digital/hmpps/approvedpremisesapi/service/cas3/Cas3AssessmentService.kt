@@ -2,13 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import java.time.LocalDate
 import java.util.UUID
@@ -24,19 +22,18 @@ class Cas3AssessmentService(
     user: UserEntity,
     assessmentId: UUID,
     updateAssessment: UpdateAssessment,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
     val assessment: TemporaryAccommodationAssessmentEntity = (
       assessmentRepository.findAssessmentById(assessmentId)
-        ?: return AuthorisableActionResult.NotFound()
+        ?: return CasResult.NotFound(TemporaryAccommodationAssessmentEntity::class.simpleName, assessmentId.toString())
       )
 
     if (!userAccessService.userCanViewAssessment(user, assessment)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
+
     if (updateAssessment.releaseDate != null && updateAssessment.accommodationRequiredFromDate != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("Cannot update both dates"),
-      )
+      return CasResult.GeneralValidationError("Cannot update both dates")
     }
 
     updateAssessment.releaseDate?.apply {
@@ -49,14 +46,12 @@ class Cas3AssessmentService(
       assessment.accommodationRequiredFromDate = this
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(assessmentRepository.save(assessment)),
-    )
+    return CasResult.Success(assessmentRepository.save(assessment))
   }
 
-  private fun notBeforeValidationResult(existingDate: LocalDate): AuthorisableActionResult.Success<ValidatableActionResult<AssessmentEntity>> =
-    AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Accommodation required from date cannot be before release date: $existingDate"))
+  private fun notBeforeValidationResult(existingDate: LocalDate) =
+    CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>("Accommodation required from date cannot be before release date: $existingDate")
 
-  private fun notAfterValidationResult(existingDate: LocalDate): AuthorisableActionResult.Success<ValidatableActionResult<AssessmentEntity>> =
-    AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Release date cannot be after accommodation required from date: $existingDate"))
+  private fun notAfterValidationResult(existingDate: LocalDate) =
+    CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>("Release date cannot be after accommodation required from date: $existingDate")
 }

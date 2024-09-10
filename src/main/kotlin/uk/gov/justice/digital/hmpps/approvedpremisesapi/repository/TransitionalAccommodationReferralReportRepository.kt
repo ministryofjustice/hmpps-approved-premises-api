@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.repository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -92,10 +91,10 @@ interface TransitionalAccommodationReferralReportData {
   val assessmentDecision: String?
   val referralRejectionReason: String?
   val referralRejectionReasonDetail: String?
-  val assessmentSubmittedDate: LocalDate?
+  val assessmentSubmittedDate: Instant?
   val referralEligibleForCas3: Boolean?
   val referralEligibilityReason: String?
-  val accommodationRequiredDate: Timestamp?
+  val accommodationRequiredDate: Instant?
   val prisonNameOnCreation: String?
   val personReleaseDate: LocalDate?
   val town: String?

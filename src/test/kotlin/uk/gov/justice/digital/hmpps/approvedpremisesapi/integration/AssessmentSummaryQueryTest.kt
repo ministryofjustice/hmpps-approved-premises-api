@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
 import java.time.OffsetDateTime
 
 class AssessmentSummaryQueryTest : IntegrationTestBase() {
@@ -213,14 +212,14 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     assertThat(summary.id).isEqualTo(assessment.id)
     val application = assessment.application
     assertThat(summary.applicationId).isEqualTo(application.id)
-    assertThat(summary.createdAt).isEqualTo(assessment.createdAt.toTimestamp())
+    assertThat(summary.createdAt).isEqualTo(assessment.createdAt.toInstant())
     assertThat(summary.decision).isEqualTo(assessment.decision?.name)
     assertThat(summary.crn).isEqualTo(application.crn)
     when (application) {
       is ApprovedPremisesApplicationEntity -> {
         assertThat(summary.type).isEqualTo("approved-premises")
         assertThat(summary.completed).isEqualTo(assessment.decision != null)
-        assertThat(summary.arrivalDate).isEqualTo(application.arrivalDate?.toTimestamp())
+        assertThat(summary.arrivalDate).isEqualTo(application.arrivalDate?.toInstant())
         assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
       }
 

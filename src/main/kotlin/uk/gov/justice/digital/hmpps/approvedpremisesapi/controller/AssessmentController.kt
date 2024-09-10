@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.toCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -39,9 +41,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentCl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortByName
 import java.util.UUID
-import javax.transaction.Transactional
 
 @Service
 class AssessmentController(
@@ -136,31 +138,23 @@ class AssessmentController(
     xServiceName: ServiceName?,
   ): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
-    val assessmentAuthResult = when (xServiceName) {
-      ServiceName.temporaryAccommodation -> cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment)
-      else -> assessmentService.updateAssessment(
-        user,
-        assessmentId,
-        objectMapper.writeValueAsString(updateAssessment.data),
-      )
-    }
+    val assessment =
+      when (xServiceName) {
+        ServiceName.temporaryAccommodation -> {
+          extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment))
+        }
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    val assessment = when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-        id = assessmentValidationResult.conflictingEntityId,
-        conflictReason = assessmentValidationResult.message,
-      )
-
-      is ValidatableActionResult.Success -> assessmentValidationResult.entity
-    }
+        else -> {
+          extractEntityFromCasResult(
+            assessmentService
+              .updateAssessment(
+                user,
+                assessmentId,
+                objectMapper.writeValueAsString(updateAssessment.data),
+              ).toCasResult(),
+          )
+        }
+      }
 
     val ignoreLao =
       (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)

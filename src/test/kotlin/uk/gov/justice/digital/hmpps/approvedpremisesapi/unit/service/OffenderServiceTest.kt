@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess
@@ -382,7 +383,7 @@ class OffenderServiceTest {
   }
 
   @Test
-  fun `getPrisonCaseNotesByNomsNumber returns NotFound when Case Notes request returns a 404`() {
+  fun `getFilteredPrisonCaseNotesByNomsNumber returns NotFound when Case Notes request returns a 404`() {
     val nomsNumber = "NOMS456"
 
     every {
@@ -394,11 +395,12 @@ class OffenderServiceTest {
       )
     } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
 
-    assertThat(offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
+    var result = offenderService.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
+    assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
   }
 
   @Test
-  fun `getPrisonCaseNotesByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
+  fun `getFilteredPrisonCaseNotesByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
     val nomsNumber = "NOMS456"
 
     every {
@@ -410,11 +412,12 @@ class OffenderServiceTest {
       )
     } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
 
-    assertThat(offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
+    var result = offenderService.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
+    assertThat(result).isInstanceOf(CasResult.Unauthorised::class.java)
   }
 
   @Test
-  fun `getPrisonCaseNotesByNomsNumber returns Success, traverses pages from Client & excludes categories + subcategories`() {
+  fun `getFilteredPrisonCaseNotesByNomsNumber returns Success, traverses pages from Client & excludes categories + subcategories`() {
     val nomsNumber = "NOMS456"
 
     val caseNotesPageOne = listOf(
@@ -463,11 +466,68 @@ class OffenderServiceTest {
       ),
     )
 
-    val result = offenderService.getPrisonCaseNotesByNomsNumber(nomsNumber)
+    val result = offenderService.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
+    assertThat(result).isInstanceOf(CasResult.Success::class.java)
+    result as CasResult.Success
+    assertThat(result.value).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
+  }
+
+  @Test
+  fun `getFilteredPrisonCaseNotesByNomsNumber returns specified case note types when getSpecificNoteTypes is true`() {
+    val nomsNumber = "NOMS456"
+
+    val caseNotesPageOne = listOf(
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().withTypeDescription(null).withType("Enforcement").produce(),
+    )
+
+    val caseNotesPageTwo = listOf(
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().produce(),
+      CaseNoteFactory().withTypeDescription("Alert").produce(),
+    )
+
+    every {
+      mockCaseNotesClient.getCaseNotesPage(
+        nomsNumber = nomsNumber,
+        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        page = 0,
+        pageSize = 2,
+      )
+    } returns ClientResult.Success(
+      HttpStatus.OK,
+      CaseNotesPage(
+        totalElements = 6,
+        totalPages = 2,
+        number = 1,
+        content = caseNotesPageOne,
+      ),
+    )
+
+    every {
+      mockCaseNotesClient.getCaseNotesPage(
+        nomsNumber = nomsNumber,
+        from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
+        page = 1,
+        pageSize = 2,
+      )
+    } returns ClientResult.Success(
+      HttpStatus.OK,
+      CaseNotesPage(
+        totalElements = 4,
+        totalPages = 2,
+        number = 2,
+        content = caseNotesPageTwo,
+      ),
+    )
+
+    val result = offenderService.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, true)
+
+    assertThat(result).isInstanceOf(CasResult.Success::class.java)
+    result as CasResult.Success
+    assertThat(result.value).containsAll(caseNotesPageTwo.subList(2, 3) + caseNotesPageTwo.subList(2, 3))
   }
 
   @Test

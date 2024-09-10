@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -50,6 +51,121 @@ class Cas1BookingDomainEventServiceTest {
     communityApiClient,
     UrlTemplate("http://frontend/applications/#id"),
   )
+
+  @Nested
+  inner class Cas1SpaceBookingMade {
+
+    val user = UserEntityFactory()
+      .withDefaults()
+      .withDeliusUsername("THEDELIUSUSERNAME")
+      .produce()
+
+    private val otherUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withEventNumber("online app event number")
+      .withCreatedByUser(otherUser)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withReleaseType(ReleaseTypeOption.licence.toString())
+      .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+      .withSituation(SituationOption.bailSentence.toString())
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withName("the premises name")
+      .withApCode("the premises ap code")
+      .withQCode("the premises qcode")
+      .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
+      .produce()
+
+    val createdAt = OffsetDateTime.now()
+
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withCrn("THEBOOKINGCRN")
+      .withCanonicalArrivalDate(LocalDate.of(2025, 12, 11))
+      .withCanonicalDepartureDate(LocalDate.of(2025, 12, 12))
+      .withPremises(premises)
+      .withCreatedAt(createdAt)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withDefaults()
+      .produce()
+
+    @BeforeEach
+    fun before() {
+      every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
+      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        assigneeUserStaffDetails,
+      )
+
+      every {
+        offenderService.getOffenderByCrn(
+          "THEBOOKINGCRN",
+          "THEDELIUSUSERNAME",
+          true,
+        )
+      } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory()
+          .withGender("male")
+          .withCrn("THECRN")
+          .withNomsNumber("THENOMS")
+          .withDateOfBirth(LocalDate.of(1982, 3, 11))
+          .produce(),
+      )
+    }
+
+    @Test
+    fun `bookingMade saves domain event`() {
+      service.spaceBookingMade(application, spaceBooking, user, placementRequest)
+
+      val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveBookingMadeDomainEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
+      assertThat(domainEvent.bookingId).isNull()
+      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
+      assertThat(data.applicationId).isEqualTo(application.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(data.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.personReference.crn).isEqualTo("THEBOOKINGCRN")
+      assertThat(data.personReference.noms).isEqualTo("THENOMS")
+      assertThat(data.deliusEventNumber).isEqualTo("online app event number")
+      assertThat(data.premises.id).isEqualTo(premises.id)
+      assertThat(data.premises.name).isEqualTo("the premises name")
+      assertThat(data.premises.apCode).isEqualTo("the premises ap code")
+      assertThat(data.premises.legacyApCode).isEqualTo("the premises qcode")
+      assertThat(data.premises.localAuthorityAreaName).isEqualTo("authority name")
+      assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2025, 12, 11))
+      assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 12, 12))
+      assertThat(data.applicationSubmittedOn).isEqualTo(application.submittedAt!!.toInstant())
+      assertThat(data.releaseType).isEqualTo(application.releaseType)
+      assertThat(data.sentenceType).isEqualTo(application.sentenceType)
+      assertThat(data.situation).isEqualTo(application.situation)
+
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
+    }
+  }
 
   @Nested
   inner class BookingMade {
@@ -86,6 +202,7 @@ class Cas1BookingDomainEventServiceTest {
       .withDefaults()
       .withCrn("THEBOOKINGCRN")
       .withArrivalDate(LocalDate.of(2025, 12, 11))
+      .withDepartureDate(LocalDate.of(2025, 12, 12))
       .withPremises(premises)
       .withCreatedAt(createdAt)
       .produce()
@@ -137,6 +254,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.cas1SpaceBookingId).isNull()
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
@@ -155,6 +273,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.premises.legacyApCode).isEqualTo("the premises qcode")
       assertThat(data.premises.localAuthorityAreaName).isEqualTo("authority name")
       assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2025, 12, 11))
+      assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 12, 12))
       assertThat(data.applicationSubmittedOn).isEqualTo(application.submittedAt!!.toInstant())
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
@@ -186,6 +305,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.cas1SpaceBookingId).isNull()
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
@@ -204,6 +324,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.premises.legacyApCode).isEqualTo("the premises qcode")
       assertThat(data.premises.localAuthorityAreaName).isEqualTo("authority name")
       assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2025, 12, 11))
+      assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 12, 12))
       assertThat(data.applicationSubmittedOn).isEqualTo(application.submittedAt!!.toInstant())
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)

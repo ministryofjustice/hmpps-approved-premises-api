@@ -124,6 +124,7 @@ class UserTransformer(
         UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
         UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
         UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
+        UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.bookingChangeDates
         UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
         UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
         UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
@@ -132,6 +133,7 @@ class UserTransformer(
         UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
         UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
         UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
+        UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
         UserPermission.CAS1_PREMISES_VIEW_SUMMARY -> ApiUserPermission.premisesViewSummary
       }
     }

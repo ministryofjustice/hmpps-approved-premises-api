@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
@@ -423,7 +424,11 @@ class OffenderService(
     }
   }
 
-  fun getPrisonCaseNotesByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<CaseNote>> {
+  fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {
+    val cas1PrisonNoteTypesToInclude = listOf(
+      "Alert", "Conduct & Behaviour", "Custodial Violence Management", "Negative Behaviours", "Enforcement", "Interventions / Keywork",
+      "Mental Health", "Drug Rehabilitation", "Social Care", "Positive Behaviour / Achievements", "Alcohol Treatment",
+    )
     val allCaseNotes = mutableListOf<CaseNote>()
 
     val fromDate = LocalDate.now().minusDays(prisonCaseNotesConfig.lookbackDays.toLong())
@@ -441,21 +446,27 @@ class OffenderService(
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
         is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
-          HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-          HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+          HttpStatus.NOT_FOUND -> return CasResult.NotFound()
+          HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
           else -> caseNotesPageResponse.throwException()
         }
         is ClientResult.Failure -> caseNotesPageResponse.throwException()
       }
 
       allCaseNotes.addAll(
-        currentPage.content.filter { caseNote ->
-          prisonCaseNotesConfig.excludedCategories.none { it.excluded(caseNote.type, caseNote.subType) }
+        if (getCas1SpecificNoteTypes) {
+          currentPage.content.filter { caseNote ->
+            cas1PrisonNoteTypesToInclude.any { it == (caseNote.typeDescription ?: caseNote.type) }
+          }
+        } else {
+          currentPage.content.filter { caseNote ->
+            prisonCaseNotesConfig.excludedCategories.none { it.excluded(caseNote.type, caseNote.subType) }
+          }
         },
       )
     } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
 
-    return AuthorisableActionResult.Success(allCaseNotes)
+    return CasResult.Success(allCaseNotes)
   }
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {

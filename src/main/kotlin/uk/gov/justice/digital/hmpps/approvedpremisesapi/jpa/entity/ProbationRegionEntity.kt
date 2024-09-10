@@ -1,13 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.Table
 
 @Repository
 interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID> {
@@ -16,6 +17,7 @@ interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID>
 
 @Entity
 @Table(name = "probation_regions")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class ProbationRegionEntity(
   @Id
   val id: UUID,

@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1KeyWorkerAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -21,32 +23,67 @@ class Cas1SpaceBookingTransformer(
   private val spaceBookingRequirementsTransformer: Cas1SpaceBookingRequirementsTransformer,
   private val userTransformer: UserTransformer,
 ) {
-  fun transformJpaToApi(person: PersonInfoResult, jpa: Cas1SpaceBookingEntity) = Cas1SpaceBooking(
-    id = jpa.id,
-    person = personTransformer.transformModelToPersonApi(person),
-    requirements = spaceBookingRequirementsTransformer.transformJpaToApi(jpa.placementRequest.placementRequirements),
-    premises = NamedId(
-      id = jpa.premises.id,
-      name = jpa.premises.name,
-    ),
-    apArea = jpa.premises.probationRegion.apArea!!.let {
-      NamedId(
-        id = it.id,
-        name = it.name,
+  fun transformJpaToApi(
+    person: PersonInfoResult,
+    jpa: Cas1SpaceBookingEntity,
+    otherBookingsAtPremiseForCrn: List<Cas1SpaceBookingAtPremises>,
+  ): Cas1SpaceBooking {
+    val placementRequest = jpa.placementRequest
+    val application = placementRequest.application
+    return Cas1SpaceBooking(
+      id = jpa.id,
+      applicationId = application.id,
+      assessmentId = placementRequest.assessment.id,
+      person = personTransformer.transformModelToPersonApi(person),
+      requirements = spaceBookingRequirementsTransformer.transformJpaToApi(placementRequest.placementRequirements),
+      premises = NamedId(
+        id = jpa.premises.id,
+        name = jpa.premises.name,
+      ),
+      apArea = jpa.premises.probationRegion.apArea!!.let {
+        NamedId(
+          id = it.id,
+          name = it.name,
+        )
+      },
+      bookedBy = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),
+      expectedArrivalDate = jpa.expectedArrivalDate,
+      expectedDepartureDate = jpa.expectedDepartureDate,
+      createdAt = jpa.createdAt.toInstant(),
+      tier = application.riskRatings?.tier?.value?.level,
+      keyWorkerAllocation = jpa.extractKeyWorkerAllocation(),
+      actualArrivalDate = jpa.actualArrivalDateTime,
+      actualDepartureDate = jpa.actualDepartureDateTime,
+      canonicalArrivalDate = jpa.canonicalArrivalDate,
+      canonicalDepartureDate = jpa.canonicalDepartureDate,
+      otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
+    )
+  }
+
+  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() =
+    Cas1SpaceBookingDates(
+      id = this.id,
+      canonicalArrivalDate = this.canonicalArrivalDate,
+      canonicalDepartureDate = this.canonicalDepartureDate,
+    )
+
+  private fun Cas1SpaceBookingEntity.extractKeyWorkerAllocation(): Cas1KeyWorkerAllocation? {
+    val staffCode = keyWorkerStaffCode
+    val name = keyWorkerName
+    val assignedAt = keyWorkerAssignedAt
+    return if (staffCode != null && name != null && assignedAt != null) {
+      Cas1KeyWorkerAllocation(
+        keyWorker = StaffMember(
+          code = staffCode,
+          keyWorker = true,
+          name = name,
+        ),
+        allocatedAt = assignedAt.toLocalDate(),
       )
-    },
-    bookedBy = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),
-    expectedArrivalDate = jpa.expectedArrivalDate,
-    expectedDepartureDate = jpa.expectedDepartureDate,
-    createdAt = jpa.createdAt.toInstant(),
-    tier = null,
-    keyWorker = null,
-    actualDepartureDate = null,
-    actualArrivalDate = null,
-    canonicalArrivalDate = jpa.canonicalArrivalDate,
-    canonicalDepartureDate = jpa.canonicalDepartureDate,
-    otherBookingsInPremises = listOf(),
-  )
+    } else {
+      null
+    }
+  }
 
   fun transformSearchResultToSummary(
     searchResult: Cas1SpaceBookingSearchResult,

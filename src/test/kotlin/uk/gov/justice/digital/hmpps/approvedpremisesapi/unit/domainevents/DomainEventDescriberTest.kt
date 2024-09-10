@@ -861,6 +861,7 @@ data class DomainEventSummaryImpl(
   override val bookingId: UUID?,
   override val premisesId: UUID?,
   override val appealId: UUID?,
+  override val cas1SpaceBookingId: UUID?,
   override val triggerSource: TriggerSourceType?,
   override val triggeredByUser: UserEntity?,
 ) : DomainEventSummary {
@@ -874,6 +875,7 @@ data class DomainEventSummaryImpl(
       bookingId = null,
       premisesId = null,
       appealId = null,
+      cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
     )

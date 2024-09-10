@@ -1,9 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.awspring.cloud.sqs.annotation.SqsListener
 import org.junit.jupiter.api.Assertions.fail
 import org.slf4j.LoggerFactory
-import org.springframework.jms.annotation.JmsListener
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.test.context.event.annotation.BeforeTestMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -15,6 +16,9 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
   private val log = LoggerFactory.getLogger(this::class.java)
   private val messages = mutableListOf<SnsEvent>()
 
+  @Value("\${hmpps.sqs.topics.domainevents.arn}")
+  lateinit var topicName: String
+
   /**
    * The [Jmslistener](https://www.baeldung.com/spring-jms) annotation will automatically set up a
    * consumer for the corresponding SNS queue and invoke this function for every message.
@@ -22,7 +26,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
    * We utilise the [hmpss spring boot sqs starter](https://github.com/ministryofjustice/hmpps-spring-boot-sqs)
    * to configure the queue container factory, using localstack to emulate SNS.
    */
-  @JmsListener(destination = "domaineventsqueue", containerFactory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener(queueNames = ["domaineventsqueue"], factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(rawMessage: String?) {
     val (message) = objectMapper.readValue(rawMessage, Message::class.java)
     val event = objectMapper.readValue(message, SnsEvent::class.java)
@@ -41,7 +45,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
     var waitedCount = 0
     while (!contains(typeName)) {
       if (waitedCount >= Duration.ofSeconds(15).toMillis()) {
-        fail<Any>("Did not receive SQS message of type $eventType from SNS topic after 15s. Have messages of type ${messages.map { m -> m.eventType }}")
+        fail<Any>("Did not receive SQS message of type $eventType from SNS topic $topicName after 15s. Have messages of type ${messages.map { m -> m.eventType }}")
       }
 
       Thread.sleep(100)

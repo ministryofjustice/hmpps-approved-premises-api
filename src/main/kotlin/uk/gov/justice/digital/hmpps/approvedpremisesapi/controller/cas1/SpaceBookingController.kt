@@ -13,7 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -55,13 +57,7 @@ class SpaceBookingController(
       ),
     )
 
-    val person = offenderService.getPersonInfoResult(
-      booking.placementRequest.application.crn,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
-
-    return ResponseEntity.ok(spaceBookingTransformer.transformJpaToApi(person, booking))
+    return ResponseEntity.ok(toCas1SpaceBooking(booking))
   }
 
   override fun premisesPremisesIdSpaceBookingsGet(
@@ -109,11 +105,14 @@ class SpaceBookingController(
       .body(summaries)
   }
 
-  override fun premisesPremisesIdSpaceBookingsBookingIdGet(
-    premisesId: UUID,
-    bookingId: UUID,
-  ): ResponseEntity<Cas1SpaceBooking> {
-    return super.premisesPremisesIdSpaceBookingsBookingIdGet(premisesId, bookingId)
+  override fun getSpaceBookingById(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
+    userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_VIEW)
+
+    val booking = extractEntityFromCasResult(spaceBookingService.getBooking(premisesId, bookingId))
+
+    return ResponseEntity
+      .ok()
+      .body(toCas1SpaceBooking(booking))
   }
 
   override fun premisesPremisesIdSpaceBookingsBookingIdArrivalPost(
@@ -138,5 +137,22 @@ class SpaceBookingController(
     cas1AssignKeyWorker: Cas1AssignKeyWorker,
   ): ResponseEntity<Unit> {
     return super.premisesPremisesIdSpaceBookingsBookingIdKeyworkerPost(premisesId, bookingId, cas1AssignKeyWorker)
+  }
+
+  private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {
+    val user = userService.getUserForRequest()
+
+    val person = offenderService.getPersonInfoResult(
+      booking.placementRequest.application.crn,
+      user.deliusUsername,
+      user.hasQualification(UserQualification.LAO),
+    )
+
+    val otherBookingsInPremiseForCrn = spaceBookingService.getBookingsForPremisesAndCrn(
+      premisesId = booking.premises.id,
+      crn = booking.crn,
+    ).filter { it.id != booking.id }
+
+    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
   }
 }

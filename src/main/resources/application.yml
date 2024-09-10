@@ -32,17 +32,33 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/all-except-integration
     placeholderReplacement: true
 
+  cache:
+    # we explicitly define redis as the cache provided as we have
+    # ehcache on the classpath for JPA/hibernate, and spring will
+    # that by default instead
+    type: redis
+
   jpa:
     hibernate:
       ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        cache:
+          use_second_level_cache: true
+      javax.cache:
+        provider: org.ehcache.jsr107.EhcacheCachingProvider
+        uri: hibernate-ehcache.xml
+        persistence:
+          sharedCache:
+            mode: ENABLE_SELECTIVE
 
-  redis:
-    database: 5
-    timeout: 60000
-    ssl: false
+  data:
+    redis:
+      database: 5
+      timeout: 60000
+      ssl:
+        enabled: false
 
   security:
     oauth2:
@@ -246,6 +262,8 @@ url-templates:
     application-timeline: http://localhost:3000/applications/#applicationId?tab=timeline
     assessment: http://localhost:3000/assessments/#id
     booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
+    cas1:
+      space-booking-made: http://localhost:3000/manage/premises/#premisesId/bookings/#bookingId
     cas2:
       application: http://localhost:3000/applications/#id
       application-overview: http://localhost:3000/applications/#id/overview
@@ -260,7 +278,7 @@ preemptive-cache-lock-duration-ms: 1800000
 arrived-departed-domain-events-disabled: true
 
 upstream-timeout-ms: 10000
-case-notes-service-upstream-timeout-ms: 30000
+case-notes-service-upstream-timeout-ms: 25000
 
 web-clients:
   # 0.7MB
@@ -282,4 +300,5 @@ feature-flags:
   cas1-appeal-manager-can-assess-applications: false
   cas1_only_list_adjudications_up_to_12_months: false
   cas1_only_list_conviction_documents: false
+  cas1_only_list_specific_prison_note_types: false
   use-ap-and-delius-to-update-users: true

@@ -1,5 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.MapKeyColumn
+import jakarta.persistence.MapKeyEnumerated
+import jakarta.persistence.Table
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -9,17 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.CollectionTable
-import javax.persistence.Column
-import javax.persistence.ElementCollection
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.MapKeyColumn
-import javax.persistence.MapKeyEnumerated
-import javax.persistence.Table
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType as Cas2EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType as Cas3EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType as Cas1EventType
@@ -37,11 +38,17 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
         d.assessmentId as assessmentId,
         d.bookingId as bookingId,
         d.triggerSource as triggerSource,
-        b.premises.id as premisesId,
+        CASE
+            WHEN b.id IS NOT NULL THEN b.premises.id
+            WHEN sb.id IS NOT NULL THEN sb.premises.id
+            ELSE NULL
+        END as premisesId,
         a.id as appealId,
+        d.cas1SpaceBookingId as cas1SpaceBookingId,
         u as triggeredByUser
       FROM DomainEventEntity d 
       LEFT OUTER JOIN BookingEntity b ON b.id = d.bookingId
+      LEFT OUTER JOIN Cas1SpaceBookingEntity sb ON sb.id = d.cas1SpaceBookingId
       LEFT OUTER JOIN AppealEntity a ON a.application.id = d.applicationId 
       LEFT OUTER JOIN UserEntity u ON u.id = d.triggeredByUserId
       WHERE d.applicationId = :applicationId
@@ -91,7 +98,7 @@ data class DomainEventEntity(
   val type: DomainEventType,
   val occurredAt: OffsetDateTime,
   val createdAt: OffsetDateTime,
-  @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
+  @Type(JsonType::class)
   val data: String,
   val service: String,
   @Enumerated(value = EnumType.STRING)
