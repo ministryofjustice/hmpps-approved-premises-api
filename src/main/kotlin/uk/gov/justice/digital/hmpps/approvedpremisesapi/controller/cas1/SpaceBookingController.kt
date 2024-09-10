@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
@@ -36,6 +37,10 @@ class SpaceBookingController(
   private val spaceBookingService: Cas1SpaceBookingService,
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) : SpaceBookingsCas1Delegate {
+  override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<TimelineEvent> {
+    return super.getSpaceBookingTimeline(premisesId, bookingId)
+  }
+
   override fun placementRequestsPlacementRequestIdSpaceBookingsPost(
     placementRequestId: UUID,
     body: NewCas1SpaceBooking,
