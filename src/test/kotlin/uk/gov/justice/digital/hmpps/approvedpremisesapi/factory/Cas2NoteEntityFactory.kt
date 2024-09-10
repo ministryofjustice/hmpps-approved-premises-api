@@ -31,6 +31,14 @@ class Cas2NoteEntityFactory : Factory<Cas2ApplicationNoteEntity> {
     this.createdByUser = { createdByUser }
   }
 
+  fun withBody(body: String) = apply {
+    this.body = { body }
+  }
+
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   override fun produce(): Cas2ApplicationNoteEntity = Cas2ApplicationNoteEntity(
     id = this.id(),
     createdByUser = this.createdByUser(),

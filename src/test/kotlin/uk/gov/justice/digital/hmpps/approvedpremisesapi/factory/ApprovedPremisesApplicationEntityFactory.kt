@@ -215,8 +215,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.caseManagerIsNotApplicant = { caseManagerIsNotApplicant }
   }
 
-  fun withCaseManagerUserDetails(casManagerUserDetails: Cas1ApplicationUserDetailsEntity?) = apply {
-    this.caseManagerUserDetails = { casManagerUserDetails }
+  fun withCaseManagerUserDetails(caseManagerUserDetails: Cas1ApplicationUserDetailsEntity?) = apply {
+    this.caseManagerUserDetails = { caseManagerUserDetails }
   }
 
   fun withNoticeType(noticeType: Cas1ApplicationTimelinessCategory?) = apply {
