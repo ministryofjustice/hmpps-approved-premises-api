@@ -45,6 +45,7 @@ class OAuth2ResourceServerSecurityConfiguration {
       csrf { disable() }
 
       authorizeHttpRequests {
+        authorize(HttpMethod.GET, "/swagger-ui.html", permitAll)
         authorize(HttpMethod.GET, "/health/**", permitAll)
         authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
         authorize(HttpMethod.GET, "/v3/api-docs/swagger-config", permitAll)
