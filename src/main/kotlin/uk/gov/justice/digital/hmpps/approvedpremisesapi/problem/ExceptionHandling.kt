@@ -18,6 +18,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.zalando.problem.Problem
 import org.zalando.problem.Status
@@ -46,6 +47,10 @@ class ExceptionHandling(
 
     if (throwable is AccessDeniedException) {
       return ForbiddenProblem()
+    }
+
+    if (throwable is NoResourceFoundException) {
+      return NotFoundResourceProblem()
     }
 
     if (throwable is MissingRequestHeaderException) {
