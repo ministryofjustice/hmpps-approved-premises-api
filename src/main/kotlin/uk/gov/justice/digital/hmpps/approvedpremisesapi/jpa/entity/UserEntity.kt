@@ -346,12 +346,25 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
     ),
   ),
-  CAS1_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.manager),
-  CAS1_LEGACY_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.legacyManager),
+  CAS1_MANAGER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.manager,
+    listOf(
+      UserPermission.CAS1_BOOKING_CHANGE_DATES,
+    ),
+  ),
+  CAS1_LEGACY_MANAGER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.legacyManager,
+    listOf(
+      UserPermission.CAS1_BOOKING_CHANGE_DATES,
+    ),
+  ),
   CAS1_FUTURE_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,
     listOf(
+      UserPermission.CAS1_BOOKING_CHANGE_DATES,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_SPACE_BOOKING_LIST,
@@ -479,6 +492,7 @@ enum class UserPermission {
   CAS1_ASSESS_PLACEMENT_REQUEST,
   CAS1_BOOKING_CREATE,
   CAS1_BOOKING_WITHDRAW,
+  CAS1_BOOKING_CHANGE_DATES,
   CAS1_OUT_OF_SERVICE_BED_CREATE,
   CAS1_PROCESS_AN_APPEAL,
   CAS1_VIEW_ASSIGNED_ASSESSMENTS,
