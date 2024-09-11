@@ -6506,7 +6506,7 @@ components:
         reason:
           $ref: '#/components/schemas/CancellationReason'
         reason_notes:
-          type: String
+          type: string
       required:
         - occurredAt
         - recordedAt

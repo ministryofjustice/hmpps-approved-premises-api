@@ -299,6 +299,7 @@ class Cas1SpaceBookingTest {
     lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
     lateinit var upcomingSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var upcomingCancelledSpaceBooking: Cas1SpaceBookingEntity
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
 
     @BeforeAll
@@ -382,6 +383,20 @@ class Cas1SpaceBookingTest {
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(null)
+      }
+
+      upcomingCancelledSpaceBooking = createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tier = "U") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2023-01-01"))
+        withExpectedDepartureDate(LocalDate.parse("2023-02-01"))
+        withActualArrivalDateTime(null)
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2023-01-01"))
+        withCanonicalDepartureDate(LocalDate.parse("2023-02-01"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(null)
+        withCancellationOccurredAt(LocalDate.now())
       }
     }
 
@@ -639,6 +654,7 @@ class Cas1SpaceBookingTest {
 
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremisesCancelled: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremisesDifferentCrn: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingNotAtPremises: Cas1SpaceBookingEntity
 
@@ -696,6 +712,17 @@ class Cas1SpaceBookingTest {
         withCreatedBy(user)
         withCanonicalArrivalDate(LocalDate.parse("2031-05-29"))
         withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
+      }
+
+      otherSpaceBookingAtPremisesCancelled = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2031-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
+        withCancellationOccurredAt(LocalDate.parse("2020-01-01"))
       }
 
       otherSpaceBookingNotAtPremises = cas1SpaceBookingEntityFactory.produceAndPersist {
