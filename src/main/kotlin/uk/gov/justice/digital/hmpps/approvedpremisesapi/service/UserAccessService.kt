@@ -90,7 +90,7 @@ class UserAccessService(
    * It doesn't consider if the booking is in a cancellable state
    */
   fun userMayCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER)
+    is ApprovedPremisesEntity -> user.hasPermission(UserPermission.CAS1_BOOKING_WITHDRAW)
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }
@@ -241,7 +241,7 @@ class UserAccessService(
   fun userMayWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
     is ApprovedPremisesApplicationEntity ->
       application.createdByUser == user || (
-        application.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
+        application.isSubmitted() && user.hasPermission(UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS)
         )
     else -> false
   }
@@ -253,7 +253,7 @@ class UserAccessService(
    */
   fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity) =
     placementRequest.application.createdByUser == user ||
-      user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
+      user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS)
 
   /**
    * This function only checks if the user has the correct permissions to withdraw the given placement application.
@@ -262,12 +262,7 @@ class UserAccessService(
    */
   fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity) =
     placementApplication.createdByUser == user ||
-      (placementApplication.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER))
-}
-
-enum class ApprovedPremisesApplicationAccessLevel {
-  ALL,
-  TEAM,
+      (placementApplication.isSubmitted() && user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS))
 }
 
 enum class TemporaryAccommodationApplicationAccessLevel {

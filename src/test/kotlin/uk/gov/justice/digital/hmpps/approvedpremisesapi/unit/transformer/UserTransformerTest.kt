@@ -13,11 +13,13 @@ import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.adhocBookingCreate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.applicationWithdrawOthers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.bookingCreate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.bookingWithdraw
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.outOfServiceBedCreate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.requestForPlacementWithdrawOthers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
@@ -216,15 +218,16 @@ class UserTransformerTest {
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
-      assertThat(result.permissions).size().isEqualTo(10)
       assertThat(result.permissions).hasSameElementsAs(
         listOf(
           adhocBookingCreate,
+          applicationWithdrawOthers,
           assessAppealedApplication,
           bookingCreate,
           bookingWithdraw,
           processAnAppeal,
           outOfServiceBedCreate,
+          requestForPlacementWithdrawOthers,
           viewAssignedAssessments,
           viewCruDashboard,
           viewManageTasks,
@@ -246,7 +249,7 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.version).isNotNull()
-      assertThat(result.version).isEqualTo(-159026997)
+      assertThat(result.version).isEqualTo(2087183858)
     }
 
     @Test
