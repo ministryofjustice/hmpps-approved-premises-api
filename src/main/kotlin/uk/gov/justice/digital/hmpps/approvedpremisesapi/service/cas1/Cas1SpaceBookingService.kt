@@ -88,6 +88,10 @@ class Cas1SpaceBookingService(
         keyWorkerStaffCode = null,
         keyWorkerName = null,
         keyWorkerAssignedAt = null,
+        cancellationOccurredAt = null,
+        cancellationRecordedAt = null,
+        cancellationReason = null,
+        cancellationReasonNotes = null,
       ),
     )
 

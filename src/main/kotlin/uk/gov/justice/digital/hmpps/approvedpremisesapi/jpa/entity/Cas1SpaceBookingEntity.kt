@@ -122,4 +122,10 @@ data class Cas1SpaceBookingEntity(
   val keyWorkerStaffCode: String?,
   val keyWorkerName: String?,
   val keyWorkerAssignedAt: Instant?,
+  var cancellationOccurredAt: LocalDate?,
+  var cancellationRecordedAt: Instant?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cancellation_reason_id")
+  var cancellationReason: CancellationReasonEntity?,
+  var cancellationReasonNotes: String?,
 )

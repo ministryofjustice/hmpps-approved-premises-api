@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingRequirementsTransformer
@@ -51,6 +54,9 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var requirementsTransformer: Cas1SpaceBookingRequirementsTransformer
+
+  @MockK
+  private lateinit var cancellationReasonTransformer: CancellationReasonTransformer
 
   @MockK
   private lateinit var userTransformer: UserTransformer
@@ -88,6 +94,8 @@ class Cas1SpaceBookingTransformerTest {
         .withApplication(application)
         .produce()
 
+      val cancellationReason = CancellationReasonEntityFactory().produce()
+
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withPlacementRequest(placementRequest)
         .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -96,6 +104,10 @@ class Cas1SpaceBookingTransformerTest {
         .withKeyworkerAssignedAt(LocalDateTime.parse("2007-12-03T10:15:30").toInstant(ZoneOffset.UTC))
         .withActualArrivalDateTime(Instant.parse("2009-02-05T11:25:10.00Z"))
         .withActualDepartureDateTime(Instant.parse("2012-12-25T00:00:00.00Z"))
+        .withCancellationOccurredAt(LocalDate.parse("2039-12-28"))
+        .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
+        .withCancellationReason(cancellationReason)
+        .withCancellationReasonNotes("some extra info on cancellation")
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(
@@ -103,6 +115,13 @@ class Cas1SpaceBookingTransformerTest {
         gender = Gender.female,
         essentialCharacteristics = listOf(),
         desirableCharacteristics = listOf(),
+      )
+
+      val expectedCancellationReason = CancellationReason(
+        id = UUID.randomUUID(),
+        name = "some reason",
+        isActive = true,
+        serviceScope = "the service",
       )
 
       val expectedUser = ApprovedPremisesUser(
@@ -139,6 +158,7 @@ class Cas1SpaceBookingTransformerTest {
           ServiceName.approvedPremises,
         )
       } returns expectedUser
+      every { cancellationReasonTransformer.transformJpaToApi(cancellationReason) } returns expectedCancellationReason
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
 
@@ -163,6 +183,10 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("Mr Key Worker")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("K123")
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2007-12-03"))
+      assertThat(result.cancellation!!.occurredAt).isEqualTo(LocalDate.parse("2039-12-28"))
+      assertThat(result.cancellation!!.recordedAt).isEqualTo(Instant.parse("2023-12-29T11:25:10.00Z"))
+      assertThat(result.cancellation!!.reason).isEqualTo(expectedCancellationReason)
+      assertThat(result.cancellation!!.reasonNotes).isEqualTo("some extra info on cancellation")
 
       assertThat(result.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalArrivalDate).isEqualTo(LocalDate.parse("2025-04-06"))
