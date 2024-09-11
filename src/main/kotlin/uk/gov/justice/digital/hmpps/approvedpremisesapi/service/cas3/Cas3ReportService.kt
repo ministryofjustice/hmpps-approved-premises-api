@@ -6,7 +6,6 @@ import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -22,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalAccommodationReferralReportRepository
@@ -42,7 +42,7 @@ class Cas3ReportService(
   private val bookingTransformer: BookingTransformer,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
-  private val bedRepository: BedRepository,
+  private val bedUsageRepository: BedUsageRepository,
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
   @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
 ) {
@@ -103,8 +103,12 @@ class Cas3ReportService(
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
+    val bedspacesInScope = bedUsageRepository.findAllBedspaces(
+      probationRegionId = properties.probationRegionId,
+    )
+
     BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayService)
-      .createReport(bedRepository.findAll(), properties)
+      .createReport(bedspacesInScope, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
