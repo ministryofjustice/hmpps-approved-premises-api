@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -1350,7 +1351,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
   @Nested
   inner class CreateBookingFromPlacementRequest {
     @Test
-    fun `Create a Booking from a Placement Request without a JWT returns 401`() {
+    fun `Create a Booking from PR without a JWT returns 401`() {
       webTestClient.post()
         .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking")
         .bodyValue(
@@ -1366,7 +1367,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Creating a Booking from a Placement Request creates a domain event and sends booking made emails`() {
+    fun `Create a Booking from a PR creates a domain event and sends booking made emails`() {
       `Given a User` { user, jwt ->
         `Given a User` { applicant, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -1428,10 +1429,81 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Creating a Booking from a Placement Request that is not allocated to the User returns a 403`() {
+    fun `Create a Booking from a PR linked to a placement application creates a domain event and sends booking made emails`() {
       `Given a User` { user, jwt ->
+        `Given a User` { applicant, _ ->
+          `Given a User` { placementApplicationCreator, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              `Given an Application`(createdByUser = applicant) {
+                `Given a Placement Application`(createdByUser = placementApplicationCreator) { placementApplication ->
+                  `Given a Placement Request`(
+                    placementRequestAllocatedTo = user,
+                    assessmentAllocatedTo = applicant,
+                    createdByUser = applicant,
+                    crn = offenderDetails.otherIds.crn,
+                    placementApplication = placementApplication,
+                  ) { placementRequest, _ ->
+                    val premises = approvedPremisesEntityFactory.produceAndPersist {
+                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                      withYieldedProbationRegion {
+                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                      }
+                    }
+
+                    val room = roomEntityFactory.produceAndPersist {
+                      withPremises(premises)
+                    }
+
+                    val bed = bedEntityFactory.produceAndPersist {
+                      withRoom(room)
+                    }
+
+                    webTestClient.post()
+                      .uri("/placement-requests/${placementRequest.id}/booking")
+                      .header("Authorization", "Bearer $jwt")
+                      .bodyValue(
+                        NewPlacementRequestBooking(
+                          arrivalDate = LocalDate.parse("2023-03-29"),
+                          departureDate = LocalDate.parse("2023-04-01"),
+                          bedId = bed.id,
+                        ),
+                      )
+                      .exchange()
+                      .expectStatus()
+                      .isOk
+
+                    domainEventAsserter.assertDomainEventOfTypeStored(
+                      placementRequest.application.id,
+                      DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+                    )
+
+                    emailAsserter.assertEmailsRequestedCount(3)
+                    emailAsserter.assertEmailRequested(
+                      applicant.email!!,
+                      notifyConfig.templates.bookingMade,
+                    )
+                    emailAsserter.assertEmailRequested(
+                      placementApplicationCreator.email!!,
+                      notifyConfig.templates.bookingMade,
+                    )
+                    emailAsserter.assertEmailRequested(
+                      premises.emailAddress!!,
+                      notifyConfig.templates.bookingMadePremises,
+                    )
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create a Booking from a PR allocated to another user returns a 403`() {
+      `Given a User` { _, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             `Given an Application`(createdByUser = otherUser) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
@@ -1460,7 +1532,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Creating a Booking from a Placement Request that is allocated to the User returns a 200 and sends email`() {
+    fun `Create a Booking from a PR for bed id returns a 200`() {
       `Given a User` { user, jwt ->
         `Given a User` { applicant, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -1507,10 +1579,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Creating a Booking from a Placement Request that is allocated to the User and a premisesId is specified returns a 200`() {
+    fun `Create a Booking from a PR for premises id returns a 200`() {
       `Given a User` { user, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             `Given an Application`(createdByUser = otherUser) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = user,
@@ -1547,10 +1619,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Creating a Booking from a Placement Request that is not allocated to the User and the user is a Workflow Manager returns a 200`() {
+    fun `Create a Booking from a PR allocated to other user and current user is a Workflow Manager returns a 200`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             `Given an Application`(createdByUser = otherUser) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = user,

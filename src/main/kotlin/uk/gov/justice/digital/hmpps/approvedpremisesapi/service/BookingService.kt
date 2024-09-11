@@ -307,7 +307,11 @@ class BookingService(
         user = user,
         placementRequest = placementRequest,
       )
-      cas1BookingEmailService.bookingMade(placementRequest.application, booking)
+      cas1BookingEmailService.bookingMade(
+        application = placementRequest.application,
+        booking = booking,
+        placementApplication = placementRequest.placementApplication,
+      )
 
       return@validated success(booking)
     }
@@ -458,7 +462,11 @@ class BookingService(
         )
 
         if (onlineApplication != null) {
-          cas1BookingEmailService.bookingMade(onlineApplication, booking)
+          cas1BookingEmailService.bookingMade(
+            application = onlineApplication,
+            booking = booking,
+            placementApplication = null,
+          )
         }
       }
 
