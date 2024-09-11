@@ -196,7 +196,8 @@ ORDER BY distance_miles;
            (SELECT count(1) FROM beds b2 WHERE b2.room_id IN (SELECT id FROM rooms r2 WHERE r2.premises_id = p.id) AND ( b2.end_date IS NULL OR b2.end_date > :end_date ) ) as premises_bed_count,
            c2.name as room_characteristic_name,
            b.id as bed_id,
-           b.name as bed_name
+           b.name as bed_name,
+           pdu.name as probation_delivery_unit_name
     FROM premises p  
     JOIN temporary_accommodation_premises tap ON tap.premises_id = p.id
     LEFT JOIN premises_characteristics pc ON p.id = pc.premises_id
@@ -222,7 +223,7 @@ ORDER BY distance_miles;
              lostbeds_cancel.id IS NULL
         ) AND 
         (p.id in (SELECT premises_id FROM FilteredPremisesIds) OR (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy)) AND
-        pdu.name = :probation_delivery_unit AND
+        pdu.id IN (:probation_delivery_unit_ids) AND
         p.probation_region_id = :probation_region_id AND 
         p.status = 'active' AND 
         p.service = 'temporary-accommodation' AND
@@ -230,7 +231,7 @@ ORDER BY distance_miles;
 """
 
   fun findTemporaryAccommodationBeds(
-    probationDeliveryUnit: String,
+    probationDeliveryUnits: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID,
@@ -239,7 +240,7 @@ ORDER BY distance_miles;
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
-      addValue("probation_delivery_unit", probationDeliveryUnit)
+      addValue("probation_delivery_unit_ids", probationDeliveryUnits)
       addValue("start_date", startDate)
       addValue("end_date", endDate)
       addValue("filter_by_shared_property", filterBySharedProperty)
@@ -268,6 +269,7 @@ ORDER BY distance_miles;
           val roomCharacteristicPropertyName = resultSet.getString("room_characteristic_property_name")
           val bedId = resultSet.getNullableUUID("bed_id")
           val bedName = resultSet.getString("bed_name")
+          val probationDeliveryUnitName = resultSet.getString("probation_delivery_unit_name")
 
           if (bedId == null) continue
 
@@ -279,6 +281,7 @@ ORDER BY distance_miles;
               premisesAddressLine2 = premisesAddressLine2,
               premisesTown = premisesTown,
               premisesPostcode = premisesPostcode,
+              probationDeliveryUnitName = probationDeliveryUnitName,
               premisesCharacteristics = mutableListOf(),
               premisesBedCount = premisesBedCount,
               bedId = bedId,
@@ -372,6 +375,7 @@ class ApprovedPremisesBedSearchResult(
   roomCharacteristics,
 )
 
+@SuppressWarnings("LongParameterList")
 class TemporaryAccommodationBedSearchResult(
   premisesId: UUID,
   premisesName: String,
@@ -386,6 +390,7 @@ class TemporaryAccommodationBedSearchResult(
   bedId: UUID,
   bedName: String,
   roomCharacteristics: MutableList<CharacteristicNames>,
+  val probationDeliveryUnitName: String,
   val overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>,
 ) : BedSearchResult(
   premisesId,

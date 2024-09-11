@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService.Constants.MAX_NUMBER_PDUS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.countOverlappingDays
 import java.time.LocalDate
 import java.util.UUID
@@ -27,7 +29,12 @@ class BedSearchService(
   private val characteristicService: CharacteristicService,
   private val bookingRepository: BookingRepository,
   private val workingDayService: WorkingDayService,
+  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
 ) {
+  object Constants {
+    const val MAX_NUMBER_PDUS = 5
+  }
+
   fun findApprovedPremisesBeds(
     user: UserEntity,
     postcodeDistrictOutcode: String,
@@ -92,17 +99,49 @@ class BedSearchService(
     )
   }
 
+  @Deprecated("After the UI work finish the property probationDeliveryUnit will be removed from the bedspace search API it will be replaced with probationDeliveryUnits")
+  @Suppress("detekt:CyclomaticComplexMethod")
   fun findTemporaryAccommodationBeds(
     user: UserEntity,
-    probationDeliveryUnit: String,
+    probationDeliveryUnit: String?,
+    probationDeliveryUnits: List<UUID>?,
     startDate: LocalDate,
     durationInDays: Int,
     propertyBedAttributes: List<BedSearchAttributes>?,
   ): AuthorisableActionResult<ValidatableActionResult<List<TemporaryAccommodationBedSearchResult>>> {
     return AuthorisableActionResult.Success(
       validated {
+        val probationDeliveryUnitIds: MutableList<UUID> = mutableListOf()
+
         if (durationInDays < 1) {
           "$.durationDays" hasValidationError "mustBeAtLeast1"
+        }
+
+        when (probationDeliveryUnits) {
+          null -> {
+            if (probationDeliveryUnit.isNullOrBlank()) {
+              "$.probationDeliveryUnit" hasValidationError "empty"
+            } else {
+              val probationDeliveryUnitEntity = probationDeliveryUnitRepository.findByName(probationDeliveryUnit)
+              probationDeliveryUnitEntity?.let { probationDeliveryUnitIds.add(it.id) }
+            }
+          }
+          else -> {
+            if (probationDeliveryUnits.isEmpty()) {
+              "$.probationDeliveryUnits" hasValidationError "empty"
+            } else if (probationDeliveryUnits.size > MAX_NUMBER_PDUS) {
+              "$.probationDeliveryUnits" hasValidationError "maxNumberProbationDeliveryUnits"
+            } else {
+              probationDeliveryUnits.mapIndexed { index, id ->
+                val probationDeliveryUnitEntityExist = probationDeliveryUnitRepository.existsById(id)
+                if (!probationDeliveryUnitEntityExist) {
+                  "$.probationDeliveryUnits[$index]" hasValidationError "doesNotExist"
+                } else {
+                  probationDeliveryUnitIds.add(id)
+                }
+              }
+            }
+          }
         }
 
         if (validationErrors.any()) {
@@ -112,7 +151,7 @@ class BedSearchService(
         val endDate = startDate.plusDays(durationInDays.toLong() - 1)
 
         val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
-          probationDeliveryUnit = probationDeliveryUnit,
+          probationDeliveryUnits = probationDeliveryUnitIds,
           startDate = startDate,
           endDate = endDate,
           probationRegionId = user.probationRegion.id,

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
@@ -28,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
 
@@ -37,6 +40,7 @@ class BedSearchServiceTest {
   private val mockCharacteristicService = mockk<CharacteristicService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
+  private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
 
   private val bedSearchService = BedSearchService(
     mockBedSearchRepository,
@@ -44,6 +48,7 @@ class BedSearchServiceTest {
     mockCharacteristicService,
     mockBookingRepository,
     mockWorkingDayService,
+    mockProbationDeliveryUnitRepository,
   )
 
   @Test
@@ -488,11 +493,21 @@ class BedSearchServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withName(randomStringMultiCaseWithNumbers(10))
+      .withProbationRegion(user.probationRegion)
+      .produce()
+
+    every {
+      mockProbationDeliveryUnitRepository.findByName(probationDeliveryUnit.name)
+    } returns probationDeliveryUnit
+
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
-      probationDeliveryUnit = "PDU-1",
+      probationDeliveryUnit = probationDeliveryUnit.name,
+      probationDeliveryUnits = null,
       propertyBedAttributes = null,
     )
 
@@ -505,9 +520,110 @@ class BedSearchServiceTest {
   }
 
   @Test
+  fun `findTemporaryAccommodationBeds returns FieldValidationError when no pdu is provided`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val result = bedSearchService.findTemporaryAccommodationBeds(
+      user = user,
+      startDate = LocalDate.parse("2024-08-27"),
+      durationInDays = 16,
+      probationDeliveryUnit = null,
+      probationDeliveryUnits = null,
+      propertyBedAttributes = null,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationError = result.entity as ValidatableActionResult.FieldValidationError
+
+    assertThat(validationError.validationMessages["$.probationDeliveryUnit"]).isEqualTo("empty")
+  }
+
+  @Test
+  fun `findTemporaryAccommodationBeds returns FieldValidationError when number of pdus is greater than pdus limit`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val probationDeliveryUnitIds = ProbationDeliveryUnitEntityFactory()
+      .withName(randomStringMultiCaseWithNumbers(10))
+      .withProbationRegion(user.probationRegion)
+      .produceMany()
+      .take(7)
+      .map { it.id }
+      .toList()
+
+    val result = bedSearchService.findTemporaryAccommodationBeds(
+      user = user,
+      startDate = LocalDate.parse("2024-08-22"),
+      durationInDays = 30,
+      probationDeliveryUnit = null,
+      probationDeliveryUnits = probationDeliveryUnitIds,
+      propertyBedAttributes = null,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationError = result.entity as ValidatableActionResult.FieldValidationError
+
+    assertThat(validationError.validationMessages["$.probationDeliveryUnits"]).isEqualTo("maxNumberProbationDeliveryUnits")
+  }
+
+  @Test
+  fun `findTemporaryAccommodationBeds returns FieldValidationError when a pdu does not exist`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val probationDeliveryUnitIds = ProbationDeliveryUnitEntityFactory()
+      .withName(randomStringMultiCaseWithNumbers(10))
+      .withProbationRegion(user.probationRegion)
+      .produceMany()
+      .take(3)
+      .map { it.id }
+      .toMutableList()
+
+    val notExistPduId = UUID.randomUUID()
+    probationDeliveryUnitIds.add(notExistPduId)
+
+    every {
+      mockProbationDeliveryUnitRepository.existsById(match { probationDeliveryUnitIds.contains(it) })
+    } returns true
+
+    every {
+      mockProbationDeliveryUnitRepository.existsById(notExistPduId)
+    } returns false
+
+    val result = bedSearchService.findTemporaryAccommodationBeds(
+      user = user,
+      startDate = LocalDate.parse("2024-08-28"),
+      durationInDays = 84,
+      probationDeliveryUnit = null,
+      probationDeliveryUnits = probationDeliveryUnitIds,
+      propertyBedAttributes = null,
+    )
+
+    assertThat(result is AuthorisableActionResult.Success).isTrue
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
+    val validationError = result.entity as ValidatableActionResult.FieldValidationError
+
+    assertThat(validationError.validationMessages["$.probationDeliveryUnits[3]"]).isEqualTo("doesNotExist")
+  }
+
+  @Test
   fun `findTemporaryAccommodationBeds returns results from repository`() {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
+      .produce()
+
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withName(randomStringMultiCaseWithNumbers(10))
+      .withProbationRegion(user.probationRegion)
       .produce()
 
     val repositorySearchResults = listOf(
@@ -518,6 +634,7 @@ class BedSearchServiceTest {
         premisesAddressLine2 = null,
         premisesTown = null,
         premisesPostcode = "LA1111A",
+        probationDeliveryUnitName = probationDeliveryUnit.name,
         premisesCharacteristics = mutableListOf(
           CharacteristicNames(
             propertyName = "bedCharacteristicPropertyName",
@@ -551,7 +668,7 @@ class BedSearchServiceTest {
       mockBedSearchRepository.findTemporaryAccommodationBeds(
         startDate = LocalDate.parse("2023-03-22"),
         endDate = LocalDate.parse("2023-03-28"),
-        probationDeliveryUnit = "PDU-1",
+        probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
         filterBySharedProperty = false,
         filterBySingleOccupancy = false,
@@ -561,12 +678,16 @@ class BedSearchServiceTest {
     every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
     every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
     every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
+    every {
+      mockProbationDeliveryUnitRepository.findByName(probationDeliveryUnit.name)
+    } returns probationDeliveryUnit
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      probationDeliveryUnit = "PDU-1",
+      probationDeliveryUnit = probationDeliveryUnit.name,
+      probationDeliveryUnits = null,
       propertyBedAttributes = null,
     )
 
@@ -584,6 +705,11 @@ class BedSearchServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withName(randomStringMultiCaseWithNumbers(10))
+      .withProbationRegion(user.probationRegion)
+      .produce()
+
     val expectedResults = listOf(
       TemporaryAccommodationBedSearchResult(
         premisesId = UUID.randomUUID(),
@@ -592,6 +718,7 @@ class BedSearchServiceTest {
         premisesAddressLine2 = null,
         premisesTown = null,
         premisesPostcode = "LA1111A",
+        probationDeliveryUnitName = probationDeliveryUnit.name,
         premisesCharacteristics = mutableListOf(
           CharacteristicNames(
             propertyName = "bedCharacteristicPropertyName",
@@ -633,6 +760,7 @@ class BedSearchServiceTest {
         roomName = "Another Room Name",
         bedId = UUID.randomUUID(),
         bedName = "Another Bed Name",
+        probationDeliveryUnitName = probationDeliveryUnit.name,
         roomCharacteristics = mutableListOf(
           CharacteristicNames(
             propertyName = "roomCharacteristicPropertyName",
@@ -646,10 +774,14 @@ class BedSearchServiceTest {
     val repositorySearchResults = expectedResults + unexpectedResults
 
     every {
+      mockProbationDeliveryUnitRepository.findByName(probationDeliveryUnit.name)
+    } returns probationDeliveryUnit
+
+    every {
       mockBedSearchRepository.findTemporaryAccommodationBeds(
         startDate = LocalDate.parse("2023-03-22"),
         endDate = LocalDate.parse("2023-03-28"),
-        probationDeliveryUnit = "PDU-1",
+        probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
         filterBySharedProperty = false,
         filterBySingleOccupancy = false,
@@ -742,7 +874,8 @@ class BedSearchServiceTest {
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      probationDeliveryUnit = "PDU-1",
+      probationDeliveryUnit = probationDeliveryUnit.name,
+      probationDeliveryUnits = null,
       propertyBedAttributes = null,
     )
 

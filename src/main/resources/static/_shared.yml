@@ -4210,13 +4210,17 @@ components:
             probationDeliveryUnit:
               type: string
               description: The pdu to search within
+            probationDeliveryUnits:
+              type: array
+              description: The list of pdus Ids to search within
+              items:
+                type: string
+                format: uuid
             attributes:
               type: array
               description: Bedspace and property attributes to filter on
               items:
                 $ref: "_shared.yml#/components/schemas/BedSearchAttributes"
-          required:
-            - probationDeliveryUnit
     BedSearchResults:
       type: object
       properties:
@@ -4313,6 +4317,8 @@ components:
         town:
           type: string
         postcode:
+          type: string
+        probationDeliveryUnitName:
           type: string
         characteristics:
           type: array
