@@ -6164,6 +6164,8 @@ components:
         postcode:
           type: string
           example: LS1 3AD
+        apArea:
+          $ref: '#/components/schemas/ApArea'
         bedCount:
           type: integer
           description: The total number of spaces in this premises
@@ -6176,6 +6178,15 @@ components:
           type: integer
           description: The total number of out of service beds
           example: 2
+      required:
+        - id
+        - name
+        - apCode
+        - postcode
+        - apArea
+        - bedCount
+        - availableBeds
+        - outOfServiceBeds
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
