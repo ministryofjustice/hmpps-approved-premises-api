@@ -509,7 +509,7 @@ class Cas1BookingDomainEventServiceTest {
   inner class BookingCancelled {
 
     @Test
-    fun `success`() {
+    fun `success for application`() {
       val user = UserEntityFactory()
         .withDefaults()
         .withDeliusUsername("THEDELIUSUSERNAME")
@@ -598,5 +598,95 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.cancellationReason).isEqualTo("the reason name")
       assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
     }
+  }
+
+  @Test
+  fun `success for offline application`() {
+    val user = UserEntityFactory()
+      .withDefaults()
+      .withDeliusUsername("THEDELIUSUSERNAME")
+      .produce()
+
+    val offlineApplication = OfflineApplicationEntityFactory()
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withName("the premises name")
+      .withApCode("the premises ap code")
+      .withQCode("the premises qcode")
+      .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(null)
+      .withOfflineApplication(offlineApplication)
+      .withCrn(offlineApplication.crn)
+      .produce()
+
+    every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails,
+    )
+
+    service.bookingCancelled(
+      booking = bookingEntity,
+      user = user,
+      cancellation = CancellationEntityFactory()
+        .withDefaults()
+        .withBooking(bookingEntity)
+        .withDate(LocalDate.parse("2022-08-25"))
+        .produce(),
+      reason = CancellationReasonEntityFactory()
+        .withName("the reason name")
+        .produce(),
+    )
+
+    val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+    verify(exactly = 1) {
+      domainEventService.saveBookingCancelledEvent(
+        capture(domainEventArgument),
+      )
+    }
+
+    val domainEvent = domainEventArgument.captured
+
+    assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
+    assertThat(domainEvent.bookingId).isEqualTo(bookingEntity.id)
+    assertThat(domainEvent.crn).isEqualTo(offlineApplication.crn)
+    assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+    assertThat(domainEvent.schemaVersion).isEqualTo(2)
+    assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
+
+    val data = domainEvent.data.eventDetails
+    assertThat(data.applicationId).isEqualTo(offlineApplication.id)
+    assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
+    assertThat(data.bookingId).isEqualTo(bookingEntity.id)
+    assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
+    assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+    assertThat(data.deliusEventNumber).isEqualTo(offlineApplication.eventNumber)
+
+    assertThat(data.premises.id).isEqualTo(premises.id)
+    assertThat(data.premises.name).isEqualTo(premises.name)
+    assertThat(data.premises.apCode).isEqualTo(premises.apCode)
+    assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
+    assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
+
+    assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.staffCode)
+    assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
+    assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(data.cancellationReason).isEqualTo("the reason name")
+    assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
   }
 }

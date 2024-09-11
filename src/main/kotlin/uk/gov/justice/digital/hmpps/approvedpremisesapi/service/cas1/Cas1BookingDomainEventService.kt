@@ -283,10 +283,10 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  @SuppressWarnings("LongMethod", "TooGenericExceptionThrown")
+  @SuppressWarnings("LongMethod")
   fun bookingCancelled(
     booking: BookingEntity,
-    user: UserEntity?,
+    user: UserEntity,
     cancellation: CancellationEntity,
     reason: CancellationReasonEntity,
   ) {
@@ -294,25 +294,19 @@ class Cas1BookingDomainEventService(
 
     val domainEventId = UUID.randomUUID()
 
-    val offenderDetails = when (
-      val offenderDetailsResult = offenderService.getOffenderByCrn(
-        booking.crn,
-        user!!.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-    ) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
-    }
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        else -> null
+      }
 
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
+    val staffDetails = getStaffDetails(user.deliusUsername)
 
-    val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
+    val application = (booking.application as ApprovedPremisesApplicationEntity?)
+    val offlineApplication = booking.offlineApplication
+
+    val applicationId = application?.id ?: offlineApplication?.id as UUID
+    val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
 
     val approvedPremises = booking.premises as ApprovedPremisesEntity
 
@@ -321,7 +315,7 @@ class Cas1BookingDomainEventService(
         id = domainEventId,
         applicationId = applicationId,
         crn = booking.crn,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = now.toInstant(),
         bookingId = booking.id,
         schemaVersion = 2,
@@ -335,7 +329,7 @@ class Cas1BookingDomainEventService(
             bookingId = booking.id,
             personReference = PersonReference(
               crn = booking.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = eventNumber,
             premises = Premises(
@@ -357,16 +351,5 @@ class Cas1BookingDomainEventService(
         ),
       ),
     )
-  }
-
-  fun getApplicationDetailsForBooking(booking: BookingEntity): Triple<UUID, String, OffsetDateTime> {
-    val application = (booking.application as ApprovedPremisesApplicationEntity?)
-    val offlineApplication = booking.offlineApplication
-
-    val applicationId = application?.id ?: offlineApplication?.id as UUID
-    val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
-    val submittedAt = application?.submittedAt ?: offlineApplication?.createdAt as OffsetDateTime
-
-    return Triple(applicationId, eventNumber, submittedAt)
   }
 }

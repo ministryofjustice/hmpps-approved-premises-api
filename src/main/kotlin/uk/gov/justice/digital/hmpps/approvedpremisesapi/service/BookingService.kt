@@ -1122,7 +1122,7 @@ class BookingService(
       is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
     }
     if (shouldCreateDomainEventForBooking(booking, user)) {
-      cas1BookingDomainEventService.bookingCancelled(booking, user, cancellationEntity, reason)
+      cas1BookingDomainEventService.bookingCancelled(booking, user!!, cancellationEntity, reason)
     }
 
     updateApplicationStatusOnCancellation(
