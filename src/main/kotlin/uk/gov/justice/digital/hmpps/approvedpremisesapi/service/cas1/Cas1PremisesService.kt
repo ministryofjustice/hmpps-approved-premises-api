@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -15,7 +14,7 @@ class Cas1PremisesService(
   val premisesService: PremisesService,
   val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
 ) {
-  fun getPremisesSummary(premisesId: UUID): CasResult<Cas1PremisesSummary> {
+  fun getPremisesSummary(premisesId: UUID): CasResult<Cas1PremisesSummaryInfo> {
     val premise = premisesRepository.findByIdOrNull(premisesId)
     if (premise !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
 
@@ -23,15 +22,19 @@ class Cas1PremisesService(
     val outOfServiceBedsCount = cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(premisesId)
 
     return CasResult.Success(
-      Cas1PremisesSummary(
-        id = premisesId,
-        name = premise.name,
-        apCode = premise.apCode,
-        postcode = premise.postcode,
+      Cas1PremisesSummaryInfo(
+        entity = premise,
         bedCount = bedCount,
         availableBeds = bedCount - outOfServiceBedsCount,
         outOfServiceBeds = outOfServiceBedsCount,
       ),
     )
   }
+
+  data class Cas1PremisesSummaryInfo(
+    val entity: ApprovedPremisesEntity,
+    val bedCount: Int,
+    val availableBeds: Int,
+    val outOfServiceBeds: Int,
+  )
 }

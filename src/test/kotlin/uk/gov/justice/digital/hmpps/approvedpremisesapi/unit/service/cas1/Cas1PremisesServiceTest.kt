@@ -81,14 +81,11 @@ class Cas1PremisesServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
 
-      val premisesSummary = result.value
-      assertThat(premisesSummary.id).isEqualTo(premises.id)
-      assertThat(premisesSummary.name).isEqualTo("the name")
-      assertThat(premisesSummary.apCode).isEqualTo("the ap code")
-      assertThat(premisesSummary.postcode).isEqualTo("LE11 1PO")
-      assertThat(premisesSummary.bedCount).isEqualTo(56)
-      assertThat(premisesSummary.availableBeds).isEqualTo(52)
-      assertThat(premisesSummary.outOfServiceBeds).isEqualTo(4)
+      val premisesSummaryInfo = result.value
+      assertThat(premisesSummaryInfo.entity).isEqualTo(premises)
+      assertThat(premisesSummaryInfo.bedCount).isEqualTo(56)
+      assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
+      assertThat(premisesSummaryInfo.availableBeds).isEqualTo(52)
     }
   }
 }
