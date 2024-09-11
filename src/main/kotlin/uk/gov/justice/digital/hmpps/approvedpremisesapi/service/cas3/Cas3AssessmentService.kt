@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.time.LocalDate
 import java.util.UUID
 
@@ -52,8 +51,8 @@ class Cas3AssessmentService(
           listOf(
             CAS3AssessmentUpdatedField(
               fieldName = "releaseDate",
-              updatedFrom = assessment.currentReleaseDate().toUiFormat(),
-              updatedTo = newReleaseDate.toUiFormat(),
+              updatedFrom = assessment.currentReleaseDate().toString(),
+              updatedTo = newReleaseDate.toString(),
             ),
           ),
         )
@@ -74,8 +73,8 @@ class Cas3AssessmentService(
           listOf(
             CAS3AssessmentUpdatedField(
               fieldName = "accommodationRequiredFromDate",
-              updatedFrom = assessment.currentAccommodationRequiredFromDate().toUiFormat(),
-              updatedTo = newAccommodationRequiredFromDate.toUiFormat(),
+              updatedFrom = assessment.currentAccommodationRequiredFromDate().toString(),
+              updatedTo = newAccommodationRequiredFromDate.toString(),
             ),
           ),
         )
