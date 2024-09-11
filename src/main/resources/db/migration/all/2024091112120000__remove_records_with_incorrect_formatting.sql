@@ -1,0 +1,1 @@
+delete from domain_events where type = 'CAS3_ASSESSMENT_UPDATED';
