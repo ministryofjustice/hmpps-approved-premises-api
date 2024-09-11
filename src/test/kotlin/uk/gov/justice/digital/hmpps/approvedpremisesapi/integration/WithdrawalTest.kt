@@ -1032,84 +1032,90 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a request for placement cascades to applicable entities`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+      `Given a User` { applicant, _ ->
+        `Given a User` { placementAppCreator, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-          val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
-          val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
-          val booking1NoArrival = createBooking(
-            application = application,
-            hasArrivalInCas1 = false,
-            hasArrivalInDelius = false,
-            startDate = nowPlusDays(1),
-            endDate = nowPlusDays(6),
-          )
-          addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
+            val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = placementAppCreator)
+            val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
+            val booking1NoArrival = createBooking(
+              application = application,
+              hasArrivalInCas1 = false,
+              hasArrivalInDelius = false,
+              startDate = nowPlusDays(1),
+              endDate = nowPlusDays(6),
+            )
+            addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
-          val placementRequest2 = createPlacementRequest(application, placementApplication = placementApplication1)
-          val booking2NoArrival = createBooking(
-            application = application,
-            hasArrivalInCas1 = false,
-            hasArrivalInDelius = false,
-            startDate = nowPlusDays(10),
-            endDate = nowPlusDays(21),
-          )
-          addBookingToPlacementRequest(placementRequest2, booking2NoArrival)
+            val placementRequest2 = createPlacementRequest(application, placementApplication = placementApplication1)
+            val booking2NoArrival = createBooking(
+              application = application,
+              hasArrivalInCas1 = false,
+              hasArrivalInDelius = false,
+              startDate = nowPlusDays(10),
+              endDate = nowPlusDays(21),
+            )
+            addBookingToPlacementRequest(placementRequest2, booking2NoArrival)
 
-          val placementApplication2 = createPlacementApplication(application, DateSpan(now(), duration = 2))
-          val placementRequest3 = createPlacementRequest(application, placementApplication = placementApplication2)
-          val booking3NoArrival = createBooking(
-            application = application,
-            hasArrivalInCas1 = false,
-            startDate = nowPlusDays(10),
-            endDate = nowPlusDays(21),
-          )
-          addBookingToPlacementRequest(placementRequest3, booking3NoArrival)
+            val placementApplication2 = createPlacementApplication(application, DateSpan(now(), duration = 2))
+            val placementRequest3 = createPlacementRequest(application, placementApplication = placementApplication2)
+            val booking3NoArrival = createBooking(
+              application = application,
+              hasArrivalInCas1 = false,
+              startDate = nowPlusDays(10),
+              endDate = nowPlusDays(21),
+            )
+            addBookingToPlacementRequest(placementRequest3, booking3NoArrival)
 
-          withdrawPlacementApplication(
-            placementApplication1,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt,
-          )
+            withdrawPlacementApplication(
+              placementApplication1,
+              WithdrawPlacementRequestReason.duplicatePlacementRequest,
+              jwt,
+            )
 
-          assertApplicationNotWithdrawn(application)
-          assertAssessmentNotWithdrawn(assessment)
+            assertApplicationNotWithdrawn(application)
+            assertAssessmentNotWithdrawn(assessment)
 
-          assertPlacementApplicationWithdrawn(
-            placementApplication1,
-            PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-          )
+            assertPlacementApplicationWithdrawn(
+              placementApplication1,
+              PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+            )
 
-          assertPlacementRequestWithdrawn(
-            placementRequest1,
-            PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          )
-          assertBookingWithdrawn(booking1NoArrival, "Related request for placement withdrawn")
+            assertPlacementRequestWithdrawn(
+              placementRequest1,
+              PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
+            )
+            assertBookingWithdrawn(booking1NoArrival, "Related request for placement withdrawn")
 
-          assertPlacementRequestWithdrawn(
-            placementRequest2,
-            PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          )
-          assertBookingWithdrawn(booking2NoArrival, "Related request for placement withdrawn")
+            assertPlacementRequestWithdrawn(
+              placementRequest2,
+              PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
+            )
+            assertBookingWithdrawn(booking2NoArrival, "Related request for placement withdrawn")
 
-          assertPlacementApplicationNotWithdrawn(placementApplication2)
-          assertPlacementRequestNotWithdrawn(placementRequest3)
-          assertBookingNotWithdrawn(booking3NoArrival)
+            assertPlacementApplicationNotWithdrawn(placementApplication2)
+            assertPlacementRequestNotWithdrawn(placementRequest3)
+            assertBookingNotWithdrawn(booking3NoArrival)
 
-          val applicantEmail = applicant.email!!
-          val cruEmail = application.apArea!!.emailAddress!!
+            val applicantEmail = applicant.email!!
+            val placementAppCreatorEmail = placementAppCreator.email!!
+            val cruEmail = application.apArea!!.emailAddress!!
 
-          emailAsserter.assertEmailsRequestedCount(7)
-          assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest1)
+            emailAsserter.assertEmailsRequestedCount(10)
+            assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest1)
+            assertPlacementRequestWithdrawnEmail(placementAppCreatorEmail, placementRequest1)
 
-          assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
-          assertBookingWithdrawnEmail(booking1NoArrival.premises.emailAddress!!, booking1NoArrival)
-          assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(placementAppCreatorEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(booking1NoArrival.premises.emailAddress!!, booking1NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
 
-          assertBookingWithdrawnEmail(applicantEmail, booking2NoArrival)
-          assertBookingWithdrawnEmail(booking2NoArrival.premises.emailAddress!!, booking2NoArrival)
-          assertBookingWithdrawnEmail(cruEmail, booking2NoArrival)
+            assertBookingWithdrawnEmail(applicantEmail, booking2NoArrival)
+            assertBookingWithdrawnEmail(placementAppCreatorEmail, booking2NoArrival)
+            assertBookingWithdrawnEmail(booking2NoArrival.premises.emailAddress!!, booking2NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, booking2NoArrival)
+          }
         }
       }
     }
@@ -1591,9 +1597,10 @@ class WithdrawalTest : IntegrationTestBase() {
     decision: PlacementApplicationDecision? = PlacementApplicationDecision.ACCEPTED,
     allocatedTo: UserEntity? = null,
     isWithdrawn: Boolean = false,
+    createdBy: UserEntity? = null,
   ): PlacementApplicationEntity {
     val placementApplication = placementApplicationFactory.produceAndPersist {
-      withCreatedByUser(application.createdByUser)
+      withCreatedByUser(createdBy ?: application.createdByUser)
       withApplication(application)
       withSchemaVersion(
         approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {

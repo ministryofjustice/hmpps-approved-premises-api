@@ -61,6 +61,7 @@ class Cas1BookingEmailService(
   fun bookingWithdrawn(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
+    placementApplication: PlacementApplicationEntity?,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
     val allPersonalisation =
@@ -72,9 +73,10 @@ class Cas1BookingEmailService(
     val interestedParties =
       (
         application.interestedPartiesEmailAddresses() +
+          setOfNotNull(placementApplication?.createdByUser?.email) +
           setOfNotNull(booking.premises.emailAddress) +
           setOfNotNull(application.apArea?.emailAddress)
-        )
+        ).toSet()
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = interestedParties,

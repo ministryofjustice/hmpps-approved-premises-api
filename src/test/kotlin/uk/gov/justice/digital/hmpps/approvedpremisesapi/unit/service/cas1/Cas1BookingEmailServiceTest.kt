@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+// TOdO: add tests in here for placement app email
 class Cas1BookingEmailServiceTest {
 
   private object TestConstants {
@@ -297,7 +298,12 @@ class Cas1BookingEmailServiceTest {
         caseManagerNotApplicant = true,
       )
 
-      service.bookingWithdrawn(application, booking, WithdrawalTriggeredByUser(withdrawingUser))
+      service.bookingWithdrawn(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawingUser),
+      )
 
       val expectedPersonalisation = mapOf(
         "apName" to PREMISES_NAME,
@@ -362,7 +368,12 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
       )
 
-      service.bookingWithdrawn(application, booking, WithdrawalTriggeredByUser(withdrawingUser))
+      service.bookingWithdrawn(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawingUser),
+      )
 
       mockEmailNotificationService.assertNoEmailsRequested()
     }
@@ -382,7 +393,12 @@ class Cas1BookingEmailServiceTest {
         caseManagerNotApplicant = true,
       )
 
-      service.bookingWithdrawn(application, booking, WithdrawalTriggeredBySeedJob)
+      service.bookingWithdrawn(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
+      )
 
       val expectedPersonalisation = mapOf(
         "apName" to PREMISES_NAME,

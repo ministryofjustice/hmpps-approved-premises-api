@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -2518,7 +2519,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, null, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2589,11 +2590,22 @@ class BookingServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .produce()
+
       val bookingEntity = BookingEntityFactory()
         .withPremises(premises)
         .withApplication(application)
         .withCrn(application.crn)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withPlacementApplication(placementApplication)
+            .produce(),
+        )
         .produce()
+
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
@@ -2614,7 +2626,7 @@ class BookingServiceTest {
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, placementApplication, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2634,7 +2646,7 @@ class BookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) }
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, placementApplication, WithdrawalTriggeredByUser(user)) }
     }
 
     @Test
@@ -2954,7 +2966,7 @@ class BookingServiceTest {
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, null, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
@@ -3049,7 +3061,7 @@ class BookingServiceTest {
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, null, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
@@ -3126,7 +3138,7 @@ class BookingServiceTest {
           ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         )
       } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, null, WithdrawalTriggeredByUser(user)) } returns Unit
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
 
