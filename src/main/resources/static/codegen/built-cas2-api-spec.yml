@@ -3731,6 +3731,7 @@ components:
         - cas1_space_booking_list
         - cas1_space_booking_view
         - cas1_premises_view_summary
+        - cas1_reports_view
     TemporaryAccommodationUserRole:
       type: string
       enum:

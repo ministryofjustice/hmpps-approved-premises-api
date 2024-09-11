@@ -188,7 +188,18 @@ class UserTransformerTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_JANITOR", "CAS1_APPEALS_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_CRU_MEMBER", "CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER", "CAS1_MANAGER", "CAS1_LEGACY_MANAGER"],
+      names = [
+        "CAS1_JANITOR",
+        "CAS1_APPEALS_MANAGER",
+        "CAS1_ASSESSOR",
+        "CAS1_MATCHER",
+        "CAS1_CRU_MEMBER",
+        "CAS1_FUTURE_MANAGER",
+        "CAS1_WORKFLOW_MANAGER",
+        "CAS1_MANAGER",
+        "CAS1_LEGACY_MANAGER",
+        "CAS1_REPORT_VIEWER",
+      ],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `transformJpaToApi CAS1 should return no permissions for Approved Premises roles which have no permissions defined`(role: UserRole) {
