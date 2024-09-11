@@ -473,6 +473,7 @@ workflows:
           name: generate_trivyignore
       - hmpps/gradle_owasp_dependency_check:
           slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          jdk_tag: "21.0"
           context:
             - hmpps-common-vars
       - hmpps/trivy_latest_scan:
@@ -501,6 +502,7 @@ workflows:
           image_name: hmpps-approved-premises-api
       - hmpps/gradle_owasp_dependency_check:
           slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          jdk_tag: "21.0"
           context:
             - hmpps-common-vars
       - hmpps/trivy_pipeline_scan:
