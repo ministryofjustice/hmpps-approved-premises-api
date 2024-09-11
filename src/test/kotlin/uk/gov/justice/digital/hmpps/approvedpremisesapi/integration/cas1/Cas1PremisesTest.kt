@@ -27,7 +27,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun setupTestData() {
       val region = probationRegionEntityFactory.produceAndPersist {
         withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
+          apAreaEntityFactory.produceAndPersist() {
+            withName("The ap area name")
+          }
         }
       }
 
@@ -105,6 +107,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.bedCount).isEqualTo(5)
       assertThat(summary.availableBeds).isEqualTo(4)
       assertThat(summary.outOfServiceBeds).isEqualTo(1)
+      assertThat(summary.apArea.name).isEqualTo("The ap area name")
     }
   }
 }

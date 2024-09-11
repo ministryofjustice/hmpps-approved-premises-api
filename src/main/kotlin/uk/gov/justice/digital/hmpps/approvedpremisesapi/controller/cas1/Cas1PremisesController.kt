@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -14,6 +15,7 @@ import java.util.UUID
 class Cas1PremisesController(
   val userAccessService: UserAccessService,
   val cas1PremisesService: Cas1PremisesService,
+  val cas1PremisesTransformer: Cas1PremisesTransformer,
 ) : PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
@@ -21,6 +23,10 @@ class Cas1PremisesController(
 
     return ResponseEntity
       .ok()
-      .body(extractEntityFromCasResult(cas1PremisesService.getPremisesSummary(premisesId)))
+      .body(
+        cas1PremisesTransformer.toPremiseSummary(
+          extractEntityFromCasResult(cas1PremisesService.getPremisesSummary(premisesId)),
+        ),
+      )
   }
 }
