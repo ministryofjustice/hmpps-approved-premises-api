@@ -379,6 +379,9 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.workflowManager,
     listOf(
+      UserPermission.CAS1_BOOKING_WITHDRAW,
+      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
+      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
     ),
   ),
@@ -386,11 +389,13 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMember,
     listOf(
+      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
       UserPermission.CAS1_ADHOC_BOOKING_CREATE,
       UserPermission.CAS1_BOOKING_CREATE,
       UserPermission.CAS1_BOOKING_CHANGE_DATES,
       UserPermission.CAS1_BOOKING_WITHDRAW,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
+      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
@@ -416,10 +421,12 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ApprovedPremisesUserRole.janitor,
     listOf(
       UserPermission.CAS1_ADHOC_BOOKING_CREATE,
+      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
       UserPermission.CAS1_BOOKING_CREATE,
       UserPermission.CAS1_BOOKING_WITHDRAW,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_PROCESS_AN_APPEAL,
+      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
@@ -506,6 +513,8 @@ enum class UserPermission {
   CAS1_SPACE_BOOKING_LIST,
   CAS1_SPACE_BOOKING_VIEW,
   CAS1_PREMISES_VIEW_SUMMARY,
+  CAS1_APPLICATION_WITHDRAW_OTHERS,
+  CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
 }
 
 interface UserWorkload {

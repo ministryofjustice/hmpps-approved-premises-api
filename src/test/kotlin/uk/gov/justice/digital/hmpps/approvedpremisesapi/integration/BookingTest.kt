@@ -3050,7 +3050,11 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         `Given a User`(roles = listOf(role)) { applicant, _ ->

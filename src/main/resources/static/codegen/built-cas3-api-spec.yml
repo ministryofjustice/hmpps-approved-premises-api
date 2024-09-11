@@ -3213,6 +3213,7 @@ components:
       type: string
       enum:
         - cas1_adhoc_booking_create
+        - cas1_application_withdraw_others
         - cas1_assess_appealed_application
         - cas1_assess_application
         - cas1_assess_placement_application
@@ -3226,6 +3227,7 @@ components:
         - cas1_view_cru_dashboard
         - cas1_view_manage_tasks
         - cas1_view_out_of_service_beds
+        - cas1_request_for_placement_withdraw_others
         - cas1_space_booking_list
         - cas1_space_booking_view
         - cas1_premises_view_summary

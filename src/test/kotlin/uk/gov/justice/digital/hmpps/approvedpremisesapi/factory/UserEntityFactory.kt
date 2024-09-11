@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -32,7 +31,6 @@ class UserEntityFactory : Factory<UserEntity> {
   private var deliusStaffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
-  private var permissions: Yielded<MutableList<UserPermission>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
   private var isActive: Yielded<Boolean> = { true }
@@ -71,10 +69,6 @@ class UserEntityFactory : Factory<UserEntity> {
 
   fun withQualifications(qualifications: MutableList<UserQualificationAssignmentEntity>) = apply {
     this.qualifications = { qualifications }
-  }
-
-  fun withPermissions(permissions: MutableList<UserPermission>) = apply {
-    this.permissions = { permissions }
   }
 
   fun withEmail(email: String?) = apply {
