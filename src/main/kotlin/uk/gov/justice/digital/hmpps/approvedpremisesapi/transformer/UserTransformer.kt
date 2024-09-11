@@ -137,6 +137,7 @@ class UserTransformer(
         UserPermission.CAS1_PREMISES_VIEW_SUMMARY -> ApiUserPermission.premisesViewSummary
         UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers
         UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS -> ApiUserPermission.requestForPlacementWithdrawOthers
+        UserPermission.CAS1_REPORTS_VIEW -> ApiUserPermission.reportsView
       }
     }
   }

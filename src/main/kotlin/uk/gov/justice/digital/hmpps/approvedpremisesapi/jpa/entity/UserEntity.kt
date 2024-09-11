@@ -403,7 +403,13 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   ),
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
   CAS1_ADMIN(ServiceName.approvedPremises, ApprovedPremisesUserRole.roleAdmin),
-  CAS1_REPORT_VIEWER(ServiceName.approvedPremises, ApprovedPremisesUserRole.reportViewer),
+  CAS1_REPORT_VIEWER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.reportViewer,
+    listOf(
+      UserPermission.CAS1_REPORTS_VIEW,
+    ),
+  ),
   CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromAssessAllocation),
   CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromMatchAllocation),
   CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation),
@@ -514,6 +520,7 @@ enum class UserPermission {
   CAS1_SPACE_BOOKING_VIEW,
   CAS1_PREMISES_VIEW_SUMMARY,
   CAS1_APPLICATION_WITHDRAW_OTHERS,
+  CAS1_REPORTS_VIEW,
   CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
 }
 

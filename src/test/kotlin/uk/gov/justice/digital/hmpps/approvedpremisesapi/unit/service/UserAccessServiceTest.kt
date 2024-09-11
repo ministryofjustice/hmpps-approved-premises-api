@@ -1253,16 +1253,6 @@ class UserAccessServiceTest {
     assertThat(userAccessService.currentUserCanViewReport()).isFalse
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER", "CAS1_ADMIN"])
-  fun `currentUserCanViewReport returns returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the correct role`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.currentUserCanViewReport()).isTrue
-  }
-
   @Test
   fun `userCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
