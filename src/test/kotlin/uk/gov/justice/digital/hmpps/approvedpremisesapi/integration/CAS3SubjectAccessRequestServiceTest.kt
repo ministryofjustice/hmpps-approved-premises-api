@@ -42,6 +42,28 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   @Test
+  fun `Get CAS3 Information - Null dates check`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val result =
+      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+    assertJsonEquals(
+      """ 
+     {
+         "Applications": [ ],
+         "Assessments": [ ],
+         "AssessmentReferralHistoryNotes" : [ ],
+         "Bookings": [ ],
+         "BookingExtensions": [ ],
+         "Cancellations": [ ],
+         "DomainEvents": [ ],
+         "DomainEventsMetadata": [ ]
+      }
+      """.trimIndent(),
+      result,
+    )
+  }
+
+  @Test
   fun `Get CAS3 Information - Applications`() {
     val (offenderDetails, _) = `Given an Offender`()
     val user = userEntity()

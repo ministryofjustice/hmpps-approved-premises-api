@@ -150,7 +150,7 @@ class SubjectAccessRequestService(
           fromDate?.atStartOfDay(),
           toDate?.atTime(LocalTime.MAX),
         ),
-      ),
+      ).toMap().entries,
     )
   private fun Logger.logDebugMessage(service: String, result: String) {
     if (this.isDebugEnabled) {

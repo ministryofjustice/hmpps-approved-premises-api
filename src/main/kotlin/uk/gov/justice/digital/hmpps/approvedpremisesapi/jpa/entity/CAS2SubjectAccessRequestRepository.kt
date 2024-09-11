@@ -42,8 +42,8 @@ class CAS2SubjectAccessRequestRepository(
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number ) 
-        	and (:start_date is null or ca.created_at >= :start_date) 
-        	and (:end_date is null or ca.created_at <= :end_date)
+        	and (:start_date::date is null or ca.created_at >= :start_date) 
+        	and (:end_date::date is null or ca.created_at <= :end_date)
       ) applications
       """.trimIndent(),
       MapSqlParameterSource()
@@ -73,8 +73,8 @@ class CAS2SubjectAccessRequestRepository(
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
-          and (:start_date is null or ca.created_at >= :start_date) 
-          and (:end_date is null or ca.created_at <= :end_date)
+          and (:start_date::date is null or ca.created_at >= :start_date) 
+          and (:end_date::date is null or ca.created_at <= :end_date)
       ) assessments
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
@@ -114,8 +114,8 @@ class CAS2SubjectAccessRequestRepository(
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
-          and (:start_date is null or ca.created_at >= :start_date) 
-          and (:end_date is null or ca.created_at <= :end_date)
+          and (:start_date::date is null or ca.created_at >= :start_date) 
+          and (:end_date::date is null or ca.created_at <= :end_date)
       ) application_notes
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
@@ -136,7 +136,7 @@ class CAS2SubjectAccessRequestRepository(
               csu.assessment_id,
               eu."name" as assessor_name,
               eu.origin as assessor_origin,
-              to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS') as created_at,
+              to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
               csu.description ,
               csu."label"
           from cas_2_status_updates csu 
@@ -147,8 +147,8 @@ class CAS2SubjectAccessRequestRepository(
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
-          and (:start_date is null or ca.created_at >= :start_date) 
-          and (:end_date is null or ca.created_at <= :end_date)
+          and (:start_date::date is null or ca.created_at >= :start_date) 
+          and (:end_date::date is null or ca.created_at <= :end_date)
       ) application_status_updates
       """.trimIndent(),
       MapSqlParameterSource()
@@ -170,7 +170,7 @@ class CAS2SubjectAccessRequestRepository(
         	csu.assessment_id,
         	csu."label" as status_label,
         	csud."label" as detail_label,
-        	to_char(csud.created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at 
+        	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 
         from cas_2_status_updates csu 
         inner join cas_2_status_update_details csud  
         	on csu.id  = csud.status_update_id 
@@ -181,8 +181,8 @@ class CAS2SubjectAccessRequestRepository(
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number )
-        and (:start_date is null or ca.created_at >= :start_date) 
-        and (:end_date is null or ca.created_at <= :end_date)
+        and (:start_date::date is null or ca.created_at >= :start_date) 
+        and (:end_date::date is null or ca.created_at <= :end_date)
         ) application_status_update_details
       """.trimIndent(),
       MapSqlParameterSource()
