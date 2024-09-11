@@ -147,7 +147,7 @@ jobs:
             git clone https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git
             export LOCAL_CAS_API_PATH=/home/circleci/project/hmpps-approved-premises-api
             export LOCAL_CAS_UI_PATH=/home/circleci/project/hmpps-temporary-accommodation-ui
-            chmod +x ./hmpps-temporary-accommodation-ui/script/setup
+            chmod +x ./hmpps-temporary-accommodation-ui/script/bootstrap
             ./hmpps-temporary-accommodation-ui/script/setup
             printenv
             ls
