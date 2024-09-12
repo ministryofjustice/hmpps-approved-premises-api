@@ -170,7 +170,7 @@ services:
   case-notes:
     base-url: http://localhost:9004
   ap-delius-context-api:
-    base-url: http://localhost:9004
+    base-url: http://localhost:8181
   ap-oasys-context-api:
     base-url: http://localhost:9004
   gov-uk-bank-holidays-api:
