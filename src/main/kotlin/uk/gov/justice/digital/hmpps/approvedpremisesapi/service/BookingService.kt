@@ -1138,6 +1138,7 @@ class BookingService(
       cas1BookingEmailService.bookingWithdrawn(
         application = it,
         booking = booking,
+        placementApplication = booking.placementRequest?.placementApplication,
         withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
       )
     }

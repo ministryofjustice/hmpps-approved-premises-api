@@ -3107,74 +3107,119 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles WORKFLOW_MANAGER`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has role CRU_MEMBER`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         `Given a User` { applicant, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val apArea = apAreaEntityFactory.produceAndPersist {
-              withEmailAddress("apAreaEmail@test.com")
-            }
+          `Given a User` { placementApplicationCreator, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              val apArea = apAreaEntityFactory.produceAndPersist {
+                withEmailAddress("apAreaEmail@test.com")
+              }
 
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(applicant)
-              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-              withApArea(apArea)
-              withSubmittedAt(OffsetDateTime.now())
-            }
+              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(applicant)
+                withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+                withApArea(apArea)
+                withSubmittedAt(OffsetDateTime.now())
+              }
 
-            val booking = bookingEntityFactory.produceAndPersist {
-              withYieldedPremises {
-                approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              val placementApplication = placementApplicationFactory.produceAndPersist() {
+                withCreatedByUser(placementApplicationCreator)
+                withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist())
+                withApplication(application)
+              }
+
+              val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+                withAssessmentSchema(
+                  approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                )
+                withApplication(application)
+                withSubmittedAt(OffsetDateTime.now())
+                withAllocatedToUser(applicant)
+                withDecision(AssessmentDecision.ACCEPTED)
+              }
+
+              val placementRequirements = placementRequirementsFactory.produceAndPersist {
+                withApplication(application)
+                withAssessment(assessment)
+                withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+                withDesirableCriteria(
+                  characteristicEntityFactory.produceAndPersistMultiple(5),
+                )
+                withEssentialCriteria(
+                  characteristicEntityFactory.produceAndPersistMultiple(3),
+                )
+              }
+
+              val booking = bookingEntityFactory.produceAndPersist {
+                withYieldedPremises {
+                  approvedPremisesEntityFactory.produceAndPersist {
+                    withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                    withYieldedProbationRegion {
+                      probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                    }
                   }
                 }
+                withCrn(offenderDetails.otherIds.crn)
+                withApplication(application)
               }
-              withCrn(offenderDetails.otherIds.crn)
-              withApplication(application)
-            }
 
-            val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-              withServiceScope("*")
-            }
+              placementRequestFactory.produceAndPersist() {
+                withAllocatedToUser(applicant)
+                withApplication(application)
+                withAssessment(assessment)
+                withPlacementRequirements(placementRequirements)
+                withPlacementApplication(placementApplication)
+                withBooking(booking)
+              }
 
-            APDeliusContext_mockSuccessfulGetReferralDetails(
-              crn = booking.crn,
-              bookingId = booking.id.toString(),
-              arrivedAt = null,
-            )
+              val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+                withServiceScope("*")
+              }
 
-            webTestClient.post()
-              .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                NewCancellation(
-                  date = LocalDate.parse("2022-08-17"),
-                  reason = cancellationReason.id,
-                  notes = null,
-                ),
+              APDeliusContext_mockSuccessfulGetReferralDetails(
+                crn = booking.crn,
+                bookingId = booking.id.toString(),
+                arrivedAt = null,
               )
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-              .jsonPath(".date").isEqualTo("2022-08-17")
-              .jsonPath(".notes").isEqualTo(null)
-              .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
-              .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
-              .jsonPath(".reason.isActive").isEqualTo(true)
-              .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
 
-            val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
-            assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+              webTestClient.post()
+                .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  NewCancellation(
+                    date = LocalDate.parse("2022-08-17"),
+                    reason = cancellationReason.id,
+                    notes = null,
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+                .jsonPath(".date").isEqualTo("2022-08-17")
+                .jsonPath(".notes").isEqualTo(null)
+                .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+                .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+                .jsonPath(".reason.isActive").isEqualTo(true)
+                .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
 
-            emailAsserter.assertEmailsRequestedCount(3)
-            emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
-            emailAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
-            emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+              val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
+              assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+              emailAsserter.assertEmailsRequestedCount(4)
+              emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
+              emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
+              emailAsserter.assertEmailRequested(
+                booking.premises.emailAddress!!,
+                notifyConfig.templates.bookingWithdrawnV2,
+              )
+              emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+            }
           }
         }
       }

@@ -61,6 +61,7 @@ class Cas1BookingEmailService(
   fun bookingWithdrawn(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
+    placementApplication: PlacementApplicationEntity?,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
     val allPersonalisation =
@@ -69,34 +70,20 @@ class Cas1BookingEmailService(
     allPersonalisation += "region" to booking.premises.probationRegion.name
     allPersonalisation["withdrawnBy"] = withdrawalTriggeredBy.getName()
 
-    val template = notifyConfig.templates.bookingWithdrawnV2
+    val interestedParties =
+      (
+        application.interestedPartiesEmailAddresses() +
+          setOfNotNull(placementApplication?.createdByUser?.email) +
+          setOfNotNull(booking.premises.emailAddress) +
+          setOfNotNull(application.apArea?.emailAddress)
+        ).toSet()
 
     emailNotifier.sendEmails(
-      recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
-      templateId = template,
+      recipientEmailAddresses = interestedParties,
+      templateId = notifyConfig.templates.bookingWithdrawnV2,
       personalisation = allPersonalisation,
       application = application,
     )
-
-    val premises = booking.premises
-    premises.emailAddress?.let { email ->
-      emailNotifier.sendEmail(
-        recipientEmailAddress = email,
-        templateId = template,
-        personalisation = allPersonalisation,
-        application = application,
-      )
-    }
-
-    val area = application.apArea
-    area?.emailAddress?.let { cruEmail ->
-      emailNotifier.sendEmail(
-        recipientEmailAddress = cruEmail,
-        templateId = template,
-        personalisation = allPersonalisation,
-        application = application,
-      )
-    }
   }
 
   fun buildCommonPersonalisation(application: ApplicationEntity, booking: BookingEntity): Map<String, Any> {
