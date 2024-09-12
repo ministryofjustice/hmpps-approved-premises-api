@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -30,6 +31,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var keyWorkerName: Yielded<String?> = { null }
   private var keyWorkerAssignedAt: Yielded<Instant?> = { null }
+  private var cancellationOccurredAt: Yielded<LocalDate?> = { null }
+  private var cancellationRecordedAt: Yielded<Instant?> = { null }
+  private var cancellationReason: Yielded<CancellationReasonEntity?> = { null }
+  private var cancellationReasonNotes: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -129,6 +134,22 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.keyWorkerAssignedAt = { keyWorkerAssignedAt }
   }
 
+  fun withCancellationOccurredAt(occurredAt: LocalDate?) = apply {
+    this.cancellationOccurredAt = { occurredAt }
+  }
+
+  fun withCancellationRecordedAt(recordedAt: Instant?) = apply {
+    this.cancellationRecordedAt = { recordedAt }
+  }
+
+  fun withCancellationReason(reason: CancellationReasonEntity?) = apply {
+    this.cancellationReason = { reason }
+  }
+
+  fun withCancellationReasonNotes(reasonNotes: String?) = apply {
+    this.cancellationReasonNotes = { reasonNotes }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
@@ -146,5 +167,9 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     keyWorkerName = this.keyWorkerName(),
     keyWorkerAssignedAt = this.keyWorkerAssignedAt(),
     application = this.application(),
+    cancellationOccurredAt = cancellationOccurredAt(),
+    cancellationRecordedAt = cancellationRecordedAt(),
+    cancellationReason = cancellationReason(),
+    cancellationReasonNotes = cancellationReasonNotes(),
   )
 }

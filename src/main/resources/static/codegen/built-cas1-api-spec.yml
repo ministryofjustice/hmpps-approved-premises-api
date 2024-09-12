@@ -6409,6 +6409,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingDates'
+        cancellation:
+          $ref: '#/components/schemas/Cas1SpaceBookingCancellation'
       required:
         - id
         - applicationId
@@ -6492,6 +6494,23 @@ components:
       required:
         - keyWorker
         - allocatedAt
+    Cas1SpaceBookingCancellation:
+      type: object
+      properties:
+        occurredAt:
+          type: string
+          format: date
+        recordedAt:
+          type: string
+          format: date-time
+        reason:
+          $ref: '#/components/schemas/CancellationReason'
+        reason_notes:
+          type: string
+      required:
+        - occurredAt
+        - recordedAt
+        - reason
     Cas1NewArrival:
       type: object
       properties:

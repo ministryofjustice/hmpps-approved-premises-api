@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1KeyWorkerAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 class Cas1SpaceBookingTransformer(
   private val personTransformer: PersonTransformer,
   private val spaceBookingRequirementsTransformer: Cas1SpaceBookingRequirementsTransformer,
+  private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val userTransformer: UserTransformer,
 ) {
   fun transformJpaToApi(
@@ -57,6 +60,7 @@ class Cas1SpaceBookingTransformer(
       canonicalArrivalDate = jpa.canonicalArrivalDate,
       canonicalDepartureDate = jpa.canonicalDepartureDate,
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
+      cancellation = jpa.extractCancellation(),
     )
   }
 
@@ -79,6 +83,22 @@ class Cas1SpaceBookingTransformer(
           name = name,
         ),
         allocatedAt = assignedAt.toLocalDate(),
+      )
+    } else {
+      null
+    }
+  }
+
+  private fun Cas1SpaceBookingEntity.extractCancellation(): Cas1SpaceBookingCancellation? {
+    val occurredAt = cancellationOccurredAt
+    val recordedAt = cancellationRecordedAt
+    val reason = cancellationReason
+    return if (occurredAt != null && recordedAt != null && reason != null) {
+      Cas1SpaceBookingCancellation(
+        occurredAt = occurredAt,
+        recordedAt = recordedAt,
+        reason = cancellationReasonTransformer.transformJpaToApi(reason),
+        reasonNotes = cancellationReasonNotes,
       )
     } else {
       null

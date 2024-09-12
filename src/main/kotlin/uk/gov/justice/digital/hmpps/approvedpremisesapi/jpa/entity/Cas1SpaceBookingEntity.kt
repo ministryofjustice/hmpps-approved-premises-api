@@ -36,6 +36,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       INNER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       WHERE 
       b.premises_id = :premisesId AND 
+      b.cancellation_occurred_at IS NULL AND 
       b.actual_departure_date_time IS NULL AND
       (
         :residency IS NULL OR (
@@ -67,7 +68,10 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.canonical_arrival_date as canonicalArrivalDate,
       b.canonical_departure_date as canonicalDepartureDate
       FROM cas1_space_bookings b
-      WHERE b.premises_id = :premisesId AND b.crn = :crn
+      WHERE 
+      b.premises_id = :premisesId AND 
+      b.crn = :crn AND
+      b.cancellation_occurred_at IS NULL 
     """,
     nativeQuery = true,
   )
@@ -122,4 +126,14 @@ data class Cas1SpaceBookingEntity(
   val keyWorkerStaffCode: String?,
   val keyWorkerName: String?,
   val keyWorkerAssignedAt: Instant?,
+  /**
+   * Users are asked to specify when a cancelled occurred which may not necessarily
+   * be the same as when it was recorded in the system
+   */
+  var cancellationOccurredAt: LocalDate?,
+  var cancellationRecordedAt: Instant?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cancellation_reason_id")
+  var cancellationReason: CancellationReasonEntity?,
+  var cancellationReasonNotes: String?,
 )
