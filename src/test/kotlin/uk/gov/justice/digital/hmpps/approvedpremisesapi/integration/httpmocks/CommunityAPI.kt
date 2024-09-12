@@ -10,11 +10,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
 @Deprecated(message = "This should be replaced with a mock call to ap-and-delius integration", replaceWith = ReplaceWith("ApDeliusContext_addStaffDetailResponse"))
-fun IntegrationTestBase.CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) =
+fun IntegrationTestBase.CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/staff/username/${staffUserDetails.username}",
     responseBody = staffUserDetails,
   )
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/secure/staff/staffCode/${staffUserDetails.staffCode}",
+    responseBody = staffUserDetails,
+  )
+}
 
 fun IntegrationTestBase.CommunityAPI_mockNotFoundStaffUserDetailsCall(username: String) =
   mockUnsuccessfulGetCall(

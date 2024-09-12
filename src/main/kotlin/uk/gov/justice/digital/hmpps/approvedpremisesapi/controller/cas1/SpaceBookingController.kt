@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCas1Delegate
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -36,6 +38,7 @@ class SpaceBookingController(
   private val offenderService: OffenderService,
   private val spaceBookingService: Cas1SpaceBookingService,
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
+  private val cas1SpaceBookingService: Cas1SpaceBookingService,
 ) : SpaceBookingsCas1Delegate {
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<TimelineEvent> {
     return super.getSpaceBookingTimeline(premisesId, bookingId)
@@ -120,7 +123,16 @@ class SpaceBookingController(
     bookingId: UUID,
     cas1NewArrival: Cas1NewArrival,
   ): ResponseEntity<Unit> {
-    return super.premisesPremisesIdSpaceBookingsBookingIdArrivalPost(premisesId, bookingId, cas1NewArrival)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL)
+
+    extractEntityFromCasResult(
+      cas1SpaceBookingService.recordArrivalForBooking(
+        premisesId,
+        bookingId,
+        cas1NewArrival,
+      ),
+    )
+    return ResponseEntity(HttpStatus.OK)
   }
 
   override fun premisesPremisesIdSpaceBookingsBookingIdDeparturePost(

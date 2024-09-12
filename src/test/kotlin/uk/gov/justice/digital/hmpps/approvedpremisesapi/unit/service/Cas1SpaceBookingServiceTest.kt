@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -34,9 +35,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -58,6 +63,9 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var cas1BookingEmailService: Cas1BookingEmailService
+
+  @MockK
+  private lateinit var cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -391,6 +399,151 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       assertThat((result as CasResult.Success).value).isEqualTo(spaceBooking)
+    }
+  }
+
+  @Nested
+  inner class RecordArrival {
+
+    private val originalArrivalDate = LocalDateTime.now().minusDays(10).toInstant(ZoneOffset.UTC)
+    private val arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    private val expectedDepartureDate = LocalDate.now().plusMonths(3)
+
+    private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    @Test
+    fun `Returns validation error if no premises with the given premisesId exists`() {
+      every { premisesService.getApprovedPremises(any()) } returns null
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(expectedDepartureDate, arrivalDateTime),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.premisesId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no space booking with the given bookingId exists`() {
+      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(LocalDate.of(2024, 12, 31), LocalDateTime.now().toInstant(ZoneOffset.UTC)),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.bookingId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking record already has an arrival date recorded`() {
+      val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(actualArrivalDateTime = originalArrivalDate)
+
+      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(expectedDepartureDate, arrivalDateTime),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("An arrival is already recorded for this Space Booking")
+    }
+
+    @Test
+    fun `Updates existing space booking with arrival information and raises domain event`() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(any(), any()) } returns Unit
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(expectedDepartureDate, arrivalDateTime),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
+      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
+      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
+      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
+      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
+      assertThat(existingSpaceBooking.actualDepartureDateTime).isEqualTo(updatedSpaceBooking.actualDepartureDateTime)
+      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
+      assertThat(existingSpaceBooking.keyWorkerStaffCode).isEqualTo(updatedSpaceBooking.keyWorkerStaffCode)
+      assertThat(existingSpaceBooking.keyWorkerAssignedAt).isEqualTo(updatedSpaceBooking.keyWorkerAssignedAt)
+      assertThat(existingSpaceBooking.expectedArrivalDate).isEqualTo(updatedSpaceBooking.expectedArrivalDate)
+
+      assertThat(arrivalDateTime).isEqualTo(updatedSpaceBooking.actualArrivalDateTime)
+      assertThat(arrivalDateTime.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalArrivalDate)
+      assertThat(expectedDepartureDate).isEqualTo(updatedSpaceBooking.expectedDepartureDate)
+      assertThat(expectedDepartureDate).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
+    }
+
+    @Test
+    fun `Updates existing space booking with arrival information and recognises change in expected departure date`() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      val updatedExpectedDepartureDate = expectedDepartureDate.plusMonths(1)
+
+      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(any(), any()) } returns Unit
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(expectedDepartureDate.plusMonths(1), arrivalDateTime),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
+      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
+      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
+      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
+      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
+      assertThat(existingSpaceBooking.actualDepartureDateTime).isEqualTo(updatedSpaceBooking.actualDepartureDateTime)
+      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
+      assertThat(existingSpaceBooking.keyWorkerStaffCode).isEqualTo(updatedSpaceBooking.keyWorkerStaffCode)
+      assertThat(existingSpaceBooking.keyWorkerAssignedAt).isEqualTo(updatedSpaceBooking.keyWorkerAssignedAt)
+      assertThat(existingSpaceBooking.expectedArrivalDate).isEqualTo(updatedSpaceBooking.expectedArrivalDate)
+
+      assertThat(arrivalDateTime).isEqualTo(updatedSpaceBooking.actualArrivalDateTime)
+      assertThat(arrivalDateTime.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalArrivalDate)
+      assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.expectedDepartureDate)
+      assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
     }
   }
 }
