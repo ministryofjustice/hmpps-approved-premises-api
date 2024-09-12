@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -25,6 +26,14 @@ class Cas1BookingEmailService(
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
 ) {
+
+  fun spaceBookingMade(
+    spaceBooking: Cas1SpaceBookingEntity,
+    application: ApprovedPremisesApplicationEntity,
+    placementApplication: PlacementApplicationEntity?,
+  ) = bookingMade(
+    spaceBooking.toBookingInfo(application, placementApplication),
+  )
 
   fun bookingMade(
     application: ApprovedPremisesApplicationEntity,
@@ -101,6 +110,18 @@ class Cas1BookingEmailService(
       application = application,
     )
   }
+
+  private fun Cas1SpaceBookingEntity.toBookingInfo(
+    application: ApprovedPremisesApplicationEntity,
+    placementApplication: PlacementApplicationEntity?,
+  ) = BookingInfo(
+    bookingId = id,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    premises = premises,
+    application = application,
+    placementApplication = placementApplication,
+  )
 
   private fun BookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,
