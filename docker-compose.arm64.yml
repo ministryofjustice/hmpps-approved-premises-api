@@ -1,4 +1,0 @@
-version: "3"
-services:
-  database:
-    image: "ghcr.io/baosystems/postgis:15-3.3" # Official PostGIS image doesn't have ARM64 support
