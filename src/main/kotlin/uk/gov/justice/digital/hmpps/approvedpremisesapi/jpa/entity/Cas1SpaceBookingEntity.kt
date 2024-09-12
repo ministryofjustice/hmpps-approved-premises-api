@@ -126,6 +126,10 @@ data class Cas1SpaceBookingEntity(
   val keyWorkerStaffCode: String?,
   val keyWorkerName: String?,
   val keyWorkerAssignedAt: Instant?,
+  /**
+   * Users are asked to specify when a cancelled occurred which may not necessarily
+   * be the same as when it was recorded in the system
+   */
   var cancellationOccurredAt: LocalDate?,
   var cancellationRecordedAt: Instant?,
   @ManyToOne(fetch = FetchType.LAZY)
