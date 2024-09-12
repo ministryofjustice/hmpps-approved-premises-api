@@ -55,8 +55,8 @@ class CAS3SubjectAccessRequestRepository(
         where
         	(a.crn = :crn
         		or a.noms_number = :noms_number )
-        and (:start_date is null or a.created_at >= :start_date) 
-        and (:end_date is null or a.created_at <= :end_date)
+        and (:start_date::date is null or a.created_at >= :start_date) 
+        and (:end_date::date is null or a.created_at <= :end_date)
      ) applications 
       """.trimIndent(),
       MapSqlParameterSource()
@@ -106,8 +106,8 @@ class CAS3SubjectAccessRequestRepository(
               where 
                 (app.crn = :crn
                   or app.noms_number = :noms_number )
-              and (:start_date is null or app.created_at >= :start_date) 
-              and (:end_date is null or app.created_at <= :end_date)
+              and (:start_date::date is null or app.created_at >= :start_date) 
+              and (:end_date::date is null or app.created_at <= :end_date)
             ) assessments
       
       """.trimIndent(),
@@ -150,8 +150,8 @@ class CAS3SubjectAccessRequestRepository(
         where 
             (app.crn = :crn
             or app.noms_number = :noms_number )
-        and (:start_date is null or app.created_at >= :start_date) 
-        and (:end_date is null or app.created_at <= :end_date)
+        and (:start_date::date is null or app.created_at >= :start_date) 
+        and (:end_date::date is null or app.created_at <= :end_date)
      ) referral_notes
       """.trimIndent(),
       MapSqlParameterSource()

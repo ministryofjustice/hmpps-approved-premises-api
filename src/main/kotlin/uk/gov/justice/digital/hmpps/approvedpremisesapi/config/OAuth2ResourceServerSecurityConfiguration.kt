@@ -74,6 +74,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2/reports/**", hasRole("CAS2_MI"))
         authorize("/cas2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA"))
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
+        authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
       }
 

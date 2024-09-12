@@ -69,9 +69,9 @@ from
 	where
 		(a.crn = :crn
 			or a.noms_number = :noms_number )
-		and (:start_date is null
+		and (:start_date::date is null
 			or a.created_at >= :start_date)
-		and (:end_date is null
+		and (:end_date::date is null
 			or a.created_at <= :end_date) 
 ) app;
       """.trimIndent(),
@@ -113,8 +113,8 @@ from
       where
       (a.crn = :crn
           or a.noms_number = :noms_number )
-      and (:start_date is null or a.created_at >= :start_date)
-      and (:end_date is null or a.created_at <= :end_date)
+      and (:start_date::date is null or a.created_at >= :start_date)
+      and (:end_date::date is null or a.created_at <= :end_date)
   ) apptimeline
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -166,9 +166,9 @@ from
           where
               (app.crn = :crn or app.noms_number = :noms_number )
           and 
-              (:start_date is null or app.created_at >= :start_date)
+              (:start_date::date is null or app.created_at >= :start_date)
           and 
-              (:end_date is null or app.created_at <= :end_date)
+              (:end_date::date is null or app.created_at <= :end_date)
   ) assess
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -211,9 +211,9 @@ from
           or 
           app.noms_number = :noms_number)
       and 
-          (:start_date is null or app.created_at >= :start_date)
+          (:start_date::date is null or app.created_at >= :start_date)
       and 
-          (:end_date is null or app.created_at <= :end_date)
+          (:end_date::date is null or app.created_at <= :end_date)
       ) assess
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -270,8 +270,8 @@ from
           where
             (a.crn = :crn
               or a.noms_number = :noms_number )
-          and (:start_date is null or a.created_at >= :start_date)
-          and (:end_date is null or a.created_at <= :end_date)
+          and (:start_date::date is null or a.created_at >= :start_date)
+          and (:end_date::date is null or a.created_at <= :end_date)
        ) placement_applications
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -312,9 +312,9 @@ from
               or 
               app.noms_number = :noms_number)
           and 
-            (:start_date is null or app.created_at >= :start_date)
+            (:start_date::date is null or app.created_at >= :start_date)
           and 
-            (:end_date is null or app.created_at <= :end_date)
+            (:end_date::date is null or app.created_at <= :end_date)
         ) placement_requests  
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
@@ -361,9 +361,9 @@ from
               or 
                  app.noms_number = :noms_number)
         and 
-             (:start_date is null or app.created_at >= :start_date)
+             (:start_date::date is null or app.created_at >= :start_date)
         and 
-             (:end_date is null or app.created_at <= :end_date)
+             (:end_date::date is null or app.created_at <= :end_date)
       ) placement_requirements  
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
@@ -399,9 +399,9 @@ from
                 or 
                 app.noms_number = :noms_number)
           and 
-            (:start_date is null or app.created_at >= :start_date)
+            (:start_date::date is null or app.created_at >= :start_date)
           and 
-            (:end_date is null or app.created_at <= :end_date)
+            (:end_date::date is null or app.created_at <= :end_date)
           union all 
           select 
             app.crn as crn,
@@ -425,9 +425,9 @@ from
               or 
               app.noms_number = :noms_number)
           and 
-            (:start_date is null or app.created_at >= :start_date)
+            (:start_date::date is null or app.created_at >= :start_date)
           and 
-            (:end_date is null or app.created_at <= :end_date)
+            (:end_date::date is null or app.created_at <= :end_date)
        	) placement_requirements_criteria
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
@@ -453,9 +453,9 @@ from
                     or 
                 b.noms_number = :noms_number)
             and 
-                (:start_date is null or b.created_at >= :start_date)
+                (:start_date::date is null or b.created_at >= :start_date)
             and 
-                (:end_date is null or b.created_at <= :end_date)
+                (:end_date::date is null or b.created_at <= :end_date)
             ) offline_applications
       """.trimIndent(),
       MapSqlParameterSource()
@@ -491,9 +491,9 @@ from
                     or 
                 a.noms_number = :noms_number)
             and 
-                (:start_date is null or a.created_at >= :start_date)
+                (:start_date::date is null or a.created_at >= :start_date)
             and 
-                (:end_date is null or a.created_at <= :end_date)
+                (:end_date::date is null or a.created_at <= :end_date)
           )booking_not_mades
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
@@ -532,8 +532,8 @@ from
           where
               (b.crn = :crn
                   or b.noms_number = :noms_number )
-            and (:start_date is null or b.created_at >= :start_date)
-            and (:end_date is null or b.created_at <= :end_date)
+            and (:start_date::date is null or b.created_at >= :start_date)
+            and (:end_date::date is null or b.created_at <= :end_date)
         ) bed_moves
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -573,8 +573,8 @@ from
             where
               (app.crn = :crn
                 or app.noms_number = :noms_number )
-            and (:start_date is null or app.created_at >= :start_date)
-            and (:end_date is null or app.created_at <= :end_date)
+            and (:start_date::date is null or app.created_at >= :start_date)
+            and (:end_date::date is null or app.created_at <= :end_date)
         ) appeals
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(

@@ -70,6 +70,37 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   @Test
+  fun `Get CAS1 Information - Test Null Dates`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val result =
+      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+    assertJsonEquals(
+      """ 
+     {
+          "Applications": [ ],
+          "ApplicationTimeline": [ ],
+          "Assessments": [ ],
+          "AssessmentClarificationNotes": [ ],
+          "Bookings": [ ],
+          "OfflineApplications":  [ ],
+          "BookingExtensions": [ ],
+          "Cancellations": [ ],
+          "BedMoves": [ ],
+          "Appeals": [ ],
+          "PlacementApplications": [ ],
+          "PlacementRequests": [ ],
+          "PlacementRequirements": [ ],
+          "PlacementRequirementCriteria" : [ ],
+          "BookingNotMades" : [ ],
+          "DomainEvents": [ ],
+          "DomainEventsMetadata": [ ]
+      }
+      """.trimIndent(),
+      result,
+    )
+  }
+
+  @Test
   fun `Get CAS1 Information - Have Application`() {
     val (offenderDetails, _) = `Given an Offender`()
 

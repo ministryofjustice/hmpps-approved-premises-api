@@ -42,6 +42,26 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     )
   }
 
+  fun `Get CAS2 Information - null date Check`() {
+    val (offenderDetails, _) = `Given an Offender`()
+    val result =
+      sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+    assertJsonEquals(
+      """ 
+      {
+          "Applications": [ ],
+          "ApplicationNotes": [ ],
+          "Assessments": [ ],
+          "StatusUpdates": [ ],
+          "StatusUpdateDetails": [ ],
+          "DomainEvents":  [ ],
+          "DomainEventsMetadata": [ ]
+      }
+      """.trimIndent(),
+      result,
+    )
+  }
+
   @Test
   fun `Get CAS2 Information - Applications`() {
     val (offenderDetails, _) = `Given an Offender`()

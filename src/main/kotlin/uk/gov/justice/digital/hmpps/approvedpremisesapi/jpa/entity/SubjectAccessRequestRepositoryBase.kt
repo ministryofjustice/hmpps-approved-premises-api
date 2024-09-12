@@ -46,8 +46,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
           and 
               (b.crn = :crn
               or b.noms_number = :noms_number )
-          and (:start_date is null or b.created_at >= :start_date) 
-          and (:end_date is null or b.created_at <= :end_date)
+          and (:start_date::date is null or b.created_at >= :start_date) 
+          and (:end_date::date is null or b.created_at <= :end_date)
   ) booking
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -92,8 +92,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
       b.service = :service_name and
         (b.crn = :crn
           or b.noms_number = :noms_number )
-      and (:start_date is null or b.created_at >= :start_date)
-      and (:end_date is null or b.created_at <= :end_date)
+      and (:start_date::date is null or b.created_at >= :start_date)
+      and (:end_date::date is null or b.created_at <= :end_date)
         )booking_ext
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -135,8 +135,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                   b.service = :service_name and
                   (b.crn = :crn
                       or b.noms_number = :noms_number )
-                and (:start_date is null or b.created_at >= :start_date)
-                and (:end_date is null or b.created_at <= :end_date)        
+                and (:start_date::date is null or b.created_at >= :start_date)
+                and (:end_date::date is null or b.created_at <= :end_date)        
           ) cancellation
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
@@ -181,8 +181,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                   de.service = :service_name and
                   (de.crn = :crn
                         or de.noms_number = :noms_number )
-               and (:start_date is null or de.created_at >= :start_date)
-               and (:end_date is null or de.created_at <= :end_date) 
+               and (:start_date::date is null or de.created_at >= :start_date)
+               and (:end_date::date is null or de.created_at <= :end_date) 
            ) domain_events
       """.trimIndent(),
       MapSqlParameterSource()
@@ -218,8 +218,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                     de.service = :service_name and
                     (de.crn = :crn
                          or de.noms_number = :noms_number )
-                 and (:start_date is null or de.created_at >= :start_date)
-                 and (:end_date is null or de.created_at <= :end_date) 
+                 and (:start_date::date is null or de.created_at >= :start_date)
+                 and (:end_date::date is null or de.created_at <= :end_date) 
              ) domain_events_metadata
       """.trimIndent(),
       MapSqlParameterSource()
