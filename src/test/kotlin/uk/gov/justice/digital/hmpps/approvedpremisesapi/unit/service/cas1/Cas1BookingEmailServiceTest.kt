@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-// TOdO: add tests in here for placement app email
 class Cas1BookingEmailServiceTest {
 
   private object TestConstants {
