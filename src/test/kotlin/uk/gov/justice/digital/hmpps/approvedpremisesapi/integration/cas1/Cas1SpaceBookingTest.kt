@@ -180,12 +180,12 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Booking a space returns OK with the correct data and creates a domain event`() {
-      `Given a User` { user, jwt ->
+    fun `Booking a space returns OK with the correct data, emits a domain event and emails`() {
+      `Given a User` { applicant, jwt ->
         `Given a Placement Request`(
-          placementRequestAllocatedTo = user,
-          assessmentAllocatedTo = user,
-          createdByUser = user,
+          placementRequestAllocatedTo = applicant,
+          assessmentAllocatedTo = applicant,
+          createdByUser = applicant,
         ) { placementRequest, application ->
           val essentialCharacteristics = listOf(
             Cas1SpaceCharacteristic.hasBrailleSignage,
@@ -268,9 +268,9 @@ class Cas1SpaceBookingTest {
           assertThat(result.premises.name).isEqualTo(premises.name)
           assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)
           assertThat(result.apArea.name).isEqualTo(premises.probationRegion.apArea!!.name)
-          assertThat(result.bookedBy.id).isEqualTo(user.id)
-          assertThat(result.bookedBy.name).isEqualTo(user.name)
-          assertThat(result.bookedBy.deliusUsername).isEqualTo(user.deliusUsername)
+          assertThat(result.bookedBy.id).isEqualTo(applicant.id)
+          assertThat(result.bookedBy.name).isEqualTo(applicant.name)
+          assertThat(result.bookedBy.deliusUsername).isEqualTo(applicant.deliusUsername)
           assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
           assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
           assertThat(result.createdAt).satisfies(
@@ -278,6 +278,10 @@ class Cas1SpaceBookingTest {
           )
 
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+
+          emailAsserter.assertEmailsRequestedCount(2)
+          emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingMade)
+          emailAsserter.assertEmailRequested(premises.emailAddress!!, notifyConfig.templates.bookingMadePremises)
         }
       }
     }
