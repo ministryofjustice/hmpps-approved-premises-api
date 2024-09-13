@@ -1,69 +1,32 @@
 # Approved Premises API (now Community Accommodation)
 
-This is the shared backend for the Community Accommodation services, currently:
+This is the shared backend for the Community Accommodation User Interfaces
 
-- [Approved Premises (CAS1)](https://github.com/ministryofjustice/hmpps-approved-premises-ui)
-- [Temporary Accommodation (CAS3)](https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui)
+- [CAS1 - Approved Premises](https://github.com/ministryofjustice/hmpps-approved-premises-ui)
+- [CAS2 - Short-Term Accommodation](https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-ui)
+- [CAS3 - Temporary Accommodation ](https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui)
 
-## Prerequisites
+## Running Tests
 
-TBC
+To run tests, you'll need to start a few docker dependencies using:
 
-## Setup
-
-When running the application for the first time, run the following command:
-
-```bash
-script/setup # TODO - this script is currently a stub
+```shell
+/script/test_database
 ```
 
-If you're coming back to the application after a certain amount of time, you can run:
+You can then run tests in intellij or via the command line e.g.
 
-```bash
-script/bootstrap # TODO - this script is currently a stub
+```shell
+/script/test
 ```
 
-## Running the application
+## Running the Application
 
-To run the server, from the root directory, run:
-
-```bash
-script/server
-```
-
-This runs the project as a Spring Boot application on `localhost:8080`
-
-### Running/Debugging from IntelliJ
-
-To run from IntelliJ, first start the database:
-
-```bash
-script/development_database
-```
-
-Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
-`application` and right click on `bootRunLocal` and select either Run or Debug.
-
-Note that setting a breakpoint will block the handling of any subsequent web requests (don't use breakpoints to test what happens when subsequent request are received that are in contention).
-
-### Linting
-
-There is a linting check stage in the pipeline, so to ensure this passes run the linting check locally before pushing:
-
-```bash
-./gradlew ktlintCheck
-```
-
-And (if required) run the following to update the code automatically to follow the coding style:
-
-```bash
-./gradlew ktlintFormat
-```
+To run the application locally, use [ap-tools README](https://github.com/ministryofjustice/hmpps-approved-premises-tools/blob/main/README.md) as this will manage starting all the required dependencies
 
 ## Making requests to the application
 
-Most endpoints require a JWT from HMPPS Auth - an instance of this runs in Docker locally (started alongside the database) 
-on port 9091.  You can get a JWT by running:
+Most endpoints require a JWT from HMPPS Auth - an instance of this runs in Docker locally on port 9091 (via ap-tools). You can get a JWT by running:
 
 ```
 script/get_client_credentials_jwt
@@ -77,38 +40,25 @@ This value is then included in the Authorization header on requests to the API, 
 Authorization: Bearer {the JWT}
 ```
 
-## Running the tests
+## Coding Notes
 
-To run linting and tests, from the root directory, run:
+### Documentation
+
+* Architectural decisions are documented in [doc/architecture/decisions](doc/architecture/decisions)
+* Miscellaneous guidance is provided in [doc/how-to](doc/how-to)
+
+### Linting / Static Analysis
+
+There is are linting and static analysis checks in the build pipeline. You can lint and check for issues before pushing by running
 
 ```bash
-script/test
+./gradlew ktlintFormat && ./gradlew detekt
 ```
-
-### Running/Debugging from IntelliJ
-
-To run from IntelliJ, first start the database:
-
-```bash
-script/test_database
-```
-
-Then either:
- - Run or Debug the `verification`, `test` Task from the "Gradle" panel
- - Open an individual test class and click the green play icon in the gutter at the class level or on a specific test method
-
-## OpenAPI documentation
-
-The API which is offered to front-end UI apps is documented using Swagger/OpenAPI.
-The initial contract covers the migration of certain bed-management functions from Delius into the new service.
-
-This is available in development at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
 ## Infrastructure
 
 The service is deployed to the [MoJ Cloud Platform](https://user-guide.cloud-platform.service.justice.gov.uk). This is 
 managed by Kubernetes and Helm Charts which reside within this repo at [`./helm_deploy`](./helm_deploy/approved-premises-api/).
-
 
 To get set up with Kubernetes and configure your system so that the `kubectl` command authenticates, see this 
 [[MoJ guide to generating a 'kube' config](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/getting-started/kubectl-config.html#generating-a-kubeconfig-file)].
@@ -129,7 +79,7 @@ hmpps-temporary-accommodation-ui-67b49b8dcd-tgjd5   1/1     Running   0         
 **NB**: this [`kubectl` cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) is a good reference to 
 other commands you may need.
 
-## Environments
+### Environments
 
 [Details of the different environments and their roles can be found in
 Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4330226204/Environments).
