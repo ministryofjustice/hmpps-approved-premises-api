@@ -477,3 +477,18 @@ components:
       required:
         - roles
         - qualifications
+
+    Cas1SpaceBookingCancellationNew:
+      type: object
+      properties:
+        occurredAt:
+          type: string
+          format: date
+        reasonId:
+          type: string
+          format: uuid
+        reasonNotes:
+          type: string
+      required:
+        - occurredAt
+        - reasonId

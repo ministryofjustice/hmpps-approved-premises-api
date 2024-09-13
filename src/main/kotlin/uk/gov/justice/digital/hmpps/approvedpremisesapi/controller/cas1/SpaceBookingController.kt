@@ -41,6 +41,7 @@ class SpaceBookingController(
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
 ) : SpaceBookingsCas1Delegate {
+  
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<TimelineEvent> {
     return super.getSpaceBookingTimeline(premisesId, bookingId)
   }
