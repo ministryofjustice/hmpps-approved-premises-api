@@ -4,6 +4,7 @@ import kotlinx.datetime.toKotlinDatePeriod
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @Service
@@ -31,6 +33,7 @@ class Cas1SpaceBookingService(
   private val cas1SpaceSearchRepository: Cas1SpaceSearchRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
+  private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
 ) {
   @Transactional
   fun createNewBooking(
@@ -110,6 +113,55 @@ class Cas1SpaceBookingService(
     )
 
     success(spaceBooking)
+  }
+
+  @Transactional
+  fun recordArrivalForBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1NewArrival: Cas1NewArrival,
+  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
+    val premises = premisesService.getApprovedPremises(premisesId)
+    if (premises == null) {
+      "$.premisesId" hasValidationError "doesNotExist"
+    }
+
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
+    if (existingCas1SpaceBooking == null) {
+      "$.bookingId" hasValidationError "doesNotExist"
+    }
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    existingCas1SpaceBooking!!
+
+    if (existingCas1SpaceBooking.actualArrivalDateTime != null) {
+      return existingCas1SpaceBooking.id hasConflictError "An arrival is already recorded for this Space Booking"
+    }
+
+    val previousExpectedDepartureOn =
+      if (existingCas1SpaceBooking.expectedDepartureDate != cas1NewArrival.expectedDepartureDate) {
+        existingCas1SpaceBooking.expectedDepartureDate
+      } else {
+        null
+      }
+
+    val updatedCas1SpaceBooking = existingCas1SpaceBooking.copy(
+      actualArrivalDateTime = cas1NewArrival.arrivalDateTime,
+      canonicalArrivalDate = LocalDate.ofInstant(cas1NewArrival.arrivalDateTime, ZoneId.systemDefault()),
+      expectedDepartureDate = cas1NewArrival.expectedDepartureDate,
+      canonicalDepartureDate = cas1NewArrival.expectedDepartureDate,
+    )
+
+    val result = cas1SpaceBookingRepository.save(updatedCas1SpaceBooking)
+
+    cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
+      updatedCas1SpaceBooking,
+      previousExpectedDepartureOn,
+    )
+
+    success(result)
   }
 
   fun search(

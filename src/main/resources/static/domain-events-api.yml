@@ -1392,6 +1392,10 @@ components:
           type: string
           example: '2023-02-28'
           format: date
+        previousExpectedDepartureOn:
+          type: string
+          example: '2023-02-28'
+          format: date
         notes:
           type: string
           example: Arrived a day late due to rail strike. Informed in advance by COM.
@@ -1403,7 +1407,6 @@ components:
         - applicationSubmittedOn
         - bookingId
         - premises
-        - keyWorker
         - arrivedAt
         - expectedDepartureOn
     PersonNotArrivedEnvelope:

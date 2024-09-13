@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -22,12 +24,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas1SpaceBookingTest {
@@ -791,6 +796,152 @@ class Cas1SpaceBookingTest {
       assertThat(response.id).isEqualTo(spaceBooking.id)
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
+    }
+  }
+
+  @Nested
+  inner class RecordArrival : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      region = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerAssignedAt(Instant.now())
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            expectedDepartureDate = LocalDate.now().plusMonths(1),
+            arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid key worker )`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      val unknownKeyWorker = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(unknownKeyWorker.name)
+        withKeyworkerStaffCode(unknownKeyWorker.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            expectedDepartureDate = LocalDate.now().plusMonths(1),
+            arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Internal Server Error")
+        .jsonPath("status").isEqualTo(500)
+        .jsonPath("detail").isEqualTo("There was an unexpected problem")
+    }
+
+    @Test
+    fun `Recording arrival returns OK and creates a domain event`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            expectedDepartureDate = LocalDate.now().plusMonths(1),
+            arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
     }
   }
 }

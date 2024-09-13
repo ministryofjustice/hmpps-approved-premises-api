@@ -47,6 +47,7 @@ fun IntegrationTestBase.`Given a User`(
   val user = userEntityFactory.produceAndPersist {
     withId(id)
     withDeliusUsername(staffUserDetails.username)
+    withDeliusStaffCode(staffUserDetails.staffCode)
     withEmail(staffUserDetails.email)
     withTelephoneNumber(staffUserDetails.telephoneNumber)
     withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
