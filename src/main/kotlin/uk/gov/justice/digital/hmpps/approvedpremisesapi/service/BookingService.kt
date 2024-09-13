@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelled
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
@@ -60,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -1125,7 +1122,7 @@ class BookingService(
       is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
     }
     if (shouldCreateDomainEventForBooking(booking, user)) {
-      createCas1CancellationDomainEvent(booking, user, cancellationEntity, reason)
+      cas1BookingDomainEventService.bookingCancelled(booking, user!!, cancellationEntity, reason)
     }
 
     updateApplicationStatusOnCancellation(
@@ -1193,82 +1190,6 @@ class BookingService(
         null,
       )
     }
-  }
-
-  @SuppressWarnings("LongMethod")
-  private fun createCas1CancellationDomainEvent(
-    booking: BookingEntity,
-    user: UserEntity?,
-    cancellation: CancellationEntity,
-    reason: CancellationReasonEntity,
-  ) {
-    val now = OffsetDateTime.now()
-
-    val domainEventId = UUID.randomUUID()
-
-    val offenderDetails = when (
-      val offenderDetailsResult = offenderService.getOffenderByCrn(
-        booking.crn,
-        user!!.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-    ) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
-    }
-
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
-    val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
-
-    val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-    domainEventService.saveBookingCancelledEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = applicationId,
-        crn = booking.crn,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-        occurredAt = now.toInstant(),
-        bookingId = booking.id,
-        schemaVersion = 2,
-        data = BookingCancelledEnvelope(
-          id = domainEventId,
-          timestamp = now.toInstant(),
-          eventType = EventType.bookingCancelled,
-          eventDetails = BookingCancelled(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-            bookingId = booking.id,
-            personReference = PersonReference(
-              crn = booking.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            cancelledBy = staffDetails.toStaffMember(),
-            cancelledAt = cancellation.date.atTime(0, 0).toInstant(ZoneOffset.UTC),
-            cancelledAtDate = cancellation.date,
-            cancellationReason = reason.name,
-            cancellationRecordedAt = now.toInstant(),
-          ),
-        ),
-        metadata = mapOf(
-          MetaDataName.CAS1_CANCELLATION_ID to cancellation.id.toString(),
-        ),
-      ),
-    )
   }
 
   @Transactional

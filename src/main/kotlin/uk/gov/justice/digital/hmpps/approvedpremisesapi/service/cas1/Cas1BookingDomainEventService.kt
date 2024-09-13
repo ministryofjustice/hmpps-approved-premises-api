@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelled
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -16,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -30,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 @Service
@@ -277,4 +282,106 @@ class Cas1BookingDomainEventService(
       ),
     )
   }
+
+  @SuppressWarnings("LongMethod")
+  fun bookingCancelled(
+    booking: BookingEntity,
+    user: UserEntity,
+    cancellation: CancellationEntity,
+    reason: CancellationReasonEntity,
+  ) {
+    bookingCancelled(
+      CancellationInfo(
+        bookingId = booking.id,
+        application = booking.application as ApprovedPremisesApplicationEntity?,
+        offlineApplication = booking.offlineApplication,
+        cancellationId = cancellation.id,
+        crn = booking.crn,
+        cancelledAt = cancellation.date,
+        reason = reason,
+        cancelledBy = user,
+        premises = booking.premises as ApprovedPremisesEntity,
+      ),
+    )
+  }
+
+  private fun bookingCancelled(
+    cancellationInfo: CancellationInfo,
+  ) {
+    val bookingId = cancellationInfo.bookingId
+    val now = OffsetDateTime.now()
+    val user = cancellationInfo.cancelledBy
+    val crn = cancellationInfo.crn
+    val premises = cancellationInfo.premises
+
+    val domainEventId = UUID.randomUUID()
+
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        else -> null
+      }
+
+    val staffDetails = getStaffDetails(user.deliusUsername)
+
+    val application = cancellationInfo.application
+    val offlineApplication = cancellationInfo.offlineApplication
+
+    val applicationId = application?.id ?: offlineApplication?.id as UUID
+    val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
+
+    domainEventService.saveBookingCancelledEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        occurredAt = now.toInstant(),
+        bookingId = bookingId,
+        schemaVersion = 2,
+        data = BookingCancelledEnvelope(
+          id = domainEventId,
+          timestamp = now.toInstant(),
+          eventType = EventType.bookingCancelled,
+          eventDetails = BookingCancelled(
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            bookingId = bookingId,
+            personReference = PersonReference(
+              crn = crn,
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = eventNumber,
+            premises = Premises(
+              id = premises.id,
+              name = premises.name,
+              apCode = premises.apCode,
+              legacyApCode = premises.qCode,
+              localAuthorityAreaName = premises.localAuthorityArea!!.name,
+            ),
+            cancelledBy = staffDetails.toStaffMember(),
+            cancelledAt = cancellationInfo.cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
+            cancelledAtDate = cancellationInfo.cancelledAt,
+            cancellationReason = cancellationInfo.reason.name,
+            cancellationRecordedAt = now.toInstant(),
+          ),
+        ),
+        metadata = mapOfNonNullValues(
+          MetaDataName.CAS1_CANCELLATION_ID to cancellationInfo.cancellationId?.toString(),
+        ),
+      ),
+    )
+  }
+
+  private data class CancellationInfo(
+    val bookingId: UUID,
+    val application: ApprovedPremisesApplicationEntity?,
+    val offlineApplication: OfflineApplicationEntity?,
+    val crn: String,
+    val premises: ApprovedPremisesEntity,
+    val cancellationId: UUID?,
+    val cancelledBy: UserEntity,
+    val cancelledAt: LocalDate,
+    val reason: CancellationReasonEntity,
+  )
 }

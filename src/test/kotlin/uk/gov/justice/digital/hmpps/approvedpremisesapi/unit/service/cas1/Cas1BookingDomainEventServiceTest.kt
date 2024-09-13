@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
@@ -22,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -36,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -498,5 +503,190 @@ class Cas1BookingDomainEventServiceTest {
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
+  }
+
+  @Nested
+  inner class BookingCancelled {
+
+    @Test
+    fun `success for application`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .withDeliusUsername("THEDELIUSUSERNAME")
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withName("the premises name")
+        .withApCode("the premises ap code")
+        .withQCode("the premises qcode")
+        .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
+        .produce()
+
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(application)
+        .withCrn(application.crn)
+        .produce()
+
+      every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val staffUserDetails = StaffUserDetailsFactory().produce()
+
+      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
+
+      service.bookingCancelled(
+        booking = bookingEntity,
+        user = user,
+        cancellation = CancellationEntityFactory()
+          .withDefaults()
+          .withBooking(bookingEntity)
+          .withDate(LocalDate.parse("2022-08-25"))
+          .produce(),
+        reason = CancellationReasonEntityFactory()
+          .withName("the reason name")
+          .produce(),
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+      verify(exactly = 1) {
+        domainEventService.saveBookingCancelledEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.bookingId).isEqualTo(bookingEntity.id)
+      assertThat(domainEvent.crn).isEqualTo(application.crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
+      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(application.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(data.bookingId).isEqualTo(bookingEntity.id)
+      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
+      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
+
+      assertThat(data.premises.id).isEqualTo(premises.id)
+      assertThat(data.premises.name).isEqualTo(premises.name)
+      assertThat(data.premises.apCode).isEqualTo(premises.apCode)
+      assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
+      assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
+
+      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.staffCode)
+      assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
+      assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(data.cancellationReason).isEqualTo("the reason name")
+      assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
+    }
+  }
+
+  @Test
+  fun `success for offline application`() {
+    val user = UserEntityFactory()
+      .withDefaults()
+      .withDeliusUsername("THEDELIUSUSERNAME")
+      .produce()
+
+    val offlineApplication = OfflineApplicationEntityFactory()
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withName("the premises name")
+      .withApCode("the premises ap code")
+      .withQCode("the premises qcode")
+      .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(null)
+      .withOfflineApplication(offlineApplication)
+      .withCrn(offlineApplication.crn)
+      .produce()
+
+    every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(bookingEntity.crn)
+      .produce()
+
+    every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+    val staffUserDetails = StaffUserDetailsFactory().produce()
+
+    every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails,
+    )
+
+    service.bookingCancelled(
+      booking = bookingEntity,
+      user = user,
+      cancellation = CancellationEntityFactory()
+        .withDefaults()
+        .withBooking(bookingEntity)
+        .withDate(LocalDate.parse("2022-08-25"))
+        .produce(),
+      reason = CancellationReasonEntityFactory()
+        .withName("the reason name")
+        .produce(),
+    )
+
+    val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+    verify(exactly = 1) {
+      domainEventService.saveBookingCancelledEvent(
+        capture(domainEventArgument),
+      )
+    }
+
+    val domainEvent = domainEventArgument.captured
+
+    assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
+    assertThat(domainEvent.bookingId).isEqualTo(bookingEntity.id)
+    assertThat(domainEvent.crn).isEqualTo(offlineApplication.crn)
+    assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+    assertThat(domainEvent.schemaVersion).isEqualTo(2)
+    assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
+
+    val data = domainEvent.data.eventDetails
+    assertThat(data.applicationId).isEqualTo(offlineApplication.id)
+    assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
+    assertThat(data.bookingId).isEqualTo(bookingEntity.id)
+    assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
+    assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+    assertThat(data.deliusEventNumber).isEqualTo(offlineApplication.eventNumber)
+
+    assertThat(data.premises.id).isEqualTo(premises.id)
+    assertThat(data.premises.name).isEqualTo(premises.name)
+    assertThat(data.premises.apCode).isEqualTo(premises.apCode)
+    assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
+    assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
+
+    assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.staffCode)
+    assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
+    assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
+    assertThat(data.cancellationReason).isEqualTo("the reason name")
+    assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
   }
 }
