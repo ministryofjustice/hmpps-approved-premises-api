@@ -136,4 +136,7 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "cancellation_reason_id")
   var cancellationReason: CancellationReasonEntity?,
   var cancellationReasonNotes: String?,
-)
+) {
+  fun isCancelled() = cancellationOccurredAt != null
+  fun hasArrival() = actualArrivalDateTime != null
+}

@@ -5346,6 +5346,7 @@ components:
         - booking
         - placement_application
         - placement_request
+        - space_booking
     WithdrawalReason:
       type: string
       enum:

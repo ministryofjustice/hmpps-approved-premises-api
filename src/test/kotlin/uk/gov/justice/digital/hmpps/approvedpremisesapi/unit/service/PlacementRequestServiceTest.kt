@@ -839,7 +839,7 @@ class PlacementRequestServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking", "PlacementRequest"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking", "PlacementRequest", "SpaceBooking"], mode = EnumSource.Mode.EXCLUDE)
     fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity and user permissions not checked`(triggeringEntity: WithdrawableEntityType) {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
@@ -865,6 +865,7 @@ class PlacementRequestServiceTest {
         WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
         WithdrawableEntityType.Booking -> providedReason
         WithdrawableEntityType.PlacementRequest -> providedReason
+        WithdrawableEntityType.SpaceBooking -> providedReason
       }
 
       verify { userAccessService wasNot Called }

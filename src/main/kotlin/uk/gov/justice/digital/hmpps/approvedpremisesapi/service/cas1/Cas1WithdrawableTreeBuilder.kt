@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -19,10 +20,10 @@ import java.util.UUID
  * > Application
  * ---> Request for Placement
  * ------> Match Request
- * ---------> Placement
+ * ---------> Placement (Booking or Space Booking)
  * ---> Match Request (For initial application dates)
- * ------> Placement
- * ---> Placement (For adhoc placements)
+ * ------> Placement (Booking or Space Booking)
+ * ---> Placement (For adhoc placements - Booking only)
  *
  * Note that whilst assessments are automatically withdrawn when
  * an application is withdrawn, that is not managed by the tree
@@ -33,6 +34,7 @@ class Cas1WithdrawableTreeBuilder(
   @Lazy private val bookingService: BookingService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
   @Lazy private val applicationService: ApplicationService,
+  @Lazy private val cas1SpaceBookingService: Cas1SpaceBookingService,
 ) {
   fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTree {
     val children = mutableListOf<WithdrawableTreeNode>()
@@ -77,8 +79,6 @@ class Cas1WithdrawableTreeBuilder(
   }
 
   fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTree {
-    val booking = placementRequest.booking
-
     /*
      * Some legacy adhoc bookings were incorrectly linked to placement requests,
      * and in some cases these placement requests had completely different dates
@@ -88,11 +88,14 @@ class Cas1WithdrawableTreeBuilder(
      *
      * If adhoc is null, we treat it as 'potentially adhoc' and exclude it.
      */
-    val children = if (booking != null && booking.adhoc == false) {
+    val booking = placementRequest.booking
+    val bookingChildren = if (booking != null && booking.adhoc == false) {
       listOf(treeForBooking(booking, user).rootNode)
     } else {
       emptyList()
     }
+
+    val spaceBookingChildren = placementRequest.spaceBookings.map { treeForSpaceBooking(it, user).rootNode }
 
     return WithdrawableTree(
       WithdrawableTreeNode(
@@ -101,7 +104,7 @@ class Cas1WithdrawableTreeBuilder(
         entityId = placementRequest.id,
         status = placementRequestService.getWithdrawableState(placementRequest, user),
         dates = listOf(WithdrawableDatePeriod(placementRequest.expectedArrival, placementRequest.expectedDeparture())),
-        children = children,
+        children = bookingChildren + spaceBookingChildren,
       ),
     )
   }
@@ -114,6 +117,19 @@ class Cas1WithdrawableTreeBuilder(
         entityId = booking.id,
         status = bookingService.getWithdrawableState(booking, user),
         dates = listOf(WithdrawableDatePeriod(booking.arrivalDate, booking.departureDate)),
+        children = emptyList(),
+      ),
+    )
+  }
+
+  fun treeForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableTree {
+    return WithdrawableTree(
+      WithdrawableTreeNode(
+        applicationId = spaceBooking.application.id,
+        entityType = WithdrawableEntityType.SpaceBooking,
+        entityId = spaceBooking.id,
+        status = cas1SpaceBookingService.getWithdrawableState(spaceBooking, user),
+        dates = listOf(WithdrawableDatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
         children = emptyList(),
       ),
     )

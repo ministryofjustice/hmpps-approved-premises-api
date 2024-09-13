@@ -251,6 +251,7 @@ enum class WithdrawableEntityType(val label: String) {
   PlacementRequest("Request for Placement"),
   PlacementApplication("Request for Placement"),
   Booking("Placement"),
+  SpaceBooking("Space Booking"),
 }
 
 data class WithdrawableState(

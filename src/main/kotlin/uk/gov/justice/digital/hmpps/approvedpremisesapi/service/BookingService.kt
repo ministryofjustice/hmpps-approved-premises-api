@@ -1151,6 +1151,7 @@ class BookingService(
     WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
     WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
     WithdrawableEntityType.Booking -> userProvidedReason
+    WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to Booking")
   }
 
   private fun updateApplicationStatusOnCancellation(

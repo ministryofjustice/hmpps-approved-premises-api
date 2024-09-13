@@ -336,6 +336,7 @@ class PlacementRequestService(
       WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
       WithdrawableEntityType.PlacementRequest -> userProvidedReason
       WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementRequests")
+      WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementRequests")
     }
 
     placementRequestRepository.save(placementRequest)
