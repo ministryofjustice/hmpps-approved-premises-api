@@ -147,9 +147,6 @@ jobs:
             git clone https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git
             export LOCAL_CAS_API_PATH=/home/circleci/project/hmpps-approved-premises-api
             export LOCAL_CAS_UI_PATH=/home/circleci/project/hmpps-temporary-accommodation-ui
-#            sudo ln -s bash /bin/sh.bash
-#            sudo mv /bin/sh.bash /bin/sh
-#            ./hmpps-temporary-accommodation-ui/script/setup
             cd hmpps-temporary-accommodation-ui
             if [ ! -f .env ]; then
               cp .env.example .env
