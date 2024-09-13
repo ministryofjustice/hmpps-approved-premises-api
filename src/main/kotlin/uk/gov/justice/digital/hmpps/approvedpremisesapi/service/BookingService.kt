@@ -252,7 +252,7 @@ class BookingService(
           "$.premisesId" hasValidationError "mustBeAnApprovedPremises"
         }
       } else {
-        return@validated generalError("You must specify either a bedId or a premisesId")
+        return@validated generalError("You must identify the AP Area and Premises name")
       }
 
       if (validationErrors.any()) {
