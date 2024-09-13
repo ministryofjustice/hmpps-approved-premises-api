@@ -78,16 +78,6 @@ class Cas1AutoScript(
   private fun usersToSeed(): List<SeedUser> {
     return listOf(
       SeedUser(
-        username = "SHEILAHANCOCKNPS",
-        roles = listOf(UserRole.CAS1_CRU_MEMBER),
-        documentation = "Used for local E2E, with name 'E2E CRU Member",
-      ),
-      SeedUser(
-        username = "APPROVEDPREMISESTESTUSER",
-        roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
-        documentation = "Used for E2E testing in local environment",
-      ),
-      SeedUser(
         username = "JIMSNOWLDAP",
         roles = listOf(
           UserRole.CAS1_ASSESSOR,
