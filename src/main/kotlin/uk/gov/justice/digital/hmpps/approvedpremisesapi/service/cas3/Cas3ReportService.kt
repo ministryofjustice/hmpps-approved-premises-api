@@ -66,9 +66,10 @@ class Cas3ReportService(
 
     TransitionalAccommodationReferralReportGenerator()
       .createReport(reportData, properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
@@ -97,9 +98,10 @@ class Cas3ReportService(
           properties.endDate,
         ),
       )
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
@@ -109,9 +111,10 @@ class Cas3ReportService(
 
     BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayService)
       .createReport(bedspacesInScope, properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
@@ -161,9 +164,10 @@ class Cas3ReportService(
 
     BedUtilisationReportGenerator(workingDayService)
       .createReport(reportData, properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
