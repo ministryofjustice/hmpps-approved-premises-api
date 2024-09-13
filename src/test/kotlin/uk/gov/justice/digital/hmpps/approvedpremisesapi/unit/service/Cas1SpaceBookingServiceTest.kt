@@ -275,13 +275,7 @@ class Cas1SpaceBookingServiceTest {
         )
       } returns Unit
 
-      every {
-        cas1BookingEmailService.spaceBookingMade(
-          any(),
-          application,
-          placementApplication,
-        )
-      } returns Unit
+      every { cas1BookingEmailService.spaceBookingMade(any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0

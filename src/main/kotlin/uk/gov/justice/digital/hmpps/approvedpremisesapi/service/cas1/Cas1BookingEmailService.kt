@@ -29,10 +29,8 @@ class Cas1BookingEmailService(
 
   fun spaceBookingMade(
     spaceBooking: Cas1SpaceBookingEntity,
-    application: ApprovedPremisesApplicationEntity,
-    placementApplication: PlacementApplicationEntity?,
   ) = bookingMade(
-    spaceBooking.toBookingInfo(application, placementApplication),
+    spaceBooking.toBookingInfo(),
   )
 
   fun bookingMade(
@@ -83,6 +81,14 @@ class Cas1BookingEmailService(
     withdrawalTriggeredBy,
   )
 
+  fun spaceBookingWithdrawn(
+    spaceBooking: Cas1SpaceBookingEntity,
+    withdrawalTriggeredBy: WithdrawalTriggeredBy,
+  ) = bookingWithdrawn(
+    spaceBooking.toBookingInfo(),
+    withdrawalTriggeredBy,
+  )
+
   private fun bookingWithdrawn(
     bookingInfo: BookingInfo,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
@@ -111,17 +117,15 @@ class Cas1BookingEmailService(
     )
   }
 
-  private fun Cas1SpaceBookingEntity.toBookingInfo(
-    application: ApprovedPremisesApplicationEntity,
-    placementApplication: PlacementApplicationEntity?,
-  ) = BookingInfo(
-    bookingId = id,
-    arrivalDate = canonicalArrivalDate,
-    departureDate = canonicalDepartureDate,
-    premises = premises,
-    application = application,
-    placementApplication = placementApplication,
-  )
+  private fun Cas1SpaceBookingEntity.toBookingInfo() =
+    BookingInfo(
+      bookingId = id,
+      arrivalDate = canonicalArrivalDate,
+      departureDate = canonicalDepartureDate,
+      premises = premises,
+      application = application,
+      placementApplication = placementRequest.placementApplication,
+    )
 
   private fun BookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,

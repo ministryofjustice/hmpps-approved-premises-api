@@ -125,11 +125,7 @@ class Cas1SpaceBookingService(
       placementRequest = placementRequest,
     )
 
-    cas1BookingEmailService.spaceBookingMade(
-      spaceBooking = spaceBooking,
-      application = application,
-      placementApplication = placementRequest.placementApplication,
-    )
+    cas1BookingEmailService.spaceBookingMade(spaceBooking)
 
     success(spaceBooking)
   }
