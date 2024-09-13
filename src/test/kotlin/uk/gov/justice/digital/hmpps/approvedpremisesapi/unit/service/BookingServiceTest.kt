@@ -6021,7 +6021,7 @@ class BookingServiceTest {
       assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
       val error = result.entity as ValidatableActionResult.GeneralValidationError
 
-      assertThat(error.message).isEqualTo("You must specify either a bedId or a premisesId")
+      assertThat(error.message).isEqualTo("You must identify the AP Area and Premises name")
     }
 
     @Test
