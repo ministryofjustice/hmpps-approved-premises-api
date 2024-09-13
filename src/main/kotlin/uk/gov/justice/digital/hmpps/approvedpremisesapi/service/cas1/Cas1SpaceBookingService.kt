@@ -30,6 +30,7 @@ class Cas1SpaceBookingService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceSearchRepository: Cas1SpaceSearchRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
+  private val cas1BookingEmailService: Cas1BookingEmailService,
 ) {
   @Transactional
   fun createNewBooking(
@@ -100,6 +101,12 @@ class Cas1SpaceBookingService(
       booking = spaceBooking,
       user = createdBy,
       placementRequest = placementRequest,
+    )
+
+    cas1BookingEmailService.spaceBookingMade(
+      spaceBooking = spaceBooking,
+      application = application,
+      placementApplication = placementRequest.placementApplication,
     )
 
     success(spaceBooking)

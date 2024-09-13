@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -32,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -54,11 +56,14 @@ class Cas1SpaceBookingServiceTest {
   @MockK
   private lateinit var cas1BookingDomainEventService: Cas1BookingDomainEventService
 
+  @MockK
+  private lateinit var cas1BookingEmailService: Cas1BookingEmailService
+
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
 
   companion object CONSTANTS {
-    val PREMISES_ID = UUID.randomUUID()
+    val PREMISES_ID: UUID = UUID.randomUUID()
   }
 
   @Nested
@@ -193,18 +198,15 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Creates new booking if all data is valid and raises domain event`() {
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withDefaults()
-        .produce()
+    fun `Creates new booking if all data is valid and raises domain event and email`() {
+      val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+      val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
 
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
         .withApplication(application)
+        .withPlacementApplication(placementApplication)
         .produce()
 
       val user = UserEntityFactory()
@@ -233,6 +235,14 @@ class Cas1SpaceBookingServiceTest {
           any(),
           user,
           placementRequest,
+        )
+      } returns Unit
+
+      every {
+        cas1BookingEmailService.spaceBookingMade(
+          any(),
+          application,
+          placementApplication,
         )
       } returns Unit
 
