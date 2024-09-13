@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
@@ -45,6 +47,7 @@ class Cas1WithdrawableServiceTest {
   private val placementRequestService = mockk<PlacementRequestService>()
   private val placementApplicationService = mockk<PlacementApplicationService>()
   private val bookingService = mockk<BookingService>()
+  private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
   private val cas1WithdrawableTreeBuilder = mockk<Cas1WithdrawableTreeBuilder>()
   private val cas1WithdrawableTreeOperations = mockk<Cas1WithdrawableTreeOperations>()
 
@@ -53,6 +56,7 @@ class Cas1WithdrawableServiceTest {
     placementRequestService,
     placementApplicationService,
     bookingService,
+    cas1SpaceBookingService,
     cas1WithdrawableTreeBuilder,
     cas1WithdrawableTreeOperations,
   )
@@ -773,6 +777,109 @@ class Cas1WithdrawableServiceTest {
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement withdrawal is blocked")
+    }
+  }
+
+  @Nested
+  inner class WithdrawSpaceBooking {
+    val cancelledAt = LocalDate.now()
+    val userProvidedReason = UUID.randomUUID()
+    val otherReason = "Other reason"
+
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    @Test
+    fun success() {
+      val tree = WithdrawableTree(
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true),
+        ),
+      )
+
+      every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
+
+      every {
+        cas1SpaceBookingService.withdraw(any(), any(), any(), any(), any())
+      } returns CasResult.Success(Unit)
+
+      val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.SpaceBooking, spaceBooking.id)
+
+      every {
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree.rootNode, context)
+      } returns Unit
+
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+
+      assertThat(result is CasResult.Success)
+
+      verify {
+        cas1SpaceBookingService.withdraw(spaceBooking, cancelledAt, userProvidedReason, otherReason, context)
+      }
+
+      verify {
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree.rootNode, context)
+      }
+    }
+
+    @Test
+    fun `fails if user may not directly withdraw()`() {
+      val tree = WithdrawableTree(
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
+        ),
+      )
+
+      every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
+
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+
+      assertThat(result is CasResult.Unauthorised).isTrue()
+    }
+
+    @Test
+    fun `fails if not withdrawable()`() {
+      val tree = WithdrawableTree(
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+          WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = true),
+        ),
+      )
+
+      every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
+
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Space Booking is not in a withdrawable state")
+    }
+
+    @Test
+    fun `fails if blocked()`() {
+      val tree = WithdrawableTree(
+        WithdrawableTreeNode(
+          applicationId = application.id,
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+          WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true, blockingReason = BlockingReason.ArrivalRecordedInCas1),
+        ),
+      )
+
+      every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
+
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Space Booking withdrawal is blocked")
     }
   }
 

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -26,6 +27,7 @@ class Cas1WithdrawableService(
   private val placementRequestService: PlacementRequestService,
   private val placementApplicationService: PlacementApplicationService,
   private val bookingService: BookingService,
+  private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1WithdrawableTreeBuilder: Cas1WithdrawableTreeBuilder,
   private val cas1WithdrawableTreeOperations: Cas1WithdrawableTreeOperations,
 ) {
@@ -167,6 +169,34 @@ class Cas1WithdrawableService(
         notes,
         otherReason,
         withdrawalContext,
+      )
+    }
+  }
+
+  @Transactional
+  fun withdrawSpaceBooking(
+    spaceBooking: Cas1SpaceBookingEntity,
+    user: UserEntity,
+    cancelledAt: LocalDate,
+    userProvidedReason: UUID?,
+    otherReason: String?,
+  ): CasResult<Unit> {
+    val withdrawalContext = WithdrawalContext(
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
+      triggeringEntityType = WithdrawableEntityType.SpaceBooking,
+      triggeringEntityId = spaceBooking.id,
+    )
+
+    return withdraw(
+      cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user).rootNode,
+      withdrawalContext,
+    ) {
+      cas1SpaceBookingService.withdraw(
+        spaceBooking = spaceBooking,
+        occurredAt = cancelledAt,
+        userProvidedReasonId = userProvidedReason,
+        userProvidedReasonNotes = otherReason,
+        withdrawalContext = withdrawalContext,
       )
     }
   }
