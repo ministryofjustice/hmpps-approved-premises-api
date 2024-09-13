@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cache.preemptive
 
+import jakarta.annotation.PreDestroy
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.FlywayException
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import redis.lock.redlock.LockResult
 import redis.lock.redlock.RedLock
@@ -25,15 +27,17 @@ class PreemptiveCacheRefresher(
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
   @Value("\${preemptive-cache-lock-duration-ms}") private val lockDurationMs: Int,
-  redLock: RedLock,
-) : DisposableBean {
+  private val redLock: RedLock,
+) {
   protected val log = LoggerFactory.getLogger(this::class.java)
+
   private val preemptiveCacheThreads = mutableListOf<CacheRefreshWorker>()
 
   @Volatile
   var shuttingDown = false
 
-  init {
+  @EventListener(ApplicationReadyEvent::class)
+  fun startThreads() {
     Thread {
       while (!haveFlywayMigrationsFinished()) {
         if (shuttingDown) return@Thread
@@ -57,7 +61,8 @@ class PreemptiveCacheRefresher(
     }.start()
   }
 
-  override fun destroy() {
+  @PreDestroy
+  fun stopThreads() {
     shuttingDown = true
 
     preemptiveCacheThreads.forEach {
