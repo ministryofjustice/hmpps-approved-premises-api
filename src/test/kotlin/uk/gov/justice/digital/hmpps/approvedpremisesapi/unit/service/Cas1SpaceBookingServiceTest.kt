@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.called
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -8,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -22,14 +24,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
@@ -51,11 +56,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -93,6 +102,9 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var staffMemberService: StaffMemberService
+
+  @MockK
+  private lateinit var cancellationReasonRepository: CancellationReasonRepository
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -997,6 +1009,145 @@ class Cas1SpaceBookingServiceTest {
       )
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(true)
+    }
+  }
+
+  @Nested
+  inner class Withdraw {
+    val user = UserEntityFactory().withDefaults().produce()
+    val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    val reason = CancellationReasonEntityFactory().withServiceScope("*").produce()
+    val reasonId = reason.id
+
+    @Test
+    fun `withdraw is idempotent if the booking is already cancelled`() {
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val result = service.withdraw(
+        spaceBooking = spaceBooking,
+        occurredAt = LocalDate.parse("2022-08-25"),
+        userProvidedReasonId = UUID.randomUUID(),
+        userProvidedReasonNotes = null,
+        withdrawalContext = WithdrawalContext(
+          WithdrawalTriggeredByUser(user),
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      verify { spaceBookingRepository.save(any()) wasNot called }
+    }
+
+    @Test
+    fun `withdraw returns FieldValidationError if reason id can't be resolved`() {
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .produce()
+
+      val reasonId = UUID.randomUUID()
+
+      every { cancellationReasonRepository.findByIdAndServiceScope(reasonId, "approved-premises") } returns null
+
+      val result = service.withdraw(
+        spaceBooking = spaceBooking,
+        occurredAt = LocalDate.parse("2022-08-25"),
+        userProvidedReasonId = reasonId,
+        userProvidedReasonNotes = null,
+        withdrawalContext = WithdrawalContext(
+          WithdrawalTriggeredByUser(user),
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
+        entry("$.reason", "doesNotExist"),
+      )
+    }
+
+    @Test
+    fun `withdraw returns FieldValidationError wwhen reason is 'Other' and 'userProvidedReasonNotes' is blank`() {
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .produce()
+
+      val reasonId = UUID.randomUUID()
+
+      val reasonEntity = CancellationReasonEntityFactory()
+        .withServiceScope(ServiceName.approvedPremises.value)
+        .withName("Other")
+        .produce()
+
+      every { cancellationReasonRepository.findByIdAndServiceScope(reasonId, "approved-premises") } returns reasonEntity
+
+      val result = service.withdraw(
+        spaceBooking = spaceBooking,
+        occurredAt = LocalDate.parse("2022-08-25"),
+        userProvidedReasonId = reasonId,
+        userProvidedReasonNotes = null,
+        withdrawalContext = WithdrawalContext(
+          WithdrawalTriggeredByUser(user),
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
+        entry("$.otherReason", "empty"),
+      )
+    }
+
+    @Test
+    fun `success`() {
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .produce()
+
+      val reasonId = UUID.randomUUID()
+
+      val reason = CancellationReasonEntityFactory()
+        .withServiceScope(ServiceName.approvedPremises.value)
+        .withName("Some Reason")
+        .produce()
+
+      every { cancellationReasonRepository.findByIdAndServiceScope(reasonId, "approved-premises") } returns reason
+
+      val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
+
+      every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
+
+      val result = service.withdraw(
+        spaceBooking = spaceBooking,
+        occurredAt = LocalDate.parse("2022-08-25"),
+        userProvidedReasonId = reasonId,
+        userProvidedReasonNotes = "the user provided notes",
+        withdrawalContext = WithdrawalContext(
+          WithdrawalTriggeredByUser(user),
+          WithdrawableEntityType.SpaceBooking,
+          spaceBooking.id,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val persistedBooking = spaceBookingCaptor.captured
+      assertThat(persistedBooking.cancellationOccurredAt).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(persistedBooking.cancellationRecordedAt).isWithinTheLastMinute()
+      assertThat(persistedBooking.cancellationReason).isEqualTo(reason)
+      assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
     }
   }
 }
