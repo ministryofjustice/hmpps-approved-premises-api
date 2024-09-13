@@ -34,7 +34,7 @@ val springDocVersion = "1.7.0"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.2-beta-4")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
