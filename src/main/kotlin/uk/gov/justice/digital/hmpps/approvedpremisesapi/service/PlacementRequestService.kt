@@ -254,6 +254,7 @@ class PlacementRequestService(
       application = placementRequirements.application,
       allocatedToUser = null,
       booking = null,
+      spaceBookings = mutableListOf(),
       bookingNotMades = mutableListOf(),
       reallocatedAt = null,
       notes = notes,

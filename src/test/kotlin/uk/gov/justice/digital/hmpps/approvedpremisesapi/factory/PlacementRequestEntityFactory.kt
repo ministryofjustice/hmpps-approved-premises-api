@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -26,6 +27,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var booking: Yielded<BookingEntity?> = { null }
+  private var spaceBookings: Yielded<MutableList<Cas1SpaceBookingEntity>> = { mutableListOf() }
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var notes: Yielded<String?> = { null }
@@ -123,6 +125,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     createdAt = this.createdAt(),
     allocatedToUser = this.allocatedToUser(),
     booking = this.booking(),
+    spaceBookings = this.spaceBookings(),
     bookingNotMades = this.bookingNotMades(),
     reallocatedAt = this.reallocatedAt(),
     notes = this.notes(),
