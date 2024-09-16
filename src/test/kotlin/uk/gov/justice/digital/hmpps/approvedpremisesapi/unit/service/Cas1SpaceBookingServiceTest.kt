@@ -992,20 +992,20 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `user without CAS1_BOOKING_WITHDRAW permission cannot directly withdraw`() {
+    fun `user without CAS1_SPACE_BOOKING_WITHDRAW permission cannot directly withdraw`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory().produce(),
-        UserEntityFactory.mockUserWithoutPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+        UserEntityFactory.mockUserWithoutPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
       )
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(false)
     }
 
     @Test
-    fun `user with CAS1_BOOKING_WITHDRAW can directly withdraw`() {
+    fun `user with CAS1_SPACE_BOOKING_WITHDRAW can directly withdraw`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory().produce(),
-        UserEntityFactory.mockUserWithPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+        UserEntityFactory.mockUserWithPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
       )
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(true)
@@ -1055,7 +1055,7 @@ class Cas1SpaceBookingServiceTest {
 
       val reasonId = UUID.randomUUID()
 
-      every { cancellationReasonRepository.findByIdAndServiceScope(reasonId, "approved-premises") } returns null
+      every { cancellationReasonRepository.findByIdOrNull(reasonId) } returns null
 
       val result = service.withdraw(
         spaceBooking = spaceBooking,
@@ -1076,7 +1076,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `withdraw returns FieldValidationError wwhen reason is 'Other' and 'userProvidedReasonNotes' is blank`() {
+    fun `withdraw returns FieldValidationError when reason is 'Other' and 'userProvidedReasonNotes' is blank`() {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
         .produce()
@@ -1088,7 +1088,7 @@ class Cas1SpaceBookingServiceTest {
         .withName("Other")
         .produce()
 
-      every { cancellationReasonRepository.findByIdAndServiceScope(reasonId, "approved-premises") } returns reasonEntity
+      every { cancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
 
       val result = service.withdraw(
         spaceBooking = spaceBooking,
@@ -1121,7 +1121,7 @@ class Cas1SpaceBookingServiceTest {
         .withName("Some Reason")
         .produce()
 
-      every { cancellationReasonRepository.findByIdAndServiceScope(reasonId, "approved-premises") } returns reason
+      every { cancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
 
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking

@@ -150,6 +150,7 @@ data class Cas1SpaceBookingEntity(
   var cancellationReason: CancellationReasonEntity?,
   var cancellationReasonNotes: String?,
 ) {
+  fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
   fun hasArrival() = actualArrivalDateTime != null
 }

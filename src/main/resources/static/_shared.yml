@@ -3192,6 +3192,7 @@ components:
         - cas1_space_booking_record_departure
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
+        - cas1_space_booking_withdraw
         - cas1_premises_view_summary
         - cas1_reports_view
     TemporaryAccommodationUserRole:

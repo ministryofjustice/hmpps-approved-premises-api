@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -18,6 +19,8 @@ class Cas1WithdrawableTreeOperations(
   private val placementRequestService: PlacementRequestService,
   private val bookingService: BookingService,
   private val bookingRepository: BookingRepository,
+  private val cas1SpaceBookingService: Cas1SpaceBookingService,
+  private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val placementApplicationService: PlacementApplicationService,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -119,7 +122,24 @@ class Cas1WithdrawableTreeOperations(
         }
       }
       WithdrawableEntityType.SpaceBooking -> {
-        TODO("implement me")
+        val spaceBooking = cas1SpaceBookingRepository.findByIdOrNull(node.entityId)!!
+
+        val withdrawalResult = cas1SpaceBookingService.withdraw(
+          spaceBooking = spaceBooking,
+          occurredAt = LocalDate.now(),
+          userProvidedReasonId = null,
+          userProvidedReasonNotes = null,
+          withdrawalContext = context,
+        )
+
+        when (withdrawalResult) {
+          is CasResult.Success -> Unit
+          else -> log.error(
+            "Failed to automatically withdraw Space Booking ${spaceBooking.id} " +
+              "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
+              "with message ${extractMessageFromCasResult(withdrawalResult)}",
+          )
+        }
       }
     }
   }

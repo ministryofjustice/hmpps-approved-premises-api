@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -21,12 +22,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -39,12 +42,16 @@ class Cas1WithdrawableTreeOperationsTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockBookingService = mockk<BookingService>()
   private val mockBookingRepository = mockk<BookingRepository>()
+  private val mockCas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
+  private val mockCas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val mockPlacementApplicationService = mockk<PlacementApplicationService>()
 
   private val service = Cas1WithdrawableTreeOperations(
     mockPlacementRequestService,
     mockBookingService,
     mockBookingRepository,
+    mockCas1SpaceBookingService,
+    mockCas1SpaceBookingRepository,
     mockPlacementApplicationService,
   )
 
@@ -103,6 +110,9 @@ class Cas1WithdrawableTreeOperationsTest {
     val bookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
     val bookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
 
+    val spaceBookingWithdrawable = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
+    val spaceBookingNotWithdrawable = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
+
     val adhocBookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
     val adhocBookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
 
@@ -134,6 +144,18 @@ class Cas1WithdrawableTreeOperationsTest {
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = application.id,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingWithdrawable.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = application.id,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingNotWithdrawable.id,
                   status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
                 ),
               ),
@@ -179,8 +201,13 @@ class Cas1WithdrawableTreeOperationsTest {
       mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())
     } returns mockk<CasResult.Success<CancellationEntity>>()
 
+    every {
+      mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any())
+    } returns mockk<CasResult.Success<Unit>>()
+
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
     every { mockBookingRepository.findByIdOrNull(adhocBookingWithdrawable.id) } returns adhocBookingWithdrawable
+    every { mockCas1SpaceBookingRepository.findByIdOrNull(spaceBookingWithdrawable.id) } returns spaceBookingWithdrawable
 
     service.withdrawDescendantsOfRootNode(tree, context)
 
@@ -222,9 +249,20 @@ class Cas1WithdrawableTreeOperationsTest {
       )
     }
 
+    verify {
+      mockCas1SpaceBookingService.withdraw(
+        spaceBookingWithdrawable,
+        any(),
+        null,
+        null,
+        context,
+      )
+    }
+
     confirmVerified(mockPlacementApplicationService)
     confirmVerified(mockPlacementRequestService)
     confirmVerified(mockBookingService)
+    confirmVerified(mockCas1SpaceBookingService)
   }
 
   @Test
@@ -262,6 +300,9 @@ class Cas1WithdrawableTreeOperationsTest {
 
     val bookingWithdrawableButBlocking = BookingEntityFactory().withPremises(approvedPremises).produce()
     val bookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
+
+    val spaceBookingWithdrawableButBlocking = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
+    val spaceBookingNotWithdrawable = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
 
     val adhocBookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
     val adhocBookingWithdrawableButBlocked = BookingEntityFactory().withPremises(approvedPremises).produce()
@@ -308,6 +349,18 @@ class Cas1WithdrawableTreeOperationsTest {
                   applicationId = application.id,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false, blockingReason = null),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = application.id,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingWithdrawableButBlocking.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = application.id,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingNotWithdrawable.id,
                   status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false, blockingReason = null),
                 ),
               ),
@@ -421,6 +474,9 @@ class Cas1WithdrawableTreeOperationsTest {
     val bookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
     val bookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
 
+    val spaceBookingWithdrawable = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
+    val spaceBookingNotWithdrawable = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
+
     val adhocBookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
     val adhocBookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
 
@@ -452,6 +508,18 @@ class Cas1WithdrawableTreeOperationsTest {
                   applicationId = UUID.randomUUID(),
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = application.id,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingWithdrawable.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = UUID.randomUUID(),
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingNotWithdrawable.id,
                   status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
                 ),
               ),
@@ -497,8 +565,13 @@ class Cas1WithdrawableTreeOperationsTest {
       mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())
     } returns CasResult.GeneralValidationError("oh dear")
 
+    every {
+      mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any())
+    } returns CasResult.GeneralValidationError("oh dear")
+
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
     every { mockBookingRepository.findByIdOrNull(adhocBookingWithdrawable.id) } returns adhocBookingWithdrawable
+    every { mockCas1SpaceBookingRepository.findByIdOrNull(spaceBookingWithdrawable.id) } returns spaceBookingWithdrawable
 
     service.withdrawDescendantsOfRootNode(tree, context)
 
@@ -529,6 +602,14 @@ class Cas1WithdrawableTreeOperationsTest {
     verify {
       logger.error(
         "Failed to automatically withdraw Booking ${adhocBookingWithdrawable.id} " +
+          "when withdrawing Application ${application.id} " +
+          "with message oh dear",
+      )
+    }
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw Space Booking ${spaceBookingWithdrawable.id} " +
           "when withdrawing Application ${application.id} " +
           "with message oh dear",
       )
@@ -565,6 +646,12 @@ class Cas1WithdrawableTreeOperationsTest {
       .produce()
     val bookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
 
+    val spaceBookingWithdrawableOtherApp = Cas1SpaceBookingEntityFactory()
+      .withId(UUID.fromString("943de779-0b23-4517-8dea-f749596e0666"))
+      .withPremises(approvedPremises)
+      .produce()
+    val spaceBookingNotWithdrawable = Cas1SpaceBookingEntityFactory().withPremises(approvedPremises).produce()
+
     val adhocBookingWithdrawableOtherApp = BookingEntityFactory()
       .withId(UUID.fromString("3a159ffe-d22e-4a04-9432-c7df4f836098"))
       .withPremises(approvedPremises)
@@ -599,6 +686,18 @@ class Cas1WithdrawableTreeOperationsTest {
                   applicationId = otherApplicationId,
                   entityType = WithdrawableEntityType.Booking,
                   entityId = bookingNotWithdrawable.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = otherApplicationId,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingWithdrawableOtherApp.id,
+                  status = WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false),
+                ),
+                WithdrawableTreeNode(
+                  applicationId = otherApplicationId,
+                  entityType = WithdrawableEntityType.SpaceBooking,
+                  entityId = spaceBookingNotWithdrawable.id,
                   status = WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false),
                 ),
               ),
@@ -639,6 +738,7 @@ class Cas1WithdrawableTreeOperationsTest {
         "remove the following nodes belonging to other applications " +
         "[PlacementApplication db8c102a-4062-4f8e-ab0f-d5f8953f447c (application 4071072a-3d52-4904-b5bd-32b6420b105a), " +
         "Booking 843de779-0b23-4517-8dea-f749596e0666 (application 4071072a-3d52-4904-b5bd-32b6420b105a), " +
+        "SpaceBooking 943de779-0b23-4517-8dea-f749596e0666 (application 4071072a-3d52-4904-b5bd-32b6420b105a), " +
         "Booking 3a159ffe-d22e-4a04-9432-c7df4f836098 (application 4071072a-3d52-4904-b5bd-32b6420b105a)]",
     )
   }

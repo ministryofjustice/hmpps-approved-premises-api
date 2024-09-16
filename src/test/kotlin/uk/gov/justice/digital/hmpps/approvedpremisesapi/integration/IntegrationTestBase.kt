@@ -275,7 +275,7 @@ import java.util.UUID
 @Tag("integration")
 abstract class IntegrationTestBase {
   @Autowired
-  private lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
+  lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @Autowired
   private lateinit var cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository

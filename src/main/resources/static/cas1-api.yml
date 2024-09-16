@@ -916,15 +916,11 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBookingCancellationNew'
+              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1SpaceBookingCancellation'
         required: true
       responses:
         200:
           description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Cancellation'
         400:
           description: invalid params
           content:

@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
@@ -330,7 +329,7 @@ class Cas1SpaceBookingService(
     return WithdrawableState(
       withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
       withdrawn = spaceBooking.isCancelled(),
-      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
       blockingReason = if (spaceBooking.hasArrival()) {
         BlockingReason.ArrivalRecordedInCas1
       } else {
@@ -352,7 +351,7 @@ class Cas1SpaceBookingService(
 
     val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReasonId)
 
-    val reason = cancellationReasonRepository.findByIdAndServiceScope(resolvedReasonId, ServiceName.approvedPremises.value)
+    val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
       ?: return CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
 
     if (reason.name == "Other" && userProvidedReasonNotes.isNullOrEmpty()) {
