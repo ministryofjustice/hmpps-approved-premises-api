@@ -68,10 +68,11 @@ class UserService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  fun findByIdOrNull(id: UUID) = userRepository.findByIdOrNull(id)
+
   fun getUsersByPartialName(name: String): List<UserEntity> {
     return userRepository.findByNameContainingIgnoreCase(name)
   }
-
   fun getDeliusUserNameForRequest() = httpAuthService.getDeliusPrincipalOrThrow().name
 
   fun getUserForRequest(): UserEntity {

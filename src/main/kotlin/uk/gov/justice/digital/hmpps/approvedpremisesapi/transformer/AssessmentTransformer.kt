@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessment
@@ -19,14 +20,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
@@ -40,8 +44,13 @@ class AssessmentTransformer(
   private val userTransformer: UserTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
+  private val userService: UserService,
 ) {
-  fun transformJpaToApi(jpa: AssessmentEntity, personInfo: PersonInfoResult) = when (jpa) {
+  fun transformJpaToApi(
+    jpa: AssessmentEntity,
+    personInfo: PersonInfoResult,
+    cas3Events: List<DomainEventEntity> = emptyList(),
+  ) = when (jpa) {
     is ApprovedPremisesAssessmentEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
       application = applicationsTransformer.transformJpaToApi(
@@ -85,13 +94,7 @@ class AssessmentTransformer(
         allocatedAt = jpa.allocatedAt?.toInstant(),
         data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
         clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-        referralHistoryNotes = jpa.referralHistoryNotes.map {
-          if (it.id == lastReferralRejectedHistoryNote?.id) {
-            assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, jpa)
-          } else {
-            assessmentReferralHistoryNoteTransformer.transformJpaToApi(it)
-          }
-        },
+        referralHistoryNotes = getSortedReferralHistoryNotes(jpa, lastReferralRejectedHistoryNote, cas3Events),
         allocatedToStaffMember = jpa.allocatedToUser?.let {
           userTransformer.transformJpaToApi(
             it,
@@ -110,6 +113,28 @@ class AssessmentTransformer(
     }
 
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
+  }
+
+  private fun getSortedReferralHistoryNotes(
+    jpa: TemporaryAccommodationAssessmentEntity,
+    lastReferralRejectedHistoryNote: AssessmentReferralHistoryNoteEntity?,
+    cas3Events: List<DomainEventEntity>,
+  ): List<ReferralHistoryNote> {
+    val notes = jpa.referralHistoryNotes.map {
+      if (it.id == lastReferralRejectedHistoryNote?.id) {
+        assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, jpa)
+      } else {
+        assessmentReferralHistoryNoteTransformer.transformJpaToApi(it)
+      }
+    }.toMutableList()
+
+    notes.addAll(
+      cas3Events.map {
+        val user = userService.findByIdOrNull(it.triggeredByUserId!!)!!
+        assessmentReferralHistoryNoteTransformer.transformToReferralHistoryDomainEventNote(it, user)
+      },
+    )
+    return notes.sortedByDescending { it.createdAt }
   }
 
   fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): AssessmentSummary =

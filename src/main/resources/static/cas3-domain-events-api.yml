@@ -283,6 +283,7 @@ components:
           accommodation.cas3.person.departed: '#/components/schemas/CAS3PersonDepartedEvent'
           accommodation.cas3.referral.submitted: '#/components/schemas/CAS3ReferralSubmittedEvent'
           accommodation.cas3.person.departed.updated: '#/components/schemas/CAS3PersonDepartureUpdatedEvent'
+          accommodation.cas3.assessment.updated: '#/components/schemas/CAS3AssessmentUpdatedEvent'
     CAS3BookingCancelledEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryDomainEventNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNoteMessageDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
@@ -8,11 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 
 @Component
 class AssessmentReferralHistoryNoteTransformer {
+
   fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryNote = when (jpa) {
     is AssessmentReferralHistoryUserNoteEntity -> { transformJpaToReferralHistoryUserNote(jpa) }
     is AssessmentReferralHistorySystemNoteEntity -> ReferralHistorySystemNote(
@@ -39,6 +43,15 @@ class AssessmentReferralHistoryNoteTransformer {
     )
     else -> throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")
   }
+
+  fun transformToReferralHistoryDomainEventNote(domainEventEntity: DomainEventEntity, user: UserEntity) =
+    ReferralHistoryDomainEventNote(
+      id = domainEventEntity.id,
+      createdAt = domainEventEntity.createdAt.toInstant(),
+      messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = domainEventEntity.data),
+      createdByUserName = user.name,
+      type = "domainEvent",
+    )
 
   private fun transformJpaToReferralHistoryUserNote(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryUserNote {
     return ReferralHistoryUserNote(

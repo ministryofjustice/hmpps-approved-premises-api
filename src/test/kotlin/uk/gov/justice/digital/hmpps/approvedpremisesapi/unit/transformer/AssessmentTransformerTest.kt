@@ -5,6 +5,9 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -12,6 +15,7 @@ import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
@@ -38,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
@@ -54,12 +59,27 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
+@ExtendWith(MockKExtension::class)
 class AssessmentTransformerTest {
-  private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
-  private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
-  private val mockAssessmentReferralHistoryNoteTransformer = mockk<AssessmentReferralHistoryNoteTransformer>()
-  private val mockUserTransformer = mockk<UserTransformer>()
-  private val mockPersonTransformer = mockk<PersonTransformer>()
+
+  @MockK
+  lateinit var mockApplicationsTransformer: ApplicationsTransformer
+
+  @MockK
+  lateinit var mockAssessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
+
+  @MockK
+  lateinit var mockAssessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer
+
+  @MockK
+  lateinit var mockUserTransformer: UserTransformer
+
+  @MockK
+  lateinit var mockPersonTransformer: PersonTransformer
+
+  @MockK
+  lateinit var userService: UserService
+
   private val risksTransformer = RisksTransformer()
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -67,15 +87,8 @@ class AssessmentTransformerTest {
     registerKotlinModule()
   }
 
-  private val assessmentTransformer = AssessmentTransformer(
-    objectMapper,
-    mockApplicationsTransformer,
-    mockAssessmentClarificationNoteTransformer,
-    mockAssessmentReferralHistoryNoteTransformer,
-    mockUserTransformer,
-    mockPersonTransformer,
-    risksTransformer,
-  )
+  @InjectMockKs
+  lateinit var assessmentTransformer: AssessmentTransformer
 
   private val allocatedToUser = UserEntityFactory()
     .withYieldedProbationRegion {
