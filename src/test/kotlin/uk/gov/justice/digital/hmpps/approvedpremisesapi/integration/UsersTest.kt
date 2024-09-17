@@ -291,47 +291,11 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
   inner class UserHeaders {
 
     @Test
-    fun `Getting an Approved Premises user returns x cas user version header`() {
-      val deliusUsername = "JIMJIMMERSON"
-      val forename = "Jim"
-      val surname = "Jimmerson"
-      val name = "$forename $surname"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = deliusUsername,
-        authSource = "delius",
-        roles = listOf("ROLE_PROBATION"),
-      )
-
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
-
-      userEntityFactory.produceAndPersist {
-        withId(id)
-        withDeliusUsername(deliusUsername)
-        withName(name)
-        withEmail(email)
-        withTelephoneNumber(telephoneNumber)
-        withYieldedProbationRegion { region }
-      }
-
-      mockStaffUserInfoCommunityApiCall(
-        StaffUserDetailsFactory()
-          .withForenames(forename)
-          .withSurname(surname)
-          .withUsername(deliusUsername)
-          .withEmail(email)
-          .withTelephoneNumber(telephoneNumber)
-          .produce(),
-      )
-
-      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    fun `Getting an Approved Premises user with no roles returns x cas user headers`() {
+      val (user, jwt) = `Given a User`()
 
       val headers = webTestClient.get()
-        .uri("/users/$id")
+        .uri("/users/${user.id}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -340,51 +304,34 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         .returnResult(ApprovedPremisesUser::class.java)
         .responseHeaders
 
-      assertThat(headers.containsKey("X-CAS-User-Version")).isTrue()
+      assertThat(headers["X-CAS-User-ID"]!![0]).isEqualTo(user.id.toString())
+      assertThat(headers["X-CAS-User-Version"]!![0]).isEqualTo("993")
     }
 
     @Test
-    fun `Getting a non Approved Premises user does not return x cas user version header`() {
-      val deliusUsername = "JIMJIMMERSON"
-      val forename = "Jim"
-      val surname = "Jimmerson"
-      val name = "$forename $surname"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = deliusUsername,
-        authSource = "delius",
-        roles = listOf("ROLE_PROBATION"),
-      )
-
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
-
-      userEntityFactory.produceAndPersist {
-        withId(id)
-        withDeliusUsername(deliusUsername)
-        withName(name)
-        withEmail(email)
-        withTelephoneNumber(telephoneNumber)
-        withYieldedProbationRegion { region }
-      }
-
-      mockStaffUserInfoCommunityApiCall(
-        StaffUserDetailsFactory()
-          .withForenames(forename)
-          .withSurname(surname)
-          .withUsername(deliusUsername)
-          .withEmail(email)
-          .withTelephoneNumber(telephoneNumber)
-          .produce(),
-      )
-
-      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+    fun `Getting an Approved Premises user with roles returns x cas user headers`() {
+      val (user, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
 
       val headers = webTestClient.get()
-        .uri("/users/$id")
+        .uri("/users/${user.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(ApprovedPremisesUser::class.java)
+        .responseHeaders
+
+      assertThat(headers["X-CAS-User-ID"]!![0]).isEqualTo(user.id.toString())
+      assertThat(headers["X-CAS-User-Version"]!![0]).isEqualTo("1173003502")
+    }
+
+    @Test
+    fun `Getting a non Approved Premises user does not return x cas user headers`() {
+      val (user, jwt) = `Given a User`()
+
+      val headers = webTestClient.get()
+        .uri("/users/${user.id}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -393,6 +340,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         .returnResult(ApprovedPremisesUser::class.java)
         .responseHeaders
 
+      assertThat(headers.containsKey("X-CAS-User-ID")).isFalse()
       assertThat(headers.containsKey("X-CAS-User-Version")).isFalse()
     }
   }

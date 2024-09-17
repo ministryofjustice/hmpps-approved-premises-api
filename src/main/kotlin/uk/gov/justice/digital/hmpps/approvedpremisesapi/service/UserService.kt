@@ -99,12 +99,29 @@ class UserService(
     return userRepository.findByDeliusUsername(username.uppercase())
   }
 
-  fun getUserForRequestVersion(): Int? {
+  fun getUserForRequestVersionInfo(): UserVersionInfo? {
     return httpAuthService.getDeliusPrincipalOrNull()?.let { deliusPrincipal ->
-      val roles = userRepository.findRolesByUsername(deliusPrincipal.name.uppercase())
-      return UserEntity.getVersionHashCode(roles)
+      val roleAssignments = userRepository.findRoleAssignmentByUsername(deliusPrincipal.name.uppercase())
+      if (roleAssignments.isEmpty()) {
+        return null
+      }
+
+      val userId = roleAssignments.first().userId
+      val roles = roleAssignments
+        .filter { it.roleName != null }
+        .map { UserRole.valueOf(it.roleName!!) }
+
+      return UserVersionInfo(
+        userId = userId,
+        version = UserEntity.getVersionHashCode(roles),
+      )
     }
   }
+
+  data class UserVersionInfo(
+    val userId: UUID,
+    val version: Int,
+  )
 
   fun getUsersWithQualificationsAndRoles(
     qualifications: List<UserQualification>?,
