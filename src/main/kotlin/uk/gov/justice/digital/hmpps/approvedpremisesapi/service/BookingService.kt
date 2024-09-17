@@ -72,7 +72,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -83,6 +82,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -137,8 +137,8 @@ class BookingService(
   private val assessmentService: AssessmentService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
-  private val bookingListener: BookingListener,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -293,7 +293,7 @@ class BookingService(
 
       placementRequest.booking = booking
 
-      bookingListener.prePersist(booking)
+      cas1ApplicationStatusService.bookingMade(booking)
       placementRequestRepository.save(placementRequest)
 
       val application = placementRequest.application
@@ -446,7 +446,7 @@ class BookingService(
         adhoc = true,
       )
 
-      bookingListener.prePersist(bookingPrePersist)
+      cas1ApplicationStatusService.bookingMade(bookingPrePersist)
       val booking = bookingRepository.save(bookingPrePersist)
 
       if (!isCalledFromSeeder) {
