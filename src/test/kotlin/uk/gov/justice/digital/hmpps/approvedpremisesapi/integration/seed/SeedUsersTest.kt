@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -56,12 +57,12 @@ class SeedUsersTest : SeedTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
         .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
-        .produce(),
+        .produce().toStaffDetail(),
     )
 
     withCsv(
@@ -320,8 +321,8 @@ class SeedUsersTest : SeedTestBase() {
     )
 
     seedInfos.forEach {
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-        it.staffUserDetails,
+      ApDeliusContext_addStaffDetailResponse(
+        it.staffUserDetails.toStaffDetail(),
       )
     }
 
@@ -401,8 +402,8 @@ class SeedUsersTest : SeedTestBase() {
     )
 
     seedInfos.forEach {
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-        it.staffUserDetails,
+      ApDeliusContext_addStaffDetailResponse(
+        it.staffUserDetails.toStaffDetail(),
       )
     }
 

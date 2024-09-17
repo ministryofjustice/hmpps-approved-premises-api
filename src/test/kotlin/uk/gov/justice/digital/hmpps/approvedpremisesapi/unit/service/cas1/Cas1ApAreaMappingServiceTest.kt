@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 
@@ -33,7 +34,7 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(usersProbationRegionApArea)
         .produce()
 
-      val staffUserDetails = StaffUserDetailsFactory().produce()
+      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
 
       val result = service.determineApArea(
         usersProbationRegion,
@@ -87,6 +88,7 @@ class Cas1ApAreaMappingServiceTest {
           ),
         )
         .produce()
+        .toStaffDetail()
 
       val retrievedApArea = ApAreaEntityFactory().produce()
       every { apAreaRepository.findByIdentifier(expectedApArea) } returns retrievedApArea
@@ -111,6 +113,7 @@ class Cas1ApAreaMappingServiceTest {
         .withProbationAreaCode("N43")
         .withTeams(emptyList())
         .produce()
+        .toStaffDetail()
 
       val retrievedApArea = ApAreaEntityFactory().produce()
       every { apAreaRepository.findByIdentifier("NE") } returns retrievedApArea
@@ -141,6 +144,7 @@ class Cas1ApAreaMappingServiceTest {
           ),
         )
         .produce()
+        .toStaffDetail()
 
       assertThatThrownBy {
         service.determineApArea(
@@ -169,6 +173,7 @@ class Cas1ApAreaMappingServiceTest {
           ),
         )
         .produce()
+        .toStaffDetail()
 
       every { apAreaRepository.findByIdentifier("Mids") } returns null
 

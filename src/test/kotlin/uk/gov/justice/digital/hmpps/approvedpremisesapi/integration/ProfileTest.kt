@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
@@ -230,15 +229,8 @@ class ProfileTest : IntegrationTestBase() {
           probationArea = probationArea,
         )
 
-    fun setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag: Boolean) {
-      mockFeatureFlagService.setFlag("use-ap-and-delius-to-update-users", flag)
-    }
-
-    @ValueSource(booleans = [true, false])
-    @ParameterizedTest
-    fun `Getting existing CAS1 profile returns OK with correct body`(flag: Boolean) {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag)
-
+    @Test
+    fun `Getting existing CAS1 profile returns OK with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -269,8 +261,7 @@ class ProfileTest : IntegrationTestBase() {
 
         ApDeliusContext_addStaffDetailResponse(staffDetail = staffDetail)
 
-        val expectedName =
-          if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) staffDetail.name.deliusName() else userEntity.name
+        val expectedName = staffDetail.name.deliusName()
 
         webTestClient.get()
           .uri(profileV2Endpoint)
@@ -311,11 +302,8 @@ class ProfileTest : IntegrationTestBase() {
       }
     }
 
-    @ValueSource(booleans = [true, false])
-    @ParameterizedTest
-    fun `Getting existing CAS3 profile returns OK with correct body`(flag: Boolean) {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag)
-
+    @Test
+    fun `Getting existing CAS3 profile returns OK with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -371,12 +359,7 @@ class ProfileTest : IntegrationTestBase() {
         withQualification(UserQualification.PIPE)
       }
 
-      val expectedName =
-        if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) {
-          staffUserDetail.toStaffDetail().name.deliusName()
-        } else {
-          userEntity.name
-        }
+      val expectedName = staffUserDetail.toStaffDetail().name.deliusName()
 
       webTestClient.get()
         .uri(profileV2Endpoint)
@@ -408,9 +391,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting existing profile with no Delius staff record returns load error if use-ap-and-delius-to-update-users is true`() {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(true)
-
+    fun `Getting existing profile with no Delius staff record returns load error`() {
       val id = UUID.randomUUID()
       val deliusUsername = "UNKNOWNUSER"
       val email = "foo@bar.com"
@@ -466,71 +447,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting existing profile with no Delius staff record returns stale user info use-ap-and-delius-to-update-users is false`() {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(false)
-
-      val id = UUID.randomUUID()
-      val deliusUsername = "UNKNOWNN"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
-
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = deliusUsername,
-        authSource = "delius",
-        roles = listOf("ROLE_PROBATION"),
-      )
-
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
-
-      probationAreaProbationRegionMappingFactory.produceAndPersist {
-        withProbationRegion(region)
-        withProbationAreaDeliusCode(deliusCode)
-      }
-
-      val userEntity = userEntityFactory.produceAndPersist {
-        withId(id)
-        withYieldedProbationRegion { region }
-        withDeliusUsername(deliusUsername)
-        withEmail(email)
-        withTelephoneNumber(telephoneNumber)
-        withName("Original Name")
-      }
-
-      userRoleAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withRole(UserRole.CAS3_ASSESSOR)
-      }
-
-      userQualificationAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withQualification(UserQualification.PIPE)
-      }
-
-      val response = webTestClient.get()
-        .uri(profileV2Endpoint)
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody(ProfileResponse::class.java)
-        .returnResult()
-        .responseBody!!
-
-      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
-      assertThat(response.loadError).isNull()
-      assertThat(response.user!!.name).isEqualTo("Original Name")
-    }
-
-    @Test
-    fun `Getting existing profile with Delius staff record updates user details if use-ap-and-delius-to-update-users is true`() {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(true)
-
+    fun `Getting existing profile with Delius staff record updates user details`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -591,71 +508,7 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Getting existing profile with Delius staff record doesn't update user details if use-ap-and-delius-to-update-users is false`() {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(false)
-
-      val id = UUID.randomUUID()
-      val deliusUsername = "JIMJIMMERSON"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
-
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = deliusUsername,
-        authSource = "delius",
-        roles = listOf("ROLE_PROBATION"),
-      )
-
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
-
-      probationAreaProbationRegionMappingFactory.produceAndPersist {
-        withProbationRegion(region)
-        withProbationAreaDeliusCode(deliusCode)
-      }
-
-      val userEntity = userEntityFactory.produceAndPersist {
-        withId(id)
-        withYieldedProbationRegion { region }
-        withDeliusUsername(deliusUsername)
-        withEmail(email)
-        withTelephoneNumber(telephoneNumber)
-        withName("Original Name")
-      }
-
-      userRoleAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withRole(UserRole.CAS3_ASSESSOR)
-      }
-
-      userQualificationAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withQualification(UserQualification.PIPE)
-      }
-
-      val response = webTestClient.get()
-        .uri(profileV2Endpoint)
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody(ProfileResponse::class.java)
-        .returnResult()
-        .responseBody!!
-
-      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
-      assertThat(response.user!!.name).isEqualTo("Original Name")
-    }
-
-    @ValueSource(booleans = [true, false])
-    @ParameterizedTest
-    fun `Getting existing CAS3 profile returns OK for CAS3_REPORTER with correct body`(flag: Boolean) {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag)
-
+    fun `Getting existing CAS3 profile returns OK for CAS3_REPORTER with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
@@ -711,12 +564,7 @@ class ProfileTest : IntegrationTestBase() {
         withQualification(UserQualification.PIPE)
       }
 
-      val expectedName =
-        if (mockFeatureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) {
-          staffUserDetail.toStaffDetail().name.deliusName()
-        } else {
-          userEntity.name
-        }
+      val expectedName = staffUserDetail.toStaffDetail().name.deliusName()
 
       webTestClient.get()
         .uri(profileV2Endpoint)
@@ -747,11 +595,8 @@ class ProfileTest : IntegrationTestBase() {
         )
     }
 
-    @ValueSource(booleans = [true, false])
-    @ParameterizedTest
-    fun `Getting new profile persists new user`(flag: Boolean) {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag)
-
+    @Test
+    fun `Getting new profile persists new user`() {
       val deliusUsername = "JIMJIMMERSON"
       val email = "foo@bar.com"
       val telephoneNumber = "123445677"
@@ -771,13 +616,13 @@ class ProfileTest : IntegrationTestBase() {
         withProbationAreaDeliusCode(region.deliusCode)
       }
 
-      CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+      ApDeliusContext_addStaffDetailResponse(
         StaffUserDetailsFactory()
           .withUsername(deliusUsername)
           .withEmail(email)
           .withTelephoneNumber(telephoneNumber)
           .withProbationAreaCode(region.deliusCode)
-          .produce(),
+          .produce().toStaffDetail(),
       )
 
       val response = webTestClient.get()
@@ -794,11 +639,8 @@ class ProfileTest : IntegrationTestBase() {
       assertThat(response!!.user!!.deliusUsername).isEqualTo(deliusUsername)
     }
 
-    @ValueSource(booleans = [true, false])
-    @ParameterizedTest
-    fun `Getting new profile with no Delius staff record returns load error`(flag: Boolean) {
-      setIsProfileV2UpdateUserIfAlreadyExistsEnabled(flag)
-
+    @Test
+    fun `Getting new profile with no Delius staff record returns load error`() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt("nonStaffUser")
       mockOAuth2ClientCredentialsCallIfRequired()
 

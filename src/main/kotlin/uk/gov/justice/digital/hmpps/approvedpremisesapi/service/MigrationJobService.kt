@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduFromCommunityApiJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
@@ -102,7 +102,7 @@ class MigrationJobService(
           pageSize,
         )
 
-        MigrationJobType.usersPduFromCommunityApi -> UpdateUsersPduFromCommunityApiJob(
+        MigrationJobType.usersPduByApi -> UpdateUsersPduJob(
           getBean(UserRepository::class),
           getBean(UserService::class),
           getBean(MigrationLogger::class),
@@ -151,7 +151,7 @@ class MigrationJobService(
         MigrationJobType.cas1BackfillUserApArea -> Cas1BackfillUserApArea(
           getBean(UserRepository::class),
           getBean(UserService::class),
-          getBean(CommunityApiClient::class),
+          getBean(ApDeliusContextApiClient::class),
           transactionTemplate,
         )
 
