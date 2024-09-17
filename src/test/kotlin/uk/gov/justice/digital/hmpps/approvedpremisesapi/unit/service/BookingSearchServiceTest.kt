@@ -14,7 +14,6 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -36,14 +35,12 @@ class BookingSearchServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val cas3BookingSearchPageSize = 50
-  private val defaultBookingSearchPageSize = 20
 
   private val bookingSearchService = BookingSearchService(
     mockOffenderService,
     mockUserService,
     mockBookingRepository,
     cas3BookingSearchPageSize,
-    defaultBookingSearchPageSize,
   )
 
   @BeforeEach
@@ -73,7 +70,6 @@ class BookingSearchServiceTest {
       crns.map { PersonSummaryInfoResult.Success.Full(it, CaseSummaryFactory().produce()) }
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -120,7 +116,6 @@ class BookingSearchServiceTest {
       )
 
     val (results, metadata) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -175,7 +170,6 @@ class BookingSearchServiceTest {
     )
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -226,7 +220,6 @@ class BookingSearchServiceTest {
       )
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       sortOrder,
       BookingSearchSortField.personName,
@@ -244,59 +237,6 @@ class BookingSearchServiceTest {
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
       mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), pageable)
-    }
-  }
-
-  @EnumSource(value = SortOrder::class)
-  @ParameterizedTest
-  fun `findBookings returns sorted approved premises booking results by person name and database default sort when page number is given`(sortOrder: SortOrder) {
-    val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("personName").ascending()
-      SortOrder.descending -> Sort.by("personName").descending()
-    }
-    val pageable = PageRequest.of(0, defaultBookingSearchPageSize, pageSort)
-    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea {
-            ApAreaEntityFactory().produce()
-          }
-          .produce()
-      }
-      .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
-      listOf(
-        TestBookingSearchResult().withPersonCrn("crn1"),
-        TestBookingSearchResult().withPersonCrn("crn2"),
-        TestBookingSearchResult().withPersonCrn("crn3"),
-      ),
-    )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any()) } returns
-      listOf(
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
-      )
-
-    val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.approvedPremises,
-      null,
-      sortOrder,
-      BookingSearchSortField.personName,
-      1,
-      null,
-    )
-
-    assertThat(results).hasSize(3)
-    assertThat(results.map { it.personName }).isSortedAccordingTo { a, b ->
-      when (sortOrder) {
-        SortOrder.ascending -> compareValues(a, b)
-        SortOrder.descending -> compareValues(b, a)
-      }
-    }
-    assertThat(metaData).isNotNull()
-    verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -332,7 +272,6 @@ class BookingSearchServiceTest {
       )
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       sortOrder,
       BookingSearchSortField.personName,
@@ -385,7 +324,6 @@ class BookingSearchServiceTest {
       )
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       sortOrder,
       BookingSearchSortField.personCrn,
@@ -415,7 +353,6 @@ class BookingSearchServiceTest {
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -445,7 +382,6 @@ class BookingSearchServiceTest {
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
-      ServiceName.temporaryAccommodation,
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -479,7 +415,6 @@ class BookingSearchServiceTest {
 
     Assertions.assertThrows(DataRetrievalFailureException::class.java) {
       bookingSearchService.findBookings(
-        ServiceName.temporaryAccommodation,
         null,
         SortOrder.ascending,
         BookingSearchSortField.bookingCreatedAt,

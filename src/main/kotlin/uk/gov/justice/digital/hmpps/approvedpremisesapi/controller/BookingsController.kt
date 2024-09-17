@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -43,17 +42,17 @@ class BookingsController(
   }
 
   override fun bookingsSearchGet(
-    xServiceName: ServiceName,
     status: BookingStatus?,
     sortOrder: SortOrder?,
     sortField: BookingSearchSortField?,
     page: Int?,
     crn: String?,
+    crnOrName: String?,
   ): ResponseEntity<BookingSearchResults> {
     val sortOrder = sortOrder ?: SortOrder.ascending
     val sortField = sortField ?: BookingSearchSortField.bookingCreatedAt
 
-    val (results, metadata) = bookingSearchService.findBookings(xServiceName, status, sortOrder, sortField, page, crn)
+    val (results, metadata) = bookingSearchService.findBookings(status, sortOrder, sortField, page, crnOrName ?: crn)
 
     return ResponseEntity.ok()
       .headers(metadata?.toHeaders())
