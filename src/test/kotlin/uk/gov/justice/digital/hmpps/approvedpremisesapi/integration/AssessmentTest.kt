@@ -2821,6 +2821,7 @@ class AssessmentTest : IntegrationTestBase() {
   fun `assessmentUpdated Domain Events are returned with the assessment notes with latest first`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
+        mockFeatureFlagService.setFlag("include-assessment-updated-domain-events", true)
 
         val originalDate = LocalDate.now().plusDays(1)
         val newDate = LocalDate.now().plusDays(7)
