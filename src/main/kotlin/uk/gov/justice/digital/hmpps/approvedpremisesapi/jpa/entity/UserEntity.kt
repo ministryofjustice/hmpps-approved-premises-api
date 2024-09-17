@@ -51,9 +51,23 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
   fun findActiveUsersWithQualification(qualification: UserQualification): List<UserEntity>
 
   @Query(
-    "SELECT DISTINCT r.role FROM UserEntity u join u.roles r where u.deliusUsername = :deliusUsername",
+    """
+      SELECT
+      u.id as userId, 
+      a.role as roleName
+      FROM 
+      users u
+      LEFT OUTER JOIN user_role_assignments a ON u.id = a.user_id
+      WHERE u.delius_username = :deliusUsername
+    """,
+    nativeQuery = true,
   )
-  fun findRolesByUsername(deliusUsername: String): List<UserRole>
+  fun findRoleAssignmentByUsername(deliusUsername: String): List<RoleAssignmentByUsername>
+
+  interface RoleAssignmentByUsername {
+    val userId: UUID
+    val roleName: String?
+  }
 
   @Query(
     """
@@ -300,7 +314,7 @@ data class UserEntity(
   override fun toString() = "User $id"
 
   companion object {
-    fun getVersionHashCode(roles: List<UserRole>): Int? {
+    fun getVersionHashCode(roles: List<UserRole>): Int {
       val normalisedRoles = roles.toSet().sortedBy { it.name }
       return Objects.hash(
         normalisedRoles.map { it.name },

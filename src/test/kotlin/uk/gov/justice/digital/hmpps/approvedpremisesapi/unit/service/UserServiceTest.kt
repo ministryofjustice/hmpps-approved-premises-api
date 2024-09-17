@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository.RoleAssignmentByUsername
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
@@ -489,70 +490,134 @@ class UserServiceTest {
     }
   }
 
+  private data class RoleAssignmentByNameImpl(
+    override val userId: UUID,
+    override val roleName: String?,
+  ) : RoleAssignmentByUsername
+
   @Nested
-  inner class GetUserForRequestVersion {
+  inner class GetUserForRequestVersionInfo {
 
     @Test
     fun `getUserForRequestVersion returns same value for version when roles are duplicated`() {
       val username = "SOMEPERSON"
+      val userId = UUID.randomUUID()
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
       every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
       every { mockPrincipal.name } returns username
 
-      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
-      val nonDuplicatRoleValue = userService.getUserForRequestVersion()
-      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
-      val duplicateRoleValue = userService.getUserForRequestVersion()
-      assertThat(nonDuplicatRoleValue).isEqualTo(duplicateRoleValue)
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns listOf(
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_USER_MANAGER.name,
+        ),
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_APPEALS_MANAGER.name,
+        ),
+      )
+
+      val result1 = userService.getUserForRequestVersionInfo()!!
+      val version1 = result1.version
+
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns listOf(
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_USER_MANAGER.name,
+        ),
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_APPEALS_MANAGER.name,
+        ),
+      )
+
+      val result2 = userService.getUserForRequestVersionInfo()!!
+      val version2 = result2.version
+
+      assertThat(result1.userId).isEqualTo(userId)
+      assertThat(result2.userId).isEqualTo(userId)
+      assertThat(version1).isEqualTo(version2)
     }
 
     @Test
     fun `getUserForRequestVersion returns same value for version when roles are in different order`() {
       val username = "SOMEPERSON"
+      val userId = UUID.randomUUID()
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
       every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
       every { mockPrincipal.name } returns username
 
-      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_ASSESSOR)
-      val unorderedRoleValue = userService.getUserForRequestVersion()
-      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_USER_MANAGER)
-      val orderedRoleValue = userService.getUserForRequestVersion()
-      assertThat(unorderedRoleValue).isEqualTo(orderedRoleValue)
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns listOf(
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_USER_MANAGER.name,
+        ),
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_APPEALS_MANAGER.name,
+        ),
+      )
+
+      val version1 = userService.getUserForRequestVersionInfo()!!.version
+
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns listOf(
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_APPEALS_MANAGER.name,
+        ),
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_USER_MANAGER.name,
+        ),
+      )
+
+      val version2 = userService.getUserForRequestVersionInfo()!!.version
+
+      assertThat(version1).isEqualTo(version2)
     }
 
     @Test
-    fun `getUserForRequestVersion returns userVersion when user exists`() {
+    fun `getUserForRequestVersion returns userVersion and ID when no roles set`() {
+      val username = "SOMEPERSON"
+      val userId = UUID.randomUUID()
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
+
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns listOf(
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = null,
+        ),
+      )
+
+      val result = userService.getUserForRequestVersionInfo()!!
+      assertThat(result.userId).isEqualTo(userId)
+      assertThat(result.version).isEqualTo(993)
+    }
+
+    @Test
+    fun `getUserForRequestVersion returns null when user isn't found`() {
       val username = "SOMEPERSON"
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
       every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
       every { mockPrincipal.name } returns username
 
-      every { mockUserRepository.findRolesByUsername(username) } returns listOf<UserRole>(UserRole.CAS1_USER_MANAGER, UserRole.CAS1_APPEALS_MANAGER)
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns emptyList()
 
-      assertThat(userService.getUserForRequestVersion()).isEqualTo(1081659926)
-    }
-
-    @Test
-    fun `getUserForRequestOrNull returns null when User has no roles`() {
-      val username = "SOMEPERSON"
-      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-
-      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
-      every { mockPrincipal.name } returns username
-
-      every { mockUserRepository.findRolesByUsername(username) } returns emptyList<UserRole>()
-
-      assertThat(userService.getUserForRequestVersion()).isNull()
+      val result = userService.getUserForRequestVersionInfo()
+      assertThat(result).isNull()
     }
 
     @Test
     fun `getUserForRequestOrNull returns null when no principal is available`() {
       every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
 
-      assertThat(userService.getUserForRequestVersion()).isNull()
+      assertThat(userService.getUserForRequestVersionInfo()).isNull()
     }
   }
 

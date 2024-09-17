@@ -21,16 +21,18 @@ class UserVersionFilter(
   override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
     when (requestContextService.getServiceForRequest()) {
       ServiceName.approvedPremises -> {
-        addUserVersionHeader(response)
+        addUserHeaders(response)
       }
       else -> { }
     }
     filterChain.doFilter(request, response)
   }
 
-  private fun addUserVersionHeader(response: HttpServletResponse) {
-    userService.getUserForRequestVersion()?.let {
-      response.setHeader("X-CAS-User-Version", it.toString())
+  private fun addUserHeaders(response: HttpServletResponse) {
+    val userVersionInfo = userService.getUserForRequestVersionInfo()
+    userVersionInfo?.let {
+      response.setHeader("X-CAS-User-ID", it.userId.toString())
+      response.setHeader("X-CAS-User-Version", it.version.toString())
     }
   }
 }
