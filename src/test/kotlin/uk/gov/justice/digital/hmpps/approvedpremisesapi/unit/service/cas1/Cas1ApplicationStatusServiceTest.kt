@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
@@ -53,6 +54,29 @@ class Cas1ApplicationStatusServiceTest {
       every { applicationRepository.save(any()) } returns application
 
       service.bookingMade(booking)
+
+      verify { applicationRepository.save(application) }
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+    }
+  }
+
+  @Nested
+  inner class SpaceBookingMade {
+    @Test
+    fun `if linked to application set status to PLACEMENT_ALLOCATED`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { applicationRepository.save(any()) } returns application
+
+      service.spaceBookingMade(spaceBooking)
 
       verify { applicationRepository.save(application) }
 

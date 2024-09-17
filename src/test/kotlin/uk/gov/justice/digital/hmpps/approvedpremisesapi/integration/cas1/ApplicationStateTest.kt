@@ -100,7 +100,24 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `a CAS1 application can transition between all states correctly`() {
+  fun `a CAS1 application can transition between all states correctly, booking`() {
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
+
+    submitApplication(true)
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+
+    startAssessment()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+
+    approveAssessment()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+    createBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+  }
+
+  @Test
+  fun `a CAS1 application can transition between all states correctly, space booking`() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
 
     submitApplication(true)

@@ -6,6 +6,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAva
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
@@ -66,6 +68,9 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService
+
+  @MockK
+  private lateinit var cas1ApplicationStatusService: Cas1ApplicationStatusService
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -206,7 +211,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Creates new booking if all data is valid and raises domain event and email`() {
+    fun `Creates new booking if all data is valid, updates application status, raises domain event and sends email`() {
       val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
       val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
       val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
@@ -236,6 +241,8 @@ class Cas1SpaceBookingServiceTest {
       every {
         spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
       } returns listOf(spaceAvailability)
+
+      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 
       every {
         cas1BookingDomainEventService.spaceBookingMade(
@@ -283,6 +290,8 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.crn).isEqualTo(application.crn)
       assertThat(persistedBooking.keyWorkerStaffCode).isNull()
       assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
+
+      verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
     }
   }
 

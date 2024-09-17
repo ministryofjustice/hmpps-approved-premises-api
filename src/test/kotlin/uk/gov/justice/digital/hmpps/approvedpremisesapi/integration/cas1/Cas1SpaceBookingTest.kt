@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.Instant
@@ -174,7 +176,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Booking a space returns OK with the correct data, emits a domain event and emails`() {
+    fun `Booking a space returns OK with the correct data, updates app status, emits domain event and emails`() {
       `Given a User` { applicant, jwt ->
         `Given a Placement Request`(
           placementRequestAllocatedTo = applicant,
@@ -270,6 +272,9 @@ class Cas1SpaceBookingTest {
           emailAsserter.assertEmailsRequestedCount(2)
           emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingMade)
           emailAsserter.assertEmailRequested(premises.emailAddress!!, notifyConfig.templates.bookingMadePremises)
+
+          assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
         }
       }
     }
