@@ -3853,7 +3853,6 @@ components:
       required:
         - id
         - createdAt
-        - message
         - createdByUserName
         - type
       discriminator:
@@ -3861,6 +3860,7 @@ components:
         mapping:
           user: '#/components/schemas/ReferralHistoryUserNote'
           system: '#/components/schemas/ReferralHistorySystemNote'
+          domainEvent: '#/components/schemas/ReferralHistoryDomainEventNote'
     ReferralHistoryNoteMessageDetails:
       type: object
       properties:
@@ -3870,6 +3870,12 @@ components:
           type: string
         isWithdrawn:
           type: boolean
+        domainEvent:
+          type: object
+    ReferralHistoryDomainEventNote:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReferralHistoryNote'
     ReferralHistoryUserNote:
       allOf:
         - $ref: '#/components/schemas/ReferralHistoryNote'
