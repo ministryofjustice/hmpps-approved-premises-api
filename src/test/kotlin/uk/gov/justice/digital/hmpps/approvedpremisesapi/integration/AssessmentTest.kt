@@ -2905,8 +2905,8 @@ class AssessmentTest : IntegrationTestBase() {
           CAS3AssessmentUpdatedEvent::class.java,
         )
 
-        assertThat(releaseDateUpdatedEvent.eventType).isEqualTo("accommodation.cas3.assessment.updated")
-        assertThat(accommodationReqFromUpdatedEvent.eventType).isEqualTo("accommodation.cas3.assessment.updated")
+        assertThat(releaseDateUpdatedEvent.eventType).isEqualTo(EventType.assessmentUpdated)
+        assertThat(accommodationReqFromUpdatedEvent.eventType).isEqualTo(EventType.assessmentUpdated)
 
         assertThat(releaseDateUpdatedEvent.updatedFields).isEqualTo(
           listOf(
