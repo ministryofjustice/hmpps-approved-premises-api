@@ -106,6 +106,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
 
+  @Deprecated("Use ApprovedPremisesRepository")
   @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE p.id = :id")
   fun findApprovedPremisesByIdOrNull(id: UUID): ApprovedPremisesEntity?
 
@@ -173,6 +174,14 @@ where
     nativeQuery = true,
   )
   fun getBookingSummariesForPremisesId(premisesId: UUID): List<BookingSummary>
+}
+
+@Repository
+interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUID> {
+  fun findByGender(gender: ApprovedPremisesGender): List<ApprovedPremisesEntity>
+
+  @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE :gender IS NULL OR p.gender = :gender")
+  fun findForSummaries(gender: ApprovedPremisesGender?): List<ApprovedPremisesEntity>
 }
 
 @Entity

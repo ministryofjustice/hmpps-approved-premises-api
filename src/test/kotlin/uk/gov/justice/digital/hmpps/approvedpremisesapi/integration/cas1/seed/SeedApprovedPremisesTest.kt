@@ -201,7 +201,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
-      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude]"
+      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -362,6 +362,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "status",
         "apCode",
         "qCode",
+        "gender",
       )
       .newRow()
 
@@ -400,6 +401,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.status.value)
         .withQuotedField(it.apCode)
         .withQuotedField(it.qCode)
+        .withQuotedField(it.gender)
         .newRow()
     }
 

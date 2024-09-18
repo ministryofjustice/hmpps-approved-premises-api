@@ -3,20 +3,21 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import java.util.UUID
 
 @Service
 class Cas1PremisesService(
-  val premisesRepository: PremisesRepository,
+  val premisesRepository: ApprovedPremisesRepository,
   val premisesService: PremisesService,
   val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
 ) {
   fun getPremisesSummary(premisesId: UUID): CasResult<Cas1PremisesSummaryInfo> {
     val premise = premisesRepository.findByIdOrNull(premisesId)
-    if (premise !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+      ?: return CasResult.NotFound("premises", premisesId.toString())
 
     val bedCount = premisesService.getBedCount(premise)
     val outOfServiceBedsCount = cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(premisesId)
@@ -30,6 +31,8 @@ class Cas1PremisesService(
       ),
     )
   }
+
+  fun getPremises(gender: ApprovedPremisesGender?) = premisesRepository.findForSummaries(gender)
 
   data class Cas1PremisesSummaryInfo(
     val entity: ApprovedPremisesEntity,

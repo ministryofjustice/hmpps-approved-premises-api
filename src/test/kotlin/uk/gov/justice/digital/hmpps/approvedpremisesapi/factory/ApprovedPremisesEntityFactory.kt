@@ -153,6 +153,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.emailAddress = { emailAddress }
   }
 
+  fun withGender(gender: ApprovedPremisesGender) = apply {
+    this.gender = { gender }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),

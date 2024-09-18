@@ -3,7 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
@@ -27,6 +30,22 @@ class Cas1PremisesController(
         cas1PremisesTransformer.toPremiseSummary(
           extractEntityFromCasResult(cas1PremisesService.getPremisesSummary(premisesId)),
         ),
+      )
+  }
+
+  override fun getPremisesSummaries(gender: Cas1ApprovedPremisesGender?): ResponseEntity<List<Cas1PremisesBasicSummary>> {
+    return ResponseEntity
+      .ok()
+      .body(
+        cas1PremisesService.getPremises(
+          gender = when (gender) {
+            Cas1ApprovedPremisesGender.male -> ApprovedPremisesGender.MALE
+            Cas1ApprovedPremisesGender.female -> ApprovedPremisesGender.FEMALE
+            null -> null
+          },
+        ).map {
+          cas1PremisesTransformer.toPremiseBasicSummary(it)
+        },
       )
   }
 }

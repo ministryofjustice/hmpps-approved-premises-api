@@ -1,5 +1,20 @@
 components:
   schemas:
+    Cas1PremisesBasicSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apArea:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+      required:
+        - id
+        - name
+        - apArea
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -442,4 +457,8 @@ components:
           type: string
       required:
         - staffCode
-
+    Cas1ApprovedPremisesGender:
+      type: string
+      enum:
+        - male
+        - female
