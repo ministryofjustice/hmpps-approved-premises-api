@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
@@ -440,6 +441,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var status: Yielded<PropertyStatus> = { PropertyStatus.active }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MALE }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -530,5 +532,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     status = this.status(),
     apCode = this.apCode(),
     qCode = this.qCode(),
+    gender = this.gender(),
   )
 }

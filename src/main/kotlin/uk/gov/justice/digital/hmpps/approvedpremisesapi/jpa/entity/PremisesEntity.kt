@@ -214,6 +214,7 @@ abstract class PremisesEntity(
   var status: PropertyStatus,
 )
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises")
@@ -239,6 +240,8 @@ class ApprovedPremisesEntity(
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
   var point: Point?, // TODO: Make not-null once Premises have had point added in all environments
+  @Enumerated(value = EnumType.STRING)
+  val gender: ApprovedPremisesGender,
 ) : PremisesEntity(
   id,
   name,
@@ -258,6 +261,11 @@ class ApprovedPremisesEntity(
   characteristics,
   status,
 )
+
+enum class ApprovedPremisesGender {
+  MALE,
+  FEMALE,
+}
 
 @Entity
 @DiscriminatorValue("temporary-accommodation")
