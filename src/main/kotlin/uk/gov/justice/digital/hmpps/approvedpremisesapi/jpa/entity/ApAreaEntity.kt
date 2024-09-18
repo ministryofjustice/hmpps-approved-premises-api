@@ -20,6 +20,9 @@ interface ApAreaRepository : JpaRepository<ApAreaEntity, UUID> {
   fun updateEmailAddress(id: UUID, emailAddress: String)
 }
 
+/**
+ * Used to geographically group premises
+ */
 @Entity
 @Table(name = "ap_areas")
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
@@ -28,6 +31,8 @@ data class ApAreaEntity(
   val id: UUID,
   val name: String,
   val identifier: String,
+  @Deprecated("We should resolve this from Cas1CruManagementAreaEntity")
   val emailAddress: String?,
+  @Deprecated("We should resolve this from Cas1CruManagementAreaEntity")
   val notifyReplyToEmailId: String?,
 )
