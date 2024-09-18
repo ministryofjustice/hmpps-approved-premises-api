@@ -442,3 +442,15 @@ components:
           type: string
       required:
         - staffCode
+    Cas1CruManagementArea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
+

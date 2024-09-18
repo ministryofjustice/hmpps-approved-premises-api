@@ -870,6 +870,29 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+
+  /reference-data/cru-management-areas:
+    get:
+      tags:
+        - Reference Data
+      operationId: getCruManagementAreas
+      summary: Lists all CRU Management Areas
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1CruManagementArea'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:

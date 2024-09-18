@@ -4,7 +4,12 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import java.util.UUID
+
+@Repository
+interface Cas1CruManagementAreaRepository : JpaRepository<Cas1CruManagementAreaEntity, UUID>
 
 /**
  * When an application is submitted it will be assigned to
