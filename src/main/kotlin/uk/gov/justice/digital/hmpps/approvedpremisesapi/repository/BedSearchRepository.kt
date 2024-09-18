@@ -227,7 +227,8 @@ ORDER BY distance_miles;
         p.probation_region_id = :probation_region_id AND 
         p.status = 'active' AND 
         p.service = 'temporary-accommodation' AND
-        (b.end_date IS NULL OR b.end_date > :end_date);
+        (b.end_date IS NULL OR b.end_date > :end_date)
+        ORDER BY pdu.name, p.name, r.name;
 """
 
   fun findTemporaryAccommodationBeds(
