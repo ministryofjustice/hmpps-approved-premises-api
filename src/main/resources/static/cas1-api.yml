@@ -853,6 +853,7 @@ paths:
     get:
       tags:
         - Reference Data
+      operationId: getOutOfServiceBedReasons
       summary: Lists all reasons for beds going out of service
       responses:
         200:

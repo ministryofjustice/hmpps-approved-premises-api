@@ -7,17 +7,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 
-@Service("Cas1ReferenceDataController")
-class ReferenceDataController(
-  private val reasonTransformer: Cas1OutOfServiceBedReasonTransformer,
-  private val repository: Cas1OutOfServiceBedReasonRepository,
+@Service
+class Cas1ReferenceDataController(
+  private val cas1OutOfServiceBedReasonTransformer: Cas1OutOfServiceBedReasonTransformer,
+  private val cas1OutOfServiceBedReasonRepository: Cas1OutOfServiceBedReasonRepository,
 ) : ReferenceDataCas1Delegate {
 
-  override fun referenceDataOutOfServiceBedReasonsGet(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
-    return ResponseEntity.ok(transformedOutOfServiceBedReasons())
+  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
+    return ResponseEntity.ok(
+      cas1OutOfServiceBedReasonRepository.findActive().map {
+        reason -> cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
+      }
+    )
   }
 
-  private fun transformedOutOfServiceBedReasons(): List<Cas1OutOfServiceBedReason> {
-    return repository.findActive().map { reason -> reasonTransformer.transformJpaToApi(reason) }
-  }
 }
