@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.LocalDate
@@ -32,7 +31,7 @@ import java.util.UUID
 
 @Service
 class Cas1SpaceBookingService(
-  private val premisesService: PremisesService,
+  private val cas1PremisesService: Cas1PremisesService,
   private val placementRequestService: PlacementRequestService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceSearchRepository: Cas1SpaceSearchRepository,
@@ -51,7 +50,7 @@ class Cas1SpaceBookingService(
     departureDate: LocalDate,
     createdBy: UserEntity,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = premisesService.getApprovedPremises(premisesId)
+    val premises = cas1PremisesService.findPremiseById(premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
@@ -133,7 +132,7 @@ class Cas1SpaceBookingService(
     bookingId: UUID,
     cas1NewArrival: Cas1NewArrival,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = premisesService.getApprovedPremises(premisesId)
+    val premises = cas1PremisesService.findPremiseById(premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
@@ -180,7 +179,7 @@ class Cas1SpaceBookingService(
     bookingId: UUID,
     cas1NewDeparture: Cas1NewDeparture,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = premisesService.getApprovedPremises(premisesId)
+    val premises = cas1PremisesService.findPremiseById(premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
@@ -239,7 +238,7 @@ class Cas1SpaceBookingService(
     filterCriteria: SpaceBookingFilterCriteria,
     pageCriteria: PageCriteria<Cas1SpaceBookingSummarySortField>,
   ): CasResult<Pair<List<Cas1SpaceBookingSearchResult>, PaginationMetadata?>> {
-    if (premisesService.getApprovedPremises(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
+    if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
 
     val page = cas1SpaceBookingRepository.search(
       filterCriteria.residency?.name,
@@ -265,7 +264,7 @@ class Cas1SpaceBookingService(
   }
 
   fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
-    if (premisesService.getApprovedPremises(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+    if (cas1PremisesService.findPremiseById(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
 
     val booking = cas1SpaceBookingRepository.findByIdOrNull(bookingId) ?: return CasResult.NotFound("booking", bookingId.toString())
 

@@ -34,6 +34,8 @@ class Cas1PremisesService(
 
   fun getPremises(gender: ApprovedPremisesGender?) = premisesRepository.findForSummaries(gender)
 
+  fun findPremiseById(id: UUID) = premisesRepository.findByIdOrNull(id)
+
   data class Cas1PremisesSummaryInfo(
     val entity: ApprovedPremisesEntity,
     val bedCount: Int,

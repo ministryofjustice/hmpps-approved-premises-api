@@ -106,10 +106,6 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
 
-  @Deprecated("Use ApprovedPremisesRepository")
-  @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE p.id = :id")
-  fun findApprovedPremisesByIdOrNull(id: UUID): ApprovedPremisesEntity?
-
   @Query("SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithBedCount>
 

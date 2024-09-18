@@ -80,9 +80,6 @@ class PremisesService(
     premisesRepository.findAllByProbationRegionAndType(probationRegionId, it)
   } ?: listOf()
 
-  @Deprecated("Callers should instead call Cas1PremisesSevice")
-  fun getApprovedPremises(premisesId: UUID) = premisesRepository.findApprovedPremisesByIdOrNull(premisesId)
-
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
 
   fun getPremisesSummary(premisesId: UUID): List<BookingSummary> = premisesRepository.getBookingSummariesForPremisesId(premisesId)

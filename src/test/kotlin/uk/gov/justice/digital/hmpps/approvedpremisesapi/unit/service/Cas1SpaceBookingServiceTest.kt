@@ -40,11 +40,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Spac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -58,7 +58,7 @@ import java.util.UUID
 @ExtendWith(MockKExtension::class)
 class Cas1SpaceBookingServiceTest {
   @MockK
-  private lateinit var premisesService: PremisesService
+  private lateinit var cas1PremisesService: Cas1PremisesService
 
   @MockK
   private lateinit var placementRequestService: PlacementRequestService
@@ -106,7 +106,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getApprovedPremises(any()) } returns null
+      every { cas1PremisesService.findPremiseById(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val result = service.createNewBooking(
@@ -135,7 +135,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
 
       val result = service.createNewBooking(
@@ -168,7 +168,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val result = service.createNewBooking(
@@ -206,7 +206,7 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementRequest(placementRequest)
         .produce()
 
-      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns existingSpaceBooking
 
@@ -249,7 +249,7 @@ class Cas1SpaceBookingServiceTest {
         premisesId = premises.id,
       )
 
-      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns null
 
@@ -315,7 +315,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `approved premises not found return error`() {
-      every { premisesService.getApprovedPremises(PREMISES_ID) } returns null
+      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns null
 
       val result = service.search(
         PREMISES_ID,
@@ -342,7 +342,7 @@ class Cas1SpaceBookingServiceTest {
       inputSortField: Cas1SpaceBookingSummarySortField,
       sqlSortField: String,
     ) {
-      every { premisesService.getApprovedPremises(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
+      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
 
       val results = PageImpl(
         listOf(
@@ -384,7 +384,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns not found error if premises with the given ID doesn't exist`() {
-      every { premisesService.getApprovedPremises(any()) } returns null
+      every { cas1PremisesService.findPremiseById(any()) } returns null
 
       val result = service.getBooking(UUID.randomUUID(), UUID.randomUUID())
 
@@ -398,7 +398,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.getBooking(premises.id, UUID.randomUUID())
@@ -416,7 +416,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .produce()
 
-      every { premisesService.getApprovedPremises(premises.id) } returns premises
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { spaceBookingRepository.findByIdOrNull(spaceBooking.id) } returns spaceBooking
 
       val result = service.getBooking(premises.id, spaceBooking.id)
@@ -442,7 +442,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no premises with the given premisesId exists`() {
-      every { premisesService.getApprovedPremises(any()) } returns null
+      every { cas1PremisesService.findPremiseById(any()) } returns null
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.recordArrivalForBooking(
@@ -461,7 +461,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no space booking with the given bookingId exists`() {
-      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.recordArrivalForBooking(
@@ -482,7 +482,7 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns conflict error if the space booking record already has an arrival date recorded`() {
       val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(actualArrivalDateTime = originalArrivalDate)
 
-      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
 
       val result = service.recordArrivalForBooking(
@@ -501,7 +501,7 @@ class Cas1SpaceBookingServiceTest {
     fun `Updates existing space booking with arrival information and raises domain event`() {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(any(), any()) } returns Unit
@@ -538,7 +538,7 @@ class Cas1SpaceBookingServiceTest {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       val updatedExpectedDepartureDate = expectedDepartureDate.plusMonths(1)
 
-      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(any(), any()) } returns Unit
@@ -614,7 +614,7 @@ class Cas1SpaceBookingServiceTest {
 
     @BeforeEach
     fun setup() {
-      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { departureReasonRepository.findByIdOrNull(any()) } returns departureReason
       every { moveOnCategoryRepository.findByIdOrNull(any()) } returns departureMoveOnCategory
@@ -622,7 +622,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no premises exist with the given premisesId`() {
-      every { premisesService.getApprovedPremises(any()) } returns null
+      every { cas1PremisesService.findPremiseById(any()) } returns null
 
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),
