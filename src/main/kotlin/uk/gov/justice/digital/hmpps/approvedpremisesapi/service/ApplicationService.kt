@@ -700,7 +700,7 @@ class ApplicationService(
     applicationId: UUID,
     submitApplication: SubmitApprovedPremisesApplication,
     username: String,
-    apAreaId: UUID?,
+    apAreaId: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
@@ -783,6 +783,7 @@ class ApplicationService(
 
     val now = OffsetDateTime.now(clock)
 
+    val apArea = apAreaRepository.findByIdOrNull(apAreaId)!!
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
       this.isEmergencyApplication = isEmergencyApplication
@@ -795,7 +796,7 @@ class ApplicationService(
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
-      apArea = apAreaRepository.findByIdOrNull(apAreaId)
+      this.apArea = apArea
       this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
       this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(

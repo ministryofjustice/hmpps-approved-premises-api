@@ -1455,16 +1455,14 @@ class ApplicationServiceTest {
   inner class SubmitApplicationCas1 {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
+    val apArea = ApAreaEntityFactory().produce()
     val user = UserEntityFactory()
+      .withDefaults()
       .withDeliusUsername(this.username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
+      .withApArea(apArea)
       .produce()
 
-    private var submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+    private var defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
       translatedDocument = {},
       isPipeApplication = true,
       isWomensApplication = false,
@@ -1483,7 +1481,7 @@ class ApplicationServiceTest {
     @BeforeEach
     fun setup() {
       every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
     }
 
     @Test
@@ -1493,9 +1491,9 @@ class ApplicationServiceTest {
       assertThat(
         applicationService.submitApprovedPremisesApplication(
           applicationId,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
-          null,
+          apAreaId = UUID.randomUUID(),
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
     }
@@ -1517,9 +1515,9 @@ class ApplicationServiceTest {
       assertThat(
         applicationService.submitApprovedPremisesApplication(
           applicationId,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
-          null,
+          apAreaId = UUID.randomUUID(),
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
     }
@@ -1541,9 +1539,9 @@ class ApplicationServiceTest {
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
-        submitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication,
         username,
-        null,
+        apAreaId = UUID.randomUUID(),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1575,9 +1573,9 @@ class ApplicationServiceTest {
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
-        submitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication,
         username,
-        null,
+        apAreaId = UUID.randomUUID(),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1607,7 +1605,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
@@ -1621,13 +1619,13 @@ class ApplicationServiceTest {
         caseManagerIsNotApplicant = true,
       )
 
-      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
-        submitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication,
         username,
-        null,
+        apAreaId = UUID.randomUUID(),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1656,7 +1654,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
@@ -1671,13 +1669,13 @@ class ApplicationServiceTest {
         caseManagerIsNotApplicant = false,
       )
 
-      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
-        submitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication,
         username,
-        null,
+        apAreaId = UUID.randomUUID(),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1695,7 +1693,7 @@ class ApplicationServiceTest {
     fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, triggers email`(
       situation: SituationOption?,
     ) {
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
@@ -1741,9 +1739,9 @@ class ApplicationServiceTest {
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
-          user.probationRegion.id,
+          apAreaId = apArea.id,
         )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1754,13 +1752,13 @@ class ApplicationServiceTest {
       val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
       assertThat(persistedApplication.isPipeApplication).isTrue
       assertThat(persistedApplication.isWomensApplication).isFalse
-      assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
+      assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
       if (situation == null) {
         assertThat(persistedApplication.situation).isNull()
       } else {
         assertThat(persistedApplication.situation).isEqualTo(situation.toString())
       }
-      assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
+      assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
       assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
@@ -1773,7 +1771,7 @@ class ApplicationServiceTest {
       verify(exactly = 1) {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
           application,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
         )
       }
@@ -1785,7 +1783,7 @@ class ApplicationServiceTest {
     @ParameterizedTest
     @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
     fun `submitApprovedPremisesApplication sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
@@ -1836,9 +1834,9 @@ class ApplicationServiceTest {
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
-          user.probationRegion.id,
+          apAreaId = apArea.id,
         )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1849,9 +1847,9 @@ class ApplicationServiceTest {
       val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
       assertThat(persistedApplication.isPipeApplication).isTrue
       assertThat(persistedApplication.isWomensApplication).isFalse
-      assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
+      assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
       assertThat(persistedApplication.noticeType).isEqualTo(noticeType)
-      assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
+      assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
       assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
@@ -1863,7 +1861,7 @@ class ApplicationServiceTest {
       verify(exactly = 1) {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
           application,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
         )
       }
@@ -1875,7 +1873,7 @@ class ApplicationServiceTest {
     @ParameterizedTest
     @EnumSource(ApType::class)
     fun `submitApprovedPremisesApplication sets apType correctly`(apType: ApType) {
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = null,
         isWomensApplication = false,
@@ -1923,9 +1921,9 @@ class ApplicationServiceTest {
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
-          user.probationRegion.id,
+          apAreaId = apArea.id,
         )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1938,9 +1936,9 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
       assertThat(persistedApplication.apType).isEqualTo(apType.asApprovedPremisesType())
       assertThat(persistedApplication.isWomensApplication).isFalse
-      assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
+      assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
       assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
-      assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
+      assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
       assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
@@ -1952,7 +1950,7 @@ class ApplicationServiceTest {
       verify(exactly = 1) {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
           application,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
         )
       }
@@ -1962,7 +1960,7 @@ class ApplicationServiceTest {
 
     @Test
     fun `submitApprovedPremisesApplication updates existing application user details`() {
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
@@ -2033,9 +2031,9 @@ class ApplicationServiceTest {
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
-          user.probationRegion.id,
+          apAreaId = apArea.id,
         )
 
       result as AuthorisableActionResult.Success
@@ -2049,7 +2047,7 @@ class ApplicationServiceTest {
 
     @Test
     fun `updateApprovedPremisesApplication if applicant is now case manager, removes existing case manager user details`() {
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
@@ -2090,9 +2088,9 @@ class ApplicationServiceTest {
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
-        submitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication,
         username,
-        user.probationRegion.id,
+        apAreaId = apArea.id,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -2101,7 +2099,7 @@ class ApplicationServiceTest {
     }
 
     private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
-      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
@@ -2112,7 +2110,7 @@ class ApplicationServiceTest {
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),
       )
 
-      every { mockApAreaRepository.findByIdOrNull(any()) } returns null
+      every { mockApAreaRepository.findByIdOrNull(apArea.id) } returns apArea
 
       every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
@@ -2122,7 +2120,7 @@ class ApplicationServiceTest {
       every {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
           application,
-          submitApprovedPremisesApplication,
+          defaultSubmitApprovedPremisesApplication,
           username,
         )
       } returns Unit
