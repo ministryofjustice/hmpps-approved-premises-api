@@ -290,6 +290,10 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
+        departureReason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        departureMoveOnCategory:
+          $ref: '_shared.yml#/components/schemas/NamedId'
         createdAt:
           type: string
           format: date-time
@@ -425,16 +429,12 @@ components:
         moveOnCategoryId:
           type: string
           format: uuid
-        destinationProviderId:
-          type: string
-          format: uuid
         notes:
           type: string
       required:
         - departureDateTime
-        - depatureReason
-        - moveOnCategory
-        - destinationProvider
+        - reasonId
+        - moveOnCategoryId
     Cas1AssignKeyWorker:
       type: object
       properties:

@@ -7,6 +7,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.util.UUID
 
 @Repository
@@ -35,4 +36,17 @@ data class DepartureReasonEntity(
   val legacyDeliusReasonCode: String?,
 ) {
   override fun toString() = "DepartureReasonEntity:$id"
+
+  companion object {
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
+      PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+  }
+}
+
+fun DepartureReasonEntity.serviceScopeMatches(bookingService: String): Boolean {
+  return when (serviceScope) {
+    "*" -> true
+    bookingService -> true
+    else -> return false
+  }
 }

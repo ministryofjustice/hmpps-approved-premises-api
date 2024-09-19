@@ -4157,6 +4157,7 @@ components:
         - cas1_request_for_placement_withdraw_others
         - cas1_space_booking_list
         - cas1_space_booking_record_arrival
+        - cas1_space_booking_record_departure
         - cas1_space_booking_view
         - cas1_premises_view_summary
         - cas1_reports_view
@@ -6431,6 +6432,10 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
+        departureReason:
+          $ref: '#/components/schemas/NamedId'
+        departureMoveOnCategory:
+          $ref: '#/components/schemas/NamedId'
         createdAt:
           type: string
           format: date-time
@@ -6566,16 +6571,12 @@ components:
         moveOnCategoryId:
           type: string
           format: uuid
-        destinationProviderId:
-          type: string
-          format: uuid
         notes:
           type: string
       required:
         - departureDateTime
-        - depatureReason
-        - moveOnCategory
-        - destinationProvider
+        - reasonId
+        - moveOnCategoryId
     Cas1AssignKeyWorker:
       type: object
       properties:

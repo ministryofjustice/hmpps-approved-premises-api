@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -125,7 +126,7 @@ class SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL)
 
-    extractEntityFromCasResult(
+    ensureEntityFromCasResultIsSuccess(
       cas1SpaceBookingService.recordArrivalForBooking(
         premisesId,
         bookingId,
@@ -140,7 +141,16 @@ class SpaceBookingController(
     bookingId: UUID,
     cas1NewDeparture: Cas1NewDeparture,
   ): ResponseEntity<Unit> {
-    return super.premisesPremisesIdSpaceBookingsBookingIdDeparturePost(premisesId, bookingId, cas1NewDeparture)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE)
+
+    ensureEntityFromCasResultIsSuccess(
+      cas1SpaceBookingService.recordDepartureForBooking(
+        premisesId,
+        bookingId,
+        cas1NewDeparture,
+      ),
+    )
+    return ResponseEntity(HttpStatus.OK)
   }
 
   override fun premisesPremisesIdSpaceBookingsBookingIdKeyworkerPost(

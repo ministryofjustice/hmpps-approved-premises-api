@@ -5,15 +5,19 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -35,6 +39,8 @@ class Cas1SpaceBookingService(
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
+  private val departureReasonRepository: DepartureReasonRepository,
+  private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
 ) {
   @Transactional
@@ -98,6 +104,8 @@ class Cas1SpaceBookingService(
         cancellationRecordedAt = null,
         cancellationReason = null,
         cancellationReasonNotes = null,
+        departureMoveOnCategory = null,
+        departureReason = null,
       ),
     )
 
@@ -151,18 +159,76 @@ class Cas1SpaceBookingService(
         null
       }
 
-    val updatedCas1SpaceBooking = existingCas1SpaceBooking.copy(
-      actualArrivalDateTime = cas1NewArrival.arrivalDateTime,
-      canonicalArrivalDate = LocalDate.ofInstant(cas1NewArrival.arrivalDateTime, ZoneId.systemDefault()),
-      expectedDepartureDate = cas1NewArrival.expectedDepartureDate,
-      canonicalDepartureDate = cas1NewArrival.expectedDepartureDate,
-    )
+    existingCas1SpaceBooking.actualArrivalDateTime = cas1NewArrival.arrivalDateTime
+    existingCas1SpaceBooking.canonicalArrivalDate = LocalDate.ofInstant(cas1NewArrival.arrivalDateTime, ZoneId.systemDefault())
+    existingCas1SpaceBooking.expectedDepartureDate = cas1NewArrival.expectedDepartureDate
+    existingCas1SpaceBooking.canonicalDepartureDate = cas1NewArrival.expectedDepartureDate
 
-    val result = cas1SpaceBookingRepository.save(updatedCas1SpaceBooking)
+    val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
-      updatedCas1SpaceBooking,
+      existingCas1SpaceBooking,
       previousExpectedDepartureOn,
+    )
+
+    success(result)
+  }
+
+  @Transactional
+  fun recordDepartureForBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1NewDeparture: Cas1NewDeparture,
+  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
+    val premises = premisesService.getApprovedPremises(premisesId)
+    if (premises == null) {
+      "$.premisesId" hasValidationError "doesNotExist"
+    }
+
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
+    if (existingCas1SpaceBooking == null) {
+      "$.bookingId" hasValidationError "doesNotExist"
+    }
+
+    val departureReason = departureReasonRepository.findByIdOrNull(cas1NewDeparture.reasonId)
+    if (departureReason == null || !departureReason.serviceScopeMatches("approved-premises")) {
+      "$.cas1NewDeparture.reasonId" hasValidationError "doesNotExist"
+    }
+
+    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(cas1NewDeparture.moveOnCategoryId)
+    if (moveOnCategory == null || !moveOnCategory.serviceScopeMatches("approved-premises")) {
+      "$.cas1NewDeparture.moveOnCategoryId" hasValidationError "doesNotExist"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    existingCas1SpaceBooking!!
+
+    if (existingCas1SpaceBooking.actualArrivalDateTime == null) {
+      return existingCas1SpaceBooking.id hasConflictError "An arrival is not recorded for this Space Booking."
+    }
+
+    if (existingCas1SpaceBooking.actualArrivalDateTime!!.isAfter(cas1NewDeparture.departureDateTime)) {
+      return existingCas1SpaceBooking.id hasConflictError "The departure date is before the arrival date."
+    }
+
+    if (existingCas1SpaceBooking.actualDepartureDateTime != null) {
+      return existingCas1SpaceBooking.id hasConflictError "A departure is already recorded for this Space Booking."
+    }
+
+    existingCas1SpaceBooking.actualDepartureDateTime = cas1NewDeparture.departureDateTime
+    existingCas1SpaceBooking.canonicalDepartureDate = LocalDate.ofInstant(cas1NewDeparture.departureDateTime, ZoneId.systemDefault())
+    existingCas1SpaceBooking.departureReason = departureReason
+    existingCas1SpaceBooking.departureMoveOnCategory = moveOnCategory
+
+    val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
+
+    cas1SpaceBookingManagementDomainEventService.departureRecorded(
+      existingCas1SpaceBooking,
+      departureReason!!,
+      moveOnCategory!!,
     )
 
     success(result)

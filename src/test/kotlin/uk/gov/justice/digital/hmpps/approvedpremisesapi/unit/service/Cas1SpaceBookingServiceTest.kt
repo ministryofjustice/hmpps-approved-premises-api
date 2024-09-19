@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -17,6 +18,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -29,6 +31,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
@@ -71,6 +77,12 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService
+
+  @MockK
+  private lateinit var moveOnCategoryRepository: MoveOnCategoryRepository
+
+  @MockK
+  private lateinit var departureReasonRepository: DepartureReasonRepository
 
   @MockK
   private lateinit var cas1ApplicationStatusService: Cas1ApplicationStatusService
@@ -556,6 +568,259 @@ class Cas1SpaceBookingServiceTest {
       assertThat(arrivalDateTime.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalArrivalDate)
       assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.expectedDepartureDate)
       assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
+    }
+  }
+
+  @Nested
+  inner class RecordDeparture {
+
+    private val actualDepartureDate = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    private val departureReason = DepartureReasonEntity(
+      id = UUID.randomUUID(),
+      name = "departureReason",
+      isActive = true,
+      serviceScope = "approved-premises",
+      legacyDeliusReasonCode = "legacyDeliusReasonCode",
+    )
+    private val departureReasonWithInvalidScope = DepartureReasonEntity(
+      id = UUID.randomUUID(),
+      name = "departureReason",
+      isActive = true,
+      serviceScope = "temporary-accommodation",
+      legacyDeliusReasonCode = "legacyDeliusReasonCode",
+    )
+    private val departureMoveOnCategory = MoveOnCategoryEntity(
+      id = UUID.randomUUID(),
+      name = "moveOnCategory",
+      isActive = true,
+      serviceScope = "approved-premises",
+      legacyDeliusCategoryCode = "legacyDeliusReasonCode",
+    )
+    private val departureMoveOnCategoryWithInvalidScope = MoveOnCategoryEntity(
+      id = UUID.randomUUID(),
+      name = "moveOnCategory",
+      isActive = true,
+      serviceScope = "temporary-accommodation",
+      legacyDeliusCategoryCode = "legacyDeliusReasonCode",
+    )
+
+    private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDateTime(LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC))
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    @BeforeEach
+    fun setup() {
+      every { premisesService.getApprovedPremises(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { departureReasonRepository.findByIdOrNull(any()) } returns departureReason
+      every { moveOnCategoryRepository.findByIdOrNull(any()) } returns departureMoveOnCategory
+    }
+
+    @Test
+    fun `Returns validation error if no premises exist with the given premisesId`() {
+      every { premisesService.getApprovedPremises(any()) } returns null
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.premisesId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no space booking exists with the given bookingId`() {
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.bookingId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no departure reason exists with the given reasonId `() {
+      every { departureReasonRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.cas1NewDeparture.reasonId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if the departure reason provided is not for the approved-premises service scope`() {
+      every { departureReasonRepository.findByIdOrNull(any()) } returns departureReasonWithInvalidScope
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.cas1NewDeparture.reasonId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no move on category exists with the given moveOnCategoryId`() {
+      every { moveOnCategoryRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.cas1NewDeparture.moveOnCategoryId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if the move on category provided is not for the approves-premises service scope`() {
+      every { moveOnCategoryRepository.findByIdOrNull(any()) } returns departureMoveOnCategoryWithInvalidScope
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.cas1NewDeparture.moveOnCategoryId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking does not have an actual arrival date`() {
+      val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(actualArrivalDateTime = null)
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("An arrival is not recorded for this Space Booking.")
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking actual departure date is before the actual arrival date`() {
+      val existingSpaceBookingWithArrivalDateInFuture = existingSpaceBooking.copy(
+        actualArrivalDateTime = LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.UTC),
+      )
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDateInFuture
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("The departure date is before the arrival date.")
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking already has an actual departure date`() {
+      val existingSpaceBookingWithDepartureDate = existingSpaceBooking.copy(
+        actualDepartureDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+      )
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithDepartureDate
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("A departure is already recorded for this Space Booking.")
+    }
+
+    @Test
+    fun `Updates existing space booking with departure information and raises domain event`() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any(), any(), any()) } returns Unit
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(
+          departureDateTime = actualDepartureDate,
+          reasonId = UUID.randomUUID(),
+          moveOnCategoryId = UUID.randomUUID(),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
+      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
+      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
+      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
+      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
+      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
+      assertThat(existingSpaceBooking.keyWorkerStaffCode).isEqualTo(updatedSpaceBooking.keyWorkerStaffCode)
+      assertThat(existingSpaceBooking.keyWorkerAssignedAt).isEqualTo(updatedSpaceBooking.keyWorkerAssignedAt)
+      assertThat(existingSpaceBooking.expectedArrivalDate).isEqualTo(updatedSpaceBooking.expectedArrivalDate)
+
+      assertThat(actualDepartureDate).isEqualTo(updatedSpaceBooking.actualDepartureDateTime)
+      assertThat(actualDepartureDate.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
+      assertThat(departureReason).isEqualTo(updatedSpaceBooking.departureReason)
+      assertThat(departureMoveOnCategory).isEqualTo(updatedSpaceBooking.departureMoveOnCategory)
     }
   }
 
