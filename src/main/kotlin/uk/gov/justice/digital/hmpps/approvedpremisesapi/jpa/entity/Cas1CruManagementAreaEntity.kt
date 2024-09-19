@@ -26,4 +26,8 @@ data class Cas1CruManagementAreaEntity(
   val name: String,
   val emailAddress: String?,
   val notifyReplyToEmailId: String?,
-)
+) {
+  companion object {
+    val WOMENS_ESTATE_ID = UUID.fromString("bfb04c2a-1954-4512-803d-164f7fcf252c")
+  }
+}
