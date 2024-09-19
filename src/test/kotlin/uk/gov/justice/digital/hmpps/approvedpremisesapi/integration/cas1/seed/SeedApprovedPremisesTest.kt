@@ -443,7 +443,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var status: Yielded<PropertyStatus> = { PropertyStatus.active }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
-  private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MALE }
+  private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
 
   fun withName(name: String) = apply {
     this.name = { name }

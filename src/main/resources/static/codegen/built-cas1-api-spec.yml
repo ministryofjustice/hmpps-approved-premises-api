@@ -6652,5 +6652,5 @@ components:
     Cas1ApprovedPremisesGender:
       type: string
       enum:
-        - male
-        - female
+        - man
+        - woman

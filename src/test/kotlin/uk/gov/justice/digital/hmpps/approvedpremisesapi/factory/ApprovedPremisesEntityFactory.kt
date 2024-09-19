@@ -38,7 +38,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var point: Yielded<Point>? = null
-  private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MALE }
+  private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
 
   fun withDefaults() = apply {
     withDefaultProbationRegion()

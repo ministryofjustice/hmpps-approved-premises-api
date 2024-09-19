@@ -174,8 +174,6 @@ where
 
 @Repository
 interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUID> {
-  fun findByGender(gender: ApprovedPremisesGender): List<ApprovedPremisesEntity>
-
   @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE :gender IS NULL OR p.gender = :gender")
   fun findForSummaries(gender: ApprovedPremisesGender?): List<ApprovedPremisesEntity>
 }
@@ -268,8 +266,8 @@ class ApprovedPremisesEntity(
 )
 
 enum class ApprovedPremisesGender {
-  MALE,
-  FEMALE,
+  MAN,
+  WOMAN,
 }
 
 @Entity
