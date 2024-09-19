@@ -30,7 +30,7 @@ class InmateDetailsCacheRefreshWorker(
           bookingRepository.getDistinctNomsNumbers()
         ).distinct() - cacheRefreshExclusionsInmateDetailsRepository.getDistinctNomsNumbers().toSet()
 
-    logConspicuously("${distinctNomsNumbers.count()} cache records to check")
+    log.info("${distinctNomsNumbers.count()} cache records to check")
 
     if (loggingEnabled) { log.info("Got $distinctNomsNumbers to consider updating for Inmate Details") }
 
@@ -47,7 +47,7 @@ class InmateDetailsCacheRefreshWorker(
     distinctNomsNumbers.shuffled().forEach { nomsNumber ->
       entriesProcessed += 1
 
-      logConspicuously("Current NOMS number: $nomsNumber")
+      log.info("Current NOMS number: $nomsNumber")
 
       val prematureStopReason = checkShouldStop()
       if (prematureStopReason != null) {
@@ -56,7 +56,7 @@ class InmateDetailsCacheRefreshWorker(
             """Inmate details refresh has stopped prematurely because the lock has expired
 Refresh started at $refreshStarted
 ${stats()}"""
-          logConspicuously(message)
+          log.info(message)
           sentryService.captureErrorMessage(message)
         }
         return
@@ -66,7 +66,7 @@ ${stats()}"""
 
       val cacheEntryStatus = prisonsApiClient.getInmateDetailsCacheEntryStatus(nomsNumber)
 
-      logConspicuously("Cache status for $nomsNumber: $cacheEntryStatus")
+      log.info("Cache status for $nomsNumber: $cacheEntryStatus")
 
       if (cacheEntryStatus == PreemptiveCacheEntryStatus.EXISTS) {
         if (loggingEnabled) {
@@ -80,7 +80,7 @@ ${stats()}"""
 
       val prisonsApiResult = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
 
-      logConspicuously("Upstream API response: $prisonsApiResult")
+      log.info("Upstream API response: $prisonsApiResult")
 
       if (prisonsApiResult is ClientResult.Failure.StatusCode) {
         if (!prisonsApiResult.isPreemptivelyCachedResponse) {
@@ -102,12 +102,8 @@ ${stats()}"""
       }
     }
 
-    logConspicuously("Have completed refreshing inmate details cache. ${stats()}")
+    log.info("Have completed refreshing inmate details cache. ${stats()}")
 
     interruptableSleep(delayMs)
-  }
-
-  private fun logConspicuously(message: String) {
-    log.error("[CONSPICUOUS] $message")
   }
 }
