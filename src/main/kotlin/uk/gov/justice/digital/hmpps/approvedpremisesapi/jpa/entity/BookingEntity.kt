@@ -206,8 +206,20 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     pageable: Pageable?,
   ): Page<BookingSearchResult>
 
+  companion object {
+    private const val OFFENDERS_QUERY = """
+       WITH offenders AS
+         (SELECT distinct on (crn) crn,name
+            FROM temporary_accommodation_applications taa
+            INNER JOIN applications a ON a.id = taa.id
+            ORDER BY crn,a.created_at desc)
+    """
+  }
+
   @Query(
     """
+      $OFFENDERS_QUERY
+      
       SELECT
         b.crn AS personCrn,
         offenders.name AS personName,
@@ -230,34 +242,32 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       LEFT JOIN beds b2 ON b.bed_id = b2.id
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
-      LEFT JOIN (
-        SELECT distinct on (crn) crn,name
-        FROM temporary_accommodation_applications taa
-        INNER JOIN applications a ON a.id = taa.id
-        ORDER BY crn,a.created_at desc
-      ) offenders on b.crn = offenders.crn       
+      LEFT JOIN offenders on b.crn = offenders.crn
       WHERE b.service = 'temporary-accommodation'
       AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crn is null OR b.crn = :crn)
+      AND (:crnOrName is null OR b.crn = :crnOrName OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
     countQuery = """
+      $OFFENDERS_QUERY
+      
       SELECT count(1)
       FROM bookings b
       LEFT JOIN beds b2 ON b.bed_id = b2.id
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
+      LEFT JOIN offenders on b.crn = offenders.crn
       WHERE b.service = 'temporary-accommodation'
       AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crn is null OR b.crn = :crn)
+      AND (:crnOrName is null OR b.crn = :crnOrName OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
     nativeQuery = true,
   )
   fun findTemporaryAccommodationBookings(
     status: String?,
     probationRegionId: UUID?,
-    crn: String?,
+    crnOrName: String?,
     pageable: Pageable?,
   ): Page<BookingSearchResult>
 

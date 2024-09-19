@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
@@ -45,91 +46,20 @@ class BookingSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for Approved Premises bookings returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val allBookings = createApprovedPremisesBookingEntities(userEntity, offenderDetails)
-        create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
-
-        webTestClient.get()
-          .uri("/bookings/search")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse))
-      }
-    }
-  }
-
-  @Test
-  fun `Searching for Approved Premises bookings with pagination`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val allBookings = createApprovedPremisesBookingEntities(userEntity, offenderDetails)
-        create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        allBookings.sortBy { it.createdAt }
-        val firstPage = allBookings.subList(0, 10)
-        val secondPage = allBookings.subList(10, allBookings.size)
-        val expectedFirstPageResponse = getExpectedResponse(firstPage, offenderDetails)
-        val expectedSecondPageResponse = getExpectedResponse(secondPage, offenderDetails)
-
-        webTestClient.get()
-          .uri("/bookings/search?page=1")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
-          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedFirstPageResponse))
-
-        webTestClient.get()
-          .uri("/bookings/search?page=2")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
-          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedSecondPageResponse))
-      }
-    }
-  }
-
-  @Test
   fun `Searching for Temporary Accommodation bookings returns 200 with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
 
-        webTestClient.get()
-          .uri("/bookings/search")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse))
+        callApiAndAssertResponse("/bookings/search", jwt, expectedResponse, true)
       }
     }
   }
 
-  @Test
-  fun `Searching for Temporary Accommodation bookings correctly filtered single booking for a specific crn`() {
+  @ParameterizedTest
+  @CsvSource("crn", "crnOrName")
+  fun `Searching for Temporary Accommodation bookings correctly filtered single booking for a specific crn`(queryParameter: String) {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val crn = "S121978"
@@ -138,21 +68,14 @@ class BookingSearchTest : IntegrationTestBase() {
           createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
 
-        webTestClient.get()
-          .uri("/bookings/search?crn=$crn")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse))
+        callApiAndAssertResponse("/bookings/search?$queryParameter=$crn", jwt, expectedResponse, true)
       }
     }
   }
 
-  @Test
-  fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking for a specific crn`() {
+  @ParameterizedTest
+  @CsvSource("crn", "crnOrName")
+  fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking for a specific crn`(queryParameter: String) {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val crn = "S121978"
@@ -161,35 +84,79 @@ class BookingSearchTest : IntegrationTestBase() {
         createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponse(expectedBookingInSearchResult, offenderDetails)
 
-        webTestClient.get()
-          .uri("/bookings/search?crn=${offenderDetails.otherIds.crn}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse))
+        callApiAndAssertResponse("/bookings/search?$queryParameter=${offenderDetails.otherIds.crn}", jwt, expectedResponse, true)
       }
     }
   }
 
-  @Test
-  fun `Searching for Temporary Accommodation bookings with crn not exists in the database return empty response`() {
+  @ParameterizedTest
+  @CsvSource("crn,S121978", "crnOrName,PersonName")
+  fun `Searching for Temporary Accommodation bookings with crn or name not exists in the database return empty response`(queryParameter: String, queryParameterValue: String) {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResults = BookingSearchResults(resultsCount = 0, results = emptyList())
 
-        webTestClient.get()
-          .uri("/bookings/search?crn=S121978")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedBookingSearchResults))
+        callApiAndAssertResponse("/bookings/search?$queryParameter=$queryParameterValue", jwt, expectedBookingSearchResults, true)
+      }
+    }
+  }
+
+  @Test
+  fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking when name is used in crnOrName query parameter`() {
+    `Given a User` { userEntity, jwt ->
+      `Given Some Offenders` { offenderSequence ->
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val offendersDetailSummary = offenderSequence.take(10).map { (offenderDetailSummary, inmateDetail) -> offenderDetailSummary }.toList()
+        val allBookings = mutableListOf<BookingEntity>()
+        val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
+
+        offendersDetailSummary.forEach {
+          val offenderName = "${it.firstName} ${it.surname}"
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withName(offenderName)
+            withCrn(it.otherIds.crn)
+            withProbationRegion(userEntity.probationRegion)
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+          temporaryAccommodationApplications += application
+
+          val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it.otherIds.crn)
+          allBookings += booking
+        }
+
+        // full name match
+        var expectedOffender = offendersDetailSummary.drop(2).first()
+        var expectedBookings = allBookings.filter { b -> b.crn == expectedOffender.otherIds.crn }
+        var expectedResponse = getExpectedResponse(expectedBookings, expectedOffender)
+
+        callApiAndAssertResponse("/bookings/search?crnOrName=${expectedOffender.firstName} ${expectedOffender.surname}", jwt, expectedResponse, true)
+
+        // first name match
+        expectedOffender = offendersDetailSummary.drop(4).first()
+        expectedBookings = allBookings.filter { b -> b.crn == expectedOffender.otherIds.crn }
+        expectedResponse = getExpectedResponse(expectedBookings, expectedOffender)
+
+        callApiAndAssertResponse("/bookings/search?crnOrName=${expectedOffender.firstName}", jwt, expectedResponse, true)
+
+        // surname match
+        expectedOffender = offendersDetailSummary.drop(7).first()
+        expectedBookings = allBookings.filter { b -> b.crn == expectedOffender.otherIds.crn }
+        expectedResponse = getExpectedResponse(expectedBookings, expectedOffender)
+
+        callApiAndAssertResponse("/bookings/search?crnOrName=${expectedOffender.surname}", jwt, expectedResponse, true)
+
+        // partial match
+        expectedOffender = offendersDetailSummary.drop(9).first()
+        expectedBookings = allBookings.filter { b -> b.crn == expectedOffender.otherIds.crn }
+        expectedResponse = getExpectedResponse(expectedBookings, expectedOffender)
+
+        callApiAndAssertResponse("/bookings/search?crnOrName=${expectedOffender.firstName.last()} ${expectedOffender.surname.first()}", jwt, expectedResponse, true)
       }
     }
   }
@@ -314,36 +281,7 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
 
-        webTestClient.get()
-          .uri("/bookings/search?status=cancelled")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse))
-      }
-    }
-  }
-
-  @Test
-  fun `Results are ordered by the given field and sort order when the query parameters are supplied`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        val expectedBookings = allBookings.sortedByDescending { it.departureDate }
-        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
-
-        webTestClient.get()
-          .uri("/bookings/search?sortOrder=descending&sortField=endDate&page=1")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse), true)
+        callApiAndAssertResponse("/bookings/search?status=cancelled", jwt, expectedResponse, false)
       }
     }
   }
@@ -406,15 +344,7 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
 
-        webTestClient.get()
-          .uri("/bookings/search")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse))
+        callApiAndAssertResponse("/bookings/search", jwt, expectedResponse, false)
       }
     }
   }
@@ -438,7 +368,6 @@ class BookingSearchTest : IntegrationTestBase() {
   ) {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        createApprovedPremisesBookingEntities(userEntity, offenderDetails)
         val sortDirection = when (sortOrder) {
           SortOrder.ascending -> "ascending"
           SortOrder.descending -> "descending"
@@ -453,7 +382,6 @@ class BookingSearchTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/bookings/search?sortOrder=$sortDirection&sortField=${bookingSearchSort.value}&page=1")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -467,7 +395,6 @@ class BookingSearchTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/bookings/search?sortOrder=$sortDirection&sortField=${bookingSearchSort.value}&page=2")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -477,56 +404,6 @@ class BookingSearchTest : IntegrationTestBase() {
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
           .json(objectMapper.writeValueAsString(expectedSecondPageResponse))
-      }
-    }
-  }
-
-  @Test
-  fun `Results are ordered by the created date and sorted descending order when the query parameters are supplied with Pagination`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        val expectedBookings = allBookings.sortedByDescending { it.createdAt }
-        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
-
-        webTestClient.get()
-          .uri("/bookings/search?sortOrder=descending&sortField=createdAt&page=1")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
-          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse), true)
-      }
-    }
-  }
-
-  @Test
-  fun `Results are ordered by the created date and sorted ascending order when the query parameters are supplied with Pagination`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        allBookings.sortBy { it.createdAt }
-        val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
-
-        webTestClient.get()
-          .uri("/bookings/search?sortOrder=ascending&sortField=createdAt&page=1")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
-          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse), true)
       }
     }
   }
@@ -621,7 +498,6 @@ class BookingSearchTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/bookings/search?sortOrder=$sortDirection&sortField=startDate&page=2&status=provisional")
         .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -697,7 +573,6 @@ class BookingSearchTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/bookings/search?sortOrder=$sortDirection&sortField=endDate&page=1&status=provisional")
         .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -724,7 +599,6 @@ class BookingSearchTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/bookings/search?sortOrder=$sortDirection&sortField=endDate&page=2&status=provisional")
         .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -748,7 +622,6 @@ class BookingSearchTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/bookings/search?sortOrder=descending&sortField=crn&page=1&status=provisional")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -770,15 +643,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val sortedByDescending = allBookings.sortedByDescending { it.crn }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
 
-        webTestClient.get()
-          .uri("/bookings/search?sortOrder=descending&sortField=crn&status=provisional")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse), true)
+        callApiAndAssertResponse("/bookings/search?sortOrder=descending&sortField=crn&status=provisional", jwt, expectedResponse, true)
       }
     }
   }
@@ -838,7 +703,6 @@ class BookingSearchTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/bookings/search?sortOrder=$sortDirection&sortField=name&page=1&status=provisional")
         .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -865,7 +729,6 @@ class BookingSearchTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/bookings/search?sortOrder=$sortDirection&sortField=name&page=2&status=provisional")
         .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -889,7 +752,6 @@ class BookingSearchTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/bookings/search?sortOrder=descending&sortField=crn&page=1&status=cancelled")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -923,7 +785,6 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.confirmed
-              booking.service == ServiceName.approvedPremises.value -> BookingStatus.awaitingMinusArrival
               else -> BookingStatus.provisional
             },
             startDate = booking.arrivalDate,
@@ -972,7 +833,6 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.confirmed
-              booking.service == ServiceName.approvedPremises.value -> BookingStatus.awaitingMinusArrival
               else -> BookingStatus.provisional
             },
             startDate = booking.arrivalDate,
@@ -1020,7 +880,6 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.confirmed
-              booking.service == ServiceName.approvedPremises.value -> BookingStatus.awaitingMinusArrival
               else -> BookingStatus.provisional
             },
             startDate = booking.arrivalDate,
@@ -1155,44 +1014,21 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
-  private fun createApprovedPremisesBookingEntities(
-    userEntity: UserEntity,
-    offenderDetails: OffenderDetailSummary,
-  ): MutableList<BookingEntity> {
-    val allPremises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-      withProbationRegion(userEntity.probationRegion)
-      withYieldedLocalAuthorityArea {
-        localAuthorityEntityFactory.produceAndPersist()
-      }
-    }
-
-    val allBeds = mutableListOf<BedEntity>()
-    allPremises.forEach { premises ->
-      val rooms = roomEntityFactory.produceAndPersistMultiple(3) {
-        withPremises(premises)
-      }
-
-      rooms.forEach { room ->
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-        }
-
-        allBeds += bed
-      }
-    }
-
-    val allBookings = mutableListOf<BookingEntity>()
-    allBeds.forEach { bed ->
-      val booking = bookingEntityFactory.produceAndPersist {
-        withPremises(bed.room.premises)
-        withCrn(offenderDetails.otherIds.crn)
-        withBed(bed)
-        withServiceName(ServiceName.approvedPremises)
-      }
-
-      allBookings += booking
-    }
-    return allBookings
+  private fun callApiAndAssertResponse(
+    uri: String,
+    jwt: String,
+    expectedResponse: BookingSearchResults,
+    jsonStrictMatch: Boolean,
+  ) {
+    webTestClient.get()
+      .uri(uri)
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(objectMapper.writeValueAsString(expectedResponse), jsonStrictMatch)
   }
 
   private fun mockApDeliusContextCasesSummary(
