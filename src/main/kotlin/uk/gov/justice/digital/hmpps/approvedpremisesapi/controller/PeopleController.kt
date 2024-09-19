@@ -100,7 +100,7 @@ class PeopleController(
 
     val getCas1SpecificNoteTypes = (
       xServiceName == ServiceName.approvedPremises &&
-        featureFlagService.getBooleanFlag("cas1_only_list_specific_prison_note_types")
+        featureFlagService.getBooleanFlag("cas1-only-list-specific-prison-note-types")
       )
     val nomsNumber = offenderDetails.otherIds.nomsNumber
 
@@ -127,7 +127,7 @@ class PeopleController(
 
     val getLast12MonthsOnly = (
       xServiceName == ServiceName.approvedPremises &&
-        featureFlagService.getBooleanFlag("cas1_only_list_adjudications_up_to_12_months")
+        featureFlagService.getBooleanFlag("cas1-only-list-adjudications-up-to-12-months")
       )
 
     return ResponseEntity.ok(adjudicationTransformer.transformToApi(adjudications, getLast12MonthsOnly))
