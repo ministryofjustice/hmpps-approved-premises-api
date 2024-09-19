@@ -855,6 +855,7 @@ paths:
     get:
       tags:
         - Reference Data
+      operationId: getOutOfServiceBedReasons
       summary: Lists all reasons for beds going out of service
       responses:
         200:
@@ -871,6 +872,29 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+
+  /reference-data/cru-management-areas:
+    get:
+      tags:
+        - Reference Data
+      operationId: getCruManagementAreas
+      summary: Lists all CRU Management Areas
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1CruManagementArea'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:
@@ -6559,3 +6583,15 @@ components:
           type: string
       required:
         - staffCode
+    Cas1CruManagementArea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
+
