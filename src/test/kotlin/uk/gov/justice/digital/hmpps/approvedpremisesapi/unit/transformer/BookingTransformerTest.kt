@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -109,13 +108,7 @@ class BookingTransformerTest {
       id = UUID.fromString("4eae0059-af28-4436-a4d8-7106523866d9"),
       name = "region",
       deliusCode = "ABC",
-      apArea = ApAreaEntity(
-        id = UUID.fromString("a005f122-a0e9-4d93-b5bb-f7c5bd82a015"),
-        identifier = "APA",
-        name = "Ap Area",
-        emailAddress = "email@test.com",
-        notifyReplyToEmailId = "1234",
-      ),
+      apArea = null,
     ),
     localAuthorityArea = LocalAuthorityAreaEntity(
       id = UUID.fromString("ee39d3bc-e9ad-4408-a21d-cf763aa1d981"),

@@ -65,8 +65,6 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
     @BeforeAll
     fun setup() {
-      cas1CruManagementAreaRepository.deleteAll()
-
       area1 = cas1CruManagementAreaEntityFactory.produceAndPersist {
         withId(UUID.randomUUID())
         withName("The area 1")
@@ -97,15 +95,9 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
         .isOk
         .bodyAsListOfObjects<Cas1CruManagementArea>()
 
-      assertThat(result).hasSize(3)
-      assertThat(result[0].id).isEqualTo(area1.id)
-      assertThat(result[0].name).isEqualTo(area1.name)
-
-      assertThat(result[1].id).isEqualTo(area2.id)
-      assertThat(result[1].name).isEqualTo(area2.name)
-
-      assertThat(result[2].id).isEqualTo(womensEstateArea.id)
-      assertThat(result[2].name).isEqualTo(womensEstateArea.name)
+      assertThat(result.any { it.id == area1.id && it.name == area1.name }).isTrue()
+      assertThat(result.any { it.id == area2.id && it.name == area2.name }).isTrue()
+      assertThat(result.any { it.id == womensEstateArea.id && it.name == womensEstateArea.name }).isTrue()
     }
 
     @Test
@@ -122,12 +114,9 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
         .isOk
         .bodyAsListOfObjects<Cas1CruManagementArea>()
 
-      assertThat(result).hasSize(2)
-      assertThat(result[0].id).isEqualTo(area1.id)
-      assertThat(result[0].name).isEqualTo(area1.name)
-
-      assertThat(result[1].id).isEqualTo(area2.id)
-      assertThat(result[1].name).isEqualTo(area2.name)
+      assertThat(result.any { it.id == area1.id && it.name == area1.name }).isTrue()
+      assertThat(result.any { it.id == area2.id && it.name == area2.name }).isTrue()
+      assertThat(result.any { it.id == womensEstateArea.id && it.name == womensEstateArea.name }).isFalse()
     }
   }
 }

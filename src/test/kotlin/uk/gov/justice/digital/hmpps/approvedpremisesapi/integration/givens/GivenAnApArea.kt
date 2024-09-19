@@ -17,5 +17,6 @@ fun IntegrationTestBase.`Given an AP Area`(
     if (emailAddress != null) {
       withEmailAddress(emailAddress)
     }
+    withDefaultCruManagementArea(`Given an CAS1 CRU Management Area`())
   }
 }
