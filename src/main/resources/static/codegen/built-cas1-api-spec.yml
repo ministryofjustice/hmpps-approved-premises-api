@@ -3303,6 +3303,7 @@ components:
               type: string
               format: date
             apAreaId:
+              description: If the user's ap area id is incorrect, they can optionally override it for the application
               type: string
               format: uuid
             applicantUserDetails:
