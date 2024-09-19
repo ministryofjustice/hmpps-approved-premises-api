@@ -830,7 +830,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics("Premises One", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSharedPropertyCharacteristic))
 
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics("Premises Two",probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSingleOccupancyCharacteristic))
+        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics("Premises Two", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSingleOccupancyCharacteristic))
 
         val premisesThree = createTemporaryAccommodationPremisesWithCharacteristics(
           "Premises Three",
@@ -968,7 +968,7 @@ class BedSearchTest : IntegrationTestBase() {
           mutableListOf(premisesSingleOccupancyCharacteristic, premisesPubNearbyCharacteristic),
         )
 
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics("Premises Two",probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSingleOccupancyCharacteristic))
+        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics("Premises Two", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSingleOccupancyCharacteristic))
 
         val premisesThree = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withName("Premises Three")
@@ -978,7 +978,7 @@ class BedSearchTest : IntegrationTestBase() {
           withStatus(PropertyStatus.active)
         }
 
-        val premisesFour = createTemporaryAccommodationPremisesWithCharacteristics("Premises Four",probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSharedPropertyCharacteristic))
+        val premisesFour = createTemporaryAccommodationPremisesWithCharacteristics("Premises Four", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSharedPropertyCharacteristic))
 
         val (roomOne, bedOne) = createBedspace(premisesOne, "Room One")
 
