@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import java.time.LocalDate
 
+@SuppressWarnings("LargeClass")
 class BedSearchRepositoryTest : IntegrationTestBase() {
   @Autowired
   lateinit var bedSearchRepository: BedSearchRepository
@@ -734,6 +735,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       probationRegionId = probationRegion.id,
       filterBySharedProperty = false,
       filterBySingleOccupancy = false,
+      filterByWheelchairAccessible = false,
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -925,6 +927,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       probationRegionId = probationRegion.id,
       filterBySharedProperty = true,
       filterBySingleOccupancy = false,
+      filterByWheelchairAccessible = false,
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -1117,6 +1120,199 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       probationRegionId = probationRegion.id,
       filterBySharedProperty = false,
       filterBySingleOccupancy = true,
+      filterByWheelchairAccessible = false,
+    )
+
+    assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
+    results.forEach { searchResult ->
+      bedsThatShouldNotAppearInSearchResults.none { searchResult.bedId == it.id }
+      bedsThatShouldAppearInSearchResults.any { searchResult.bedId == it.id }
+    }
+
+    assertThat(results.first { it.premisesId == premisesOneInPdu.id }.premisesBedCount).isEqualTo(2)
+  }
+
+  @Test
+  fun `Searching for a Temporary Accommodation Bedspace in a wheelchair accessible returns correct results`() {
+    val bedsThatShouldNotAppearInSearchResults = mutableListOf<BedEntity>()
+    val bedsThatShouldAppearInSearchResults = mutableListOf<BedEntity>()
+
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+    val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    val premisesWheelchairAccessibleCharacteristic = characteristicEntityFactory.produceAndPersist {
+      withName("Wheelchair accessible")
+      withServiceScope("temporary-accommodation")
+      withModelScope("premises")
+    }
+
+    val premisesSharedPropertyCharacteristic = characteristicEntityFactory.produceAndPersist {
+      withName("Shared property")
+      withServiceScope("temporary-accommodation")
+      withModelScope("premises")
+    }
+
+    val premisesWomenOnlyCharacteristic = characteristicEntityFactory.produceAndPersist {
+      withName("Women only")
+      withServiceScope("temporary-accommodation")
+      withModelScope("premises")
+    }
+
+    val premisesOneInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationDeliveryUnit(searchPdu)
+      withStatus(PropertyStatus.active)
+      withCharacteristics(mutableListOf(premisesWheelchairAccessibleCharacteristic, premisesWomenOnlyCharacteristic))
+    }
+
+    val roomInPremisesOneInPdu = roomEntityFactory.produceAndPersist {
+      withPremises(premisesOneInPdu)
+    }
+
+    val bedOneInRoomInPremisesOneInPdu = bedEntityFactory.produceAndPersist {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesOneInPdu)
+    }
+
+    bookingEntityFactory.produceAndPersist {
+      withPremises(premisesOneInPdu)
+      withBed(bedOneInRoomInPremisesOneInPdu)
+      withArrivalDate(LocalDate.parse("2024-08-08"))
+      withDepartureDate(LocalDate.parse("2024-08-20"))
+    }
+
+    bedsThatShouldAppearInSearchResults += bedOneInRoomInPremisesOneInPdu
+
+    val bedTwoInRoomInPremisesOneInPdu = bedEntityFactory.produceAndPersist {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesOneInPdu)
+    }
+
+    bookingEntityFactory.produceAndPersist {
+      withPremises(premisesOneInPdu)
+      withBed(bedTwoInRoomInPremisesOneInPdu)
+      withArrivalDate(LocalDate.parse("2024-08-12"))
+      withDepartureDate(LocalDate.parse("2024-09-16"))
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedTwoInRoomInPremisesOneInPdu
+
+    val premisesTwoInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationDeliveryUnit(searchPdu)
+      withStatus(PropertyStatus.active)
+      withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic, premisesWomenOnlyCharacteristic))
+    }
+
+    val roomInPremisesTwoInPdu = roomEntityFactory.produceAndPersist {
+      withPremises(premisesTwoInPdu)
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedEntityFactory.produceAndPersistMultiple(2) {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesTwoInPdu)
+    }
+
+    val bedWithBooking = bedEntityFactory.produceAndPersist {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesTwoInPdu)
+    }
+
+    bookingEntityFactory.produceAndPersist {
+      withPremises(premisesTwoInPdu)
+      withBed(bedWithBooking)
+      withArrivalDate(LocalDate.parse("2024-08-08"))
+      withDepartureDate(LocalDate.parse("2024-09-18"))
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedWithBooking
+
+    val premisesThreeInPdu = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationDeliveryUnit(searchPdu)
+      withStatus(PropertyStatus.active)
+      withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic))
+    }
+
+    val roomInPremisesThreeInPdu = roomEntityFactory.produceAndPersist {
+      withPremises(premisesThreeInPdu)
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedEntityFactory.produceAndPersistMultiple(3) {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesThreeInPdu)
+    }
+
+    val bedWithCancelledLostBed = bedEntityFactory.produceAndPersist {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesThreeInPdu)
+    }
+
+    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+      withPremises(premisesThreeInPdu)
+      withBed(bedWithCancelledLostBed)
+      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withStartDate(LocalDate.parse("2024-08-08"))
+      withEndDate(LocalDate.parse("2024-09-10"))
+    }
+
+    lostBedCancellationEntityFactory.produceAndPersist {
+      withLostBed(cancelledLostBed)
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedWithCancelledLostBed
+
+    val bedWithCancelledBooking = bedEntityFactory.produceAndPersist {
+      withName(randomNumberChars(10))
+      withRoom(roomInPremisesThreeInPdu)
+    }
+
+    val cancelledBooking = bookingEntityFactory.produceAndPersist {
+      withPremises(premisesThreeInPdu)
+      withBed(bedWithCancelledLostBed)
+      withArrivalDate(LocalDate.parse("2024-08-18"))
+      withDepartureDate(LocalDate.parse("2024-09-20"))
+    }
+
+    cancellationEntityFactory.produceAndPersist {
+      withBooking(cancelledBooking)
+      withReason(cancellationReasonEntityFactory.produceAndPersist())
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedWithCancelledBooking
+
+    val nonActivePremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationDeliveryUnit(searchPdu)
+      withStatus(PropertyStatus.archived)
+    }
+
+    val roomInNonActivePremises = roomEntityFactory.produceAndPersist {
+      withPremises(nonActivePremises)
+    }
+
+    val bedOneInRoomOneInNonActivePremises = bedEntityFactory.produceAndPersist {
+      withName(randomNumberChars(10))
+      withRoom(roomInNonActivePremises)
+    }
+
+    bedsThatShouldNotAppearInSearchResults += bedOneInRoomOneInNonActivePremises
+
+    val results = bedSearchRepository.findTemporaryAccommodationBeds(
+      probationDeliveryUnits = listOf(searchPdu.id),
+      startDate = LocalDate.parse("2024-08-29"),
+      endDate = LocalDate.parse("2024-09-15"),
+      probationRegionId = probationRegion.id,
+      filterBySharedProperty = false,
+      filterBySingleOccupancy = false,
+      filterByWheelchairAccessible = true,
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)

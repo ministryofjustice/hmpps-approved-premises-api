@@ -180,7 +180,8 @@ ORDER BY distance_miles;
              WHERE service_scope = 'temporary-accommodation'
                       AND p2.probation_region_id = :probation_region_id 
                       AND (c2.is_active = true AND c2.name = 'Single occupancy' OR FALSE = :filter_by_single_occupancy)
-                      AND (c2.is_active = true AND c2.name = 'Shared property' OR FALSE = :filter_by_shared_property))
+                      AND (c2.is_active = true AND c2.name = 'Shared property' OR FALSE = :filter_by_shared_property)
+                      AND (c2.is_active = true AND c2.name = 'Wheelchair accessible' OR FALSE = :filter_by_wheelchair_accessible))
                              
     SELECT p.id as premises_id,
            p.name as premises_name,
@@ -223,7 +224,7 @@ ORDER BY distance_miles;
              (lostbeds.start_date, lostbeds.end_date) OVERLAPS (:start_date, :end_date) AND
              lostbeds_cancel.id IS NULL
         ) AND 
-        (p.id in (SELECT premises_id FROM FilteredPremisesIds) OR (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy)) AND
+        (p.id in (SELECT premises_id FROM FilteredPremisesIds) OR (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy AND FALSE = :filter_by_wheelchair_accessible)) AND
         pdu.id IN (:probation_delivery_unit_ids) AND
         p.probation_region_id = :probation_region_id AND 
         p.status = 'active' AND 
@@ -239,6 +240,7 @@ ORDER BY distance_miles;
     probationRegionId: UUID,
     filterBySharedProperty: Boolean,
     filterBySingleOccupancy: Boolean,
+    filterByWheelchairAccessible: Boolean,
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
@@ -247,6 +249,7 @@ ORDER BY distance_miles;
       addValue("end_date", endDate)
       addValue("filter_by_shared_property", filterBySharedProperty)
       addValue("filter_by_single_occupancy", filterBySingleOccupancy)
+      addValue("filter_by_wheelchair_accessible", filterByWheelchairAccessible)
     }
 
     val result = namedParameterJdbcTemplate.query(

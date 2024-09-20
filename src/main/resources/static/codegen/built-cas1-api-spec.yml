@@ -6141,6 +6141,7 @@ components:
       enum:
         - sharedProperty
         - singleOccupancy
+        - wheelchairAccessible
     Cas1PremisesSearchResultSummary:
       type: object
       properties:

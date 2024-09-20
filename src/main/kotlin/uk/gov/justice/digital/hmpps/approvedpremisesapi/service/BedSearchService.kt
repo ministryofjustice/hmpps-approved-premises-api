@@ -157,6 +157,7 @@ class BedSearchService(
           probationRegionId = user.probationRegion.id,
           filterBySharedProperty = propertyBedAttributes?.contains(BedSearchAttributes.sharedProperty) ?: false,
           filterBySingleOccupancy = propertyBedAttributes?.contains(BedSearchAttributes.singleOccupancy) ?: false,
+          filterByWheelchairAccessible = propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) ?: false,
         )
 
         val bedIds = candidateResults.map { it.bedId }

@@ -673,6 +673,7 @@ class BedSearchServiceTest {
         probationRegionId = user.probationRegion.id,
         filterBySharedProperty = false,
         filterBySingleOccupancy = false,
+        filterByWheelchairAccessible = false,
       )
     } returns repositorySearchResults
 
@@ -788,6 +789,7 @@ class BedSearchServiceTest {
         probationRegionId = user.probationRegion.id,
         filterBySharedProperty = false,
         filterBySingleOccupancy = false,
+        filterByWheelchairAccessible = false,
       )
     } returns repositorySearchResults
 
