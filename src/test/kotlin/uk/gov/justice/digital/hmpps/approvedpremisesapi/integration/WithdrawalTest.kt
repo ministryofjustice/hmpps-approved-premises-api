@@ -1718,7 +1718,7 @@ class WithdrawalTest : IntegrationTestBase() {
   ): Cas1SpaceBookingEntity {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+      withYieldedProbationRegion { `Given a Probation Region`() }
     }
 
     val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {

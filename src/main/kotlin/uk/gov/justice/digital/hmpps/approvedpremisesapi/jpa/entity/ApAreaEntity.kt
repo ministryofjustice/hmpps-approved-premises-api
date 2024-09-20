@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
@@ -35,4 +38,10 @@ data class ApAreaEntity(
   val emailAddress: String?,
   @Deprecated("We should resolve this from Cas1CruManagementAreaEntity")
   val notifyReplyToEmailId: String?,
+  /**
+   * Used to determine a user's [Cas1CruManagementAreaEntity] if no override is specified
+   */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "default_cru1_management_area_id")
+  val defaultCruManagementArea: Cas1CruManagementAreaEntity,
 )
