@@ -2,11 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import io.mockk.every
+import io.mockk.mockk
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -20,6 +23,18 @@ class UserEntityFactory : Factory<UserEntity> {
     val DEFAULT = UserEntityFactory()
       .withDefaults()
       .produce()
+
+    fun mockUserWithPermission(permission: UserPermission): UserEntity {
+      val user = mockk<UserEntity>()
+      every { user.hasPermission(permission) } returns true
+      return user
+    }
+
+    fun mockUserWithoutPermission(permission: UserPermission): UserEntity {
+      val user = mockk<UserEntity>()
+      every { user.hasPermission(permission) } returns false
+      return user
+    }
   }
 
   private var id: Yielded<UUID> = { UUID.randomUUID() }

@@ -215,6 +215,7 @@ class PlacementApplicationService(
    * 2. The user is allowed to withdraw it, and error if not
    * 3. If withdrawn, all descendents entities are withdrawn, where applicable
    */
+  @SuppressWarnings("ThrowsCount")
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
@@ -236,6 +237,7 @@ class PlacementApplicationService(
       WithdrawableEntityType.PlacementApplication -> userProvidedReason
       WithdrawableEntityType.PlacementRequest -> throw InternalServerErrorProblem("Withdrawing a PlacementRequest should not cascade to PlacementApplications")
       WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementApplications")
+      WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to PlacementApplications")
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplication)

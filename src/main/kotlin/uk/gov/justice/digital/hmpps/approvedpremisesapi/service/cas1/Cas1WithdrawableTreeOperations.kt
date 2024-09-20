@@ -118,6 +118,9 @@ class Cas1WithdrawableTreeOperations(
           )
         }
       }
+      WithdrawableEntityType.SpaceBooking -> {
+        TODO("implement me")
+      }
     }
   }
 }

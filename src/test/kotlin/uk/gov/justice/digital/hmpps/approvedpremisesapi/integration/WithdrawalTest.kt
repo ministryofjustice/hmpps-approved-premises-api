@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -38,7 +39,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.jsonForObject
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -345,7 +348,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Returns all possible types when a user can manage bookings, with arrivals in CAS1 blocking bookings`() {
+    fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 blocking bookings`() {
       `Given a User` { applicant, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
           `Given a User` { requestForPlacementAssessor, _ ->
@@ -448,16 +451,16 @@ class WithdrawalTest : IntegrationTestBase() {
      * | Application                          | BLOCKED      |
      * | -> Request for placement 1           | YES          |
      * | ---> Match request 1                 | -            |
-     * | -----> Booking 1 arrival pending     | YES          |
+     * | -----> Space Booking arrival pending | YES          |
      * | ---> Match request 2                 | -            |
      * | -> Request for placement 2           | YES          |
      * | -> Match request 3                   | BLOCKED      |
-     * | ---> Booking 2 has arrival in Delius | BLOCKING     |
+     * | ---> Booking has arrival in Delius   | BLOCKING     |
      * | -> Adhoc Booking                     | YES          |
      * ```
      */
     @Test
-    fun `Returns all possible types when a user can manage bookings, with arrivals in Delius blocking bookings`() {
+    fun `Returns all possible types when a user can manage bookings, with booking arrivals in Delius blocking bookings`() {
       `Given a User` { applicant, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
           `Given a User` { requestForPlacementAssessor, _ ->
@@ -467,15 +470,13 @@ class WithdrawalTest : IntegrationTestBase() {
 
               val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
               val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
-              val booking1NoArrival = createBooking(
+              val spaceBookingNoArrival = createSpaceBooking(
                 application = application,
-                hasArrivalInCas1 = false,
-                hasArrivalInDelius = false,
-                adhoc = false,
                 startDate = nowPlusDays(1),
                 endDate = nowPlusDays(6),
+                arrivalDate = null,
+                placementRequest = placementRequest1,
               )
-              addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
               createPlacementRequest(application, placementApplication = placementApplication1)
 
@@ -486,14 +487,14 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               val placementRequest3 = createPlacementRequest(application)
-              val booking2HasArrivalInDelius = createBooking(
+              val bookingHasArrivalInDelius = createBooking(
                 application = application,
                 hasArrivalInCas1 = false,
                 hasArrivalInDelius = true,
                 startDate = LocalDate.now(),
                 endDate = nowPlusDays(1),
               )
-              addBookingToPlacementRequest(placementRequest3, booking2HasArrivalInDelius)
+              addBookingToPlacementRequest(placementRequest3, bookingHasArrivalInDelius)
 
               val adhocBooking = createBooking(
                 application = application,
@@ -523,7 +524,7 @@ class WithdrawalTest : IntegrationTestBase() {
                 notes = listOf("1 or more placements cannot be withdrawn as they have an arrival recorded in Delius"),
                 withdrawables = listOf(
                   toWithdrawable(placementApplication1),
-                  toWithdrawable(booking1NoArrival),
+                  toWithdrawable(spaceBookingNoArrival),
                   toWithdrawable(placementApplication2),
                   toWithdrawable(adhocBooking),
                 ),
@@ -570,7 +571,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Returns all possible types when a user can manage bookings, with arrivals in CAS1 and Delius blocking bookings`() {
+    fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 and Delius blocking bookings`() {
       `Given a User` { applicant, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
           `Given a User` { requestForPlacementAssessor, _ ->
@@ -680,11 +681,13 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Request for placement 2       | YES          |
      * | -> Match request 3               | BLOCKED      |
      * | ---> Booking 2 has arrival       | -            |
+     * | -> Match request 4               | BLOCKED      |
+     * | ---> Space Booking has arrival   | BLOCKED      |
      * | -> Adhoc Booking                 | -            |
      * ```
      */
     @Test
-    fun `Returns all possible types when a user cannot manage bookings, with arrivals in CAS1 blocking bookings`() {
+    fun `Returns all possible types when a user cannot manage bookings, with booking and space booking arrivals in CAS1 blocking bookings`() {
       `Given a User` { applicant, jwt ->
         `Given a User` { requestForPlacementAssessor, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -717,6 +720,15 @@ class WithdrawalTest : IntegrationTestBase() {
               endDate = nowPlusDays(1),
             )
             addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
+
+            val placementRequest4 = createPlacementRequest(application)
+            createSpaceBooking(
+              application = application,
+              startDate = LocalDate.now(),
+              endDate = nowPlusDays(1),
+              arrivalDate = LocalDateTime.now(),
+              placementRequest = placementRequest4,
+            )
 
             createBooking(
               application = application,
@@ -1697,6 +1709,32 @@ class WithdrawalTest : IntegrationTestBase() {
     return booking
   }
 
+  private fun createSpaceBooking(
+    application: ApprovedPremisesApplicationEntity,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    arrivalDate: LocalDateTime? = null,
+    placementRequest: PlacementRequestEntity,
+  ): Cas1SpaceBookingEntity {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
+
+    val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+      withApplication(application)
+      withPlacementRequest(placementRequest)
+      withCreatedBy(application.createdByUser)
+      withPremises(premises)
+      withCrn(application.crn)
+      withExpectedArrivalDate(startDate)
+      withExpectedDepartureDate(endDate)
+      withActualArrivalDateTime(arrivalDate?.toInstant(ZoneOffset.UTC))
+    }
+
+    return spaceBooking
+  }
+
   private fun now() = LocalDate.now()
 
   private fun nowPlusDays(days: Long) = LocalDate.now().plusDays(days)
@@ -1727,5 +1765,12 @@ class WithdrawalTest : IntegrationTestBase() {
       booking.id,
       WithdrawableType.booking,
       listOf(DatePeriod(booking.arrivalDate, booking.departureDate)),
+    )
+
+  fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) =
+    Withdrawable(
+      spaceBooking.id,
+      WithdrawableType.spaceBooking,
+      listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
     )
 }

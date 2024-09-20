@@ -2809,7 +2809,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(WithdrawableEntityType::class)
+    @EnumSource(WithdrawableEntityType::class, names = ["SpaceBooking"], mode = EnumSource.Mode.EXCLUDE)
     fun `createCancellation sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
       val bookingEntity = BookingEntityFactory()
         .withPremises(premises)
@@ -2820,6 +2820,7 @@ class BookingServiceTest {
         WithdrawableEntityType.PlacementApplication -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
         WithdrawableEntityType.PlacementRequest -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
         WithdrawableEntityType.Booking -> reasonId
+        WithdrawableEntityType.SpaceBooking -> reasonId
       }
 
       every { mockCancellationReasonRepository.findByIdOrNull(expectedReasonId) } returns reason

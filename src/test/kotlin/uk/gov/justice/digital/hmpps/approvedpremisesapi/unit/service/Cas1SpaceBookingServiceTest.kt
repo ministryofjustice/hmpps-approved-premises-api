@@ -29,11 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
@@ -41,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -553,6 +556,75 @@ class Cas1SpaceBookingServiceTest {
       assertThat(arrivalDateTime.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalArrivalDate)
       assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.expectedDepartureDate)
       assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
+    }
+  }
+
+  @Nested
+  inner class GetWithdrawalState {
+
+    @Test
+    fun `is withdrawable if no arrival and not cancelled`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory()
+          .withActualArrivalDateTime(null)
+          .withCancellationOccurredAt(null)
+          .produce(),
+        UserEntityFactory().withDefaults().produce(),
+      )
+
+      assertThat(result.withdrawable).isEqualTo(true)
+      assertThat(result.withdrawn).isEqualTo(false)
+      assertThat(result.blockingReason).isNull()
+    }
+
+    @Test
+    fun `is not withdrawable if has arrival`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory()
+          .withActualArrivalDateTime(Instant.now())
+          .withCancellationOccurredAt(null)
+          .produce(),
+        UserEntityFactory().withDefaults().produce(),
+      )
+
+      assertThat(result.withdrawable).isEqualTo(false)
+      assertThat(result.withdrawn).isEqualTo(false)
+      assertThat(result.blockingReason).isEqualTo(BlockingReason.ArrivalRecordedInCas1)
+    }
+
+    @Test
+    fun `is not withdrawable if already cancelled`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory()
+          .withActualArrivalDateTime(null)
+          .withCancellationOccurredAt(LocalDate.now())
+          .produce(),
+        UserEntityFactory().withDefaults().produce(),
+      )
+
+      assertThat(result.withdrawable).isEqualTo(false)
+      assertThat(result.withdrawn).isEqualTo(true)
+      assertThat(result.blockingReason).isNull()
+    }
+
+    @Test
+    fun `user without CAS1_BOOKING_WITHDRAW permission cannot directly withdraw`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory().produce(),
+        UserEntityFactory.mockUserWithoutPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+      )
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(false)
+    }
+
+    @Test
+    fun `user with CAS1_BOOKING_WITHDRAW can directly withdraw`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory().produce(),
+        UserEntityFactory.mockUserWithPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+      )
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(true)
     }
   }
 }

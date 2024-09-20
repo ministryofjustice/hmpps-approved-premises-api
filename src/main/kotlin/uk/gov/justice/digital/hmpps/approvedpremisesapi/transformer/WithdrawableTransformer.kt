@@ -17,6 +17,7 @@ class WithdrawableTransformer {
       WithdrawableEntityType.PlacementRequest -> WithdrawableType.placementRequest
       WithdrawableEntityType.PlacementApplication -> WithdrawableType.placementApplication
       WithdrawableEntityType.Booking -> WithdrawableType.booking
+      WithdrawableEntityType.SpaceBooking -> WithdrawableType.spaceBooking
     },
     entity.dates.map { DatePeriod(it.startDate, it.endDate) },
   )

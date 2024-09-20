@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -209,6 +210,19 @@ class Cas1SpaceBookingService(
     premisesId = premisesId,
     crn = crn,
   )
+
+  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
+      withdrawn = spaceBooking.isCancelled(),
+      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+      blockingReason = if (spaceBooking.hasArrival()) {
+        BlockingReason.ArrivalRecordedInCas1
+      } else {
+        null
+      },
+    )
+  }
 
   data class SpaceBookingFilterCriteria(
     val residency: Cas1SpaceBookingResidency?,

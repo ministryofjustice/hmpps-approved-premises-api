@@ -169,6 +169,9 @@ data class PlacementRequestEntity(
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity?,
 
+  @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
+  var spaceBookings: MutableList<Cas1SpaceBookingEntity>,
+
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   var allocatedToUser: UserEntity?,
