@@ -33,7 +33,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   isWithdrawn: Boolean = false,
 ): PlacementApplicationEntity {
-  val userApArea = apAreaEntityFactory.produceAndPersist()
+  val userApArea = `Given an AP Area`()
 
   val assessmentAllocatedToUser = userEntityFactory.produceAndPersist {
     withYieldedProbationRegion {

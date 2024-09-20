@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.hamcrest.Matchers
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchParameters
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -34,6 +36,13 @@ import java.time.LocalDate
 import java.util.UUID
 @SuppressWarnings("LargeClass")
 class BedSearchTest : IntegrationTestBase() {
+
+  lateinit var probationRegion: ProbationRegionEntity
+
+  @BeforeEach
+  fun before() {
+    probationRegion = `Given a Probation Region`()
+  }
 
   @Nested
   inner class BedSearchForApprovedPremises {
@@ -90,12 +99,6 @@ class BedSearchTest : IntegrationTestBase() {
           withOutcode("AA11")
           withLatitude(postCodeDistrictLatLong.latitude)
           withLongitude(postCodeDistrictLatLong.longitude)
-        }
-
-        val probationRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
         }
 
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -176,12 +179,6 @@ class BedSearchTest : IntegrationTestBase() {
   inner class BedSearchForTemporaryAccommodationPremises {
     @Test
     fun `Searching for a Temporary Accommodation Bed returns 200 with correct body`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -241,12 +238,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results that do not include beds with current turnarounds`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -300,12 +291,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results when existing booking departure-date is same as search start-date`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -359,12 +344,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -476,12 +455,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings across multiple premises`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -619,12 +592,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results which do not include non-overlapping bookings`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -701,12 +668,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results which do not consider cancelled bookings as overlapping`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -790,12 +751,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bedspace in a Shared Property returns only bedspaces in shared properties`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -922,12 +877,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bedspace in a Single Occupancy Property returns only bedspaces in properties with single occupancy`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1101,12 +1050,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should return single bed when given premises has got 2 rooms where one with endDate and another room without enddate`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1177,12 +1120,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should return bed when given premises bedspace endDate after search end date`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1256,12 +1193,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should return bed matches searching pdu`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withName(randomStringLowerCase(8))
         withProbationRegion(probationRegion)
@@ -1371,12 +1302,6 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed in multiple pdus should return bed matches searching pdus`() {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val pduOne = probationDeliveryUnitFactory.produceAndPersist {
         withName("Probation Delivery Unit One")
         withProbationRegion(probationRegion)
@@ -1535,12 +1460,6 @@ class BedSearchTest : IntegrationTestBase() {
       searchStartDate: LocalDate,
       bedEndDate: LocalDate,
     ): ProbationDeliveryUnitEntity {
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }

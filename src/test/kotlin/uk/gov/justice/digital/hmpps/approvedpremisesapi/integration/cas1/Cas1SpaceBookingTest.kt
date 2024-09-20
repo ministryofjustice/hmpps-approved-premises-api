@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -64,13 +65,7 @@ class Cas1SpaceBookingTest {
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
           withYieldedLocalAuthorityArea {
             localAuthorityEntityFactory.produceAndPersist()
           }
@@ -146,13 +141,7 @@ class Cas1SpaceBookingTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea {
-                  apAreaEntityFactory.produceAndPersist()
-                }
-              }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
             withYieldedLocalAuthorityArea {
               localAuthorityEntityFactory.produceAndPersist()
             }
@@ -225,13 +214,7 @@ class Cas1SpaceBookingTest {
           placementRequestRepository.saveAndFlush(placementRequest)
 
           val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea {
-                  apAreaEntityFactory.produceAndPersist()
-                }
-              }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
             withYieldedLocalAuthorityArea {
               localAuthorityEntityFactory.produceAndPersist()
             }
@@ -313,11 +296,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
+      val region = `Given a Probation Region`()
 
       premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -669,11 +648,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
+      val region = `Given a Probation Region`()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -808,11 +783,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
+      region = `Given a Probation Region`()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }

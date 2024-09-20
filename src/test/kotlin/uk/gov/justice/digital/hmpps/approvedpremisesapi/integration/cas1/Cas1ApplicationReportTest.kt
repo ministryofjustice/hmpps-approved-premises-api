@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
@@ -203,11 +204,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           withSurname("Juderson")
         },
         probationRegion = probationRegionEntityFactory.produceAndPersist() {
-          withApArea(
-            apAreaEntityFactory.produceAndPersist() {
-              withName("Ap Area 1")
-            },
-          )
+          withApArea(`Given an AP Area`(name = "Ap Area 1"))
         },
       )
 
@@ -408,12 +405,8 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           withForenames("Assessor")
           withSurname("Assessing")
         },
-        probationRegion = probationRegionEntityFactory.produceAndPersist() {
-          withApArea(
-            apAreaEntityFactory.produceAndPersist() {
-              withName("Ap Area 4")
-            },
-          )
+        probationRegion = probationRegionEntityFactory.produceAndPersist {
+          withApArea(`Given an AP Area`(name = "Ap Area 4"))
         },
       )
 
@@ -870,9 +863,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     clock.setNow(submittedAt)
 
-    val apArea = apAreaEntityFactory.produceAndPersist {
-      withName(apAreaName)
-    }
+    val apArea = `Given an AP Area`(name = apAreaName)
 
     cas1SimpleApiClient.applicationSubmit(
       this,

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
@@ -112,9 +113,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -162,9 +161,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -232,9 +229,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -247,9 +242,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val otherBed = bedEntityFactory.produceAndPersist {
@@ -311,9 +304,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -326,9 +317,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val otherBed = bedEntityFactory.produceAndPersist {
@@ -395,9 +384,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       private fun initialiseOosBedsForAllTemporalities(user: UserEntity) {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -569,9 +556,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -584,9 +569,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val otherBed = bedEntityFactory.produceAndPersist {
@@ -658,9 +641,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -719,9 +700,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Get All Out-Of-Service Beds On Premises without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       webTestClient.get()
@@ -749,9 +728,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -814,9 +791,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User` { user, _ ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -866,9 +841,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         webTestClient.get()
@@ -886,9 +859,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -933,9 +904,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Create Out-Of-Service Beds without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -964,13 +933,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
@@ -1003,9 +966,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(3) {
@@ -1082,9 +1043,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1168,9 +1127,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1221,9 +1178,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1280,9 +1235,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1404,9 +1357,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User` { user, _ ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -1480,9 +1431,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Update Out-Of-Service Bed for non-existent out-of-service bed returns 404`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -1510,9 +1459,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1624,13 +1571,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1691,13 +1632,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea {
-                  apAreaEntityFactory.produceAndPersist()
-                }
-              }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1822,9 +1757,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1893,9 +1826,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         `Given an Offender` { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -2052,9 +1983,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User` { user, _ ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -2112,9 +2041,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Cancel Out-Of-Service Bed for non-existent out-of-service bed returns 404`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -2138,9 +2065,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       `Given a User`(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {

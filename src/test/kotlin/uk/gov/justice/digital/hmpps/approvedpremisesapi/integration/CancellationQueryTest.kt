@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
@@ -16,11 +17,7 @@ class CancellationQueryTest : IntegrationTestBase() {
     `Given a User` { user, _ ->
       `Given an Application`(createdByUser = user) { application ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(
-            probationRegionEntityFactory.produceAndPersist {
-              withApArea(apAreaEntityFactory.produceAndPersist())
-            },
-          )
+          withProbationRegion(`Given a Probation Region`())
           withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
         }
 

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -19,7 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
@@ -29,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -49,6 +53,13 @@ import java.util.UUID
 class BookingTest : IntegrationTestBase() {
   @Autowired
   lateinit var bookingTransformer: BookingTransformer
+
+  lateinit var probationRegion: ProbationRegionEntity
+
+  @BeforeEach
+  fun before() {
+    probationRegion = `Given a Probation Region`()
+  }
 
   @Nested
   inner class GetBooking {
@@ -76,11 +87,11 @@ class BookingTest : IntegrationTestBase() {
     fun `Get a booking returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
       role: UserRole,
     ) {
-      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+      `Given a User`(roles = listOf(role)) { _, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+            withYieldedProbationRegion { probationRegion }
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
@@ -136,7 +147,7 @@ class BookingTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+            withYieldedProbationRegion { probationRegion }
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
@@ -169,7 +180,7 @@ class BookingTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+            withYieldedProbationRegion { probationRegion }
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
@@ -207,7 +218,7 @@ class BookingTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val keyWorker = ContextStaffMemberFactory().produce()
@@ -249,7 +260,7 @@ class BookingTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+            withYieldedProbationRegion { probationRegion }
           }
 
           val keyWorker = ContextStaffMemberFactory().produce()
@@ -289,7 +300,7 @@ class BookingTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+            withYieldedProbationRegion { probationRegion }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -335,14 +346,7 @@ class BookingTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withId(UUID.randomUUID())
-                withYieldedApArea {
-                  apAreaEntityFactory.produceAndPersist()
-                }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -403,7 +407,7 @@ class BookingTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+        withYieldedProbationRegion { probationRegion }
       }
 
       webTestClient.get()
@@ -425,7 +429,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -492,7 +496,7 @@ class BookingTest : IntegrationTestBase() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -535,7 +539,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -581,12 +585,7 @@ class BookingTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
@@ -636,7 +635,7 @@ class BookingTest : IntegrationTestBase() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        probationRegion
       }
     }
 
@@ -667,7 +666,7 @@ class BookingTest : IntegrationTestBase() {
             val premises = approvedPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
               withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                probationRegion
               }
             }
 
@@ -755,7 +754,7 @@ class BookingTest : IntegrationTestBase() {
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              probationRegion
             }
           }
 
@@ -819,7 +818,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -906,7 +905,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -980,7 +979,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1054,7 +1053,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1128,7 +1127,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1216,7 +1215,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1301,7 +1300,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1401,7 +1400,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1467,7 +1466,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1527,7 +1526,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1562,7 +1561,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1607,7 +1606,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1663,7 +1662,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1727,7 +1726,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1802,7 +1801,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1857,7 +1856,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
           withTurnaroundWorkingDayCount(2)
         }
@@ -1914,7 +1913,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -1988,12 +1987,7 @@ class BookingTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2051,7 +2045,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -2116,7 +2110,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -2183,11 +2177,7 @@ class BookingTest : IntegrationTestBase() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -2238,11 +2228,7 @@ class BookingTest : IntegrationTestBase() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -2300,11 +2286,7 @@ class BookingTest : IntegrationTestBase() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -2351,11 +2333,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withQCode("QCODE")
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2413,11 +2391,7 @@ class BookingTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2476,11 +2450,7 @@ class BookingTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2546,11 +2516,7 @@ class BookingTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2618,12 +2584,7 @@ class BookingTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2678,11 +2639,7 @@ class BookingTest : IntegrationTestBase() {
           approvedPremisesEntityFactory.produceAndPersist {
             withQCode("QCODE")
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
         }
         withServiceName(ServiceName.approvedPremises)
@@ -2733,11 +2690,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withQCode("QCODE")
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2810,11 +2763,7 @@ class BookingTest : IntegrationTestBase() {
           approvedPremisesEntityFactory.produceAndPersist {
             withQCode("QCODE")
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
         }
         withServiceName(ServiceName.approvedPremises)
@@ -2867,11 +2816,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedPremises {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist {
-                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-                }
-              }
+              withYieldedProbationRegion { probationRegion }
             }
           }
           withServiceName(ServiceName.temporaryAccommodation)
@@ -2928,11 +2873,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedPremises {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist {
-                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-                }
-              }
+              withYieldedProbationRegion { probationRegion }
             }
           }
           withServiceName(ServiceName.temporaryAccommodation)
@@ -2990,11 +2931,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedPremises {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist {
-                  withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-                }
-              }
+              withYieldedProbationRegion { probationRegion }
             }
           }
           withServiceName(ServiceName.temporaryAccommodation)
@@ -3059,9 +2996,7 @@ class BookingTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         `Given a User`(roles = listOf(role)) { applicant, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val apArea = apAreaEntityFactory.produceAndPersist {
-              withEmailAddress("apAreaEmail@test.com")
-            }
+            val apArea = `Given an AP Area`(emailAddress = "apAreaEmail@test.com")
 
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -3076,7 +3011,7 @@ class BookingTest : IntegrationTestBase() {
                 approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
                   withYieldedProbationRegion {
-                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                    probationRegion
                   }
                 }
               }
@@ -3112,9 +3047,7 @@ class BookingTest : IntegrationTestBase() {
         `Given a User` { applicant, _ ->
           `Given a User` { placementApplicationCreator, _ ->
             `Given an Offender` { offenderDetails, _ ->
-              val apArea = apAreaEntityFactory.produceAndPersist {
-                withEmailAddress("apAreaEmail@test.com")
-              }
+              val apArea = `Given an AP Area`(emailAddress = "apAreaEmail@test.com")
 
               val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
@@ -3159,7 +3092,7 @@ class BookingTest : IntegrationTestBase() {
                   approvedPremisesEntityFactory.produceAndPersist {
                     withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
                     withYieldedProbationRegion {
-                      probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                      probationRegion
                     }
                   }
                 }
@@ -3233,12 +3166,7 @@ class BookingTest : IntegrationTestBase() {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withId(UUID.randomUUID())
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
         }
       }
@@ -3541,7 +3469,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -3603,7 +3531,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -3673,7 +3601,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -3734,7 +3662,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            probationRegion
           }
         }
 
@@ -3809,7 +3737,7 @@ class BookingTest : IntegrationTestBase() {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -3843,7 +3771,7 @@ class BookingTest : IntegrationTestBase() {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -3868,7 +3796,7 @@ class BookingTest : IntegrationTestBase() {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -3911,7 +3839,7 @@ class BookingTest : IntegrationTestBase() {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -3956,7 +3884,7 @@ class BookingTest : IntegrationTestBase() {
         withQCode("QCODE")
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -3998,12 +3926,7 @@ class BookingTest : IntegrationTestBase() {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withId(UUID.randomUUID())
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
         }
       }
@@ -4045,7 +3968,7 @@ class BookingTest : IntegrationTestBase() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -4088,7 +4011,7 @@ class BookingTest : IntegrationTestBase() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          probationRegion
         }
       }
 
@@ -4158,7 +4081,7 @@ class BookingTest : IntegrationTestBase() {
           approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              probationRegion
             }
           }
         }
@@ -4192,7 +4115,7 @@ class BookingTest : IntegrationTestBase() {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              probationRegion
             }
           }
         }
@@ -4248,7 +4171,7 @@ class BookingTest : IntegrationTestBase() {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
               withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                probationRegion
               }
             }
           }
@@ -4294,11 +4217,7 @@ class BookingTest : IntegrationTestBase() {
           approvedPremisesEntityFactory.produceAndPersist {
             withQCode("QCODE")
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
         }
       }
@@ -4333,12 +4252,7 @@ class BookingTest : IntegrationTestBase() {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withId(UUID.randomUUID())
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { probationRegion }
           }
         }
         withServiceName(ServiceName.temporaryAccommodation)

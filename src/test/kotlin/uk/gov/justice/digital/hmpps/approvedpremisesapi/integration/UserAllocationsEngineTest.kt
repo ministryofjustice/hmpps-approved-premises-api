@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -45,13 +46,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
     placementApplicationSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist()
     premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
@@ -558,11 +553,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
   private fun createUser(deliusUsername: String, roles: List<UserRole>, qualifications: List<UserQualification>, isActive: Boolean = true): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(deliusUsername)
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
       withIsActive(isActive)
     }
 
@@ -585,11 +576,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createApplicationAndAssessment(): Pair<ApprovedPremisesApplicationEntity, ApprovedPremisesAssessmentEntity> {
     val user = userEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
     }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {

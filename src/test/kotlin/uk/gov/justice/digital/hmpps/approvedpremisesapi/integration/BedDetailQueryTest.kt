@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 
 class BedDetailQueryTest : IntegrationTestBase() {
@@ -11,11 +12,7 @@ class BedDetailQueryTest : IntegrationTestBase() {
 
   @Test
   fun `summary works as expected`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

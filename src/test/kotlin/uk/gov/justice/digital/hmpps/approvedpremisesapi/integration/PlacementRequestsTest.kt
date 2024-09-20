@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -50,6 +53,13 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var realPlacementRequestRepository: PlacementRequestRepository
+
+  lateinit var probationRegion: ProbationRegionEntity
+
+  @BeforeEach
+  fun before() {
+    probationRegion = `Given a Probation Region`()
+  }
 
   @Nested
   inner class AllPlacementRequests {
@@ -292,11 +302,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           fun matchPlacementRequest(placementRequest: PlacementRequestEntity) {
             val premises = approvedPremisesEntityFactory.produceAndPersist {
-              withProbationRegion(
-                probationRegionEntityFactory.produceAndPersist {
-                  withApArea(apAreaEntityFactory.produceAndPersist())
-                },
-              )
+              withProbationRegion(probationRegion)
               withLocalAuthorityArea(
                 localAuthorityEntityFactory.produceAndPersist(),
               )
@@ -1055,11 +1061,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       return placementRequestFactory.produceAndPersist {
         withAllocatedToUser(
           userEntityFactory.produceAndPersist {
-            withProbationRegion(
-              probationRegionEntityFactory.produceAndPersist {
-                withApArea(apAreaEntityFactory.produceAndPersist())
-              },
-            )
+            withProbationRegion(probationRegion)
           },
         )
         withApplication(application)
@@ -1294,11 +1296,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               val premises = approvedPremisesEntityFactory.produceAndPersist {
-                withProbationRegion(
-                  probationRegionEntityFactory.produceAndPersist {
-                    withApArea(apAreaEntityFactory.produceAndPersist())
-                  },
-                )
+                withProbationRegion(probationRegion)
                 withLocalAuthorityArea(
                   localAuthorityEntityFactory.produceAndPersist(),
                 )
@@ -1380,9 +1378,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                  }
+                  withYieldedProbationRegion { probationRegion }
                 }
 
                 val room = roomEntityFactory.produceAndPersist {
@@ -1445,9 +1441,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   ) { placementRequest, _ ->
                     val premises = approvedPremisesEntityFactory.produceAndPersist {
                       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion {
-                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                      }
+                      withYieldedProbationRegion { probationRegion }
                     }
 
                     val room = roomEntityFactory.produceAndPersist {
@@ -1545,9 +1539,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                  }
+                  withYieldedProbationRegion { probationRegion }
                 }
 
                 val room = roomEntityFactory.produceAndPersist {
@@ -1592,9 +1584,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                  }
+                  withYieldedProbationRegion { probationRegion }
                 }
 
                 webTestClient.post()
@@ -1632,9 +1622,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                  }
+                  withYieldedProbationRegion { probationRegion }
                 }
 
                 webTestClient.post()
@@ -1768,7 +1756,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,
-            apArea = apAreaEntityFactory.produceAndPersist(),
+            apArea = `Given an AP Area`(),
           ) { placementRequest, _ ->
 
             webTestClient.post()

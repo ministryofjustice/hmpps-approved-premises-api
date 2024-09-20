@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -124,11 +125,7 @@ class DeletePremisesTest : IntegrationTestBase() {
   }
 
   private fun createPremises() = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-    withProbationRegion(
-      probationRegionEntityFactory.produceAndPersist {
-        withApArea(apAreaEntityFactory.produceAndPersist())
-      },
-    )
+    withProbationRegion(`Given a Probation Region`())
 
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
   }

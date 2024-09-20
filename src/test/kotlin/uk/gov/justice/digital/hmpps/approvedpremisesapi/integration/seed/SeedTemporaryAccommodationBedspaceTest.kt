@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -37,9 +38,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
 
   @Test
   fun `Creating a new Temporary Accommodation Bedspace persists correctly`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -76,9 +75,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
 
   @Test
   fun `Updating an existing Temporary Accommodation Bedspace persists correctly`() {
-    val originalProbationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val originalProbationRegion = `Given a Probation Region`()
 
     val originalLocalAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

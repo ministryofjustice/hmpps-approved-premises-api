@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.Se
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.OLD_EVENT_NUMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.OLD_OFFENCE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -290,7 +291,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
           },
         )
         withSubmittedAt(OffsetDateTime.now())
-        withApArea(apAreaEntityFactory.produceAndPersist())
+        withApArea(`Given an AP Area`())
         withReleaseType("licence")
         withEventNumber(OLD_EVENT_NUMBER)
         withOffenceId(OLD_OFFENCE_ID)

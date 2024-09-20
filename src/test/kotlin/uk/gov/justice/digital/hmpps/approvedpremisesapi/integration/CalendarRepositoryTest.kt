@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBedInfo
@@ -12,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarLostBedInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarRepository
 import java.time.LocalDate
-import java.util.UUID
 
 class CalendarRepositoryTest : IntegrationTestBase() {
   @Autowired
@@ -24,14 +24,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   fun createPremises() {
     premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withId(UUID.randomUUID())
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
     }
   }
 

@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
@@ -51,13 +52,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     `Given a User` { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -110,13 +105,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     `Given a User` { _, jwt ->
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -126,13 +115,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -185,13 +168,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     `Given a User` { _, jwt ->
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -201,13 +178,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -261,13 +232,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     `Given a User` { _, jwt ->
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -277,13 +242,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -359,13 +318,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     `Given a User` { _, jwt ->
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -382,13 +335,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -455,13 +402,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     `Given a User` { _, jwt ->
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
@@ -478,13 +419,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }

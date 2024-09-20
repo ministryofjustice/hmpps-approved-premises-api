@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
@@ -84,11 +85,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   private fun createPlacementApplication(): PlacementApplicationEntity {
     val user = userEntityFactory.produceAndPersist {
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
     }
 
     val assessment = createAssessment()
@@ -130,11 +127,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   private fun createAssessment(): ApprovedPremisesAssessmentEntity {
     val user = userEntityFactory.produceAndPersist {
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
     }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {

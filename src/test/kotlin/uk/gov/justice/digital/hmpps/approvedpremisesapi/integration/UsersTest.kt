@@ -17,7 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -103,9 +105,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_PROBATION"),
     )
 
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-    }
+    val region = `Given a Probation Region`()
 
     userEntityFactory.produceAndPersist {
       withId(id)
@@ -154,11 +154,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_PROBATION"),
     )
 
-    val apArea = apAreaEntityFactory.produceAndPersist()
-
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apArea }
-    }
+    val region = `Given a Probation Region`()
 
     userEntityFactory.produceAndPersist {
       withId(id)
@@ -226,9 +222,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_PROBATION"),
     )
 
-    val region = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-    }
+    val region = `Given a Probation Region`()
 
     val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode(brought.code)
@@ -427,7 +421,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
-              val apArea = apAreaEntityFactory.produceAndPersist()
+              val apArea = `Given an AP Area`()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
                 withApArea(apArea)
               }
@@ -474,9 +468,9 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
-              val apArea = apAreaEntityFactory.produceAndPersist()
+              val apArea = `Given an AP Area`()
 
-              val probationRegionApArea = apAreaEntityFactory.produceAndPersist()
+              val probationRegionApArea = `Given an AP Area`()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
                 withApArea(probationRegionApArea)
               }
@@ -728,7 +722,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
-              val apArea = apAreaEntityFactory.produceAndPersist()
+              val apArea = `Given an AP Area`()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
                 withApArea(apArea)
               }
@@ -775,9 +769,9 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
-              val apArea = apAreaEntityFactory.produceAndPersist()
+              val apArea = `Given an AP Area`()
 
-              val probationRegionApArea = apAreaEntityFactory.produceAndPersist()
+              val probationRegionApArea = `Given an AP Area`()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
                 withApArea(probationRegionApArea)
               }
@@ -1197,15 +1191,13 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         ApprovedPremisesUserRole.excludedFromMatchAllocation,
         ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
       )
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = `Given a Probation Region`()
 
       userEntityFactory.produceAndPersist {
         withId(id)
         withIsActive(false)
         withYieldedProbationRegion { region }
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        withYieldedApArea { `Given an AP Area`() }
       }
 
       `Given a User`(roles = listOf(role)) { _, jwt ->
@@ -1322,12 +1314,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     fun `Deleting a user with an approved role deletes successfully`(role: UserRole) {
       userEntityFactory.produceAndPersist {
         withId(id)
-
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       `Given a User`(roles = listOf(role)) { _, jwt ->

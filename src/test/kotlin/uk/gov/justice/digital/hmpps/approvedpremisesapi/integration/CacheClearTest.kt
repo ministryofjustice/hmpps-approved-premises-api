@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
@@ -80,11 +81,7 @@ class CacheClearTest : IntegrationTestBase() {
 
   private fun setupBookingForOffender(offenderDetails: OffenderDetailSummary) {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
@@ -127,9 +124,7 @@ class CacheClearTest : IntegrationTestBase() {
     approvedPremisesEntityFactory.produceAndPersist {
       withId(premisesId)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
       withQCode(qCode)
     }
 

@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import java.time.LocalDate
@@ -13,6 +16,15 @@ import java.time.LocalDate
 class BedSearchRepositoryTest : IntegrationTestBase() {
   @Autowired
   lateinit var bedSearchRepository: BedSearchRepository
+
+  lateinit var probationRegion: ProbationRegionEntity
+  lateinit var otherProbationRegion: ProbationRegionEntity
+
+  @BeforeEach
+  fun before() {
+    probationRegion = `Given a Probation Region`()
+    otherProbationRegion = `Given a Probation Region`()
+  }
 
   // Searching for a Bed returns Beds ordered by their distance from the postcode district that:
   // - Match all the characteristics at both Premises and Room level
@@ -33,12 +45,6 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withOutcode("AA11")
       withLatitude(postCodeDistrictLatLong.latitude)
       withLongitude(postCodeDistrictLatLong.longitude)
-    }
-
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
     }
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -439,18 +445,6 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val bedsThatShouldNotAppearInSearchResults = mutableListOf<BedEntity>()
     val bedsThatShouldAppearInSearchResults = mutableListOf<BedEntity>()
 
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
-
-    val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
-
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
     val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
@@ -756,12 +750,6 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     val bedsThatShouldNotAppearInSearchResults = mutableListOf<BedEntity>()
     val bedsThatShouldAppearInSearchResults = mutableListOf<BedEntity>()
 
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
-
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
     val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
@@ -953,12 +941,6 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
   fun `Searching for a Temporary Accommodation Bedspace in a Single Occupancy Property returns correct results`() {
     val bedsThatShouldNotAppearInSearchResults = mutableListOf<BedEntity>()
     val bedsThatShouldAppearInSearchResults = mutableListOf<BedEntity>()
-
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedCsvRow
@@ -26,11 +27,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Attempting to create an AP room with an incorrectly service-scoped characteristic logs an error`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withApCode("NEABC")
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
@@ -69,11 +66,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Attempting to create an AP room with an incorrectly model-scoped characteristic logs an error`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withApCode("NEABC")
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
@@ -201,11 +194,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withApCode("NEABC")
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
@@ -270,11 +259,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withApCode("NEABC")
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
@@ -766,7 +767,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     probationRegionRepository.deleteAll()
 
     val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(10) {
-      withApArea(apAreaEntityFactory.produceAndPersist())
+      withApArea(`Given an AP Area`())
     }
     val expectedJson = objectMapper.writeValueAsString(
       probationRegions.map(probationRegionTransformer::transformJpaToApi),
@@ -791,7 +792,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     probationRegionRepository.deleteAll()
     apAreaRepository.deleteAll()
 
-    val apAreas = apAreaEntityFactory.produceAndPersistMultiple(10)
+    val apAreas = (1..10).map { `Given an AP Area`() }
     val expectedJson = objectMapper.writeValueAsString(
       apAreas.map(apAreaTransformer::transformJpaToApi),
     )
@@ -834,9 +835,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     probationDeliveryUnitRepository.deleteAll()
 
     val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(4) {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
+      withYieldedApArea { `Given an AP Area`() }
     }
 
     val probationDeliveryUnits = mutableListOf<ProbationDeliveryUnitEntity>()
@@ -867,9 +866,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     probationDeliveryUnitRepository.deleteAll()
 
     val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(4) {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
+      withYieldedApArea { `Given an AP Area`() }
     }
 
     val probationDeliveryUnits = mutableListOf<ProbationDeliveryUnitEntity>()

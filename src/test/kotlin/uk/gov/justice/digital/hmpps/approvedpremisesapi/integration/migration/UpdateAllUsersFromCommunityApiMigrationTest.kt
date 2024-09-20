@@ -6,6 +6,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
@@ -13,9 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
   fun `All users are updated from Community API with a 50ms artificial delay`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val userOne = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER1")
@@ -59,9 +58,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
   @Test
   fun `Failure to update individual user does not stop processing`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val userOne = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER1")

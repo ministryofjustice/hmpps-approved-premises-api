@@ -19,11 +19,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
 class ProfileTest : IntegrationTestBase() {
@@ -39,9 +41,7 @@ class ProfileTest : IntegrationTestBase() {
       val email = "foo@bar.com"
       val telephoneNumber = "123445677"
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion()
 
       `Given a User`(
         id = id,
@@ -104,9 +104,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion()
 
       val userEntity = userEntityFactory.produceAndPersist {
         withId(id)
@@ -164,9 +162,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion()
 
       val userEntity = userEntityFactory.produceAndPersist {
         withId(id)
@@ -244,10 +240,7 @@ class ProfileTest : IntegrationTestBase() {
       val email = "foo@bar.com"
       val telephoneNumber = "123445677"
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -329,10 +322,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -424,10 +414,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
         withProbationAreaDeliusCode(deliusCode)
@@ -482,10 +469,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -546,10 +530,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -607,10 +588,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -669,10 +647,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withDeliusCode(deliusCode)
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -762,9 +737,7 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-      }
+      val region = createProbationRegion()
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
@@ -866,5 +839,10 @@ class ProfileTest : IntegrationTestBase() {
           .jsonPath("detail").isEqualTo("Missing required header X-Service-Name")
       }
     }
+  }
+
+  fun IntegrationTestBase.createProbationRegion(deliusCode: String? = null) = probationRegionEntityFactory.produceAndPersist {
+    withDeliusCode(deliusCode ?: randomStringMultiCaseWithNumbers(10))
+    withYieldedApArea { `Given an AP Area`() }
   }
 }

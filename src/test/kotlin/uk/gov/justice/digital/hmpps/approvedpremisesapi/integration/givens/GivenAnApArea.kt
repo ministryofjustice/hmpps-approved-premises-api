@@ -6,10 +6,16 @@ import java.util.UUID
 
 fun IntegrationTestBase.`Given an AP Area`(
   id: UUID = UUID.randomUUID(),
+  name: String? = null,
+  emailAddress: String? = null,
 ): ApAreaEntity {
-  val probationRegion = apAreaEntityFactory.produceAndPersist {
+  return apAreaEntityFactory.produceAndPersist {
     withId(id)
+    if (name != null) {
+      withName(name)
+    }
+    if (emailAddress != null) {
+      withEmailAddress(emailAddress)
+    }
   }
-
-  return probationRegion
 }

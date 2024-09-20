@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import java.util.UUID
@@ -36,11 +37,7 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
   @Test
   fun `Bookings adhoc statuses are updated`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
     val booking1 = bookingEntityFactory.produceAndPersist {

@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClie
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
@@ -150,9 +151,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf(UserRole.CAS1_ASSESSOR),
       probationRegion = probationRegionEntityFactory.produceAndPersist {
         withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist {
-            withName("Wales")
-          }
+          `Given an AP Area`(name = "Wales")
         }
       },
     )
@@ -607,7 +606,11 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea {
+            `Given an AP Area`()
+          }
+        }
       }
     }
 

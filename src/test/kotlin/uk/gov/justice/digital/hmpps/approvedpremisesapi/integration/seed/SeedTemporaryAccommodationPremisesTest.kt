@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -37,9 +38,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create a Temporary Accommodation Premises with an invalid Local Authority Area logs an error`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     withCsv(
       "invalid-local-authority-ta",
@@ -65,9 +64,7 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
 
   @Test
   fun `Creating a new Temporary Accommodation Premises persists correctly`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -108,17 +105,13 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
 
   @Test
   fun `Updating an existing Temporary Accommodation Premises persists correctly`() {
-    val originalProbationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val originalProbationRegion = `Given a Probation Region`()
 
     val originalProbationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
       withProbationRegion(originalProbationRegion)
     }
 
-    val updatedProbationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val updatedProbationRegion = `Given a Probation Region`()
 
     val updateProbationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
       withProbationRegion(updatedProbationRegion)

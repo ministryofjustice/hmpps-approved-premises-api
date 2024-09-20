@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
@@ -28,9 +29,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withPermissiveSchema()
       }
 
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withApArea(apAreaEntityFactory.produceAndPersist())
-      }
+      val probationRegion = `Given a Probation Region`()
 
       val user = userEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
@@ -80,9 +79,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withPermissiveSchema()
       }
 
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withApArea(apAreaEntityFactory.produceAndPersist())
-      }
+      val probationRegion = `Given a Probation Region`()
 
       val user = userEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
@@ -134,9 +131,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withPermissiveSchema()
       }
 
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withApArea(apAreaEntityFactory.produceAndPersist())
-      }
+      val probationRegion = `Given a Probation Region`()
 
       val user = userEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)

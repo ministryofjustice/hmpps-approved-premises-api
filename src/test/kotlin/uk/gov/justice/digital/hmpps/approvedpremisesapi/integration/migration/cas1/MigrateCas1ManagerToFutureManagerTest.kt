@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -67,11 +68,7 @@ class MigrateCas1ManagerToFutureManagerTest : MigrationJobTestBase() {
   fun createUserWithRoles(username: String, roles: List<UserRole>): UserEntity {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername(username)
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
     }
     roles.forEach {
       userRoleAssignmentEntityFactory.produceAndPersist {

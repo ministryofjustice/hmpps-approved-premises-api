@@ -105,6 +105,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruMana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.DomainEventAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MockFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MutableClockConfiguration
@@ -850,7 +851,7 @@ abstract class IntegrationTestBase {
   fun mockStaffUserInfoCommunityApiCall(staffUserDetails: StaffUserDetails, createProbationRegionForStaffAreaCode: Boolean = true): StubMapping? {
     if (createProbationRegionForStaffAreaCode) {
       probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+        withYieldedApArea { `Given an AP Area`() }
         withDeliusCode(staffUserDetails.probationArea.code)
       }
     }
@@ -858,9 +859,9 @@ abstract class IntegrationTestBase {
     ApDeliusContext_addStaffDetailResponse(staffDetail = staffUserDetails.toStaffDetail())
 
     return wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/staff/username/${staffUserDetails.username}"))
+      WireMock.get(urlEqualTo("/secure/staff/username/${staffUserDetails.username}"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withBody(

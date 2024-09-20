@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
@@ -289,9 +290,7 @@ class PremisesTest {
     fun `Trying to create a new premises with a non-unique name returns 400`() {
       temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
         withName("premises-name-conflict")
       }
 
@@ -611,9 +610,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
         val premisesToGet = premises[0]
 
@@ -889,10 +886,7 @@ class PremisesTest {
           withProbationRegion(user.probationRegion)
         }
 
-        val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
-          withId(UUID.randomUUID())
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
+        val otherProbationRegion = `Given a Probation Region`()
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -935,9 +929,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[0]
@@ -972,9 +964,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[0]
@@ -1007,9 +997,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[0]
@@ -1044,9 +1032,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[0]
@@ -1084,9 +1070,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[0]
@@ -1175,9 +1159,7 @@ class PremisesTest {
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[0]
@@ -1215,9 +1197,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
           withName("old-premises-name")
         }
 
@@ -1448,11 +1428,7 @@ class PremisesTest {
       }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
-      val otherRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
+      val otherRegion = `Given a Probation Region`()
 
       cas3Premises[otherRegion] = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1596,9 +1572,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }.onEach {
           addRoomsAndBeds(it, roomCount = 4, 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1623,9 +1597,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }.onEach {
           addRoomsAndBeds(it, roomCount = 4, 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1681,9 +1653,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val premisesToGet = premises[2]
@@ -1703,9 +1673,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }.also {
           addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1745,9 +1713,7 @@ class PremisesTest {
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
           withQCode(qCode)
         }
 
@@ -1793,14 +1759,7 @@ class PremisesTest {
       `Given a User` { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         webTestClient.get()
@@ -1821,9 +1780,7 @@ class PremisesTest {
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
           withQCode(qCode)
         }
 
@@ -1875,9 +1832,7 @@ class PremisesTest {
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
           withQCode(qCode)
         }
 
@@ -1942,9 +1897,7 @@ class PremisesTest {
     fun setup() {
       premises = approvedPremisesEntityFactory.produceAndPersist() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
@@ -2195,9 +2148,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
           withYieldedPremises { premises }
@@ -2225,12 +2176,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
           withYieldedPremises { premises }
@@ -2257,9 +2203,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
           withYieldedPremises { premises }
@@ -2302,9 +2246,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
@@ -2341,9 +2283,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         webTestClient.post()
@@ -2369,9 +2309,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
@@ -2410,9 +2348,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         webTestClient.post()
@@ -2439,9 +2375,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         webTestClient.post()
@@ -2468,9 +2402,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val characteristicId = characteristicEntityFactory.produceAndPersist {
@@ -2502,9 +2434,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val characteristicId = characteristicEntityFactory.produceAndPersist {
@@ -2536,12 +2466,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
@@ -2575,9 +2500,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2618,9 +2541,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2650,9 +2571,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val id = UUID.randomUUID()
@@ -2681,9 +2600,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2714,9 +2631,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2752,9 +2667,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2790,12 +2703,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2830,9 +2738,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2874,9 +2780,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2918,9 +2822,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2962,9 +2864,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3013,9 +2913,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3067,9 +2965,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3121,9 +3017,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3175,9 +3069,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3229,9 +3121,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3287,9 +3177,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3354,9 +3242,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3418,9 +3304,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3481,9 +3365,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3528,9 +3410,7 @@ class PremisesTest {
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3582,9 +3462,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3610,9 +3488,7 @@ class PremisesTest {
     fun `Get Room by ID returns Not Found with correct body when Premises does not exist`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -3643,9 +3519,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val roomIdToRequest = UUID.randomUUID().toString()
@@ -3669,12 +3543,7 @@ class PremisesTest {
       `Given a User` { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3698,12 +3567,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3730,12 +3594,7 @@ class PremisesTest {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
