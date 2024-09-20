@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -37,13 +35,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduFromCommunityApiJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1LostBedsToOutOfServiceBedsMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1MigrateManagerToFutureManager
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1OutOfServiceBedReasonMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TruncateOosbMigrationJob
@@ -85,12 +79,6 @@ class MigrationJobService(
           getBean(BookingRepository::class),
           getBean(EntityManager::class),
           pageSize,
-        )
-
-        MigrationJobType.applicationApAreas -> ApAreaMigrationJob(
-          getBean(ApAreaMigrationJobApplicationRepository::class),
-          getBean(ApAreaRepository::class),
-          transactionTemplate,
         )
 
         MigrationJobType.taskDueDates -> Cas1TaskDueMigrationJob(
@@ -155,11 +143,6 @@ class MigrationJobService(
           transactionTemplate,
         )
 
-        MigrationJobType.cas1OutOfServiceBedReasons -> Cas1OutOfServiceBedReasonMigrationJob(
-          getBean(LostBedReasonRepository::class),
-          getBean(Cas1OutOfServiceBedReasonRepository::class),
-        )
-
         MigrationJobType.cas1LostBedsToOutOfServiceBeds -> Cas1LostBedsToOutOfServiceBedsMigrationJob(
           getBean(LostBedMigrationRepository::class),
           getBean(Cas1OutOfServiceBedRepository::class),
@@ -189,11 +172,6 @@ class MigrationJobService(
           getBean(DomainEventRepository::class),
           getBean(ObjectMapper::class),
           getBean(MigrationLogger::class),
-        )
-
-        MigrationJobType.cas1ManagerToFutureManager -> Cas1MigrateManagerToFutureManager(
-          getBean(UserService::class),
-          getBean(UserRepository::class),
         )
 
         MigrationJobType.cas1TruncateOosbForBedsWithEndDate -> Cas1TruncateOosbMigrationJob(

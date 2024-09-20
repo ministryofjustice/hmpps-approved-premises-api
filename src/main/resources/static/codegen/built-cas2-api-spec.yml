@@ -4363,7 +4363,6 @@ components:
         - update_noms_number
         - update_users_from_api
         - approved_premises_ap_staff_users
-        - approved_premises_offline_applications
         - approved_premises_cancel_bookings
         - approved_premises_ap_area_email_addresses
         - approved_premises_booking_adhoc_property
@@ -4398,12 +4397,10 @@ components:
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types
         - update_cas1_backfill_user_ap_area
-        - update_cas1_out_of_service_bed_reasons
         - update_cas1_lost_beds_to_out_of_service_beds
         - update_cas3_application_offender_name
         - update_cas1_populate_app_reason_for_short_notice_metadata
         - update_cas3_domain_event_type_for_person_departed_updated
-        - update_cas1_manager_to_future_manager
         - update_cas1_truncate_oosb_for_beds_with_end_date
     PlacementDates:
       type: object
