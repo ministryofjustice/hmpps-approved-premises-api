@@ -885,7 +885,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1CruManagementArea'
+                  $ref: '_shared.yml#/components/schemas/Cas1CruManagementArea'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

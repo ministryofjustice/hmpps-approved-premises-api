@@ -9,12 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 
 @Service
 class Cas1ReferenceDataController(
   private val cas1OutOfServiceBedReasonTransformer: Cas1OutOfServiceBedReasonTransformer,
   private val cas1OutOfServiceBedReasonRepository: Cas1OutOfServiceBedReasonRepository,
+  private val cas1CruManagementAreaTransformer: Cas1CruManagementAreaTransformer,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val featureFlagService: FeatureFlagService,
 ) : ReferenceDataCas1Delegate {
@@ -31,14 +33,11 @@ class Cas1ReferenceDataController(
   override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> {
     val womensEstateEnabled = featureFlagService.getBooleanFlag("cas1-womens-estate-enabled")
     return ResponseEntity.ok(
-      cas1CruManagementAreaRepository.findAll().map {
-        Cas1CruManagementArea(
-          id = it.id,
-          name = it.name,
-        )
-      }.filter {
-        womensEstateEnabled || it.id != Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID
-      },
+      cas1CruManagementAreaRepository.findAll()
+        .map { cas1CruManagementAreaTransformer.transformJpaToApi(it) }
+        .filter {
+          womensEstateEnabled || it.id != Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID
+        },
     )
   }
 }

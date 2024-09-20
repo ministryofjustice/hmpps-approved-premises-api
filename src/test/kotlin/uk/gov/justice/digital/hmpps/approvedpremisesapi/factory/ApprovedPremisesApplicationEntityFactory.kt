@@ -209,6 +209,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.apArea = { apArea }
   }
 
+  fun withCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity?) = apply {
+    this.cruManagementArea = { cruManagementArea }
+  }
+
   fun withApplicantUserDetails(applicantUserDetails: Cas1ApplicationUserDetailsEntity?) = apply {
     this.applicantUserDetails = { applicantUserDetails }
   }
@@ -223,10 +227,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
 
   fun withNoticeType(noticeType: Cas1ApplicationTimelinessCategory?) = apply {
     this.noticeType = { noticeType }
-  }
-
-  fun withCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity?) = apply {
-    this.cruManagementArea = { cruManagementArea }
   }
 
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
