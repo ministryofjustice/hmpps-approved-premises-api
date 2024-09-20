@@ -395,7 +395,7 @@ class TemporaryAccommodationBedSearchResult(
   bedName: String,
   roomCharacteristics: MutableList<CharacteristicNames>,
   val probationDeliveryUnitName: String,
-  val premisesNotes: String,
+  val premisesNotes: String?,
   val overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>,
 ) : BedSearchResult(
   premisesId,
