@@ -354,6 +354,7 @@ class ApplicationService(
       situation = null,
       inmateInOutStatusOnSubmission = null,
       apArea = null,
+      cruManagementArea = null,
       applicantUserDetails = null,
       caseManagerIsNotApplicant = null,
       caseManagerUserDetails = null,
@@ -797,6 +798,7 @@ class ApplicationService(
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       this.apArea = apArea
+      this.cruManagementArea = apArea.defaultCruManagementArea
       this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
       this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(

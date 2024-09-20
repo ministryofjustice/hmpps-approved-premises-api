@@ -1764,6 +1764,8 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
       assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
       assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.apArea).isEqualTo(apArea)
+      assertThat(persistedApplication.cruManagementArea).isEqualTo(apArea.defaultCruManagementArea)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }

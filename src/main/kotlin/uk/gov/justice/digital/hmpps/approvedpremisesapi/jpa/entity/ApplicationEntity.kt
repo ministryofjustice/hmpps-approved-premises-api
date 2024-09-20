@@ -342,6 +342,7 @@ abstract class ApplicationEntity(
   abstract fun getRequiredQualifications(): List<UserQualification>
 }
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_applications")
@@ -389,6 +390,9 @@ class ApprovedPremisesApplicationEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_id")
+  var cruManagementArea: Cas1CruManagementAreaEntity?,
   @OneToOne
   @JoinColumn(name = "applicant_cas1_application_user_details_id")
   var applicantUserDetails: Cas1ApplicationUserDetailsEntity?,
