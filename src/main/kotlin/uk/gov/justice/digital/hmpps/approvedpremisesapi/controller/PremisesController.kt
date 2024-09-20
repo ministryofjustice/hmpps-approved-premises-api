@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -702,6 +701,8 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdLostBedsPost(premisesId: UUID, body: NewLostBed): ResponseEntity<LostBed> {
+    throwIfRequestIsForApprovedPremises("POST /cas1/premises/$premisesId/lost-beds")
+
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -709,10 +710,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    if (premises !is ApprovedPremisesEntity) {
-      throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId)
-    }
-
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId)
     throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId)
 
     val result = premisesService.createLostBeds(
@@ -731,6 +729,8 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdLostBedsGet(premisesId: UUID): ResponseEntity<List<LostBed>> {
+    throwIfRequestIsForApprovedPremises("GET /cas1/premises/$premisesId/lost-beds")
+
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -744,6 +744,8 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdLostBedsLostBedIdGet(premisesId: UUID, lostBedId: UUID): ResponseEntity<LostBed> {
+    throwIfRequestIsForApprovedPremises("GET /cas1/premises/$premisesId/lost-beds/$lostBedId")
+
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -754,17 +756,6 @@ class PremisesController(
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId }
       ?: throw NotFoundProblem(lostBedId, "LostBed")
 
-    val user = usersService.getUserForRequest()
-
-    if (premises is ApprovedPremisesEntity && !user.hasAnyRole(
-        UserRole.CAS1_LEGACY_MANAGER,
-        UserRole.CAS1_MANAGER,
-        UserRole.CAS1_MATCHER,
-      )
-    ) {
-      throw ForbiddenProblem()
-    }
-
     return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
   }
 
@@ -773,6 +764,8 @@ class PremisesController(
     lostBedId: UUID,
     body: UpdateLostBed,
   ): ResponseEntity<LostBed> {
+    throwIfRequestIsForApprovedPremises("PUT /cas1/premises/$premisesId/lost-beds/$lostBedId")
+
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
@@ -818,6 +811,8 @@ class PremisesController(
     lostBedId: UUID,
     body: NewLostBedCancellation,
   ): ResponseEntity<LostBedCancellation> {
+    throwIfRequestIsForApprovedPremises("POST /cas1/premises/$premisesId/lost-beds/$lostBedId/cancellations")
+
     val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
@@ -1124,6 +1119,14 @@ class PremisesController(
         it.id,
         "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
       )
+    }
+  }
+
+  private fun throwIfRequestIsForApprovedPremises(endpoint: String) {
+    getRequest().ifPresent {
+      if (it.getHeader("X-Service-Name") == ServiceName.approvedPremises.value) {
+        throw BadRequestProblem(errorDetail = "CAS1 not supported. Use `$endpoint` instead")
+      }
     }
   }
 }
