@@ -1,2 +1,0 @@
--- ${flyway:timestamp}
--- This file intentionally left blank for historical reasons.
