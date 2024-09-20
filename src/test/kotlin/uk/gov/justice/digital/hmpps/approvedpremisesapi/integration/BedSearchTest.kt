@@ -197,6 +197,7 @@ class BedSearchTest : IntegrationTestBase() {
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
           withStatus(PropertyStatus.active)
+          withNotes(randomStringMultiCaseWithNumbers(100))
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -1377,17 +1378,17 @@ class BedSearchTest : IntegrationTestBase() {
       }
 
       val pduOne = probationDeliveryUnitFactory.produceAndPersist {
-        withName(randomStringLowerCase(8))
+        withName("Probation Delivery Unit One")
         withProbationRegion(probationRegion)
       }
 
       val pduTwo = probationDeliveryUnitFactory.produceAndPersist {
-        withName(randomStringLowerCase(8))
+        withName("Probation Delivery Unit Two")
         withProbationRegion(probationRegion)
       }
 
       val pduThree = probationDeliveryUnitFactory.produceAndPersist {
-        withName(randomStringLowerCase(8))
+        withName("Probation Delivery Unit Three")
         withProbationRegion(probationRegion)
       }
 
@@ -1595,6 +1596,7 @@ class BedSearchTest : IntegrationTestBase() {
           characteristics = premisesCharacteristics,
           addressLine2 = premises.addressLine2,
           town = premises.town,
+          notes = premises.notes,
           bedCount = numberOfBeds,
         ),
         room = BedSearchResultRoomSummary(

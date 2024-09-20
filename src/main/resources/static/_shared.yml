@@ -4330,6 +4330,8 @@ components:
           type: string
         probationDeliveryUnitName:
           type: string
+        notes:
+          type: string
         characteristics:
           type: array
           items:

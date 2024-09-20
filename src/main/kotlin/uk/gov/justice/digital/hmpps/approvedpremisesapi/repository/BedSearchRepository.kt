@@ -188,6 +188,7 @@ ORDER BY distance_miles;
            p.address_line2 as premises_address_line2,
            p.town as premises_town,
            p.postcode as premises_postcode,
+           p.notes as premises_notes,
            c.property_name as premises_characteristic_property_name,
            c.name as premises_characteristic_name,
            r.id as room_id,
@@ -261,6 +262,7 @@ ORDER BY distance_miles;
           val premisesAddressLine2 = resultSet.getString("premises_address_line2")
           val premisesTown = resultSet.getString("premises_town")
           val premisesPostcode = resultSet.getString("premises_postcode")
+          val premisesNotes = resultSet.getString("premises_notes")
           val premisesCharacteristicName = resultSet.getString("premises_characteristic_name")
           val premisesCharacteristicPropertyName = resultSet.getString("premises_characteristic_property_name")
           val premisesBedCount = resultSet.getInt("premises_bed_count")
@@ -282,6 +284,7 @@ ORDER BY distance_miles;
               premisesAddressLine2 = premisesAddressLine2,
               premisesTown = premisesTown,
               premisesPostcode = premisesPostcode,
+              premisesNotes = premisesNotes,
               probationDeliveryUnitName = probationDeliveryUnitName,
               premisesCharacteristics = mutableListOf(),
               premisesBedCount = premisesBedCount,
@@ -392,6 +395,7 @@ class TemporaryAccommodationBedSearchResult(
   bedName: String,
   roomCharacteristics: MutableList<CharacteristicNames>,
   val probationDeliveryUnitName: String,
+  val premisesNotes: String,
   val overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>,
 ) : BedSearchResult(
   premisesId,

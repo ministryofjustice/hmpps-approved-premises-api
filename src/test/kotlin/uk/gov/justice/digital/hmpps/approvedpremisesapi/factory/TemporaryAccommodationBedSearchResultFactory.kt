@@ -19,6 +19,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
   private var premisesPostcode: Yielded<String> = { randomStringUpperCase(6) }
   private var probationDeliveryUnitName: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var premisesCharacteristics: Yielded<MutableList<CharacteristicNames>> = { mutableListOf() }
+  private var premisesNotes: Yielded<String> = { randomStringMultiCaseWithNumbers(200) }
   private var roomId: Yielded<UUID> = { UUID.randomUUID() }
   private var roomName: Yielded<String> = { randomStringUpperCase(6) }
   private var bedId: Yielded<UUID> = { UUID.randomUUID() }
@@ -59,6 +60,10 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
     this.premisesCharacteristics = { premisesCharacteristics }
   }
 
+  fun withPremisesNotes(premisesNotes: String) = apply {
+    this.premisesNotes = { premisesNotes }
+  }
+
   fun withRoomId(roomId: UUID) = apply {
     this.roomId = { roomId }
   }
@@ -96,6 +101,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
     premisesPostcode = this.premisesPostcode(),
     probationDeliveryUnitName = this.probationDeliveryUnitName(),
     premisesCharacteristics = this.premisesCharacteristics(),
+    premisesNotes = this.premisesNotes(),
     roomId = this.roomId(),
     roomName = this.roomName(),
     bedId = this.bedId(),
