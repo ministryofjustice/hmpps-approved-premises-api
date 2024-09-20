@@ -18,3 +18,7 @@ inline fun <reified T> WebTestClient.ResponseSpec.bodyAsListOfObjects(): List<T>
   val rawResponseBody = this.returnResult(String::class.java)
   return objectMapper.readValue<List<T>>(rawResponseBody.responseBody.blockFirst()!!)
 }
+
+inline fun <reified T> WebTestClient.ResponseSpec.body(): T {
+  return returnResult(T::class.java).responseBody.blockFirst()!!
+}

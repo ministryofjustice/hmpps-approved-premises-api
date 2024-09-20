@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.body
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.math.BigDecimal
@@ -1432,7 +1434,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val (roomOnePremisesThree, bedOnePremisesThree) = createBedspace(premisesThree, "Room One")
 
-        webTestClient.post()
+        val result = webTestClient.post()
           .uri("/beds/search")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
@@ -1447,22 +1449,18 @@ class BedSearchTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              BedSearchResults(
-                resultsRoomCount = 3,
-                resultsPremisesCount = 2,
-                resultsBedCount = 3,
-                results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premisesOne, roomOnePremisesOne, bedOnePremisesOne, pduOne.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premisesOne, roomTwoPremisesOne, bedTwoPremisesOne, pduOne.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premisesThree, roomOnePremisesThree, bedOnePremisesThree, pduThree.name, 1, listOf(), listOf()),
-                ),
-              ),
-            ),
-            true,
-          )
+          .body<BedSearchResults>()
+
+        assertThat(result.resultsRoomCount).isEqualTo(3)
+        assertThat(result.resultsPremisesCount).isEqualTo(2)
+        assertThat(result.resultsBedCount).isEqualTo(3)
+
+        assertThat(result.results).hasSize(3)
+        assertThat(result.results).containsExactlyInAnyOrder(
+          createTemporaryAccommodationBedSearchResult(premisesOne, roomOnePremisesOne, bedOnePremisesOne, pduOne.name, 2, listOf(), listOf()),
+          createTemporaryAccommodationBedSearchResult(premisesOne, roomTwoPremisesOne, bedTwoPremisesOne, pduOne.name, 2, listOf(), listOf()),
+          createTemporaryAccommodationBedSearchResult(premisesThree, roomOnePremisesThree, bedOnePremisesThree, pduThree.name, 1, listOf(), listOf()),
+        )
       }
     }
 
