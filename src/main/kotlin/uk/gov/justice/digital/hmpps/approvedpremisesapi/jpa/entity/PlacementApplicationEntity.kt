@@ -8,14 +8,17 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -59,6 +62,13 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
     nativeQuery = true,
   )
   fun findApplicationsThatHaveAnAcceptedPlacementApplicationWithoutACorrespondingPlacementRequest(): List<String>
+}
+
+@Repository
+interface LockablePlacementApplicationRepository : JpaRepository<LockablePlacementApplicationEntity, UUID> {
+  @Query("SELECT a FROM LockablePlacementApplicationEntity a WHERE a.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): LockablePlacementApplicationEntity?
 }
 
 @Entity
@@ -147,6 +157,19 @@ data class PlacementApplicationEntity(
 
   override fun toString() = "PlacementApplicationEntity: $id"
 }
+
+/**
+ * Provides a version of the AssessmentEntity with no relationships, allowing
+ * us to lock the applications table only without JPA/Hibernate attempting to
+ * lock all eagerly loaded relationships
+ */
+@Entity
+@Table(name = "assessments")
+@Immutable
+class LockablePlacementApplicationEntity(
+  @Id
+  val id: UUID,
+)
 
 // Do not re-order these elements as we currently use ordinal enum mapping in hibernate
 // (i.e. they're persisted as index numbers, not enum name strings)

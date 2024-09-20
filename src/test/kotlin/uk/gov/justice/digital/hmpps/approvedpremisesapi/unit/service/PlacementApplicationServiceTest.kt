@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
@@ -71,6 +72,7 @@ class PlacementApplicationServiceTest {
   private val cas1PlacementApplicationEmailService = mockk<Cas1PlacementApplicationEmailService>()
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
+  private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
@@ -84,6 +86,7 @@ class PlacementApplicationServiceTest {
     cas1PlacementApplicationDomainEventService,
     taskDeadlineServiceMock,
     Clock.systemDefaultZone(),
+    lockablePlacementApplicationRepository,
   )
 
   @Nested
@@ -495,6 +498,7 @@ class PlacementApplicationServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { taskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
@@ -566,6 +570,7 @@ class PlacementApplicationServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { taskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
@@ -614,6 +619,7 @@ class PlacementApplicationServiceTest {
 
     @Test
     fun `Reallocating a placement application that doesnt exist returns not found`() {
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns null
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
@@ -627,6 +633,7 @@ class PlacementApplicationServiceTest {
         decision = PlacementApplicationDecision.ACCEPTED
       }
 
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
@@ -645,6 +652,7 @@ class PlacementApplicationServiceTest {
         reallocatedAt = OffsetDateTime.now()
       }
 
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
@@ -660,6 +668,7 @@ class PlacementApplicationServiceTest {
 
     @Test
     fun `Reallocating a placement application when user to assign to is not a MATCHER or ASSESSOR returns a field validation error`() {
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
