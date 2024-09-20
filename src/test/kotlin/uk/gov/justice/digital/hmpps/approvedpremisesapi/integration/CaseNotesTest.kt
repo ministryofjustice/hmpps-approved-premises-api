@@ -151,10 +151,10 @@ class CaseNotesTest : IntegrationTestBase() {
           .produce()
 
         val caseNotes = listOf(
-          CaseNoteFactory().produce(),
-          CaseNoteFactory().produce(),
+          CaseNoteFactory().withType("Other").produce(),
+          CaseNoteFactory().withType("Other").produce(),
           caseNoteWithType,
-          CaseNoteFactory().produce(),
+          CaseNoteFactory().withType("Other").produce(),
           caseNoteWithTypeDescription,
         )
 

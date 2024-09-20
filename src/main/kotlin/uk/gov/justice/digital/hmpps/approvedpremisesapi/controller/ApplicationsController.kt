@@ -455,7 +455,7 @@ class ApplicationsController(
     val transformedDocuments = when (application) {
       is ApprovedPremisesApplicationEntity -> documentTransformer.transformToApi(
         groupedDocuments = documents,
-        onlyConvictionDocuments = featureFlagService.getBooleanFlag("cas1_only_list_conviction_documents"),
+        onlyConvictionDocuments = featureFlagService.getBooleanFlag("cas1-only-list-conviction-documents"),
       )
       is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApi(
         groupedDocuments = documents,
