@@ -72,6 +72,7 @@ class BedSearchResultTransformer {
         addressLine2 = result.premisesAddressLine2,
         town = result.premisesTown,
         probationDeliveryUnitName = result.probationDeliveryUnitName,
+        notes = result.premisesNotes,
         bedCount = result.premisesBedCount,
       ),
       room = BedSearchResultRoomSummary(
