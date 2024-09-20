@@ -34,6 +34,7 @@ class Cas1SpaceBookingService(
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
 ) {
   @Transactional
   fun createNewBooking(
@@ -98,6 +99,8 @@ class Cas1SpaceBookingService(
         cancellationReasonNotes = null,
       ),
     )
+
+    cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
     cas1BookingDomainEventService.spaceBookingMade(
       application = application,

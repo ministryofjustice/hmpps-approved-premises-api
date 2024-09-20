@@ -109,7 +109,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -132,6 +131,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -180,7 +180,7 @@ class BookingServiceTest {
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockCas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val mockDeliusService = mockk<DeliusService>()
-  private val mockBookingListener = mockk<BookingListener>()
+  private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
   fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
@@ -221,8 +221,8 @@ class BookingServiceTest {
       assessmentService = mockAssessmentService,
       cas1BookingEmailService = mockCas1BookingEmailService,
       deliusService = mockDeliusService,
-      bookingListener = mockBookingListener,
       cas1BookingDomainEventService = mockCas1BookingDomainEventService,
+      cas1ApplicationStatusService = mockCas1ApplicationStatusService,
     )
   }
 
@@ -4223,8 +4223,8 @@ class BookingServiceTest {
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
       every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(application)
       every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
-      every { mockBookingListener.prePersist(bookingEntity) } returns Unit
-      every { mockBookingListener.prePersist(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(bookingEntity) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { bookingEntity }
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
       every { mockCas1BookingDomainEventService.adhocBookingMade(any(), any(), any(), any(), any()) } just Runs
@@ -4366,7 +4366,7 @@ class BookingServiceTest {
     fun `createApprovedPremisesAdHocBooking succeeds when creating a double Booking`() {
       user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
 
-      every { mockBookingListener.prePersist(bookingEntity) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(bookingEntity) } returns Unit
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf(
         BookingEntityFactory()
           .withPremises(premises)
@@ -4467,7 +4467,7 @@ class BookingServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockBookingListener.prePersist(bookingEntity) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(bookingEntity) } returns Unit
       every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(existingApplication)
       every { mockApplicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises) } returns emptyList()
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -6298,7 +6298,7 @@ class BookingServiceTest {
 
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
-      every { mockBookingListener.prePersist(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
@@ -6352,7 +6352,7 @@ class BookingServiceTest {
 
       every { mockPremisesRepository.findByIdOrNull(premises.id) } returns premises
 
-      every { mockBookingListener.prePersist(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
@@ -6431,7 +6431,7 @@ class BookingServiceTest {
 
       every { mockPremisesRepository.findByIdOrNull(premises.id) } returns premises
 
-      every { mockBookingListener.prePersist(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
@@ -6496,7 +6496,7 @@ class BookingServiceTest {
 
       every { mockPremisesRepository.findByIdOrNull(premises.id) } returns premises
 
-      every { mockBookingListener.prePersist(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.bookingMade(any()) } returns Unit
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { mockCas1BookingDomainEventService.bookingMade(any(), any(), any(), any()) } just Runs
