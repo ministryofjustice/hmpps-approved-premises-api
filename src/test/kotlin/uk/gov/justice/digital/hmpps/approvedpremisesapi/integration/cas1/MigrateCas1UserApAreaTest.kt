@@ -6,13 +6,14 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 
 class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
   @Test
   fun `Populate ap area and team codes`() {
-    val apArea = apAreaEntityFactory.produceAndPersist()
+    val apArea = `Given an AP Area`()
 
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withDefaults()
@@ -43,7 +44,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
   @Test
   fun `If staff details not found for user (404), fall back to probation region ap area and set team codes to an empty list`() {
-    val apArea = apAreaEntityFactory.produceAndPersist()
+    val apArea = `Given an AP Area`()
 
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withDefaults()

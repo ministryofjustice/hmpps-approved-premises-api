@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import java.time.LocalDate
@@ -14,11 +15,7 @@ class BedSummaryTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeEach
   fun setup() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import java.time.LocalDate
@@ -70,11 +71,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     @BeforeEach
     fun setup() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(
-          probationRegionEntityFactory.produceAndPersist {
-            withApArea(apAreaEntityFactory.produceAndPersist())
-          },
-        )
+        withProbationRegion(`Given a Probation Region`())
         withLocalAuthorityArea(
           localAuthorityEntityFactory.produceAndPersist(),
         )
@@ -262,11 +259,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
   private fun createPlacementRequests(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null, name: String? = null, expectedArrival: LocalDate? = null, tier: String? = null): List<PlacementRequestEntity> {
     val user = userEntityFactory.produceAndPersist {
-      withProbationRegion(
-        probationRegionEntityFactory.produceAndPersist {
-          withApArea(apAreaEntityFactory.produceAndPersist())
-        },
-      )
+      withProbationRegion(`Given a Probation Region`())
     }
 
     return List(count) {

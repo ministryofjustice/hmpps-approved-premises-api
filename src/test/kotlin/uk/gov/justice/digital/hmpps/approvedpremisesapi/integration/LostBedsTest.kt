@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -9,9 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCanc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -23,13 +26,18 @@ class LostBedsTest : IntegrationTestBase() {
   @Autowired
   lateinit var lostBedsTransformer: LostBedsTransformer
 
+  lateinit var probationRegion: ProbationRegionEntity
+
+  @BeforeEach
+  fun before() {
+    probationRegion = `Given a Probation Region`()
+  }
+
   @Test
   fun `List Lost Beds without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     webTestClient.get()
@@ -57,9 +65,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -108,9 +114,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val lostBeds = lostBedsEntityFactory.produceAndPersist {
@@ -147,12 +151,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -185,9 +184,7 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Get Lost Bed without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     val lostBeds = lostBedsEntityFactory.produceAndPersist {
@@ -231,9 +228,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       webTestClient.get()
@@ -251,9 +246,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val lostBeds = lostBedsEntityFactory.produceAndPersist {
@@ -290,9 +283,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -329,12 +320,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -369,9 +355,7 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Create Lost Beds without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     val bed = bedEntityFactory.produceAndPersist {
@@ -400,13 +384,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val reason = lostBedReasonEntityFactory.produceAndPersist {
@@ -441,9 +419,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       bedEntityFactory.produceAndPersistMultiple(3) {
@@ -497,9 +473,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       bedEntityFactory.produceAndPersistMultiple(2) {
@@ -560,13 +534,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -618,14 +586,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -667,9 +628,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       bedEntityFactory.produceAndPersistMultiple(2) {
@@ -713,9 +672,7 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Update Lost Bed without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     val lostBeds = lostBedsEntityFactory.produceAndPersist {
@@ -783,9 +740,7 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Update Lost Bed for non-existent lost bed returns 404`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -813,9 +768,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       bedEntityFactory.produceAndPersistMultiple(2) {
@@ -876,13 +829,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -939,14 +886,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -992,9 +932,7 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Cancel Lost Bed without JWT returns 401`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     val lostBeds = lostBedsEntityFactory.produceAndPersist {
@@ -1046,9 +984,7 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Cancel Lost Bed for non-existent lost bed returns 404`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      }
+      withYieldedProbationRegion { probationRegion }
     }
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -1072,9 +1008,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1123,13 +1057,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -1174,14 +1102,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -1225,9 +1146,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1283,9 +1202,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1352,9 +1269,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1407,9 +1322,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1475,13 +1388,7 @@ class LostBedsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -1543,13 +1450,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1623,9 +1524,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1685,9 +1584,7 @@ class LostBedsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
+          withYieldedProbationRegion { probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {

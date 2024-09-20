@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 
 class CharacteristicQueryTest : IntegrationTestBase() {
@@ -11,11 +12,7 @@ class CharacteristicQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findAllForRoomId returns all the characteristics for a roomId`() {
-    var probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist()
-      }
-    }
+    val probationRegion = `Given a Probation Region`()
 
     var localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.midlandsApplicationIds
@@ -24,8 +25,8 @@ class ApAreaMigrationTest : IntegrationTestBase() {
     probationRegionRepository.deleteAll()
     apAreaRepository.deleteAll()
 
-    val apArea1 = apAreaEntityFactory.produceAndPersist()
-    val apArea2 = apAreaEntityFactory.produceAndPersist()
+    val apArea1 = `Given an AP Area`()
+    val apArea2 = `Given an AP Area`()
 
     val probationRegion1 = probationRegionEntityFactory.produceAndPersist {
       withApArea(apArea1)
@@ -35,15 +36,9 @@ class ApAreaMigrationTest : IntegrationTestBase() {
       withApArea(apArea2)
     }
 
-    val midlandsApArea = apAreaEntityFactory.produceAndPersist {
-      withName("Midlands")
-    }
-    val southEastAndEasternApArea = apAreaEntityFactory.produceAndPersist {
-      withName("South East & Eastern")
-    }
-    val northEastApArea = apAreaEntityFactory.produceAndPersist {
-      withName("North East")
-    }
+    val midlandsApArea = `Given an AP Area`(name = "Midlands")
+    val southEastAndEasternApArea = `Given an AP Area`(name = "South East & Eastern")
+    val northEastApArea = `Given an AP Area`(name = "North East")
 
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()

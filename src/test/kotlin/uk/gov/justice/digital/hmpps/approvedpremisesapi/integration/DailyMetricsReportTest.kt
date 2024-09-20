@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeBookedByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -72,11 +73,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
       val year = 2023
 
       val user = userEntityFactory.produceAndPersist {
-        withProbationRegion(
-          probationRegionEntityFactory.produceAndPersist {
-            withApArea(apAreaEntityFactory.produceAndPersist())
-          },
-        )
+        withProbationRegion(`Given a Probation Region`())
       }
 
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {

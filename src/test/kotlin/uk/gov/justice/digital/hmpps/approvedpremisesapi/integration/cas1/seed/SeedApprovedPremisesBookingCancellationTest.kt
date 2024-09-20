@@ -6,6 +6,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -42,14 +43,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
     `Given an Offender` { offenderDetails, _ ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -96,14 +90,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
     `Given an Offender` { offenderDetails, _ ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val bed = bedEntityFactory.produceAndPersist {

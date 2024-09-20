@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
@@ -50,9 +51,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed a real but currently unknown user succeeds`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -94,11 +93,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PRE-EXISTING-USER")
       withUpdatedAt(OffsetDateTime.now().minusDays(3))
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
     }
 
     val roleEntities = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER).map { role ->

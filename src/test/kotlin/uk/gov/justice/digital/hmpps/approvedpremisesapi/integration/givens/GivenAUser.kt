@@ -37,11 +37,7 @@ fun IntegrationTestBase.`Given a User`(
 
   val yieldedProbationRegion = probationRegion
     ?: probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea {
-        apAreaEntityFactory.produceAndPersist {
-          withName(apAreaName)
-        }
-      }
+      withYieldedApArea { `Given an AP Area`(name = apAreaName) }
     }
 
   val user = userEntityFactory.produceAndPersist {

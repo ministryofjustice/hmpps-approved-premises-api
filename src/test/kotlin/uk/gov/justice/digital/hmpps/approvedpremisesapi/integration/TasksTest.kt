@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
@@ -1367,9 +1368,7 @@ class TasksTest {
                   withPremises(
                     approvedPremisesEntityFactory.produceAndPersist {
                       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion {
-                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                      }
+                      withYieldedProbationRegion { `Given a Probation Region`() }
                     },
                   )
                 },
@@ -1564,9 +1563,7 @@ class TasksTest {
                   withPremises(
                     approvedPremisesEntityFactory.produceAndPersist {
                       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion {
-                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                      }
+                      withYieldedProbationRegion { `Given a Probation Region`() }
                     },
                   )
                 },
@@ -1582,9 +1579,7 @@ class TasksTest {
                   withPremises(
                     approvedPremisesEntityFactory.produceAndPersist {
                       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion {
-                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                      }
+                      withYieldedProbationRegion { `Given a Probation Region`() }
                     },
                   )
                 },

@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import java.time.LocalDate
 import java.util.UUID
 class PremisesSummaryTest : IntegrationTestBase() {
@@ -31,12 +33,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       // unexpectedCas3Premises that's in a different region
       temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-          }
-        }
+        withYieldedProbationRegion { `Given a Probation Region`() }
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -285,12 +282,10 @@ class PremisesSummaryTest : IntegrationTestBase() {
 
   @Test
   fun `Get all CAS1 Premises returns OK with correct body`() {
-    `Given a User` { _, jwt ->
+    `Given a User` { user, jwt ->
       val uuid = UUID.randomUUID()
-      val apArea = apAreaEntityFactory.produceAndPersist()
-      val probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withApArea(apArea)
-      }
+      val apArea = `Given an AP Area`()
+      val probationRegion = `Given a Probation Region`(apArea = apArea)
 
       val cas1Premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -354,8 +349,8 @@ class PremisesSummaryTest : IntegrationTestBase() {
   @Test
   fun `Get all CAS1 Premises filters by probation region`() {
     `Given a User` { _, jwt ->
-      val region1 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-      val region2 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      val region1 = `Given a Probation Region`()
+      val region2 = `Given a Probation Region`()
 
       val region1Premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -383,9 +378,9 @@ class PremisesSummaryTest : IntegrationTestBase() {
   @Test
   fun `Get all CAS1 Premises filters by AP Area`() {
     `Given a User` { _, jwt ->
-      val apArea = apAreaEntityFactory.produceAndPersist()
-      val region1 = probationRegionEntityFactory.produceAndPersist { withApArea(apArea) }
-      val region2 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      val apArea = `Given an AP Area`()
+      val region1 = `Given a Probation Region`(apArea = apArea)
+      val region2 = `Given a Probation Region`()
 
       val apAreaPremises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

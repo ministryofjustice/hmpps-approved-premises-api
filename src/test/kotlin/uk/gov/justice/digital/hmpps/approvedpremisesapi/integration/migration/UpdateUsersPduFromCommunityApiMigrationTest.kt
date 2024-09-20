@@ -6,6 +6,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -15,9 +16,7 @@ import java.time.LocalDate
 class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
   fun `All users pdu are updated from Community API with a 50ms artificial delay`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode("PDUCODE1")
@@ -215,9 +214,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
   @Test
   fun `Failure to update individual user does not stop processing`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     val probationDeliveryUnitTwo = probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode("PDUCODE2")
@@ -289,9 +286,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
   @Test
   fun `When probation delivery unit not exist in CAS does not stop processing other users`() {
-    val probationRegion = probationRegionEntityFactory.produceAndPersist {
-      withApArea(apAreaEntityFactory.produceAndPersist())
-    }
+    val probationRegion = `Given a Probation Region`()
 
     probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode("PDUCODE1")

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
@@ -38,11 +39,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           withApplicationSchema(jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java))
           withSubmittedAt(OffsetDateTime.now())
           withNomsNumber(offenderDetails.otherIds.nomsNumber)
-          withApArea(
-            apAreaEntityFactory.produceAndPersist {
-              withEmailAddress("apAreaEmail@test.com")
-            },
-          )
+          withApArea(`Given an AP Area`(emailAddress = "apAreaEmail@test.com"))
           withIsEmergencyApplication(true)
           withReleaseType("licence")
         }

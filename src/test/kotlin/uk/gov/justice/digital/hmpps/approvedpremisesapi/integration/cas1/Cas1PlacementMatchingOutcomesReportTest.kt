@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1Pla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesReportTest.Constants.REPORT_YEAR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -26,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUtcOffsetDateTime
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
@@ -481,13 +481,6 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
   private fun premises() = approvedPremisesEntityFactory.produceAndPersist {
     withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-    withYieldedProbationRegion {
-      probationRegionEntityFactory.produceAndPersist {
-        withId(UUID.randomUUID())
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist()
-        }
-      }
-    }
+    withYieldedProbationRegion { `Given a Probation Region`() }
   }
 }

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
@@ -427,11 +428,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       `Given a User` { _, jwt ->
         `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           },
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -589,11 +586,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       `Given a User` { _, jwt ->
         `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           },
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -1119,11 +1112,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       val placementApplication = `Given a Placement Application`(
         allocatedToUser = allocatedToUser,
         createdByUser = userEntityFactory.produceAndPersist {
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-            }
-          }
+          withYieldedProbationRegion { `Given a Probation Region`() }
         },
         schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -1206,11 +1195,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       `Given a User` { _, jwt ->
         `Given a Placement Application`(
           createdByUser = userEntityFactory.produceAndPersist {
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-              }
-            }
+            withYieldedProbationRegion { `Given a Probation Region`() }
           },
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()

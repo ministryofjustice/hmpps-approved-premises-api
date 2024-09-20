@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
@@ -26,11 +27,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @BeforeAll
     fun setupTestData() {
       val region = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          apAreaEntityFactory.produceAndPersist() {
-            withName("The ap area name")
-          }
-        }
+        withYieldedApArea { `Given an AP Area`(name = "The ap area name") }
       }
 
       premises = approvedPremisesEntityFactory.produceAndPersist {

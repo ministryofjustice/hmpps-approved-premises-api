@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClie
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
@@ -281,9 +282,7 @@ class ApplicationTest : IntegrationTestBase() {
                 createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
               val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea {
-                  apAreaEntityFactory.produceAndPersist()
-                }
+                withYieldedApArea { `Given an AP Area`() }
               }
 
               val notInRegionApplication =
@@ -2147,8 +2146,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-            val apArea = apAreaEntityFactory.produceAndPersist {
-            }
+            val apArea = `Given an AP Area`()
 
             val probationRegion = probationRegionEntityFactory.produceAndPersist {
               withApArea(apArea)

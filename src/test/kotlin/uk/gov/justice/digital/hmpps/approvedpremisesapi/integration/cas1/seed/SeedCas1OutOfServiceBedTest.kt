@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises Bed`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -78,13 +79,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
   @Test
   fun `Logs an error if no bed exists with the given ID`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      withYieldedProbationRegion { `Given a Probation Region`() }
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
