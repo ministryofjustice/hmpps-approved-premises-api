@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config
 
 import jakarta.annotation.PreDestroy
 import org.springframework.boot.env.OriginTrackedMapPropertySource
@@ -6,18 +6,15 @@ import org.springframework.boot.origin.OriginTrackedValue
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortManager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
-  private var postgresPort = System.getenv("POSTGRES_PORT") ?: "5433"
-
   override fun initialize(applicationContext: ConfigurableApplicationContext?) {
     val wiremockPort = WiremockPortManager.reserveFreePort()
 
-    val databaseName = setupDatabase()
+    val databaseConfigMap = IntegrationTestDbManager.initialiseDatabase()
 
     val upstreamServiceUrlsToOverride = mutableMapOf<String, String>()
 
@@ -43,26 +40,8 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
           "wiremock.port" to wiremockPort.toString(),
           "preemptive-cache-key-prefix" to wiremockPort.toString(),
           "hmpps.sqs.topics.domainevents.arn" to "arn:aws:sns:eu-west-2:000000000000:domainevents-int-test-${randomStringLowerCase(10)}",
-          "spring.datasource.url" to "jdbc:postgresql://localhost:$postgresPort/$databaseName",
-        ) + upstreamServiceUrlsToOverride,
+        ) + databaseConfigMap + upstreamServiceUrlsToOverride,
       ).applyTo(applicationContext)
-  }
-
-  private fun setupDatabase(): String {
-    val driver = DriverManagerDataSource().apply {
-      setDriverClassName("org.postgresql.Driver")
-      url = "jdbc:postgresql://localhost:$postgresPort/postgres"
-      username = "integration_test"
-      password = "integration_test_password"
-    }
-
-    val jdbcTemplate = JdbcTemplate(driver)
-
-    val databaseName = "ap_api_it_${System.currentTimeMillis()}_${randomStringLowerCase(4)}"
-
-    jdbcTemplate.execute("CREATE DATABASE $databaseName")
-
-    return databaseName
   }
 }
 

@@ -1,13 +1,22 @@
-version: "3"
+name: approved-premises-api-test
 services:
   integration_test_database:
     image: "postgis/postgis"
+    # If connecting to this database for investigations, use integration_test_monitor:integration_test_monitor_password
+    # If you use api_user as defined below, cloning templates will fail
+    # See IntegrationTestDbInitialiser for more information
     environment:
-      - POSTGRES_USER=integration_test
-      - POSTGRES_PASSWORD=integration_test_password
-      - POSTGRES_DB=approved_premises_integration_test
+      - POSTGRES_USER=api_user
+      - POSTGRES_PASSWORD=api_user_password
+      - POSTGRES_DB=unused
+      - PGDATA=/var/lib/pg/data
     ports:
       - "5433:5432"
+    volumes:
+      # provides an in-memory volume, more performant than disk based
+      - type: tmpfs
+        target: /var/lib/pg/data
+      - ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
 
   integration_test_redis:
     image: "bitnami/redis:7.2.5"
@@ -23,7 +32,7 @@ services:
     ports:
       - "4566:4566"
       - "4571:4571"
-      - 8999:8080
+      - "8999:8080"
     environment:
       - SERVICES=sns,sqs
       - DEBUG=${DEBUG- }

@@ -105,6 +105,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruMana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.DomainEventAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.IntegrationTestDbManager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.TestPropertiesInitializer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MockFeatureFlagService
@@ -261,14 +263,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TurnaroundTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualificationAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DbExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.TestPropertiesInitializer
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
 
-@ExtendWith(DbExtension::class)
+@ExtendWith(IntegrationTestDbManager.IntegrationTestListener::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
