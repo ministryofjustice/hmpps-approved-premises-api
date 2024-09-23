@@ -8,20 +8,17 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedRevisionTransformer
@@ -93,23 +90,7 @@ class Cas1OutOfServiceBedTransformerTest {
     val historyItem = Cas1OutOfServiceBedRevision(
       id = UUID.randomUUID(),
       updatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres().toInstant(),
-      updatedBy = ApprovedPremisesUser(
-        qualifications = listOf(),
-        roles = listOf(),
-        apArea = ApArea(
-          id = UUID.randomUUID(),
-          identifier = "APAREA",
-          name = "An AP Area",
-        ),
-        service = ServiceName.approvedPremises.value,
-        id = UUID.randomUUID(),
-        name = "Some User",
-        deliusUsername = "SOMEUSER",
-        region = ProbationRegion(
-          id = UUID.randomUUID(),
-          name = "A Probation Region",
-        ),
-      ),
+      updatedBy = ApprovedPremisesUserFactory().produce(),
       revisionType = listOf(Cas1OutOfServiceBedRevisionType.created),
     )
 
@@ -182,23 +163,7 @@ class Cas1OutOfServiceBedTransformerTest {
     val historyItem = Cas1OutOfServiceBedRevision(
       id = UUID.randomUUID(),
       updatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres().toInstant(),
-      updatedBy = ApprovedPremisesUser(
-        qualifications = listOf(),
-        roles = listOf(),
-        apArea = ApArea(
-          id = UUID.randomUUID(),
-          identifier = "APAREA",
-          name = "An AP Area",
-        ),
-        service = ServiceName.approvedPremises.value,
-        id = UUID.randomUUID(),
-        name = "Some User",
-        deliusUsername = "SOMEUSER",
-        region = ProbationRegion(
-          id = UUID.randomUUID(),
-          name = "A Probation Region",
-        ),
-      ),
+      updatedBy = ApprovedPremisesUserFactory().produce(),
       revisionType = listOf(Cas1OutOfServiceBedRevisionType.created),
     )
 
