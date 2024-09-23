@@ -225,6 +225,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.noticeType = { noticeType }
   }
 
+  fun withCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity?) = apply {
+    this.cruManagementArea = { cruManagementArea }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),

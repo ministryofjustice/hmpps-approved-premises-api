@@ -23,11 +23,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -646,6 +648,39 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It searches by CRU Management Area ID where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val cruArea1 = `Given an CAS1 CRU Management Area`()
+          val cruArea2 = `Given an CAS1 CRU Management Area`()
+
+          createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea1)
+          val placementRequestA1 = createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea2)
+          createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea1)
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?cruManagementAreaId=${cruArea2.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequestA1,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
     fun `It searches by requestType where type is standardRelease`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -701,6 +736,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
+    @Deprecated("Can be removed when apAreaId is removed from search filter in the front end.")
     @Test
     fun `It searches using multiple criteria where user is manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
@@ -721,6 +757,49 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
             webTestClient.get()
               .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2&requestType=parole&apAreaId=${apArea1.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      placementOffender1On5thJanTierA2Parole,
+                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It searches using multiple criteria including CRU management area id where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offender1Details, inmate1Details ->
+          `Given an Offender` { offender2Details, _ ->
+
+            val cruArea1 = `Given an CAS1 CRU Management Area`()
+            val cruArea2 = `Given an CAS1 CRU Management Area`()
+
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
+            val placementOffender1On5thJanTierA2Parole =
+              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, cruManagementArea = cruArea1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, cruManagementArea = cruArea2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
+            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
+
+            webTestClient.get()
+              .uri(
+                "/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}" +
+                  "&tier=A2&requestType=parole&cruManagementAreaId=${cruArea1.id}",
+              )
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1007,6 +1086,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       tier: RiskTierLevel = RiskTierLevel.b1,
       isParole: Boolean = false,
       apArea: ApAreaEntity? = null,
+      cruManagementArea: Cas1CruManagementAreaEntity? = null,
     ): PlacementRequestEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -1036,6 +1116,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
             ).produce(),
         )
         withApArea(apArea)
+        cruManagementArea?.let {
+          withCruManagementArea(it)
+        }
       }
 
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
