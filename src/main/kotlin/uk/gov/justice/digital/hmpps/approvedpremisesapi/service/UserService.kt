@@ -343,9 +343,11 @@ class UserService(
     }
 
     if (forService == ServiceName.approvedPremises) {
-      user.apArea =
-        cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), staffDetail.username)
+      val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), staffDetail.username)
+      user.apArea = apArea
+      user.cruManagementArea = apArea.defaultCruManagementArea
     }
+
     return userRepository.save(user)
   }
 
@@ -376,7 +378,9 @@ class UserService(
     }
 
     if (forService == ServiceName.approvedPremises) {
-      user.apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, deliusUser)
+      val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, deliusUser)
+      user.apArea = apArea
+      user.cruManagementArea = apArea.defaultCruManagementArea
     }
 
     return userRepository.save(user)
@@ -466,6 +470,8 @@ class UserService(
         },
         isActive = true,
         apArea = apArea,
+        cruManagementArea = apArea.defaultCruManagementArea,
+        cruManagementAreaOverride = null,
         teamCodes = staffUserDetails.getTeamCodes(),
         createdAt = OffsetDateTime.now(),
         updatedAt = null,

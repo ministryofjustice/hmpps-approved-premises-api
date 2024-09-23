@@ -292,9 +292,21 @@ data class UserEntity(
   var probationRegion: ProbationRegionEntity,
   @ManyToOne(fetch = FetchType.LAZY)
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  /**
+   * The geographical area the user belongs to.
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  /**
+   * Used by CRU Members only to determine which tasks/applications they should work on.
+   */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_id")
+  var cruManagementArea: Cas1CruManagementAreaEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_override_id")
+  var cruManagementAreaOverride: Cas1CruManagementAreaEntity?,
   @Convert(converter = StringListConverter::class)
   var teamCodes: List<String>?,
   val createdAt: OffsetDateTime?,
