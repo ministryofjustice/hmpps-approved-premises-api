@@ -4388,7 +4388,6 @@ components:
         - update_all_users_from_community_api
         - update_sentence_type_and_situation
         - update_booking_status
-        - update_application_ap_areas
         - update_task_due_dates
         - update_users_pdu_from_community_api
         - update_cas2_applications_with_assessments
