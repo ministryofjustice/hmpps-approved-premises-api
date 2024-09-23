@@ -14,12 +14,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @Component
 class OffenderRisksDataSource(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
+  private val sentryService: SentryService,
 ) {
 
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
@@ -57,9 +59,9 @@ class OffenderRisksDataSource(
       }
       is ClientResult.Failure.StatusCode -> when (roshRisksResponse.status) {
         HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-        else -> RiskWithStatus(status = RiskStatus.Error)
+        else -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
       }
-      is ClientResult.Failure -> RiskWithStatus(status = RiskStatus.Error)
+      is ClientResult.Failure -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
     }
   }
 
@@ -73,18 +75,18 @@ class OffenderRisksDataSource(
       )
       is ClientResult.Failure.StatusCode -> when (tierResponse.status) {
         HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-        else -> RiskWithStatus(status = RiskStatus.Error)
+        else -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
       }
-      is ClientResult.Failure -> RiskWithStatus(status = RiskStatus.Error)
+      is ClientResult.Failure -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
     }
 
   fun ClientResult<CaseDetail>.toMappa(): RiskWithStatus<Mappa> = when (this) {
     is ClientResult.Success -> this.body.toMappa()
     is ClientResult.Failure.StatusCode -> when (this.status) {
       HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-      else -> RiskWithStatus(status = RiskStatus.Error)
+      else -> recordAndReturnError("toMappa, body: ${this.body}", this.toException())
     }
-    is ClientResult.Failure -> RiskWithStatus(status = RiskStatus.Error)
+    is ClientResult.Failure -> recordAndReturnError("toMappa", this.toException())
   }
 
   fun CaseDetail.toMappa(): RiskWithStatus<Mappa> = when (this.mappaDetail) {
@@ -108,9 +110,9 @@ class OffenderRisksDataSource(
     is ClientResult.Success -> this.body.toRiskFlags()
     is ClientResult.Failure.StatusCode -> when (this.status) {
       HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-      else -> RiskWithStatus(status = RiskStatus.Error)
+      else -> recordAndReturnError("toRiskFlags, body: ${this.body}", this.toException())
     }
-    is ClientResult.Failure -> RiskWithStatus(status = RiskStatus.Error)
+    is ClientResult.Failure -> recordAndReturnError("toRiskFlags", this.toException())
   }
 
   fun CaseDetail.toRiskFlags(): RiskWithStatus<List<String>> {
@@ -120,5 +122,10 @@ class OffenderRisksDataSource(
       true -> RiskWithStatus(status = RiskStatus.NotFound)
       else -> RiskWithStatus(value = registrations.map { it.description })
     }
+  }
+
+  private fun <T>recordAndReturnError(targetInfo: String, cause: Throwable, value: T? = null): RiskWithStatus<T> {
+    sentryService.captureException(RuntimeException("Error occurred obtaining Risks for $targetInfo", cause))
+    return RiskWithStatus(status = RiskStatus.Error, value)
   }
 }
