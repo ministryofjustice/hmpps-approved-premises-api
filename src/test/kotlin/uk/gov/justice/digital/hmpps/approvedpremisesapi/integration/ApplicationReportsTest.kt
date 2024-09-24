@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -101,6 +102,9 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Autowired
   lateinit var apDeliusContextApiClient: ApDeliusContextApiClient
+
+  @Autowired
+  lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
   lateinit var referrerDetails: Pair<UserEntity, String>
   lateinit var referrerTeam: StaffUserTeamMembership
@@ -714,10 +718,21 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .expectStatus()
       .isOk
 
-    val (_, matcherJwt) = matcherDetails
+    val (matcher, matcherJwt) = matcherDetails
+
+    cas1SimpleApiClient.placementApplicationReallocate(
+      integrationTestBase = this,
+      placementApplicationId = placementApplication.id,
+      NewReallocation(
+        userId = matcher.id,
+      ),
+    )
+
+    val reallocatedPlacementApp =
+      placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
 
     webTestClient.post()
-      .uri("/placement-applications/${placementApplication.id}/decision")
+      .uri("/placement-applications/${reallocatedPlacementApp.id}/decision")
       .header("Authorization", "Bearer $matcherJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(

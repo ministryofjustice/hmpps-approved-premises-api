@@ -54,7 +54,8 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   lateinit var jwt: String
 
-  lateinit var user: UserEntity
+  lateinit var user1: UserEntity
+  lateinit var user2: UserEntity
 
   lateinit var applicationId: UUID
 
@@ -94,9 +95,11 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
     this.offenderDetails = offenderDetails
-    this.user = user
+    this.user1 = user
     this.jwt = jwt
     this.applicationId = createApplication()
+
+    this.user2 = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)).first
   }
 
   @Test
@@ -104,6 +107,9 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
 
     submitApplication(true)
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+
+    reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
     startAssessment()
@@ -121,6 +127,9 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
 
     submitApplication(true)
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+
+    reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
     startAssessment()
@@ -138,6 +147,9 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
 
     submitApplication(false)
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+
+    reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
     startAssessment()
@@ -153,9 +165,12 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application status changes correctly when an assessment gets reallocated`() {
     submitApplication()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+
+    reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
-    reallocateAssessment()
+    reallocateAssessment(user2)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
   }
 
@@ -421,7 +436,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .isOk
   }
 
-  private fun reallocateAssessment() {
+  private fun reallocateAssessment(user: UserEntity) {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val assessment = application.getLatestAssessment()!!
 
