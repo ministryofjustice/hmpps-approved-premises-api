@@ -209,8 +209,6 @@ user-allocations:
         wales: WALES_ASSESSOR
     appealed-assessments:
       enabled: true
-    female-assessments:
-      enabled: true
 
 notify:
   emailaddresses:
