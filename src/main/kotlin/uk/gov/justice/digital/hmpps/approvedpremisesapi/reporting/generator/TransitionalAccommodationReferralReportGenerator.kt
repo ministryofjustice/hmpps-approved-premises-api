@@ -52,7 +52,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
           town = referralData.town,
           postCode = referralData.postCode,
           probationRegion = referralData.probationRegionName,
-          pdu = referralData.pdu,
+          pdu = referralData.pduName,
           referralSubmittedDate = referralData.referralSubmittedDate?.toLocalDate(),
           referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
           rejectionReason = referralData.referralRejectionReason,
