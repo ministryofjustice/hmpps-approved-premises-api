@@ -1889,30 +1889,7 @@ class ApplicationTest : IntegrationTestBase() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                """
-                {
-                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                  "${"\$id"}": "https://example.com/product.schema.json",
-                  "title": "Thing",
-                  "description": "A thing",
-                  "type": "object",
-                  "properties": {
-                    "isWomensApplication": {
-                      "description": "whether this is a womens application",
-                      "type": "boolean"
-                    },
-                    "isPipeApplication": {
-                      "description": "whether this is a PIPE application",
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [ "isWomensApplication", "isPipeApplication" ]
-                }
-              """,
-              )
+              withDefaults()
             }
 
             approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -1920,14 +1897,6 @@ class ApplicationTest : IntegrationTestBase() {
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
-              withData(
-                """
-                {
-                   "isWomensApplication": true,
-                   "isPipeApplication": true
-                }
-              """,
-              )
             }
 
             CommunityAPI_mockSuccessfulRegistrationsCall(
@@ -2065,35 +2034,12 @@ class ApplicationTest : IntegrationTestBase() {
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-        ) { assessorUser, _ ->
+        ) { _, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {
-                  "isWomensApplication": {
-                    "description": "whether this is a womens application",
-                    "type": "boolean"
-                  },
-                  "isPipeApplication": {
-                    "description": "whether this is a PIPE application",
-                    "type": "boolean"
-                  }
-                },
-                "required": [ "isWomensApplication", "isPipeApplication" ]
-              }
-            """,
-              )
+              withDefaults()
             }
 
             approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -2101,14 +2047,6 @@ class ApplicationTest : IntegrationTestBase() {
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
-              withData(
-                """
-              {
-                 "isWomensApplication": true,
-                 "isPipeApplication": true
-              }
-            """,
-              )
             }
 
             CommunityAPI_mockSuccessfulRegistrationsCall(
