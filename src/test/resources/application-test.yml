@@ -219,5 +219,4 @@ logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 feature-flags:
   cas1-appeal-manager-can-assess-applications: true
   cas1-only-list-adjudications-up-to-12-months: true
-  cas1-only-list-conviction-documents: true
   cas1-only-list-specific-prison-note-types: true

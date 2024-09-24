@@ -300,7 +300,6 @@ reports:
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
   cas1-only-list-adjudications-up-to-12-months: false
-  cas1-only-list-conviction-documents: false
   cas1-only-list-specific-prison-note-types: false
   cas1-womens-estate-enabled: false
   use-ap-and-delius-to-update-users: true
