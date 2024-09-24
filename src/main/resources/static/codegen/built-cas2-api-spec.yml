@@ -3750,7 +3750,6 @@ components:
     UserQualification:
       type: string
       enum:
-        - womens
         - pipe
         - lao
         - emergency

@@ -1169,16 +1169,13 @@ class UserServiceTest {
       val assessorRole = ApprovedPremisesUserRole.assessor
       val assessorRoleAdmin = ApprovedPremisesUserRole.roleAdmin
 
-      val qualificationWomens = APIUserQualification.womens
-      val qualificationPipe = APIUserQualification.pipe
-
       every { userService.clearRolesForService(user, ServiceName.approvedPremises) } returns Unit
       every { userService.clearQualifications(user) } returns Unit
       every { userService.addRoleToUser(user, any()) } returns Unit
       every { userService.addQualificationToUser(user, any()) } returns Unit
 
       val roles = listOf(assessorRole, assessorRoleAdmin)
-      val qualifications = listOf(qualificationWomens, qualificationPipe)
+      val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
 
       val result = userService.updateUserRolesAndQualificationsForUser(user, roles, qualifications)
 
@@ -1195,7 +1192,7 @@ class UserServiceTest {
       verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ASSESSOR) }
       verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ADMIN) }
       verify(exactly = 2) { userService.addQualificationToUser(user, any()) }
-      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.WOMENS) }
+      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.EMERGENCY) }
       verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.PIPE) }
     }
   }

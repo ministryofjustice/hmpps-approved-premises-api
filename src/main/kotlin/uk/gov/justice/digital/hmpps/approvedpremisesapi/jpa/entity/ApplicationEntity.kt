@@ -434,10 +434,6 @@ class ApprovedPremisesApplicationEntity(
       else -> {}
     }
 
-    if (isWomensApplication == true) {
-      requiredQualifications += UserQualification.WOMENS
-    }
-
     if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
       requiredQualifications += UserQualification.EMERGENCY
     }
