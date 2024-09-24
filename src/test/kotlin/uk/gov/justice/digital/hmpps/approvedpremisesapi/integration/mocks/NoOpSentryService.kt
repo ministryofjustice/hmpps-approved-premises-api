@@ -17,12 +17,12 @@ class NoOpSentryService : SentryService {
   private val capturedErrors = mutableListOf<String>()
 
   override fun captureException(throwable: Throwable) {
-    log.info("Will capture exception in sentry", throwable)
+    log.info("Sentry Exception Captured", throwable)
     capturedExceptions.add(throwable)
   }
 
   override fun captureErrorMessage(message: String) {
-    log.info("Will capture message $message in sentry", message)
+    log.info("Sentry Message Captured : '$message'", message)
     capturedErrors.add(message)
   }
 

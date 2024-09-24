@@ -24,6 +24,7 @@ class PreemptiveCacheRefresher(
   private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
   private val prisonsApiClient: PrisonsApiClient,
   private val sentryService: SentryService,
+  @Value("\${preemptive-cache-enabled}") private val enabled: Boolean,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
   @Value("\${preemptive-cache-lock-duration-ms}") private val lockDurationMs: Int,
@@ -38,6 +39,11 @@ class PreemptiveCacheRefresher(
 
   @EventListener(ApplicationReadyEvent::class)
   fun startThreads() {
+    if (!enabled) {
+      sentryService.captureErrorMessage("Pre-emptive cache is disabled")
+      return
+    }
+
     Thread {
       while (!haveFlywayMigrationsFinished()) {
         if (shuttingDown) return@Thread
