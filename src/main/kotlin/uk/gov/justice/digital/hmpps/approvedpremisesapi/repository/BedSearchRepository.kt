@@ -180,7 +180,18 @@ ORDER BY distance_miles;
              WHERE service_scope = 'temporary-accommodation'
                       AND p2.probation_region_id = :probation_region_id 
                       AND (c2.is_active = true AND c2.name = 'Single occupancy' OR FALSE = :filter_by_single_occupancy)
-                      AND (c2.is_active = true AND c2.name = 'Shared property' OR FALSE = :filter_by_shared_property))
+                      AND (c2.is_active = true AND c2.name = 'Shared property' OR FALSE = :filter_by_shared_property)),
+                      
+    BookedBedspaces AS
+        (SELECT distinct b.bed_id, b.premises_id 
+             FROM bookings b
+             INNER JOIN premises p ON b.premises_id = p.id
+             LEFT JOIN cancellations bc ON bc.booking_id = b.id
+         WHERE
+             b.service = 'temporary-accommodation'
+             AND p.probation_region_id = :probation_region_id
+             AND (b.arrival_date, b.departure_date) OVERLAPS (:start_date, :end_date)
+             AND bc.id IS NULL)
                              
     SELECT p.id as premises_id,
            p.name as premises_name,
@@ -195,6 +206,7 @@ ORDER BY distance_miles;
            r.name as room_name,
            c2.property_name as room_characteristic_property_name,
            (SELECT count(1) FROM beds b2 WHERE b2.room_id IN (SELECT id FROM rooms r2 WHERE r2.premises_id = p.id) AND ( b2.end_date IS NULL OR b2.end_date > :end_date ) ) as premises_bed_count,
+           (SELECT count(bed_id) FROM BookedBedspaces bb WHERE bb.premises_id = p.id) as booked_bed_count,
            c2.name as room_characteristic_name,
            b.id as bed_id,
            b.name as bed_name,
@@ -209,12 +221,8 @@ ORDER BY distance_miles;
     LEFT JOIN beds b ON b.room_id = r.id
     LEFT JOIN probation_delivery_units pdu on pdu.id = tap.probation_delivery_unit_id
     WHERE
-        NOT EXISTS (SELECT books.bed_id FROM bookings books
-             LEFT JOIN cancellations books_cancel ON books_cancel.booking_id = books.id
-         WHERE
-             books.bed_id = b.id AND
-             (books.arrival_date, books.departure_date) OVERLAPS (:start_date, :end_date) AND
-             books_cancel.id IS NULL
+        NOT EXISTS (SELECT bb.bed_id FROM BookedBedspaces bb
+         WHERE bb.bed_id = b.id
         ) AND
         NOT EXISTS (SELECT lostbeds.bed_id FROM lost_beds lostbeds
              LEFT JOIN lost_bed_cancellations lostbeds_cancel ON lostbeds_cancel.lost_bed_id = lostbeds.id
@@ -266,6 +274,7 @@ ORDER BY distance_miles;
           val premisesCharacteristicName = resultSet.getString("premises_characteristic_name")
           val premisesCharacteristicPropertyName = resultSet.getString("premises_characteristic_property_name")
           val premisesBedCount = resultSet.getInt("premises_bed_count")
+          val bookedBedCount = resultSet.getInt("booked_bed_count")
           val roomId = resultSet.getNullableUUID("room_id")
           val roomName = resultSet.getString("room_name")
           val roomCharacteristicName = resultSet.getString("room_characteristic_name")
@@ -288,6 +297,7 @@ ORDER BY distance_miles;
               probationDeliveryUnitName = probationDeliveryUnitName,
               premisesCharacteristics = mutableListOf(),
               premisesBedCount = premisesBedCount,
+              bookedBedCount = bookedBedCount,
               bedId = bedId,
               bedName = bedName,
               roomId = roomId!!,
@@ -396,6 +406,7 @@ class TemporaryAccommodationBedSearchResult(
   roomCharacteristics: MutableList<CharacteristicNames>,
   val probationDeliveryUnitName: String,
   val premisesNotes: String?,
+  val bookedBedCount: Int,
   val overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>,
 ) : BedSearchResult(
   premisesId,

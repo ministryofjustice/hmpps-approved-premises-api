@@ -26,6 +26,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
   private var bedName: Yielded<String> = { randomStringUpperCase(6) }
   private var roomCharacteristics: Yielded<MutableList<CharacteristicNames>> = { mutableListOf() }
   private var premisesBedCount: Yielded<Int> = { randomInt(1, 10) }
+  private var bookedBedCount: Yielded<Int> = { randomInt(1, 5) }
   private var overlaps: Yielded<MutableList<TemporaryAccommodationBedSearchResultOverlap>> = { mutableListOf() }
 
   fun withPremisesId(premisesId: UUID) = apply {
@@ -88,6 +89,10 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
     this.premisesBedCount = { premisesBedCount }
   }
 
+  fun withBookedBedCount(bookedBedCount: Int) = apply {
+    this.bookedBedCount = { bookedBedCount }
+  }
+
   fun withOverlaps(overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>) = apply {
     this.overlaps = { overlaps }
   }
@@ -108,6 +113,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<TemporaryAccommodat
     bedName = this.bedName(),
     roomCharacteristics = this.roomCharacteristics(),
     premisesBedCount = this.premisesBedCount(),
+    bookedBedCount = this.bookedBedCount(),
     overlaps = this.overlaps(),
   )
 }

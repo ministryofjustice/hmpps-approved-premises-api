@@ -74,6 +74,7 @@ class BedSearchResultTransformer {
         probationDeliveryUnitName = result.probationDeliveryUnitName,
         notes = result.premisesNotes,
         bedCount = result.premisesBedCount,
+        bookedBedCount = result.bookedBedCount,
       ),
       room = BedSearchResultRoomSummary(
         id = result.roomId,

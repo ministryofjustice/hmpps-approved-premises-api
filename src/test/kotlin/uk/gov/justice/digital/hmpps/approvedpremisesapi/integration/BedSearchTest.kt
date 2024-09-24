@@ -228,7 +228,16 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 1,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premises, room, bed, searchPdu.name, 1, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    room,
+                    bed,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -265,6 +274,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bed)
           withArrivalDate(LocalDate.parse("2022-12-21"))
@@ -318,6 +328,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bed)
           withArrivalDate(LocalDate.parse("2022-12-21"))
@@ -385,6 +396,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val overlappingBookingSameRoom = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bedTwo)
           withArrivalDate(LocalDate.parse("2023-07-15"))
@@ -394,6 +406,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val overlappingBookingDifferentRoom = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bedThree)
           withArrivalDate(LocalDate.parse("2023-08-25"))
@@ -429,8 +442,9 @@ class BedSearchTest : IntegrationTestBase() {
                     roomOne,
                     bedOne,
                     searchPdu.name,
-                    3,
-                    listOf(),
+                    numberOfBeds = 3,
+                    numberOfBookedBeds = 2,
+                    premisesCharacteristics = listOf(),
                     listOf(
                       TemporaryAccommodationBedSearchResultOverlap(
                         crn = overlappingBookingSameRoom.crn,
@@ -511,6 +525,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val overlappingBookingForBedInPremisesOne = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premisesOne)
           withBed(overlappingBedInPremisesOne)
           withArrivalDate(LocalDate.parse("2023-07-15"))
@@ -520,6 +535,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val overlappingBookingForBedInPremisesTwo = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premisesTwo)
           withBed(overlappingBedInPremisesTwo)
           withArrivalDate(LocalDate.parse("2023-08-25"))
@@ -555,8 +571,9 @@ class BedSearchTest : IntegrationTestBase() {
                     roomInPremisesOne,
                     matchingBedInPremisesOne,
                     searchPdu.name,
-                    2,
-                    listOf(),
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 1,
+                    premisesCharacteristics = listOf(),
                     listOf(
                       TemporaryAccommodationBedSearchResultOverlap(
                         crn = overlappingBookingForBedInPremisesOne.crn,
@@ -571,8 +588,9 @@ class BedSearchTest : IntegrationTestBase() {
                     roomInPremisesTwo,
                     matchingBedInPremisesTwo,
                     searchPdu.name,
-                    2,
-                    listOf(),
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 1,
+                    premisesCharacteristics = listOf(),
                     overlaps = listOf(
                       TemporaryAccommodationBedSearchResultOverlap(
                         crn = overlappingBookingForBedInPremisesTwo.crn,
@@ -624,6 +642,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val nonOverlappingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bedTwo)
           withArrivalDate(LocalDate.parse("2024-01-01"))
@@ -654,8 +673,26 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 2,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premises, roomOne, bedOne, searchPdu.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premises, roomOne, bedTwo, searchPdu.name, 2, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    roomOne,
+                    bedOne,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    roomOne,
+                    bedTwo,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -700,6 +737,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         val nonOverlappingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bedTwo)
           withArrivalDate(LocalDate.parse("2023-07-15"))
@@ -737,8 +775,26 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 2,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premises, roomOne, bedOne, searchPdu.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premises, roomOne, bedTwo, searchPdu.name, 2, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    roomOne,
+                    bedOne,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    roomOne,
+                    bedTwo,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -840,21 +896,23 @@ class BedSearchTest : IntegrationTestBase() {
                     roomOne,
                     bedOne,
                     searchPdu.name,
-                    1,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
                         propertyName = sharedPropertyPropertyName,
                         name = "Shared property",
                       ),
                     ),
-                    listOf(),
+                    overlaps = listOf(),
                   ),
                   createTemporaryAccommodationBedSearchResult(
                     premisesThree,
                     roomThree,
                     bedThree,
                     searchPdu.name,
-                    1,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
                         propertyName = sharedPropertyPropertyName,
@@ -865,7 +923,7 @@ class BedSearchTest : IntegrationTestBase() {
                         name = "Men only",
                       ),
                     ),
-                    listOf(),
+                    overlaps = listOf(),
                   ),
                 ),
               ),
@@ -966,7 +1024,8 @@ class BedSearchTest : IntegrationTestBase() {
                     roomOne,
                     bedOne,
                     searchPdu.name,
-                    1,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
                         propertyName = singleOccupancyPropertyName,
@@ -977,21 +1036,22 @@ class BedSearchTest : IntegrationTestBase() {
                         name = "Pub nearby",
                       ),
                     ),
-                    listOf(),
+                    overlaps = listOf(),
                   ),
                   createTemporaryAccommodationBedSearchResult(
                     premisesTwo,
                     roomTwo,
                     bedTwo,
                     searchPdu.name,
-                    1,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
                         propertyName = singleOccupancyPropertyName,
                         name = "Single occupancy",
                       ),
                     ),
-                    listOf(),
+                    overlaps = listOf(),
                   ),
                 ),
               ),
@@ -1110,7 +1170,16 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 1,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premises, roomWithoutEndDate, bedWithoutEndDate, searchPdu.name, 1, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    roomWithoutEndDate,
+                    bedWithoutEndDate,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -1171,7 +1240,16 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 1,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premises, room, bed, searchPdu.name, 1, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premises,
+                    room,
+                    bed,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -1290,8 +1368,26 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 2,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premisesOne, roomOne, bedOne, searchPdu.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premisesOne, roomTwo, bedTwo, searchPdu.name, 2, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premisesOne,
+                    roomOne,
+                    bedOne,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    premisesOne,
+                    roomTwo,
+                    bedTwo,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -1381,9 +1477,36 @@ class BedSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 2,
                 resultsBedCount = 3,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(premisesOne, roomOnePremisesOne, bedOnePremisesOne, pduOne.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premisesOne, roomTwoPremisesOne, bedTwoPremisesOne, pduOne.name, 2, listOf(), listOf()),
-                  createTemporaryAccommodationBedSearchResult(premisesThree, roomOnePremisesThree, bedOnePremisesThree, pduThree.name, 1, listOf(), listOf()),
+                  createTemporaryAccommodationBedSearchResult(
+                    premisesOne,
+                    roomOnePremisesOne,
+                    bedOnePremisesOne,
+                    pduOne.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    premisesOne,
+                    roomTwoPremisesOne,
+                    bedTwoPremisesOne,
+                    pduOne.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    premisesThree,
+                    roomOnePremisesThree,
+                    bedOnePremisesThree,
+                    pduThree.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
                 ),
               ),
             ),
@@ -1502,6 +1625,7 @@ class BedSearchTest : IntegrationTestBase() {
       bed: BedEntity,
       pduName: String,
       numberOfBeds: Int,
+      numberOfBookedBeds: Int,
       premisesCharacteristics: List<CharacteristicPair>,
       overlaps: List<TemporaryAccommodationBedSearchResultOverlap>,
     ): TemporaryAccommodationBedSearchResult {
@@ -1517,6 +1641,7 @@ class BedSearchTest : IntegrationTestBase() {
           town = premises.town,
           notes = premises.notes,
           bedCount = numberOfBeds,
+          bookedBedCount = numberOfBookedBeds,
         ),
         room = BedSearchResultRoomSummary(
           id = room.id,

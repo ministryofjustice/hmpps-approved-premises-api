@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -503,6 +504,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedOneInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2023-03-08"))
@@ -517,6 +519,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedTwoInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2023-03-14"))
@@ -531,6 +534,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedThreeInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2023-03-08"))
@@ -545,6 +549,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedFourInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2023-03-08"))
@@ -678,6 +683,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     val cancelledBooking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withArrivalDate(LocalDate.parse("2023-03-08"))
@@ -743,6 +749,9 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     assertThat(results.first { it.premisesId == premisesTwoInPdu.id }.premisesBedCount).isEqualTo(4)
+    assertThat(results.first { it.premisesId == premisesTwoInPdu.id }.bookedBedCount).isEqualTo(0)
+    assertThat(results.first { it.premisesId == premisesThreeInPdu.id }.premisesBedCount).isEqualTo(4)
+    assertThat(results.first { it.premisesId == premisesThreeInPdu.id }.bookedBedCount).isEqualTo(0)
   }
 
   @Test
@@ -792,6 +801,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedOneInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2024-08-08"))
@@ -806,6 +816,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedTwoInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2024-08-12"))
@@ -837,6 +848,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesTwoInPdu)
       withBed(bedWithBooking)
       withArrivalDate(LocalDate.parse("2024-08-08"))
@@ -887,6 +899,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     val cancelledBooking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withArrivalDate(LocalDate.parse("2024-08-18"))
@@ -934,7 +947,9 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     assertThat(results.first { it.premisesId == premisesTwoInPdu.id }.premisesBedCount).isEqualTo(3)
+    assertThat(results.first { it.premisesId == premisesTwoInPdu.id }.bookedBedCount).isEqualTo(1)
     assertThat(results.first { it.premisesId == premisesThreeInPdu.id }.premisesBedCount).isEqualTo(5)
+    assertThat(results.first { it.premisesId == premisesThreeInPdu.id }.bookedBedCount).isEqualTo(0)
   }
 
   @Test
@@ -984,6 +999,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedOneInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2024-08-08"))
@@ -998,6 +1014,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedTwoInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2024-08-12"))
@@ -1029,6 +1046,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesTwoInPdu)
       withBed(bedWithBooking)
       withArrivalDate(LocalDate.parse("2024-08-08"))
@@ -1079,6 +1097,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     val cancelledBooking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withArrivalDate(LocalDate.parse("2024-08-18"))
@@ -1126,6 +1145,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     assertThat(results.first { it.premisesId == premisesOneInPdu.id }.premisesBedCount).isEqualTo(2)
+    assertThat(results.first { it.premisesId == premisesOneInPdu.id }.bookedBedCount).isEqualTo(1)
   }
 }
 
