@@ -7,10 +7,12 @@ management.endpoint:
 
 spring:
   datasource:
-    username: integration_test
-    password: integration_test_password
+    username: api_user
+    password: api_user_password
     driverClassName: org.postgresql.Driver
+    # see TestPropertiesInitializer and IntegrationTestDbManager
     url: "dynamically set per test"
+  # if making changes here, also update TestPropertiesInitializer
   flyway:
     locations: classpath:db/migration/all,classpath:db/migration/integration
     clean-disabled: false
