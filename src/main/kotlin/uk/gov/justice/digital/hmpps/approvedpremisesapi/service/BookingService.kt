@@ -72,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -1092,7 +1093,7 @@ class BookingService(
     val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
     if (reason == null) {
       return CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
-    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+    } else if (!reason.serviceScopeMatches(booking.service)) {
       return CasResult.FieldValidationError(mapOf("$.reason" to "incorrectCancellationReasonServiceScope"))
     }
 
@@ -1204,7 +1205,7 @@ class BookingService(
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reason" hasValidationError "doesNotExist"
-    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+    } else if (!reason.serviceScopeMatches(booking.service)) {
       "$.reason" hasValidationError "incorrectCancellationReasonServiceScope"
     }
 
@@ -1316,14 +1317,14 @@ class BookingService(
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reasonId" hasValidationError "doesNotExist"
-    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+    } else if (!reason.serviceScopeMatches(booking.service)) {
       "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (moveOnCategory == null) {
       "$.moveOnCategoryId" hasValidationError "doesNotExist"
-    } else if (!serviceScopeMatches(moveOnCategory.serviceScope, booking)) {
+    } else if (!moveOnCategory.serviceScopeMatches(booking.service)) {
       "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
     }
 
@@ -1468,14 +1469,14 @@ class BookingService(
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reasonId" hasValidationError "doesNotExist"
-    } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
+    } else if (!reason.serviceScopeMatches(booking.service)) {
       "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (moveOnCategory == null) {
       "$.moveOnCategoryId" hasValidationError "doesNotExist"
-    } else if (!serviceScopeMatches(moveOnCategory.serviceScope, booking)) {
+    } else if (!moveOnCategory.serviceScopeMatches(booking.service)) {
       "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
     }
 
@@ -1649,14 +1650,6 @@ class BookingService(
     }
 
     return GetBookingForPremisesResult.Success(booking)
-  }
-
-  private fun serviceScopeMatches(scope: String, booking: BookingEntity): Boolean {
-    return when (scope) {
-      "*" -> true
-      booking.service -> true
-      else -> return false
-    }
   }
 
   fun getBookingWithConflictingDates(

@@ -117,15 +117,21 @@ data class Cas1SpaceBookingEntity(
   val createdBy: UserEntity,
   val createdAt: OffsetDateTime,
   val expectedArrivalDate: LocalDate,
-  val expectedDepartureDate: LocalDate,
-  val actualArrivalDateTime: Instant?,
-  val actualDepartureDateTime: Instant?,
-  val canonicalArrivalDate: LocalDate,
-  val canonicalDepartureDate: LocalDate,
+  var expectedDepartureDate: LocalDate,
+  var actualArrivalDateTime: Instant?,
+  var actualDepartureDateTime: Instant?,
+  var canonicalArrivalDate: LocalDate,
+  var canonicalDepartureDate: LocalDate,
   val crn: String,
   val keyWorkerStaffCode: String?,
   val keyWorkerName: String?,
   val keyWorkerAssignedAt: Instant?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "departure_reason_id")
+  var departureReason: DepartureReasonEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "departure_move_on_category_id")
+  var departureMoveOnCategory: MoveOnCategoryEntity?,
   /**
    * Users are asked to specify when a cancelled occurred which may not necessarily
    * be the same as when it was recorded in the system

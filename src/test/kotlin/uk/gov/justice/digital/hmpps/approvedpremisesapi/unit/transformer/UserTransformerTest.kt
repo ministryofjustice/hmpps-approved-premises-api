@@ -21,6 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.premisesViewSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.requestForPlacementWithdrawOthers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingView
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
@@ -245,6 +249,10 @@ class UserTransformerTest {
           viewCruDashboard,
           viewManageTasks,
           viewOutOfServiceBeds,
+          spaceBookingList,
+          spaceBookingRecordArrival,
+          spaceBookingRecordDeparture,
+          spaceBookingView,
         ),
       )
     }
@@ -262,7 +270,7 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.version).isNotNull()
-      assertThat(result.version).isEqualTo(-950936260)
+      assertThat(result.version).isEqualTo(1937577864)
     }
 
     @Test

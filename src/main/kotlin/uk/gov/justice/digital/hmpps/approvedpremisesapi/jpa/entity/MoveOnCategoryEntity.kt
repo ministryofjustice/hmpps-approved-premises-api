@@ -36,3 +36,11 @@ data class MoveOnCategoryEntity(
 ) {
   override fun toString() = "MoveOnCategoryEntity:$id"
 }
+
+fun MoveOnCategoryEntity.serviceScopeMatches(bookingService: String): Boolean {
+  return when (serviceScope) {
+    "*" -> true
+    bookingService -> true
+    else -> return false
+  }
+}
