@@ -269,6 +269,7 @@ url-templates:
       application-overview: http://localhost:3000/applications/#id/overview
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
 
+preemptive-cache-enabled: true
 preemptive-cache-key-prefix: ""
 preemptive-cache-logging-enabled: false
 preemptive-cache-delay-ms: 10000
