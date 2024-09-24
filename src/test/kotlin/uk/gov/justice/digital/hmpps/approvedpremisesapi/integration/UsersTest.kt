@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -429,11 +430,13 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
               val userOne = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
                 withApArea(apArea)
+                withCruManagementArea(`Given a CAS1 CRU Management Area`())
               }
 
               val userTwo = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
                 withApArea(apArea)
+                withCruManagementArea(`Given a CAS1 CRU Management Area`())
               }
 
               webTestClient.get()
@@ -478,11 +481,13 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
               val userOne = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
                 withApArea(apArea)
+                withCruManagementArea(`Given a CAS1 CRU Management Area`())
               }
 
               val userTwo = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
                 withApArea(apArea)
+                withCruManagementArea(`Given a CAS1 CRU Management Area`())
               }
 
               webTestClient.get()
@@ -1193,12 +1198,11 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       )
       val region = `Given a Probation Region`()
 
-      userEntityFactory.produceAndPersist {
-        withId(id)
-        withIsActive(false)
-        withYieldedProbationRegion { region }
-        withYieldedApArea { `Given an AP Area`() }
-      }
+      `Given a User`(
+        id = id,
+        isActive = false,
+        probationRegion = region,
+      )
 
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.put()

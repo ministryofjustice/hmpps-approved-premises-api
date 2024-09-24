@@ -150,6 +150,14 @@ class UserEntityFactory : Factory<UserEntity> {
     this.apArea = { apArea }
   }
 
+  fun withCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity?) = apply {
+    this.cruManagementArea = { cruManagementArea }
+  }
+
+  fun withCruManagementAreaOverride(cruManagementAreaOverride: Cas1CruManagementAreaEntity?) = apply {
+    this.cruManagementAreaOverride = { cruManagementAreaOverride }
+  }
+
   fun withTeamCodes(teamCodes: List<String>) = apply {
     this.teamCodes = { teamCodes }
   }

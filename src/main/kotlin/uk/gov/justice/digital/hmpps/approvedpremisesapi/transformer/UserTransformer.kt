@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -59,21 +61,28 @@ class UserTransformer(
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
   }
 
-  fun transformCas1JpaToApi(jpa: UserEntity) = ApprovedPremisesUser(
-    id = jpa.id,
-    deliusUsername = jpa.deliusUsername,
-    roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
-    email = jpa.email,
-    name = jpa.name,
-    telephoneNumber = jpa.telephoneNumber,
-    isActive = jpa.isActive,
-    qualifications = jpa.qualifications.map(::transformQualificationToApi),
-    permissions = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToPermissionApi).flatten().distinct(),
-    region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
-    service = "CAS1",
-    apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) } ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set"),
-    version = UserEntity.getVersionHashCode((jpa.roles.map { it.role })),
-  )
+  fun transformCas1JpaToApi(jpa: UserEntity): ApprovedPremisesUser {
+    val apArea = jpa.apArea ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set")
+    val cruManagementArea = jpa.cruManagementArea ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have CRU Management Area Set")
+    return ApprovedPremisesUser(
+      id = jpa.id,
+      deliusUsername = jpa.deliusUsername,
+      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
+      email = jpa.email,
+      name = jpa.name,
+      telephoneNumber = jpa.telephoneNumber,
+      isActive = jpa.isActive,
+      qualifications = jpa.qualifications.map(::transformQualificationToApi),
+      permissions = jpa.roles.distinctBy { it.role }.map(::transformApprovedPremisesRoleToPermissionApi).flatten().distinct(),
+      region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+      service = "CAS1",
+      apArea = apArea.let { apAreaTransformer.transformJpaToApi(it) },
+      cruManagementArea = cruManagementArea.toNamedId(),
+      cruManagementAreaDefault = apArea.defaultCruManagementArea.toNamedId(),
+      cruManagementAreaOverride = jpa.cruManagementAreaOverride?.toNamedId(),
+      version = UserEntity.getVersionHashCode((jpa.roles.map { it.role })),
+    )
+  }
 
   fun transformCas3JpatoApi(jpa: UserEntity) = TemporaryAccommodationUser(
     id = jpa.id,
@@ -87,6 +96,8 @@ class UserTransformer(
     probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
     service = "CAS3",
   )
+
+  fun Cas1CruManagementAreaEntity.toNamedId() = NamedId(id, name)
 
   fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse {
     return when (userResponse) {

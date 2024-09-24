@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1Pla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
@@ -450,7 +451,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       staffUserDetailsConfigBlock = {
         withUsername(matcherUsername)
       },
-      apAreaName = matcherApAreaName,
+      probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = matcherApAreaName)),
     ).second
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -481,7 +482,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       staffUserDetailsConfigBlock = {
         withUsername(matcherUsername)
       },
-      apAreaName = matcherApAreaName,
+      probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = matcherApAreaName)),
     ).second
 
     cas1SimpleApiClient.placementRequestBookingNotMade(

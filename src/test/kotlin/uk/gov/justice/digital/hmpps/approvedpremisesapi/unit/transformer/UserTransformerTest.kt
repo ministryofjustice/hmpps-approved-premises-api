@@ -44,7 +44,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorklo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_APPEALS_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
@@ -123,12 +125,20 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `transformJpaToApi CAS1 Should successfully transfer user entity with role CAS1_MATCHER to matcher`() {
-      val apAreaEntity = ApAreaEntityFactory().produce()
+    fun `transformJpaToApi CAS1 should map successfully`() {
+      val cruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val defaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val overriddenCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+
+      val apAreaEntity = ApAreaEntityFactory()
+        .withDefaultCruManagementArea(defaultCruManagementArea)
+        .produce()
 
       val user = buildUserEntity(
         role = CAS1_MATCHER,
         apArea = apAreaEntity,
+        cruManagementArea = cruManagementArea,
+        cruManagementAreaOverride = overriddenCruManagementArea,
       )
 
       every { apAreaTransformer.transformJpaToApi(apAreaEntity) } returns apArea
@@ -139,6 +149,12 @@ class UserTransformerTest {
       assertThat(result.service).isEqualTo("CAS1")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
       assertThat(result.apArea).isEqualTo(apArea)
+      assertThat(result.cruManagementArea.id).isEqualTo(cruManagementArea.id)
+      assertThat(result.cruManagementArea.name).isEqualTo(cruManagementArea.name)
+      assertThat(result.cruManagementAreaDefault.id).isEqualTo(defaultCruManagementArea.id)
+      assertThat(result.cruManagementAreaDefault.name).isEqualTo(defaultCruManagementArea.name)
+      assertThat(result.cruManagementAreaOverride!!.id).isEqualTo(overriddenCruManagementArea.id)
+      assertThat(result.cruManagementAreaOverride!!.name).isEqualTo(overriddenCruManagementArea.name)
     }
 
     @Test
@@ -146,6 +162,7 @@ class UserTransformerTest {
       val user = buildUserEntity(
         role = CAS1_MATCHER,
         apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
       user.addRoleForUnitTest(CAS1_MATCHER)
       user.addRoleForUnitTest(CAS1_MATCHER)
@@ -173,6 +190,7 @@ class UserTransformerTest {
       val user = buildUserEntity(
         role = role,
         apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
@@ -210,6 +228,7 @@ class UserTransformerTest {
       val user = buildUserEntity(
         role = role,
         apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
@@ -225,6 +244,7 @@ class UserTransformerTest {
       val user = buildUserEntity(
         role = CAS1_JANITOR,
         apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
       user.addRoleForUnitTest(CAS1_APPEALS_MANAGER)
 
@@ -262,6 +282,7 @@ class UserTransformerTest {
       val user = buildUserEntity(
         role = CAS1_JANITOR,
         apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
@@ -383,6 +404,7 @@ class UserTransformerTest {
       val user = buildUserEntity(
         role = CAS1_MATCHER,
         apArea = apAreaEntity,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
 
       every { apAreaTransformer.transformJpaToApi(apAreaEntity) } returns apArea
@@ -403,6 +425,8 @@ class UserTransformerTest {
     role: UserRole,
     apArea: ApAreaEntity? = null,
     updatedAt: OffsetDateTime? = null,
+    cruManagementArea: Cas1CruManagementAreaEntity? = null,
+    cruManagementAreaOverride: Cas1CruManagementAreaEntity? = null,
   ) = UserEntityFactory()
     .withId(randomUUID())
     .withName("username")
@@ -412,6 +436,8 @@ class UserTransformerTest {
     .withIsActive(true)
     .withProbationRegion(buildProbationRegionEntity())
     .withApArea(apArea)
+    .withCruManagementArea(cruManagementArea)
+    .withCruManagementAreaOverride(cruManagementAreaOverride)
     .withUpdatedAt(updatedAt)
     .produce()
     .addRoleForUnitTest(role)

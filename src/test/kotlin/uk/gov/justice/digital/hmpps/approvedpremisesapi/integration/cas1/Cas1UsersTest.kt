@@ -201,7 +201,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `Updating a user returns OK with correct body when user has an approved role`(role: UserRole) {
-      val id = UUID.randomUUID()
       val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
       val roles = listOf(
         ApprovedPremisesUserRole.assessor,
@@ -210,14 +209,8 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         ApprovedPremisesUserRole.excludedFromMatchAllocation,
         ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
       )
-      val region = `Given a Probation Region`()
-
-      userEntityFactory.produceAndPersist {
-        withId(id)
-        withIsActive(false)
-        withYieldedProbationRegion { region }
-        withYieldedApArea { `Given an AP Area`() }
-      }
+      
+      val id = `Given a User`().first.id
 
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.put()
