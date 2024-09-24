@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.OffsetDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class APStaffUsersSeedJobTest : SeedTestBase() {
+class ApStaffUsersSeedJobTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a non existent user logs an error`() {
     CommunityAPI_mockNotFoundOffenderDetailsCall("INVALID-USER")
@@ -45,7 +45,7 @@ class APStaffUsersSeedJobTest : SeedTestBase() {
         it.throwable != null &&
         it.throwable.cause != null &&
         it.throwable.message!!.contains("Could not get user INVALID-USER") &&
-        it.throwable.cause!!.message!!.contains("Unable to complete GET request to /secure/staff/username/INVALID-USER")
+        it.throwable.cause!!.message!!.contains("Could not find staff record for user INVALID-USER")
     }
   }
 
