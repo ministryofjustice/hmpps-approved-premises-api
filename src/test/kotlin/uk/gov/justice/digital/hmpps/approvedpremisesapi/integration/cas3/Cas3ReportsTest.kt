@@ -394,7 +394,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             }
             withPrisonNameAtReferral("HM Hounslow")
             withPersonReleaseDate(LocalDate.now())
-            withPdu("Probation Delivery Unit Test")
+            withProbationDeliveryUnit(user.probationDeliveryUnit)
           }
 
           val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
@@ -733,6 +733,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
             withProbationRegion(user.probationRegion)
+            withProbationDeliveryUnit(user.probationDeliveryUnit)
             withApplicationSchema(applicationSchema)
             withArrivalDate(LocalDate.now().randomDateAfter(14))
             withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
@@ -762,7 +763,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             }
             withPrisonNameAtReferral("HM Hounslow")
             withPersonReleaseDate(LocalDate.now())
-            withPdu("Probation Delivery Unit Test")
           }
 
           val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId)
@@ -839,6 +839,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
             withProbationRegion(user.probationRegion)
+            withProbationDeliveryUnit(user.probationDeliveryUnit)
             withApplicationSchema(applicationSchema)
             withArrivalDate(LocalDate.now().randomDateAfter(14))
             withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
@@ -869,7 +870,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             }
             withPrisonNameAtReferral("HM Hounslow")
             withPersonReleaseDate(LocalDate.now())
-            withPdu("Probation Delivery Unit Test")
           }
 
           val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
@@ -1084,6 +1084,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
             withProbationRegion(user.probationRegion)
+            withProbationDeliveryUnit(user.probationDeliveryUnit)
             withApplicationSchema(applicationSchema)
             withArrivalDate(LocalDate.now().randomDateAfter(14))
             withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
@@ -1113,7 +1114,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             }
             withPrisonNameAtReferral("HM Hounslow")
             withPersonReleaseDate(LocalDate.now())
-            withPdu("Probation Delivery Unit Test")
           }
 
           val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
