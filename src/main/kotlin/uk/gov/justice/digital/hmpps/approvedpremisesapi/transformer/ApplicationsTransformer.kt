@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
@@ -37,6 +38,7 @@ class ApplicationsTransformer(
   private val risksTransformer: RisksTransformer,
   private val apAreaTransformer: ApAreaTransformer,
   private val cas1ApplicationUserDetailsTransformer: Cas1ApplicationUserDetailsTransformer,
+  private val cas1CruManagementAreaTransformer: Cas1CruManagementAreaTransformer,
 ) {
   fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = jpa.getLatestAssessment()
@@ -72,6 +74,7 @@ class ApplicationsTransformer(
         ),
         type = "CAS1",
         apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+        cruManagementArea = jpa.cruManagementArea?. let { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
         applicantUserDetails = jpa.applicantUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
         caseManagerIsNotApplicant = jpa.caseManagerIsNotApplicant,
         caseManagerUserDetails = jpa.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },

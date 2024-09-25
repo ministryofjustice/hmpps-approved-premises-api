@@ -6,7 +6,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.GenderForAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Applications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -58,6 +60,7 @@ class ApplicationsTransformerTest {
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
   private val mockCas1ApplicationUserDetailsTransformer = mockk<Cas1ApplicationUserDetailsTransformer>()
+  private val mockCas1CruManagementAreaTransformer = mockk<Cas1CruManagementAreaTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -71,6 +74,7 @@ class ApplicationsTransformerTest {
     mockRisksTransformer,
     mockApAreaTransformer,
     mockCas1ApplicationUserDetailsTransformer,
+    mockCas1CruManagementAreaTransformer,
   )
 
   private val user = UserEntityFactory()
@@ -148,19 +152,29 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi returns the Ap Area`() {
-    val apArea = ApAreaEntityFactory().produce()
-    val application = approvedPremisesApplicationFactory.withApArea(apArea).produce()
+  fun `transformJpaToApi returns the Ap and Cru Management Area`() {
+    val apAreaEntity = ApAreaEntityFactory().produce()
+    val cruManagementAreaEntity = Cas1CruManagementAreaEntityFactory().produce()
+    val application = approvedPremisesApplicationFactory
+      .withApArea(apAreaEntity)
+      .withCruManagementArea(cruManagementAreaEntity)
+      .produce()
 
-    val mockApArea = mockk<ApArea>()
+    val apArea = mockk<ApArea>()
+    val cCruManagementArea = mockk<Cas1CruManagementArea>()
 
-    every { mockApAreaTransformer.transformJpaToApi(apArea) } returns mockApArea
+    every { mockApAreaTransformer.transformJpaToApi(apAreaEntity) } returns apArea
+    every {
+      mockCas1CruManagementAreaTransformer.transformJpaToApi(
+        cruManagementAreaEntity,
+      )
+    } returns cCruManagementArea
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(any()) } returns Cas1ApplicationUserDetails("", "", "")
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
 
-    assertThat(result.apArea).isEqualTo(mockApArea)
-    verify { mockApAreaTransformer.transformJpaToApi(apArea) }
+    assertThat(result.apArea).isEqualTo(apArea)
+    assertThat(result.cruManagementArea).isEqualTo(cCruManagementArea)
   }
 
   @ParameterizedTest

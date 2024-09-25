@@ -387,9 +387,15 @@ class ApprovedPremisesApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var status: ApprovedPremisesApplicationStatus,
   var inmateInOutStatusOnSubmission: String?,
+  /**
+   * The geographic AP Area associated with the applicant
+   */
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  /**
+   * The CRU Management Area responsible for this application
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_cru_management_area_id")
   var cruManagementArea: Cas1CruManagementAreaEntity?,

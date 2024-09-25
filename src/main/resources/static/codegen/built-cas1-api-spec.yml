@@ -1427,6 +1427,17 @@ components:
         - id
         - identifier
         - name
+    Cas1CruManagementArea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
     ProbationRegion:
       type: object
       properties:
@@ -2700,6 +2711,8 @@ components:
               $ref: '#/components/schemas/PersonStatus'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            cruManagementArea:
+              $ref: '#/components/schemas/Cas1CruManagementArea'
             applicantUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
             caseManagerIsNotApplicant:
@@ -6586,15 +6599,4 @@ components:
           type: string
       required:
         - staffCode
-    Cas1CruManagementArea:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-      required:
-        - id
-        - name
 
