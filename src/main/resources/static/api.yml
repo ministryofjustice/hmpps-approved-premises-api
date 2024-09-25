@@ -4071,7 +4071,8 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
     put:
-      summary: Update information about a specific user's roles and qualifications
+      summary: Update information about a specific user's roles and qualifications. Deprecated. Instead use PUT /cas1/user/{userid}
+      deprecated: true
       parameters:
         - name: X-Service-Name
           in: header
@@ -4106,7 +4107,8 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
     delete:
-      summary: Deletes the user
+      summary: Deletes the user. Deprecated. Instead use DELETE /cas1/user/{userid}
+      deprecated: true
       parameters:
         - name: id
           in: path
