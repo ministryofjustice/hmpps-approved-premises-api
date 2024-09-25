@@ -3190,7 +3190,15 @@ paths:
         - name: apAreaId
           in: query
           required: false
-          description: filter by approved premises area ID
+          description: filter by approved premises area ID.  Use cruManagementAreaId instead.
+          deprecated: true
+          schema:
+            type: string
+            format: uuid
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: filter by CRU management area ID
           schema:
             type: string
             format: uuid

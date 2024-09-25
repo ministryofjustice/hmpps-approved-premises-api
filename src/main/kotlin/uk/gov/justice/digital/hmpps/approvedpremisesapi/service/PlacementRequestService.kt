@@ -107,6 +107,7 @@ class PlacementRequestService(
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType?.name,
       apAreaId = searchCriteria.apAreaId,
+      cruManagementAreaId = searchCriteria.cruManagementAreaId,
       pageable = pageable,
     )
 
@@ -404,6 +405,7 @@ class PlacementRequestService(
     val arrivalDateEnd: LocalDate? = null,
     val requestType: PlacementRequestRequestType? = null,
     val apAreaId: UUID? = null,
+    val cruManagementAreaId: UUID? = null,
   )
 
   data class PlacementRequestAndCancellations(

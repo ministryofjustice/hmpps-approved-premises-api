@@ -80,6 +80,7 @@ class PlacementRequestsController(
     arrivalDateEnd: LocalDate?,
     requestType: PlacementRequestRequestType?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     page: Int?,
     sortBy: PlacementRequestSortField?,
     sortDirection: SortDirection?,
@@ -100,6 +101,7 @@ class PlacementRequestsController(
         arrivalDateEnd = arrivalDateEnd,
         requestType = requestType,
         apAreaId = apAreaId,
+        cruManagementAreaId = cruManagementAreaId,
       ),
       PageCriteria(
         sortBy = sortBy ?: PlacementRequestSortField.createdAt,
