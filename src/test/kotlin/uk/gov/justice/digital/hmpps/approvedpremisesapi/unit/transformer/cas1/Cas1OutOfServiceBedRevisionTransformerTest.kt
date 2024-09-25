@@ -5,13 +5,10 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionChangeType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
@@ -49,23 +46,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     isActive = true,
   )
 
-  private val expectedUser = ApprovedPremisesUser(
-    qualifications = listOf(),
-    roles = listOf(),
-    apArea = ApArea(
-      id = UUID.randomUUID(),
-      identifier = "APA",
-      name = "AP Area",
-    ),
-    service = ServiceName.approvedPremises.value,
-    id = UUID.randomUUID(),
-    name = "Some User",
-    deliusUsername = "SOMEUSER",
-    region = ProbationRegion(
-      id = UUID.randomUUID(),
-      name = "Some Probation Region",
-    ),
-  )
+  private val expectedUser = ApprovedPremisesUserFactory().produce()
 
   @BeforeEach
   fun setup() {

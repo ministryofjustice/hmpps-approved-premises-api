@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -50,6 +51,8 @@ class UserEntityFactory : Factory<UserEntity> {
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
   private var isActive: Yielded<Boolean> = { true }
   private var apArea: Yielded<ApAreaEntity?> = { null }
+  private var cruManagementArea: Yielded<Cas1CruManagementAreaEntity?> = { null }
+  private var cruManagementAreaOverride: Yielded<Cas1CruManagementAreaEntity?> = { null }
   private var teamCodes: Yielded<List<String>?> = { null }
   private var createdAt: Yielded<OffsetDateTime?> = { null }
   private var updatedAt: Yielded<OffsetDateTime?> = { null }
@@ -166,6 +169,8 @@ class UserEntityFactory : Factory<UserEntity> {
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
     isActive = this.isActive(),
     apArea = this.apArea(),
+    cruManagementArea = this.cruManagementArea(),
+    cruManagementAreaOverride = this.cruManagementAreaOverride(),
     teamCodes = this.teamCodes(),
     createdAt = this.createdAt(),
     updatedAt = this.updatedAt(),

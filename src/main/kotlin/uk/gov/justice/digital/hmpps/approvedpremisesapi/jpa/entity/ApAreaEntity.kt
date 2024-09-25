@@ -40,6 +40,9 @@ data class ApAreaEntity(
   val notifyReplyToEmailId: String?,
   /**
    * Used to determine a user's [Cas1CruManagementAreaEntity] if no override is specified
+   *
+   * Also used to determine which management area an application is linked to on submission,
+   * based upon the user's AP Area
    */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "default_cru1_management_area_id")
