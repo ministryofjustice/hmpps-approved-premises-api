@@ -15,7 +15,6 @@ import java.util.UUID
 
 @Repository
 interface ApAreaRepository : JpaRepository<ApAreaEntity, UUID> {
-  fun findByName(name: String): ApAreaEntity?
   fun findByIdentifier(name: String): ApAreaEntity?
 
   @Modifying
