@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -881,8 +882,8 @@ class UserServiceTest {
       verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(any()) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      val getUserResponse = (result as CasResult.Success).value
 
       assertThat(getUserResponse).isInstanceOf(GetUserResponse::class.java)
       val entity = (getUserResponse as GetUserResponse.Success).user
@@ -918,11 +919,11 @@ class UserServiceTest {
 
       val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(result.entity).isInstanceOf(GetUserResponse.Success::class.java)
-      val entity = (result.entity as GetUserResponse.Success).user
+      assertThat(result.value).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (result.value as GetUserResponse.Success).user
 
       assertThat(entity.email).isNull()
 
@@ -935,7 +936,7 @@ class UserServiceTest {
     fun `it returns not found when there is no user for that ID`() {
       every { mockUserRepository.findByIdOrNull(id) } returns null
       val result = userService.updateUser(id, ServiceName.approvedPremises)
-      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
     }
 
     @Test
@@ -958,8 +959,8 @@ class UserServiceTest {
 
       val result = userService.updateUser(id, ServiceName.approvedPremises)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      val getUserResponse = (result as CasResult.Success).value
 
       assertThat(getUserResponse).isEqualTo(GetUserResponse.StaffRecordNotFound)
     }
@@ -1064,8 +1065,8 @@ class UserServiceTest {
 
       val result = userService.updateUser(id, forService)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      val getUserResponse = (result as CasResult.Success).value
 
       assertThat(getUserResponse).isInstanceOf(GetUserResponse.Success::class.java)
       val entity = (getUserResponse as GetUserResponse.Success).user
@@ -1116,11 +1117,11 @@ class UserServiceTest {
 
       val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(result.entity).isInstanceOf(GetUserResponse.Success::class.java)
-      val entity = (result.entity as GetUserResponse.Success).user
+      assertThat(result.value).isInstanceOf(GetUserResponse.Success::class.java)
+      val entity = (result.value as GetUserResponse.Success).user
 
       assertThat(entity.email).isEqualTo("null")
 
@@ -1134,7 +1135,7 @@ class UserServiceTest {
 
       val result = userService.updateUser(id, ServiceName.approvedPremises)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
     }
 
     @Test
@@ -1155,8 +1156,8 @@ class UserServiceTest {
 
       val result = userService.updateUser(id, ServiceName.approvedPremises)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      val getUserResponse = (result as AuthorisableActionResult.Success).entity
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      val getUserResponse = (result as CasResult.Success).value
 
       assertThat(getUserResponse).isEqualTo(GetUserResponse.StaffRecordNotFound)
     }
