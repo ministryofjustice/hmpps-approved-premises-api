@@ -51,7 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringConfigFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
@@ -83,7 +82,6 @@ class ApplicationsController(
   private val appealTransformer: AppealTransformer,
   private val requestForPlacementService: RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
-  private val featureFlagService: SpringConfigFeatureFlagService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -453,14 +451,8 @@ class ApplicationsController(
     }
 
     val transformedDocuments = when (application) {
-      is ApprovedPremisesApplicationEntity -> documentTransformer.transformToApi(
-        groupedDocuments = documents,
-        onlyConvictionDocuments = featureFlagService.getBooleanFlag("cas1-only-list-conviction-documents"),
-      )
-      is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApi(
-        groupedDocuments = documents,
-        convictionId = application.convictionId,
-      )
+      is ApprovedPremisesApplicationEntity -> documentTransformer.transformToApiUnfiltered(documents)
+      is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApiFiltered(documents, application.convictionId)
       else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
