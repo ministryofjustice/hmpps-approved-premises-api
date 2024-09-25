@@ -152,7 +152,6 @@ private fun ApprovedPremisesApplicationEntityFactory.applyQualification(required
   when (requiredQualification) {
     UserQualification.PIPE -> withApType(ApprovedPremisesType.PIPE)
     UserQualification.ESAP -> withApType(ApprovedPremisesType.ESAP)
-    UserQualification.WOMENS -> withIsWomensApplication(true)
     UserQualification.RECOVERY_FOCUSED -> withApType(ApprovedPremisesType.RFAP)
     UserQualification.MENTAL_HEALTH_SPECIALIST -> withApType(ApprovedPremisesType.MHAP_ST_JOSEPHS)
     else -> { }

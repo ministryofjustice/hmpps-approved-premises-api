@@ -104,7 +104,7 @@ class ApStaffUsersSeedJobTest : SeedTestBase() {
     }
     user.roles.addAll(roleEntities)
 
-    val qualificationEntities = listOf(UserQualification.PIPE, UserQualification.WOMENS).map { qualification ->
+    val qualificationEntities = listOf(UserQualification.PIPE, UserQualification.EMERGENCY).map { qualification ->
       userQualificationAssignmentEntityFactory.produceAndPersist {
         withUser(user)
         withQualification(qualification)
@@ -135,7 +135,7 @@ class ApStaffUsersSeedJobTest : SeedTestBase() {
     )
     assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
       UserQualification.PIPE,
-      UserQualification.WOMENS,
+      UserQualification.EMERGENCY,
     )
 
     assertThat(logEntries).anyMatch {

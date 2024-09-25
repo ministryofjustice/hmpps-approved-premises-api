@@ -519,7 +519,6 @@ data class UserQualificationAssignmentEntity(
 }
 
 enum class UserQualification {
-  WOMENS,
   PIPE,
   LAO,
   ESAP,

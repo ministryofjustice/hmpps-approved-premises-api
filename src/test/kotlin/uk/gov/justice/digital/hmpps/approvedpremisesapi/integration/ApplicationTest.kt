@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -1871,8 +1872,9 @@ class ApplicationTest : IntegrationTestBase() {
   inner class Cas1SubmitApplication {
 
     @Test
-    fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event and email`() {
+    fun `Submit emergency application returns 200, auto allocates the assessment, saves a domain event, emits an SNS event and email`() {
       `Given a User`(
+        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "london")),
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -1883,36 +1885,16 @@ class ApplicationTest : IntegrationTestBase() {
       ) { submittingUser, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+          qualifications = listOf(UserQualification.PIPE),
+          staffUserDetailsConfigBlock = {
+            withUsername("LONDON_ASSESSOR")
+          },
         ) { assessorUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                """
-                {
-                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                  "${"\$id"}": "https://example.com/product.schema.json",
-                  "title": "Thing",
-                  "description": "A thing",
-                  "type": "object",
-                  "properties": {
-                    "isWomensApplication": {
-                      "description": "whether this is a womens application",
-                      "type": "boolean"
-                    },
-                    "isPipeApplication": {
-                      "description": "whether this is a PIPE application",
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [ "isWomensApplication", "isPipeApplication" ]
-                }
-              """,
-              )
+              withDefaults()
             }
 
             approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -1920,14 +1902,6 @@ class ApplicationTest : IntegrationTestBase() {
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
-              withData(
-                """
-                {
-                   "isWomensApplication": true,
-                   "isPipeApplication": true
-                }
-              """,
-              )
             }
 
             CommunityAPI_mockSuccessfulRegistrationsCall(
@@ -1974,7 +1948,7 @@ class ApplicationTest : IntegrationTestBase() {
                 SubmitApprovedPremisesApplication(
                   translatedDocument = {},
                   isPipeApplication = true,
-                  isWomensApplication = true,
+                  isWomensApplication = false,
                   isEmergencyApplication = true,
                   isEsapApplication = true,
                   targetLocation = "SW1A 1AA",
@@ -2002,7 +1976,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-            assertThat(persistedApplication.isWomensApplication).isTrue
+            assertThat(persistedApplication.isWomensApplication).isFalse()
             assertThat(persistedApplication.isPipeApplication).isTrue
             assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
             assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
@@ -2052,8 +2026,9 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Submit application returns 200, creates and allocates an assessment, has given probation region id`() {
+    fun `Submit short notice application returns 200, auto allocates the assessment according to overridden ap area`() {
       `Given a User`(
+        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "somewhere")),
         staffUserDetailsConfigBlock = {
           withTeams(
             listOf(
@@ -2064,36 +2039,16 @@ class ApplicationTest : IntegrationTestBase() {
       ) { submittingUser, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+          qualifications = listOf(UserQualification.PIPE),
+          staffUserDetailsConfigBlock = {
+            withUsername("WALES_ASSESSOR")
+          },
         ) { assessorUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {
-                  "isWomensApplication": {
-                    "description": "whether this is a womens application",
-                    "type": "boolean"
-                  },
-                  "isPipeApplication": {
-                    "description": "whether this is a PIPE application",
-                    "type": "boolean"
-                  }
-                },
-                "required": [ "isWomensApplication", "isPipeApplication" ]
-              }
-            """,
-              )
+              withDefaults()
             }
 
             approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -2101,14 +2056,6 @@ class ApplicationTest : IntegrationTestBase() {
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
-              withData(
-                """
-              {
-                 "isWomensApplication": true,
-                 "isPipeApplication": true
-              }
-            """,
-              )
             }
 
             CommunityAPI_mockSuccessfulRegistrationsCall(
@@ -2146,11 +2093,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-            val apArea = `Given an AP Area`()
-
-            val probationRegion = probationRegionEntityFactory.produceAndPersist {
-              withApArea(apArea)
-            }
+            val overriddenApArea = `Given an AP Area`(name = "wales")
 
             webTestClient.post()
               .uri("/applications/$applicationId/submission")
@@ -2159,14 +2102,15 @@ class ApplicationTest : IntegrationTestBase() {
                 SubmitApprovedPremisesApplication(
                   translatedDocument = {},
                   isPipeApplication = true,
-                  isWomensApplication = true,
-                  isEmergencyApplication = true,
+                  isWomensApplication = false,
+                  isEmergencyApplication = false,
                   isEsapApplication = true,
+                  noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
                   targetLocation = "SW1A 1AA",
                   releaseType = ReleaseTypeOption.licence,
                   sentenceType = SentenceTypeOption.nonStatutory,
                   type = "CAS1",
-                  apAreaId = apArea.id,
+                  apAreaId = overriddenApArea.id,
                   applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
                   caseManagerIsNotApplicant = false,
                 ),
@@ -2178,11 +2122,15 @@ class ApplicationTest : IntegrationTestBase() {
             val persistedApplication =
               approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
-            assertThat(persistedApplication?.isWomensApplication).isTrue
+            assertThat(persistedApplication?.isWomensApplication).isFalse()
             assertThat(persistedApplication?.isPipeApplication).isTrue
             assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
             assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-            assertThat(persistedApplication?.apArea?.id).isEqualTo(apArea.id)
+            assertThat(persistedApplication?.apArea?.id).isEqualTo(overriddenApArea.id)
+
+            val createdAssessment =
+              approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+            assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
           }
         }
       }
@@ -2201,36 +2149,13 @@ class ApplicationTest : IntegrationTestBase() {
       ) { submittingUser, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+          qualifications = listOf(UserQualification.PIPE),
         ) { _, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {
-                  "isWomensApplication": {
-                    "description": "whether this is a womens application",
-                    "type": "boolean"
-                  },
-                  "isPipeApplication": {
-                    "description": "whether this is a PIPE application",
-                    "type": "boolean"
-                  }
-                },
-                "required": [ "isWomensApplication", "isPipeApplication" ]
-              }
-            """,
-              )
+              withDefaults()
             }
 
             approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -2327,10 +2252,8 @@ class ApplicationTest : IntegrationTestBase() {
             val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
 
             val persistedApplicationSubmittedEvents = persistedDomainEvents.filter { it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
-            val persistedAssessmentAllocatedEvents = persistedDomainEvents.filter { it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED }
 
             assertThat(persistedApplicationSubmittedEvents).singleElement()
-            assertThat(persistedAssessmentAllocatedEvents).singleElement()
             assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
             assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
           }

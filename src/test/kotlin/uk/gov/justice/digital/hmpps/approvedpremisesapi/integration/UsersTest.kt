@@ -573,12 +573,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
-      `Given a User`(qualifications = listOf(UserQualification.WOMENS)) { womensUser, _ ->
+      `Given a User`(qualifications = listOf(UserQualification.EMERGENCY)) { emergencyUser, _ ->
         `Given a User`(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
           `Given a User` { _, _ ->
             `Given a User`(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
-                .uri("/users?qualifications=womens")
+                .uri("/users?qualifications=emergency")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -587,7 +587,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(womensUser).map {
+                    listOf(emergencyUser).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
                   ),
@@ -605,17 +605,17 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     ) {
       `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.WOMENS),
-      ) { womensAssessor1, _ ->
+        qualifications = listOf(UserQualification.EMERGENCY),
+      ) { emergencyAssessor1, _ ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.WOMENS),
-        ) { womensAssessor2, _ ->
+          qualifications = listOf(UserQualification.EMERGENCY),
+        ) { emergencyAssessor2, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
             `Given a User` { _, _ ->
               `Given a User`(roles = listOf(role)) { _, jwt ->
                 webTestClient.get()
-                  .uri("/users?roles=assessor&qualifications=womens")
+                  .uri("/users?roles=assessor&qualifications=emergency")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .exchange()
@@ -624,7 +624,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                   .expectBody()
                   .json(
                     objectMapper.writeValueAsString(
-                      listOf(womensAssessor1, womensAssessor2).map {
+                      listOf(emergencyAssessor1, emergencyAssessor2).map {
                         userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                       },
                     ),
@@ -874,12 +874,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
-      `Given a User`(qualifications = listOf(UserQualification.WOMENS)) { womensUser, _ ->
+      `Given a User`(qualifications = listOf(UserQualification.EMERGENCY)) { emergencyUser, _ ->
         `Given a User`(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
           `Given a User` { _, _ ->
             `Given a User`(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
-                .uri("/users/summary?qualifications=womens")
+                .uri("/users/summary?qualifications=emergency")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -888,7 +888,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(womensUser).map {
+                    listOf(emergencyUser).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
                   ),
@@ -906,17 +906,17 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     ) {
       `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.WOMENS),
-      ) { womensAssessor1, _ ->
+        qualifications = listOf(UserQualification.EMERGENCY),
+      ) { emergencyAssessor1, _ ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.WOMENS),
-        ) { womensAssessor2, _ ->
+          qualifications = listOf(UserQualification.EMERGENCY),
+        ) { emergencyAssessor2, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
             `Given a User` { _, _ ->
               `Given a User`(roles = listOf(role)) { _, jwt ->
                 webTestClient.get()
-                  .uri("/users/summary?roles=assessor&qualifications=womens")
+                  .uri("/users/summary?roles=assessor&qualifications=emergency")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .exchange()
@@ -925,7 +925,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                   .expectBody()
                   .json(
                     objectMapper.writeValueAsString(
-                      listOf(womensAssessor1, womensAssessor2).map {
+                      listOf(emergencyAssessor1, emergencyAssessor2).map {
                         userTransformer.transformJpaToSummaryApi(it)
                       },
                     ),
