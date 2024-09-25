@@ -58,9 +58,8 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
-  @ParameterizedTest
-  @CsvSource("crn", "crnOrName")
-  fun `Searching for Temporary Accommodation bookings correctly filtered single booking for a specific crn`(queryParameter: String) {
+  @Test
+  fun `Searching for Temporary Accommodation bookings correctly filtered single booking for a specific crn`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val crn = "S121978"
@@ -69,14 +68,13 @@ class BookingSearchTest : IntegrationTestBase() {
           createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
 
-        callApiAndAssertResponse("/bookings/search?$queryParameter=$crn", jwt, expectedResponse, true)
+        callApiAndAssertResponse("/bookings/search?crnOrName=$crn", jwt, expectedResponse, true)
       }
     }
   }
 
-  @ParameterizedTest
-  @CsvSource("crn", "crnOrName")
-  fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking for a specific crn`(queryParameter: String) {
+  @Test
+  fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking for a specific crn`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val crn = "S121978"
@@ -85,20 +83,20 @@ class BookingSearchTest : IntegrationTestBase() {
         createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponse(expectedBookingInSearchResult, offenderDetails)
 
-        callApiAndAssertResponse("/bookings/search?$queryParameter=${offenderDetails.otherIds.crn}", jwt, expectedResponse, true)
+        callApiAndAssertResponse("/bookings/search?crnOrName=${offenderDetails.otherIds.crn}", jwt, expectedResponse, true)
       }
     }
   }
 
   @ParameterizedTest
-  @CsvSource("crn,S121978", "crnOrName,PersonName")
-  fun `Searching for Temporary Accommodation bookings with crn or name not exists in the database return empty response`(queryParameter: String, queryParameterValue: String) {
+  @CsvSource("S121978", "PersonName")
+  fun `Searching for Temporary Accommodation bookings with crn or name not exists in the database return empty response`(queryParameterValue: String) {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResults = BookingSearchResults(resultsCount = 0, results = emptyList())
 
-        callApiAndAssertResponse("/bookings/search?$queryParameter=$queryParameterValue", jwt, expectedBookingSearchResults, true)
+        callApiAndAssertResponse("/bookings/search?crnOrName=$queryParameterValue", jwt, expectedBookingSearchResults, true)
       }
     }
   }

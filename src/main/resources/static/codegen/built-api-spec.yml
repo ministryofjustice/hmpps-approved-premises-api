@@ -2504,12 +2504,6 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
-        - name: crn
-          in: query
-          description: If provided, return only results for the given CRN
-          required: false
-          schema:
-            type: string
         - name: crnOrName
           in: query
           description: Filters bookings using exact or partial match on name or exact CRN match
