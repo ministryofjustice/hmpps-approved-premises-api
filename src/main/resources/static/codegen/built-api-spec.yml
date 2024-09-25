@@ -2959,7 +2959,15 @@ paths:
         - name: apAreaId
           in: query
           required: false
-          description: Approved Premises Area ID to filter results by
+          description: Approved Premises Area ID to filter results by.  Deprecated, Use cruManagementAreaId instead.
+          deprecated: true
+          schema:
+            type: string
+            format: uuid
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: filter by CRU management area ID
           schema:
             type: string
             format: uuid

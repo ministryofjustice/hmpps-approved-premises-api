@@ -73,6 +73,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
         ) AND (
+          (cast(:cruManagementAreaId as uuid) IS NULL) OR
+          (apa.cas1_cru_management_area_id = :cruManagementAreaId)          
+        ) AND (
           (cast(:allocatedToUserId as uuid) IS NULL) OR
           assessment.allocated_to_user_id = :allocatedToUserId
         ) AND (
@@ -115,6 +118,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
+        ) AND (
+          (cast(:cruManagementAreaId as uuid) IS NULL) OR
+          (apa.cas1_cru_management_area_id = :cruManagementAreaId)          
         ) AND (
           (cast(:allocatedToUserId as uuid) IS NULL) OR
           placement_application.allocated_to_user_id = :allocatedToUserId
@@ -169,6 +175,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
         ) AND (
+          (cast(:cruManagementAreaId as uuid) IS NULL) OR
+          (apa.cas1_cru_management_area_id = :cruManagementAreaId)           
+        ) AND (
           (cast(:allocatedToUserId as uuid) IS NULL) OR
           placement_request.allocated_to_user_id = :allocatedToUserId
         ) AND (
@@ -195,6 +204,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
   fun getAll(
     isAllocated: Boolean?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
@@ -211,6 +221,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
   fun getAllPlacementRequests(
     isAllocated: Boolean?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
@@ -227,6 +238,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
   fun getAllPlacementApplications(
     isAllocated: Boolean?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
@@ -243,6 +255,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
   fun getAllAssessments(
     isAllocated: Boolean?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,

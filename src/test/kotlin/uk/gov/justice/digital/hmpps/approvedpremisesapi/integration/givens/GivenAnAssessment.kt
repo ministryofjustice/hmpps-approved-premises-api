@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -30,6 +31,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   createdAt: OffsetDateTime? = null,
   isWithdrawn: Boolean = false,
   apArea: ApAreaEntity? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   name: String? = null,
   requiredQualification: UserQualification? = null,
@@ -53,6 +55,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withReleaseType("licence")
     withIsWithdrawn(isWithdrawn)
     withApArea(apArea)
+    withCruManagementArea(cruManagementArea)
     if (name !== null) {
       withName(name)
     }

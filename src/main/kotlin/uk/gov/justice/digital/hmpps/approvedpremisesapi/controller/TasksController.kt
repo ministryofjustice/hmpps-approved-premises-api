@@ -73,6 +73,7 @@ class TasksController(
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     allocatedToUserId: UUID?,
     requiredQualification: ApiUserQualification?,
     crnOrName: String?,
@@ -96,6 +97,7 @@ class TasksController(
       TaskService.TaskFilterCriteria(
         allocatedFilter = allocatedFilter,
         apAreaId = apAreaId,
+        cruManagementAreaId = cruManagementAreaId,
         types = taskEntityTypes,
         allocatedToUserId = allocatedToUserId,
         requiredQualification = requiredQualification,
