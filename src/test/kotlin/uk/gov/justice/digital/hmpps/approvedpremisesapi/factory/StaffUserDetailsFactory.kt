@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
-@Deprecated(message = "StaffUserDetails are being removed with the community api", replaceWith = ReplaceWith("StaffDetailsFactory"))
+@Deprecated(message = "StaffUserDetails are being removed with the community api", replaceWith = ReplaceWith("StaffDetailFactory"))
 class StaffUserDetailsFactory : Factory<StaffUserDetails> {
   private var username: Yielded<String> = { randomStringUpperCase(10) }
   private var email: Yielded<String?> = { randomStringUpperCase(8) }
