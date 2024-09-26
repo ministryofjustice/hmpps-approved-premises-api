@@ -8,6 +8,7 @@ import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -37,6 +38,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var point: Yielded<Point>? = null
+  private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
 
   fun withDefaults() = apply {
     withDefaultProbationRegion()
@@ -151,6 +153,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.emailAddress = { emailAddress }
   }
 
+  fun withGender(gender: ApprovedPremisesGender) = apply {
+    this.gender = { gender }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -173,5 +179,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     status = this.status(),
     point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
       .createPoint(Coordinate(this.latitude(), this.longitude())),
+    gender = this.gender(),
   )
 }

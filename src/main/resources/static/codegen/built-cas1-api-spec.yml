@@ -84,6 +84,41 @@ paths:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
+  /premises/summary:
+    get:
+      description: Provide a summary of all premises, with optional filtering
+      tags:
+        - premises
+      operationId: "getPremisesSummaries"
+      parameters:
+        - name: gender
+          in: query
+          required: false
+          description: If specified, only return premises for the corresponding gender
+          schema:
+            $ref: '#/components/schemas/Cas1ApprovedPremisesGender'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1PremisesBasicSummary'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/lost-beds:
     post:
       deprecated: true
@@ -6157,6 +6192,21 @@ components:
       enum:
         - sharedProperty
         - singleOccupancy
+    Cas1PremisesBasicSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apArea:
+          $ref: '#/components/schemas/NamedId'
+      required:
+        - id
+        - name
+        - apArea
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -6599,4 +6649,8 @@ components:
           type: string
       required:
         - staffCode
-
+    Cas1ApprovedPremisesGender:
+      type: string
+      enum:
+        - man
+        - woman
