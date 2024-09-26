@@ -165,25 +165,9 @@ ORDER BY distance_miles;
     return result ?: emptyList()
   }
 
-  /*
-    The FilteredPremisesIds is to get premises Ids that match the search property attributes criteria
-    In the where condition is checking (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy)
-    another time to include the properties that don't have property attributes
-  */
   private val temporaryAccommodationSearchQuery =
     """
-    WITH FilteredPremisesIds AS
-        (SELECT distinct pc2.premises_id
-             FROM premises_characteristics pc2
-             INNER JOIN characteristics c2 on pc2.characteristic_id = c2.id
-             INNER JOIN premises p2 ON pc2.premises_id = p2.id
-             WHERE service_scope = 'temporary-accommodation'
-                      AND p2.probation_region_id = :probation_region_id 
-                      AND (c2.is_active = true AND c2.name = 'Single occupancy' OR FALSE = :filter_by_single_occupancy)
-                      AND (c2.is_active = true AND c2.name = 'Shared property' OR FALSE = :filter_by_shared_property)
-                      AND (c2.is_active = true AND c2.name = 'Wheelchair accessible' OR FALSE = :filter_by_wheelchair_accessible)),
-                      
-    BookedBedspaces AS
+    WITH BookedBedspaces AS
         (SELECT distinct b.bed_id, b.premises_id 
              FROM bookings b
              INNER JOIN premises p ON b.premises_id = p.id
@@ -232,7 +216,7 @@ ORDER BY distance_miles;
              (lostbeds.start_date, lostbeds.end_date) OVERLAPS (:start_date, :end_date) AND
              lostbeds_cancel.id IS NULL
         ) AND 
-        (p.id in (SELECT premises_id FROM FilteredPremisesIds) OR (FALSE = :filter_by_shared_property AND FALSE = :filter_by_single_occupancy AND FALSE = :filter_by_wheelchair_accessible)) AND
+        #OPTIONAL_FILTERS
         pdu.id IN (:probation_delivery_unit_ids) AND
         p.probation_region_id = :probation_region_id AND 
         p.status = 'active' AND 
@@ -240,28 +224,42 @@ ORDER BY distance_miles;
         (b.end_date IS NULL OR b.end_date > :end_date)
         ORDER BY pdu.name, p.name, r.name;
 """
+  private val temporaryAccommodationPremisesCharacteristicFilter = """
+    p.id in (SELECT pc2.premises_id
+    FROM premises_characteristics pc2
+    INNER JOIN premises p2 ON pc2.premises_id = p2.id
+    WHERE service = 'temporary-accommodation'
+    And pc2.characteristic_id in (:premises_characteristic_ids)
+    Group By pc2.premises_id
+    Having count(pc2.premises_id) = :premises_characteristic_ids_count)
+"""
 
   fun findTemporaryAccommodationBeds(
     probationDeliveryUnits: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID,
-    filterBySharedProperty: Boolean,
-    filterBySingleOccupancy: Boolean,
-    filterByWheelchairAccessible: Boolean,
+    premisesCharacteristicsIds: List<UUID>,
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
       addValue("probation_delivery_unit_ids", probationDeliveryUnits)
       addValue("start_date", startDate)
       addValue("end_date", endDate)
-      addValue("filter_by_shared_property", filterBySharedProperty)
-      addValue("filter_by_single_occupancy", filterBySingleOccupancy)
-      addValue("filter_by_wheelchair_accessible", filterByWheelchairAccessible)
+      addValue("premises_characteristic_ids", premisesCharacteristicsIds)
+      addValue("premises_characteristic_ids_count", premisesCharacteristicsIds.size)
     }
 
+    val optionalFilters = if (premisesCharacteristicsIds.any()) {
+      "$temporaryAccommodationPremisesCharacteristicFilter AND\n"
+    } else {
+      ""
+    }
+
+    val query = temporaryAccommodationSearchQuery.replace("#OPTIONAL_FILTERS", optionalFilters)
+
     val result = namedParameterJdbcTemplate.query(
-      temporaryAccommodationSearchQuery,
+      query,
       params,
       ResultSetExtractor { resultSet ->
         val beds = mutableMapOf<UUID, TemporaryAccommodationBedSearchResult>()

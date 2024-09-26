@@ -739,9 +739,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       startDate = LocalDate.parse("2023-03-09"),
       endDate = LocalDate.parse("2023-03-15"),
       probationRegionId = probationRegion.id,
-      filterBySharedProperty = false,
-      filterBySingleOccupancy = false,
-      filterByWheelchairAccessible = false,
+      listOf(),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -938,9 +936,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       startDate = LocalDate.parse("2024-08-29"),
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
-      filterBySharedProperty = true,
-      filterBySingleOccupancy = false,
-      filterByWheelchairAccessible = false,
+      listOf(premisesSharedPropertyCharacteristic.id),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -1137,9 +1133,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       startDate = LocalDate.parse("2024-08-29"),
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
-      filterBySharedProperty = false,
-      filterBySingleOccupancy = true,
-      filterByWheelchairAccessible = false,
+      listOf(premisesSingleOccupancyCharacteristic.id),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -1198,6 +1192,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedOneInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2024-08-08"))
@@ -1212,6 +1207,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesOneInPdu)
       withBed(bedTwoInRoomInPremisesOneInPdu)
       withArrivalDate(LocalDate.parse("2024-08-12"))
@@ -1243,6 +1239,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesTwoInPdu)
       withBed(bedWithBooking)
       withArrivalDate(LocalDate.parse("2024-08-08"))
@@ -1293,6 +1290,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
     }
 
     val cancelledBooking = bookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withArrivalDate(LocalDate.parse("2024-08-18"))
@@ -1329,9 +1327,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       startDate = LocalDate.parse("2024-08-29"),
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
-      filterBySharedProperty = false,
-      filterBySingleOccupancy = false,
-      filterByWheelchairAccessible = true,
+      listOf(premisesWheelchairAccessibleCharacteristic.id),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
