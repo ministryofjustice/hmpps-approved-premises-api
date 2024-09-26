@@ -84,6 +84,41 @@ paths:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
+  /premises/summary:
+    get:
+      description: Provide a summary of all premises, with optional filtering
+      tags:
+        - premises
+      operationId: "getPremisesSummaries"
+      parameters:
+        - name: gender
+          in: query
+          required: false
+          description: If specified, only return premises for the corresponding gender
+          schema:
+            $ref: '#/components/schemas/Cas1ApprovedPremisesGender'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1PremisesBasicSummary'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/lost-beds:
     post:
       deprecated: true
@@ -1427,6 +1462,17 @@ components:
         - id
         - identifier
         - name
+    Cas1CruManagementArea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
     ProbationRegion:
       type: object
       properties:
@@ -2700,6 +2746,8 @@ components:
               $ref: '#/components/schemas/PersonStatus'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            cruManagementArea:
+              $ref: '#/components/schemas/Cas1CruManagementArea'
             applicantUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
             caseManagerIsNotApplicant:
@@ -3303,6 +3351,7 @@ components:
               type: string
               format: date
             apAreaId:
+              description: If the user's ap area id is incorrect, they can optionally override it for the application
               type: string
               format: uuid
             applicantUserDetails:
@@ -4156,6 +4205,7 @@ components:
         - cas1_request_for_placement_withdraw_others
         - cas1_space_booking_list
         - cas1_space_booking_record_arrival
+        - cas1_space_booking_record_departure
         - cas1_space_booking_view
         - cas1_premises_view_summary
         - cas1_reports_view
@@ -4168,7 +4218,6 @@ components:
     UserQualification:
       type: string
       enum:
-        - womens
         - pipe
         - lao
         - emergency
@@ -4807,7 +4856,6 @@ components:
         - update_all_users_from_community_api
         - update_sentence_type_and_situation
         - update_booking_status
-        - update_application_ap_areas
         - update_task_due_dates
         - update_users_pdu_from_community_api
         - update_cas2_applications_with_assessments
@@ -5347,6 +5395,9 @@ components:
         bedCount:
           type: integer
           description: the total number of Beds in the Premises
+        bookedBedCount:
+          type: integer
+          description: the total number of booked Beds in the Premises
       required:
         - id
         - name
@@ -6142,6 +6193,21 @@ components:
         - sharedProperty
         - singleOccupancy
         - wheelchairAccessible
+    Cas1PremisesBasicSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apArea:
+          $ref: '#/components/schemas/NamedId'
+      required:
+        - id
+        - name
+        - apArea
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -6432,6 +6498,10 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
+        departureReason:
+          $ref: '#/components/schemas/NamedId'
+        departureMoveOnCategory:
+          $ref: '#/components/schemas/NamedId'
         createdAt:
           type: string
           format: date-time
@@ -6567,16 +6637,12 @@ components:
         moveOnCategoryId:
           type: string
           format: uuid
-        destinationProviderId:
-          type: string
-          format: uuid
         notes:
           type: string
       required:
         - departureDateTime
-        - depatureReason
-        - moveOnCategory
-        - destinationProvider
+        - reasonId
+        - moveOnCategoryId
     Cas1AssignKeyWorker:
       type: object
       properties:
@@ -6584,15 +6650,8 @@ components:
           type: string
       required:
         - staffCode
-    Cas1CruManagementArea:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-      required:
-        - id
-        - name
-
+    Cas1ApprovedPremisesGender:
+      type: string
+      enum:
+        - man
+        - woman

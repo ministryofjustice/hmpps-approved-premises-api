@@ -106,7 +106,6 @@ class UserTransformer(
 
   private fun transformQualificationToApi(userQualification: UserQualificationAssignmentEntity): ApiUserQualification = when (userQualification.qualification) {
     UserQualification.PIPE -> ApiUserQualification.pipe
-    UserQualification.WOMENS -> ApiUserQualification.womens
     UserQualification.LAO -> ApiUserQualification.lao
     UserQualification.ESAP -> ApiUserQualification.esap
     UserQualification.EMERGENCY -> ApiUserQualification.emergency
@@ -134,6 +133,7 @@ class UserTransformer(
         UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
         UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
         UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
         UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
         UserPermission.CAS1_PREMISES_VIEW_SUMMARY -> ApiUserPermission.premisesViewSummary
         UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers

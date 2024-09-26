@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises ADD gender TEXT NOT NULL DEFAULT 'MALE';

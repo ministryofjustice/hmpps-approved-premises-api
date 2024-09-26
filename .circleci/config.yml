@@ -24,9 +24,9 @@ executors:
       - image: cimg/openjdk:21.0.2
       - image: "postgis/postgis"
         environment:
-          - POSTGRES_USER=integration_test
-          - POSTGRES_PASSWORD=integration_test_password
-          - POSTGRES_DB=approved_premises_integration_test
+          - POSTGRES_USER=api_user
+          - POSTGRES_PASSWORD=api_user_password
+          - POSTGRES_DB=unused
       - image: "bitnami/redis:7.2.5"
         environment:
           - ALLOW_EMPTY_PASSWORD=yes
@@ -207,7 +207,7 @@ jobs:
       - store_artifacts:
           path: build/reports/tests
   integration_test:
-    parallelism: 7
+    parallelism: 6
     environment:
       _JAVA_OPTIONS: "-Xmx1g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"

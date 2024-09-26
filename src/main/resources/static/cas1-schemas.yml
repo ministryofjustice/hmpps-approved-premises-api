@@ -1,5 +1,20 @@
 components:
   schemas:
+    Cas1PremisesBasicSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        apArea:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+      required:
+        - id
+        - name
+        - apArea
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -290,6 +305,10 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
+        departureReason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        departureMoveOnCategory:
+          $ref: '_shared.yml#/components/schemas/NamedId'
         createdAt:
           type: string
           format: date-time
@@ -425,16 +444,12 @@ components:
         moveOnCategoryId:
           type: string
           format: uuid
-        destinationProviderId:
-          type: string
-          format: uuid
         notes:
           type: string
       required:
         - departureDateTime
-        - depatureReason
-        - moveOnCategory
-        - destinationProvider
+        - reasonId
+        - moveOnCategoryId
     Cas1AssignKeyWorker:
       type: object
       properties:
@@ -442,15 +457,8 @@ components:
           type: string
       required:
         - staffCode
-    Cas1CruManagementArea:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-      required:
-        - id
-        - name
-
+    Cas1ApprovedPremisesGender:
+      type: string
+      enum:
+        - man
+        - woman

@@ -342,6 +342,7 @@ abstract class ApplicationEntity(
   abstract fun getRequiredQualifications(): List<UserQualification>
 }
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_applications")
@@ -386,9 +387,18 @@ class ApprovedPremisesApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var status: ApprovedPremisesApplicationStatus,
   var inmateInOutStatusOnSubmission: String?,
+  /**
+   * The geographic AP Area associated with the applicant
+   */
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  /**
+   * The CRU Management Area responsible for this application
+   */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_id")
+  var cruManagementArea: Cas1CruManagementAreaEntity?,
   @OneToOne
   @JoinColumn(name = "applicant_cas1_application_user_details_id")
   var applicantUserDetails: Cas1ApplicationUserDetailsEntity?,
@@ -428,10 +438,6 @@ class ApprovedPremisesApplicationEntity(
       ApprovedPremisesType.MHAP_ST_JOSEPHS -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
       ApprovedPremisesType.MHAP_ELLIOTT_HOUSE -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
       else -> {}
-    }
-
-    if (isWomensApplication == true) {
-      requiredQualifications += UserQualification.WOMENS
     }
 
     if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {

@@ -114,6 +114,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         )
       )
       AND ((CAST(:apAreaId AS pg_catalog.uuid) IS NULL) OR area.id = :apAreaId)
+      AND ((CAST(:cruManagementAreaId AS pg_catalog.uuid) IS NULL) OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
   """,
     nativeQuery = true,
   )
@@ -126,6 +127,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     arrivalDateTo: LocalDate? = null,
     requestType: String? = null,
     apAreaId: UUID? = null,
+    cruManagementAreaId: UUID? = null,
     pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>
 

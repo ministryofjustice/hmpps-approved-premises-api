@@ -106,9 +106,6 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
 
-  @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE p.id = :id")
-  fun findApprovedPremisesByIdOrNull(id: UUID): ApprovedPremisesEntity?
-
   @Query("SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithBedCount>
 
@@ -175,6 +172,12 @@ where
   fun getBookingSummariesForPremisesId(premisesId: UUID): List<BookingSummary>
 }
 
+@Repository
+interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUID> {
+  @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE :gender IS NULL OR p.gender = :gender")
+  fun findForSummaries(gender: ApprovedPremisesGender?): List<ApprovedPremisesEntity>
+}
+
 @Entity
 @Table(name = "premises")
 @DiscriminatorColumn(name = "service")
@@ -214,6 +217,7 @@ abstract class PremisesEntity(
   var status: PropertyStatus,
 )
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises")
@@ -239,6 +243,8 @@ class ApprovedPremisesEntity(
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
   var point: Point?, // TODO: Make not-null once Premises have had point added in all environments
+  @Enumerated(value = EnumType.STRING)
+  val gender: ApprovedPremisesGender,
 ) : PremisesEntity(
   id,
   name,
@@ -258,6 +264,11 @@ class ApprovedPremisesEntity(
   characteristics,
   status,
 )
+
+enum class ApprovedPremisesGender {
+  MAN,
+  WOMAN,
+}
 
 @Entity
 @DiscriminatorValue("temporary-accommodation")

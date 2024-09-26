@@ -8,7 +8,6 @@ fun transformQualifications(qualification: ApiUserQualification): UserQualificat
   ApiUserQualification.esap -> UserQualification.ESAP
   ApiUserQualification.lao -> UserQualification.LAO
   ApiUserQualification.pipe -> UserQualification.PIPE
-  ApiUserQualification.womens -> UserQualification.WOMENS
   ApiUserQualification.mentalHealthSpecialist -> UserQualification.MENTAL_HEALTH_SPECIALIST
   ApiUserQualification.recoveryFocused -> UserQualification.RECOVERY_FOCUSED
 }

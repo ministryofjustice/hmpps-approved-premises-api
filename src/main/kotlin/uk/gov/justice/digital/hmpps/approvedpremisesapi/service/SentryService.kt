@@ -21,6 +21,9 @@ class SentryServiceImpl : SentryService {
     Sentry.captureException(throwable)
   }
 
+  /**
+   * First line of error messages MUST be identical to ensure correct grouping in alerts.
+   */
   override fun captureErrorMessage(message: String) {
     log.debug("Will capture error message in sentry: '$message'")
     Sentry.captureMessage(message, SentryLevel.ERROR)

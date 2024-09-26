@@ -14,12 +14,27 @@ class DocumentTransformer {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  fun transformToApiFiltered(groupedDocuments: GroupedDocuments, convictionId: Long?) =
+    transformToApi(groupedDocuments) { it.convictionId == convictionId.toString() }
+
+  fun transformToApiUnfiltered(groupedDocuments: GroupedDocuments) =
+    transformToApi(groupedDocuments) { true }
+
   fun transformToApi(
     groupedDocuments: GroupedDocuments,
-    onlyConvictionDocuments: Boolean = false,
-    convictionId: Long? = null,
+    convictionDocFilter: (ConvictionDocuments) -> Boolean,
   ): List<Document> {
-    val convictionDocFilter: (ConvictionDocuments) -> Boolean = { document -> convictionId?.let { document.convictionId == convictionId.toString() } ?: true }
+    val offenderDocuments = documentsWithIdsAndNames(groupedDocuments.documents).map {
+      Document(
+        id = it.id!!,
+        level = DocumentLevel.offender,
+        fileName = it.documentName!!,
+        createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
+        typeCode = it.type.code,
+        typeDescription = it.type.description,
+        description = it.extendedDescription,
+      )
+    }
 
     val filteredConvictionDocuments = groupedDocuments
       .convictions
@@ -38,23 +53,7 @@ class DocumentTransformer {
       )
     }
 
-    when (onlyConvictionDocuments) {
-      true -> return convictionDocuments
-      false -> {
-        val offenderDocuments = documentsWithIdsAndNames(groupedDocuments.documents).map {
-          Document(
-            id = it.id!!,
-            level = DocumentLevel.offender,
-            fileName = it.documentName!!,
-            createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
-            typeCode = it.type.code,
-            typeDescription = it.type.description,
-            description = it.extendedDescription,
-          )
-        }
-        return offenderDocuments + convictionDocuments
-      }
-    }
+    return offenderDocuments + convictionDocuments
   }
 
   /**

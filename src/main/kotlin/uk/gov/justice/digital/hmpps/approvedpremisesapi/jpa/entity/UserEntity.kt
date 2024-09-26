@@ -292,9 +292,21 @@ data class UserEntity(
   var probationRegion: ProbationRegionEntity,
   @ManyToOne(fetch = FetchType.LAZY)
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  /**
+   * The geographical area the user belongs to.
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  /**
+   * Used by CRU Members only to determine which tasks/applications they should work on.
+   */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_id")
+  var cruManagementArea: Cas1CruManagementAreaEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_override_id")
+  var cruManagementAreaOverride: Cas1CruManagementAreaEntity?,
   @Convert(converter = StringListConverter::class)
   var teamCodes: List<String>?,
   val createdAt: OffsetDateTime?,
@@ -386,8 +398,9 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_SPACE_BOOKING_LIST,
       UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
       UserPermission.CAS1_SPACE_BOOKING_VIEW,
+      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
     ),
   ),
   CAS1_WORKFLOW_MANAGER(
@@ -413,6 +426,10 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
       UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
+      UserPermission.CAS1_SPACE_BOOKING_LIST,
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
+      UserPermission.CAS1_SPACE_BOOKING_VIEW,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
@@ -451,6 +468,10 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
       UserPermission.CAS1_PROCESS_AN_APPEAL,
       UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
+      UserPermission.CAS1_SPACE_BOOKING_LIST,
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
+      UserPermission.CAS1_SPACE_BOOKING_VIEW,
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
@@ -510,7 +531,6 @@ data class UserQualificationAssignmentEntity(
 }
 
 enum class UserQualification {
-  WOMENS,
   PIPE,
   LAO,
   ESAP,
@@ -536,6 +556,7 @@ enum class UserPermission {
   CAS1_VIEW_OUT_OF_SERVICE_BEDS,
   CAS1_SPACE_BOOKING_LIST,
   CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
+  CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
   CAS1_SPACE_BOOKING_VIEW,
   CAS1_PREMISES_VIEW_SUMMARY,
   CAS1_APPLICATION_WITHDRAW_OTHERS,

@@ -28,6 +28,7 @@ class Cas1PremisesTransformerTest {
   lateinit var transformer: Cas1PremisesTransformer
 
   companion object CONSTANTS {
+    val AP_AREA_ID: UUID = UUID.randomUUID()
     val PREMISES_ID: UUID = UUID.randomUUID()
   }
 
@@ -35,7 +36,7 @@ class Cas1PremisesTransformerTest {
   inner class ToPremisesSummary {
 
     @Test
-    fun `success`() {
+    fun success() {
       val apArea = ApAreaEntityFactory().produce()
 
       val probationRegion = ProbationRegionEntityFactory()
@@ -72,6 +73,37 @@ class Cas1PremisesTransformerTest {
       assertThat(result.availableBeds).isEqualTo(8)
       assertThat(result.outOfServiceBeds).isEqualTo(2)
       assertThat(result.apArea).isEqualTo(expectedApArea)
+    }
+  }
+
+  @Nested
+  inner class ToPremiseBasicSummary {
+
+    @Test
+    fun success() {
+      val apArea = ApAreaEntityFactory()
+        .withId(AP_AREA_ID)
+        .withName("the ap area name")
+        .produce()
+
+      val probationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .withApArea(apArea)
+        .produce()
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withId(PREMISES_ID)
+        .withName("the name")
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val result = transformer.toPremiseBasicSummary(premises)
+
+      assertThat(result.id).isEqualTo(premises.id)
+      assertThat(result.name).isEqualTo("the name")
+      assertThat(result.apArea.id).isEqualTo(AP_AREA_ID)
+      assertThat(result.apArea.name).isEqualTo("the ap area name")
     }
   }
 }

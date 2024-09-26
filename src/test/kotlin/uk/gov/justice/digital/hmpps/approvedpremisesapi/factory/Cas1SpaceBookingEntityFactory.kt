@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -35,6 +37,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var cancellationRecordedAt: Yielded<Instant?> = { null }
   private var cancellationReason: Yielded<CancellationReasonEntity?> = { null }
   private var cancellationReasonNotes: Yielded<String?> = { null }
+  private var departureReason: Yielded<DepartureReasonEntity?> = { null }
+  private var departureMoveOnCategory: Yielded<MoveOnCategoryEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -150,6 +154,14 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.cancellationReasonNotes = { reasonNotes }
   }
 
+  fun withDepartureReason(departureReason: DepartureReasonEntity?) = apply {
+    this.departureReason = { departureReason }
+  }
+
+  fun withMoveOnCategory(moveOnCategory: MoveOnCategoryEntity) = apply {
+    this.departureMoveOnCategory = { moveOnCategory }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
@@ -171,5 +183,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     cancellationRecordedAt = cancellationRecordedAt(),
     cancellationReason = cancellationReason(),
     cancellationReasonNotes = cancellationReasonNotes(),
+    departureReason = this.departureReason(),
+    departureMoveOnCategory = this.departureMoveOnCategory(),
   )
 }

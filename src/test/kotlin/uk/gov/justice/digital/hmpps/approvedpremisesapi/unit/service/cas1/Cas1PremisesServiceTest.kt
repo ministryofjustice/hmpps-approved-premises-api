@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
@@ -22,7 +21,7 @@ import java.util.UUID
 class Cas1PremisesServiceTest {
 
   @MockK
-  lateinit var premisesRepository: PremisesRepository
+  lateinit var approvedPremisesRepository: ApprovedPremisesRepository
 
   @MockK
   lateinit var premisesService: PremisesService
@@ -34,7 +33,7 @@ class Cas1PremisesServiceTest {
   lateinit var service: Cas1PremisesService
 
   companion object CONSTANTS {
-    val PREMISES_ID = UUID.randomUUID()
+    val PREMISES_ID: UUID = UUID.randomUUID()
   }
 
   @Nested
@@ -42,19 +41,7 @@ class Cas1PremisesServiceTest {
 
     @Test
     fun `premises not found return error`() {
-      every { premisesRepository.findByIdOrNull(PREMISES_ID) } returns null
-
-      val result = service.getPremisesSummary(PREMISES_ID)
-
-      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
-    }
-
-    @Test
-    fun `premises not cas1 return error`() {
-      every { premisesRepository.findByIdOrNull(PREMISES_ID) } returns
-        TemporaryAccommodationPremisesEntityFactory()
-          .withDefaults()
-          .produce()
+      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns null
 
       val result = service.getPremisesSummary(PREMISES_ID)
 
@@ -71,7 +58,7 @@ class Cas1PremisesServiceTest {
         .withPostcode("LE11 1PO")
         .produce()
 
-      every { premisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
+      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
       every { premisesService.getBedCount(premises) } returns 56
       every { cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4

@@ -1007,6 +1007,17 @@ components:
         - id
         - identifier
         - name
+    Cas1CruManagementArea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
     ProbationRegion:
       type: object
       properties:
@@ -2280,6 +2291,8 @@ components:
               $ref: '#/components/schemas/PersonStatus'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            cruManagementArea:
+              $ref: '#/components/schemas/Cas1CruManagementArea'
             applicantUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
             caseManagerIsNotApplicant:
@@ -2883,6 +2896,7 @@ components:
               type: string
               format: date
             apAreaId:
+              description: If the user's ap area id is incorrect, they can optionally override it for the application
               type: string
               format: uuid
             applicantUserDetails:
@@ -3736,6 +3750,7 @@ components:
         - cas1_request_for_placement_withdraw_others
         - cas1_space_booking_list
         - cas1_space_booking_record_arrival
+        - cas1_space_booking_record_departure
         - cas1_space_booking_view
         - cas1_premises_view_summary
         - cas1_reports_view
@@ -3748,7 +3763,6 @@ components:
     UserQualification:
       type: string
       enum:
-        - womens
         - pipe
         - lao
         - emergency
@@ -4387,7 +4401,6 @@ components:
         - update_all_users_from_community_api
         - update_sentence_type_and_situation
         - update_booking_status
-        - update_application_ap_areas
         - update_task_due_dates
         - update_users_pdu_from_community_api
         - update_cas2_applications_with_assessments
@@ -4927,6 +4940,9 @@ components:
         bedCount:
           type: integer
           description: the total number of Beds in the Premises
+        bookedBedCount:
+          type: integer
+          description: the total number of booked Beds in the Premises
       required:
         - id
         - name

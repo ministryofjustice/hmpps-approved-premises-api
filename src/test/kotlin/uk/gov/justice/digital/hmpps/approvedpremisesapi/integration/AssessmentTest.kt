@@ -1166,7 +1166,7 @@ class AssessmentTest : IntegrationTestBase() {
       }
 
       val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, user) {
-        withArrivalDate(LocalDate.now().randomDateAfter(14))
+        withArrivalDate(LocalDate.now().randomDateAfter(512))
       }
 
       val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
@@ -1231,7 +1231,7 @@ class AssessmentTest : IntegrationTestBase() {
 
           val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
             val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, user) {
-              withArrivalDate(LocalDate.now().randomDateAfter(14))
+              withArrivalDate(LocalDate.now().randomDateAfter(512))
               withProbationDeliveryUnit(
                 probationDeliveryUnits[i],
               )
@@ -1398,7 +1398,7 @@ class AssessmentTest : IntegrationTestBase() {
 
           val assessments = offenders.map { (offenderDetails, inmateDetails) ->
             val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, user) {
-              withArrivalDate(LocalDate.now().randomDateAfter(14))
+              withArrivalDate(LocalDate.now().randomDateAfter(512))
             }
 
             val assessment =
@@ -1591,10 +1591,20 @@ class AssessmentTest : IntegrationTestBase() {
 
           val (offender, otherOffender) = offenderSequence.take(2).toList()
 
-          val application = produceAndPersistTemporaryAccommodationApplication(offender.first.otherIds.crn, user)
+          val application = produceAndPersistTemporaryAccommodationApplication(
+            crn = offender.first.otherIds.crn,
+            user = user,
+          ) {
+            withArrivalDate(LocalDate.now().plusDays(2))
+          }
 
           val otherApplication =
-            produceAndPersistTemporaryAccommodationApplication(otherOffender.first.otherIds.crn, user)
+            produceAndPersistTemporaryAccommodationApplication(
+              crn = otherOffender.first.otherIds.crn,
+              user = user,
+            ) {
+              withArrivalDate(LocalDate.now().plusDays(4))
+            }
 
           val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
 

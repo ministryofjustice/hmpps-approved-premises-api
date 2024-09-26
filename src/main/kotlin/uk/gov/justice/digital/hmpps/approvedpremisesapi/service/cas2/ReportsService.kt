@@ -37,9 +37,10 @@ class ReportsService(
     }
 
     reportData.toDataFrame()
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
@@ -57,9 +58,10 @@ class ReportsService(
     }
 
     reportData.toDataFrame()
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
@@ -74,8 +76,9 @@ class ReportsService(
     }
 
     reportData.toDataFrame()
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 }

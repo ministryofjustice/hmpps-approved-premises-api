@@ -269,6 +269,7 @@ url-templates:
       application-overview: http://localhost:3000/applications/#id/overview
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
 
+preemptive-cache-enabled: true
 preemptive-cache-key-prefix: ""
 preemptive-cache-logging-enabled: false
 preemptive-cache-delay-ms: 10000
@@ -299,7 +300,6 @@ reports:
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
   cas1-only-list-adjudications-up-to-12-months: false
-  cas1-only-list-conviction-documents: false
   cas1-only-list-specific-prison-note-types: false
   cas1-womens-estate-enabled: false
   use-ap-and-delius-to-update-users: true

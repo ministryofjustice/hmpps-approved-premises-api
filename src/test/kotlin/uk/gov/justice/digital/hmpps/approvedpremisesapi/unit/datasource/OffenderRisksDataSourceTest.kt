@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.datasource
 
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
@@ -20,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Regi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -30,15 +33,17 @@ class OffenderRisksDataSourceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
+  private val mockSentryService = mockk<SentryService>()
 
   private val apDeliusContextApiOffenderRisksDataSource = OffenderRisksDataSource(
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,
     mockHMPPSTierApiClient,
+    mockSentryService,
   )
 
   @Test
-  fun `getPersonRisks returns NotFound envelopes for RoSH, Tier, Mappa & flags when respective Clients return 404`() {
+  fun `getPersonRisks returns NotFound envelopes for RoSH, Tier, Mappa & flags when respective Clients return 404 and does not log error`() {
     val crn = "a-crn"
 
     mock404RoSH(crn)
@@ -50,21 +55,59 @@ class OffenderRisksDataSourceTest {
     assertThat(result.tier.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.flags.status).isEqualTo(RiskStatus.NotFound)
+
+    verify { mockSentryService wasNot Called }
   }
 
   @Test
-  fun `getPersonRisks returns Error envelopes for RoSH, Tier, Mappa & flags when respective Clients return 500`() {
+  fun `getPersonRisks returns Error envelopes for RoSH, Tier, Mappa & flags when respective Clients return 500 and logs error`() {
     val crn = "a-crn"
 
     mock500RoSH(crn)
     mock500Tier(crn)
     mock500CaseDetail(crn)
+    mockSentry()
 
     val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Error)
     assertThat(result.tier.status).isEqualTo(RiskStatus.Error)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.Error)
     assertThat(result.flags.status).isEqualTo(RiskStatus.Error)
+
+    var exceptions = mutableListOf<RuntimeException>()
+    verify { mockSentryService.captureException(capture(exceptions)) }
+
+    assertThat(exceptions[0].message).isEqualTo("Error occurred obtaining Risks for getRoshRatings, crn: a-crn")
+    assertThat(exceptions[1].message).isEqualTo("Error occurred obtaining Risks for toMappa, body: null")
+    assertThat(exceptions[2].message).isEqualTo("Error occurred obtaining Risks for getTier, crn: a-crn")
+    assertThat(exceptions[3].message).isEqualTo("Error occurred obtaining Risks for toRiskFlags, body: null")
+  }
+
+  @Test
+  fun `getPersonRisks returns Error envelopes when RoSH Client fails and logs error`() {
+    val crn = "a-crn"
+
+    every { mockApOASysContextApiClient.getRoshRatings(crn) } returns
+      ClientResult.Failure.Other(
+        HttpMethod.GET,
+        "/rosh/a-crn",
+        RuntimeException(),
+      )
+    mock500Tier(crn)
+    mock500CaseDetail(crn)
+    mockSentry()
+
+    val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
+    assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Error)
+    assertThat(result.tier.status).isEqualTo(RiskStatus.Error)
+    assertThat(result.mappa.status).isEqualTo(RiskStatus.Error)
+    assertThat(result.flags.status).isEqualTo(RiskStatus.Error)
+
+    var exceptions = mutableListOf<RuntimeException>()
+    verify { mockSentryService.captureException(capture(exceptions)) }
+
+    assertThat(exceptions[0].message).isEqualTo("Error occurred obtaining Risks for getRoshRatings, crn: a-crn")
+    assertThat(exceptions[0].cause.toString()).isEqualTo("java.lang.RuntimeException: Unable to complete GET request to /rosh/a-crn")
   }
 
   @Test
@@ -132,6 +175,8 @@ class OffenderRisksDataSourceTest {
       assertThat(it.riskToPublic).isEqualTo("Medium")
       assertThat(it.riskToKnownAdult).isEqualTo("High")
       assertThat(it.riskToStaff).isEqualTo("Very High")
+
+      verify { mockSentryService wasNot Called }
     }
 
     assertThat(result.tier.status).isEqualTo(RiskStatus.Retrieved)
@@ -303,5 +348,9 @@ class OffenderRisksDataSourceTest {
   private fun mock200CaseDetail(crn: String, body: CaseDetail) {
     every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns
       ClientResult.Success(HttpStatus.OK, body = body)
+  }
+
+  private fun mockSentry() {
+    every { mockSentryService.captureException(any()) } returns Unit
   }
 }

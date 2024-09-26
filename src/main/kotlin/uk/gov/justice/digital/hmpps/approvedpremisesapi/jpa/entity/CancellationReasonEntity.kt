@@ -37,3 +37,11 @@ data class CancellationReasonEntity(
 ) {
   override fun toString() = "CancellationReasonEntity:$id"
 }
+
+fun CancellationReasonEntity.serviceScopeMatches(bookingService: String): Boolean {
+  return when (serviceScope) {
+    "*" -> true
+    bookingService -> true
+    else -> return false
+  }
+}

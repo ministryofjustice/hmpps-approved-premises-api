@@ -40,7 +40,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       taa.person_release_date as personReleaseDate,
       premises.town as town,
       premises.postcode as postCode,
-      taa.pdu as pdu,
+      pdu.name as pduName,
       taa.prison_release_types as prisonReleaseTypes,
       tass.release_date as updatedReleaseDate,
       tass.accommodation_required_from_date as updatedAccommodationRequiredFromDate
@@ -50,6 +50,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
     LEFT JOIN temporary_accommodation_applications taa on ap.id = taa.id
     LEFT JOIN probation_regions probation_region ON probation_region.id = taa.probation_region_id
+    LEFT JOIN probation_delivery_units pdu ON taa.probation_delivery_unit_id = pdu.id 
     LEFT JOIN bookings b on b.application_id = ap.id AND b.service='temporary-accommodation'
     LEFT JOIN premises premises ON premises.id = b.premises_id and premises.service='temporary-accommodation'
     LEFT JOIN referral_rejection_reasons rrr ON aa.referral_rejection_reason_id = rrr.id AND rrr.service_scope='temporary-accommodation'
@@ -85,7 +86,7 @@ interface TransitionalAccommodationReferralReportData {
   val dutyToReferMade: Boolean?
   val dateDutyToReferMade: LocalDate?
   val probationRegionName: String
-  val pdu: String?
+  val pduName: String?
   val dutyToReferLocalAuthorityAreaName: String?
   val dutyToReferOutcome: String?
   val assessmentDecision: String?

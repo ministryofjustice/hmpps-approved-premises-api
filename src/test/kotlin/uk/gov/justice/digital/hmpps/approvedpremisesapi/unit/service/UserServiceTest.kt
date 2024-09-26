@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -199,7 +200,8 @@ class UserServiceTest {
         .withProbationAreaDeliusCode("AREACODE")
         .produce()
 
-      val apArea = ApAreaEntityFactory().produce()
+      val apAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val apArea = ApAreaEntityFactory().withDefaultCruManagementArea(apAreaDefaultCruManagementArea).produce()
 
       every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
 
@@ -218,6 +220,7 @@ class UserServiceTest {
       assertThat(result.user.name).isEqualTo("Jim Jimmerson")
       assertThat(result.user.teamCodes).isEqualTo(listOf("TC1", "TC2"))
       assertThat(result.user.apArea).isEqualTo(apArea)
+      assertThat(result.user.cruManagementArea).isEqualTo(apAreaDefaultCruManagementArea)
       assertThat(result.user.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
       assertThat(result.user.createdAt).isWithinTheLastMinute()
 
@@ -864,7 +867,8 @@ class UserServiceTest {
       every { mockUserRepository.save(any()) } returnsArgument 0
       every { mockProbationDeliveryUnitRepository.findByDeliusCode(any()) } returns pdu
 
-      val newApAreaForCas1 = ApAreaEntityFactory().produce()
+      val newApAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val newApAreaForCas1 = ApAreaEntityFactory().withDefaultCruManagementArea(newApAreaDefaultCruManagementArea).produce()
       if (serviceName == ServiceName.approvedPremises) {
         every {
           mockCas1ApAreaMappingService.determineApArea(probationRegion, user.teamCodes!!, user.deliusUsername)
@@ -895,8 +899,10 @@ class UserServiceTest {
 
       if (serviceName == ServiceName.approvedPremises) {
         assertThat(entity.apArea).isEqualTo(newApAreaForCas1)
+        assertThat(entity.cruManagementArea).isEqualTo(newApAreaDefaultCruManagementArea)
       } else {
         assertThat(entity.apArea).isNull()
+        assertThat(entity.cruManagementArea).isNull()
       }
     }
 
@@ -1050,7 +1056,8 @@ class UserServiceTest {
           .produce()
       }
 
-      val newApAreaForCas1 = ApAreaEntityFactory().produce()
+      val newApAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val newApAreaForCas1 = ApAreaEntityFactory().withDefaultCruManagementArea(newApAreaDefaultCruManagementArea).produce()
       if (forService == ServiceName.approvedPremises) {
         every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
       }
@@ -1075,8 +1082,10 @@ class UserServiceTest {
 
       if (forService == ServiceName.approvedPremises) {
         assertThat(entity.apArea).isEqualTo(newApAreaForCas1)
+        assertThat(entity.cruManagementArea).isEqualTo(newApAreaDefaultCruManagementArea)
       } else {
         assertThat(entity.apArea).isNull()
+        assertThat(entity.cruManagementArea).isNull()
       }
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
@@ -1169,16 +1178,13 @@ class UserServiceTest {
       val assessorRole = ApprovedPremisesUserRole.assessor
       val assessorRoleAdmin = ApprovedPremisesUserRole.roleAdmin
 
-      val qualificationWomens = APIUserQualification.womens
-      val qualificationPipe = APIUserQualification.pipe
-
       every { userService.clearRolesForService(user, ServiceName.approvedPremises) } returns Unit
       every { userService.clearQualifications(user) } returns Unit
       every { userService.addRoleToUser(user, any()) } returns Unit
       every { userService.addQualificationToUser(user, any()) } returns Unit
 
       val roles = listOf(assessorRole, assessorRoleAdmin)
-      val qualifications = listOf(qualificationWomens, qualificationPipe)
+      val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
 
       val result = userService.updateUserRolesAndQualificationsForUser(user, roles, qualifications)
 
@@ -1195,7 +1201,7 @@ class UserServiceTest {
       verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ASSESSOR) }
       verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ADMIN) }
       verify(exactly = 2) { userService.addQualificationToUser(user, any()) }
-      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.WOMENS) }
+      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.EMERGENCY) }
       verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.PIPE) }
     }
   }

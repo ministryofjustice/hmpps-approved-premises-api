@@ -64,7 +64,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForAssessmentQuery(
       "Assessor with both Qualifications and two pending allocated Assessments",
       isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPendingAssessments = 2,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 0,
@@ -72,7 +72,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForAssessmentQuery(
       "Assessor with both Qualifications, zero pending allocated Assessments and one complete Assessment from the last week",
       isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 1,
       numberOfLessRecentCompletedAssessments = 2,
@@ -80,7 +80,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForAssessmentQuery(
       "Assessor with both Qualifications and one pending allocated Assessment",
       isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPendingAssessments = 1,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 2,
@@ -88,7 +88,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForAssessmentQuery(
       "Inactive Assessor with both Qualifications and zero pending allocated Assessments",
       isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 2,
@@ -105,7 +105,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     excludedAssessor = createUserForAssessmentQuery(
       "Excluded User",
       isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       isExcluded = true,
       numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 0,
@@ -131,7 +131,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementApplicationsQuery(
       "Matcher with both Qualifications and two pending allocated Placement Applications",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementApplications = 2,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 0,
@@ -139,7 +139,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementApplicationsQuery(
       "Matcher with both Qualifications, zero pending allocated Placement Applications and one complete Placement Application from the last week",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementApplications = 0,
       numberOfRecentCompletedPlacementApplications = 1,
       numberOfLessRecentCompletedPlacementApplications = 2,
@@ -147,7 +147,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementApplicationsQuery(
       "Matcher with both Qualifications and one pending allocated Placement Application",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementApplications = 1,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
@@ -155,7 +155,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementApplicationsQuery(
       "Inactive Matcher with both Qualifications and zero pending allocated Placement Applications",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementApplications = 0,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
@@ -164,7 +164,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementApplicationsQuery(
       "Matcher with one Qualification and zero pending allocated Placement Applications",
       isMatcher = true,
-      qualifications = listOf(UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.EMERGENCY),
       numberOfPlacementApplications = 0,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
@@ -173,7 +173,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
       "Excluded Matcher with both Qualifications and zero pending allocated Placement Applications",
       isMatcher = true,
       isExcluded = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementApplications = 0,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
@@ -197,7 +197,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementRequestsQuery(
       "Matcher with both Qualifications and two pending allocated Placement Requests",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementRequests = 2,
       numberOfRecentCompletedPlacementRequests = 0,
       numberOfLessRecentCompletedPlacementRequests = 0,
@@ -205,7 +205,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementRequestsQuery(
       "Matcher with both Qualifications, zero pending allocated Placement Requests and one complete Placement Request from the last week",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementRequests = 0,
       numberOfRecentCompletedPlacementRequests = 1,
       numberOfLessRecentCompletedPlacementRequests = 2,
@@ -213,7 +213,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementRequestsQuery(
       "Matcher with both Qualifications and one pending allocated Placement Request",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementRequests = 1,
       numberOfRecentCompletedPlacementRequests = 0,
       numberOfLessRecentCompletedPlacementRequests = 0,
@@ -229,7 +229,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     createUserForPlacementRequestsQuery(
       "Inactive Matcher with both Qualifications and zero pending allocated Placement Requests",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementRequests = 0,
       numberOfRecentCompletedPlacementRequests = 0,
       numberOfLessRecentCompletedPlacementRequests = 2,
@@ -238,7 +238,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     excludedMatcher = createUserForPlacementRequestsQuery(
       "Excluded Matcher with both Qualifications and zero pending allocated Placement Requests",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementRequests = 0,
       isExcluded = true,
       numberOfRecentCompletedPlacementRequests = 0,
@@ -248,7 +248,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     expectedQualifiedAssessmentUser = createUserForAssessmentQuery(
       "Assessor with both Qualifications and zero pending allocated Assessments",
       isAssessor = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPendingAssessments = 0,
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 2,
@@ -266,7 +266,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     expectedPlacementApplicationMatcher = createUserForPlacementApplicationsQuery(
       "Matcher with both Qualifications and zero pending allocated Placement Applications",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementApplications = 0,
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
@@ -275,7 +275,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     expectedPlacementRequestMatcher = createUserForPlacementRequestsQuery(
       "Matcher with both Qualifications and zero pending allocated Placement Requests",
       isMatcher = true,
-      qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      qualifications = listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       numberOfPlacementRequests = 0,
       numberOfRecentCompletedPlacementRequests = 0,
       numberOfLessRecentCompletedPlacementRequests = 2,
@@ -284,7 +284,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `finding a qualified assessor gets an assessor with the smallest workload and the correct qualifications`() {
-    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.Assessment, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.Assessment, listOf(UserQualification.PIPE, UserQualification.EMERGENCY), false)
     val userPool = allocationEngine.getUserPool()
     val allocatedUser = allocationEngine.getAllocatedUser()
 
@@ -293,7 +293,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_ASSESSOR)
       assertThat(qualifications).contains(UserQualification.PIPE)
-      assertThat(qualifications).contains(UserQualification.WOMENS)
+      assertThat(qualifications).contains(UserQualification.EMERGENCY)
     }
     assertThat(allocatedUser).isNotNull()
     assertThat(allocatedUser!!.deliusUsername).isEqualTo(expectedQualifiedAssessmentUser.deliusUsername)
@@ -319,7 +319,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `finding a matcher for a placement application gets a matcher with the smallest workload and the correct qualifications`() {
-    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementApplication, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementApplication, listOf(UserQualification.PIPE, UserQualification.EMERGENCY), false)
     val userPool = allocationEngine.getUserPool()
     val actualAllocatedUser = allocationEngine.getAllocatedUser()
 
@@ -328,7 +328,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_MATCHER)
       assertThat(qualifications).contains(UserQualification.PIPE)
-      assertThat(qualifications).contains(UserQualification.WOMENS)
+      assertThat(qualifications).contains(UserQualification.EMERGENCY)
     }
     assertThat(actualAllocatedUser).isNotNull()
     assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo(expectedPlacementApplicationMatcher.deliusUsername)
@@ -336,7 +336,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `finding a matcher for a placement request gets a matcher with the smallest workload and the correct qualifications`() {
-    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementRequest, listOf(UserQualification.PIPE, UserQualification.WOMENS), false)
+    val allocationEngine = UserAllocationsEngine(realUserRepository, AllocationType.PlacementRequest, listOf(UserQualification.PIPE, UserQualification.EMERGENCY), false)
     val userPool = allocationEngine.getUserPool()
     val actualAllocatedUser = allocationEngine.getAllocatedUser()
 
@@ -345,7 +345,7 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(user.roles.map { it.role }).contains(UserRole.CAS1_MATCHER)
       assertThat(qualifications).contains(UserQualification.PIPE)
-      assertThat(qualifications).contains(UserQualification.WOMENS)
+      assertThat(qualifications).contains(UserQualification.EMERGENCY)
     }
     assertThat(actualAllocatedUser).isNotNull()
     assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo(expectedPlacementRequestMatcher.deliusUsername)
@@ -356,21 +356,21 @@ class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
     val assessmentAllocationEngine = UserAllocationsEngine(
       realUserRepository,
       AllocationType.Assessment,
-      listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       isLao = false,
       excludeAutoAllocations = false,
     )
     val placementApplicationAllocationEngine = UserAllocationsEngine(
       realUserRepository,
       AllocationType.PlacementApplication,
-      listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       isLao = false,
       excludeAutoAllocations = false,
     )
     val placementRequestAllocationsEngine = UserAllocationsEngine(
       realUserRepository,
       AllocationType.PlacementRequest,
-      listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      listOf(UserQualification.PIPE, UserQualification.EMERGENCY),
       isLao = false,
       excludeAutoAllocations = false,
     )

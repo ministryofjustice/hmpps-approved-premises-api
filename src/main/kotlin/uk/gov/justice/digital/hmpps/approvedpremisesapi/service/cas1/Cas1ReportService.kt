@@ -62,9 +62,10 @@ class Cas1ReportService(
   fun createApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ApplicationReportGenerator()
       .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createApplicationReportV2(properties: MonthSpecificReportParams, outputStream: OutputStream) {
@@ -98,33 +99,37 @@ class Cas1ReportService(
 
     DailyMetricsReportGenerator(domainEvents, applications, domainEventService)
       .createReport(dates, properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createLostBedReport(properties: LostBedReportProperties, outputStream: OutputStream) {
     LostBedsReportGenerator(lostBedsRepository)
       .createReport(bedRepository.findAll(), properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createOutOfServiceBedReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     Cas1OutOfServiceBedsReportGenerator(cas1OutOfServiceBedRepository)
       .createReport(bedRepository.findAll(), properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createPlacementApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     PlacementApplicationReportGenerator()
       .createReport(placementApplicationEntityReportRowRepository.generatePlacementApplicationEntityReportRowsForCalendarMonth(properties.month, properties.year), properties)
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   fun createRequestForPlacementReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {

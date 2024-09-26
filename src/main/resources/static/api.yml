@@ -2502,12 +2502,6 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
-        - name: crn
-          in: query
-          description: If provided, return only results for the given CRN
-          required: false
-          schema:
-            type: string
         - name: crnOrName
           in: query
           description: Filters bookings using exact or partial match on name or exact CRN match
@@ -3196,7 +3190,15 @@ paths:
         - name: apAreaId
           in: query
           required: false
-          description: filter by approved premises area ID
+          description: filter by approved premises area ID.  Use cruManagementAreaId instead.
+          deprecated: true
+          schema:
+            type: string
+            format: uuid
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: filter by CRU management area ID
           schema:
             type: string
             format: uuid

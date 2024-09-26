@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -62,6 +63,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var status: Yielded<ApprovedPremisesApplicationStatus> = { ApprovedPremisesApplicationStatus.STARTED }
   private var inmateInOutStatusOnSubmission: Yielded<String?> = { null }
   private var apArea: Yielded<ApAreaEntity?> = { null }
+  private var cruManagementArea: Yielded<Cas1CruManagementAreaEntity?> = { null }
   private var applicantUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
   private var caseManagerIsNotApplicant: Yielded<Boolean?> = { null }
   private var caseManagerUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
@@ -207,6 +209,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.apArea = { apArea }
   }
 
+  fun withCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity?) = apply {
+    this.cruManagementArea = { cruManagementArea }
+  }
+
   fun withApplicantUserDetails(applicantUserDetails: Cas1ApplicationUserDetailsEntity?) = apply {
     this.applicantUserDetails = { applicantUserDetails }
   }
@@ -257,6 +263,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
     apArea = this.apArea(),
+    cruManagementArea = this.cruManagementArea(),
     applicantUserDetails = this.applicantUserDetails(),
     caseManagerIsNotApplicant = this.caseManagerIsNotApplicant(),
     caseManagerUserDetails = this.caseManagerUserDetails(),
