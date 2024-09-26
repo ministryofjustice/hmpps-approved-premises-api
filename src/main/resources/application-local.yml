@@ -73,3 +73,6 @@ user-allocations:
 
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
+
+# allows us to see the request URL and method for upstream requests
+logging.level.reactor.netty.http.client.HttpClientConnect: DEBUG
