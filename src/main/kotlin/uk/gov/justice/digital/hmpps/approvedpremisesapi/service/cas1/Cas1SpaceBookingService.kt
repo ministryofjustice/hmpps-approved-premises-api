@@ -4,6 +4,7 @@ import kotlinx.datetime.toKotlinDatePeriod
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
@@ -20,9 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Spac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -41,6 +45,7 @@ class Cas1SpaceBookingService(
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
+  private val staffMemberService: StaffMemberService,
 ) {
   @Transactional
   fun createNewBooking(
@@ -71,7 +76,10 @@ class Cas1SpaceBookingService(
     premises!!
     placementRequest!!
 
-    when (val existingBooking = cas1SpaceBookingRepository.findByPremisesIdAndPlacementRequestId(premisesId, placementRequestId)) {
+    when (
+      val existingBooking =
+        cas1SpaceBookingRepository.findByPremisesIdAndPlacementRequestId(premisesId, placementRequestId)
+    ) {
       null -> {}
       else -> return existingBooking.id hasConflictError "A Space Booking already exists for this premises and placement request"
     }
@@ -169,6 +177,43 @@ class Cas1SpaceBookingService(
       existingCas1SpaceBooking,
       previousExpectedDepartureOn,
     )
+
+    success(result)
+  }
+
+  @Transactional
+  fun recordKeyWorkerForBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    keyWorker: Cas1AssignKeyWorker,
+  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+    if (premises == null) {
+      "$.premisesId" hasValidationError "doesNotExist"
+    }
+
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
+    if (existingCas1SpaceBooking == null) {
+      "$.bookingId" hasValidationError "doesNotExist"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorker.staffCode, premises!!.qCode)
+    if (staffMemberResponse !is AuthorisableActionResult.Success) {
+      return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
+    }
+    val staffKeyWorker = extractEntityFromAuthorisableActionResult(staffMemberResponse)
+
+    existingCas1SpaceBooking!!
+
+    existingCas1SpaceBooking.keyWorkerStaffCode = staffKeyWorker.code
+    existingCas1SpaceBooking.keyWorkerName = "${staffKeyWorker.name.forename} ${staffKeyWorker.name.surname}"
+    existingCas1SpaceBooking.keyWorkerAssignedAt = OffsetDateTime.now().toInstant()
+
+    val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
     success(result)
   }

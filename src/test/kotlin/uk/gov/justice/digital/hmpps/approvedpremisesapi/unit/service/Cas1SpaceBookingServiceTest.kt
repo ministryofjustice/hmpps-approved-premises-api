@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -38,8 +40,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
@@ -86,6 +90,9 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var cas1ApplicationStatusService: Cas1ApplicationStatusService
+
+  @MockK
+  private lateinit var staffMemberService: StaffMemberService
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -821,6 +828,109 @@ class Cas1SpaceBookingServiceTest {
       assertThat(actualDepartureDate.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
       assertThat(departureReason).isEqualTo(updatedSpaceBooking.departureReason)
       assertThat(departureMoveOnCategory).isEqualTo(updatedSpaceBooking.departureMoveOnCategory)
+    }
+  }
+
+  @Nested
+  inner class RecordKeyWorker {
+
+    private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDateTime(LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC))
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    val keyWorker = ContextStaffMemberFactory().produce()
+
+    @BeforeEach
+    fun setup() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Success(keyWorker)
+    }
+
+    @Test
+    fun `Returns validation error if no premises exist with the given premisesId`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns null
+
+      val result = service.recordKeyWorkerForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.premisesId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no space booking exists with the given bookingId`() {
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.recordKeyWorkerForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.bookingId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no staff record exists with the given staff code`() {
+      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound()
+
+      val result = service.recordKeyWorkerForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.keyWorker.staffCode" && value == "notFound"
+      }
+    }
+
+    @Test
+    fun `Updates existing space booking with key worker information `() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+
+      val result = service.recordKeyWorkerForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
+      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
+      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
+      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
+      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
+      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
+
+      assertThat(keyWorker.code).isEqualTo(updatedSpaceBooking.keyWorkerStaffCode)
+      assertThat("${keyWorker.name.forename} ${keyWorker.name.surname}").isEqualTo(updatedSpaceBooking.keyWorkerName)
+      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
     }
   }
 
