@@ -207,8 +207,8 @@ class UserService(
   fun updateUserRolesAndQualifications(
     id: UUID,
     userRolesAndQualifications: UserRolesAndQualifications,
-  ): AuthorisableActionResult<UserEntity> {
-    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  ): CasResult<UserEntity> {
+    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
     val roles = userRolesAndQualifications.roles
     val qualifications = userRolesAndQualifications.qualifications
     user.isActive = true
@@ -221,7 +221,7 @@ class UserService(
     user: UserEntity,
     roles: List<ApprovedPremisesUserRole>,
     qualifications: List<APIUserQualification>,
-  ): AuthorisableActionResult<UserEntity> {
+  ): CasResult<UserEntity> {
     clearQualifications(user)
     clearRolesForService(user, ServiceName.approvedPremises)
 
@@ -233,7 +233,7 @@ class UserService(
       this.addQualificationToUser(user, transformQualifications(it))
     }
 
-    return AuthorisableActionResult.Success(user)
+    return CasResult.Success(user)
   }
 
   fun updateUser(
