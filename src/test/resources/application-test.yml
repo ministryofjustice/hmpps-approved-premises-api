@@ -48,6 +48,8 @@ spring:
             client-secret: clientsecret
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
+  cache:
+    type: none
 
 hmpps.sqs:
   useWebToken: false
@@ -115,18 +117,6 @@ prison-case-notes:
 
 prison-adjudications:
   prison-api-page-size: 30
-
-caches:
-  staffMembers:
-    expiry-seconds: 21600
-  staffMember:
-    expiry-seconds: 21600
-  userAccess:
-    expiry-seconds: 1200
-  staffDetails:
-    expiry-seconds: 1200
-  teamManagingCases:
-    expiry-seconds: 21600
 
 seed:
   file-prefix: "./test-seed-csvs"
