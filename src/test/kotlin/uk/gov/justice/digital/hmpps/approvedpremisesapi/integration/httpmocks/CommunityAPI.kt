@@ -21,12 +21,6 @@ fun IntegrationTestBase.CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUse
   )
 }
 
-fun IntegrationTestBase.CommunityAPI_mockNotFoundStaffUserDetailsCall(username: String) =
-  mockUnsuccessfulGetCall(
-    url = "/secure/staff/username/$username",
-    responseStatus = 404,
-  )
-
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails: OffenderDetailSummary) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/offenders/crn/${offenderDetails.otherIds.crn}",

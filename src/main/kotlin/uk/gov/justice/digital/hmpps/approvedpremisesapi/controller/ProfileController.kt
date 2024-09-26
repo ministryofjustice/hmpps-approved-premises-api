@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ProfileApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 
@@ -16,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 class ProfileController(
   private val userService: UserService,
   private val userTransformer: UserTransformer,
-  private val featureFlagService: FeatureFlagService,
 ) : ProfileApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -43,16 +41,13 @@ class ProfileController(
       }
     }
 
-    val responseToReturn = if (
-      getUserResponse is UserService.GetUserResponse.Success &&
-      !getUserResponse.createdOnGet &&
-      featureFlagService.isUseApAndDeliusToUpdateUsersEnabled()
-    ) {
-      log.info("Updating user record for $username")
-      userService.updateUser(getUserResponse.user, xServiceName)
-    } else {
-      getUserResponse
-    }
+    val responseToReturn =
+      if (getUserResponse is UserService.GetUserResponse.Success && !getUserResponse.createdOnGet) {
+        log.info("Updating user record for $username")
+        userService.updateUser(getUserResponse.user, xServiceName)
+      } else {
+        getUserResponse
+      }
 
     return ResponseEntity(userTransformer.transformProfileResponseToApi(username, responseToReturn, xServiceName), HttpStatus.OK)
   }
