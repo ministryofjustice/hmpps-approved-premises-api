@@ -141,6 +141,19 @@ tasks.register("bootRunLocal") {
   finalizedBy("bootRun")
 }
 
+tasks.bootRun {
+  System.getenv()["BOOT_RUN_ENV_FILE"]?.let { envFilePath ->
+    println("Reading env vars from file $envFilePath")
+    file(envFilePath).readLines().forEach {
+      if (it.isNotBlank() && !it.startsWith("#")) {
+        val (key, value) = it.split('=')
+        println("Setting env var $key")
+        environment(key, value)
+      }
+    }
+  }
+}
+
 tasks.withType<Test> {
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
 
