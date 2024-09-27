@@ -7,9 +7,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockNotFoundStaffDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
@@ -24,7 +25,7 @@ import java.time.OffsetDateTime
 class ApStaffUsersSeedJobTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a non existent user logs an error`() {
-    CommunityAPI_mockNotFoundOffenderDetailsCall("INVALID-USER")
+    ApDeliusContext_mockNotFoundStaffDetailCall("INVALID-USER")
 
     withCsv(
       "invalid-user",
@@ -44,8 +45,7 @@ class ApStaffUsersSeedJobTest : SeedTestBase() {
         it.message.contains("Error on row 1:") &&
         it.throwable != null &&
         it.throwable.cause != null &&
-        it.throwable.message!!.contains("Could not get user INVALID-USER") &&
-        it.throwable.cause!!.message!!.contains("Could not find staff record for user INVALID-USER")
+        it.throwable.cause!!.message!!.contains("Internal Server Error: Could not find staff record for user INVALID-USER")
     }
   }
 
@@ -57,12 +57,12 @@ class ApStaffUsersSeedJobTest : SeedTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername("UNKNOWN-USER")
         .withStaffIdentifier(6789)
         .withProbationAreaCode(probationRegionDeliusMapping.probationAreaDeliusCode)
-        .produce(),
+        .produce().toStaffDetail(),
     )
 
     withCsv(

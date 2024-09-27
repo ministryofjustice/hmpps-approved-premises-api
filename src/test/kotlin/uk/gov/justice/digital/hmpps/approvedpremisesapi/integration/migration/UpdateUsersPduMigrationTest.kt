@@ -6,16 +6,17 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockNotFoundStaffDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import java.time.LocalDate
 
-class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
+class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
   @Test
-  fun `All users pdu are updated from Community API with a 50ms artificial delay`() {
+  fun `All users pdu are updated from AP-delius integration with a 50ms artificial delay`() {
     val probationRegion = `Given a Probation Region`()
 
     probationDeliveryUnitFactory.produceAndPersist {
@@ -74,7 +75,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REFERRER)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userOneCas3Assessor.deliusUsername)
         .withTeams(
@@ -108,10 +109,10 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce().toStaffDetail(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userTwoCas3Referrer.deliusUsername)
         .withTeams(
@@ -145,10 +146,10 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce().toStaffDetail(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userThreeCas1Assessor.deliusUsername)
         .withTeams(
@@ -163,10 +164,11 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce()
+        .toStaffDetail(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userFourCas3Referrer.deliusUsername)
         .withTeams(
@@ -192,11 +194,12 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce()
+        .toStaffDetail(),
     )
 
     val startTime = System.currentTimeMillis()
-    migrationJobService.runMigrationJob(MigrationJobType.usersPduFromCommunityApi, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi, 1)
     val endTime = System.currentTimeMillis()
 
     Assertions.assertThat(endTime - startTime).isGreaterThan(50 * 2)
@@ -213,7 +216,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
   }
 
   @Test
-  fun `Failure to update individual user does not stop processing`() {
+  fun `Failure to update individual user does not stop processing - PDU migration`() {
     val probationRegion = `Given a Probation Region`()
 
     val probationDeliveryUnitTwo = probationDeliveryUnitFactory.produceAndPersist {
@@ -247,9 +250,9 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REFERRER)
     }
 
-    CommunityAPI_mockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
+    ApDeliusContext_mockNotFoundStaffDetailCall(userOne.deliusUsername)
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withTeams(
@@ -263,10 +266,11 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce()
+        .toStaffDetail(),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.usersPduFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
@@ -280,7 +284,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
         it.level == "error" &&
           it.message == "Unable to update user PDU. User id ${userOne.id}" &&
           it.throwable != null &&
-          it.throwable.message == "Unable to complete GET request to /secure/staff/username/USER1: 404 NOT_FOUND"
+          it.throwable.message == "Unable to complete GET request to /staff/USER1: 404 NOT_FOUND"
       }
   }
 
@@ -313,7 +317,7 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REPORTER)
     }
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userOne.deliusUsername)
         .withTeams(
@@ -327,10 +331,11 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce()
+        .toStaffDetail(),
     )
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+    ApDeliusContext_addStaffDetailResponse(
       StaffUserDetailsFactory()
         .withUsername(userTwo.deliusUsername)
         .withTeams(
@@ -347,10 +352,11 @@ class UpdateUsersPduFromCommunityApiMigrationTest : MigrationJobTestBase() {
               .produce(),
           ),
         )
-        .produce(),
+        .produce()
+        .toStaffDetail(),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.usersPduFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!

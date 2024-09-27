@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -115,7 +116,7 @@ class TaskServiceTest {
     every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-    every { userServiceMock.updateUser(assigneeUserId, ServiceName.approvedPremises) } returns AuthorisableActionResult.NotFound()
+    every { userServiceMock.updateUser(assigneeUserId, ServiceName.approvedPremises) } returns CasResult.NotFound()
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
 
@@ -307,6 +308,7 @@ class TaskServiceTest {
 
     val isAllocated = true
     val apAreaId = UUID.randomUUID()
+    val cruManagementAreaId = UUID.randomUUID()
 
     val assessments = List(3) { generateAssessment() }
     val placementApplications = List(4) { generatePlacementApplication() }
@@ -366,6 +368,7 @@ class TaskServiceTest {
       taskRepositoryMock.getAll(
         isAllocated,
         apAreaId,
+        cruManagementAreaId,
         taskEntityTypes.map { it.name },
         allocatedToUserId,
         requiredQualification.value,
@@ -386,6 +389,7 @@ class TaskServiceTest {
       TaskService.TaskFilterCriteria(
         AllocatedFilter.allocated,
         apAreaId,
+        cruManagementAreaId,
         taskEntityTypes,
         allocatedToUserId,
         requiredQualification,
@@ -420,7 +424,7 @@ class TaskServiceTest {
         ServiceName.approvedPremises,
       )
     } returns
-      AuthorisableActionResult.Success(
+      CasResult.Success(
         UserService.GetUserResponse.Success(user),
       )
 

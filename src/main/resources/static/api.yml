@@ -2957,7 +2957,15 @@ paths:
         - name: apAreaId
           in: query
           required: false
-          description: Approved Premises Area ID to filter results by
+          description: Approved Premises Area ID to filter results by.  Deprecated, Use cruManagementAreaId instead.
+          deprecated: true
+          schema:
+            type: string
+            format: uuid
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: filter by CRU management area ID
           schema:
             type: string
             format: uuid
@@ -4071,7 +4079,8 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
     put:
-      summary: Update information about a specific user's roles and qualifications
+      summary: Update information about a specific user's roles and qualifications. Deprecated. Instead use PUT /cas1/user/{userid}
+      deprecated: true
       parameters:
         - name: X-Service-Name
           in: header
@@ -4106,7 +4115,8 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
     delete:
-      summary: Deletes the user
+      summary: Deletes the user. Deprecated. Instead use DELETE /cas1/user/{userid}
+      deprecated: true
       parameters:
         - name: id
           in: path

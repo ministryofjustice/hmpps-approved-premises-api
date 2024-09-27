@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
@@ -27,6 +28,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   apArea: ApAreaEntity? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   name: String? = null,
   requiredQualification: UserQualification? = null,
@@ -60,6 +62,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     allocatedToUser = assessmentAllocatedToUser,
     createdByUser = assessmentCreatedByUser,
     apArea = apArea,
+    cruManagementArea = cruManagementArea,
     name = name,
     requiredQualification = requiredQualification,
     noticeType = noticeType,

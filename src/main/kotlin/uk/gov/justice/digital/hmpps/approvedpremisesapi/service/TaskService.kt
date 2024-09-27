@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -48,6 +49,7 @@ class TaskService(
   data class TaskFilterCriteria(
     val allocatedFilter: AllocatedFilter?,
     val apAreaId: UUID?,
+    val cruManagementAreaId: UUID?,
     val types: List<TaskEntityType>,
     val allocatedToUserId: UUID?,
     val requiredQualification: UserQualification?,
@@ -134,6 +136,7 @@ class TaskService(
     return repoFunction(
       isAllocated,
       filterCriteria.apAreaId,
+      filterCriteria.cruManagementAreaId,
       taskTypes.map { it.name },
       filterCriteria.allocatedToUserId,
       filterCriteria.requiredQualification?.value,
@@ -155,10 +158,10 @@ class TaskService(
     val assigneeUserResult = userService.updateUser(userToAllocateToId, ServiceName.approvedPremises)
 
     val assigneeUser =
-      if (assigneeUserResult is AuthorisableActionResult.Success &&
-        assigneeUserResult.entity is UserService.GetUserResponse.Success
+      if (assigneeUserResult is CasResult.Success &&
+        assigneeUserResult.value is UserService.GetUserResponse.Success
       ) {
-        assigneeUserResult.entity.user
+        assigneeUserResult.value.user
       } else {
         return AuthorisableActionResult.NotFound()
       }

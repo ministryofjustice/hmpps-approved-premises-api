@@ -5,8 +5,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 class Cas1BackfillUserApArea(
   private val userRepository: UserRepository,
   private val userService: UserService,
-  private val communityApiClient: CommunityApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val transactionTemplate: TransactionTemplate,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -37,7 +37,7 @@ class Cas1BackfillUserApArea(
   private fun updateUser(user: UserEntity) {
     log.info("Update ap area and teams for user ${user.id}")
     try {
-      val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+      val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)
 
       when (staffDetailsResult) {
         is ClientResult.Success -> {

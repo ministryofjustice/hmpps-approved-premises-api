@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -43,6 +44,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   booking: BookingEntity? = null,
   apArea: ApAreaEntity? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   duration: Int? = null,
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
@@ -87,6 +89,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
       risksFactory.produce(),
     )
     withApArea(apArea)
+    withCruManagementArea(cruManagementArea)
     applyQualification(requiredQualification)
     withNoticeType(noticeType)
   }

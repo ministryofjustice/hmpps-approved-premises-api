@@ -551,7 +551,7 @@
     <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$cas2StatusUpdatesWithAssessments : MigrationJobType</ID>
     <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$cas3ApplicationOffenderName : MigrationJobType</ID>
     <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$cas3DomainEventTypeForPersonDepartedUpdated : MigrationJobType</ID>
-    <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$cas3UsersPduFromCommunityApi : MigrationJobType</ID>
+    <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$usersPduByApi : MigrationJobType</ID>
     <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$sentenceTypeAndSituation : MigrationJobType</ID>
     <ID>EnumNaming:MigrationJobType.kt$MigrationJobType$taskDueDates : MigrationJobType</ID>
     <ID>EnumNaming:OASysAssessmentState.kt$OASysAssessmentState$completed : OASysAssessmentState</ID>
