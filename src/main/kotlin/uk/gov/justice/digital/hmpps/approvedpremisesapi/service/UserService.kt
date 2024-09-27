@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -206,8 +207,8 @@ class UserService(
   fun updateUserRolesAndQualifications(
     id: UUID,
     userRolesAndQualifications: UserRolesAndQualifications,
-  ): AuthorisableActionResult<UserEntity> {
-    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  ): CasResult<UserEntity> {
+    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
     val roles = userRolesAndQualifications.roles
     val qualifications = userRolesAndQualifications.qualifications
     user.isActive = true
@@ -220,7 +221,7 @@ class UserService(
     user: UserEntity,
     roles: List<ApprovedPremisesUserRole>,
     qualifications: List<APIUserQualification>,
-  ): AuthorisableActionResult<UserEntity> {
+  ): CasResult<UserEntity> {
     clearQualifications(user)
     clearRolesForService(user, ServiceName.approvedPremises)
 
@@ -232,15 +233,15 @@ class UserService(
       this.addQualificationToUser(user, transformQualifications(it))
     }
 
-    return AuthorisableActionResult.Success(user)
+    return CasResult.Success(user)
   }
 
   fun updateUser(
     id: UUID,
     forService: ServiceName,
-  ): AuthorisableActionResult<GetUserResponse> {
-    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    return AuthorisableActionResult.Success(updateUser(user, forService))
+  ): CasResult<GetUserResponse> {
+    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
+    return CasResult.Success(updateUser(user, forService))
   }
 
   fun updateUser(

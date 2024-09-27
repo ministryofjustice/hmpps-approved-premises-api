@@ -462,3 +462,17 @@ components:
       enum:
         - man
         - woman
+    Cas1UpdateUser:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/ApprovedPremisesUserRole'
+        qualifications:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/UserQualification'
+      required:
+        - roles
+        - qualifications
