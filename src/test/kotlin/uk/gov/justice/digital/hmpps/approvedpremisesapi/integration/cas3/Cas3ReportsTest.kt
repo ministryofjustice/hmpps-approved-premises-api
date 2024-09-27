@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -74,11 +75,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDat
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas3ReportsTest : IntegrationTestBase() {
   @Autowired
   lateinit var bookingTransformer: BookingTransformer
+
+  @Autowired
+  lateinit var cas3ReportService: Cas3ReportService
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
@@ -3410,6 +3415,107 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertThat(actual).isEqualTo(expectedDataFrame)
             }
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class GetBookingGapReport {
+
+    @Test
+    fun `Get booking gap report returns OK with correct body`() {
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(yorkshireRegion!!)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(yorkshireRegion!!)
+          withProbationDeliveryUnit(probationDeliveryUnit)
+        }
+
+        val booking1DepartureDate = LocalDate.of(2023, 4, 12)
+
+        val bedOne = bedEntityFactory.produceAndPersist {
+          withRoom(
+            roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+              withName("room1")
+            },
+          )
+        }
+
+        val booking1 = createBooking(premises, bedOne, offenderDetails.otherIds.crn, LocalDate.of(2023, 4, 5), booking1DepartureDate)
+
+        confirmationEntityFactory.produceAndPersist {
+          withBooking(booking1)
+        }
+
+        val booking2DepartureDate = LocalDate.of(2023, 4, 21)
+
+        val bedTwo = bedEntityFactory.produceAndPersist {
+          withRoom(
+            roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+              withName("room2")
+            },
+          )
+        }
+
+        val booking2 = createBooking(premises, bedTwo, offenderDetails.otherIds.crn, LocalDate.of(2023, 4, 19), booking2DepartureDate)
+
+        confirmationEntityFactory.produceAndPersist {
+          withBooking(booking2)
+        }
+
+        val booking3 = createBooking(premises, bedTwo, offenderDetails.otherIds.crn, LocalDate.of(2024, 3, 8), LocalDate.of(2024, 4, 21))
+
+        cancellationEntityFactory.produceAndPersist {
+          withBooking(booking3)
+          withYieldedReason {
+            cancellationReasonEntityFactory.produceAndPersist()
+          }
+        }
+
+        val booking4ArrivalDate = LocalDate.of(2024, 5, 12)
+        val booking4DepartureDate = LocalDate.of(2024, 7, 17)
+        createBooking(premises, bedTwo, offenderDetails.otherIds.crn, booking4ArrivalDate, booking4DepartureDate)
+
+        val gapRangesReport = cas3ReportService.createBookingGapRangesReport()
+
+        val today = LocalDate.now()
+
+        val expectedGapRangesReport = listOf(
+          mutableMapOf<String, Any?>(
+            "probation_region" to premises.probationRegion.name,
+            "pdu_name" to probationDeliveryUnit.name,
+            "premises_name" to premises.name,
+            "room_name" to "room1",
+            "gap" to "[${booking1DepartureDate.plusDays(1)},$today)",
+            "gap_days" to ChronoUnit.DAYS.between(booking1DepartureDate.plusDays(1), LocalDate.now()).toInt(),
+          ),
+          mutableMapOf<String, Any?>(
+            "probation_region" to premises.probationRegion.name,
+            "pdu_name" to probationDeliveryUnit.name,
+            "premises_name" to premises.name,
+            "room_name" to "room2",
+            "gap" to "[${booking2DepartureDate.plusDays(1)},$booking4ArrivalDate)",
+            "gap_days" to ChronoUnit.DAYS.between(booking2DepartureDate.plusDays(1), booking4ArrivalDate).toInt(),
+          ),
+          mutableMapOf<String, Any?>(
+            "probation_region" to premises.probationRegion.name,
+            "pdu_name" to probationDeliveryUnit.name,
+            "premises_name" to premises.name,
+            "room_name" to "room2",
+            "gap" to "[${booking4DepartureDate.plusDays(1)},$today)",
+            "gap_days" to ChronoUnit.DAYS.between(booking4DepartureDate.plusDays(1), LocalDate.now()).toInt(),
+          ),
+        )
+
+        assertThat(gapRangesReport).isEqualTo(expectedGapRangesReport)
       }
     }
   }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
@@ -45,6 +46,7 @@ class Cas3ReportService(
   private val bedUsageRepository: BedUsageRepository,
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
   @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
+  private val cas3BookingGapReportRepository: Cas3BookingGapReportRepository,
 ) {
 
   fun createCas3ApplicationReferralsReport(
@@ -168,6 +170,11 @@ class Cas3ReportService(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),
       )
+  }
+
+  fun createBookingGapRangesReport(): MutableList<MutableMap<String, Any>> {
+    return cas3BookingGapReportRepository
+      .generateBookingGapRangesReport()
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
