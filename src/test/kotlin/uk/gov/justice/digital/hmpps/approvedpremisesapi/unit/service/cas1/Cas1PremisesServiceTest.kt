@@ -61,7 +61,7 @@ class Cas1PremisesServiceTest {
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
       every { premisesService.getBedCount(premises) } returns 56
-      every { cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
+      every { cas1OutOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
 
       val result = service.getPremisesSummary(PREMISES_ID)
 

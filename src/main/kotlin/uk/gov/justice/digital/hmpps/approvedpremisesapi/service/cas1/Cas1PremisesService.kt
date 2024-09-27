@@ -20,7 +20,7 @@ class Cas1PremisesService(
       ?: return CasResult.NotFound("premises", premisesId.toString())
 
     val bedCount = premisesService.getBedCount(premise)
-    val outOfServiceBedsCount = cas1OutOfServiceBedService.getActiveOutOfServiceBedsCountForPremisesId(premisesId)
+    val outOfServiceBedsCount = cas1OutOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
 
     return CasResult.Success(
       Cas1PremisesSummaryInfo(

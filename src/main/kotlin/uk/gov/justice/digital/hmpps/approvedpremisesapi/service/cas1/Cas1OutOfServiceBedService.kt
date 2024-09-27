@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
@@ -276,7 +277,7 @@ class Cas1OutOfServiceBedService(
     val excludeCurrent = !temporality.contains(Temporality.current)
     val excludeFuture = !temporality.contains(Temporality.future)
 
-    val page = outOfServiceBedRepository.findOutOfServiceBeds(
+    val page = outOfServiceBedRepository.findOutOfServiceBedIds(
       premisesId,
       apAreaId,
       excludePast,
@@ -292,7 +293,16 @@ class Cas1OutOfServiceBedService(
 
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 
-  fun getActiveOutOfServiceBedsCountForPremisesId(premisesId: UUID) = outOfServiceBedRepository.countAllActiveForPremisesId(premisesId)
+  fun getCurrentOutOfServiceBedsCountForPremisesId(premisesId: UUID): Int {
+    return outOfServiceBedRepository.findOutOfServiceBedIds(
+      premisesId = premisesId,
+      apAreaId = null,
+      excludePast = true,
+      excludeCurrent = false,
+      excludeFuture = true,
+      pageable = Pageable.unpaged(),
+    ).size
+  }
 
   fun getOutOfServiceBedWithConflictingDates(
     startDate: LocalDate,
