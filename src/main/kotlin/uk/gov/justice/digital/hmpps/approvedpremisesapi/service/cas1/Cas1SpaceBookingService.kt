@@ -288,6 +288,7 @@ class Cas1SpaceBookingService(
     val page = cas1SpaceBookingRepository.search(
       filterCriteria.residency?.name,
       filterCriteria.crnOrName,
+      null,
       premisesId,
       pageCriteria.toPageableOrAllPages(
         sortByConverter = when (pageCriteria.sortBy) {

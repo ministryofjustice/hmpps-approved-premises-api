@@ -50,6 +50,12 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
             (b.crn ILIKE :crnOrName) OR
             (apa.name ILIKE '%' || :crnOrName || '%')
         ) 
+      ) AND
+      (
+        :workerStaffCode IS NULL OR 
+        (
+            (b.key_worker_staff_code = :workerStaffCode)
+        ) 
       )
     """,
     nativeQuery = true,
@@ -57,6 +63,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   fun search(
     residency: String?,
     crnOrName: String?,
+    workerStaffCode: String?,
     premisesId: UUID,
     pageable: Pageable?,
   ): Page<Cas1SpaceBookingSearchResult>

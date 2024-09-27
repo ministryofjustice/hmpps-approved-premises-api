@@ -364,6 +364,7 @@ class Cas1SpaceBookingServiceTest {
         spaceBookingRepository.search(
           "current",
           "theCrnOrName",
+          "theKeyworker",
           PREMISES_ID,
           capture(pageableCaptor),
         )
