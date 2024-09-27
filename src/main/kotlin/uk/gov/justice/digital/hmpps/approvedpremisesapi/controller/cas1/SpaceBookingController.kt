@@ -68,6 +68,7 @@ class SpaceBookingController(
     premisesId: UUID,
     residency: Cas1SpaceBookingResidency?,
     crnOrName: String?,
+    keyWorkerStaffCode: String?,
     sortDirection: SortDirection?,
     sortBy: Cas1SpaceBookingSummarySortField?,
     page: Int?,
@@ -80,6 +81,7 @@ class SpaceBookingController(
       SpaceBookingFilterCriteria(
         residency = residency,
         crnOrName = crnOrName,
+        keyWorkerStaffCode = keyWorkerStaffCode,
       ),
       PageCriteria(
         sortBy = sortBy ?: Cas1SpaceBookingSummarySortField.personName,

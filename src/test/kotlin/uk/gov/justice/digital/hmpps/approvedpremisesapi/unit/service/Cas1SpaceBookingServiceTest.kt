@@ -329,6 +329,7 @@ class Cas1SpaceBookingServiceTest {
         Cas1SpaceBookingService.SpaceBookingFilterCriteria(
           residency = null,
           crnOrName = null,
+          keyWorkerStaffCode = null,
         ),
         PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
           .produce(),
@@ -364,6 +365,7 @@ class Cas1SpaceBookingServiceTest {
         spaceBookingRepository.search(
           "current",
           "theCrnOrName",
+          "keyWorkerStaffCode",
           PREMISES_ID,
           capture(pageableCaptor),
         )
@@ -374,6 +376,7 @@ class Cas1SpaceBookingServiceTest {
         Cas1SpaceBookingService.SpaceBookingFilterCriteria(
           residency = Cas1SpaceBookingResidency.current,
           crnOrName = "theCrnOrName",
+          keyWorkerStaffCode = "keyWorkerStaffCode",
         ),
         PageCriteriaFactory(inputSortField).produce(),
       )

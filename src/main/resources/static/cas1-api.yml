@@ -621,6 +621,12 @@ paths:
           description: Partial search on CRN or Name
           schema:
             type: string
+        - name: keyWorkerStaffCode
+          in: query
+          required: false
+          description: Staff Code of the key worker to show bookings for
+          schema:
+            type: string
         - name: sortDirection
           in: query
           required: false

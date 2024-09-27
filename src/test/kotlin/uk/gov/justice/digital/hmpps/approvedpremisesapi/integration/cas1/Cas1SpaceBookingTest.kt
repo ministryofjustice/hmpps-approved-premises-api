@@ -300,13 +300,16 @@ class Cas1SpaceBookingTest {
     lateinit var currentSpaceBooking1: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
-    lateinit var upcomingSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var upcomingSpaceBookingWithKeyWorker: Cas1SpaceBookingEntity
     lateinit var upcomingCancelledSpaceBooking: Cas1SpaceBookingEntity
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
+
+    lateinit var keyWorker: UserEntity
 
     @BeforeAll
     fun setupTestData() {
       val region = `Given a Probation Region`()
+      keyWorker = `Given a User`().first
 
       premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -370,7 +373,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(null)
       }
 
-      upcomingSpaceBooking = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming", tier = "U") {
+      upcomingSpaceBookingWithKeyWorker = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming", tier = "U") {
         withPremises(premisesWithBookings)
         withExpectedArrivalDate(LocalDate.parse("2023-01-01"))
         withExpectedDepartureDate(LocalDate.parse("2023-02-01"))
@@ -378,9 +381,9 @@ class Cas1SpaceBookingTest {
         withActualDepartureDateTime(null)
         withCanonicalArrivalDate(LocalDate.parse("2023-01-01"))
         withCanonicalDepartureDate(LocalDate.parse("2023-02-01"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(null)
+        withKeyworkerName(keyWorker.name)
+        withKeyworkerStaffCode(keyWorker.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
       }
 
       upcomingCancelledSpaceBooking = createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tier = "U") {
@@ -558,6 +561,27 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(1)
       assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+    }
+
+    @Test
+    fun `Filter on Key Worker Staff Code`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerStaffCode=${keyWorker.deliusStaffCode}&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(1)
+      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+
+      val spaceBookingKeyWorker = response[0].keyWorkerAllocation!!.keyWorker
+
+      assertThat(spaceBookingKeyWorker.name).isEqualTo(keyWorker.name)
+      assertThat(spaceBookingKeyWorker.code).isEqualTo(keyWorker.deliusStaffCode)
     }
 
     @Test
