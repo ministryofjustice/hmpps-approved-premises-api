@@ -4,9 +4,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 
 @Component
 class Cas1ApAreaMappingService(
@@ -45,8 +44,8 @@ class Cas1ApAreaMappingService(
 
   fun determineApArea(
     usersProbationRegion: ProbationRegionEntity,
-    deliusUser: StaffUserDetails,
-  ): ApAreaEntity = determineApArea(usersProbationRegion, deliusUser.getTeamCodes(), deliusUser.username)
+    deliusUser: StaffDetail,
+  ): ApAreaEntity = determineApArea(usersProbationRegion, deliusUser.teamCodes(), deliusUser.username)
 
   fun determineApArea(
     usersProbationRegion: ProbationRegionEntity,

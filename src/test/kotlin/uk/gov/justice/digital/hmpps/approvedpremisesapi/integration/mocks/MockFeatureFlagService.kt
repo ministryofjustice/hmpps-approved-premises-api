@@ -34,6 +34,4 @@ class MockFeatureFlagService(
   override fun getBooleanFlag(key: String): Boolean {
     return testOverrides.getOrDefault(key, featureFlags.getOrDefault(key, false))
   }
-
-  override fun isUseApAndDeliusToUpdateUsersEnabled(): Boolean = getBooleanFlag("use-ap-and-delius-to-update-users")
 }

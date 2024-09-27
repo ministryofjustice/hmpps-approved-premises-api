@@ -8,8 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundStaffUserDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockNotFoundStaffDetailCall
 
 class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
@@ -33,14 +32,14 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .withUsername(userOne.deliusUsername)
         .withStaffCode("STAFFCODE1")
         .produce()
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffuserDetail1)
+
     ApDeliusContext_addStaffDetailResponse(staffuserDetail1.toStaffDetail())
 
     val staffUserDetail2 = StaffUserDetailsFactory()
       .withUsername(userTwo.deliusUsername)
       .withStaffCode("STAFFCODE2")
       .produce()
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetail2)
+
     ApDeliusContext_addStaffDetailResponse(staffUserDetail2.toStaffDetail())
 
     val startTime = System.currentTimeMillis()
@@ -57,7 +56,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
   }
 
   @Test
-  fun `Failure to update individual user does not stop processing`() {
+  fun `Failure to update individual user does not stop processing - Update all users`() {
     val probationRegion = `Given a Probation Region`()
 
     val userOne = userEntityFactory.produceAndPersist {
@@ -72,14 +71,13 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    CommunityAPI_mockNotFoundStaffUserDetailsCall(userOne.deliusUsername)
+    ApDeliusContext_mockNotFoundStaffDetailCall(userOne.deliusUsername)
 
     val staffUserDetail = StaffUserDetailsFactory()
       .withUsername(userTwo.deliusUsername)
       .withStaffCode("STAFFCODE2")
       .produce()
 
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetail)
     ApDeliusContext_addStaffDetailResponse(staffUserDetail.toStaffDetail())
 
     migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi)

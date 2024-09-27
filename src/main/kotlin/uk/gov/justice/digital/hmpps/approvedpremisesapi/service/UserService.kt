@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -56,7 +55,6 @@ class UserService(
   private val requestContextService: RequestContextService,
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
-  private val communityApiClient: CommunityApiClient,
   private val userRepository: UserRepository,
   private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
@@ -248,11 +246,7 @@ class UserService(
     user: UserEntity,
     forService: ServiceName,
   ): GetUserResponse {
-    if (featureFlagService.isUseApAndDeliusToUpdateUsersEnabled()) {
-      return updateUserByApprovedPremisesAndDeliusApi(user, forService)
-    } else {
-      return updateUserByCommunityApi(user, forService)
-    }
+    return updateUserByApprovedPremisesAndDeliusApi(user, forService)
   }
 
   private fun updateUserByApprovedPremisesAndDeliusApi(
@@ -274,33 +268,11 @@ class UserService(
     }
   }
 
-  @Deprecated(
-    message = "Deprecated as part of the move away from the community-api",
-    replaceWith = ReplaceWith("updateUserByApprovedPremisesAndDeliusApi"),
-  )
-  private fun updateUserByCommunityApi(
-    user: UserEntity,
-    forService: ServiceName,
-  ) = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
-    is ClientResult.Failure.StatusCode -> {
-      if (staffUserDetailsResponse.status == HttpStatus.NOT_FOUND) {
-        GetUserResponse.StaffRecordNotFound
-      } else {
-        staffUserDetailsResponse.throwException()
-      }
-    }
-    is ClientResult.Failure -> staffUserDetailsResponse.throwException()
-    is ClientResult.Success -> {
-      val deliusUser = staffUserDetailsResponse.body
-      GetUserResponse.Success(updateUserEntity(user, deliusUser, forService))
-    }
-  }
-
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun updateUserPduFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {
+  fun updateUserPduById(id: UUID): AuthorisableActionResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
-    val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+    val deliusUser = when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
@@ -352,41 +324,6 @@ class UserService(
     return userRepository.save(user)
   }
 
-  @Deprecated(
-    message = "Deprecated as part of the move away from the community-api",
-    replaceWith = ReplaceWith("updateUserEntity(user, staffDetail, service)"),
-  )
-  fun updateUserEntity(
-    user: UserEntity,
-    deliusUser: StaffUserDetails,
-    forService: ServiceName,
-  ): UserEntity {
-    user.name = deliusUser.staff.fullName
-    user.email = deliusUser.email.toString()
-    user.telephoneNumber = deliusUser.telephoneNumber
-    user.deliusStaffCode = deliusUser.staffCode
-    user.teamCodes = deliusUser.getTeamCodes()
-
-    deliusUser.probationArea.let { probationArea ->
-      findProbationRegionFromArea(probationArea.code)?.let { probationRegion ->
-        user.probationRegion = probationRegion
-      }
-    }
-
-    val pduResult = findDeliusUserLastPdu(deliusUser)
-    if (pduResult is CasSimpleResult.Success) {
-      user.probationDeliveryUnit = pduResult.value
-    }
-
-    if (forService == ServiceName.approvedPremises) {
-      val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, deliusUser)
-      user.apArea = apArea
-      user.cruManagementArea = apArea.defaultCruManagementArea
-    }
-
-    return userRepository.save(user)
-  }
-
   fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
     return userRepository.findWorkloadForUserIds(userIds).associate {
       it.getUserId() to UserWorkload(
@@ -422,7 +359,7 @@ class UserService(
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
     if (existingUser != null) return GetUserResponse.Success(existingUser)
 
-    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(normalisedUsername)
+    val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(normalisedUsername)
 
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
@@ -455,10 +392,10 @@ class UserService(
     val savedUser = userRepository.save(
       UserEntity(
         id = UUID.randomUUID(),
-        name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}",
+        name = staffUserDetails.name.deliusName(),
         deliusUsername = normalisedUsername,
         deliusStaffIdentifier = staffUserDetails.staffIdentifier,
-        deliusStaffCode = staffUserDetails.staffCode,
+        deliusStaffCode = staffUserDetails.code,
         email = staffUserDetails.email,
         telephoneNumber = staffUserDetails.telephoneNumber,
         applications = mutableListOf(),
@@ -473,7 +410,7 @@ class UserService(
         apArea = apArea,
         cruManagementArea = apArea.defaultCruManagementArea,
         cruManagementAreaOverride = null,
-        teamCodes = staffUserDetails.getTeamCodes(),
+        teamCodes = staffUserDetails.teamCodes(),
         createdAt = OffsetDateTime.now(),
         updatedAt = null,
       ),
@@ -503,31 +440,6 @@ class UserService(
 
     return CasSimpleResult.Failure(
       "PDU could not be determined for user ${staffDetail.username}. " +
-        "Considered ${activeTeamsNewestFirst.size} teams$teamsToLog",
-    )
-  }
-
-  @Deprecated(
-    message = "Deprecated as part of the move away from the community-api",
-    replaceWith = ReplaceWith("findDeliusUserLastPdu(staffDetails)"),
-  )
-  private fun findDeliusUserLastPdu(deliusUser: StaffUserDetails): CasSimpleResult<ProbationDeliveryUnitEntity> {
-    val activeTeams = deliusUser.teams?.filter { t -> t.endDate == null } ?: emptyList()
-    val activeTeamsNewestFirst = activeTeams.sortedByDescending { t -> t.startDate }
-
-    activeTeamsNewestFirst.forEach {
-      val probationDeliveryUnit = probationDeliveryUnitRepository.findByDeliusCode(it.borough.code)
-      if (probationDeliveryUnit != null) {
-        return CasSimpleResult.Success(probationDeliveryUnit)
-      }
-    }
-
-    val teamsToLog = activeTeamsNewestFirst.joinToString(",") {
-      " ${it.description} (${it.code}) with borough ${it.borough.description} (${it.borough.code})"
-    }
-
-    return CasSimpleResult.Failure(
-      "PDU could not be determined for user ${deliusUser.username}. " +
         "Considered ${activeTeamsNewestFirst.size} teams$teamsToLog",
     )
   }
