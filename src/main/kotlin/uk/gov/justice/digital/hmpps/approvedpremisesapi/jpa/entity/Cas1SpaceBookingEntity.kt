@@ -38,17 +38,23 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
       (
-        :residency IS NULL OR (
+        cast(:residency as text) IS NULL OR (
           (:residency = 'upcoming' AND b.actual_arrival_date_time IS NULL) OR
           (:residency = 'current' AND b.actual_arrival_date_time IS NOT NULL and b.actual_departure_date_time IS NULL) OR
           (:residency = 'historic' AND b.actual_departure_date_time IS NOT NULL)
         ) 
       ) AND
       (
-        :crnOrName IS NULL OR 
+        cast(:crnOrName as text) IS NULL OR 
         (
             (b.crn ILIKE :crnOrName) OR
             (apa.name ILIKE '%' || :crnOrName || '%')
+        ) 
+      ) AND
+      (
+        cast(:keyWorkerStaffCode as text) IS NULL OR 
+        (
+            (b.key_worker_staff_code = :keyWorkerStaffCode)
         ) 
       )
     """,
@@ -57,6 +63,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   fun search(
     residency: String?,
     crnOrName: String?,
+    keyWorkerStaffCode: String?,
     premisesId: UUID,
     pageable: Pageable?,
   ): Page<Cas1SpaceBookingSearchResult>
