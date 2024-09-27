@@ -392,6 +392,7 @@ components:
       enum:
         - upcoming
         - current
+        - historic
     Cas1KeyWorkerAllocation:
       type: object
       properties:
