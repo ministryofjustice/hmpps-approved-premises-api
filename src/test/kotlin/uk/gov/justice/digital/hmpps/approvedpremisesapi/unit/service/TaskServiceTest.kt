@@ -308,6 +308,7 @@ class TaskServiceTest {
 
     val isAllocated = true
     val apAreaId = UUID.randomUUID()
+    val cruManagementAreaId = UUID.randomUUID()
 
     val assessments = List(3) { generateAssessment() }
     val placementApplications = List(4) { generatePlacementApplication() }
@@ -367,6 +368,7 @@ class TaskServiceTest {
       taskRepositoryMock.getAll(
         isAllocated,
         apAreaId,
+        cruManagementAreaId,
         taskEntityTypes.map { it.name },
         allocatedToUserId,
         requiredQualification.value,
@@ -387,6 +389,7 @@ class TaskServiceTest {
       TaskService.TaskFilterCriteria(
         AllocatedFilter.allocated,
         apAreaId,
+        cruManagementAreaId,
         taskEntityTypes,
         allocatedToUserId,
         requiredQualification,

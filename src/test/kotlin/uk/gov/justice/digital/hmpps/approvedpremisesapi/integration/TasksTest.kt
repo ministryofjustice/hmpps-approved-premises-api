@@ -38,11 +38,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.REJECTED
@@ -578,6 +580,154 @@ class TasksTest {
 
         webTestClient.get()
           .uri("/tasks?apAreaId=${apArea.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+    }
+
+    @Nested
+    inner class FilterByCruManagementArea : InitialiseDatabasePerClassTestBase() {
+      private lateinit var tasks: Map<TaskType, List<Task>>
+
+      lateinit var jwt: String
+      lateinit var cruArea: Cas1CruManagementAreaEntity
+
+      @Autowired
+      lateinit var taskTransformer: TaskTransformer
+
+      @BeforeAll
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
+
+              cruArea = `Given an CAS1 CRU Management Area`()
+              val cruArea2 = `Given an CAS1 CRU Management Area`()
+
+              val offenderSummaries = getOffenderSummaries(offenderDetails)
+
+              val (assessment) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                cruManagementArea = cruArea,
+              )
+
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                cruManagementArea = cruArea2,
+              )
+
+              val placementApplication = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                cruManagementArea = cruArea,
+              )
+
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                cruManagementArea = cruArea2,
+              )
+
+              val (placementRequest) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                cruManagementArea = cruArea,
+              )
+
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                cruManagementArea = cruArea2,
+              )
+
+              val assessments = listOf(
+                taskTransformer.transformAssessmentToTask(
+                  assessment,
+                  offenderSummaries,
+                ),
+              )
+
+              val placementApplications = listOf(
+                taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication,
+                  offenderSummaries,
+                ),
+              )
+
+              val placementRequests = listOf(
+                taskTransformer.transformPlacementRequestToTask(
+                  placementRequest,
+                  offenderSummaries,
+                ),
+              )
+
+              tasks = mapOf(
+                TaskType.assessment to assessments,
+                TaskType.placementApplication to placementApplications,
+                TaskType.placementRequest to placementRequests,
+              )
+            }
+          }
+        }
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
+      fun `it filters by CRU area and task type`(taskType: TaskType) {
+        val expectedTasks = tasks[taskType]
+        val url = "/tasks?type=${taskType.value}&cruManagementAreaId=${cruArea.id}"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @Test
+      fun `it filters by all areas with no task type`() {
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!!,
+          tasks[TaskType.placementRequest]!!,
+          tasks[TaskType.placementApplication]!!,
+        ).flatten().sortedBy { it.dueDate }
+
+        webTestClient.get()
+          .uri("/tasks?cruManagementAreaId=${cruArea.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

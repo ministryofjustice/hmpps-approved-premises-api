@@ -49,6 +49,7 @@ class TaskService(
   data class TaskFilterCriteria(
     val allocatedFilter: AllocatedFilter?,
     val apAreaId: UUID?,
+    val cruManagementAreaId: UUID?,
     val types: List<TaskEntityType>,
     val allocatedToUserId: UUID?,
     val requiredQualification: UserQualification?,
@@ -135,6 +136,7 @@ class TaskService(
     return repoFunction(
       isAllocated,
       filterCriteria.apAreaId,
+      filterCriteria.cruManagementAreaId,
       taskTypes.map { it.name },
       filterCriteria.allocatedToUserId,
       filterCriteria.requiredQualification?.value,
