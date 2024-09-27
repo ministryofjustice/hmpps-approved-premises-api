@@ -6280,6 +6280,7 @@ components:
       enum:
         - sharedProperty
         - singleOccupancy
+        - wheelchairAccessible
     Cas1PremisesBasicSummary:
       type: object
       properties:

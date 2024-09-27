@@ -672,8 +672,7 @@ class BedSearchServiceTest {
         endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
-        filterBySharedProperty = false,
-        filterBySingleOccupancy = false,
+        premisesCharacteristicsIds = listOf(),
       )
     } returns repositorySearchResults
 
@@ -789,8 +788,7 @@ class BedSearchServiceTest {
         endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
-        filterBySharedProperty = false,
-        filterBySingleOccupancy = false,
+        premisesCharacteristicsIds = listOf(),
       )
     } returns repositorySearchResults
 

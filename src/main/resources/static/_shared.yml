@@ -5147,3 +5147,4 @@ components:
       enum:
         - sharedProperty
         - singleOccupancy
+        - wheelchairAccessible

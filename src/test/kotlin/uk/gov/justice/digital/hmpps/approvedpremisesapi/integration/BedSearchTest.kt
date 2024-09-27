@@ -815,58 +815,18 @@ class BedSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val sharedPropertyPropertyName = randomStringMultiCaseWithNumbers(10)
-        val singleOccupancyPropertyName = randomStringMultiCaseWithNumbers(10)
-        val menOnlyPropertyName = randomStringMultiCaseWithNumbers(10)
-
-        val premisesSharedPropertyCharacteristic = characteristicEntityFactory.produceAndPersist {
-          withName("Shared property")
-          withServiceScope("temporary-accommodation")
-          withModelScope("premises")
-          withPropertyName(sharedPropertyPropertyName)
-        }
-
-        val premisesSingleOccupancyCharacteristic = characteristicEntityFactory.produceAndPersist {
-          withName("Single occupancy")
-          withServiceScope("temporary-accommodation")
-          withModelScope("premises")
-          withPropertyName(singleOccupancyPropertyName)
-        }
-
-        val premisesMenOnlyCharacteristic = characteristicEntityFactory.produceAndPersist {
-          withName("Men only")
-          withServiceScope("temporary-accommodation")
-          withModelScope("premises")
-          withPropertyName(menOnlyPropertyName)
-        }
-
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics("Premises One", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSharedPropertyCharacteristic))
-
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics("Premises Two", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSingleOccupancyCharacteristic))
-
-        val premisesThree = createTemporaryAccommodationPremisesWithCharacteristics(
-          "Premises Three",
-          probationRegion,
+        val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          mutableListOf(premisesSharedPropertyCharacteristic, premisesMenOnlyCharacteristic),
+          BedSearchAttributes.sharedProperty,
         )
 
-        val premisesFour = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withName("Premises Four")
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withStatus(PropertyStatus.active)
-        }
-
-        val (roomOne, bedOne) = createBedspace(premisesOne, "Room One")
-
-        val (roomTwo, bedTwo) = createBedspace(premisesTwo, "Room Two")
-
-        val (roomThree, bedThree) = createBedspace(premisesThree, "Room Three")
-
-        val (roomFour, bedFour) = createBedspace(premisesFour, "Room Four")
+        val expextedPremisesOneBedOne = beds.first()
+        val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
+        val expextedPremisesTwoBedOne = beds.drop(1).first()
+        val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
+        val expextedPremisesThreeBedOne = beds.drop(2).first()
+        val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
 
         webTestClient.post()
           .uri("/beds/search")
@@ -887,40 +847,59 @@ class BedSearchTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               BedSearchResults(
-                resultsRoomCount = 2,
-                resultsPremisesCount = 2,
-                resultsBedCount = 2,
+                resultsRoomCount = 3,
+                resultsPremisesCount = 3,
+                resultsBedCount = 3,
                 results = listOf(
                   createTemporaryAccommodationBedSearchResult(
-                    premisesOne,
-                    roomOne,
-                    bedOne,
+                    expextedPremisesOneRoomOne.premises,
+                    expextedPremisesOneRoomOne,
+                    expextedPremisesOneBedOne,
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = sharedPropertyPropertyName,
+                        propertyName = null,
                         name = "Shared property",
                       ),
                     ),
                     overlaps = listOf(),
                   ),
                   createTemporaryAccommodationBedSearchResult(
-                    premisesThree,
-                    roomThree,
-                    bedThree,
+                    expextedPremisesTwoRoomOne.premises,
+                    expextedPremisesTwoRoomOne,
+                    expextedPremisesTwoBedOne,
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = sharedPropertyPropertyName,
+                        propertyName = null,
+                        name = "Men only",
+                      ),
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Shared property",
+                      ),
+                    ),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    expextedPremisesThreeRoomOne.premises,
+                    expextedPremisesThreeRoomOne,
+                    expextedPremisesThreeBedOne,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    listOf(
+                      CharacteristicPair(
+                        propertyName = null,
                         name = "Shared property",
                       ),
                       CharacteristicPair(
-                        propertyName = menOnlyPropertyName,
-                        name = "Men only",
+                        propertyName = null,
+                        name = "Wheelchair accessible",
                       ),
                     ),
                     overlaps = listOf(),
@@ -943,58 +922,18 @@ class BedSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val sharedPropertyPropertyName = randomStringMultiCaseWithNumbers(10)
-        val singleOccupancyPropertyName = randomStringMultiCaseWithNumbers(10)
-        val pubNearbyPropertyName = randomStringMultiCaseWithNumbers(10)
-
-        val premisesSharedPropertyCharacteristic = characteristicEntityFactory.produceAndPersist {
-          withName("Shared property")
-          withServiceScope("temporary-accommodation")
-          withModelScope("premises")
-          withPropertyName(sharedPropertyPropertyName)
-        }
-
-        val premisesSingleOccupancyCharacteristic = characteristicEntityFactory.produceAndPersist {
-          withName("Single occupancy")
-          withServiceScope("temporary-accommodation")
-          withModelScope("premises")
-          withPropertyName(singleOccupancyPropertyName)
-        }
-
-        val premisesPubNearbyCharacteristic = characteristicEntityFactory.produceAndPersist {
-          withName("Pub nearby")
-          withServiceScope("temporary-accommodation")
-          withModelScope("premises")
-          withPropertyName(pubNearbyPropertyName)
-        }
-
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
-          "Premises One",
-          probationRegion,
+        val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          mutableListOf(premisesSingleOccupancyCharacteristic, premisesPubNearbyCharacteristic),
+          BedSearchAttributes.singleOccupancy,
         )
 
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics("Premises Two", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSingleOccupancyCharacteristic))
-
-        val premisesThree = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withName("Premises Three")
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withStatus(PropertyStatus.active)
-        }
-
-        val premisesFour = createTemporaryAccommodationPremisesWithCharacteristics("Premises Four", probationRegion, localAuthorityArea, searchPdu, mutableListOf(premisesSharedPropertyCharacteristic))
-
-        val (roomOne, bedOne) = createBedspace(premisesOne, "Room One")
-
-        val (roomTwo, bedTwo) = createBedspace(premisesTwo, "Room Two")
-
-        val (roomThree, bedThree) = createBedspace(premisesThree, "Room Three")
-
-        val (roomFour, bedFour) = createBedspace(premisesFour, "Room Four")
+        val expextedPremisesOneBedOne = beds.first()
+        val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
+        val expextedPremisesTwoBedOne = beds.drop(1).first()
+        val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
+        val expextedPremisesThreeBedOne = beds.drop(2).first()
+        val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
 
         webTestClient.post()
           .uri("/beds/search")
@@ -1015,40 +954,166 @@ class BedSearchTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               BedSearchResults(
-                resultsRoomCount = 2,
-                resultsPremisesCount = 2,
-                resultsBedCount = 2,
+                resultsRoomCount = 3,
+                resultsPremisesCount = 3,
+                resultsBedCount = 3,
                 results = listOf(
                   createTemporaryAccommodationBedSearchResult(
-                    premisesOne,
-                    roomOne,
-                    bedOne,
+                    expextedPremisesOneRoomOne.premises,
+                    expextedPremisesOneRoomOne,
+                    expextedPremisesOneBedOne,
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = singleOccupancyPropertyName,
+                        propertyName = null,
                         name = "Single occupancy",
-                      ),
-                      CharacteristicPair(
-                        propertyName = pubNearbyPropertyName,
-                        name = "Pub nearby",
                       ),
                     ),
                     overlaps = listOf(),
                   ),
                   createTemporaryAccommodationBedSearchResult(
-                    premisesTwo,
-                    roomTwo,
-                    bedTwo,
+                    expextedPremisesThreeRoomOne.premises,
+                    expextedPremisesThreeRoomOne,
+                    expextedPremisesThreeBedOne,
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = singleOccupancyPropertyName,
+                        propertyName = null,
                         name = "Single occupancy",
+                      ),
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Wheelchair accessible",
+                      ),
+                    ),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    expextedPremisesTwoRoomOne.premises,
+                    expextedPremisesTwoRoomOne,
+                    expextedPremisesTwoBedOne,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    listOf(
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Women only",
+                      ),
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Single occupancy",
+                      ),
+                    ),
+                    overlaps = listOf(),
+                  ),
+                ),
+              ),
+            ),
+            true,
+          )
+      }
+    }
+
+    @Test
+    fun `Searching for a Temporary Accommodation Bedspace with wheelchair accessible returns only bedspaces in properties with wheelchair accessible`() {
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      `Given a User`(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val beds = createPremisesAndBedsWithCharacteristics(
+          localAuthorityArea,
+          searchPdu,
+          BedSearchAttributes.wheelchairAccessible,
+        )
+
+        val expextedPremisesOneBedOne = beds.first()
+        val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
+        val expextedPremisesTwoBedOne = beds.drop(1).first()
+        val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
+        val expextedPremisesThreeBedOne = beds.drop(2).first()
+        val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
+
+        webTestClient.post()
+          .uri("/beds/search")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            TemporaryAccommodationBedSearchParameters(
+              startDate = LocalDate.parse("2024-08-27"),
+              durationDays = 84,
+              serviceName = "temporary-accommodation",
+              probationDeliveryUnit = searchPdu.name,
+              attributes = listOf(BedSearchAttributes.wheelchairAccessible),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              BedSearchResults(
+                resultsRoomCount = 3,
+                resultsPremisesCount = 3,
+                resultsBedCount = 3,
+                results = listOf(
+                  createTemporaryAccommodationBedSearchResult(
+                    expextedPremisesOneRoomOne.premises,
+                    expextedPremisesOneRoomOne,
+                    expextedPremisesOneBedOne,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    listOf(
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Shared property",
+                      ),
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Wheelchair accessible",
+                      ),
+                    ),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    expextedPremisesTwoRoomOne.premises,
+                    expextedPremisesTwoRoomOne,
+                    expextedPremisesTwoBedOne,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    listOf(
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Single occupancy",
+                      ),
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Wheelchair accessible",
+                      ),
+                    ),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    expextedPremisesThreeRoomOne.premises,
+                    expextedPremisesThreeRoomOne,
+                    expextedPremisesThreeBedOne,
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    listOf(
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Wheelchair accessible",
                       ),
                     ),
                     overlaps = listOf(),
@@ -1655,6 +1720,129 @@ class BedSearchTest : IntegrationTestBase() {
         serviceName = ServiceName.temporaryAccommodation,
         overlaps = overlaps,
       )
+    }
+
+    private fun createPremisesAndBedsWithCharacteristics(
+      localAuthorityArea: LocalAuthorityAreaEntity,
+      pdu: ProbationDeliveryUnitEntity,
+      bedSearchAttribute: BedSearchAttributes,
+    ): List<BedEntity> {
+      val premisesSingleOccupancyCharacteristic = characteristicRepository.findByName("Single occupancy")
+      val premisesSharedPropertyCharacteristic = characteristicRepository.findByName("Shared property")
+      val premisesWheelchairAccessibleCharacteristic = characteristicRepository.findByName("Wheelchair accessible")
+      val premisesMenOnlyCharacteristic = characteristicRepository.findByName("Men only")
+      val premisesWomenOnlyCharacteristic = characteristicRepository.findByName("Women only")
+      val premisesPubNearbyCharacteristic = characteristicRepository.findByName("Pub nearby")
+      var beds = listOf<BedEntity>()
+
+      val premisesSingleOccupancy = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Single Occupancy",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesSingleOccupancyCharacteristic!!),
+      )
+
+      val (singleOccupancyRoomOne, singleOccupancyBedOne) = createBedspace(premisesSingleOccupancy, "Premises Single Occupancy Room One")
+
+      val premisesSharedProperty = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Shared Property",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesSharedPropertyCharacteristic!!),
+      )
+
+      val (sharedPropertyRoomOne, sharedPropertyBedOne) = createBedspace(premisesSharedProperty, "Premises Shared Property Room One")
+
+      val premisesWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Wheelchair Accessible",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesWheelchairAccessibleCharacteristic!!),
+      )
+
+      val (wheelchairAccessibleRoomOne, wheelchairAccessibleBedOne) = createBedspace(premisesWheelchairAccessible, "Premises Wheelchair Accessible Room One")
+
+      val premisesMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Men Only",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesMenOnlyCharacteristic!!),
+      )
+
+      val (premisesMenOnlyRoomOne, premisesMenOnlyBedOne) = createBedspace(premisesMenOnly, "Premises Men Only Room One")
+
+      val premisesWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Women Only",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesWomenOnlyCharacteristic!!),
+      )
+
+      val (premisesWomenOnlyRoomOne, premisesWomenOnlyBedOne) = createBedspace(premisesWomenOnly, "Premises Women Only Room One")
+
+      val premisesPubNearby = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Pub Nearby",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesPubNearbyCharacteristic!!),
+      )
+
+      val (premisesPubNearbyRoomOne, premisesPubNearbyBedOne) = createBedspace(premisesPubNearby, "Premises Pub Nearby Room One")
+
+      val premisesSingleOccupancyWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Single Occupancy - Women Only",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesWomenOnlyCharacteristic, premisesSingleOccupancyCharacteristic),
+      )
+
+      val (premisesSingleOccupancyWomenOnlyRoomOne, premisesSingleOccupancyWomenOnlyBedOne) = createBedspace(premisesSingleOccupancyWomenOnly, "Premises Single Occupancy Women Only Room One")
+
+      val premisesSharedPropertyMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Shared Property - Men Only",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesMenOnlyCharacteristic, premisesSharedPropertyCharacteristic),
+      )
+
+      val (premisesSharedPropertyMenOnlyRoomOne, premisesSharedPropertyMenOnlyBedOne) = createBedspace(premisesSharedPropertyMenOnly, "Premises Shared Property Men Only Room One")
+
+      val premisesSingleOccupancyWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Single Occupancy with Wheelchair Accessible",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesSingleOccupancyCharacteristic, premisesWheelchairAccessibleCharacteristic),
+      )
+
+      val (premisesSingleOccupancyWheelchairAccessibleRoomOne, premisesSingleOccupancyWheelchairAccessibleBedOne) =
+        createBedspace(premisesSingleOccupancyWheelchairAccessible, "Premises Single Occupancy with Wheelchair Accessible Room One")
+
+      val premisesSharedPropertyWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Premises Shared Property with Wheelchair Accessible",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesSharedPropertyCharacteristic, premisesWheelchairAccessibleCharacteristic),
+      )
+
+      val (premisesSharedPropertyWheelchairAccessibleRoomOne, premisesSharedPropertyWheelchairAccessibleBedOne) =
+        createBedspace(premisesSharedPropertyWheelchairAccessible, "Premises Shared Property with Wheelchair Accessible Room One")
+
+      when (bedSearchAttribute) {
+        BedSearchAttributes.singleOccupancy -> beds = listOf(singleOccupancyBedOne, premisesSingleOccupancyWomenOnlyBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
+        BedSearchAttributes.sharedProperty -> beds = listOf(sharedPropertyBedOne, premisesSharedPropertyMenOnlyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne)
+        BedSearchAttributes.wheelchairAccessible -> beds = listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne, wheelchairAccessibleBedOne)
+      }
+      return beds
     }
   }
 }

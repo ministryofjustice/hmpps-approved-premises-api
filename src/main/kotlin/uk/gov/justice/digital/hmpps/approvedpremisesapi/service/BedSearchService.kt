@@ -148,6 +148,19 @@ class BedSearchService(
           return@validated fieldValidationError
         }
 
+        val premisesCharacteristicsNames = propertyBedAttributes?.map {
+          when (it) {
+            BedSearchAttributes.singleOccupancy -> "Single occupancy"
+            BedSearchAttributes.sharedProperty -> "Shared property"
+            BedSearchAttributes.wheelchairAccessible -> "Wheelchair accessible"
+          }
+        }
+
+        val premisesCharacteristicIds = premisesCharacteristicsNames?.let {
+          val premisesCharacteristics = characteristicService.getCharacteristicsByNames(premisesCharacteristicsNames)
+          premisesCharacteristics.filter { it.isActive && it.matches(ServiceName.temporaryAccommodation.value, "premises") }.map { it.id }.toList()
+        } ?: emptyList()
+
         val endDate = startDate.plusDays(durationInDays.toLong() - 1)
 
         val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
@@ -155,8 +168,7 @@ class BedSearchService(
           startDate = startDate,
           endDate = endDate,
           probationRegionId = user.probationRegion.id,
-          filterBySharedProperty = propertyBedAttributes?.contains(BedSearchAttributes.sharedProperty) ?: false,
-          filterBySingleOccupancy = propertyBedAttributes?.contains(BedSearchAttributes.singleOccupancy) ?: false,
+          premisesCharacteristicIds,
         )
 
         val bedIds = candidateResults.map { it.bedId }
