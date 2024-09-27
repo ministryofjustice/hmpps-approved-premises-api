@@ -54,35 +54,39 @@ class UserTransformer(
     )
 
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
-    ServiceName.approvedPremises -> ApprovedPremisesUser(
-      id = jpa.id,
-      deliusUsername = jpa.deliusUsername,
-      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
-      email = jpa.email,
-      name = jpa.name,
-      telephoneNumber = jpa.telephoneNumber,
-      isActive = jpa.isActive,
-      qualifications = jpa.qualifications.map(::transformQualificationToApi),
-      permissions = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToPermissionApi).flatten().distinct(),
-      region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
-      service = "CAS1",
-      apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) } ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set"),
-      version = UserEntity.getVersionHashCode((jpa.roles.map { it.role })),
-    )
-    ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(
-      id = jpa.id,
-      deliusUsername = jpa.deliusUsername,
-      email = jpa.email,
-      name = jpa.name,
-      telephoneNumber = jpa.telephoneNumber,
-      isActive = jpa.isActive,
-      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformTemporaryAccommodationRoleToApi),
-      region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
-      probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
-      service = "CAS3",
-    )
+    ServiceName.approvedPremises -> transformCas1JpaToApi(jpa)
+    ServiceName.temporaryAccommodation -> transformCas3JpatoApi(jpa)
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
   }
+
+  fun transformCas1JpaToApi(jpa: UserEntity) = ApprovedPremisesUser(
+    id = jpa.id,
+    deliusUsername = jpa.deliusUsername,
+    roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
+    email = jpa.email,
+    name = jpa.name,
+    telephoneNumber = jpa.telephoneNumber,
+    isActive = jpa.isActive,
+    qualifications = jpa.qualifications.map(::transformQualificationToApi),
+    permissions = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToPermissionApi).flatten().distinct(),
+    region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+    service = "CAS1",
+    apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) } ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set"),
+    version = UserEntity.getVersionHashCode((jpa.roles.map { it.role })),
+  )
+
+  fun transformCas3JpatoApi(jpa: UserEntity) = TemporaryAccommodationUser(
+    id = jpa.id,
+    deliusUsername = jpa.deliusUsername,
+    email = jpa.email,
+    name = jpa.name,
+    telephoneNumber = jpa.telephoneNumber,
+    isActive = jpa.isActive,
+    roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformTemporaryAccommodationRoleToApi),
+    region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+    probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
+    service = "CAS3",
+  )
 
   fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse {
     return when (userResponse) {
@@ -134,6 +138,7 @@ class UserTransformer(
         UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
         UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
         UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.spaceBookingRecordKeyworker
         UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
         UserPermission.CAS1_PREMISES_VIEW_SUMMARY -> ApiUserPermission.premisesViewSummary
         UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers

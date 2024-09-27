@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service
@@ -29,13 +29,7 @@ class UsersController(
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
-    val getUserResponse = when (val result = userService.updateUser(id, xServiceName)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
-    }
-
-    return when (getUserResponse) {
+    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUser(id, xServiceName))) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
       is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName), HttpStatus.OK)
     }
@@ -128,11 +122,9 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val userEntity = when (val result = userService.updateUserRolesAndQualifications(id, userRolesAndQualifications)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
-    }
+    val userEntity = extractEntityFromCasResult(
+      userService.updateUserRolesAndQualifications(id, userRolesAndQualifications),
+    )
 
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises), HttpStatus.OK)
   }

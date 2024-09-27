@@ -158,7 +158,16 @@ class SpaceBookingController(
     bookingId: UUID,
     cas1AssignKeyWorker: Cas1AssignKeyWorker,
   ): ResponseEntity<Unit> {
-    return super.premisesPremisesIdSpaceBookingsBookingIdKeyworkerPost(premisesId, bookingId, cas1AssignKeyWorker)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER)
+
+    ensureEntityFromCasResultIsSuccess(
+      cas1SpaceBookingService.recordKeyWorkerForBooking(
+        premisesId,
+        bookingId,
+        cas1AssignKeyWorker,
+      ),
+    )
+    return ResponseEntity(HttpStatus.OK)
   }
 
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {

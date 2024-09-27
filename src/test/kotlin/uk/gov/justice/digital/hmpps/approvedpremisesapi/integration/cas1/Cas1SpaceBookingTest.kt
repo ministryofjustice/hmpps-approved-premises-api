@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
@@ -17,17 +18,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -919,6 +923,81 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+    }
+  }
+
+  @Nested
+  inner class RecordKeyWorker : InitialiseDatabasePerClassTestBase() {
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+    lateinit var keyWorker: UserEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      region = `Given a Probation Region`()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withQCode("QCODE")
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      keyWorker = `Given a User`().first
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerAssignedAt(Instant.now())
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1AssignKeyWorker(
+            keyWorker.deliusStaffCode,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Recording key worker returns OK`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val keyWorker = ContextStaffMemberFactory().produce()
+      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1AssignKeyWorker(
+            keyWorker.code,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
     }
   }
 

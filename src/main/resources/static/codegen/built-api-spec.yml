@@ -4073,7 +4073,8 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
     put:
-      summary: Update information about a specific user's roles and qualifications
+      summary: Update information about a specific user's roles and qualifications. Deprecated. Instead use PUT /cas1/user/{userid}
+      deprecated: true
       parameters:
         - name: X-Service-Name
           in: header
@@ -4108,7 +4109,8 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
     delete:
-      summary: Deletes the user
+      summary: Deletes the user. Deprecated. Instead use DELETE /cas1/user/{userid}
+      deprecated: true
       parameters:
         - name: id
           in: path
@@ -7628,6 +7630,7 @@ components:
         - cas1_space_booking_list
         - cas1_space_booking_record_arrival
         - cas1_space_booking_record_departure
+        - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_premises_view_summary
         - cas1_reports_view

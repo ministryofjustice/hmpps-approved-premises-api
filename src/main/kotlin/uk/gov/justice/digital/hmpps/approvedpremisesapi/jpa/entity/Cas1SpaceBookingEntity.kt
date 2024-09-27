@@ -123,9 +123,9 @@ data class Cas1SpaceBookingEntity(
   var canonicalArrivalDate: LocalDate,
   var canonicalDepartureDate: LocalDate,
   val crn: String,
-  val keyWorkerStaffCode: String?,
-  val keyWorkerName: String?,
-  val keyWorkerAssignedAt: Instant?,
+  var keyWorkerStaffCode: String?,
+  var keyWorkerName: String?,
+  var keyWorkerAssignedAt: Instant?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "departure_reason_id")
   var departureReason: DepartureReasonEntity?,

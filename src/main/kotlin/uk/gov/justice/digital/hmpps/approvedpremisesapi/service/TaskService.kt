@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -155,10 +156,10 @@ class TaskService(
     val assigneeUserResult = userService.updateUser(userToAllocateToId, ServiceName.approvedPremises)
 
     val assigneeUser =
-      if (assigneeUserResult is AuthorisableActionResult.Success &&
-        assigneeUserResult.entity is UserService.GetUserResponse.Success
+      if (assigneeUserResult is CasResult.Success &&
+        assigneeUserResult.value is UserService.GetUserResponse.Success
       ) {
-        assigneeUserResult.entity.user
+        assigneeUserResult.value.user
       } else {
         return AuthorisableActionResult.NotFound()
       }
