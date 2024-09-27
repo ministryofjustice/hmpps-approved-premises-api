@@ -1,0 +1,1 @@
+ALTER TABLE cas1_cru_management_areas ADD assessment_auto_allocation_username TEXT NULL;
