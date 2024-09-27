@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -61,6 +62,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -99,6 +101,9 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var apDeliusContextApiClient: ApDeliusContextApiClient
+
+  @Autowired
+  lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
   lateinit var referrerDetails: Pair<UserEntity, String>
   lateinit var referrerTeam: StaffUserTeamMembership
@@ -656,10 +661,30 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       duration = 12,
     )
 
-  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): List<PlacementApplication> {
+  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): List<PlacementApplicationEntity> {
     val placementApplications = createAndSubmitPlacementApplication(application, placementDates)
-    placementApplications.forEach { acceptPlacementApplication(it.id) }
-    return placementApplications
+    return placementApplications.map { placementApplication ->
+      val (matcher, _) = matcherDetails
+
+      cas1SimpleApiClient.placementApplicationReallocate(
+        integrationTestBase = this,
+        placementApplicationId = placementApplication.id,
+        NewReallocation(
+          userId = matcher.id,
+        ),
+      )
+
+      val reallocatedPlacementApp =
+        placementApplicationRepository.findByApplication(application)
+          .first {
+            it.reallocatedAt == null &&
+              it.placementDates.first().expectedArrival == placementApplication.placementDates.first().expectedArrival
+          }
+
+      acceptPlacementApplication(reallocatedPlacementApp.id)
+
+      reallocatedPlacementApp
+    }
   }
 
   private fun createPlacementApplication(application: ApprovedPremisesApplicationEntity): PlacementApplication {

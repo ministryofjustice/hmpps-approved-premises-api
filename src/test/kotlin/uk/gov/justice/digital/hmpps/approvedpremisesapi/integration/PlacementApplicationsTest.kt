@@ -713,8 +713,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
               assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
               assertThat(updatedPlacementApplication.submittedAt).isNotNull()
-              assertThat(updatedPlacementApplication.allocatedToUser!!.id).isEqualTo(matcherUser.id)
-              assertThat(updatedPlacementApplication.allocatedAt).isNotNull()
+              assertThat(updatedPlacementApplication.allocatedToUser).isNull()
 
               val createdPlacementDates = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)
 
@@ -732,9 +731,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               val recipient = placementApplicationEntity.createdByUser.email!!
               val templates = notifyConfig.templates
 
-              emailAsserter.assertEmailsRequestedCount(2)
+              emailAsserter.assertEmailsRequestedCount(1)
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2025-03-10"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2025-03-10"))
             }
           }
         }
@@ -804,21 +802,21 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               assertThat(updatedEntity1.placementDates[0].expectedArrival).isEqualTo(arrival1)
               assertThat(updatedEntity1.placementDates[0].duration).isEqualTo(duration1)
               assertThat(updatedEntity1.submittedAt).isNotNull()
-              assertThat(updatedEntity1.allocatedToUser!!.id).isEqualTo(matcherUser.id)
+              assertThat(updatedEntity1.allocatedToUser).isNull()
 
               val createdApp2Id = body[1].id
               val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
               assertThat(updatedEntity2.placementDates[0].expectedArrival).isEqualTo(arrival2)
               assertThat(updatedEntity2.placementDates[0].duration).isEqualTo(duration2)
               assertThat(updatedEntity2.submittedAt).isNotNull()
-              assertThat(updatedEntity2.allocatedToUser!!.id).isEqualTo(matcherUser.id)
+              assertThat(updatedEntity1.allocatedToUser).isNull()
 
               val createdApp3Id = body[2].id
               val updatedEntity3 = placementApplicationRepository.findByIdOrNull(createdApp3Id)!!
               assertThat(updatedEntity3.placementDates[0].expectedArrival).isEqualTo(arrival3)
               assertThat(updatedEntity3.placementDates[0].duration).isEqualTo(duration3)
               assertThat(updatedEntity3.submittedAt).isNotNull()
-              assertThat(updatedEntity3.allocatedToUser!!.id).isEqualTo(matcherUser.id)
+              assertThat(updatedEntity1.allocatedToUser).isNull()
 
               val recipient = placementApplicationEntity.createdByUser.email!!
               val templates = notifyConfig.templates
@@ -829,13 +827,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 expectedCount = 3,
               )
 
-              emailAsserter.assertEmailsRequestedCount(6)
+              emailAsserter.assertEmailsRequestedCount(3)
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-01-02"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2024-01-02"))
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-02-03"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2024-02-03"))
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-03-04"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2024-03-04"))
             }
           }
         }
@@ -997,7 +992,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
-    fun `accepting a placement application decision records the decision, creates and assigns a placement request and sends an email`(placementType: JpaPlacementType, isParole: Boolean) {
+    fun `accepting a placement application decision records the decision, creates a placement request and sends an email`(placementType: JpaPlacementType, isParole: Boolean) {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given a User` { user, jwt ->
@@ -1035,7 +1030,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       val createdPlacementApplication = createdPlacementRequests[0]
                       assertThat(updatedPlacementApplication.placementDates[0].placementRequest!!.id).isEqualTo(createdPlacementApplication.id)
 
-                      assertThat(createdPlacementApplication.allocatedToUser!!.id).isIn(listOf(matcher1.id, matcher2.id))
+                      assertThat(createdPlacementApplication.allocatedToUser).isNull()
                       assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
                       assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
                       assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)

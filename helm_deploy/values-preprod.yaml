@@ -85,8 +85,6 @@ generic-service:
     URL-TEMPLATES_API_CAS3_PERSON-DEPARTURE-UPDATED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/person-departure-updated/#eventId
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
 
-    USER-ALLOCATIONS_RULES_LEGACY-ALLOCATOR_ENABLED: false
-    USER-ALLOCATIONS_RULES_LEGACY-ALLOCATOR_PRIORITY: -1
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ENABLED: true
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_PRIORITY: 3
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: KATHRYNHALL1NPS

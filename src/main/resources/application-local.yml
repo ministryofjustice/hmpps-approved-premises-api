@@ -51,9 +51,6 @@ preemptive-cache-lock-duration-ms: 60000
 
 user-allocations:
   rules:
-    legacy-allocator:
-      enabled: false
-      priority: -1
     esap-assessments:
       enabled: true
       allocate-to-user: JIMSNOWLDAP

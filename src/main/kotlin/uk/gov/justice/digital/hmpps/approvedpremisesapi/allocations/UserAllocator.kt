@@ -30,12 +30,28 @@ class UserAllocator(
       selectUser = { suitableUsers -> userRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(suitableUsers) },
     )
 
+  @Deprecated(
+    """
+    This function was added to support the switch over from the Legacy behaviour to the
+    new allocation behaviour. The new allocation behaviour will never auto allocate a 
+    placement request, so this function will always return null
+  """,
+    replaceWith = ReplaceWith("remove any call to this function as it will always return null"),
+  )
   fun getUserForPlacementRequestAllocation(placementRequestEntity: PlacementRequestEntity): UserEntity? =
     getUserForAllocation(
       evaluate = { userAllocatorRule -> userAllocatorRule.evaluatePlacementRequest(placementRequestEntity) },
       selectUser = { suitableUsers -> userRepository.findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(suitableUsers) },
     )
 
+  @Deprecated(
+    """
+    This function was added to support the switch over from the Legacy behaviour to the
+    new allocation behaviour. The new allocation behaviour will never auto allocate a 
+    placement request, so this function will always return null
+  """,
+    replaceWith = ReplaceWith("remove any call to this function as it will always return null"),
+  )
   fun getUserForPlacementApplicationAllocation(placementApplicationEntity: PlacementApplicationEntity): UserEntity? =
     getUserForAllocation(
       evaluate = { userAllocatorRule -> userAllocatorRule.evaluatePlacementApplication(placementApplicationEntity) },
