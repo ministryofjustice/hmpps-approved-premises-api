@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
@@ -15,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
@@ -1332,6 +1332,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
   inner class Cas1CreateApplication {
 
     @Test
@@ -1591,6 +1592,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
   inner class Cas3CreateApplication {
 
     @Test
@@ -1872,295 +1874,452 @@ class ApplicationTest : IntegrationTestBase() {
   inner class Cas1SubmitApplication {
 
     @Test
-    fun `Submit emergency application returns 200, auto allocates the assessment, saves a domain event, emits an SNS event and email`() {
-      `Given a User`(
+    fun `Submit standard application does not auto allocate the assessment, sends emails and raises domain events`() {
+      val (submittingUser, jwt) = `Given a User`(
         probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "london")),
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
-        `Given a User`(
-          roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.PIPE),
-          staffUserDetailsConfigBlock = {
-            withUsername("LONDON_ASSESSOR")
+      )
+
+      val (offenderDetails, _) = `Given an Offender`()
+
+      val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withApplicationSchema(
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withDefaults()
           },
-        ) { assessorUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+        )
+        withCreatedByUser(submittingUser)
+      }.id
 
-            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withDefaults()
-            }
+      CommunityAPI_mockSuccessfulRegistrationsCall(
+        offenderDetails.otherIds.crn,
+        Registrations(
+          registrations = listOf(
+            RegistrationClientResponseFactory()
+              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
+              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withStartDate(LocalDate.parse("2022-09-06"))
+              .produce(),
+          ),
+        ),
+      )
 
-            approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withId(applicationId)
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(submittingUser)
-            }
+      APDeliusContext_mockSuccessfulCaseDetailCall(
+        offenderDetails.otherIds.crn,
+        CaseDetailFactory().produce(),
+      )
 
-            CommunityAPI_mockSuccessfulRegistrationsCall(
-              offenderDetails.otherIds.crn,
-              Registrations(
-                registrations = listOf(
-                  RegistrationClientResponseFactory()
-                    .withType(
-                      RegistrationKeyValue(
-                        code = "MAPP",
-                        description = "MAPPA",
-                      ),
-                    )
-                    .withRegisterCategory(
-                      RegistrationKeyValue(
-                        code = "A",
-                        description = "A",
-                      ),
-                    )
-                    .withRegisterLevel(
-                      RegistrationKeyValue(
-                        code = "1",
-                        description = "1",
-                      ),
-                    )
-                    .produce(),
-                ),
-              ),
-            )
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-            APDeliusContext_mockSuccessfulCaseDetailCall(
-              offenderDetails.otherIds.crn,
-              CaseDetailFactory().produce(),
-            )
+      webTestClient.post()
+        .uri("/applications/$applicationId/submission")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          SubmitApprovedPremisesApplication(
+            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            apType = ApType.normal,
+            translatedDocument = {},
+            isWomensApplication = false,
+            targetLocation = "SW1A 1AA",
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = SentenceTypeOption.nonStatutory,
+            type = "CAS1",
+            applicantUserDetails = Cas1ApplicationUserDetails(
+              "applicantName",
+              "applicantEmail",
+              "applicationTelephone",
+            ),
+            caseManagerIsNotApplicant = false,
+            caseManagerUserDetails = Cas1ApplicationUserDetails(
+              "cmName",
+              "cmEmail",
+              "cmTelephone",
+            ),
+            reasonForShortNotice = "reasonForShort",
+            reasonForShortNoticeOther = "reasonForShortOther",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
 
-            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-            snsDomainEventListener.clearMessages()
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.isWomensApplication).isFalse()
+      assertThat(persistedApplication.isPipeApplication).isFalse
+      assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
+      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+      assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
 
-            webTestClient.post()
-              .uri("/applications/$applicationId/submission")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                SubmitApprovedPremisesApplication(
-                  translatedDocument = {},
-                  isPipeApplication = true,
-                  isWomensApplication = false,
-                  isEmergencyApplication = true,
-                  isEsapApplication = true,
-                  targetLocation = "SW1A 1AA",
-                  releaseType = ReleaseTypeOption.licence,
-                  sentenceType = SentenceTypeOption.nonStatutory,
-                  type = "CAS1",
-                  applicantUserDetails = Cas1ApplicationUserDetails(
-                    "applicantName",
-                    "applicantEmail",
-                    "applicationTelephone",
-                  ),
-                  caseManagerIsNotApplicant = false,
-                  caseManagerUserDetails = Cas1ApplicationUserDetails(
-                    "cmName",
-                    "cmEmail",
-                    "cmTelephone",
-                  ),
-                  reasonForShortNotice = "reasonForShort",
-                  reasonForShortNoticeOther = "reasonForShortOther",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
+      val createdAssessment =
+        approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+      assertThat(createdAssessment.allocatedToUser).isNull()
+      assertThat(createdAssessment.createdFromAppeal).isFalse()
 
-            val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
+      domainEventAsserter.assertDomainEventStoreCount(applicationId, 1)
+      val persistedApplicationSubmittedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+      )
 
-            assertThat(persistedApplication.isWomensApplication).isFalse()
-            assertThat(persistedApplication.isPipeApplication).isTrue
-            assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
-            assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-            assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
+      assertThat(persistedApplicationSubmittedEvent.crn).isEqualTo(offenderDetails.otherIds.crn)
 
-            val createdAssessment =
-              approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
-            assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
-            assertThat(createdAssessment.createdFromAppeal).isFalse()
+      val emittedMessage = domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
-            val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
-            val persistedApplicationSubmittedEvent = persistedDomainEvents.firstOrNull { it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
-            val persistedAssessmentAllocatedEvent = persistedDomainEvents.firstOrNull { it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED }
+      val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
+      assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
+      assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/${persistedApplicationSubmittedEvent.id}")
+      assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
+      assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+        SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+        SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+      )
 
-            assertThat(persistedApplicationSubmittedEvent).isNotNull
-            assertThat(persistedApplicationSubmittedEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
-
-            assertThat(persistedAssessmentAllocatedEvent).isNotNull
-            assertThat(persistedAssessmentAllocatedEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
-
-            snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
-            val emittedMessage = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
-
-            val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
-            assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
-            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-            )
-
-            emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(
-              toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
-              templateId = notifyConfig.templates.assessmentAllocated,
-              replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
-            )
-            emailAsserter.assertEmailRequested(
-              toEmailAddress = submittingUser.email!!,
-              templateId = notifyConfig.templates.applicationSubmitted,
-              replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
-            )
-          }
-        }
-      }
+      emailAsserter.assertEmailsRequestedCount(1)
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = submittingUser.email!!,
+        templateId = notifyConfig.templates.applicationSubmitted,
+        replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
+      )
     }
 
     @Test
-    fun `Submit short notice application returns 200, auto allocates the assessment according to overridden ap area`() {
-      `Given a User`(
-        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "somewhere")),
+    fun `Submit emergency application auto allocates the assessment, sends emails and raises domain events`() {
+      val (submittingUser, jwt) = `Given a User`(
+        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "london")),
+      )
+
+      val (assessorUser, _) = `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
         staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
+          withUsername("LONDON_ASSESSOR")
         },
-      ) { submittingUser, jwt ->
-        `Given a User`(
-          roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.PIPE),
-          staffUserDetailsConfigBlock = {
-            withUsername("WALES_ASSESSOR")
+      )
+
+      val (offenderDetails, _) = `Given an Offender`()
+
+      val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withApplicationSchema(
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withDefaults()
           },
-        ) { assessorUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+        )
+        withCreatedByUser(submittingUser)
+      }.id
 
-            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withDefaults()
-            }
+      CommunityAPI_mockSuccessfulRegistrationsCall(
+        offenderDetails.otherIds.crn,
+        Registrations(
+          registrations = listOf(
+            RegistrationClientResponseFactory()
+              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
+              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withStartDate(LocalDate.parse("2022-09-06"))
+              .produce(),
+          ),
+        ),
+      )
 
-            approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withId(applicationId)
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(submittingUser)
-            }
+      APDeliusContext_mockSuccessfulCaseDetailCall(
+        offenderDetails.otherIds.crn,
+        CaseDetailFactory().produce(),
+      )
 
-            CommunityAPI_mockSuccessfulRegistrationsCall(
-              offenderDetails.otherIds.crn,
-              Registrations(
-                registrations = listOf(
-                  RegistrationClientResponseFactory()
-                    .withType(
-                      RegistrationKeyValue(
-                        code = "MAPP",
-                        description = "MAPPA",
-                      ),
-                    )
-                    .withRegisterCategory(
-                      RegistrationKeyValue(
-                        code = "A",
-                        description = "A",
-                      ),
-                    )
-                    .withRegisterLevel(
-                      RegistrationKeyValue(
-                        code = "1",
-                        description = "1",
-                      ),
-                    )
-                    .produce(),
-                ),
-              ),
-            )
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-            APDeliusContext_mockSuccessfulCaseDetailCall(
-              offenderDetails.otherIds.crn,
-              CaseDetailFactory().produce(),
-            )
+      webTestClient.post()
+        .uri("/applications/$applicationId/submission")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          SubmitApprovedPremisesApplication(
+            noticeType = Cas1ApplicationTimelinessCategory.emergency,
+            apType = ApType.esap,
+            translatedDocument = {},
+            isWomensApplication = false,
+            targetLocation = "SW1A 1AA",
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = SentenceTypeOption.nonStatutory,
+            type = "CAS1",
+            applicantUserDetails = Cas1ApplicationUserDetails(
+              "applicantName",
+              "applicantEmail",
+              "applicationTelephone",
+            ),
+            caseManagerIsNotApplicant = false,
+            caseManagerUserDetails = Cas1ApplicationUserDetails(
+              "cmName",
+              "cmEmail",
+              "cmTelephone",
+            ),
+            reasonForShortNotice = "reasonForShort",
+            reasonForShortNoticeOther = "reasonForShortOther",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
 
-            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-            val overriddenApArea = `Given an AP Area`(name = "wales")
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
 
-            webTestClient.post()
-              .uri("/applications/$applicationId/submission")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                SubmitApprovedPremisesApplication(
-                  translatedDocument = {},
-                  isPipeApplication = true,
-                  isWomensApplication = false,
-                  isEmergencyApplication = false,
-                  isEsapApplication = true,
-                  noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
-                  targetLocation = "SW1A 1AA",
-                  releaseType = ReleaseTypeOption.licence,
-                  sentenceType = SentenceTypeOption.nonStatutory,
-                  type = "CAS1",
-                  apAreaId = overriddenApArea.id,
-                  applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
-                  caseManagerIsNotApplicant = false,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
+      val createdAssessment =
+        approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+      assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
+      assertThat(createdAssessment.createdFromAppeal).isFalse()
 
-            val persistedApplication =
-              approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+      domainEventAsserter.assertDomainEventStoreCount(applicationId, 2)
+      val persistedApplicationSubmittedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+      )
+      val persistedAssessmentAllocatedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      )
 
-            assertThat(persistedApplication?.isWomensApplication).isFalse()
-            assertThat(persistedApplication?.isPipeApplication).isTrue
-            assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
-            assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-            assertThat(persistedApplication?.apArea?.id).isEqualTo(overriddenApArea.id)
+      assertThat(persistedApplicationSubmittedEvent).isNotNull
+      assertThat(persistedApplicationSubmittedEvent.crn).isEqualTo(offenderDetails.otherIds.crn)
 
-            val createdAssessment =
-              approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
-            assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
-          }
-        }
-      }
+      assertThat(persistedAssessmentAllocatedEvent).isNotNull
+      assertThat(persistedAssessmentAllocatedEvent.crn).isEqualTo(offenderDetails.otherIds.crn)
+
+      domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
+        templateId = notifyConfig.templates.assessmentAllocated,
+        replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
+      )
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = submittingUser.email!!,
+        templateId = notifyConfig.templates.applicationSubmitted,
+        replyToEmailId = persistedApplication.apArea!!.notifyReplyToEmailId,
+      )
+    }
+
+    @Test
+    fun `Submit short notice application auto allocates the assessment according to overridden ap area, sends emails and raises domain events`() {
+      val (submittingUser, jwt) = `Given a User`(
+        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "somewhere")),
+      )
+
+      val (assessorUser, _) = `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        staffUserDetailsConfigBlock = {
+          withUsername("WALES_ASSESSOR")
+        },
+      )
+
+      val (offenderDetails, _) = `Given an Offender`()
+
+      val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withApplicationSchema(
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withDefaults()
+          },
+        )
+        withCreatedByUser(submittingUser)
+      }.id
+
+      CommunityAPI_mockSuccessfulRegistrationsCall(
+        offenderDetails.otherIds.crn,
+        Registrations(
+          registrations = listOf(
+            RegistrationClientResponseFactory()
+              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
+              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withStartDate(LocalDate.parse("2022-09-06"))
+              .produce(),
+          ),
+        ),
+      )
+
+      APDeliusContext_mockSuccessfulCaseDetailCall(
+        offenderDetails.otherIds.crn,
+        CaseDetailFactory().produce(),
+      )
+
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+      val overriddenApArea = `Given an AP Area`(name = "wales")
+
+      webTestClient.post()
+        .uri("/applications/$applicationId/submission")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          SubmitApprovedPremisesApplication(
+            noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+            apType = ApType.pipe,
+            translatedDocument = {},
+            isWomensApplication = false,
+            targetLocation = "SW1A 1AA",
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = SentenceTypeOption.nonStatutory,
+            type = "CAS1",
+            apAreaId = overriddenApArea.id,
+            applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+            caseManagerIsNotApplicant = false,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
+
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.shortNotice)
+      assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
+
+      val createdAssessment =
+        approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+      assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
+
+      domainEventAsserter.assertDomainEventStoreCount(applicationId, 2)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+      )
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      )
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
+        templateId = notifyConfig.templates.assessmentAllocated,
+        replyToEmailId = overriddenApArea.notifyReplyToEmailId,
+      )
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = submittingUser.email!!,
+        templateId = notifyConfig.templates.applicationSubmitted,
+        replyToEmailId = overriddenApArea.notifyReplyToEmailId,
+      )
+    }
+
+    @Test
+    fun `Submit esap application auto allocates the assessment according to esap assessor configuration, sends emails and raises domain events`() {
+      val (submittingUser, jwt) = `Given a User`(
+        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "somewhere")),
+      )
+
+      val (esapAssessorUser, _) = `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        staffUserDetailsConfigBlock = {
+          withUsername("ESAP_ASSESSOR")
+        },
+      )
+
+      val (offenderDetails, _) = `Given an Offender`()
+
+      val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withApplicationSchema(
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withDefaults()
+          },
+        )
+        withCreatedByUser(submittingUser)
+      }.id
+
+      CommunityAPI_mockSuccessfulRegistrationsCall(
+        offenderDetails.otherIds.crn,
+        Registrations(
+          registrations = listOf(
+            RegistrationClientResponseFactory()
+              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
+              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withStartDate(LocalDate.parse("2022-09-06"))
+              .produce(),
+          ),
+        ),
+      )
+
+      APDeliusContext_mockSuccessfulCaseDetailCall(
+        offenderDetails.otherIds.crn,
+        CaseDetailFactory().produce(),
+      )
+
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+      val overriddenApArea = `Given an AP Area`(name = "wales")
+
+      webTestClient.post()
+        .uri("/applications/$applicationId/submission")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          SubmitApprovedPremisesApplication(
+            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            apType = ApType.esap,
+            translatedDocument = {},
+            isWomensApplication = false,
+            targetLocation = "SW1A 1AA",
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = SentenceTypeOption.nonStatutory,
+            type = "CAS1",
+            apAreaId = overriddenApArea.id,
+            applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+            caseManagerIsNotApplicant = false,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
+
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
+
+      val createdAssessment =
+        approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+      assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(esapAssessorUser.id)
+
+      domainEventAsserter.assertDomainEventStoreCount(applicationId, 2)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+      )
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      )
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
+        templateId = notifyConfig.templates.assessmentAllocated,
+        replyToEmailId = overriddenApArea.notifyReplyToEmailId,
+      )
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = submittingUser.email!!,
+        templateId = notifyConfig.templates.applicationSubmitted,
+        replyToEmailId = overriddenApArea.notifyReplyToEmailId,
+      )
     }
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400 without persisting domain events`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
+      `Given a User` { submittingUser, jwt ->
         `Given a User`(
           roles = listOf(UserRole.CAS1_ASSESSOR),
-          qualifications = listOf(UserQualification.PIPE),
         ) { _, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withDefaults()
             }
 
-            approvedPremisesApplicationEntityFactory.produceAndPersist {
+            val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
               withData(
@@ -2171,7 +2330,7 @@ class ApplicationTest : IntegrationTestBase() {
               }
             """,
               )
-            }
+            }.id
 
             CommunityAPI_mockSuccessfulRegistrationsCall(
               offenderDetails.otherIds.crn,

@@ -183,7 +183,8 @@ user-allocations:
   rules:
     esap-assessments:
       enabled: true
-      allocate-to-user: JIMSNOWLDAP
+      allocate-to-user: ESAP_ASSESSOR
+      priority: 3
     emergency-and-short-notice-assessments:
       enabled: true
       allocate-to-users:
@@ -194,8 +195,10 @@ user-allocations:
         south-east-eastern: JIMSNOWLDAP
         south-west-south central: JIMSNOWLDAP
         wales: WALES_ASSESSOR
+      priority: 2
     appealed-assessments:
       enabled: true
+      priority: 0
 
 notify:
   emailaddresses:
