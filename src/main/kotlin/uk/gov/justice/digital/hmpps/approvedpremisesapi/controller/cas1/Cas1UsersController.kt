@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -48,10 +47,8 @@ class Cas1UsersController(
     val userEntity = extractEntityFromCasResult(
       userService.updateUser(
         id,
-        UserRolesAndQualifications(
-          cas1UpdateUser.roles,
-          cas1UpdateUser.qualifications,
-        ),
+        cas1UpdateUser.roles,
+        cas1UpdateUser.qualifications,
       ),
     )
 

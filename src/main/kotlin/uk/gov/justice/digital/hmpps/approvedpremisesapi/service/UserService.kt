@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -205,7 +204,8 @@ class UserService(
 
   fun updateUser(
     id: UUID,
-    updatedUserRolesAndQualifications: UserRolesAndQualifications,
+    roles: List<ApprovedPremisesUserRole>,
+    qualifications: List<APIUserQualification>,
   ): CasResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
 
@@ -214,8 +214,8 @@ class UserService(
 
     return updateUserRolesAndQualificationsForUser(
       user = user,
-      roles = updatedUserRolesAndQualifications.roles,
-      qualifications = updatedUserRolesAndQualifications.qualifications,
+      roles = roles,
+      qualifications = qualifications,
     )
   }
 

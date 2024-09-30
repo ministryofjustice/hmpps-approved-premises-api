@@ -127,7 +127,11 @@ class UsersController(
     }
 
     val userEntity = extractEntityFromCasResult(
-      userService.updateUser(id, userRolesAndQualifications),
+      userService.updateUser(
+        id = id,
+        roles = userRolesAndQualifications.roles,
+        qualifications = userRolesAndQualifications.qualifications,
+      ),
     )
 
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises), HttpStatus.OK)
