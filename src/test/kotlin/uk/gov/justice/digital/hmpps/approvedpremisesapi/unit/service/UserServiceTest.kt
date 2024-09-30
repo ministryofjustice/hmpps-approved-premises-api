@@ -39,10 +39,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository.RoleAssignmentByUsername
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -968,44 +970,44 @@ class UserServiceTest {
   @Nested
   inner class UpdateUserRolesAndQualifications {
 
-    private val userService = mockk<UserService>()
-
     private val userFactory = UserEntityFactory()
       .withDefaults()
 
     @Test
     fun `updates a user with given role`() {
-      every { userService.updateUserRolesAndQualificationsForUser(any(), any(), any()) } answers { callOriginal() }
-      val user = userFactory.produce()
+      val userId = UUID.randomUUID()
 
-      val assessorRole = ApprovedPremisesUserRole.assessor
-      val assessorRoleAdmin = ApprovedPremisesUserRole.roleAdmin
+      val user = userFactory
+        .withId(userId)
+        .produce()
 
-      every { userService.clearRolesForService(user, ServiceName.approvedPremises) } returns Unit
-      every { userService.clearQualifications(user) } returns Unit
-      every { userService.addRoleToUser(user, any()) } returns Unit
-      every { userService.addQualificationToUser(user, any()) } returns Unit
+      user.roles.add(
+        UserRoleAssignmentEntityFactory().withUser(user).withRole(UserRole.CAS1_USER_MANAGER).produce(),
+      )
 
-      val roles = listOf(assessorRole, assessorRoleAdmin)
-      val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
+      user.qualifications.add(
+        UserQualificationAssignmentEntityFactory().withUser(user).withQualification(UserQualification.ESAP).produce(),
+      )
 
-      val result = userService.updateUserRolesAndQualificationsForUser(user, roles, qualifications)
+      every { mockUserRepository.findByIdOrNull(userId) } returns user
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+      every { mockUserQualificationAssignmentRepository.deleteAllById(any()) } returns Unit
+      every { mockUserRoleAssignmentRepository.delete(any()) } answers { it.invocation.args[0] as UserRoleAssignmentEntity }
+      every { mockUserRoleAssignmentRepository.save(any()) } answers { it.invocation.args[0] as UserRoleAssignmentEntity }
+      every { mockUserQualificationAssignmentRepository.save(any()) } answers { it.invocation.args[0] as UserQualificationAssignmentEntity }
+
+      val result = userService.updateUser(
+        id = userId,
+        roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.roleAdmin),
+        qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe),
+      )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-
-      val entity = result.value
+      val entity = (result as CasResult.Success).value
 
       assertThat(entity.id).isEqualTo(user.id)
-
-      verify(exactly = 1) { userService.clearRolesForService(user, ServiceName.approvedPremises) }
-      verify(exactly = 1) { userService.clearQualifications(user) }
-      verify(exactly = 2) { userService.addRoleToUser(user, any()) }
-      verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ASSESSOR) }
-      verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ADMIN) }
-      verify(exactly = 2) { userService.addQualificationToUser(user, any()) }
-      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.EMERGENCY) }
-      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.PIPE) }
+      assertThat(entity.roles.map { it.role }).containsExactlyInAnyOrder(UserRole.CAS1_ASSESSOR, UserRole.CAS1_ADMIN)
+      assertThat(entity.qualifications.map { it.qualification }).containsExactlyInAnyOrder(UserQualification.EMERGENCY, UserQualification.PIPE)
     }
   }
 

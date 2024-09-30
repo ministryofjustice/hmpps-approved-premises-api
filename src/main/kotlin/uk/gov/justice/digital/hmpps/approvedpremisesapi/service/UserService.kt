@@ -219,7 +219,7 @@ class UserService(
     )
   }
 
-  fun updateUserRolesAndQualificationsForUser(
+  private fun updateUserRolesAndQualificationsForUser(
     user: UserEntity,
     roles: List<ApprovedPremisesUserRole>,
     qualifications: List<APIUserQualification>,
