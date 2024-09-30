@@ -11,14 +11,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Out of Service Bed`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1PremisesTest : IntegrationTestBase() {
@@ -67,9 +66,10 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .isNotFound
     }
 
+    @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Returns premises summary`() {
-      val (user, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
@@ -79,19 +79,24 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(beds[0])
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(user)
-          withOutOfServiceBed(this@apply)
-          withStartDate(LocalDate.now().plusDays(2))
-          withEndDate(LocalDate.now().plusDays(4))
-          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-        }
-      }
+      val currentOutOfServiceBedCancelled = `Given an Out of Service Bed`(
+        bed = beds[0],
+        startDate = LocalDate.now().minusDays(1),
+        endDate = LocalDate.now().plusDays(4),
+        cancelled = true,
+      )
+
+      val futureOutOfServiceBed = `Given an Out of Service Bed`(
+        bed = beds[0],
+        startDate = LocalDate.now().plusDays(2),
+        endDate = LocalDate.now().plusDays(4),
+      )
+
+      val currentOutOfServiceBed = `Given an Out of Service Bed`(
+        bed = beds[0],
+        startDate = LocalDate.now().minusDays(2),
+        endDate = LocalDate.now().plusDays(2),
+      )
 
       val summary = webTestClient.get()
         .uri("/cas1/premises/${premises.id}")
@@ -106,8 +111,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.apCode).isEqualTo("the ap code")
       assertThat(summary.postcode).isEqualTo("the postcode")
       assertThat(summary.bedCount).isEqualTo(5)
-      assertThat(summary.availableBeds).isEqualTo(4)
       assertThat(summary.outOfServiceBeds).isEqualTo(1)
+      assertThat(summary.availableBeds).isEqualTo(4)
       assertThat(summary.apArea.name).isEqualTo("The ap area name")
     }
   }
