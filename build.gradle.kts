@@ -81,6 +81,9 @@ dependencies {
 
   implementation("com.opencsv:opencsv:5.9")
 
+  implementation("net.javacrumbs.shedlock:shedlock-spring:5.16.0")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:5.16.0")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.9")
   testImplementation("net.bytebuddy:byte-buddy:1.14.18")

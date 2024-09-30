@@ -204,6 +204,9 @@ notify:
   emailaddresses:
     cas2assessors: "assessors@example.com"
 
+scheduling:
+  enable: false
+
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 
 feature-flags:
