@@ -498,6 +498,7 @@ class ApplicationService(
     val isWomensApplication: Boolean?,
     @Deprecated("use apType")
     val isPipeApplication: Boolean?,
+    @Deprecated("use noticeType")
     val isEmergencyApplication: Boolean?,
     @Deprecated("use apType")
     val isEsapApplication: Boolean?,
