@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -77,6 +78,15 @@ class ProfileTest : IntegrationTestBase() {
                 service = "CAS1",
                 isActive = true,
                 apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
+                cruManagementArea = NamedId(
+                  id = userEntity.cruManagementArea!!.id,
+                  name = userEntity.cruManagementArea!!.name,
+                ),
+                cruManagementAreaDefault = NamedId(
+                  id = userApArea.defaultCruManagementArea.id,
+                  name = userApArea.defaultCruManagementArea.name,
+                ),
+                cruManagementAreaOverride = null,
                 permissions = listOf(
                   ApprovedPremisesUserPermission.assessApplication,
                   ApprovedPremisesUserPermission.assessAppealedApplication,
@@ -281,6 +291,15 @@ class ProfileTest : IntegrationTestBase() {
                   service = "CAS1",
                   isActive = true,
                   apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
+                  cruManagementArea = NamedId(
+                    id = userEntity.cruManagementArea!!.id,
+                    name = userEntity.cruManagementArea!!.name,
+                  ),
+                  cruManagementAreaDefault = NamedId(
+                    id = userApArea.defaultCruManagementArea.id,
+                    name = userApArea.defaultCruManagementArea.name,
+                  ),
+                  cruManagementAreaOverride = null,
                   permissions = listOf(
                     ApprovedPremisesUserPermission.assessApplication,
                     ApprovedPremisesUserPermission.assessAppealedApplication,

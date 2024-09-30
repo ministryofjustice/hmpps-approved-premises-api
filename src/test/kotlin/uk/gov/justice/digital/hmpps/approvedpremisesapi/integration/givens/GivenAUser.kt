@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -25,7 +24,6 @@ fun IntegrationTestBase.`Given a User`(
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
   mockStaffUserDetailsCall: Boolean = true,
-  apAreaName: String = randomStringMultiCaseWithNumbers(8),
 ): Pair<UserEntity, String> {
   val staffUserDetailsFactory = StaffUserDetailsFactory()
 
@@ -35,10 +33,10 @@ fun IntegrationTestBase.`Given a User`(
 
   val staffUserDetails = staffUserDetailsFactory.produce()
 
-  val yieldedProbationRegion = probationRegion
-    ?: probationRegionEntityFactory.produceAndPersist {
-      withYieldedApArea { `Given an AP Area`(name = apAreaName) }
-    }
+  val resolvedProbationRegion = probationRegion ?: probationRegionEntityFactory.produceAndPersist {
+    withYieldedApArea { `Given an AP Area`() }
+  }
+  val apArea = resolvedProbationRegion.apArea!!
 
   val user = userEntityFactory.produceAndPersist {
     withId(id)
@@ -48,12 +46,9 @@ fun IntegrationTestBase.`Given a User`(
     withTelephoneNumber(staffUserDetails.telephoneNumber)
     withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
     withIsActive(isActive)
-    withYieldedProbationRegion {
-      yieldedProbationRegion
-    }
-    withYieldedApArea {
-      yieldedProbationRegion.apArea!!
-    }
+    withYieldedProbationRegion { resolvedProbationRegion }
+    withYieldedApArea { apArea }
+    withCruManagementArea(apArea.defaultCruManagementArea)
   }
 
   roles.forEach { role ->

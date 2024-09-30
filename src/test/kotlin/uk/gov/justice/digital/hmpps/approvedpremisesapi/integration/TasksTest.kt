@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
@@ -38,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -610,8 +610,8 @@ class TasksTest {
             `Given an Offender` { offenderDetails, _ ->
               this.jwt = jwt
 
-              cruArea = `Given an CAS1 CRU Management Area`()
-              val cruArea2 = `Given an CAS1 CRU Management Area`()
+              cruArea = `Given a CAS1 CRU Management Area`()
+              val cruArea2 = `Given a CAS1 CRU Management Area`()
 
               val offenderSummaries = getOffenderSummaries(offenderDetails)
 

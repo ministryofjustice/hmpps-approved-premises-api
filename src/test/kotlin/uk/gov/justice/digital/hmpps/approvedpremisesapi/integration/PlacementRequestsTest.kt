@@ -17,13 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
@@ -652,8 +652,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          val cruArea1 = `Given an CAS1 CRU Management Area`()
-          val cruArea2 = `Given an CAS1 CRU Management Area`()
+          val cruArea1 = `Given a CAS1 CRU Management Area`()
+          val cruArea2 = `Given a CAS1 CRU Management Area`()
 
           createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea1)
           val placementRequestA1 = createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea2)
@@ -783,8 +783,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
         `Given an Offender` { offender1Details, inmate1Details ->
           `Given an Offender` { offender2Details, _ ->
 
-            val cruArea1 = `Given an CAS1 CRU Management Area`()
-            val cruArea2 = `Given an CAS1 CRU Management Area`()
+            val cruArea1 = `Given a CAS1 CRU Management Area`()
+            val cruArea2 = `Given a CAS1 CRU Management Area`()
 
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)

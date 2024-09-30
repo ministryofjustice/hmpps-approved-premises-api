@@ -37,14 +37,9 @@ fun IntegrationTestBase.`Given a Placement Application`(
 ): PlacementApplicationEntity {
   val userApArea = `Given an AP Area`()
 
-  val assessmentAllocatedToUser = userEntityFactory.produceAndPersist {
-    withYieldedProbationRegion {
-      probationRegionEntityFactory.produceAndPersist {
-        withApArea(userApArea)
-      }
-    }
-    withApArea(userApArea)
-  }
+  val (assessmentAllocatedToUser) = `Given a User`(
+    probationRegion = `Given a Probation Region`(apArea = userApArea),
+  )
 
   val assessmentCreatedByUser = userEntityFactory.produceAndPersist {
     withYieldedProbationRegion {

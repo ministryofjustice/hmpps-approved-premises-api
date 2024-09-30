@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -21,6 +22,13 @@ class ApprovedPremisesUserFactory : Factory<ApprovedPremisesUser> {
       randomStringMultiCaseWithNumbers(20),
     )
   }
+  private var cruManagementArea: Yielded<NamedId> = {
+    NamedId(UUID.randomUUID(), randomStringUpperCase(6))
+  }
+  private var cruManagementAreaDefault: Yielded<NamedId> = {
+    NamedId(UUID.randomUUID(), randomStringUpperCase(6))
+  }
+  private var cruManagementAreaOverride: Yielded<NamedId?> = { null }
   private var service: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
@@ -83,6 +91,9 @@ class ApprovedPremisesUserFactory : Factory<ApprovedPremisesUser> {
     qualifications = this.qualifications(),
     roles = this.roles(),
     apArea = this.apArea(),
+    cruManagementArea = this.cruManagementArea(),
+    cruManagementAreaDefault = this.cruManagementAreaDefault(),
+    cruManagementAreaOverride = this.cruManagementAreaOverride(),
     service = this.service(),
     id = this.id(),
     name = this.name(),

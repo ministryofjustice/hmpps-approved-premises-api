@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
@@ -133,6 +134,8 @@ class PersonalTimelineTest : IntegrationTestBase() {
             inmateDetail = inmateDetails,
           )
 
+          val apArea = userEntity.apArea!!
+
           webTestClient.get()
             .uri("/people/${offenderDetails.otherIds.crn}/timeline")
             .header("Authorization", "Bearer $jwt")
@@ -155,9 +158,9 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         roles = emptyList(),
                         permissions = emptyList(),
                         apArea = ApArea(
-                          id = userEntity.apArea!!.id,
-                          identifier = userEntity.apArea!!.identifier,
-                          name = userEntity.apArea!!.name,
+                          id = apArea.id,
+                          identifier = apArea.identifier,
+                          name = apArea.name,
                         ),
                         service = "CAS1",
                         id = userEntity.id,
@@ -171,6 +174,15 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         telephoneNumber = userEntity.telephoneNumber,
                         isActive = userEntity.isActive,
                         version = 993,
+                        cruManagementArea = NamedId(
+                          id = userEntity.cruManagementArea!!.id,
+                          name = userEntity.cruManagementArea!!.name,
+                        ),
+                        cruManagementAreaDefault = NamedId(
+                          id = apArea.defaultCruManagementArea.id,
+                          name = apArea.defaultCruManagementArea.name,
+                        ),
+                        cruManagementAreaOverride = null,
                       ),
                       timelineEvents = listOf(
                         TimelineEvent(
@@ -259,6 +271,8 @@ class PersonalTimelineTest : IntegrationTestBase() {
             inmateDetail = null,
           )
 
+          val apArea = userEntity.apArea!!
+
           webTestClient.get()
             .uri("/people/${offenderDetails.otherIds.crn}/timeline")
             .header("Authorization", "Bearer $jwt")
@@ -281,9 +295,9 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         roles = emptyList(),
                         permissions = emptyList(),
                         apArea = ApArea(
-                          id = userEntity.apArea!!.id,
-                          identifier = userEntity.apArea!!.identifier,
-                          name = userEntity.apArea!!.name,
+                          id = apArea.id,
+                          identifier = apArea.identifier,
+                          name = apArea.name,
                         ),
                         service = "CAS1",
                         id = userEntity.id,
@@ -297,6 +311,15 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         telephoneNumber = userEntity.telephoneNumber,
                         isActive = userEntity.isActive,
                         version = 993,
+                        cruManagementArea = NamedId(
+                          id = userEntity.cruManagementArea!!.id,
+                          name = userEntity.cruManagementArea!!.name,
+                        ),
+                        cruManagementAreaDefault = NamedId(
+                          id = apArea.defaultCruManagementArea.id,
+                          name = apArea.defaultCruManagementArea.name,
+                        ),
+                        cruManagementAreaOverride = null,
                       ),
                       timelineEvents = listOf(
                         TimelineEvent(

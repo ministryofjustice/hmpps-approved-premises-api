@@ -3091,12 +3091,26 @@ components:
                 $ref: '#/components/schemas/ApprovedPremisesUserPermission'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            cruManagementArea:
+              description: CRU Management Area to use. This will be the same as cruManagementAreaDefault unless cruManagementAreaOverride is defined
+              allOf:
+                - $ref: "#/components/schemas/NamedId"
+            cruManagementAreaDefault:
+              description: The CRU Management Area used if no override is defined. This is provided to support the user configuration page.
+              allOf:
+                - $ref: "#/components/schemas/NamedId"
+            cruManagementAreaOverride:
+              description: The CRU Management Area manually set on this user. This is provided to support the user configuration page.
+              allOf:
+                - $ref: "#/components/schemas/NamedId"
             version:
               type: integer
           required:
             - qualifications
             - roles
             - apArea
+            - cruManagementArea
+            - cruManagementAreaDefault
     UserRolesAndQualifications:
       type: object
       properties:
