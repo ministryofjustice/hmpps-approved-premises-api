@@ -46,7 +46,7 @@ class Cas1UsersController(
     }
 
     val userEntity = extractEntityFromCasResult(
-      userService.updateUserRolesAndQualifications(
+      userService.updateUser(
         id,
         UserRolesAndQualifications(
           cas1UpdateUser.roles,

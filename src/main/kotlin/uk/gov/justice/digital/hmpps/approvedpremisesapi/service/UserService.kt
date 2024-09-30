@@ -203,17 +203,20 @@ class UserService(
     userRepository.save(user)
   }
 
-  fun updateUserRolesAndQualifications(
+  fun updateUser(
     id: UUID,
-    userRolesAndQualifications: UserRolesAndQualifications,
+    updatedUserRolesAndQualifications: UserRolesAndQualifications,
   ): CasResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
-    val roles = userRolesAndQualifications.roles
-    val qualifications = userRolesAndQualifications.qualifications
+
     user.isActive = true
     userRepository.save(user)
 
-    return updateUserRolesAndQualificationsForUser(user, roles, qualifications)
+    return updateUserRolesAndQualificationsForUser(
+      user = user,
+      roles = updatedUserRolesAndQualifications.roles,
+      qualifications = updatedUserRolesAndQualifications.qualifications,
+    )
   }
 
   fun updateUserRolesAndQualificationsForUser(
