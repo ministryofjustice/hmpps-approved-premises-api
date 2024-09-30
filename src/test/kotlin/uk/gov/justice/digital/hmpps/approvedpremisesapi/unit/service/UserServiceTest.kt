@@ -802,7 +802,7 @@ class UserServiceTest {
   }
 
   @Nested
-  inner class UpdateUserFromApprovedPremisesAndDeliusApi {
+  inner class UpdateUserFromDelius {
 
     @BeforeEach
     fun setup() {
@@ -877,7 +877,7 @@ class UserServiceTest {
         } returns newApAreaForCas1
       }
 
-      val result = userService.updateUser(id, serviceName)
+      val result = userService.updateUserFromDelius(id, serviceName)
 
       verify(exactly = 1) { mockApDeliusContextApiClient.getStaffDetail(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -917,7 +917,7 @@ class UserServiceTest {
       val clientResultSuccess = ClientResult.Success(HttpStatus.OK, staffDetailNullEmail)
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
 
-      val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
+      val result = userService.updateUserFromDelius(id, ServiceName.temporaryAccommodation)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
@@ -934,7 +934,7 @@ class UserServiceTest {
     @Test
     fun `it returns not found when there is no user for that ID`() {
       every { mockUserRepository.findByIdOrNull(id) } returns null
-      val result = userService.updateUser(id, ServiceName.approvedPremises)
+      val result = userService.updateUserFromDelius(id, ServiceName.approvedPremises)
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
     }
 
@@ -956,7 +956,7 @@ class UserServiceTest {
           body = null,
         )
 
-      val result = userService.updateUser(id, ServiceName.approvedPremises)
+      val result = userService.updateUserFromDelius(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       val getUserResponse = (result as CasResult.Success).value

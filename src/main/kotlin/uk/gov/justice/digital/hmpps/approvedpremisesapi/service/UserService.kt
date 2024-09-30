@@ -235,15 +235,15 @@ class UserService(
     return CasResult.Success(user)
   }
 
-  fun updateUser(
+  fun updateUserFromDelius(
     id: UUID,
     forService: ServiceName,
   ): CasResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
-    return CasResult.Success(updateUser(user, forService))
+    return CasResult.Success(updateUserFromDelius(user, forService))
   }
 
-  fun updateUser(
+  fun updateUserFromDelius(
     user: UserEntity,
     forService: ServiceName,
   ): GetUserResponse {

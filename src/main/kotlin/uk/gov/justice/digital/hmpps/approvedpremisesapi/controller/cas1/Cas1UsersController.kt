@@ -25,7 +25,7 @@ class Cas1UsersController(
 ) : UsersCas1Delegate {
 
   override fun getUser(id: UUID): ResponseEntity<ApprovedPremisesUser> {
-    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUser(id, ServiceName.approvedPremises))) {
+    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, ServiceName.approvedPremises))) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
       is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformCas1JpaToApi(getUserResponse.user), HttpStatus.OK)
     }

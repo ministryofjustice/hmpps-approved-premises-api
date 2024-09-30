@@ -29,7 +29,7 @@ class UsersController(
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
-    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUser(id, xServiceName))) {
+    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, xServiceName))) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
       is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName), HttpStatus.OK)
     }

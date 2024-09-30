@@ -29,7 +29,7 @@ class UpdateUsersFromApiSeedJob(
 
     log.info("Updating user with username $username for service $service")
     val user = userService.getExistingUserOrCreateDeprecated(username)
-    when (userService.updateUser(user, service)) {
+    when (userService.updateUserFromDelius(user, service)) {
       UserService.GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
       is UserService.GetUserResponse.Success -> { }
     }
