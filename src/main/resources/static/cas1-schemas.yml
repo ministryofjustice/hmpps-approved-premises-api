@@ -474,6 +474,9 @@ components:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/UserQualification'
+        cruManagementAreaOverrideId:
+          type: string
+          format: uuid
       required:
         - roles
         - qualifications

@@ -131,6 +131,7 @@ class UsersController(
         id = id,
         roles = userRolesAndQualifications.roles,
         qualifications = userRolesAndQualifications.qualifications,
+        cruManagementAreaOverrideId = null,
       ),
     )
 

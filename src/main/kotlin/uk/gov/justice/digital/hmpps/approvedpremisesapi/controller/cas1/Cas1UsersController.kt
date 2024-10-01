@@ -49,6 +49,7 @@ class Cas1UsersController(
         id,
         cas1UpdateUser.roles,
         cas1UpdateUser.qualifications,
+        cas1UpdateUser.cruManagementAreaOverrideId,
       ),
     )
 
