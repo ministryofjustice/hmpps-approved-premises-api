@@ -36,7 +36,7 @@ class Cas1EmailNotificationService(
     )
   }
 
-  private fun getReplyToEmailId(application: ApprovedPremisesApplicationEntity) = application.apArea?.notifyReplyToEmailId
+  private fun getReplyToEmailId(application: ApprovedPremisesApplicationEntity) = application.cruManagementArea?.notifyReplyToEmailId
 }
 
 interface Cas1EmailNotifier {
