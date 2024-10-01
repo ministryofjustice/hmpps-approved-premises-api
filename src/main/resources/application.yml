@@ -297,6 +297,9 @@ pagination:
 reports:
   jdbc-fetch-size: 200
 
+scheduling:
+  enabled: true
+
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false
   cas1-only-list-adjudications-up-to-12-months: false
