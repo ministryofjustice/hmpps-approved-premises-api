@@ -187,14 +187,6 @@ user-allocations:
       priority: 3
     emergency-and-short-notice-assessments:
       enabled: true
-      allocate-to-users:
-        london: LONDON_ASSESSOR
-        north-east: JIMSNOWLDAP
-        north-west: JIMSNOWLDAP
-        midlands: JIMSNOWLDAP
-        south-east-eastern: JIMSNOWLDAP
-        south-west-south central: JIMSNOWLDAP
-        wales: WALES_ASSESSOR
       priority: 2
     appealed-assessments:
       enabled: true
