@@ -32,8 +32,6 @@ class Cas1ApAreaEmailAddressSeedJob(
       error("Email address for '${row.apAreaIdentifier}' is blank")
     }
 
-    apAreaRepository.updateEmailAddress(apArea.id, emailAddress)
-
     log.info("Updated email address for AP Area ${apArea.id} to $emailAddress")
   }
 }

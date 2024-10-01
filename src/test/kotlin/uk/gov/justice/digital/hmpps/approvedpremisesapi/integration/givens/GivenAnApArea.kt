@@ -8,16 +8,12 @@ import java.util.UUID
 fun IntegrationTestBase.`Given an AP Area`(
   id: UUID = UUID.randomUUID(),
   name: String? = null,
-  emailAddress: String? = null,
   defaultCruManagementArea: Cas1CruManagementAreaEntity? = null,
 ): ApAreaEntity {
   return apAreaEntityFactory.produceAndPersist {
     withId(id)
     if (name != null) {
       withName(name)
-    }
-    if (emailAddress != null) {
-      withEmailAddress(emailAddress)
     }
     withDefaultCruManagementArea(defaultCruManagementArea ?: `Given a CAS1 CRU Management Area`())
   }

@@ -14,10 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
@@ -297,6 +299,9 @@ class Cas1BookingEmailServiceTest {
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(AP_AREA_EMAIL)
+          .produce(),
       )
 
       service.bookingWithdrawn(
@@ -364,7 +369,7 @@ class Cas1BookingEmailServiceTest {
       val (application, booking) = createApplicationAndBooking(
         applicant,
         premises,
-        apArea = ApAreaEntityFactory().withEmailAddress(null).produce(),
+        apArea = ApAreaEntityFactory().produce(),
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
       )
@@ -392,6 +397,9 @@ class Cas1BookingEmailServiceTest {
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(AP_AREA_EMAIL)
+          .produce(),
       )
 
       service.bookingWithdrawn(
@@ -459,6 +467,9 @@ class Cas1BookingEmailServiceTest {
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(AP_AREA_EMAIL)
+          .produce(),
       )
 
       service.spaceBookingWithdrawn(
@@ -521,12 +532,15 @@ class Cas1BookingEmailServiceTest {
         .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
         .produce()
 
-      val (application, booking) = createApplicationAndSpaceBooking(
+      val (_, booking) = createApplicationAndSpaceBooking(
         applicant,
         premises,
-        apArea = ApAreaEntityFactory().withEmailAddress(null).produce(),
+        apArea = ApAreaEntityFactory().produce(),
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(null)
+          .produce(),
       )
 
       service.spaceBookingWithdrawn(
@@ -550,6 +564,9 @@ class Cas1BookingEmailServiceTest {
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(AP_AREA_EMAIL)
+          .produce(),
       )
 
       service.spaceBookingWithdrawn(
@@ -603,12 +620,13 @@ class Cas1BookingEmailServiceTest {
   private fun createApplicationAndBooking(
     applicant: UserEntity,
     premises: ApprovedPremisesEntity,
-    apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
+    apArea: ApAreaEntity = ApAreaEntityFactory().produce(),
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     caseManagerNotApplicant: Boolean = false,
+    cruManagementArea: Cas1CruManagementAreaEntity? = null,
   ): Pair<ApprovedPremisesApplicationEntity, BookingEntity> {
-    val application = createApplication(applicant, apArea, caseManagerNotApplicant)
+    val application = createApplication(applicant, apArea, caseManagerNotApplicant, cruManagementArea)
 
     val booking = BookingEntityFactory()
       .withApplication(application)
@@ -624,12 +642,13 @@ class Cas1BookingEmailServiceTest {
   private fun createApplicationAndSpaceBooking(
     applicant: UserEntity,
     premises: ApprovedPremisesEntity,
-    apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
+    apArea: ApAreaEntity = ApAreaEntityFactory().produce(),
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     caseManagerNotApplicant: Boolean = false,
+    cruManagementArea: Cas1CruManagementAreaEntity? = null,
   ): Pair<ApprovedPremisesApplicationEntity, Cas1SpaceBookingEntity> {
-    val application = createApplication(applicant, apArea, caseManagerNotApplicant)
+    val application = createApplication(applicant, apArea, caseManagerNotApplicant, cruManagementArea)
 
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withApplication(application)
@@ -643,8 +662,9 @@ class Cas1BookingEmailServiceTest {
 
   private fun createApplication(
     applicant: UserEntity,
-    apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
+    apArea: ApAreaEntity = ApAreaEntityFactory().produce(),
     caseManagerNotApplicant: Boolean = false,
+    cruManagementArea: Cas1CruManagementAreaEntity?,
   ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(CRN)
     .withCreatedByUser(applicant)
@@ -658,5 +678,6 @@ class Cas1BookingEmailServiceTest {
         null
       },
     )
+    .withCruManagementArea(cruManagementArea)
     .produce()
 }

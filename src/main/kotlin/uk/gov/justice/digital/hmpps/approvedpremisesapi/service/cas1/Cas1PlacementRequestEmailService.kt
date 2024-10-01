@@ -61,7 +61,7 @@ class Cas1PlacementRequestEmailService(
     }
 
     if (!placementRequest.hasActiveBooking()) {
-      val area = application.apArea
+      val area = application.cruManagementArea
       area?.emailAddress?.let { cruEmail ->
         emailNotifier.sendEmail(
           recipientEmailAddress = cruEmail,

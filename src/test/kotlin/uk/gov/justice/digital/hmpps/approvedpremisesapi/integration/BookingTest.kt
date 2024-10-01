@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -2996,7 +2997,7 @@ class BookingTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         `Given a User`(roles = listOf(role)) { applicant, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val apArea = `Given an AP Area`(emailAddress = "apAreaEmail@test.com")
+            val apArea = `Given an AP Area`()
 
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -3047,7 +3048,7 @@ class BookingTest : IntegrationTestBase() {
         `Given a User` { applicant, _ ->
           `Given a User` { placementApplicationCreator, _ ->
             `Given an Offender` { offenderDetails, _ ->
-              val apArea = `Given an AP Area`(emailAddress = "apAreaEmail@test.com")
+              val apArea = `Given an AP Area`()
 
               val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
@@ -3055,6 +3056,7 @@ class BookingTest : IntegrationTestBase() {
                 withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
                 withApArea(apArea)
                 withSubmittedAt(OffsetDateTime.now())
+                withCruManagementArea(`Given a CAS1 CRU Management Area`())
               }
 
               val placementApplication = placementApplicationFactory.produceAndPersist() {
@@ -3151,7 +3153,7 @@ class BookingTest : IntegrationTestBase() {
                 booking.premises.emailAddress!!,
                 notifyConfig.templates.bookingWithdrawnV2,
               )
-              emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+              emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
             }
           }
         }

@@ -8,18 +8,12 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
 interface ApAreaRepository : JpaRepository<ApAreaEntity, UUID> {
   fun findByIdentifier(name: String): ApAreaEntity?
-
-  @Modifying
-  @Query("UPDATE ApAreaEntity set emailAddress = :emailAddress where id = :id")
-  fun updateEmailAddress(id: UUID, emailAddress: String)
 }
 
 /**
@@ -33,8 +27,6 @@ data class ApAreaEntity(
   val id: UUID,
   val name: String,
   val identifier: String,
-  @Deprecated("We should resolve this from Cas1CruManagementAreaEntity")
-  val emailAddress: String?,
   /**
    * Used to determine a user's [Cas1CruManagementAreaEntity] if no override is specified
    *

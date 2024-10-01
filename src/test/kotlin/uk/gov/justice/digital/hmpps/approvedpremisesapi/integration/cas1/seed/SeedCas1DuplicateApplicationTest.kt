@@ -39,7 +39,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           withApplicationSchema(jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java))
           withSubmittedAt(OffsetDateTime.now())
           withNomsNumber(offenderDetails.otherIds.nomsNumber)
-          withApArea(`Given an AP Area`(emailAddress = "apAreaEmail@test.com"))
+          withApArea(`Given an AP Area`())
           withIsEmergencyApplication(true)
           withReleaseType("licence")
         }

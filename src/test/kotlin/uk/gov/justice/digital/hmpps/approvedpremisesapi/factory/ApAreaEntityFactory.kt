@@ -13,7 +13,6 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var identifier: Yielded<String> = { randomStringUpperCase(5) }
-  private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var defaultCruManagementArea: Yielded<Cas1CruManagementAreaEntity> = { Cas1CruManagementAreaEntityFactory().produce() }
 
   fun withId(id: UUID) = apply {
@@ -28,10 +27,6 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
     this.identifier = { identifier }
   }
 
-  fun withEmailAddress(emailAddress: String?) = apply {
-    this.emailAddress = { emailAddress }
-  }
-
   fun withDefaultCruManagementArea(defaultCruManagementArea: Cas1CruManagementAreaEntity) = apply {
     this.defaultCruManagementArea = { defaultCruManagementArea }
   }
@@ -40,7 +35,6 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
     id = this.id(),
     name = this.name(),
     identifier = this.identifier(),
-    emailAddress = this.emailAddress(),
     defaultCruManagementArea = this.defaultCruManagementArea(),
   )
 }

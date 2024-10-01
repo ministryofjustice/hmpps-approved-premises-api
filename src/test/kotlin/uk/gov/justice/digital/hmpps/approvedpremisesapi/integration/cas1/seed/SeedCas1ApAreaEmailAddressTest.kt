@@ -96,9 +96,6 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
     )
 
     seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "valid-csv.csv")
-
-    assertThat(apAreaRepository.findByIdentifier("SWSC")!!.emailAddress).isEqualTo("swsc@test.com")
-    assertThat(apAreaRepository.findByIdentifier("Mids")!!.emailAddress).isEqualTo("mids@midlands.com")
   }
 
   private fun cas1ApAreaEmailAddressesCsvRowsToCsv(rows: List<Cas1ApAreaEmailAddressSeedCsvRow>): String {
