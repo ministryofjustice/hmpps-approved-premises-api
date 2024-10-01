@@ -12,6 +12,7 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var notifyReplyToEmailId: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
+  private var assessmentAutoAllocationUsername: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -29,10 +30,15 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
     this.notifyReplyToEmailId = { notifyReplyToEmailId }
   }
 
+  fun withAssessmentAutoAllocationUsername(assessmentAutoAllocationUsername: String?) = apply {
+    this.assessmentAutoAllocationUsername = { assessmentAutoAllocationUsername }
+  }
+
   override fun produce() = Cas1CruManagementAreaEntity(
     id = this.id(),
     name = this.name(),
     emailAddress = this.emailAddress(),
     notifyReplyToEmailId = this.notifyReplyToEmailId(),
+    assessmentAutoAllocationUsername = this.assessmentAutoAllocationUsername(),
   )
 }
