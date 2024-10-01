@@ -2,10 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import jakarta.transaction.Transactional
 import org.springframework.core.io.DefaultResourceLoader
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -18,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
+import java.util.UUID
 
 @SuppressWarnings("MagicNumber", "MaxLineLength")
 @Component
@@ -26,6 +30,7 @@ class Cas1AutoScript(
   private val applicationService: ApplicationService,
   private val userService: UserService,
   private val offenderService: OffenderService,
+  private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) {
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -56,8 +61,7 @@ class Cas1AutoScript(
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun seedUser(seedUser: SeedUser) {
     try {
-      val getUserResponse = userService
-        .getExistingUserOrCreate(username = seedUser.username)
+      val getUserResponse = userService.getExistingUserOrCreate(username = seedUser.username)
 
       when (getUserResponse) {
         UserService.GetUserResponse.StaffRecordNotFound -> seedLogger.error("Seeding user with ${seedUser.username} failed as staff record not found")
@@ -68,6 +72,10 @@ class Cas1AutoScript(
           }
           val roles = user.roles.map { it.role }.joinToString(", ")
           seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
+
+          if (seedUser.cruManagementAreaOverrideId != null) {
+            user.cruManagementAreaOverride = cruManagementAreaRepository.findByIdOrNull(seedUser.cruManagementAreaOverrideId)
+          }
         }
       }
     } catch (e: Exception) {
@@ -80,6 +88,7 @@ class Cas1AutoScript(
       SeedUser(
         username = "JIMSNOWLDAP",
         roles = listOf(
+          UserRole.CAS1_CRU_MEMBER,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -93,6 +102,7 @@ class Cas1AutoScript(
       SeedUser(
         username = "LAOFULLACCESS",
         roles = listOf(
+          UserRole.CAS1_CRU_MEMBER,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -107,6 +117,7 @@ class Cas1AutoScript(
       SeedUser(
         username = "LAORESTRICTED",
         roles = listOf(
+          UserRole.CAS1_CRU_MEMBER,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -116,6 +127,21 @@ class Cas1AutoScript(
           UserRole.CAS1_FUTURE_MANAGER,
         ),
         documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
+      ),
+      SeedUser(
+        username = "CRUWOMENSESTATE",
+        roles = listOf(
+          UserRole.CAS1_CRU_MEMBER,
+          UserRole.CAS1_ASSESSOR,
+          UserRole.CAS1_MATCHER,
+          UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_ADMIN,
+          UserRole.CAS1_REPORT_VIEWER,
+          UserRole.CAS1_APPEALS_MANAGER,
+          UserRole.CAS1_FUTURE_MANAGER,
+        ),
+        cruManagementAreaOverrideId = Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID,
+        documentation = "For local use in development and testing. This user's CRU Management Area is overridden to women's estate",
       ),
     )
   }
@@ -208,4 +234,5 @@ data class SeedUser(
   val username: String,
   val roles: List<UserRole>,
   val documentation: String,
+  val cruManagementAreaOverrideId: UUID? = null,
 )
