@@ -42,6 +42,7 @@ class Cas1AutoScriptTest : IntegrationTestBase() {
         applicationService,
         userService,
         offenderService,
+        cas1CruManagementAreaRepository,
       ).script()
     }
   }
