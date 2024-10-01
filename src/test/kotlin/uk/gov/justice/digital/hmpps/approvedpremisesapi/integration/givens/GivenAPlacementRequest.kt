@@ -51,6 +51,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   placementApplication: PlacementApplicationEntity? = null,
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
+  application: ApprovedPremisesApplicationEntity? = null,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -78,7 +79,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     )
   }
 
-  val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+  val app = application ?: approvedPremisesApplicationEntityFactory.produceAndPersist {
     crn?.let { withCrn(it) }
     name?.let { withName(it) }
     withCreatedByUser(createdByUser)
@@ -100,7 +101,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
     withAssessmentSchema(assessmentSchema)
-    withApplication(application)
+    withApplication(app)
     withSubmittedAt(assessmentSubmittedAt)
     withAllocatedToUser(assessmentAllocatedTo)
     withDecision(AssessmentDecision.ACCEPTED)
@@ -109,7 +110,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
   val placementRequirements = placementRequirementsFactory.produceAndPersist {
-    withApplication(application)
+    withApplication(app)
     withAssessment(assessment)
     withPostcodeDistrict(postcodeDistrict)
     withDesirableCriteria(
@@ -124,7 +125,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     if (placementRequestAllocatedTo != null) {
       withAllocatedToUser(placementRequestAllocatedTo)
     }
-    withApplication(application)
+    withApplication(app)
     withAssessment(assessment)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
@@ -148,7 +149,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     }
   }
 
-  return Pair(placementRequest, application)
+  return Pair(placementRequest, app)
 }
 
 private fun ApprovedPremisesApplicationEntityFactory.applyQualification(requiredQualification: UserQualification?) {

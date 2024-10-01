@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -40,7 +42,9 @@ class SpaceBookingController(
   private val spaceBookingService: Cas1SpaceBookingService,
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
+  private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : SpaceBookingsCas1Delegate {
+
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<TimelineEvent> {
     return super.getSpaceBookingTimeline(premisesId, bookingId)
   }
@@ -170,6 +174,32 @@ class SpaceBookingController(
       ),
     )
     return ResponseEntity(HttpStatus.OK)
+  }
+
+  override fun cancelSpaceBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    body: NewCas1SpaceBookingCancellation,
+  ): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW)
+
+    val spaceBooking = extractEntityFromCasResult(
+      cas1SpaceBookingService.getBooking(premisesId, bookingId),
+    )
+
+    return ResponseEntity
+      .ok()
+      .body(
+        extractEntityFromCasResult(
+          cas1WithdrawableService.withdrawSpaceBooking(
+            spaceBooking = spaceBooking,
+            user = userService.getUserForRequest(),
+            cancelledAt = body.occurredAt,
+            body.reasonId,
+            body.reasonNotes,
+          ),
+        ),
+      )
   }
 
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {

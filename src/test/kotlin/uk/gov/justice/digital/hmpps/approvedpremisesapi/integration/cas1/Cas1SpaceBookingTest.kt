@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -16,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
@@ -24,14 +27,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -40,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -1194,6 +1201,143 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+    }
+  }
+
+  @Nested
+  inner class Cancellation : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var applicant: UserEntity
+    lateinit var placementApplicationCreator: UserEntity
+    lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+    lateinit var cancellationReason: CancellationReasonEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      region = `Given a Probation Region`()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("premises@test.com")
+      }
+
+      applicant = `Given a User`(staffUserDetailsConfigBlock = {
+        withEmail("applicant@test.com")
+      },).first
+
+      placementApplicationCreator = `Given a User`(staffUserDetailsConfigBlock = {
+        withEmail("placementApplicant@test.com")
+      },).first
+
+      val (offender) = `Given an Offender`()
+
+      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withCreatedByUser(applicant)
+        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        withApArea(`Given an AP Area`(emailAddress = "apAreaEmail@test.com"))
+        withSubmittedAt(OffsetDateTime.now())
+      }
+
+      val placementApplication = placementApplicationFactory.produceAndPersist() {
+        withCreatedByUser(placementApplicationCreator)
+        withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist())
+        withApplication(application)
+      }
+
+      val (placementRequest) = `Given a Placement Request`(
+        application = application,
+        placementRequestAllocatedTo = applicant,
+        assessmentAllocatedTo = applicant,
+        createdByUser = applicant,
+        placementApplication = placementApplication,
+      )
+
+      application = placementRequest.application
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(applicant)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+        withServiceScope("*")
+      }
+    }
+
+    @Test
+    fun `Create Cancellation without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
+        .bodyValue(
+          NewCas1SpaceBookingCancellation(
+            occurredAt = LocalDate.parse("2022-08-17"),
+            reasonId = cancellationReason.id,
+            reasonNotes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
+    fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        webTestClient.post()
+          .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewCas1SpaceBookingCancellation(
+              occurredAt = LocalDate.parse("2022-08-17"),
+              reasonId = cancellationReason.id,
+              reasonNotes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has role CRU_MEMBER`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+        webTestClient.post()
+          .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewCas1SpaceBookingCancellation(
+              occurredAt = LocalDate.parse("2022-08-17"),
+              reasonId = cancellationReason.id,
+              reasonNotes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+      }
+
+      emailAsserter.assertEmailsRequestedCount(4)
+      emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailRequested(application.apArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
     }
   }
 }

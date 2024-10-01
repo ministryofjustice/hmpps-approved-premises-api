@@ -10,6 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDepartu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
@@ -21,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Spac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -28,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -46,6 +52,7 @@ class Cas1SpaceBookingService(
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val staffMemberService: StaffMemberService,
+  private val cancellationReasonRepository: CancellationReasonRepository,
 ) {
   @Transactional
   fun createNewBooking(
@@ -125,11 +132,7 @@ class Cas1SpaceBookingService(
       placementRequest = placementRequest,
     )
 
-    cas1BookingEmailService.spaceBookingMade(
-      spaceBooking = spaceBooking,
-      application = application,
-      placementApplication = placementRequest.placementApplication,
-    )
+    cas1BookingEmailService.spaceBookingMade(spaceBooking)
 
     success(spaceBooking)
   }
@@ -326,7 +329,7 @@ class Cas1SpaceBookingService(
     return WithdrawableState(
       withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
       withdrawn = spaceBooking.isCancelled(),
-      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_BOOKING_WITHDRAW),
+      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
       blockingReason = if (spaceBooking.hasArrival()) {
         BlockingReason.ArrivalRecordedInCas1
       } else {
@@ -335,9 +338,60 @@ class Cas1SpaceBookingService(
     )
   }
 
+  fun withdraw(
+    spaceBooking: Cas1SpaceBookingEntity,
+    occurredAt: LocalDate,
+    userProvidedReasonId: UUID?,
+    userProvidedReasonNotes: String?,
+    withdrawalContext: WithdrawalContext,
+  ): CasResult<Unit> {
+    if (spaceBooking.isCancelled()) {
+      return CasResult.Success(Unit)
+    }
+
+    val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReasonId)
+
+    val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
+      ?: return CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
+
+    if (reason.name == "Other" && userProvidedReasonNotes.isNullOrEmpty()) {
+      return CasResult.FieldValidationError(mapOf("$.otherReason" to "empty"))
+    }
+
+    spaceBooking.cancellationReason = reason
+    spaceBooking.cancellationOccurredAt = occurredAt
+    spaceBooking.cancellationRecordedAt = Instant.now()
+    spaceBooking.cancellationReasonNotes = userProvidedReasonNotes
+    cas1SpaceBookingRepository.save(spaceBooking)
+
+    val user = when (withdrawalContext.withdrawalTriggeredBy) {
+      is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
+      else -> throw InternalServerErrorProblem("Withdrawal triggered automatically is not supported")
+    }
+    cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason)
+
+    cas1BookingEmailService.spaceBookingWithdrawn(
+      spaceBooking = spaceBooking,
+      withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
+    )
+
+    return CasResult.Success(Unit)
+  }
+
   data class SpaceBookingFilterCriteria(
     val residency: Cas1SpaceBookingResidency?,
     val crnOrName: String?,
     val keyWorkerStaffCode: String?,
   )
+
+  private fun toCas1CancellationReason(
+    withdrawalContext: WithdrawalContext,
+    userProvidedCancellationReasonId: UUID?,
+  ) = when (withdrawalContext.triggeringEntityType) {
+    WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
+    WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+    WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
+    WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to Booking")
+    WithdrawableEntityType.SpaceBooking -> userProvidedCancellationReasonId!!
+  }
 }

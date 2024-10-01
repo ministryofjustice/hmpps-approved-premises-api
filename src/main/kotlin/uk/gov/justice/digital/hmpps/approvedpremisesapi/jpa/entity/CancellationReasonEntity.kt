@@ -21,7 +21,7 @@ interface CancellationReasonRepository : JpaRepository<CancellationReasonEntity,
   @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*' ORDER by c.sortOrder ASC, c.name ASC")
   fun findAllByServiceScope(serviceName: String): List<CancellationReasonEntity>
 
-  fun findByNameAndServiceScope(name: String, serviceScope: String): CancellationReasonEntity?
+  fun findByIdAndServiceScope(id: UUID, serviceScope: String): CancellationReasonEntity?
 }
 
 @Entity

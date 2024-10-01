@@ -7,8 +7,10 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.service.notify.NotificationClient
 import uk.gov.service.notify.NotificationClientException
+import kotlin.reflect.full.memberProperties
 
 @Service
 class EmailNotificationService(
@@ -37,7 +39,10 @@ class EmailNotificationService(
 
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
-        log.info("Email sending is disabled - would have sent template $templateId to user $recipientEmailAddress with replyToId $replyToEmailId")
+        val templateName = NotifyTemplates::class.memberProperties
+          .firstOrNull { it.get(notifyConfig.templates) == templateId }?.name
+          ?: templateId
+        log.info("Email sending is disabled - would have sent template $templateName ($templateId) to user $recipientEmailAddress with replyToId $replyToEmailId")
         return
       }
 

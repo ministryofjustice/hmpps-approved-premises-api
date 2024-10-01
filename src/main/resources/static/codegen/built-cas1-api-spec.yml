@@ -892,6 +892,57 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
 
+  /premises/{premisesId}/space-bookings/{bookingId}/cancellations:
+    post:
+      tags:
+        - space bookings
+      summary: Cancels a space booking
+      operationId: "cancelSpaceBooking"
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the space booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: space booking id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the cancellation
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCas1SpaceBookingCancellation'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
@@ -4331,6 +4382,7 @@ components:
         - cas1_space_booking_record_departure
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
+        - cas1_space_booking_withdraw
         - cas1_premises_view_summary
         - cas1_reports_view
     TemporaryAccommodationUserRole:
@@ -6795,3 +6847,17 @@ components:
       required:
         - roles
         - qualifications
+    NewCas1SpaceBookingCancellation:
+      type: object
+      properties:
+        occurredAt:
+          type: string
+          format: date
+        reasonId:
+          type: string
+          format: uuid
+        reasonNotes:
+          type: string
+      required:
+        - occurredAt
+        - reasonId

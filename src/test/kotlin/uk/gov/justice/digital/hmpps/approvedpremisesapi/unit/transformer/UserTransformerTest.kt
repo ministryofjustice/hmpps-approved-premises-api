@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordKeyworker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingView
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingWithdraw
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
@@ -264,6 +265,9 @@ class UserTransformerTest {
           processAnAppeal,
           outOfServiceBedCreate,
           requestForPlacementWithdrawOthers,
+          spaceBookingList,
+          spaceBookingRecordArrival,
+          spaceBookingWithdraw,
           viewAssignedAssessments,
           viewCruDashboard,
           viewManageTasks,
@@ -291,7 +295,7 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.version).isNotNull()
-      assertThat(result.version).isEqualTo(-2012626225)
+      assertThat(result.version).isEqualTo(1460833655)
     }
 
     @Test

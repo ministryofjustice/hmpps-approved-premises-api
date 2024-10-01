@@ -283,27 +283,45 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  @SuppressWarnings("LongMethod")
   fun bookingCancelled(
     booking: BookingEntity,
     user: UserEntity,
     cancellation: CancellationEntity,
     reason: CancellationReasonEntity,
-  ) {
+  ) = bookingCancelled(
+    CancellationInfo(
+      bookingId = booking.id,
+      application = booking.application as ApprovedPremisesApplicationEntity?,
+      offlineApplication = booking.offlineApplication,
+      cancellationId = cancellation.id,
+      crn = booking.crn,
+      cancelledAt = cancellation.date,
+      reason = reason,
+      cancelledBy = user,
+      premises = booking.premises as ApprovedPremisesEntity,
+      isSpaceBooking = false,
+    ),
+  )
+
+  fun spaceBookingCancelled(
+    spaceBooking: Cas1SpaceBookingEntity,
+    user: UserEntity,
+    reason: CancellationReasonEntity,
+  ) =
     bookingCancelled(
       CancellationInfo(
-        bookingId = booking.id,
-        application = booking.application as ApprovedPremisesApplicationEntity?,
-        offlineApplication = booking.offlineApplication,
-        cancellationId = cancellation.id,
-        crn = booking.crn,
-        cancelledAt = cancellation.date,
+        bookingId = spaceBooking.id,
+        application = spaceBooking.application,
+        offlineApplication = null,
+        cancellationId = null,
+        crn = spaceBooking.crn,
+        cancelledAt = spaceBooking.cancellationOccurredAt!!,
         reason = reason,
         cancelledBy = user,
-        premises = booking.premises as ApprovedPremisesEntity,
+        premises = spaceBooking.premises,
+        isSpaceBooking = true,
       ),
     )
-  }
 
   private fun bookingCancelled(
     cancellationInfo: CancellationInfo,
@@ -313,6 +331,7 @@ class Cas1BookingDomainEventService(
     val user = cancellationInfo.cancelledBy
     val crn = cancellationInfo.crn
     val premises = cancellationInfo.premises
+    val isSpaceBooking = cancellationInfo.isSpaceBooking
 
     val domainEventId = UUID.randomUUID()
 
@@ -337,7 +356,8 @@ class Cas1BookingDomainEventService(
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = now.toInstant(),
-        bookingId = bookingId,
+        bookingId = if (isSpaceBooking) { null } else { bookingId },
+        cas1SpaceBookingId = if (isSpaceBooking) { bookingId } else { null },
         schemaVersion = 2,
         data = BookingCancelledEnvelope(
           id = domainEventId,
@@ -383,5 +403,6 @@ class Cas1BookingDomainEventService(
     val cancelledBy: UserEntity,
     val cancelledAt: LocalDate,
     val reason: CancellationReasonEntity,
+    val isSpaceBooking: Boolean,
   )
 }

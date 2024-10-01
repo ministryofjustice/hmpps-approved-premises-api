@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
@@ -441,6 +443,162 @@ class Cas1BookingEmailServiceTest {
     }
   }
 
+  @Nested
+  inner class SpaceBookingWithdrawn {
+
+    @Test
+    fun `spaceBookingWithdrawn sends email to applicant, premises, case manager and CRU if emails are defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndSpaceBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
+      )
+
+      service.spaceBookingWithdrawn(
+        spaceBooking = booking,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawingUser),
+      )
+
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "region" to REGION_NAME,
+        "withdrawnBy" to TestConstants.WITHDRAWING_USER_NAME,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(4)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        AP_AREA_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+    }
+
+    @Test
+    fun `spaceBookingWithdrawn doesn't send email to applicant, premises, case manager or CRU if email not defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withEmailAddress(null)
+        .withName(PREMISES_NAME)
+        .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
+        .produce()
+
+      val (application, booking) = createApplicationAndSpaceBooking(
+        applicant,
+        premises,
+        apArea = ApAreaEntityFactory().withEmailAddress(null).produce(),
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
+
+      service.spaceBookingWithdrawn(
+        spaceBooking = booking,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawingUser),
+      )
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `spaceBookingWithdrawn sends email when triggered by seed job`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndSpaceBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
+      )
+
+      service.spaceBookingWithdrawn(
+        spaceBooking = booking,
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
+      )
+
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "region" to REGION_NAME,
+        "withdrawnBy" to "Application Support",
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(4)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        AP_AREA_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+    }
+  }
+
   @SuppressWarnings("LongParameterList")
   private fun createApplicationAndBooking(
     applicant: UserEntity,
@@ -450,20 +608,7 @@ class Cas1BookingEmailServiceTest {
     departureDate: LocalDate,
     caseManagerNotApplicant: Boolean = false,
   ): Pair<ApprovedPremisesApplicationEntity, BookingEntity> {
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCrn(CRN)
-      .withCreatedByUser(applicant)
-      .withSubmittedAt(OffsetDateTime.now())
-      .withApArea(apArea)
-      .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
-      .withCaseManagerUserDetails(
-        if (caseManagerNotApplicant) {
-          Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce()
-        } else {
-          null
-        },
-      )
-      .produce()
+    val application = createApplication(applicant, apArea, caseManagerNotApplicant)
 
     val booking = BookingEntityFactory()
       .withApplication(application)
@@ -474,4 +619,44 @@ class Cas1BookingEmailServiceTest {
 
     return Pair(application, booking)
   }
+
+  @SuppressWarnings("LongParameterList")
+  private fun createApplicationAndSpaceBooking(
+    applicant: UserEntity,
+    premises: ApprovedPremisesEntity,
+    apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
+    arrivalDate: LocalDate,
+    departureDate: LocalDate,
+    caseManagerNotApplicant: Boolean = false,
+  ): Pair<ApprovedPremisesApplicationEntity, Cas1SpaceBookingEntity> {
+    val application = createApplication(applicant, apArea, caseManagerNotApplicant)
+
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withApplication(application)
+      .withPremises(premises)
+      .withCanonicalArrivalDate(arrivalDate)
+      .withCanonicalDepartureDate(departureDate)
+      .produce()
+
+    return Pair(application, spaceBooking)
+  }
+
+  private fun createApplication(
+    applicant: UserEntity,
+    apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
+    caseManagerNotApplicant: Boolean = false,
+  ) = ApprovedPremisesApplicationEntityFactory()
+    .withCrn(CRN)
+    .withCreatedByUser(applicant)
+    .withSubmittedAt(OffsetDateTime.now())
+    .withApArea(apArea)
+    .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
+    .withCaseManagerUserDetails(
+      if (caseManagerNotApplicant) {
+        Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce()
+      } else {
+        null
+      },
+    )
+    .produce()
 }
