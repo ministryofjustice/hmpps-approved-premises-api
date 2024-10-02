@@ -15,8 +15,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.time.OffsetDateTime
 import java.util.Objects
@@ -352,153 +350,6 @@ data class UserRoleAssignmentEntity(
   override fun hashCode() = Objects.hash(id, role)
 }
 
-enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremisesUserRole?, val permissions: List<UserPermission> = emptyList()) {
-  CAS1_ASSESSOR(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.assessor,
-    listOf(
-      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
-      UserPermission.CAS1_ASSESS_APPLICATION,
-      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
-      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
-    ),
-  ),
-  CAS1_MATCHER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.matcher,
-    listOf(
-      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
-      UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
-    ),
-  ),
-
-  @Deprecated("This role is no longer available for assignment on the UI and should be removed")
-  CAS1_MANAGER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.manager,
-    listOf(
-      UserPermission.CAS1_BOOKING_CHANGE_DATES,
-    ),
-  ),
-
-  @Deprecated("This role is no longer available for assignment on the UI and should be removed. It has been superseded by CAS1_FUTURE_MANAGER")
-  CAS1_LEGACY_MANAGER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.legacyManager,
-    listOf(
-      UserPermission.CAS1_BOOKING_CHANGE_DATES,
-    ),
-  ),
-  CAS1_FUTURE_MANAGER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.futureManager,
-    listOf(
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
-      UserPermission.CAS1_SPACE_BOOKING_LIST,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-      UserPermission.CAS1_SPACE_BOOKING_VIEW,
-      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
-    ),
-  ),
-  CAS1_WORKFLOW_MANAGER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.workflowManager,
-    listOf(
-      UserPermission.CAS1_BOOKING_WITHDRAW,
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-      UserPermission.CAS1_VIEW_MANAGE_TASKS,
-      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
-    ),
-  ),
-  CAS1_CRU_MEMBER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.cruMember,
-    listOf(
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-      UserPermission.CAS1_ADHOC_BOOKING_CREATE,
-      UserPermission.CAS1_BOOKING_CREATE,
-      UserPermission.CAS1_BOOKING_CHANGE_DATES,
-      UserPermission.CAS1_BOOKING_WITHDRAW,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
-      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
-      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-      UserPermission.CAS1_SPACE_BOOKING_LIST,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-      UserPermission.CAS1_SPACE_BOOKING_VIEW,
-      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
-      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
-      UserPermission.CAS1_VIEW_MANAGE_TASKS,
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-    ),
-  ),
-  CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
-  CAS1_ADMIN(ServiceName.approvedPremises, ApprovedPremisesUserRole.roleAdmin),
-  CAS1_REPORT_VIEWER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.reportViewer,
-    listOf(
-      UserPermission.CAS1_REPORTS_VIEW,
-    ),
-  ),
-  CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromAssessAllocation),
-  CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromMatchAllocation),
-  CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(ServiceName.approvedPremises, ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation),
-  CAS1_APPEALS_MANAGER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.appealsManager,
-    listOf(
-      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
-      UserPermission.CAS1_PROCESS_AN_APPEAL,
-      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
-    ),
-  ),
-  CAS1_JANITOR(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.janitor,
-    listOf(
-      UserPermission.CAS1_ADHOC_BOOKING_CREATE,
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-      UserPermission.CAS1_BOOKING_CREATE,
-      UserPermission.CAS1_BOOKING_WITHDRAW,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
-      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
-      UserPermission.CAS1_PROCESS_AN_APPEAL,
-      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-      UserPermission.CAS1_SPACE_BOOKING_LIST,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-      UserPermission.CAS1_SPACE_BOOKING_VIEW,
-      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
-      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
-      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
-      UserPermission.CAS1_VIEW_MANAGE_TASKS,
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-    ),
-  ),
-  CAS1_USER_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.userManager),
-  CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
-  CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
-  CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
-  ;
-
-  fun hasPermission(permission: UserPermission) = permissions.contains(permission)
-
-  companion object {
-    fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }
-
-    fun valueOf(apiValue: ApprovedPremisesUserRole) = UserRole.entries.first { it.cas1ApiValue == apiValue }
-
-    fun getAllRolesForPermission(permission: UserPermission) = UserRole.values().filter { it.permissions.contains(permission) }
-  }
-}
-
 @Repository
 interface UserQualificationAssignmentRepository : JpaRepository<UserQualificationAssignmentEntity, UUID>
 
@@ -541,33 +392,6 @@ enum class UserQualification {
   EMERGENCY,
   RECOVERY_FOCUSED,
   MENTAL_HEALTH_SPECIALIST,
-}
-
-enum class UserPermission {
-  CAS1_ADHOC_BOOKING_CREATE,
-  CAS1_ASSESS_APPEALED_APPLICATION,
-  CAS1_ASSESS_APPLICATION,
-  CAS1_ASSESS_PLACEMENT_APPLICATION,
-  CAS1_ASSESS_PLACEMENT_REQUEST,
-  CAS1_BOOKING_CREATE,
-  CAS1_BOOKING_WITHDRAW,
-  CAS1_BOOKING_CHANGE_DATES,
-  CAS1_OUT_OF_SERVICE_BED_CREATE,
-  CAS1_PROCESS_AN_APPEAL,
-  CAS1_VIEW_ASSIGNED_ASSESSMENTS,
-  CAS1_VIEW_CRU_DASHBOARD,
-  CAS1_VIEW_MANAGE_TASKS,
-  CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-  CAS1_SPACE_BOOKING_LIST,
-  CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-  CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-  CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-  CAS1_SPACE_BOOKING_VIEW,
-  CAS1_SPACE_BOOKING_WITHDRAW,
-  CAS1_PREMISES_VIEW_SUMMARY,
-  CAS1_APPLICATION_WITHDRAW_OTHERS,
-  CAS1_REPORTS_VIEW,
-  CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
 }
 
 interface UserWorkload {
