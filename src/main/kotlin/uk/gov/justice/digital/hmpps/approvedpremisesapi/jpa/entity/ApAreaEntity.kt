@@ -27,6 +27,10 @@ data class ApAreaEntity(
   val id: UUID,
   val name: String,
   val identifier: String,
+  @Deprecated("We should resolve this from Cas1CruManagementAreaEntity")
+  val emailAddress: String?,
+  @Deprecated("We should resolve this from Cas1CruManagementAreaEntity")
+  val notifyReplyToEmailId: String?,
   /**
    * Used to determine a user's [Cas1CruManagementAreaEntity] if no override is specified
    *

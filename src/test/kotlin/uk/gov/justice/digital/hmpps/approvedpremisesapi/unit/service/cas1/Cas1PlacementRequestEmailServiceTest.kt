@@ -90,7 +90,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
     @Test
     fun `placementRequestWithdrawn doesnt send email to CRU if no email addresses defined`() {
-      val application = createApplication(apAreaEmail = null)
+      val application = createApplication(cruManagementAreaEmail = null)
       val placementRequest = createPlacementRequest(application, booking = null)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
@@ -100,7 +100,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
     @Test
     fun `placementRequestWithdrawn doesnt send email to CRU if email addresses defined and active booking`() {
-      val application = createApplication(apAreaEmail = CRU_EMAIL)
+      val application = createApplication(cruManagementAreaEmail = CRU_EMAIL)
       val booking = BookingEntityFactory()
         .withApplication(application)
         .withDefaultPremises()
@@ -114,7 +114,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
     @Test
     fun `placementRequestWithdrawn sends match request withdrawn email to CRU if email addresses defined and no booking`() {
-      val application = createApplication(apAreaEmail = CRU_EMAIL)
+      val application = createApplication(cruManagementAreaEmail = CRU_EMAIL)
       val placementRequest = createPlacementRequest(application, booking = null)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
@@ -307,7 +307,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
   private fun createApplication(
     applicantEmail: String? = null,
-    apAreaEmail: String? = null,
+    cruManagementAreaEmail: String? = null,
     caseManagerNotApplicant: Boolean = false,
   ): ApprovedPremisesApplicationEntity {
     val applicant = UserEntityFactory()
@@ -326,7 +326,7 @@ class Cas1PlacementRequestEmailServiceTest {
       )
       .withCruManagementArea(
         Cas1CruManagementAreaEntityFactory()
-          .withEmailAddress(apAreaEmail)
+          .withEmailAddress(cruManagementAreaEmail)
           .produce(),
       )
       .withCaseManagerIsNotApplicant(caseManagerNotApplicant)

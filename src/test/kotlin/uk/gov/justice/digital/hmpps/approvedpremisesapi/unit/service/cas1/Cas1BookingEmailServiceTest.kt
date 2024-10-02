@@ -26,9 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.AP_AREA_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRU_MANAGEMENT_AREA_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PLACEMENT_APPLICATION_CREATOR_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_NAME
@@ -41,7 +41,7 @@ import java.time.OffsetDateTime
 class Cas1BookingEmailServiceTest {
 
   private object TestConstants {
-    const val AP_AREA_EMAIL = "apAreaEmail@test.com"
+    const val CRU_MANAGEMENT_AREA_EMAIL = "apAreaEmail@test.com"
     const val APPLICANT_EMAIL = "applicantEmail@test.com"
     const val PLACEMENT_APPLICATION_CREATOR_EMAIL = "placementAppCreatorEmail@test.com"
     const val CRN = "CRN123"
@@ -300,7 +300,7 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
-          .withEmailAddress(AP_AREA_EMAIL)
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
           .produce(),
       )
 
@@ -345,7 +345,7 @@ class Cas1BookingEmailServiceTest {
       )
 
       mockEmailNotificationService.assertEmailRequested(
-        AP_AREA_EMAIL,
+        CRU_MANAGEMENT_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
         application,
@@ -372,6 +372,9 @@ class Cas1BookingEmailServiceTest {
         apArea = ApAreaEntityFactory().produce(),
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(null)
+          .produce(),
       )
 
       service.bookingWithdrawn(
@@ -398,7 +401,7 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
-          .withEmailAddress(AP_AREA_EMAIL)
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
           .produce(),
       )
 
@@ -443,7 +446,7 @@ class Cas1BookingEmailServiceTest {
       )
 
       mockEmailNotificationService.assertEmailRequested(
-        AP_AREA_EMAIL,
+        CRU_MANAGEMENT_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
         application,
@@ -468,7 +471,7 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
-          .withEmailAddress(AP_AREA_EMAIL)
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
           .produce(),
       )
 
@@ -511,7 +514,7 @@ class Cas1BookingEmailServiceTest {
       )
 
       mockEmailNotificationService.assertEmailRequested(
-        AP_AREA_EMAIL,
+        CRU_MANAGEMENT_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
         application,
@@ -565,7 +568,7 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
         caseManagerNotApplicant = true,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
-          .withEmailAddress(AP_AREA_EMAIL)
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
           .produce(),
       )
 
@@ -608,7 +611,7 @@ class Cas1BookingEmailServiceTest {
       )
 
       mockEmailNotificationService.assertEmailRequested(
-        AP_AREA_EMAIL,
+        CRU_MANAGEMENT_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
         application,
