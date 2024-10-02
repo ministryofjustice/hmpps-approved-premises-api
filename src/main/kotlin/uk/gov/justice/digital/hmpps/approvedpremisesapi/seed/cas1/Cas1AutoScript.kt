@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
@@ -31,6 +32,7 @@ class Cas1AutoScript(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
+  private val environmentService: EnvironmentService,
 ) {
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -38,11 +40,17 @@ class Cas1AutoScript(
   fun script() {
     seedLogger.info("Auto-Scripting for CAS1")
 
-    seedUsers()
+    if(environmentService.isLocal()) {
+      seedUsers(usersToSeedLocal())
 
-    createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
-    createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
-    createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
+      createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
+      createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
+      createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
+    }
+
+    if(environmentService.isDev()) {
+      seedUsers(usersToSeedTest())
+    }
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -54,9 +62,7 @@ class Cas1AutoScript(
     }
   }
 
-  private fun seedUsers() {
-    usersToSeed().forEach { seedUser(it) }
-  }
+  private fun seedUsers(usersToSeed: List<SeedUser>) = usersToSeed.forEach { seedUser(it) }
 
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun seedUser(seedUser: SeedUser) {
@@ -83,7 +89,26 @@ class Cas1AutoScript(
     }
   }
 
-  private fun usersToSeed(): List<SeedUser> {
+  private fun usersToSeedTest(): List<SeedUser> =
+    listOf("AP_USER_TEST_1","AP_USER_TEST_2","AP_USER_TEST_3","AP_USER_TEST_4","AP_USER_TEST_5")
+      .map {
+        SeedUser(
+          username = it,
+          roles = listOf(
+            UserRole.CAS1_CRU_MEMBER,
+            UserRole.CAS1_ASSESSOR,
+            UserRole.CAS1_MATCHER,
+            UserRole.CAS1_WORKFLOW_MANAGER,
+            UserRole.CAS1_ADMIN,
+            UserRole.CAS1_REPORT_VIEWER,
+            UserRole.CAS1_APPEALS_MANAGER,
+            UserRole.CAS1_CRU_MEMBER,
+          ),
+          documentation = "E2E test user",
+        )
+      }
+
+  private fun usersToSeedLocal(): List<SeedUser> {
     return listOf(
       SeedUser(
         username = "JIMSNOWLDAP",
