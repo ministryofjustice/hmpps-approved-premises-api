@@ -2196,6 +2196,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.shortNotice)
       assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
+      assertThat(persistedApplication.cruManagementArea?.id).isEqualTo(overriddenApArea.defaultCruManagementArea.id)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2216,7 +2217,7 @@ class ApplicationTest : IntegrationTestBase() {
       emailAsserter.assertEmailRequested(
         toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
         templateId = notifyConfig.templates.assessmentAllocated,
-        replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
+        replyToEmailId = overriddenApArea.defaultCruManagementArea.notifyReplyToEmailId,
       )
       emailAsserter.assertEmailRequested(
         toEmailAddress = submittingUser.email!!,
