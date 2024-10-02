@@ -134,10 +134,9 @@ tasks {
 
 tasks.register("bootRunLocal") {
   group = "application"
-  description = "Runs this project as a Spring Boot application with the local profile"
+  description = "Runs this project as a Spring Boot application"
   doFirst {
     tasks.bootRun.configure {
-      systemProperty("spring.profiles.active", "local")
       jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
     }
   }
