@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
@@ -87,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -129,6 +131,8 @@ class ApplicationServiceTest {
   private val mockApplicationListener = mockk<ApplicationListener>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
+  private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -156,6 +160,8 @@ class ApplicationServiceTest {
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
     mockProbationDeliveryUnitRepository,
+    mockCas1CruManagementAreaRepository,
+    mockFeatureFlagService,
   )
 
   @Test
@@ -1736,6 +1742,8 @@ class ApplicationServiceTest {
         )
       } returns theCaseManagerUserDetailsEntity
 
+      every { mockFeatureFlagService.getBooleanFlag("cas1-womens-estate-enabled") } returns true
+
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
@@ -1833,6 +1841,8 @@ class ApplicationServiceTest {
         )
       } returns theCaseManagerUserDetailsEntity
 
+      every { mockFeatureFlagService.getBooleanFlag("cas1-womens-estate-enabled") } returns true
+
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
@@ -1919,6 +1929,8 @@ class ApplicationServiceTest {
           match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
         )
       } returns theCaseManagerUserDetailsEntity
+
+      every { mockFeatureFlagService.getBooleanFlag("cas1-womens-estate-enabled") } returns true
 
       val result =
         applicationService.submitApprovedPremisesApplication(
@@ -2030,6 +2042,8 @@ class ApplicationServiceTest {
       application.applicantUserDetails = existingApplicantUserDetails
       application.caseManagerUserDetails = existingCaseManagerUserDetails
 
+      every { mockFeatureFlagService.getBooleanFlag("cas1-womens-estate-enabled") } returns true
+
       val result =
         applicationService.submitApprovedPremisesApplication(
           applicationId,
@@ -2081,6 +2095,8 @@ class ApplicationServiceTest {
 
       val existingApplicantUserDetails = application.applicantUserDetails!!
       val existingCaseManagerUserDetails = application.caseManagerUserDetails!!
+
+      every { mockFeatureFlagService.getBooleanFlag("cas1-womens-estate-enabled") } returns true
 
       every {
         mockCas1ApplicationUserDetailsRepository.save(match { it.id == existingApplicantUserDetails.id })
