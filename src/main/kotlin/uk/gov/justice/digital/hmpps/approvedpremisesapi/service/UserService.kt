@@ -123,7 +123,7 @@ class UserService(
     val version: Int,
   )
 
-  fun getUsersWithQualificationsAndRoles(
+  fun getUsers(
     qualifications: List<UserQualification>?,
     roles: List<UserRole>?,
     sortBy: UserSortField?,
@@ -131,6 +131,7 @@ class UserService(
     page: Int?,
     region: UUID?,
     apArea: UUID?,
+    cruManagementAreaId: UUID?,
   ): Pair<List<UserEntity>, PaginationMetadata?> {
     var metadata: PaginationMetadata? = null
     val users: List<UserEntity>
@@ -139,12 +140,12 @@ class UserService(
 
     if (pageable == null) {
       users = userRepository.findAll(
-        hasQualificationsAndRoles(qualifications, roles, region, apArea, true),
+        hasQualificationsAndRoles(qualifications, roles, region, apArea, cruManagementAreaId, true),
         Sort.by(Sort.Direction.ASC, "name"),
       )
     } else {
       val response = userRepository.findAll(
-        hasQualificationsAndRoles(qualifications, roles, region, apArea, true),
+        hasQualificationsAndRoles(qualifications, roles, region, apArea, cruManagementAreaId, true),
         pageable,
       )
 

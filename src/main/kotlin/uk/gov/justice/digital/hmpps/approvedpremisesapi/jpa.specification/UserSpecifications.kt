@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 import org.springframework.data.jpa.domain.Specification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -14,11 +15,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import java.util.UUID
 
+@SuppressWarnings("LongParameterList")
 fun hasQualificationsAndRoles(
   qualifications: List<UserQualification>?,
   roles: List<UserRole>?,
   region: UUID?,
   apArea: UUID?,
+  cruManagementArea: UUID?,
   showOnlyActive: Boolean = false,
 ): Specification<UserEntity> {
   return Specification { root: Root<UserEntity>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
@@ -72,6 +75,16 @@ fun hasQualificationsAndRoles(
       predicates.add(
         criteriaBuilder.and(
           criteriaBuilder.equal(apAreaID, apArea),
+        ),
+      )
+    }
+
+    if (cruManagementArea != null) {
+      val cruManagementAreaId = root.get<Cas1CruManagementArea>("cruManagementArea").get<UUID>("id")
+
+      predicates.add(
+        criteriaBuilder.and(
+          criteriaBuilder.equal(cruManagementAreaId, cruManagementArea),
         ),
       )
     }

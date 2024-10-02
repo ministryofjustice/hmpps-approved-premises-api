@@ -445,6 +445,7 @@ class TasksTest {
       }
     }
 
+    @Deprecated("Superseded by FilterByCruManagementArea")
     @Nested
     inner class FilterByApArea : InitialiseDatabasePerClassTestBase() {
       private lateinit var tasks: Map<TaskType, List<Task>>

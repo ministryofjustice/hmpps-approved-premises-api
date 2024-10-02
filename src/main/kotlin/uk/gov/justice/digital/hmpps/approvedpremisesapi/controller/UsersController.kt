@@ -41,6 +41,7 @@ class UsersController(
     qualifications: List<UserQualification>?,
     probationRegionId: UUID?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
@@ -54,6 +55,7 @@ class UsersController(
       page,
       sortBy,
       sortDirection,
+      cruManagementAreaId,
     ) { user ->
       userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
     }
@@ -90,13 +92,14 @@ class UsersController(
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
+    cruManagementAreaId: UUID? = null,
     resultTransformer: (UserEntity) -> T,
   ): ResponseEntity<List<T>> {
     if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
-    val (users, metadata) = userService.getUsersWithQualificationsAndRoles(
+    val (users, metadata) = userService.getUsers(
       qualifications?.map(::transformApiQualification),
       roles?.map(UserRole::valueOf),
       sortBy,
@@ -104,6 +107,7 @@ class UsersController(
       page,
       probationRegionId,
       apAreaId,
+      cruManagementAreaId,
     )
 
     return ResponseEntity.ok().headers(

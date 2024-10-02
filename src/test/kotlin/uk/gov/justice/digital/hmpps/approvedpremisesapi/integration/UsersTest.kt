@@ -517,6 +517,65 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    fun `GET to users with an approved role returns list filtered by user's CRU management area`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+              val apArea = `Given an AP Area`()
+
+              val probationRegionApArea = `Given an AP Area`()
+              val probationRegion = probationRegionEntityFactory.produceAndPersist {
+                withApArea(probationRegionApArea)
+              }
+
+              val cruManagementArea = `Given a CAS1 CRU Management Area`()
+
+              val userOne = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+                withCruManagementArea(cruManagementArea)
+              }
+
+              val userTwo = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+                withCruManagementArea(cruManagementArea)
+              }
+
+              userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+                withApArea(apArea)
+                withCruManagementArea(`Given a CAS1 CRU Management Area`())
+              }
+
+              webTestClient.get()
+                .uri("/users?cruManagementAreaId=${cruManagementArea.id}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+                .expectHeader().doesNotExist("X-Pagination-TotalPages")
+                .expectHeader().doesNotExist("X-Pagination-TotalResults")
+                .expectHeader().doesNotExist("X-Pagination-PageSize")
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(userOne, userTwo).map {
+                      userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
