@@ -56,14 +56,6 @@ user-allocations:
       allocate-to-user: JIMSNOWLDAP
     emergency-and-short-notice-assessments:
       enabled: true
-      allocate-to-users:
-        london: JIMSNOWLDAP
-        north-east: JIMSNOWLDAP
-        north-west: JIMSNOWLDAP
-        midlands: JIMSNOWLDAP
-        south-east-eastern: JIMSNOWLDAP
-        south-west-south-central: JIMSNOWLDAP
-        wales: JIMSNOWLDAP
     appealed-assessments:
       enabled: true
       priority: 0

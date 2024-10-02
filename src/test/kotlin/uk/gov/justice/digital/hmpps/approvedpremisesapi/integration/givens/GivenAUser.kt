@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.NomisUserRoles_mockSuccessfulGetUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -24,6 +25,7 @@ fun IntegrationTestBase.`Given a User`(
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
   mockStaffUserDetailsCall: Boolean = true,
+  cruManagementAreaEntity: Cas1CruManagementAreaEntity? = null,
 ): Pair<UserEntity, String> {
   val staffUserDetailsFactory = StaffUserDetailsFactory()
 
@@ -48,7 +50,7 @@ fun IntegrationTestBase.`Given a User`(
     withIsActive(isActive)
     withYieldedProbationRegion { resolvedProbationRegion }
     withYieldedApArea { apArea }
-    withCruManagementArea(apArea.defaultCruManagementArea)
+    withCruManagementArea(cruManagementAreaEntity ?: apArea.defaultCruManagementArea)
   }
 
   roles.forEach { role ->

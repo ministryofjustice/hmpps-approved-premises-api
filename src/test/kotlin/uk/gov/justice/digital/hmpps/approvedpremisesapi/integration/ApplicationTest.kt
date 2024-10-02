@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -1876,7 +1877,18 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Submit standard application does not auto allocate the assessment, sends emails and raises domain events`() {
       val (submittingUser, jwt) = `Given a User`(
-        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "london")),
+        probationRegion = `Given a Probation Region`(
+          apArea = `Given an AP Area`(
+            defaultCruManagementArea = `Given a CAS1 CRU Management Area`(assessmentAutoAllocationUsername = "DEFAULT_LONDON_ASSESSOR"),
+          ),
+        ),
+      )
+
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        staffUserDetailsConfigBlock = {
+          withUsername("DEFAULT_LONDON_ASSESSOR")
+        },
       )
 
       val (offenderDetails, _) = `Given an Offender`()
@@ -1988,13 +2000,17 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Submit emergency application auto allocates the assessment, sends emails and raises domain events`() {
       val (submittingUser, jwt) = `Given a User`(
-        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "london")),
+        probationRegion = `Given a Probation Region`(
+          apArea = `Given an AP Area`(
+            defaultCruManagementArea = `Given a CAS1 CRU Management Area`(assessmentAutoAllocationUsername = "DEFAULT_LONDON_ASSESSOR"),
+          ),
+        ),
       )
 
       val (assessorUser, _) = `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         staffUserDetailsConfigBlock = {
-          withUsername("LONDON_ASSESSOR")
+          withUsername("DEFAULT_LONDON_ASSESSOR")
         },
       )
 
@@ -2105,14 +2121,12 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit short notice application auto allocates the assessment according to overridden ap area, sends emails and raises domain events`() {
-      val (submittingUser, jwt) = `Given a User`(
-        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "somewhere")),
-      )
+      val (submittingUser, jwt) = `Given a User`()
 
       val (assessorUser, _) = `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         staffUserDetailsConfigBlock = {
-          withUsername("WALES_ASSESSOR")
+          withUsername("DEFAULT_WALES_ASSESSOR")
         },
       )
 
@@ -2149,7 +2163,12 @@ class ApplicationTest : IntegrationTestBase() {
 
       GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-      val overriddenApArea = `Given an AP Area`(name = "wales")
+      val overriddenApArea = `Given an AP Area`(
+        name = "wales",
+        defaultCruManagementArea = `Given a CAS1 CRU Management Area`(
+          assessmentAutoAllocationUsername = "DEFAULT_WALES_ASSESSOR",
+        ),
+      )
 
       webTestClient.post()
         .uri("/applications/$applicationId/submission")
@@ -2180,6 +2199,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+      assertThat(createdAssessment.allocatedToUser).isNotNull()
       assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
 
       domainEventAsserter.assertDomainEventStoreCount(applicationId, 2)
@@ -2207,9 +2227,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit esap application auto allocates the assessment according to esap assessor configuration, sends emails and raises domain events`() {
-      val (submittingUser, jwt) = `Given a User`(
-        probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "somewhere")),
-      )
+      val (submittingUser, jwt) = `Given a User`()
 
       val (esapAssessorUser, _) = `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2251,7 +2269,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-      val overriddenApArea = `Given an AP Area`(name = "wales")
+      val overriddenApArea = `Given an AP Area`()
 
       webTestClient.post()
         .uri("/applications/$applicationId/submission")
