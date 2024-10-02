@@ -1,15 +1,15 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRule
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRule
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
 
 @Component
 @ConditionalOnProperty(name = ["user-allocations.rules.appealed-assessments.enabled"])

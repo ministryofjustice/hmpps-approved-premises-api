@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
