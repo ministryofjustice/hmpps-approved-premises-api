@@ -1,11 +1,10 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.seed
 
 import io.mockk.Called
 import io.mockk.called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.assertj.core.api.Assertions.assertThat
@@ -24,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedOnStartupService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 
-class SeedServiceTest {
+class SeedOnStartupServiceTest {
   private val seedConfig = SeedConfig()
   private val mockApplicationContext = mockk<ApplicationContext>()
   private val mockTransactionTemplate = mockk<TransactionTemplate>()
@@ -39,14 +39,14 @@ class SeedServiceTest {
   private val mockCas1AutoScript = mockk<Cas1AutoScript>()
   private val mockCas2AutoScript = mockk<Cas2AutoScript>()
   private val logEntries = mutableListOf<LogEntry>()
+  private val mockSeedService = mockk<SeedService>()
 
-  private val seedService = SeedService(
+  private val service = SeedOnStartupService(
     seedConfig,
-    mockApplicationContext,
-    mockTransactionTemplate,
-    mockSeedLogger,
     mockCas1AutoScript,
     mockCas2AutoScript,
+    mockSeedService,
+    mockSeedLogger,
   )
 
   @BeforeEach
@@ -71,7 +71,7 @@ class SeedServiceTest {
   fun `autoSeed does nothing if automatic seeding is not enabled`() {
     seedConfig.auto.enabled = false
 
-    seedService.autoSeed()
+    service.seedOnStartup()
 
     verify { listOf(mockApplicationContext, mockTransactionTemplate, mockSeedLogger) wasNot called }
   }
@@ -81,7 +81,7 @@ class SeedServiceTest {
     seedConfig.auto.enabled = true
     seedConfig.auto.filePrefixes = listOf("classpath:does/not/exist")
 
-    seedService.autoSeed()
+    service.seedOnStartup()
 
     assertThat(logEntries).anyMatch {
       it.level == "warn" &&
@@ -94,7 +94,7 @@ class SeedServiceTest {
     seedConfig.auto.enabled = true
     seedConfig.auto.filePrefixes = listOf("classpath:db/seed/unknown-job-type")
 
-    seedService.autoSeed()
+    service.seedOnStartup()
 
     assertThat(logEntries).anyMatch {
       it.level == "warn" &&
@@ -122,19 +122,17 @@ class SeedServiceTest {
     every { mockApplicationContext.getBean(RoomRepository::class.java) } returns mockRoomRepository
     every { mockApplicationContext.getBean(BedRepository::class.java) } returns mockBedRepository
 
-    val spy = spyk(seedService, recordPrivateCalls = true)
-
     val approvedPremisesLambda = slot<SeedJob<*>.() -> String>()
     val approvedPremisesRoomLambda = slot<SeedJob<*>.() -> String>()
 
-    every { spy["seedData"](SeedFileType.approvedPremises, "approved_premises", capture(approvedPremisesLambda)) } returns Unit
-    every { spy["seedData"](SeedFileType.approvedPremisesRooms, "approved_premises_rooms", capture(approvedPremisesRoomLambda)) } returns Unit
+    every { mockSeedService.seedData(SeedFileType.approvedPremises, "approved_premises", capture(approvedPremisesLambda)) } returns Unit
+    every { mockSeedService.seedData(SeedFileType.approvedPremisesRooms, "approved_premises_rooms", capture(approvedPremisesRoomLambda)) } returns Unit
 
-    spy.autoSeed()
+    service.seedOnStartup()
 
     verifyOrder {
-      spy["seedData"](SeedFileType.approvedPremises, "approved_premises", any<SeedJob<*>.() -> String>())
-      spy["seedData"](SeedFileType.approvedPremisesRooms, "approved_premises_rooms", any<SeedJob<*>.() -> String>())
+      mockSeedService.seedData(SeedFileType.approvedPremises, "approved_premises", any<SeedJob<*>.() -> String>())
+      mockSeedService.seedData(SeedFileType.approvedPremisesRooms, "approved_premises_rooms", any<SeedJob<*>.() -> String>())
     }
 
     val approvedPremisesFilename = approvedPremisesLambda.captured.invoke(
@@ -168,7 +166,7 @@ class SeedServiceTest {
       seedConfig.auto.enabled = true
 
       seedConfig.autoScript.cas1Enabled = false
-      seedService.autoSeed()
+      service.seedOnStartup()
 
       verify { mockCas1AutoScript wasNot Called }
       verify { mockCas2AutoScript wasNot Called }
@@ -179,7 +177,7 @@ class SeedServiceTest {
       seedConfig.auto.enabled = true
 
       seedConfig.autoScript.cas1Enabled = true
-      seedService.autoSeed()
+      service.seedOnStartup()
 
       verify { mockCas1AutoScript.script() }
       verify { mockCas2AutoScript wasNot Called }
@@ -193,7 +191,7 @@ class SeedServiceTest {
       seedConfig.auto.enabled = true
 
       seedConfig.autoScript.cas2Enabled = false
-      seedService.autoSeed()
+      service.seedOnStartup()
 
       verify { mockCas1AutoScript wasNot Called }
       verify { mockCas2AutoScript wasNot Called }
@@ -204,7 +202,7 @@ class SeedServiceTest {
       seedConfig.auto.enabled = true
 
       seedConfig.autoScript.cas2Enabled = true
-      seedService.autoSeed()
+      service.seedOnStartup()
 
       verify { mockCas1AutoScript wasNot Called }
       verify { mockCas2AutoScript.script() }
