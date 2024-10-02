@@ -2249,6 +2249,7 @@ components:
         - withdrawn
         - requestedFurtherInformation
         - pendingPlacementRequest
+        - expired
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
       type: object

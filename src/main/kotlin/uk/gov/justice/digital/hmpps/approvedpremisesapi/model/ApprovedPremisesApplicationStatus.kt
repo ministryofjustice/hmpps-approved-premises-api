@@ -34,6 +34,8 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
    * one or more [PlacementApplicationEntity]s are required
    */
   PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.pendingPlacementRequest),
+
+  EXPIRED(ApiApprovedPremisesApplicationStatus.expired),
   ;
 
   companion object {
