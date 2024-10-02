@@ -6,30 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 class Cas1AutoScriptTest : IntegrationTestBase() {
-
   @Autowired
-  lateinit var seedLogger: SeedLogger
-
-  @Autowired
-  lateinit var applicationService: ApplicationService
-
-  @Autowired
-  lateinit var userService: UserService
-
-  @Autowired
-  lateinit var offenderService: OffenderService
+  lateinit var cas1AutoScript: Cas1AutoScript
 
   @Test
-  fun `ensure auto script runs`() {
+  fun `ensure local auto script runs`() {
     `Given an Offender` { offenderDetails, _ ->
-
       APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
         offenderDetails.otherIds.crn,
         ManagingTeamsResponse(
@@ -37,13 +22,12 @@ class Cas1AutoScriptTest : IntegrationTestBase() {
         ),
       )
 
-      Cas1AutoScript(
-        seedLogger,
-        applicationService,
-        userService,
-        offenderService,
-        cas1CruManagementAreaRepository,
-      ).script()
+      cas1AutoScript.scriptLocal()
     }
+  }
+
+  @Test
+  fun `ensure dev auto script runs`() {
+    cas1AutoScript.scriptDev()
   }
 }

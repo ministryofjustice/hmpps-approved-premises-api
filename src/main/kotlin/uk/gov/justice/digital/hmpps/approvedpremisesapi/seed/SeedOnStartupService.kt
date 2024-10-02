@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.File
 import java.io.IOException
 
@@ -20,6 +22,8 @@ class SeedOnStartupService(
   private val cas2AutoScript: Cas2AutoScript,
   private val seedService: SeedService,
   private val seedLogger: SeedLogger,
+  private val environmentService: EnvironmentService,
+  private val sentryService: SentryService,
 ) {
 
   @PostConstruct
@@ -28,7 +32,12 @@ class SeedOnStartupService(
       return
     }
 
-    autoSeed()
+    if (environmentService.isControlledEnvironment()) {
+      sentryService.captureErrorMessage("Auto seeding should not be enabled outside of local and dev environments")
+      return
+    }
+
+    autoSeedFromCsv()
 
     if (seedConfig.autoScript.cas1Enabled) {
       autoScriptCas1()
@@ -39,7 +48,7 @@ class SeedOnStartupService(
     }
   }
 
-  private fun autoSeed() {
+  private fun autoSeedFromCsv() {
     seedLogger.info("Auto-seeding from locations: ${seedConfig.auto.filePrefixes}")
     for (filePrefix in seedConfig.auto.filePrefixes) {
       val csvFiles = try {

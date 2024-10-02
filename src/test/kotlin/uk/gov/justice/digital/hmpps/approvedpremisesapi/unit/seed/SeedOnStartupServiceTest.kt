@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 
 class SeedOnStartupServiceTest {
@@ -38,8 +40,11 @@ class SeedOnStartupServiceTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val mockCas1AutoScript = mockk<Cas1AutoScript>()
   private val mockCas2AutoScript = mockk<Cas2AutoScript>()
-  private val logEntries = mutableListOf<LogEntry>()
   private val mockSeedService = mockk<SeedService>()
+  private val mockEnvironmentService = mockk<EnvironmentService>()
+  private val mockSentryService = mockk<SentryService>()
+
+  private val logEntries = mutableListOf<LogEntry>()
 
   private val service = SeedOnStartupService(
     seedConfig,
@@ -47,6 +52,8 @@ class SeedOnStartupServiceTest {
     mockCas2AutoScript,
     mockSeedService,
     mockSeedLogger,
+    mockEnvironmentService,
+    mockSentryService,
   )
 
   @BeforeEach
@@ -65,6 +72,7 @@ class SeedOnStartupServiceTest {
     }
     every { mockCas1AutoScript.script() } answers { }
     every { mockCas2AutoScript.script() } answers { }
+    every { mockEnvironmentService.isControlledEnvironment() } returns false
   }
 
   @Test

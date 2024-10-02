@@ -35,6 +35,7 @@ generic-service:
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     SEED_AUTO_ENABLED: false
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
+    SEED_AUTO-SCRIPT_CAS1-ENABLED: true
     SEED_AUTO-SCRIPT_CAS2-ENABLED: true
     SEED_AUTO-SCRIPT_NOMS: A5276DZ
     SEED_AUTO-SCRIPT_PRISON-CODE: MDI

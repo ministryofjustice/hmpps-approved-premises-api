@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -38,19 +39,25 @@ class Cas1AutoScript(
   @SuppressWarnings("TooGenericExceptionCaught")
   @Transactional
   fun script() {
-    seedLogger.info("Auto-Scripting for CAS1")
-
-    if(environmentService.isLocal()) {
-      seedUsers(usersToSeedLocal())
-
-      createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
-      createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
-      createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
+    if (environmentService.isLocal()) {
+      scriptLocal()
+    } else if (environmentService.isDev()) {
+      scriptDev()
     }
+  }
 
-    if(environmentService.isDev()) {
-      seedUsers(usersToSeedTest())
-    }
+  fun scriptLocal() {
+    seedLogger.info("Auto-Scripting for CAS1 local")
+    seedUsers(usersToSeedLocal())
+
+    createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
+    createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
+    createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
+  }
+
+  fun scriptDev() {
+    seedLogger.info("Auto-Scripting for CAS1 dev")
+    seedUsers(usersToSeedDev())
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -74,7 +81,10 @@ class Cas1AutoScript(
         is UserService.GetUserResponse.Success -> {
           val user = getUserResponse.user
           seedUser.roles.forEach { role ->
-            userService.addRoleToUser(user = user, role = role)
+            userService.addRoleToUser(user, role)
+          }
+          seedUser.qualifications.forEach { qualification ->
+            userService.addQualificationToUser(user, qualification)
           }
           val roles = user.roles.map { it.role }.joinToString(", ")
           seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
@@ -89,8 +99,8 @@ class Cas1AutoScript(
     }
   }
 
-  private fun usersToSeedTest(): List<SeedUser> =
-    listOf("AP_USER_TEST_1","AP_USER_TEST_2","AP_USER_TEST_3","AP_USER_TEST_4","AP_USER_TEST_5")
+  private fun usersToSeedDev(): List<SeedUser> =
+    listOf("AP_USER_TEST_1", "AP_USER_TEST_2", "AP_USER_TEST_3", "AP_USER_TEST_4", "AP_USER_TEST_5")
       .map {
         SeedUser(
           username = it,
@@ -103,7 +113,9 @@ class Cas1AutoScript(
             UserRole.CAS1_REPORT_VIEWER,
             UserRole.CAS1_APPEALS_MANAGER,
             UserRole.CAS1_CRU_MEMBER,
+            UserRole.CAS1_FUTURE_MANAGER,
           ),
+          qualifications = UserQualification.entries.toList(),
           documentation = "E2E test user",
         )
       }
@@ -122,6 +134,7 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_CRU_MEMBER,
         ),
+        qualifications = UserQualification.entries.toList(),
         documentation = "For local use in development and testing",
       ),
       SeedUser(
@@ -137,6 +150,7 @@ class Cas1AutoScript(
           UserRole.CAS1_FUTURE_MANAGER,
           UserRole.CAS1_CRU_MEMBER,
         ),
+        qualifications = UserQualification.entries.toList(),
         documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
       ),
       SeedUser(
@@ -151,6 +165,7 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_FUTURE_MANAGER,
         ),
+        qualifications = UserQualification.entries.toList(),
         documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
       ),
       SeedUser(
@@ -165,6 +180,7 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_FUTURE_MANAGER,
         ),
+        qualifications = UserQualification.entries.toList(),
         cruManagementAreaOverrideId = Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID,
         documentation = "For local use in development and testing. This user's CRU Management Area is overridden to women's estate",
       ),
@@ -258,6 +274,7 @@ class Cas1AutoScript(
 data class SeedUser(
   val username: String,
   val roles: List<UserRole>,
+  val qualifications: List<UserQualification>,
   val documentation: String,
   val cruManagementAreaOverrideId: UUID? = null,
 )
