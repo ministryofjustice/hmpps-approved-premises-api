@@ -69,7 +69,7 @@ class UserAllocatorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.allocations.UserAllocatorTest#assessmentRules")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.UserAllocatorTest#assessmentRules")
     fun `Returns the expected user according to the rules outcome and precedence`(
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
@@ -139,7 +139,7 @@ class UserAllocatorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.allocations.UserAllocatorTest#placementRequestRules")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.UserAllocatorTest#placementRequestRules")
     fun `Returns the expected user according to the rules outcome and precedence`(
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
@@ -209,7 +209,7 @@ class UserAllocatorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.allocations.UserAllocatorTest#placementApplicationRules")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.UserAllocatorTest#placementApplicationRules")
     fun `Returns the expected user according to the rules outcome and precedence`(
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,

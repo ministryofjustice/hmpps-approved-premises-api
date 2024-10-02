@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -10,14 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
 
+@SuppressWarnings("MagicNumber")
 @Component
-@ConditionalOnProperty(name = ["user-allocations.rules.emergency-and-short-notice-assessments.enabled"])
-class EmergencyAndShortNoticeAssessmentRule(
-  @Value("\${user-allocations.rules.emergency-and-short-notice-assessments.priority:0}")
-  override val priority: Int,
-) : UserAllocatorRule {
+class EmergencyAndShortNoticeAssessmentRule : UserAllocatorRule {
   override val name: String
     get() = "Emergency assessments"
+
+  override val priority: Int
+    get() = 2
 
   override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome {
     val application = assessmentEntity.application

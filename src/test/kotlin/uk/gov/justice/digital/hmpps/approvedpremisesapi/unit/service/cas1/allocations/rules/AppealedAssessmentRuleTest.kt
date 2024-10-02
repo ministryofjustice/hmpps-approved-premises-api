@@ -25,10 +25,7 @@ import java.time.OffsetDateTime
 class AppealedAssessmentRuleTest {
   private val mockAppealRepository = mockk<AppealRepository>()
 
-  val appealedAssessmentRule = AppealedAssessmentRule(
-    0,
-    mockAppealRepository,
-  )
+  val appealedAssessmentRule = AppealedAssessmentRule(mockAppealRepository)
 
   @Nested
   inner class EvaluateAssessment {

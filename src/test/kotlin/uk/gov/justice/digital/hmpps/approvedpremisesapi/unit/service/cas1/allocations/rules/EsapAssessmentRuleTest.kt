@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 import java.time.OffsetDateTime
 
 class EsapAssessmentRuleTest {
-  val esapAssessmentRule = EsapAssessmentRule(0, "SOME-USER")
+  val esapAssessmentRule = EsapAssessmentRule("SOME-USER")
 
   @Nested
   inner class EvaluateAssessment {

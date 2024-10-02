@@ -22,9 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 import java.time.OffsetDateTime
 
 class EmergencyAndShortNoticeAssessmentRuleTest {
-  val assessmentRule = EmergencyAndShortNoticeAssessmentRule(
-    0,
-  )
+  val assessmentRule = EmergencyAndShortNoticeAssessmentRule()
 
   @Nested
   inner class EvaluateAssessment {

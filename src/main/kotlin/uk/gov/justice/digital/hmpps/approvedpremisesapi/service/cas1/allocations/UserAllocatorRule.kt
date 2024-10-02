@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 interface UserAllocatorRule {
   val name: String
 
+  /**
+   * The lower the number, the higher the priority
+   */
   val priority: Int
-    get() = 0
 
   fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome =
     UserAllocatorRuleOutcome.Skip
