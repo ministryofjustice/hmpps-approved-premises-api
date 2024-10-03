@@ -1459,7 +1459,8 @@ class AssessmentServiceTest {
 
     every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
+    val capturedEvent = slot<DomainEvent<ApplicationAssessedEnvelope>>()
+    every { domainEventServiceMock.saveApplicationAssessedDomainEvent(capture(capturedEvent)) } just Runs
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
@@ -1472,43 +1473,41 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.submittedAt).isNotNull()
     assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
 
-    verify(exactly = 1) {
-      domainEventServiceMock.saveApplicationAssessedDomainEvent(
-        match {
-          val data = it.data.eventDetails
-
-          it.applicationId == assessment.application.id &&
-            it.assessmentId == assessment.id &&
-            it.crn == assessment.application.crn &&
-            it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-            data.applicationId == assessment.application.id &&
-            data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
-            data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
-            data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
-            data.assessedBy == ApplicationAssessedAssessedBy(
-            staffMember = StaffMember(
-              staffCode = staffUserDetails.staffCode,
-              staffIdentifier = staffUserDetails.staffIdentifier,
-              forenames = staffUserDetails.staff.forenames,
-              surname = staffUserDetails.staff.surname,
-              username = staffUserDetails.username,
-            ),
-            probationArea = ProbationArea(
-              code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description,
-            ),
-            cru = Cru(
-              name = "South West & South Central",
-            ),
-          ) &&
-            data.decision == "REJECTED" &&
-            data.decisionRationale == "reasoning"
-        },
-      )
-    }
+    verify(exactly = 1) { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) }
+    val it = capturedEvent.captured
+    assertThat(it.applicationId).isEqualTo(assessment.application.id)
+    assertThat(it.assessmentId).isEqualTo(assessment.id)
+    assertThat(it.crn).isEqualTo(assessment.application.crn)
+    assertThat(it.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+    val data = it.data.eventDetails
+    assertThat(data.applicationId).isEqualTo(assessment.application.id)
+    assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
+    assertThat(
+      data.personReference,
+    ).isEqualTo(
+      PersonReference(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber!!),
+    )
+    assertThat(data.deliusEventNumber).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).eventNumber)
+    assertThat(data.assessedBy).isEqualTo(
+      ApplicationAssessedAssessedBy(
+        staffMember = StaffMember(
+          staffCode = staffUserDetails.staffCode,
+          staffIdentifier = staffUserDetails.staffIdentifier,
+          forenames = staffUserDetails.staff.forenames,
+          surname = staffUserDetails.staff.surname,
+          username = staffUserDetails.username,
+        ),
+        probationArea = ProbationArea(
+          code = staffUserDetails.probationArea.code,
+          name = staffUserDetails.probationArea.description,
+        ),
+        cru = Cru(
+          name = "South West & South Central",
+        ),
+      ),
+    )
+    assertThat(data.decision).isEqualTo("REJECTED")
+    assertThat(data.decisionRationale).isEqualTo("reasoning")
 
     verify(exactly = 1) {
       cas1AssessmentEmailServiceMock.assessmentRejected(application)
