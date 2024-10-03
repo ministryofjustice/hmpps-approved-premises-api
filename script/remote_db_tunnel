@@ -177,6 +177,10 @@ else
 
     echo "Port forwarding setup. Now starting CLI"
 
+    # We've found that the port forward is not always available
+    # immediately, leading to connection failures
+    sleep 2
+
     JAQY_CHECKSUM="6d426a6ccf8f7ff07c06346a07a2921561561aa8d9405dace115a6c1947bb4c4"
     JAQY_URL="https://github.com/Teradata/jaqy/releases/download/v1.2.0/jaqy-1.2.0.jar"
     POSTGRES_URL="https://jdbc.postgresql.org/download/postgresql-42.7.3.jar"
