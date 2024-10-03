@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -941,7 +942,7 @@ class WithdrawalTest : IntegrationTestBase() {
             assertBookingWithdrawn(adhocBooking2NoArrival, "Related application withdrawn")
 
             val applicantEmail = applicant.email!!
-            val cruEmail = application.apArea!!.emailAddress!!
+            val cruEmail = application.cruManagementArea!!.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
             emailAsserter.assertEmailsRequestedCount(25)
@@ -1156,7 +1157,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val applicantEmail = applicant.email!!
             val placementAppCreatorEmail = placementAppCreator.email!!
-            val cruEmail = application.apArea!!.emailAddress!!
+            val cruEmail = application.cruManagementArea!!.emailAddress!!
 
             emailAsserter.assertEmailsRequestedCount(10)
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest1)
@@ -1264,7 +1265,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertBookingNotWithdrawn(booking3PotentiallyAdhoc)
 
           val applicantEmail = applicant.email!!
-          val cruEmail = application.apArea!!.emailAddress!!
+          val cruEmail = application.cruManagementArea!!.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(4)
           assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest1)
@@ -1316,7 +1317,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
 
           val applicantEmail = applicant.email!!
-          val cruEmail = application.apArea!!.emailAddress!!
+          val cruEmail = application.cruManagementArea!!.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(2)
           assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest)
@@ -1375,7 +1376,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertBookingWithdrawn(bookingNoArrival, "Related placement request withdrawn")
 
           val applicantEmail = applicant.email!!
-          val cruEmail = application.apArea!!.emailAddress!!
+          val cruEmail = application.cruManagementArea!!.emailAddress!!
           val apEmail = bookingNoArrival.premises.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(4)
@@ -1436,7 +1437,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertSpaceBookingWithdrawn(spaceBookingNoArrival, "Related placement request withdrawn")
 
           val applicantEmail = applicant.email!!
-          val cruEmail = application.apArea!!.emailAddress!!
+          val cruEmail = application.cruManagementArea!!.emailAddress!!
           val apEmail = spaceBookingNoArrival.premises.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(4)
@@ -1638,7 +1639,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
-    val apArea = `Given an AP Area`(emailAddress = "apAreaEmail@test.com")
+    val apArea = `Given an AP Area`()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -1646,6 +1647,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withApplicationSchema(applicationSchema)
       withSubmittedAt(OffsetDateTime.now())
       withApArea(apArea)
+      withCruManagementArea(`Given a CAS1 CRU Management Area`())
       withReleaseType("licence")
       withCaseManagerUserDetails(caseManager)
       withCaseManagerIsNotApplicant(caseManager != null)

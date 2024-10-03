@@ -106,7 +106,7 @@ class Cas1BookingEmailService(
         application.interestedPartiesEmailAddresses() +
           setOfNotNull(bookingInfo.placementApplication?.createdByUser?.email) +
           setOfNotNull(bookingInfo.premises.emailAddress) +
-          setOfNotNull(application.apArea?.emailAddress)
+          setOfNotNull(application.cruManagementArea?.emailAddress)
         ).toSet()
 
     emailNotifier.sendEmails(

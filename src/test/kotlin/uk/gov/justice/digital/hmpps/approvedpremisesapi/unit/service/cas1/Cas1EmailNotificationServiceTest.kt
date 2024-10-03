@@ -6,6 +6,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1EmailNotificationService
 import java.util.UUID
@@ -30,6 +31,10 @@ class Cas1EmailNotificationServiceTest {
     .withDefaults()
     .withApArea(
       ApAreaEntityFactory()
+        .produce(),
+    )
+    .withCruManagementArea(
+      Cas1CruManagementAreaEntityFactory()
         .withNotifyReplyToEmailId(NOTIFY_REPLY_TO_EMAIL_ID)
         .produce(),
     )

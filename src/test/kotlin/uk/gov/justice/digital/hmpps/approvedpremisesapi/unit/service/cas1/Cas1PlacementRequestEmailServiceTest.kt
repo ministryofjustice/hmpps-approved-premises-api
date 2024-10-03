@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -89,7 +90,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
     @Test
     fun `placementRequestWithdrawn doesnt send email to CRU if no email addresses defined`() {
-      val application = createApplication(apAreaEmail = null)
+      val application = createApplication(cruManagementAreaEmail = null)
       val placementRequest = createPlacementRequest(application, booking = null)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
@@ -99,7 +100,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
     @Test
     fun `placementRequestWithdrawn doesnt send email to CRU if email addresses defined and active booking`() {
-      val application = createApplication(apAreaEmail = CRU_EMAIL)
+      val application = createApplication(cruManagementAreaEmail = CRU_EMAIL)
       val booking = BookingEntityFactory()
         .withApplication(application)
         .withDefaultPremises()
@@ -113,7 +114,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
     @Test
     fun `placementRequestWithdrawn sends match request withdrawn email to CRU if email addresses defined and no booking`() {
-      val application = createApplication(apAreaEmail = CRU_EMAIL)
+      val application = createApplication(cruManagementAreaEmail = CRU_EMAIL)
       val placementRequest = createPlacementRequest(application, booking = null)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
@@ -306,7 +307,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
   private fun createApplication(
     applicantEmail: String? = null,
-    apAreaEmail: String? = null,
+    cruManagementAreaEmail: String? = null,
     caseManagerNotApplicant: Boolean = false,
   ): ApprovedPremisesApplicationEntity {
     val applicant = UserEntityFactory()
@@ -321,7 +322,11 @@ class Cas1PlacementRequestEmailServiceTest {
       .withApArea(
         ApAreaEntityFactory()
           .withName(AREA_NAME)
-          .withEmailAddress(apAreaEmail)
+          .produce(),
+      )
+      .withCruManagementArea(
+        Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(cruManagementAreaEmail)
           .produce(),
       )
       .withCaseManagerIsNotApplicant(caseManagerNotApplicant)

@@ -29,14 +29,6 @@ class ApAreaEntityFactory : Factory<ApAreaEntity> {
     this.identifier = { identifier }
   }
 
-  fun withEmailAddress(emailAddress: String?) = apply {
-    this.emailAddress = { emailAddress }
-  }
-
-  fun withNotifyReplyToEmailId(notifyReplyToEmailId: String) = apply {
-    this.notifyReplyToEmailId = { notifyReplyToEmailId }
-  }
-
   fun withDefaultCruManagementArea(defaultCruManagementArea: Cas1CruManagementAreaEntity) = apply {
     this.defaultCruManagementArea = { defaultCruManagementArea }
   }

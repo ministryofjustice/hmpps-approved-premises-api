@@ -1840,6 +1840,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,
             apArea = `Given an AP Area`(),
+            cruManagementArea = `Given a CAS1 CRU Management Area`(),
           ) { placementRequest, _ ->
 
             webTestClient.post()
@@ -1864,7 +1865,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
-              placementRequest.application.apArea!!.emailAddress!!,
+              placementRequest.application.cruManagementArea!!.emailAddress!!,
               notifyConfig.templates.matchRequestWithdrawnV2,
             )
             emailAsserter.assertEmailRequested(

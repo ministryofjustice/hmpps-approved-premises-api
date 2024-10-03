@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -1239,8 +1240,9 @@ class Cas1SpaceBookingTest {
         withCrn(offender.otherIds.crn)
         withCreatedByUser(applicant)
         withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-        withApArea(`Given an AP Area`(emailAddress = "apAreaEmail@test.com"))
+        withApArea(`Given an AP Area`())
         withSubmittedAt(OffsetDateTime.now())
+        withCruManagementArea(`Given a CAS1 CRU Management Area`())
       }
 
       val placementApplication = placementApplicationFactory.produceAndPersist() {
@@ -1337,7 +1339,7 @@ class Cas1SpaceBookingTest {
       emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
-      emailAsserter.assertEmailRequested(application.apArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
     }
   }
 }

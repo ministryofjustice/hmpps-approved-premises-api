@@ -8,6 +8,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -106,7 +107,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
         assertPlacementRequestNotWithdrawn(placementRequest2)
         assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
 
-        val cruEmail = application.apArea!!.emailAddress!!
+        val cruEmail = application.cruManagementArea!!.emailAddress!!
         emailAsserter.assertEmailsRequestedCount(2)
         assertMatchRequestWithdrawnEmail(cruEmail, placementRequest1)
         assertMatchRequestWithdrawnEmail(cruEmail, placementRequest3)
@@ -171,7 +172,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
-    val apArea = `Given an AP Area`(emailAddress = "apAreaEmail@test.com")
+    val apArea = `Given an AP Area`()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -182,6 +183,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       withReleaseType("licence")
       withCaseManagerUserDetails(caseManager)
       withCaseManagerIsNotApplicant(caseManager != null)
+      withCruManagementArea(`Given a CAS1 CRU Management Area`())
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
