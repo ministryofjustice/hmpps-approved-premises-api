@@ -26,7 +26,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
    * We utilise the [hmpss spring boot sqs starter](https://github.com/ministryofjustice/hmpps-spring-boot-sqs)
    * to configure the queue container factory, using localstack to emulate SNS.
    */
-  @SqsListener(queueNames = ["domaineventsqueue"], factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener(queueNames = ["domaineventsqueue"], factory = "hmppsQueueContainerFactoryProxy", pollTimeoutSeconds = "1")
   fun processMessage(rawMessage: String?) {
     val (message) = objectMapper.readValue(rawMessage, Message::class.java)
     val event = objectMapper.readValue(message, SnsEvent::class.java)
