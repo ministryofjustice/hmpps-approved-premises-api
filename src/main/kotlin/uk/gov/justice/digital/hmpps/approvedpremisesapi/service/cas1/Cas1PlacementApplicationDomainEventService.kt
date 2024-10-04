@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -33,7 +33,7 @@ import java.util.UUID
 class Cas1PlacementApplicationDomainEventService(
   private val domainEventService: DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
-  private val communityApiClient: CommunityApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
@@ -55,7 +55,7 @@ class Cas1PlacementApplicationDomainEventService(
       PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.additionalPlacement
     }
 
-    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(username)) {
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(username)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
@@ -70,7 +70,7 @@ class Cas1PlacementApplicationDomainEventService(
       ),
       deliusEventNumber = application.eventNumber,
       createdAt = eventOccurredAt,
-      createdBy = domainEventTransformer.toStaffMember(staffDetails),
+      createdBy = staffDetails.toStaffMember(),
       expectedArrival = dates.expectedArrival,
       duration = dates.duration,
       requestForPlacementType = placementType,

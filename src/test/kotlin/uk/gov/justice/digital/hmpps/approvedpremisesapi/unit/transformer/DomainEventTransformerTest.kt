@@ -11,9 +11,11 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 
 class DomainEventTransformerTest {
@@ -35,6 +37,7 @@ class DomainEventTransformerTest {
     assertThat(result.name).isEqualTo("theProbationDescription")
   }
 
+  // just for piece of mind - remove in next PR
   @Test
   fun `toStaffMember success`() {
     val staffDetails = StaffUserDetailsFactory()
@@ -45,13 +48,30 @@ class DomainEventTransformerTest {
       .withUsername("theUsername")
       .produce()
 
-    val result = domainEventTransformerService.toStaffMember(staffDetails)
+    val staffDetail = StaffDetailFactory.staffDetail().copy(
+      code = "theStaffCode",
+      staffIdentifier = 22L,
+      name =
+      PersonName(forename = "theForenames", surname = "theSurname"),
+      username = "theUsername",
+    )
+
+    val res = staffDetail.toStaffMember()
+    val result = staffDetails.toStaffMember()
+
+    assertThat(result).isEqualTo(res)
 
     assertThat(result.staffCode).isEqualTo("theStaffCode")
     assertThat(result.staffIdentifier).isEqualTo(22L)
     assertThat(result.forenames).isEqualTo("theForenames")
     assertThat(result.surname).isEqualTo("theSurname")
     assertThat(result.username).isEqualTo("theUsername")
+
+    assertThat(res.staffCode).isEqualTo("theStaffCode")
+    assertThat(res.staffIdentifier).isEqualTo(22L)
+    assertThat(res.forenames).isEqualTo("theForenames")
+    assertThat(res.surname).isEqualTo("theSurname")
+    assertThat(res.username).isEqualTo("theUsername")
   }
 
   @Test

@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -53,12 +54,12 @@ class Cas1PlacementApplicationDomainEventServiceTest {
 
   val domainEventService = mockk<DomainEventService>()
   val domainEventTransformer = mockk<DomainEventTransformer>()
-  val communityApiClient = mockk<CommunityApiClient>()
+  val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   val service = Cas1PlacementApplicationDomainEventService(
     domainEventService,
     domainEventTransformer,
-    communityApiClient,
+    apDeliusContextApiClient,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
   )
 
@@ -99,13 +100,12 @@ class Cas1PlacementApplicationDomainEventServiceTest {
       )
 
       val staffUserDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(USERNAME) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetail(USERNAME) } returns ClientResult.Success(
         status = HttpStatus.OK,
-        body = staffUserDetails,
+        body = staffUserDetails.toStaffDetail(),
       )
 
-      val staffMember = StaffMemberFactory().produce()
-      every { domainEventTransformer.toStaffMember(staffUserDetails) } returns staffMember
+      val staffMember = staffUserDetails.toStaffMember()
       every { domainEventService.saveRequestForPlacementCreatedEvent(any(), any()) } returns Unit
 
       service.placementApplicationSubmitted(placementApplication, USERNAME)

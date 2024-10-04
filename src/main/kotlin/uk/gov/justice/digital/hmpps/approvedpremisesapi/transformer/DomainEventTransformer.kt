@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 
 @Component
 class DomainEventTransformer(private val communityApiClient: CommunityApiClient) {
@@ -23,7 +24,15 @@ class DomainEventTransformer(private val communityApiClient: CommunityApiClient)
     return WithdrawnBy(staffMember, probationArea)
   }
 
+  @Deprecated("This will be removed as part of CAS-573")
   fun toProbationArea(staffDetails: StaffUserDetails): ProbationArea {
+    return ProbationArea(
+      code = staffDetails.probationArea.code,
+      name = staffDetails.probationArea.description,
+    )
+  }
+
+  fun toProbationArea(staffDetails: StaffDetail): ProbationArea {
     return ProbationArea(
       code = staffDetails.probationArea.code,
       name = staffDetails.probationArea.description,
@@ -36,5 +45,6 @@ class DomainEventTransformer(private val communityApiClient: CommunityApiClient)
       is ClientResult.Failure -> result.throwException()
     }
 
+  @Deprecated("This has moved to StaffDetail")
   fun toStaffMember(staffDetails: StaffUserDetails): StaffMember = staffDetails.toStaffMember()
 }
