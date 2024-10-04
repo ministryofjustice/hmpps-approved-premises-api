@@ -133,6 +133,11 @@ class DomainEventDescriber(
   @SuppressWarnings("TooGenericExceptionThrown")
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
+
+    if (domainEventSummary.cas1SpaceBookingId != null) {
+      return "Space booking cancelled"
+    }
+
     return event.describe { data ->
       val booking = bookingRepository.findByIdOrNull(data.eventDetails.bookingId)
         ?: throw RuntimeException("Booking ID ${data.eventDetails.bookingId} with cancellation not found")
