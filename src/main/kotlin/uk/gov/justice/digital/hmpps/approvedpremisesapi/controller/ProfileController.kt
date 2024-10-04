@@ -44,7 +44,7 @@ class ProfileController(
     val responseToReturn =
       if (getUserResponse is UserService.GetUserResponse.Success && !getUserResponse.createdOnGet) {
         log.info("Updating user record for $username")
-        userService.updateUser(getUserResponse.user, xServiceName)
+        userService.updateUserFromDelius(getUserResponse.user, xServiceName)
       } else {
         getUserResponse
       }

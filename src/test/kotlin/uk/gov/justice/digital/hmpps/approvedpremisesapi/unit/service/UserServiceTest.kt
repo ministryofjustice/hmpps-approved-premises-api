@@ -33,16 +33,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository.RoleAssignmentByUsername
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -74,6 +77,7 @@ class UserServiceTest {
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+  private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
 
   private val userService = UserService(
     mockUserServiceConfig,
@@ -89,6 +93,7 @@ class UserServiceTest {
     mockProbationDeliveryUnitRepository,
     mockFeatureFlagService,
     mockApDeliusContextApiClient,
+    mockCas1CruManagementAreaRepository,
   )
 
   @BeforeEach
@@ -802,7 +807,7 @@ class UserServiceTest {
   }
 
   @Nested
-  inner class UpdateUserFromApprovedPremisesAndDeliusApi {
+  inner class UpdateUserFromDelius {
 
     @BeforeEach
     fun setup() {
@@ -877,7 +882,7 @@ class UserServiceTest {
         } returns newApAreaForCas1
       }
 
-      val result = userService.updateUser(id, serviceName)
+      val result = userService.updateUserFromDelius(id, serviceName)
 
       verify(exactly = 1) { mockApDeliusContextApiClient.getStaffDetail(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -917,7 +922,7 @@ class UserServiceTest {
       val clientResultSuccess = ClientResult.Success(HttpStatus.OK, staffDetailNullEmail)
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
 
-      val result = userService.updateUser(id, ServiceName.temporaryAccommodation)
+      val result = userService.updateUserFromDelius(id, ServiceName.temporaryAccommodation)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
@@ -934,7 +939,7 @@ class UserServiceTest {
     @Test
     fun `it returns not found when there is no user for that ID`() {
       every { mockUserRepository.findByIdOrNull(id) } returns null
-      val result = userService.updateUser(id, ServiceName.approvedPremises)
+      val result = userService.updateUserFromDelius(id, ServiceName.approvedPremises)
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
     }
 
@@ -956,7 +961,7 @@ class UserServiceTest {
           body = null,
         )
 
-      val result = userService.updateUser(id, ServiceName.approvedPremises)
+      val result = userService.updateUserFromDelius(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       val getUserResponse = (result as CasResult.Success).value
@@ -966,46 +971,109 @@ class UserServiceTest {
   }
 
   @Nested
-  inner class UpdateUserRolesAndQualifications {
-
-    private val userService = mockk<UserService>()
+  inner class UpdateUser {
 
     private val userFactory = UserEntityFactory()
       .withDefaults()
 
     @Test
     fun `updates a user with given role`() {
-      every { userService.updateUserRolesAndQualificationsForUser(any(), any(), any()) } answers { callOriginal() }
-      val user = userFactory.produce()
+      val user = userFactory
+        .withDefaults()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce()
 
-      val assessorRole = ApprovedPremisesUserRole.assessor
-      val assessorRoleAdmin = ApprovedPremisesUserRole.roleAdmin
+      user.roles.add(
+        UserRoleAssignmentEntityFactory().withUser(user).withRole(UserRole.CAS1_USER_MANAGER).produce(),
+      )
 
-      every { userService.clearRolesForService(user, ServiceName.approvedPremises) } returns Unit
-      every { userService.clearQualifications(user) } returns Unit
-      every { userService.addRoleToUser(user, any()) } returns Unit
-      every { userService.addQualificationToUser(user, any()) } returns Unit
+      user.qualifications.add(
+        UserQualificationAssignmentEntityFactory().withUser(user).withQualification(UserQualification.ESAP).produce(),
+      )
 
-      val roles = listOf(assessorRole, assessorRoleAdmin)
-      val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
+      every { mockUserRepository.findByIdOrNull(user.id) } returns user
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+      every { mockUserQualificationAssignmentRepository.deleteAllById(any()) } returns Unit
+      every { mockUserRoleAssignmentRepository.delete(any()) } answers { it.invocation.args[0] as UserRoleAssignmentEntity }
+      every { mockUserRoleAssignmentRepository.save(any()) } answers { it.invocation.args[0] as UserRoleAssignmentEntity }
+      every { mockUserQualificationAssignmentRepository.save(any()) } answers { it.invocation.args[0] as UserQualificationAssignmentEntity }
 
-      val result = userService.updateUserRolesAndQualificationsForUser(user, roles, qualifications)
+      val result = userService.updateUser(
+        id = user.id,
+        roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.roleAdmin),
+        qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe),
+        cruManagementAreaOverrideId = null,
+      )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
+      val updatedUser = (result as CasResult.Success).value
 
-      val entity = result.value
+      assertThat(updatedUser.id).isEqualTo(user.id)
+      assertThat(updatedUser.roles.map { it.role }).containsExactlyInAnyOrder(UserRole.CAS1_ASSESSOR, UserRole.CAS1_ADMIN)
+      assertThat(updatedUser.qualifications.map { it.qualification }).containsExactlyInAnyOrder(UserQualification.EMERGENCY, UserQualification.PIPE)
+      assertThat(updatedUser.cruManagementAreaOverride).isNull()
+    }
 
-      assertThat(entity.id).isEqualTo(user.id)
+    @Test
+    fun `set cru management override`() {
+      val user = userFactory
+        .withCruManagementArea(Cas1CruManagementAreaEntityFactory().produce())
+        .withCruManagementAreaOverride(Cas1CruManagementAreaEntityFactory().produce())
+        .produce()
 
-      verify(exactly = 1) { userService.clearRolesForService(user, ServiceName.approvedPremises) }
-      verify(exactly = 1) { userService.clearQualifications(user) }
-      verify(exactly = 2) { userService.addRoleToUser(user, any()) }
-      verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ASSESSOR) }
-      verify(exactly = 1) { userService.addRoleToUser(user, UserRole.CAS1_ADMIN) }
-      verify(exactly = 2) { userService.addQualificationToUser(user, any()) }
-      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.EMERGENCY) }
-      verify(exactly = 1) { userService.addQualificationToUser(user, UserQualification.PIPE) }
+      val cruManagementAreaOverride = Cas1CruManagementAreaEntityFactory().produce()
+
+      every { mockUserRepository.findByIdOrNull(user.id) } returns user
+      every { mockCas1CruManagementAreaRepository.findByIdOrNull(cruManagementAreaOverride.id) } returns cruManagementAreaOverride
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+      every { mockUserQualificationAssignmentRepository.deleteAllById(any()) } returns Unit
+
+      val result = userService.updateUser(
+        id = user.id,
+        roles = emptyList(),
+        qualifications = emptyList(),
+        cruManagementAreaOverrideId = cruManagementAreaOverride.id,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      val updatedUser = (result as CasResult.Success).value
+
+      assertThat(updatedUser.id).isEqualTo(user.id)
+      assertThat(updatedUser.cruManagementArea).isEqualTo(cruManagementAreaOverride)
+      assertThat(updatedUser.cruManagementAreaOverride).isEqualTo(cruManagementAreaOverride)
+    }
+
+    @Test
+    fun `remove cru management override, revert to ap area default`() {
+      val apAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val overriddenCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+
+      val user = userFactory
+        .withApArea(ApAreaEntityFactory().withDefaultCruManagementArea(apAreaDefaultCruManagementArea).produce())
+        .withCruManagementArea(overriddenCruManagementArea)
+        .withCruManagementAreaOverride(overriddenCruManagementArea)
+        .produce()
+
+      val cruManagementAreaOverride = Cas1CruManagementAreaEntityFactory().produce()
+
+      every { mockUserRepository.findByIdOrNull(user.id) } returns user
+      every { mockCas1CruManagementAreaRepository.findByIdOrNull(cruManagementAreaOverride.id) } returns cruManagementAreaOverride
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+      every { mockUserQualificationAssignmentRepository.deleteAllById(any()) } returns Unit
+
+      val result = userService.updateUser(
+        id = user.id,
+        roles = emptyList(),
+        qualifications = emptyList(),
+        cruManagementAreaOverrideId = null,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      val updatedUser = (result as CasResult.Success).value
+
+      assertThat(updatedUser.id).isEqualTo(user.id)
+      assertThat(updatedUser.cruManagementArea).isEqualTo(apAreaDefaultCruManagementArea)
+      assertThat(updatedUser.cruManagementAreaOverride).isNull()
     }
   }
 

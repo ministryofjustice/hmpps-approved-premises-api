@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -46,6 +47,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var deliusStaffCode: Yielded<String> = { randomStringUpperCase(6) }
   private var deliusStaffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
+  private var roles: Yielded<MutableList<UserRoleAssignmentEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
@@ -171,7 +173,7 @@ class UserEntityFactory : Factory<UserEntity> {
     deliusStaffCode = this.deliusStaffCode(),
     deliusStaffIdentifier = this.deliusStaffIdentifier(),
     applications = this.applications(),
-    roles = mutableListOf(),
+    roles = this.roles(),
     qualifications = this.qualifications(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),

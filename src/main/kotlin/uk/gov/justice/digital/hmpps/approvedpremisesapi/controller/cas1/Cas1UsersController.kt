@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -25,7 +24,7 @@ class Cas1UsersController(
 ) : UsersCas1Delegate {
 
   override fun getUser(id: UUID): ResponseEntity<ApprovedPremisesUser> {
-    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUser(id, ServiceName.approvedPremises))) {
+    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, ServiceName.approvedPremises))) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
       is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformCas1JpaToApi(getUserResponse.user), HttpStatus.OK)
     }
@@ -46,12 +45,11 @@ class Cas1UsersController(
     }
 
     val userEntity = extractEntityFromCasResult(
-      userService.updateUserRolesAndQualifications(
+      userService.updateUser(
         id,
-        UserRolesAndQualifications(
-          cas1UpdateUser.roles,
-          cas1UpdateUser.qualifications,
-        ),
+        cas1UpdateUser.roles,
+        cas1UpdateUser.qualifications,
+        cas1UpdateUser.cruManagementAreaOverrideId,
       ),
     )
 

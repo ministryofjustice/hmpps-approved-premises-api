@@ -155,7 +155,7 @@ class TaskService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val assigneeUserResult = userService.updateUser(userToAllocateToId, ServiceName.approvedPremises)
+    val assigneeUserResult = userService.updateUserFromDelius(userToAllocateToId, ServiceName.approvedPremises)
 
     val assigneeUser =
       if (assigneeUserResult is CasResult.Success &&

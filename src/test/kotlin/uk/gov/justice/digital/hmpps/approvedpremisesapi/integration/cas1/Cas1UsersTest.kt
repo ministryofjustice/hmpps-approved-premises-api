@@ -9,14 +9,17 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory.probationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory.team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -199,7 +202,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `Updating a user returns OK with correct body when user has an approved role`(role: UserRole) {
+    fun `Updating a user returns OK`(role: UserRole) {
       val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
       val roles = listOf(
         ApprovedPremisesUserRole.assessor,
@@ -209,16 +212,20 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
       )
 
-      val id = `Given a User`().first.id
+      val apArea = `Given an AP Area`()
+      val userId = `Given a User`(probationRegion = `Given a Probation Region`(apArea = apArea)).first.id
+
+      val cruManagementAreaOverride = `Given a CAS1 CRU Management Area`()
 
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.put()
-          .uri("/cas1/users/$id")
+          .uri("/cas1/users/$userId")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            UserRolesAndQualifications(
+            Cas1UpdateUser(
               roles = roles,
               qualifications = qualifications,
+              cruManagementAreaOverrideId = cruManagementAreaOverride.id,
             ),
           )
           .exchange()
@@ -234,6 +241,9 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath(".roles[3]").isEqualTo(ApprovedPremisesUserRole.excludedFromMatchAllocation.value)
           .jsonPath(".roles[4]").isEqualTo(ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation.value)
           .jsonPath(".isActive").isEqualTo(true)
+          .jsonPath(".cruManagementArea.id").isEqualTo(cruManagementAreaOverride.id.toString())
+          .jsonPath(".cruManagementAreaDefault.id").isEqualTo(apArea.defaultCruManagementArea.id.toString())
+          .jsonPath(".cruManagementAreaOverride.id").isEqualTo(cruManagementAreaOverride.id.toString())
       }
     }
   }

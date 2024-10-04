@@ -6844,6 +6844,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserQualification'
+        cruManagementAreaOverrideId:
+          type: string
+          format: uuid
       required:
         - roles
         - qualifications

@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -64,6 +64,7 @@ class UserService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val featureFlagService: FeatureFlagService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -203,24 +204,42 @@ class UserService(
     userRepository.save(user)
   }
 
-  fun updateUserRolesAndQualifications(
+  fun updateUser(
     id: UUID,
-    userRolesAndQualifications: UserRolesAndQualifications,
+    roles: List<ApprovedPremisesUserRole>,
+    qualifications: List<APIUserQualification>,
+    cruManagementAreaOverrideId: UUID?,
   ): CasResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
-    val roles = userRolesAndQualifications.roles
-    val qualifications = userRolesAndQualifications.qualifications
+
     user.isActive = true
+
+    if (cruManagementAreaOverrideId != null) {
+      val override = cas1CruManagementAreaRepository.findByIdOrNull(cruManagementAreaOverrideId)
+        ?: return CasResult.NotFound("Cas1CruManagementArea")
+      user.cruManagementArea = override
+      user.cruManagementAreaOverride = override
+    } else {
+      user.cruManagementArea = user.apArea!!.defaultCruManagementArea
+      user.cruManagementAreaOverride = null
+    }
+
     userRepository.save(user)
 
-    return updateUserRolesAndQualificationsForUser(user, roles, qualifications)
+    updateUserRolesAndQualificationsForUser(
+      user = user,
+      roles = roles,
+      qualifications = qualifications,
+    )
+
+    return CasResult.Success(user)
   }
 
-  fun updateUserRolesAndQualificationsForUser(
+  private fun updateUserRolesAndQualificationsForUser(
     user: UserEntity,
     roles: List<ApprovedPremisesUserRole>,
     qualifications: List<APIUserQualification>,
-  ): CasResult<UserEntity> {
+  ) {
     clearQualifications(user)
     clearRolesForService(user, ServiceName.approvedPremises)
 
@@ -231,19 +250,17 @@ class UserService(
     qualifications.forEach {
       this.addQualificationToUser(user, transformQualifications(it))
     }
-
-    return CasResult.Success(user)
   }
 
-  fun updateUser(
+  fun updateUserFromDelius(
     id: UUID,
     forService: ServiceName,
   ): CasResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
-    return CasResult.Success(updateUser(user, forService))
+    return CasResult.Success(updateUserFromDelius(user, forService))
   }
 
-  fun updateUser(
+  fun updateUserFromDelius(
     user: UserEntity,
     forService: ServiceName,
   ): GetUserResponse {
