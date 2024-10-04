@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -19,7 +19,7 @@ import java.util.UUID
 @Service
 class Cas1AppealDomainEventService(
   private val domainEventService: DomainEventService,
-  private val communityApiClient: CommunityApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val applicationAppealUrlTemplate: UrlTemplate,
 ) {
@@ -28,7 +28,7 @@ class Cas1AppealDomainEventService(
     val id = UUID.randomUUID()
     val timestamp = appeal.createdAt.toInstant()
 
-    val staffDetails = when (val result = communityApiClient.getStaffUserDetails(appeal.createdBy.deliusUsername)) {
+    val staffDetails = when (val result = apDeliusContextApiClient.getStaffDetail(appeal.createdBy.deliusUsername)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
     }

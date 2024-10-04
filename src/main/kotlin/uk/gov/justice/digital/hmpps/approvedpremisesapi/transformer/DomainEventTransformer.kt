@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.WithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -44,7 +43,4 @@ class DomainEventTransformer(private val communityApiClient: CommunityApiClient)
       is ClientResult.Success -> result.body.toStaffMember()
       is ClientResult.Failure -> result.throwException()
     }
-
-  @Deprecated("This has moved to StaffDetail")
-  fun toStaffMember(staffDetails: StaffUserDetails): StaffMember = staffDetails.toStaffMember()
 }

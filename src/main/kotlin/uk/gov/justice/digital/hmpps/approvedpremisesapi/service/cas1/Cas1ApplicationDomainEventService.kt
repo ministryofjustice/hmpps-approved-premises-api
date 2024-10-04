@@ -15,14 +15,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -40,7 +39,6 @@ import java.util.UUID
 class Cas1ApplicationDomainEventService(
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
-  private val communityApiClient: CommunityApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -84,7 +82,7 @@ class Cas1ApplicationDomainEventService(
 
     val mappaLevel = risks.mappa.value?.level
 
-    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(username)) {
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(username)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
@@ -174,7 +172,7 @@ class Cas1ApplicationDomainEventService(
     offenderDetails: OffenderDetailSummary,
     mappaLevel: String?,
     submitApplication: SubmitApprovedPremisesApplication,
-    staffDetails: StaffUserDetails,
+    staffDetails: StaffDetail,
     caseDetail: CaseDetail,
   ): ApplicationSubmitted {
     return ApplicationSubmitted(
@@ -202,11 +200,11 @@ class Cas1ApplicationDomainEventService(
   }
 
   private fun getApplicationSubmittedSubmittedBy(
-    staffDetails: StaffUserDetails,
+    staffDetails: StaffDetail,
     caseDetail: CaseDetail,
   ): ApplicationSubmittedSubmittedBy {
     return ApplicationSubmittedSubmittedBy(
-      staffMember = domainEventTransformer.toStaffMember(staffDetails),
+      staffMember = staffDetails.toStaffMember(),
       probationArea = domainEventTransformer.toProbationArea(staffDetails),
       team = getTeamFromCaseDetail(caseDetail),
       ldu = getLduFromCaseDetail(caseDetail),
@@ -228,7 +226,7 @@ class Cas1ApplicationDomainEventService(
     )
   }
 
-  private fun getRegionFromStaffDetails(staffDetails: StaffUserDetails): Region {
+  private fun getRegionFromStaffDetails(staffDetails: StaffDetail): Region {
     return Region(
       code = staffDetails.probationArea.code,
       name = staffDetails.probationArea.description,

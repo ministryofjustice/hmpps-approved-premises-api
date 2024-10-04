@@ -35,8 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -108,7 +109,7 @@ class AssessmentServiceTest {
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val domainEventServiceMock = mockk<DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
-  private val communityApiClientMock = mockk<CommunityApiClient>()
+  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
@@ -131,7 +132,7 @@ class AssessmentServiceTest {
     jsonSchemaServiceMock,
     domainEventServiceMock,
     offenderServiceMock,
-    communityApiClientMock,
+    apDeliusContextApiClient,
     placementRequestServiceMock,
     placementRequirementsServiceMock,
     userAllocatorMock,
@@ -1460,7 +1461,10 @@ class AssessmentServiceTest {
       .withProbationAreaCode("N26")
       .produce()
 
-    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+    every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails.toStaffDetail(),
+    )
 
     val capturedEvent = slot<DomainEvent<ApplicationAssessedEnvelope>>()
     every { domainEventServiceMock.saveApplicationAssessedDomainEvent(capture(capturedEvent)) } just Runs
@@ -1579,7 +1583,10 @@ class AssessmentServiceTest {
       .withProbationAreaCode("N26")
       .produce()
 
-    every { communityApiClientMock.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+    every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails.toStaffDetail(),
+    )
 
     every { userServiceMock.getUserForRequest() } returns user
     every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
@@ -2358,7 +2365,7 @@ class AssessmentServiceTest {
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
     private val domainEventServiceMock = mockk<DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
-    private val communityApiClientMock = mockk<CommunityApiClient>()
+    private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
@@ -2375,7 +2382,7 @@ class AssessmentServiceTest {
       jsonSchemaServiceMock,
       domainEventServiceMock,
       offenderServiceMock,
-      communityApiClientMock,
+      apDeliusContextApiClient,
       placementRequestServiceMock,
       placementRequirementsServiceMock,
       userAllocatorMock,
