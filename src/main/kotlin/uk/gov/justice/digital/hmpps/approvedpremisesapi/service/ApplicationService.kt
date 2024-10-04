@@ -28,6 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
@@ -50,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -66,7 +69,6 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 @Service
 @Suppress(
@@ -87,7 +89,7 @@ class ApplicationService(
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val domainEventService: DomainEventService,
-  private val cas3DomainEventService: Cas3DomainEventService,
+  private val cas3DomainEventService: uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val userAccessService: UserAccessService,
@@ -102,6 +104,8 @@ class ApplicationService(
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
+  private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
+  private val featureFlagService: FeatureFlagService,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -799,7 +803,14 @@ class ApplicationService(
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       this.apArea = apArea
-      this.cruManagementArea = apArea.defaultCruManagementArea
+      this.cruManagementArea = if (featureFlagService.getBooleanFlag("cas1-womens-estate-enabled") &&
+        submitApplication.isWomensApplication == true
+      ) {
+        cas1CruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
+          ?: throw InternalServerErrorProblem("Could not find women's estate CRU Management Area Entity with ID ${Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID}")
+      } else {
+        apArea.defaultCruManagementArea
+      }
       this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
       this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(

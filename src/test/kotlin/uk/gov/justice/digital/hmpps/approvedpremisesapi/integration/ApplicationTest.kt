@@ -72,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -1964,6 +1965,132 @@ class ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
       assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
+
+      val createdAssessment =
+        approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+      assertThat(createdAssessment.allocatedToUser).isNull()
+      assertThat(createdAssessment.createdFromAppeal).isFalse()
+
+      domainEventAsserter.assertDomainEventStoreCount(applicationId, 1)
+      val persistedApplicationSubmittedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+        applicationId,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+      )
+
+      assertThat(persistedApplicationSubmittedEvent.crn).isEqualTo(offenderDetails.otherIds.crn)
+
+      val emittedMessage = domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+
+      val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
+      assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
+      assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/${persistedApplicationSubmittedEvent.id}")
+      assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
+      assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+        SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+        SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+      )
+
+      emailAsserter.assertEmailsRequestedCount(1)
+      emailAsserter.assertEmailRequested(
+        toEmailAddress = submittingUser.email!!,
+        templateId = notifyConfig.templates.applicationSubmitted,
+        replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
+      )
+    }
+
+    @Test
+    fun `Submit womens application does not auto allocate the assessment, sends emails and raises domain events`() {
+      val (submittingUser, jwt) = `Given a User`(
+        probationRegion = `Given a Probation Region`(
+          apArea = `Given an AP Area`(
+            defaultCruManagementArea = `Given a CAS1 CRU Management Area`(assessmentAutoAllocationUsername = "DEFAULT_LONDON_ASSESSOR"),
+          ),
+        ),
+      )
+
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        staffUserDetailsConfigBlock = {
+          withUsername("DEFAULT_LONDON_ASSESSOR")
+        },
+      )
+
+      val (offenderDetails, _) = `Given an Offender`()
+
+      val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withApplicationSchema(
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withDefaults()
+          },
+        )
+        withCreatedByUser(submittingUser)
+      }.id
+
+      CommunityAPI_mockSuccessfulRegistrationsCall(
+        offenderDetails.otherIds.crn,
+        Registrations(
+          registrations = listOf(
+            RegistrationClientResponseFactory()
+              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
+              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
+              .withStartDate(LocalDate.parse("2022-09-06"))
+              .produce(),
+          ),
+        ),
+      )
+
+      APDeliusContext_mockSuccessfulCaseDetailCall(
+        offenderDetails.otherIds.crn,
+        CaseDetailFactory().produce(),
+      )
+
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+      mockFeatureFlagService.setFlag("cas1-womens-estate-enabled", true)
+
+      webTestClient.post()
+        .uri("/applications/$applicationId/submission")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          SubmitApprovedPremisesApplication(
+            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            apType = ApType.normal,
+            translatedDocument = {},
+            isWomensApplication = true,
+            targetLocation = "SW1A 1AA",
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = SentenceTypeOption.nonStatutory,
+            type = "CAS1",
+            applicantUserDetails = Cas1ApplicationUserDetails(
+              "applicantName",
+              "applicantEmail",
+              "applicationTelephone",
+            ),
+            caseManagerIsNotApplicant = false,
+            caseManagerUserDetails = Cas1ApplicationUserDetails(
+              "cmName",
+              "cmEmail",
+              "cmTelephone",
+            ),
+            reasonForShortNotice = "reasonForShort",
+            reasonForShortNoticeOther = "reasonForShortOther",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
+
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.isWomensApplication).isTrue()
+      assertThat(persistedApplication.isPipeApplication).isFalse
+      assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
+      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+      assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
+      assertThat(persistedApplication.cruManagementArea!!.id).isEqualTo(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
