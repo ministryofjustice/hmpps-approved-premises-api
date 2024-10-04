@@ -398,6 +398,30 @@ class DomainEventDescriberTest {
   }
 
   @Test
+  fun `Returns expected description for space booking cancelled event`() {
+    val spaceBookingId = UUID.randomUUID()
+
+    val domainEventSummary = DomainEventSummaryImpl
+      .ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+      .copy(cas1SpaceBookingId = UUID.randomUUID())
+
+    every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
+      BookingCancelledEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = BookingCancelledFactory()
+          .withBookingId(spaceBookingId)
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("Space booking cancelled")
+  }
+
+  @Test
   fun `Returns expected description for booking changed event`() {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
