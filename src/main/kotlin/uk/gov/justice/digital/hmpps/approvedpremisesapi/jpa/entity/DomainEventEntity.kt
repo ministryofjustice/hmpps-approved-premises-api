@@ -171,6 +171,12 @@ enum class DomainEventType(
     "An application has been assessed for an Approved Premises placement",
     TimelineEventType.approvedPremisesApplicationAssessed,
   ),
+  APPROVED_PREMISES_APPLICATION_EXPIRED(
+    DomainEventCas.CAS1,
+    Cas1EventType.applicationExpired.value,
+    "An Approved Premises application has expired",
+    TimelineEventType.approvedPremisesApplicationExpired,
+  ),
   APPROVED_PREMISES_BOOKING_MADE(
     DomainEventCas.CAS1,
     Cas1EventType.bookingMade.value,

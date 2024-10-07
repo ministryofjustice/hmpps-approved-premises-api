@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.util.UUID
 
+@SuppressWarnings("TooManyFunctions")
 @Service
 class DomainEventsController(
   private val domainEventService: DomainEventService,
@@ -49,6 +51,8 @@ class DomainEventsController(
 
   override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<ApplicationWithdrawnEnvelope>(eventId)
 
+  override fun eventsApplicationExpiredEventIdGet(eventId: UUID) = getDomainEvent<ApplicationExpiredEnvelope>(eventId)
+
   override fun eventsPlacementApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationWithdrawnEnvelope>(eventId)
 
   override fun eventsPlacementApplicationAllocatedEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationAllocatedEnvelope>(eventId)
@@ -72,6 +76,7 @@ class DomainEventsController(
       AssessmentAppealedEnvelope::class -> domainEventService::getAssessmentAppealedEvent
       MatchRequestWithdrawnEnvelope::class -> domainEventService::getMatchRequestWithdrawnEvent
       ApplicationWithdrawnEnvelope::class -> domainEventService::getApplicationWithdrawnEvent
+      ApplicationExpiredEnvelope::class -> domainEventService::getApplicationExpiredEvent
       ApplicationAssessedEnvelope::class -> domainEventService::getApplicationAssessedDomainEvent
       BookingMadeEnvelope::class -> domainEventService::getBookingMadeEvent
       ApplicationSubmittedEnvelope::class -> domainEventService::getApplicationSubmittedDomainEvent

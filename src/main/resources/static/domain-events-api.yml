@@ -517,6 +517,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/application-expired/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Manage' events"
+      summary: An 'application-expired' event
+      responses:
+        '200':
+          description: The 'application-expired' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationExpiredEnvelope'
+        404:
+          description: No 'application-expired' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -814,6 +841,37 @@ components:
         - withdrawnAt
         - withdrawnBy
         - withdrawalReason
+    ApplicationExpiredEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        eventDetails:
+          $ref: '#/components/schemas/ApplicationExpired'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    ApplicationExpired:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        previousStatus:
+          type: string
+        updatedStatus:
+          type: string
+      required:
+        - applicationId
+        - previousStatus
+        - updatedStatus
     WithdrawnBy:
       type: object
       properties:
@@ -1929,6 +1987,7 @@ components:
           - approved-premises.booking.cancelled
           - approved-premises.booking.changed
           - approved-premises.application.withdrawn
+          - approved-premises.application.expired
           - approved-premises.assessment.appealed
           - approved-premises.assessment.allocated
           - approved-premises.assessment.info-requested
@@ -1948,6 +2007,7 @@ components:
         - bookingCancelled
         - bookingChanged
         - applicationWithdrawn
+        - applicationExpired
         - assessmentAppealed
         - assessmentAllocated
         - informationRequestMade

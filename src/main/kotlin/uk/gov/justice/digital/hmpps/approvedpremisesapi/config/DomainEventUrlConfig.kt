@@ -17,6 +17,7 @@ class DomainEventUrlConfig {
     val template = when (domainEventType) {
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> cas1["application-submitted-event-detail"]
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> cas1["application-assessed-event-detail"]
+      DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> cas1["application-expired-event-detail"]
       DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> cas1["booking-made-event-detail"]
       DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> cas1["person-arrived-event-detail"]
       DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> cas1["person-not-arrived-event-detail"]
