@@ -6,14 +6,23 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpiredEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import java.time.Instant
+import java.util.UUID
 
 @Service
 class Cas1ExpiredApplicationsScheduledJob(
   private val featureFlagService: FeatureFlagService,
+  private val domainEventService: DomainEventService,
   private val applicationRepository: ApplicationRepository,
   private val transactionTemplate: TransactionTemplate,
 ) {
@@ -33,13 +42,38 @@ class Cas1ExpiredApplicationsScheduledJob(
 
         transactionTemplate.executeWithoutResult {
           val application = applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+          val previousStatus = application.status.name
           application.status = ApprovedPremisesApplicationStatus.EXPIRED
           applicationRepository.save(application)
 
           log.info("Status changed to EXPIRED for application $applicationId.")
 
-          // send domain event
-          log.info("Domain event emitted for application $applicationId.")
+          val applicationExpired = ApplicationExpired(
+            applicationId,
+            previousStatus,
+            (applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity).status.name,
+          )
+
+          val domainEventId = UUID.randomUUID()
+          val eventOccurredAt = Instant.now()
+          domainEventService.saveApplicationExpiredEvent(
+            DomainEvent(
+              id = domainEventId,
+              applicationId = application.id,
+              crn = application.crn,
+              nomsNumber = application.nomsNumber,
+              occurredAt = eventOccurredAt,
+              data = ApplicationExpiredEnvelope(
+                id = domainEventId,
+                timestamp = eventOccurredAt,
+                eventType = EventType.applicationExpired,
+                eventDetails = applicationExpired,
+              ),
+            ),
+            triggerSource = TriggerSourceType.SYSTEM,
+            emit = false,
+          )
+          log.info("Domain event id $domainEventId emitted for application $applicationId.")
         }
       }
     }

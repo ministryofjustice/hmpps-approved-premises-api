@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
@@ -63,6 +64,7 @@ class DomainEventService(
   fun getBookingCancelledEvent(id: UUID) = get(id, BookingCancelledEnvelope::class)
   fun getBookingChangedEvent(id: UUID) = get(id, BookingChangedEnvelope::class)
   fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawnEnvelope::class)
+  fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpiredEnvelope::class)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawnEnvelope::class)
   fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocatedEnvelope::class)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawnEnvelope::class)
@@ -93,6 +95,7 @@ class DomainEventService(
         (type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE) ||
         (type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED) ||
         (type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN) ||
+        (type == ApplicationExpiredEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED) ||
         (type == AssessmentAppealedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) ||
         (type == PlacementApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN) ||
         (type == PlacementApplicationAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED) ||
@@ -232,6 +235,19 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
+    )
+
+  @Transactional
+  fun saveApplicationExpiredEvent(
+    domainEvent: DomainEvent<ApplicationExpiredEnvelope>,
+    triggerSource: TriggerSourceType,
+    emit: Boolean,
+  ) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
+      triggerSource = triggerSource,
+      emit = emit,
     )
 
   @Transactional
