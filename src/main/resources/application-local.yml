@@ -52,13 +52,7 @@ preemptive-cache-lock-duration-ms: 60000
 user-allocations:
   rules:
     esap-assessments:
-      enabled: true
       allocate-to-user: JIMSNOWLDAP
-    emergency-and-short-notice-assessments:
-      enabled: true
-    appealed-assessments:
-      enabled: true
-      priority: 0
 
 feature-flags:
   cas1-appeal-manager-can-assess-applications: false

@@ -6,7 +6,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
 import java.time.OffsetDateTime
 import java.util.UUID

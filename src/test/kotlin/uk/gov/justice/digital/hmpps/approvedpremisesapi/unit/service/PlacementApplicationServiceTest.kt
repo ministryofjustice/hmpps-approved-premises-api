@@ -15,7 +15,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
@@ -54,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock

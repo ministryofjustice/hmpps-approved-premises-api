@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.allocations.rules
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.rules
 
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -6,8 +6,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAndShortNoticeAssessmentRule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -19,12 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules.EmergencyAndShortNoticeAssessmentRule
 import java.time.OffsetDateTime
 
 class EmergencyAndShortNoticeAssessmentRuleTest {
-  val assessmentRule = EmergencyAndShortNoticeAssessmentRule(
-    0,
-  )
+  val assessmentRule = EmergencyAndShortNoticeAssessmentRule()
 
   @Nested
   inner class EvaluateAssessment {

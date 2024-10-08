@@ -1,12 +1,10 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.allocations.rules
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.rules
 
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.AppealedAssessmentRule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -20,15 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealReposit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules.AppealedAssessmentRule
 import java.time.OffsetDateTime
 
 class AppealedAssessmentRuleTest {
   private val mockAppealRepository = mockk<AppealRepository>()
 
-  val appealedAssessmentRule = AppealedAssessmentRule(
-    0,
-    mockAppealRepository,
-  )
+  val appealedAssessmentRule = AppealedAssessmentRule(mockAppealRepository)
 
   @Nested
   inner class EvaluateAssessment {

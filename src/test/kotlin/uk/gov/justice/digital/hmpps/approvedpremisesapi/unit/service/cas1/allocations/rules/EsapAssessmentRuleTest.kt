@@ -1,11 +1,9 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.allocations.rules
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.rules
 
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EsapAssessmentRule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -16,10 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules.EsapAssessmentRule
 import java.time.OffsetDateTime
 
 class EsapAssessmentRuleTest {
-  val esapAssessmentRule = EsapAssessmentRule(0, "SOME-USER")
+  val esapAssessmentRule = EsapAssessmentRule("SOME-USER")
 
   @Nested
   inner class EvaluateAssessment {
