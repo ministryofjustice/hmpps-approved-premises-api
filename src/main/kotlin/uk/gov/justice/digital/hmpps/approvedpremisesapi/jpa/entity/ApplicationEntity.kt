@@ -358,7 +358,7 @@ class ApprovedPremisesApplicationEntity(
   submittedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
-  var isWomensApplication: Boolean?,
+  var isWomensApplication: Boolean,
   @Deprecated("Use noticeType=emergency instead")
   var isEmergencyApplication: Boolean?,
   @Enumerated(value = EnumType.STRING)
@@ -561,7 +561,7 @@ interface ApplicationSummary {
 }
 
 interface ApprovedPremisesApplicationSummary : ApplicationSummary {
-  fun getIsWomensApplication(): Boolean?
+  fun getIsWomensApplication(): Boolean
   fun getIsPipeApplication(): Boolean?
   fun getIsEmergencyApplication(): Boolean?
   fun getIsEsapApplication(): Boolean?

@@ -333,7 +333,7 @@ class ApplicationService(
       schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java),
       createdAt = OffsetDateTime.now(),
       submittedAt = null,
-      isWomensApplication = null,
+      isWomensApplication = false,
       isEmergencyApplication = null,
       apType = ApprovedPremisesType.NORMAL,
       convictionId = convictionId!!,
@@ -499,7 +499,7 @@ class ApplicationService(
   }
 
   data class Cas1ApplicationUpdateFields(
-    val isWomensApplication: Boolean?,
+    val isWomensApplication: Boolean,
     @Deprecated("use apType")
     val isPipeApplication: Boolean?,
     @Deprecated("use noticeType")
@@ -803,8 +803,7 @@ class ApplicationService(
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       this.apArea = apArea
-      this.cruManagementArea = if (featureFlagService.getBooleanFlag("cas1-womens-estate-enabled") &&
-        submitApplication.isWomensApplication == true
+      this.cruManagementArea = if (featureFlagService.getBooleanFlag("cas1-womens-estate-enabled") && submitApplication.isWomensApplication
       ) {
         cas1CruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
           ?: throw InternalServerErrorProblem("Could not find women's estate CRU Management Area Entity with ID ${Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID}")
