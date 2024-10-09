@@ -1811,7 +1811,6 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
-            - isWomensApplication
     Cas2Application:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -1990,7 +1989,6 @@ components:
             - status
             - isWithdrawn
             - hasRequestsForPlacement
-            - isWomensApplication
     TemporaryAccommodationApplicationSummary:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
@@ -2360,8 +2358,6 @@ components:
               format: date
             noticeType:
               $ref: '#/components/schemas/Cas1ApplicationTimelinessCategory'
-          required:
-            - isWomensApplication
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
@@ -2436,7 +2432,6 @@ components:
             - targetLocation
             - releaseType
             - sentenceType
-            - isWomensApplication
     SubmitCas2Application:
       type: object
       properties:

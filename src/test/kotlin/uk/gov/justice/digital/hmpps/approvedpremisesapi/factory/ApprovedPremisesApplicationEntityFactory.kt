@@ -39,7 +39,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
-  private var isWomensApplication: Yielded<Boolean> = { false }
+  private var isWomensApplication: Yielded<Boolean?> = { null }
   private var isEmergencyApplication: Yielded<Boolean?> = { null }
   private var apType: Yielded<ApprovedPremisesType> = { ApprovedPremisesType.NORMAL }
   private var convictionId: Yielded<Long> = { randomInt(0, 1000).toLong() }
