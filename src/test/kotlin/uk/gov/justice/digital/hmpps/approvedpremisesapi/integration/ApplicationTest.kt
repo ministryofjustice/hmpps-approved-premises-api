@@ -453,7 +453,7 @@ class ApplicationTest : IntegrationTestBase() {
                     type = PersonType.unknownPerson,
                   ),
                   createdAt = application.createdAt.toInstant(),
-                  isWomensApplication = false,
+                  isWomensApplication = null,
                   isPipeApplication = false,
                   isEmergencyApplication = null,
                   isEsapApplication = null,

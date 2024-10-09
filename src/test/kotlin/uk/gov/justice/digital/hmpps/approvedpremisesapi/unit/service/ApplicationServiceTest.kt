@@ -193,7 +193,7 @@ class ApplicationServiceTest {
       .produce()
     val applicationSummaries = listOf(
       object : ApprovedPremisesApplicationSummary {
-        override fun getIsWomensApplication(): Boolean = true
+        override fun getIsWomensApplication(): Boolean? = true
         override fun getIsPipeApplication(): Boolean? = true
         override fun getIsEsapApplication() = true
         override fun getIsEmergencyApplication() = true
