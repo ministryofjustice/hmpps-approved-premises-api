@@ -14,7 +14,7 @@ plugins {
   kotlin("plugin.spring") version "1.9.22"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
-  id("io.gatling.gradle") version "3.10.3.2"
+  id("io.gatling.gradle") version "3.12.0.3"
   id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
