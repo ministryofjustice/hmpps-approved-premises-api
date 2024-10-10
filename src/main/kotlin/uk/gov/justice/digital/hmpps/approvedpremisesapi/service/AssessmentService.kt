@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -90,6 +91,7 @@ class AssessmentService(
   private val clock: Clock,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -609,9 +611,8 @@ class AssessmentService(
     }
 
     if (assessment.completedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This assessment has already been closed"),
-      )
+      log.info("User: ${user.id} attempted to close assessment: $assessmentId. This assessment has already been closed.")
+      return AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
     }
 
     assessment.completedAt = OffsetDateTime.now()

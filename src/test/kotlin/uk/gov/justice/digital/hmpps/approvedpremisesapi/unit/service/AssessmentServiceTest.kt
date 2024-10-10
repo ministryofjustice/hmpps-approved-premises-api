@@ -1693,7 +1693,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `closeAssessment returns general validation error for Assessment where it has already been closed`() {
+  fun `closeAssessment returns OK for Assessment where it has already been closed`() {
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
@@ -1740,9 +1740,7 @@ class AssessmentServiceTest {
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("This assessment has already been closed")
+    assertThat((validationResult as ValidatableActionResult.Success).entity.id).isEqualTo(assessment.id)
   }
 
   @Test
