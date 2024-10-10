@@ -408,9 +408,9 @@ workflows:
       - request-preprod-approval:
           type: approval
           requires:
-            - cas1_e2e_tests
-            - cas2_e2e_tests
-            - cas3_e2e_tests
+            - cas1_e2e_tests_dev_deploy
+            - cas2_e2e_tests_dev_deploy
+            - cas3_e2e_tests_dev_deploy
       - hmpps/deploy_env:
           name: deploy_preprod
           env: "preprod"
