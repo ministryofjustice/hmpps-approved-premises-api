@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
@@ -143,6 +145,29 @@ class Cas1ApplicationDomainEventService(
         ),
       ),
       emit = application.isSubmitted(),
+    )
+  }
+
+  fun applicationExpired(
+    application: ApprovedPremisesApplicationEntity,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now(clock)
+
+    domainEventService.saveApplicationExpiredEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        nomsNumber = application.nomsNumber,
+        data = ApplicationExpiredEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.applicationExpired,
+          eventDetails = ApplicationExpired(application.id),
+        ),
+      ),
     )
   }
 

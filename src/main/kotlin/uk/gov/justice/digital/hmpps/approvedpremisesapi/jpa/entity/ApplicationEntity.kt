@@ -291,6 +291,22 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
     nativeQuery = true,
   )
   fun updateNomsNumber(applicationId: UUID, nomsNumber: String)
+
+  @Query(
+    """
+      SELECT application_id
+      FROM domain_events de
+      JOIN approved_premises_applications apa
+        ON de.application_id = apa.id
+      WHERE
+        de.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED'
+        AND de.data -> 'eventDetails' ->> 'decision' = 'ACCEPTED'
+        AND apa.status <> 'EXPIRED'
+        AND de.occurred_at < current_date - 365
+    """,
+    nativeQuery = true,
+  )
+  fun findAllExpiredApplications(): List<UUID>
 }
 
 @Repository
