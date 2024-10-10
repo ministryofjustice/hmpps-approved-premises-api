@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOptio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -35,8 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -61,12 +60,10 @@ class Cas1ApplicationDomainEventServiceTest {
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
-  private val mockCommunityApiClient = mockk<CommunityApiClient>()
 
   private val service = Cas1ApplicationDomainEventService(
     mockDomainEventService,
     mockOffenderService,
-    mockCommunityApiClient,
     mockApDeliusContextApiClient,
     mockDomainEventTransformer,
     UrlTemplate("http://frontend/applications/#id"),
@@ -91,7 +88,6 @@ class Cas1ApplicationDomainEventServiceTest {
 
     private lateinit var application: ApprovedPremisesApplicationEntity
     private val caseDetails = CaseDetailFactory().produce()
-    private val domainEventStaffMember = StaffMemberFactory().produce()
     private val domainEventProbationArea = ProbationAreaFactory().produce()
 
     private val staffUserDetails = StaffUserDetailsFactory()
@@ -157,15 +153,13 @@ class Cas1ApplicationDomainEventServiceTest {
         body = caseDetails,
       )
 
-      every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
-
-      every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
+      every { mockDomainEventTransformer.toProbationArea(staffUserDetails.toStaffDetail()) } returns domainEventProbationArea
 
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
 
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = staffUserDetails,
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails.toStaffDetail(),
       )
     }
 
@@ -214,7 +208,7 @@ class Cas1ApplicationDomainEventServiceTest {
               data.age == Period.between(LocalDate.of(1982, 3, 11), LocalDate.now()).years &&
               data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
-              staffMember = domainEventStaffMember,
+              staffMember = staffUserDetails.toStaffMember(),
               probationArea = domainEventProbationArea,
               team = Team(
                 code = caseDetails.case.manager.team.code,

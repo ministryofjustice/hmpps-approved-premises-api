@@ -12,8 +12,8 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
@@ -32,13 +33,13 @@ import java.util.UUID
 class Cas1AppealDomainEventServiceTest {
 
   private val domainEventService = mockk<DomainEventService>()
-  private val communityApiClient = mockk<CommunityApiClient>()
+  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val applicationUrlTemplate = mockk<UrlTemplate>()
   private val applicationAppealUrlTemplate = mockk<UrlTemplate>()
 
   private val service = Cas1AppealDomainEventService(
     domainEventService,
-    communityApiClient,
+    apDeliusContextApiClient,
     applicationUrlTemplate,
     applicationAppealUrlTemplate,
   )
@@ -73,10 +74,8 @@ class Cas1AppealDomainEventServiceTest {
   @BeforeEach
   fun setupMocks() {
     every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
-    every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(
-      HttpStatus.OK,
-      staffUserDetails,
-    )
+    every { apDeliusContextApiClient.getStaffDetail(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
+
     every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
     every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
   }

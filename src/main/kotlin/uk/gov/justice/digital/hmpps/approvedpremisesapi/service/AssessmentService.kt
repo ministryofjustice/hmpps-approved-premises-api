@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -75,7 +75,7 @@ class AssessmentService(
   private val jsonSchemaService: JsonSchemaService,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
-  private val communityApiClient: CommunityApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val placementRequestService: PlacementRequestService,
   private val placementRequirementsService: PlacementRequirementsService,
   private val userAllocator: UserAllocator,
@@ -534,8 +534,7 @@ class AssessmentService(
         else -> null
       }
 
-    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-    val staffDetails = when (staffDetailsResult) {
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }

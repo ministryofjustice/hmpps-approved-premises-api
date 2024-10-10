@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -69,6 +70,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -182,6 +184,7 @@ class BookingServiceTest {
   private val mockDeliusService = mockk<DeliusService>()
   private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
+  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
     return BookingService(
@@ -223,6 +226,7 @@ class BookingServiceTest {
       deliusService = mockDeliusService,
       cas1BookingDomainEventService = mockCas1BookingDomainEventService,
       cas1ApplicationStatusService = mockCas1ApplicationStatusService,
+      apDeliusContextApiClient = mockApDeliusContextApiClient,
     )
   }
 
@@ -2007,10 +2011,7 @@ class BookingServiceTest {
 
       val staffUserDetails = StaffUserDetailsFactory().produce()
 
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockDomainEventService.savePersonNotArrivedEvent(any(), any()) } just Runs
 
@@ -2100,10 +2101,7 @@ class BookingServiceTest {
 
       val staffUserDetails = StaffUserDetailsFactory().produce()
 
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockDomainEventService.savePersonNotArrivedEvent(any(), any()) } just Runs
 
@@ -2198,10 +2196,7 @@ class BookingServiceTest {
 
       val staffUserDetails = StaffUserDetailsFactory().produce()
 
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockDomainEventService.savePersonNotArrivedEvent(any(), any()) } just Runs
 
@@ -3685,7 +3680,7 @@ class BookingServiceTest {
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
 
@@ -3760,7 +3755,7 @@ class BookingServiceTest {
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
 
@@ -7294,7 +7289,7 @@ class BookingServiceTest {
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
@@ -7395,7 +7390,7 @@ class BookingServiceTest {
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
