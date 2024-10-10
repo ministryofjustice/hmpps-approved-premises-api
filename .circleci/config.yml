@@ -396,7 +396,7 @@ workflows:
       - request-test-approval:
           type: approval
           requires:
-            - deploy_dev
+            - integration_test
       - hmpps/deploy_env:
           name: deploy_test
           env: "test"
@@ -442,6 +442,7 @@ workflows:
           requires:
             - request-prod-approval
       - cas1_e2e_tests:
+          name: cas1_e2e_tests_dev_deploy
           context:
             - hmpps-common-vars
             - hmpps-community-accommodation
@@ -449,17 +450,41 @@ workflows:
           requires:
             - deploy_dev
       - cas2_e2e_tests:
+          name: cas2_e2e_tests_dev_deploy
           context:
             - hmpps-common-vars
             - hmpps-community-accommodation
           requires:
             - deploy_dev
       - cas3_e2e_tests:
+          name: cas3_e2e_tests_dev_deploy
           context:
             - hmpps-common-vars
             - hmpps-community-accommodation
           requires:
             - deploy_dev
+      - cas1_e2e_tests:
+          name: cas1_e2e_test_test_environment_deploy
+          context:
+            - hmpps-common-vars
+            - hmpps-community-accommodation
+            - approved-premises-ui-e2e
+          requires:
+            - deploy_test
+      - cas2_e2e_tests:
+          name: cas2_e2e_test_test_environment_deploy
+          context:
+            - hmpps-common-vars
+            - hmpps-community-accommodation
+          requires:
+            - deploy_test
+      - cas3_e2e_tests:
+          name: cas3_e2e_test_test_environment_deploy
+          context:
+            - hmpps-common-vars
+            - hmpps-community-accommodation
+          requires:
+            - deploy_test
   security:
     triggers:
       - schedule:
