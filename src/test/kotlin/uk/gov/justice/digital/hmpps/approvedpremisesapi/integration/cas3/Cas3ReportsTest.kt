@@ -3450,6 +3450,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
         val booking1 = createBooking(premises, bedOne, offenderDetails.otherIds.crn, LocalDate.of(2023, 4, 5), booking1DepartureDate)
 
+        val turnaroundBooking1 = turnaroundFactory.produceAndPersist {
+          withBooking(booking1)
+          withWorkingDayCount(5)
+        }
+
+        booking1.turnarounds = mutableListOf(turnaroundBooking1)
+
         confirmationEntityFactory.produceAndPersist {
           withBooking(booking1)
         }
@@ -3467,6 +3474,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
         val booking2 = createBooking(premises, bedTwo, offenderDetails.otherIds.crn, LocalDate.of(2023, 4, 19), booking2DepartureDate)
 
+        val turnaroundBooking2 = turnaroundFactory.produceAndPersist {
+          withBooking(booking2)
+          withWorkingDayCount(2)
+        }
+
+        booking2.turnarounds = mutableListOf(turnaroundBooking2)
+
         confirmationEntityFactory.produceAndPersist {
           withBooking(booking2)
         }
@@ -3482,7 +3496,16 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
         val booking4ArrivalDate = LocalDate.of(2024, 5, 12)
         val booking4DepartureDate = LocalDate.of(2024, 7, 17)
-        createBooking(premises, bedTwo, offenderDetails.otherIds.crn, booking4ArrivalDate, booking4DepartureDate)
+        val booking4 = createBooking(premises, bedTwo, offenderDetails.otherIds.crn, booking4ArrivalDate, booking4DepartureDate)
+
+        val turnaroundBooking4 = turnaroundFactory.produceAndPersist {
+          withBooking(booking4)
+          withWorkingDayCount(0)
+        }
+
+        booking4.turnarounds = mutableListOf(turnaroundBooking4)
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
         val gapRangesReport = cas3ReportService.createBookingGapRangesReport()
 
@@ -3493,25 +3516,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
             "probation_region" to premises.probationRegion.name,
             "pdu_name" to probationDeliveryUnit.name,
             "premises_name" to premises.name,
-            "room_name" to "room1",
-            "gap" to "[${booking1DepartureDate.plusDays(1)},$today)",
-            "gap_days" to ChronoUnit.DAYS.between(booking1DepartureDate.plusDays(1), LocalDate.now()).toInt(),
-          ),
-          mutableMapOf<String, Any?>(
-            "probation_region" to premises.probationRegion.name,
-            "pdu_name" to probationDeliveryUnit.name,
-            "premises_name" to premises.name,
-            "room_name" to "room2",
+            "bed_name" to "room2",
             "gap" to "[${booking2DepartureDate.plusDays(1)},$booking4ArrivalDate)",
             "gap_days" to ChronoUnit.DAYS.between(booking2DepartureDate.plusDays(1), booking4ArrivalDate).toInt(),
-          ),
-          mutableMapOf<String, Any?>(
-            "probation_region" to premises.probationRegion.name,
-            "pdu_name" to probationDeliveryUnit.name,
-            "premises_name" to premises.name,
-            "room_name" to "room2",
-            "gap" to "[${booking4DepartureDate.plusDays(1)},$today)",
-            "gap_days" to ChronoUnit.DAYS.between(booking4DepartureDate.plusDays(1), LocalDate.now()).toInt(),
+            "turnaround_days" to 2,
           ),
         )
 
