@@ -45,14 +45,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarif
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -1457,13 +1456,11 @@ class AssessmentServiceTest {
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
 
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withProbationAreaCode("N26")
-      .produce()
+    val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
 
     every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
       HttpStatus.OK,
-      staffUserDetails.toStaffDetail(),
+      staffUserDetails,
     )
 
     val capturedEvent = slot<DomainEvent<ApplicationAssessedEnvelope>>()
@@ -1498,10 +1495,10 @@ class AssessmentServiceTest {
     assertThat(data.assessedBy).isEqualTo(
       ApplicationAssessedAssessedBy(
         staffMember = StaffMember(
-          staffCode = staffUserDetails.staffCode,
+          staffCode = staffUserDetails.code,
           staffIdentifier = staffUserDetails.staffIdentifier,
-          forenames = staffUserDetails.staff.forenames,
-          surname = staffUserDetails.staff.surname,
+          forenames = staffUserDetails.name.forenames(),
+          surname = staffUserDetails.name.surname,
           username = staffUserDetails.username,
         ),
         probationArea = ProbationArea(
@@ -1579,13 +1576,11 @@ class AssessmentServiceTest {
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
 
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withProbationAreaCode("N26")
-      .produce()
+    val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
 
     every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
       HttpStatus.OK,
-      staffUserDetails.toStaffDetail(),
+      staffUserDetails,
     )
 
     every { userServiceMock.getUserForRequest() } returns user
