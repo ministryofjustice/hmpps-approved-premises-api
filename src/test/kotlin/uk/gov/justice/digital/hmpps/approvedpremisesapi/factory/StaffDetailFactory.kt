@@ -6,33 +6,49 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 
 object StaffDetailFactory {
-  fun staffDetail() =
+  @Suppress("LongParameterList")
+  fun staffDetail(
+    email: String? = randomEmailAddress(),
+    telephoneNumber: String? = randomNumberChars(11),
+    staffIdentifier: Long = randomInt(Int.MIN_VALUE, Int.MAX_VALUE).toLong(),
+    teams: List<Team> = listOf(team()),
+    probationArea: ProbationArea = probationArea(),
+    deliusUsername: String = randomStringMultiCaseWithNumbers(10),
+    name: PersonName = PersonName(randomStringLowerCase(6), randomStringLowerCase(6), randomStringLowerCase(6)),
+    code: String = randomStringUpperCase(10),
+    active: Boolean = true,
+  ) =
     StaffDetail(
-      email = "foo@example.com",
-      telephoneNumber = "0123456789",
-      staffIdentifier = 5678L,
-      teams = listOf(team()),
-      probationArea = probationArea(),
-      username = "deliususername",
-      name = PersonName("New", "Name", "C"),
-      code = "STAFF1",
-      active = true,
+      email = email,
+      telephoneNumber = telephoneNumber,
+      staffIdentifier = staffIdentifier,
+      teams = teams,
+      probationArea = probationArea,
+      username = deliusUsername,
+      name = name,
+      code = code,
+      active = active,
     )
 
   fun team() =
     Team(
-      code = "TEAMCODE1",
-      name = "TEAMNAME",
-      ldu = ldo(),
-      borough = Borough("B1", "B1 Borough"),
+      code = randomStringMultiCaseWithNumbers(10),
+      name = randomStringMultiCaseWithNumbers(10),
+      ldu = Ldu(code = randomStringUpperCase(10), name = randomStringUpperCase(10)),
+      borough = Borough(randomStringMultiCaseWithNumbers(5), randomStringMultiCaseWithNumbers(25)),
       startDate = LocalDate.now().minusYears(1),
       endDate = null,
     )
 
-  fun ldo() = Ldu("LDUCODE", "LDUNAME")
-
-  fun probationArea() = ProbationArea("PACODE", "Probation Area Description")
+  fun probationArea() =
+    ProbationArea(code = randomStringUpperCase(10), description = randomStringMultiCaseWithNumbers(50))
 }

@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -35,19 +35,19 @@ import java.util.UUID
 @Service
 class Cas1AssessmentDomainEventService(
   private val domainEventService: DomainEventService,
-  private val communityApiClient: CommunityApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
 
   fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity, allocatingUser: UserEntity?) {
-    val allocatedToStaffDetails = when (val result = communityApiClient.getStaffUserDetails(allocatedToUser.deliusUsername)) {
+    val allocatedToStaffDetails = when (val result = apDeliusContextApiClient.getStaffDetail(allocatedToUser.deliusUsername)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
     }
 
     val allocatingUserStaffDetails = allocatingUser?.let {
-      when (val result = communityApiClient.getStaffUserDetails(allocatingUser.deliusUsername)) {
+      when (val result = apDeliusContextApiClient.getStaffDetail(allocatingUser.deliusUsername)) {
         is ClientResult.Success -> result.body
         is ClientResult.Failure -> result.throwException()
       }
@@ -96,12 +96,12 @@ class Cas1AssessmentDomainEventService(
   }
 
   fun furtherInformationRequested(assessment: AssessmentEntity, clarificationNoteEntity: AssessmentClarificationNoteEntity, emit: Boolean = true) {
-    val requesterStaffDetails = when (val result = communityApiClient.getStaffUserDetails(clarificationNoteEntity.createdByUser.deliusUsername)) {
+    val requesterStaffDetails = when (val result = apDeliusContextApiClient.getStaffDetail(clarificationNoteEntity.createdByUser.deliusUsername)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
     }
 
-    val recipientStaffDetails = when (val result = communityApiClient.getStaffUserDetails(assessment.application.createdByUser.deliusUsername)) {
+    val recipientStaffDetails = when (val result = apDeliusContextApiClient.getStaffDetail(assessment.application.createdByUser.deliusUsername)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
     }
@@ -153,7 +153,7 @@ class Cas1AssessmentDomainEventService(
     val domainEventId = UUID.randomUUID()
     val acceptedAt = assessment.submittedAt!!
 
-    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(acceptingUser.deliusUsername)) {
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(acceptingUser.deliusUsername)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }

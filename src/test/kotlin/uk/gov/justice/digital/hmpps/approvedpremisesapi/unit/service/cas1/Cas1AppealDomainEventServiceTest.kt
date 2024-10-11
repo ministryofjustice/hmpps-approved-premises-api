@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -19,9 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
@@ -55,9 +53,7 @@ class Cas1AppealDomainEventServiceTest {
     .withProbationRegion(probationRegion)
     .produce()
 
-  private val staffUserDetails = StaffUserDetailsFactory()
-    .withUsername(createdByUser.deliusUsername)
-    .produce()
+  private val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = createdByUser.deliusUsername)
 
   private val application = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(createdByUser)
@@ -74,7 +70,10 @@ class Cas1AppealDomainEventServiceTest {
   @BeforeEach
   fun setupMocks() {
     every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
-    every { apDeliusContextApiClient.getStaffDetail(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails.toStaffDetail())
+    every { apDeliusContextApiClient.getStaffDetail(createdByUser.deliusUsername) } returns ClientResult.Success(
+      HttpStatus.OK,
+      staffUserDetails,
+    )
 
     every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
     every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
@@ -153,15 +152,8 @@ class Cas1AppealDomainEventServiceTest {
       this.eventDetails.personReference.noms == application.nomsNumber &&
       this.eventDetails.deliusEventNumber == application.eventNumber &&
       withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
-      this.eventDetails.createdBy.matches() &&
+      this.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
       this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
       this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision.accepted &&
       this.eventDetails.decisionDetail == "Some information about the decision made"
-
-  private fun StaffMember.matches() =
-    this.staffCode == staffUserDetails.staffCode &&
-      this.staffIdentifier == staffUserDetails.staffIdentifier &&
-      this.forenames == staffUserDetails.staff.forenames &&
-      this.surname == staffUserDetails.staff.surname &&
-      this.username == staffUserDetails.username
 }

@@ -54,7 +54,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.io.StringReader
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -199,9 +202,10 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffUserDetailsConfigBlock = {
-          withUsername("ASSESSOR1")
-          withForenames("Judy Jude")
-          withSurname("Juderson")
+          staffDetail(
+            deliusUsername = "ASSESSOR1",
+            name = PersonName(forename = "Judy", middleName = "Jude", surname = "Juderson"),
+          )
         },
         probationRegion = probationRegionEntityFactory.produceAndPersist() {
           withApArea(`Given an AP Area`(name = "Ap Area 1"))
@@ -212,17 +216,18 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffUserDetailsConfigBlock = {
-          withUsername("ASSESSOR2")
+          staffDetail(deliusUsername = "ASSESSOR2")
         },
       )
 
       application = createAndSubmitApplication(
         applicantDetails = `Given a User`(
           staffUserDetailsConfigBlock = {
-            withUsername("USER1")
-            withForenames("Jeff Jeffity")
-            withSurname("Jefferson")
-            withProbationAreaDescription("refRegion1")
+            staffDetail(
+              deliusUsername = "USER1",
+              name = PersonName(forename = "Jeff", middleName = "Jeffity", surname = "Jefferson"),
+              probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = "refRegion1"),
+            )
           },
         ),
         nomsNumber = "noms1",
@@ -401,9 +406,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffUserDetailsConfigBlock = {
-          withUsername("ASSESSOR4")
-          withForenames("Assessor")
-          withSurname("Assessing")
+          staffDetail(deliusUsername = "ASSESSOR4", name = PersonName(forename = "Assessor", surname = "Assessing"))
         },
         probationRegion = probationRegionEntityFactory.produceAndPersist {
           withApArea(`Given an AP Area`(name = "Ap Area 4"))
@@ -413,10 +416,11 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = `Given a User`(
           staffUserDetailsConfigBlock = {
-            withUsername("USER3")
-            withForenames("Test")
-            withSurname("Testing")
-            withProbationAreaDescription("refRegion3")
+            staffDetail(
+              deliusUsername = "USER3",
+              name = PersonName(forename = "Test", surname = "Testing"),
+              probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = "refRegion3"),
+            )
           },
         ),
         nomsNumber = "noms3",
@@ -524,17 +528,18 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffUserDetailsConfigBlock = {
-          withUsername("ASSESSOR3")
+          staffDetail(deliusUsername = "ASSESSOR3")
         },
       )
 
       application = createAndSubmitApplication(
         applicantDetails = `Given a User`(
           staffUserDetailsConfigBlock = {
-            withUsername("USER2")
-            withForenames("App")
-            withSurname("Licant")
-            withProbationAreaDescription("refRegion2")
+            staffDetail(
+              deliusUsername = "USER2",
+              name = PersonName(forename = "App", surname = "Licant"),
+              probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = "refRegion2"),
+            )
           },
         ),
         nomsNumber = "noms2",

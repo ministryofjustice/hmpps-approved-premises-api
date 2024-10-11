@@ -15,16 +15,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
@@ -106,27 +108,6 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       roles = listOf("ROLE_PROBATION"),
     )
 
-    val region = `Given a Probation Region`()
-
-    userEntityFactory.produceAndPersist {
-      withId(id)
-      withDeliusUsername(deliusUsername)
-      withName(name)
-      withEmail(email)
-      withTelephoneNumber(telephoneNumber)
-      withYieldedProbationRegion { region }
-    }
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withForenames(forename)
-        .withSurname(surname)
-        .withUsername(deliusUsername)
-        .withEmail(email)
-        .withTelephoneNumber(telephoneNumber)
-        .produce(),
-    )
-
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
 
     webTestClient.get()
@@ -165,15 +146,13 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       withTelephoneNumber(telephoneNumber)
       withYieldedProbationRegion { region }
     }
-
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withForenames(forename)
-        .withSurname(surname)
-        .withUsername(deliusUsername)
-        .withEmail(email)
-        .withTelephoneNumber(telephoneNumber)
-        .produce(),
+    ApDeliusContext_addStaffDetailResponse(
+      StaffDetailFactory.staffDetail(
+        name = PersonName(forename, surname),
+        deliusUsername = deliusUsername,
+        email = email,
+        telephoneNumber = telephoneNumber,
+      ),
     )
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
@@ -212,7 +191,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     val name = "$forename $surname"
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
-    val brought = KeyValue(
+    val borough = Borough(
       code = randomStringMultiCaseWithNumbers(7),
       description = randomStringMultiCaseWithNumbers(10),
     )
@@ -226,8 +205,8 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     val region = `Given a Probation Region`()
 
     val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-      withDeliusCode(brought.code)
-      withName(brought.description)
+      withDeliusCode(borough.code)
+      withName(borough.description)
       withProbationRegion(region)
     }
 
@@ -241,17 +220,14 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       withProbationDeliveryUnit { probationDeliveryUnit }
     }
 
-    mockStaffUserInfoCommunityApiCall(
-      StaffUserDetailsFactory()
-        .withForenames(forename)
-        .withSurname(surname)
-        .withUsername(deliusUsername)
-        .withEmail(email)
-        .withTelephoneNumber(telephoneNumber)
-        .withTeams(
-          listOf(StaffUserTeamMembershipFactory().withBorough(brought).produce()),
-        )
-        .produce(),
+    ApDeliusContext_addStaffDetailResponse(
+      StaffDetailFactory.staffDetail(
+        name = PersonName(forename, surname),
+        deliusUsername = deliusUsername,
+        email = email,
+        telephoneNumber = telephoneNumber,
+        teams = listOf(TeamFactory2.team(borough = borough)),
+      ),
     )
 
     mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
@@ -1050,12 +1026,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     fun `GET to search users with approved role returns a user`(role: UserRole) {
       `Given a User`(
         staffUserDetailsConfigBlock = {
-          withForenames("SomeUserName")
+          staffDetail(name = PersonName(forename = "SomeUserName", surname = ""))
         },
       ) { user, _ ->
         `Given a User`(
           staffUserDetailsConfigBlock = {
-            withForenames("fail")
+            staffDetail(name = PersonName(forename = "fail", surname = ""))
           },
         ) { _, _ ->
           `Given a User`(roles = listOf(role)) { _, jwt ->
@@ -1128,12 +1104,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     fun `GET to search users delius username with an approved role returns a user`(role: UserRole) {
       `Given a User`(
         staffUserDetailsConfigBlock = {
-          withUsername("SOME")
+          staffDetail(deliusUsername = "SOME")
         },
       ) { user, _ ->
         `Given a User`(
           staffUserDetailsConfigBlock = {
-            withForenames("fail")
+            staffDetail(name = PersonName(forename = "fail", surname = "r"))
           },
         ) { _, _ ->
           `Given a User`(roles = listOf(role)) { _, jwt ->

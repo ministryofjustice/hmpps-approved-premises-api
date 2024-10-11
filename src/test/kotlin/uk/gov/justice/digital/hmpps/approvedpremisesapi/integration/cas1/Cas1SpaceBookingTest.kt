@@ -1227,11 +1227,11 @@ class Cas1SpaceBookingTest {
       }
 
       applicant = `Given a User`(staffUserDetailsConfigBlock = {
-        withEmail("applicant@test.com")
+        staffDetail(email = "applicant@test.com")
       },).first
 
       placementApplicationCreator = `Given a User`(staffUserDetailsConfigBlock = {
-        withEmail("placementApplicant@test.com")
+        staffDetail(email = "placementApplicant@test.com")
       },).first
 
       val (offender) = `Given an Offender`()

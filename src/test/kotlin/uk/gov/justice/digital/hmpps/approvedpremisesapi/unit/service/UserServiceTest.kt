@@ -26,13 +26,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -47,7 +45,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -164,27 +164,21 @@ class UserServiceTest {
     fun `getExistingUserOrCreate creates new user`() {
       val username = "SOMEPERSON"
       val pduDeliusCode = randomStringMultiCaseWithNumbers(7)
-      val brought = KeyValue(
-        code = pduDeliusCode,
-        description = randomStringMultiCaseWithNumbers(10),
-      )
+
+      val borough = Borough(code = pduDeliusCode, description = randomStringMultiCaseWithNumbers(10))
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
 
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername(username)
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withProbationAreaCode("AREACODE")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withCode("TC1").withBorough(brought).produce(),
-            StaffUserTeamMembershipFactory().withCode("TC2").withBorough(brought).produce(),
-          ),
-        )
-        .produce()
-        .toStaffDetail()
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = username,
+        name = PersonName("Jim", "Jimmerson"),
+        staffIdentifier = 5678,
+        probationArea = ProbationArea(code = "AREACODE", description = "description"),
+        teams = listOf(
+          TeamFactory2.team(code = "TC1", borough = borough),
+          TeamFactory2.team(code = "TC2", borough = borough),
+        ),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -233,27 +227,21 @@ class UserServiceTest {
     fun `getExistingUserOrCreate throws internal server error problem if can't resolve region`() {
       val username = "SOMEPERSON"
       val pduDeliusCode = randomStringMultiCaseWithNumbers(7)
-      val brought = KeyValue(
-        code = pduDeliusCode,
-        description = randomStringMultiCaseWithNumbers(10),
-      )
+      val borough = Borough(code = pduDeliusCode, description = randomStringMultiCaseWithNumbers(10))
+
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
 
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername(username)
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withProbationAreaCode("AREACODE")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withCode("TC1").withBorough(brought).produce(),
-            StaffUserTeamMembershipFactory().withCode("TC2").withBorough(brought).produce(),
-          ),
-        )
-        .produce()
-        .toStaffDetail()
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = username,
+        name = PersonName("Jim", "Jimmerson"),
+        staffIdentifier = 5678,
+        probationArea = ProbationArea(code = "AREACODE", description = "Description"),
+        teams = listOf(
+          TeamFactory2.team(code = "TC1", borough = borough),
+          TeamFactory2.team(code = "TC2", borough = borough),
+        ),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -308,14 +296,13 @@ class UserServiceTest {
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
 
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername(username)
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withProbationAreaCode("AREACODE")
-        .produce()
-        .toStaffDetail()
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = username,
+        name = PersonName("Jim", "Jimmerson"),
+        staffIdentifier = 5678,
+        probationArea = ProbationArea(code = "AREACODE", description = "AREADESCRIPTION"),
+        teams = emptyList(),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -639,11 +626,10 @@ class UserServiceTest {
 
     @Test
     fun `Throw exception if can't determine PDU, no teams`() {
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername("theusername")
-        .withTeams(emptyList())
-        .produce()
-        .toStaffDetail()
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = "theusername",
+        teams = emptyList(),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -657,17 +643,10 @@ class UserServiceTest {
 
     @Test
     fun `Throw exception if can't determine PDU, no teams without end date`() {
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername("theusername")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withEndDate(LocalDate.now())
-              .produce(),
-          ),
-        )
-        .produce()
-        .toStaffDetail()
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = "theusername",
+        teams = listOf(TeamFactory2.team(endDate = LocalDate.now())),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -681,21 +660,18 @@ class UserServiceTest {
 
     @Test
     fun `Throw exception if no mapping for only team's borough`() {
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername("theusername")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("team1")
-              .withDescription("team 1")
-              .withBorough(KeyValue("boroughcode1", "borough1"))
-              .withStartDate(LocalDate.of(2024, 1, 1))
-              .withEndDate(null)
-              .produce(),
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = "theusername",
+        teams = listOf(
+          TeamFactory2.team(
+            code = "team1",
+            name = "team 1",
+            borough = Borough(code = "boroughcode1", description = "borough1"),
+            startDate = LocalDate.of(2024, 1, 1),
+            endDate = null,
           ),
-        )
-        .produce()
-        .toStaffDetail()
+        ),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -711,35 +687,32 @@ class UserServiceTest {
 
     @Test
     fun `Throw exception if no mapping for any active team's borough`() {
-      val deliusUser = StaffUserDetailsFactory()
-        .withUsername("theusername")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("team3")
-              .withDescription("team 3")
-              .withBorough(KeyValue("boroughcode3", "borough3"))
-              .withStartDate(LocalDate.of(2024, 1, 3))
-              .withEndDate(LocalDate.of(2024, 1, 4))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withCode("team2")
-              .withDescription("team 2")
-              .withBorough(KeyValue("boroughcode2", "borough2"))
-              .withStartDate(LocalDate.of(2024, 1, 2))
-              .withEndDate(null)
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withCode("team1")
-              .withDescription("team 1")
-              .withBorough(KeyValue("boroughcode1", "borough1"))
-              .withStartDate(LocalDate.of(2024, 1, 1))
-              .withEndDate(null)
-              .produce(),
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = "theusername",
+        teams = listOf(
+          TeamFactory2.team(
+            code = "team3",
+            name = "team 3",
+            borough = Borough(code = "boroughcode3", description = "borough3"),
+            startDate = LocalDate.of(2024, 1, 3),
+            endDate = LocalDate.of(2024, 1, 4),
           ),
-        )
-        .produce()
-        .toStaffDetail()
+          TeamFactory2.team(
+            code = "team2",
+            name = "team 2",
+            borough = Borough(code = "boroughcode2", description = "borough2"),
+            startDate = LocalDate.of(2024, 1, 2),
+            endDate = null,
+          ),
+          TeamFactory2.team(
+            code = "team1",
+            name = "team 1",
+            borough = Borough(code = "boroughcode1", description = "borough1"),
+            startDate = LocalDate.of(2024, 1, 1),
+            endDate = null,
+          ),
+        ),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -756,34 +729,31 @@ class UserServiceTest {
 
     @Test
     fun `Update PDU using latest team that has a mapping`() {
-      val deliusUser = StaffUserDetailsFactory()
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withBorough(KeyValue("boroughcode2", "borough2"))
-              .withStartDate(LocalDate.of(2024, 1, 2))
-              .withStartDate(LocalDate.of(2024, 1, 3))
-              .withEndDate(LocalDate.of(2024, 1, 4))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(KeyValue("nomapping", "nomapping"))
-              .withStartDate(LocalDate.of(2024, 1, 3))
-              .withEndDate(null)
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(KeyValue("boroughcode2", "borough2"))
-              .withStartDate(LocalDate.of(2024, 1, 2))
-              .withEndDate(null)
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(KeyValue("boroughcode1", "borough1"))
-              .withStartDate(LocalDate.of(2024, 1, 1))
-              .withEndDate(null)
-              .produce(),
+      val deliusUser = StaffDetailFactory.staffDetail(
+        deliusUsername = "theusername",
+        teams = listOf(
+          TeamFactory2.team(
+            borough = Borough(code = "boroughcode2", description = "borough2"),
+            startDate = LocalDate.of(2024, 1, 3),
+            endDate = LocalDate.of(2024, 1, 4),
           ),
-        )
-        .produce()
-        .toStaffDetail()
+          TeamFactory2.team(
+            borough = Borough(code = "nomapping", description = "nomapping"),
+            startDate = LocalDate.of(2024, 1, 3),
+            endDate = null,
+          ),
+          TeamFactory2.team(
+            borough = Borough(code = "boroughcode2", description = "borough2"),
+            startDate = LocalDate.of(2024, 1, 2),
+            endDate = null,
+          ),
+          TeamFactory2.team(
+            borough = Borough(code = "boroughcode1", description = "borough1"),
+            startDate = LocalDate.of(2024, 1, 1),
+            endDate = null,
+          ),
+        ),
+      )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
