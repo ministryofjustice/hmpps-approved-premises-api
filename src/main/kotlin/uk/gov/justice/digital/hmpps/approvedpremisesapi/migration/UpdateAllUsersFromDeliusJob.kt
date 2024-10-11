@@ -5,13 +5,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
-class UpdateAllUsersFromCommunityApiJob(
+class UpdateAllUsersFromDeliusJob(
   private val userRepository: UserRepository,
   private val userService: UserService,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = false
 
+  @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
   override fun process() {
     userRepository.findAll().forEach {
       log.info("Updating user ${it.id}")

@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.NEW_CONVICTION_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.NEW_EVENT_NUMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.NEW_OFFENCE_ID
@@ -84,7 +84,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
   fun `Update Application Assessed Domain Event`() {
     val (application, offenderDetails) = createApplication()
 
-    val staffUserDetails = StaffUserDetailsFactory().produce()
+    val staffUserDetails = StaffDetailFactory.staffDetail()
 
     domainEventService.saveApplicationAssessedDomainEvent(
       DomainEvent(
@@ -141,7 +141,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
   fun `Update Application Submitted Domain Event`() {
     val (application, offenderDetails) = createApplication()
 
-    val staffUserDetails = StaffUserDetailsFactory().produce()
+    val staffUserDetails = StaffDetailFactory.staffDetail()
 
     domainEventService.saveApplicationSubmittedDomainEvent(
       DomainEvent(
@@ -199,7 +199,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
   fun `Update Booking Made Domain Event`() {
     val (application, offenderDetails) = createApplication()
 
-    val staffUserDetails = StaffUserDetailsFactory().produce()
+    val staffUserDetails = StaffDetailFactory.staffDetail()
 
     domainEventService.saveBookingMadeDomainEvent(
       DomainEvent(

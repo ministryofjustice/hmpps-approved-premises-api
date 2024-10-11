@@ -30,6 +30,7 @@ fun randomPostCode() = randomStringUpperCase(2) + randomNumberChars(1) + " " +
   randomStringUpperCase(2) + randomNumberChars(1)
 
 fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
+fun randomLong() = Random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE)
 fun randomDouble(min: Double, max: Double) = Random.nextDouble(min, max)
 
 fun LocalDate.randomDateAfter(maxDays: Int): LocalDate = this.plusDays(randomInt(1, maxDays).toLong())

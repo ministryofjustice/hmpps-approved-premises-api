@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.c
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import java.time.OffsetDateTime
 
 class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
@@ -35,12 +37,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Populate applicant details, no caseManagementResponsibility field defined`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -77,12 +78,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Populate applicant details, no case manager`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -120,12 +120,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Populate overridden applicant details, no case manager`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -171,12 +170,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Populate some overridden applicant details, no case manager defined`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -221,12 +219,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Overridden values defined but not mentioned in details to update - take from user entity`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -268,12 +265,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Populate case manager when defined`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -318,12 +314,11 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
   @Test
   fun `Use paging`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withForenames("user entity")
-        withSurname("name")
-        withEmail("user entity email")
-        withTelephoneNumber("user entity phone")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(forename = "user", middleName = "entity", surname = "name"),
+        email = "user entity email",
+        telephoneNumber = "user entity phone",
+      ),
     ) { userEntity, _ ->
       `Given an Offender` { _, _ ->
 

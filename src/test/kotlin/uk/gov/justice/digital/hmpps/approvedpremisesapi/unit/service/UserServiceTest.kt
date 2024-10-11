@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -175,8 +175,8 @@ class UserServiceTest {
         staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "description"),
         teams = listOf(
-          TeamFactory2.team(code = "TC1", borough = borough),
-          TeamFactory2.team(code = "TC2", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC1", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC2", borough = borough),
         ),
       )
 
@@ -238,8 +238,8 @@ class UserServiceTest {
         staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "Description"),
         teams = listOf(
-          TeamFactory2.team(code = "TC1", borough = borough),
-          TeamFactory2.team(code = "TC2", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC1", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC2", borough = borough),
         ),
       )
 
@@ -645,7 +645,7 @@ class UserServiceTest {
     fun `Throw exception if can't determine PDU, no teams without end date`() {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
-        teams = listOf(TeamFactory2.team(endDate = LocalDate.now())),
+        teams = listOf(TeamFactoryDeliusContext.team(endDate = LocalDate.now())),
       )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -663,7 +663,7 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
         teams = listOf(
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team1",
             name = "team 1",
             borough = Borough(code = "boroughcode1", description = "borough1"),
@@ -690,21 +690,21 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
         teams = listOf(
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team3",
             name = "team 3",
             borough = Borough(code = "boroughcode3", description = "borough3"),
             startDate = LocalDate.of(2024, 1, 3),
             endDate = LocalDate.of(2024, 1, 4),
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team2",
             name = "team 2",
             borough = Borough(code = "boroughcode2", description = "borough2"),
             startDate = LocalDate.of(2024, 1, 2),
             endDate = null,
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team1",
             name = "team 1",
             borough = Borough(code = "boroughcode1", description = "borough1"),
@@ -732,22 +732,22 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
         teams = listOf(
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "boroughcode2", description = "borough2"),
             startDate = LocalDate.of(2024, 1, 3),
             endDate = LocalDate.of(2024, 1, 4),
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "nomapping", description = "nomapping"),
             startDate = LocalDate.of(2024, 1, 3),
             endDate = null,
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "boroughcode2", description = "borough2"),
             startDate = LocalDate.of(2024, 1, 2),
             endDate = null,
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "boroughcode1", description = "borough1"),
             startDate = LocalDate.of(2024, 1, 1),
             endDate = null,

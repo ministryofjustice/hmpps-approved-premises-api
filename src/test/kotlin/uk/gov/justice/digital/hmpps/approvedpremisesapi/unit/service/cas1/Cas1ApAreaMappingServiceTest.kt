@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
@@ -82,9 +82,9 @@ class Cas1ApAreaMappingServiceTest {
         probationArea = ProbationArea(code = "XYA", description = "description"),
         teams =
         listOf(
-          TeamFactory2.team(code = "CODE_NOT_IN_MAPPING"),
-          TeamFactory2.team(code = deliusTeamCode),
-          TeamFactory2.team(code = "OTHER_CODE_NOT_IN_MAPPING"),
+          TeamFactoryDeliusContext.team(code = "CODE_NOT_IN_MAPPING"),
+          TeamFactoryDeliusContext.team(code = deliusTeamCode),
+          TeamFactoryDeliusContext.team(code = "OTHER_CODE_NOT_IN_MAPPING"),
         ),
       )
 
@@ -137,8 +137,8 @@ class Cas1ApAreaMappingServiceTest {
         probationArea = ProbationArea(code = "XYZ", description = "description"),
         teams =
         listOf(
-          TeamFactory2.team(code = "CODE_NOT_IN_MAPPING"),
-          TeamFactory2.team(code = "OTHER_CODE_NOT_IN_MAPPING"),
+          TeamFactoryDeliusContext.team(code = "CODE_NOT_IN_MAPPING"),
+          TeamFactoryDeliusContext.team(code = "OTHER_CODE_NOT_IN_MAPPING"),
         ),
       )
 
@@ -165,7 +165,7 @@ class Cas1ApAreaMappingServiceTest {
         probationArea = ProbationArea(code = "XYZ", description = "description"),
         teams =
         listOf(
-          TeamFactory2.team(code = "N43MID"),
+          TeamFactoryDeliusContext.team(code = "N43MID"),
         ),
       )
       every { apAreaRepository.findByIdentifier("Mids") } returns null

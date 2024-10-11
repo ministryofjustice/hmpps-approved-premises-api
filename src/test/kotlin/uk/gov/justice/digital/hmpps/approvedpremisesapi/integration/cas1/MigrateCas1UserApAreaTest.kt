@@ -4,7 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
@@ -22,11 +23,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
     `Given a User`(
       probationRegion = probationRegion,
-      staffUserDetailsConfigBlock = {
-        this.withTeams(
-          listOf(StaffUserTeamMembershipFactory().withCode("abc").produce()),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "abc"))),
     ) { userEntity, _ ->
 
       userEntity.apArea = null
@@ -53,11 +50,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
     `Given a User`(
       probationRegion = probationRegion,
-      staffUserDetailsConfigBlock = {
-        this.withTeams(
-          listOf(StaffUserTeamMembershipFactory().withCode("abc").produce()),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "abc"))),
       mockStaffUserDetailsCall = false,
     ) { userEntity, _ ->
 

@@ -52,7 +52,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -133,9 +134,7 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
       ) { userEntity, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -415,9 +414,7 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get all applications returns limited information when a person cannot be found`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
       ) { userEntity, jwt ->
         val crn = "X1234"
 
@@ -478,9 +475,7 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get all applications returns successfully when a person has no NOMS number`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
       ) { userEntity, jwt ->
         `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
@@ -518,9 +513,7 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get all applications returns successfully when the person cannot be fetched from the prisons API`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
       ) { userEntity, jwt ->
         val crn = "X1234"
 
@@ -739,9 +732,7 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get single application returns 403 when caller not in a managing team and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM2"))),
       ) { userEntity, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -770,9 +761,7 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get single application returns 200 when a person has no NOMS number`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
       ) { userEntity, jwt ->
         `Given an Offender`(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
@@ -815,9 +804,8 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get single application returns 200 when the person cannot be fetched from the prisons API`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
+
       ) { userEntity, jwt ->
         val crn = "X1234"
 
@@ -1887,9 +1875,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        staffUserDetailsConfigBlock = {
-          withUsername("DEFAULT_LONDON_ASSESSOR")
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "DEFAULT_LONDON_ASSESSOR"),
       )
 
       val (offenderDetails, _) = `Given an Offender`()
@@ -2010,9 +1996,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        staffUserDetailsConfigBlock = {
-          withUsername("DEFAULT_LONDON_ASSESSOR")
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "DEFAULT_LONDON_ASSESSOR"),
       )
 
       val (offenderDetails, _) = `Given an Offender`()
@@ -2136,9 +2120,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val (assessorUser, _) = `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        staffUserDetailsConfigBlock = {
-          withUsername("DEFAULT_LONDON_ASSESSOR")
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "DEFAULT_LONDON_ASSESSOR"),
       )
 
       val (offenderDetails, _) = `Given an Offender`()
@@ -2252,9 +2234,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val (assessorUser, _) = `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        staffUserDetailsConfigBlock = {
-          withUsername("DEFAULT_WALES_ASSESSOR")
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "DEFAULT_WALES_ASSESSOR"),
       )
 
       val (offenderDetails, _) = `Given an Offender`()
@@ -2359,9 +2339,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val (esapAssessorUser, _) = `Given a User`(
         roles = listOf(UserRole.CAS1_ASSESSOR),
-        staffUserDetailsConfigBlock = {
-          withUsername("ESAP_ASSESSOR")
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ESAP_ASSESSOR"),
       )
 
       val (offenderDetails, _) = `Given an Offender`()
@@ -2572,15 +2550,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit Temporary Accommodation application returns 200`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
+      `Given a User` { submittingUser, jwt ->
         `Given a User` { _, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -2637,15 +2607,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`() {
-      `Given a User`(
-        staffUserDetailsConfigBlock = {
-          withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().produce(),
-            ),
-          )
-        },
-      ) { submittingUser, jwt ->
+      `Given a User` { submittingUser, jwt ->
         `Given a User` { _, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")

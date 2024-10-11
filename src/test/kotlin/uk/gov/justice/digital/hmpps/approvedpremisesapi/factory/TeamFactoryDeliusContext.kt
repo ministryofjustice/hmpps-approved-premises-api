@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 
-object TeamFactory2 {
+object TeamFactoryDeliusContext {
   @Suppress("LongParameterList")
   fun team(
     code: String = randomStringMultiCaseWithNumbers(6),

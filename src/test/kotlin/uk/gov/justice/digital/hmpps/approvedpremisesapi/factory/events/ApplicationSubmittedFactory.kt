@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
@@ -31,10 +32,13 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var submittedByProbationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
-  private var submittedByTeam: Yielded<Team> = { TeamFactory().produce() }
+  private var submittedByTeam: Yielded<Team> = { TeamFactoryDeliusContext.team().toDomainEventTeam() }
   private var submittedByLdu: Yielded<Ldu> = { LduFactory().produce() }
   private var submittedByRegion: Yielded<Region> = { RegionFactory().produce() }
   private var sentenceLengthInMonths: Yielded<Int?> = { null }
+
+  private fun uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team.toDomainEventTeam() =
+    Team(this.code, this.name)
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }

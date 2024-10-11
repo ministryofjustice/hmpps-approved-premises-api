@@ -17,14 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
@@ -47,11 +46,7 @@ class ProfileTest : IntegrationTestBase() {
         id = id,
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = listOf(UserQualification.PIPE),
-        staffUserDetailsConfigBlock = {
-          withUsername(deliusUsername)
-          withEmail(email)
-          withTelephoneNumber(telephoneNumber)
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber),
         probationRegion = region,
       ) { userEntity, jwt ->
         val userApArea = userEntity.apArea!!
@@ -224,12 +219,11 @@ class ProfileTest : IntegrationTestBase() {
     private val email = "foo@bar.com"
     private val telephoneNumber = "123445677"
     private val deliusCode = "INTTESTCODE"
-    private val probationArea = StaffDetailFactory.probationArea().copy(code = deliusCode)
+    private val probationArea = ProbationArea(code = deliusCode, description = "description")
     private val staffDetail =
       StaffDetailFactory
-        .staffDetail()
-        .copy(
-          username = deliusUsername,
+        .staffDetail(
+          deliusUsername = deliusUsername,
           email = email,
           telephoneNumber = telephoneNumber,
           probationArea = probationArea,
@@ -253,11 +247,7 @@ class ProfileTest : IntegrationTestBase() {
         id = id,
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = listOf(UserQualification.PIPE),
-        staffUserDetailsConfigBlock = {
-          withUsername(deliusUsername)
-          withEmail(email)
-          withTelephoneNumber(telephoneNumber)
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber),
         probationRegion = region,
       ) { userEntity, jwt ->
         val userApArea = userEntity.apArea!!
@@ -345,16 +335,17 @@ class ProfileTest : IntegrationTestBase() {
         withTelephoneNumber(telephoneNumber)
       }
 
-      val staffUserDetail =
-        StaffUserDetailsFactory()
-          .withForenames(userEntity.name.split(" ")[0])
-          .withSurname(userEntity.name.split(" ")[1])
-          .withUsername(deliusUsername)
-          .withEmail(email)
-          .withTelephoneNumber(telephoneNumber)
-          .produce()
-      mockStaffUserInfoCommunityApiCall(staffUserDetail)
-      ApDeliusContext_addStaffDetailResponse(staffUserDetail.toStaffDetail())
+      val staffUserDetail = StaffDetailFactory.staffDetail(
+        deliusUsername = deliusUsername,
+        name = PersonName(
+          forename = forename,
+          surname = surname,
+        ),
+        email = email,
+        telephoneNumber = telephoneNumber,
+      )
+
+      ApDeliusContext_addStaffDetailResponse(staffUserDetail)
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -368,7 +359,7 @@ class ProfileTest : IntegrationTestBase() {
         withQualification(UserQualification.PIPE)
       }
 
-      val expectedName = staffUserDetail.toStaffDetail().name.deliusName()
+      val expectedName = staffUserDetail.name.deliusName()
 
       webTestClient.get()
         .uri(profileV2Endpoint)
@@ -540,16 +531,17 @@ class ProfileTest : IntegrationTestBase() {
         withTelephoneNumber(telephoneNumber)
       }
 
-      val staffUserDetail =
-        StaffUserDetailsFactory()
-          .withForenames(userEntity.name.split(" ")[0])
-          .withSurname(userEntity.name.split(" ")[1])
-          .withUsername(deliusUsername)
-          .withEmail(email)
-          .withTelephoneNumber(telephoneNumber)
-          .produce()
-      mockStaffUserInfoCommunityApiCall(staffUserDetail)
-      ApDeliusContext_addStaffDetailResponse(staffUserDetail.toStaffDetail())
+      val staffUserDetail = StaffDetailFactory.staffDetail(
+        name = PersonName(
+          forename = forename,
+          surname = surname,
+        ),
+        deliusUsername = deliusUsername,
+        email = email,
+        telephoneNumber = telephoneNumber,
+      )
+
+      ApDeliusContext_addStaffDetailResponse(staffUserDetail)
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -563,7 +555,7 @@ class ProfileTest : IntegrationTestBase() {
         withQualification(UserQualification.PIPE)
       }
 
-      val expectedName = staffUserDetail.toStaffDetail().name.deliusName()
+      val expectedName = staffUserDetail.name.deliusName()
 
       webTestClient.get()
         .uri(profileV2Endpoint)
@@ -606,20 +598,21 @@ class ProfileTest : IntegrationTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = createProbationRegion()
+      val deliusCode = "DeliusCode"
+      val region = createProbationRegion(deliusCode)
 
       probationAreaProbationRegionMappingFactory.produceAndPersist {
         withProbationRegion(region)
-        withProbationAreaDeliusCode(region.deliusCode)
+        withProbationAreaDeliusCode(deliusCode)
       }
 
       ApDeliusContext_addStaffDetailResponse(
-        StaffUserDetailsFactory()
-          .withUsername(deliusUsername)
-          .withEmail(email)
-          .withTelephoneNumber(telephoneNumber)
-          .withProbationAreaCode(region.deliusCode)
-          .produce().toStaffDetail(),
+        StaffDetailFactory.staffDetail(
+          deliusUsername = deliusUsername,
+          email = email,
+          telephoneNumber = telephoneNumber,
+          probationArea = ProbationArea(code = region.deliusCode, description = randomStringMultiCaseWithNumbers(10)),
+        ),
       )
 
       val response = webTestClient.get()

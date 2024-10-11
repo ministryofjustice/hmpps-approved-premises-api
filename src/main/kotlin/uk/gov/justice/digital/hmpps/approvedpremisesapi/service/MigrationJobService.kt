@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJobApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromDeliusJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduJob
@@ -66,7 +66,7 @@ class MigrationJobService(
 
     try {
       val job: MigrationJob = when (migrationJobType) {
-        MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
+        MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromDeliusJob(
           getBean(UserRepository::class),
           getBean(UserService::class),
         )

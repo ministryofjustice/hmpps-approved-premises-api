@@ -4,14 +4,13 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockNotFoundStaffDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
 import java.time.LocalDate
 
 class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
@@ -76,126 +75,71 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
     }
 
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userOneCas3Assessor.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE2",
-                  description = "PDUDESCRIPTION2",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2022-06-02"))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODENotExistInCas",
-                  description = "PDUDESCRIPTIONNotExistInCas",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2024-02-05"))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE1",
-                  description = "PDUDESCRIPTION1",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2024-02-05"))
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userOneCas3Assessor.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE2", description = "PDUDESCRIPTION2"),
+            startDate = LocalDate.parse("2022-06-02"),
           ),
-        )
-        .produce().toStaffDetail(),
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODENotExistInCas", description = "PDUDESCRIPTIONNotExistInCas"),
+            startDate = LocalDate.parse("2024-02-05"),
+          ),
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE1", description = "PDUDESCRIPTION1"),
+            startDate = LocalDate.parse("2024-02-05"),
+          ),
+        ),
+      ),
     )
 
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userTwoCas3Referrer.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE2",
-                  description = "PDUDESCRIPTION2",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2020-05-19"))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODENotExistInCas",
-                  description = "PDUDESCRIPTIONNotExistInCas",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2024-02-05"))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE3",
-                  description = "PDUDESCRIPTION3",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2022-09-12"))
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userTwoCas3Referrer.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE2", description = "PDUDESCRIPTION2"),
+            startDate = LocalDate.parse("2020-05-19"),
           ),
-        )
-        .produce().toStaffDetail(),
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODENotExistInCas", description = "PDUDESCRIPTIONNotExistInCas"),
+            startDate = LocalDate.parse("2024-02-05"),
+          ),
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE3", description = "PDUDESCRIPTION3"),
+            startDate = LocalDate.parse("2022-09-12"),
+          ),
+        ),
+      ),
     )
 
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userThreeCas1Assessor.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE1",
-                  description = "PDUDESCRIPTION1",
-                ),
-              )
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userThreeCas1Assessor.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE1", description = "PDUDESCRIPTION1"),
           ),
-        )
-        .produce()
-        .toStaffDetail(),
+        ),
+      ),
     )
 
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userFourCas3Referrer.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE1",
-                  description = "PDUDESCRIPTION1",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2020-02-05"))
-              .withEndDate(LocalDate.parse("2022-03-05"))
-              .produce(),
-            StaffUserTeamMembershipFactory()
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE2",
-                  description = "PDUDESCRIPTION2",
-                ),
-              )
-              .withStartDate(LocalDate.parse("2023-08-07"))
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userFourCas3Referrer.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE1", description = "PDUDESCRIPTION1"),
+            startDate = LocalDate.parse("2020-02-05"),
+            endDate = LocalDate.parse("2022-03-05"),
           ),
-        )
-        .produce()
-        .toStaffDetail(),
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE2", description = "PDUDESCRIPTION2"),
+            startDate = LocalDate.parse("2023-08-07"),
+          ),
+        ),
+      ),
     )
 
     val startTime = System.currentTimeMillis()
@@ -253,21 +197,14 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
     ApDeliusContext_mockNotFoundStaffDetailCall(userOne.deliusUsername)
 
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userTwo.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE3",
-                description = "PDUDESCRIPTION3",
-              ),
-            )
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userTwo.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE3", description = "PDUDESCRIPTION3"),
           ),
-        )
-        .produce()
-        .toStaffDetail(),
+        ),
+      ),
     )
 
     migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi)
@@ -316,44 +253,29 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       withUser(userTwo)
       withRole(UserRole.CAS3_REPORTER)
     }
-
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userOne.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withBorough(
-              KeyValue(
-                code = "PDUCODE1",
-                description = "PDUDESCRIPTION1",
-              ),
-            )
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userOne.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            borough = Borough(code = "PDUCODE1", description = "PDUDESCRIPTION1"),
           ),
-        )
-        .produce()
-        .toStaffDetail(),
+        ),
+      ),
     )
 
     ApDeliusContext_addStaffDetailResponse(
-      StaffUserDetailsFactory()
-        .withUsername(userTwo.deliusUsername)
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .withDescription("TEAM 1")
-              .withBorough(
-                KeyValue(
-                  code = "PDUCODE5",
-                  description = "PDUDESCRIPTION5",
-                ),
-              )
-              .produce(),
+      StaffDetailFactory.staffDetail(
+        deliusUsername = userTwo.deliusUsername,
+        teams = listOf(
+          TeamFactoryDeliusContext.team(
+            code = "TEAM1",
+            name = "TEAM 1",
+            borough = Borough(code = "PDUCODE5", description = "PDUDESCRIPTION5"),
+            startDate = LocalDate.parse("2022-06-02"),
           ),
-        )
-        .produce()
-        .toStaffDetail(),
+        ),
+      ),
     )
 
     migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi)
