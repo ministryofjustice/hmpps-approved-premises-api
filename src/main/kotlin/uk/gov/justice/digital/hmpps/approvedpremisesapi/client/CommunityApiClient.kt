@@ -2,18 +2,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import java.io.OutputStream
 
@@ -23,15 +20,6 @@ class CommunityApiClient(
   objectMapper: ObjectMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
-  @Deprecated(
-    message = "Deprecated as part of the move away from the community-api",
-    replaceWith = ReplaceWith("ApDeliusContextApiClient.getStaffDetail(username)"),
-  )
-  @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
-  fun getStaffUserDetails(deliusUsername: String) = getRequest<StaffUserDetails> {
-    path = "/secure/staff/username/$deliusUsername"
-  }
-
   fun getStaffUserDetailsForStaffCode(staffCode: String) = getRequest<StaffWithoutUsernameUserDetails> {
     path = "/secure/staff/staffCode/$staffCode"
   }
