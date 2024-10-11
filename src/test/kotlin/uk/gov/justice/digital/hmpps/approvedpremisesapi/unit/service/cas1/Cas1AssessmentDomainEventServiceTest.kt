@@ -30,11 +30,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -98,13 +97,13 @@ class Cas1AssessmentDomainEventServiceTest {
 
     @Test
     fun `assessmentAllocated raises domain event`() {
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val assigneeUserStaffDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
 
-      val allocatingUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val allocatingUserStaffDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(allocatingUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         allocatingUserStaffDetails,
@@ -155,7 +154,7 @@ class Cas1AssessmentDomainEventServiceTest {
 
     @Test
     fun `assessmentAllocated allocating user is system`() {
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val assigneeUserStaffDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
@@ -219,9 +218,10 @@ class Cas1AssessmentDomainEventServiceTest {
 
       val application = assessment.application as ApprovedPremisesApplicationEntity
       val offenderDetails = OffenderDetailsSummaryFactory().produce()
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withProbationAreaCode("N26")
-        .produce().toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail(
+        probationArea = uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea(code = "N26", description = "description"),
+      )
+
       val placementDates = PlacementDates(
         expectedArrival = LocalDate.now(),
         duration = 12,
@@ -296,8 +296,8 @@ class Cas1AssessmentDomainEventServiceTest {
         )
         .produce()
 
-      val requesterStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
-      val recipientStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val requesterStaffDetails = StaffDetailFactory.staffDetail()
+      val recipientStaffDetails = StaffDetailFactory.staffDetail()
 
       every { apDeliusContextApiClient.getStaffDetail(clarificationNoteEntity.createdByUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
