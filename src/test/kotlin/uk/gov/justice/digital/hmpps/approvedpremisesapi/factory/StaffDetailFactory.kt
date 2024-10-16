@@ -22,7 +22,7 @@ object StaffDetailFactory {
     staffIdentifier: Long = randomInt(Int.MIN_VALUE, Int.MAX_VALUE).toLong(),
     teams: List<Team> = listOf(team()),
     probationArea: ProbationArea = probationArea(),
-    deliusUsername: String = randomStringMultiCaseWithNumbers(10),
+    deliusUsername: String = randomStringUpperCase(10),
     name: PersonName = PersonName(randomStringLowerCase(6), randomStringLowerCase(6), randomStringLowerCase(6)),
     code: String = randomStringUpperCase(10),
     active: Boolean = true,
