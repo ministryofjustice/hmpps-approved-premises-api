@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -48,12 +49,12 @@ class Cas1BookingDomainEventServiceTest {
 
   private val domainEventService = mockk<DomainEventService>()
   private val offenderService = mockk<OffenderService>()
-  private val communityApiClient = mockk<CommunityApiClient>()
+  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   val service = Cas1BookingDomainEventService(
     domainEventService,
     offenderService,
-    communityApiClient,
+    apDeliusContextApiClient,
     UrlTemplate("http://frontend/applications/#id"),
   )
 
@@ -104,8 +105,8 @@ class Cas1BookingDomainEventServiceTest {
     fun before() {
       every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
@@ -220,8 +221,8 @@ class Cas1BookingDomainEventServiceTest {
     fun before() {
       every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
@@ -444,8 +445,8 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().withStaffCode("the staff code").produce()
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().withStaffCode("the staff code").produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
@@ -542,9 +543,9 @@ class Cas1BookingDomainEventServiceTest {
 
       every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
 
-      val staffUserDetails = StaffUserDetailsFactory().produce()
+      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
 
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         staffUserDetails,
       )
@@ -592,7 +593,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
 
-      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.staffCode)
+      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.code)
       assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
       assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(data.cancellationReason).isEqualTo("the reason name")
@@ -632,9 +633,9 @@ class Cas1BookingDomainEventServiceTest {
 
       every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
 
-      val staffUserDetails = StaffUserDetailsFactory().produce()
+      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
 
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         staffUserDetails,
       )
@@ -682,7 +683,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
 
-      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.staffCode)
+      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.code)
       assertThat(data.cancelledAt).isEqualTo(Instant.parse("2022-08-25T00:00:00.00Z"))
       assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(data.cancellationReason).isEqualTo("the reason name")
@@ -732,8 +733,8 @@ class Cas1BookingDomainEventServiceTest {
         )
       } returns AuthorisableActionResult.Success(offenderDetails)
 
-      val staffUserDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         staffUserDetails,
       )
@@ -777,7 +778,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
 
-      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.staffCode)
+      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.code)
       assertThat(data.cancelledAt).isEqualTo(Instant.parse("2025-11-15T00:00:00.00Z"))
       assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2025-11-15"))
       assertThat(data.cancellationReason).isEqualTo("the reason name")

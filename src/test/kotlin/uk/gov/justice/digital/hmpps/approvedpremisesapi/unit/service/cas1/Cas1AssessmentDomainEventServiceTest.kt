@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -42,7 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -53,11 +54,11 @@ import java.util.UUID
 class Cas1AssessmentDomainEventServiceTest {
 
   private val domainEventService = mockk<DomainEventService>()
-  private val communityApiClient = mockk<CommunityApiClient>()
+  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   val service = Cas1AssessmentDomainEventService(
     domainEventService,
-    communityApiClient,
+    apDeliusContextApiClient,
     UrlTemplate("http://frontend/applications/#id"),
     UrlTemplate("http://frontend/assessments/#id"),
   )
@@ -97,14 +98,14 @@ class Cas1AssessmentDomainEventServiceTest {
 
     @Test
     fun `assessmentAllocated raises domain event`() {
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
 
-      val allocatingUserStaffDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(allocatingUser.deliusUsername) } returns ClientResult.Success(
+      val allocatingUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(allocatingUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         allocatingUserStaffDetails,
       )
@@ -154,8 +155,8 @@ class Cas1AssessmentDomainEventServiceTest {
 
     @Test
     fun `assessmentAllocated allocating user is system`() {
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
@@ -220,20 +221,23 @@ class Cas1AssessmentDomainEventServiceTest {
       val offenderDetails = OffenderDetailsSummaryFactory().produce()
       val staffUserDetails = StaffUserDetailsFactory()
         .withProbationAreaCode("N26")
-        .produce()
+        .produce().toStaffDetail()
       val placementDates = PlacementDates(
         expectedArrival = LocalDate.now(),
         duration = 12,
       )
       val apType = ApType.normal
 
-      every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
       every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
 
       service.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, user)
 
       verify(exactly = 1) {
-        communityApiClient.getStaffUserDetails(user.deliusUsername)
+        apDeliusContextApiClient.getStaffDetail(user.deliusUsername)
       }
 
       verify(exactly = 1) {
@@ -245,13 +249,7 @@ class Cas1AssessmentDomainEventServiceTest {
               noms = offenderDetails.otherIds.nomsNumber!!,
             )
             val expectedAssessor = ApplicationAssessedAssessedBy(
-              staffMember = StaffMember(
-                staffCode = staffUserDetails.staffCode,
-                staffIdentifier = staffUserDetails.staffIdentifier,
-                forenames = staffUserDetails.staff.forenames,
-                surname = staffUserDetails.staff.surname,
-                username = staffUserDetails.username,
-              ),
+              staffUserDetails.toStaffMember(),
               probationArea = ProbationArea(
                 code = staffUserDetails.probationArea.code,
                 name = staffUserDetails.probationArea.description,
@@ -298,14 +296,14 @@ class Cas1AssessmentDomainEventServiceTest {
         )
         .produce()
 
-      val requesterStaffDetails = StaffUserDetailsFactory().produce()
-      val recipientStaffDetails = StaffUserDetailsFactory().produce()
+      val requesterStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val recipientStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
 
-      every { communityApiClient.getStaffUserDetails(clarificationNoteEntity.createdByUser.deliusUsername) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetail(clarificationNoteEntity.createdByUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         requesterStaffDetails,
       )
-      every { communityApiClient.getStaffUserDetails(assessment.application.createdByUser.deliusUsername) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetail(assessment.application.createdByUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         recipientStaffDetails,
       )
@@ -387,14 +385,14 @@ class Cas1AssessmentDomainEventServiceTest {
     return assessment
   }
 
-  private fun assertStaffMemberDetailsMatch(staffMember: StaffMember?, staffDetails: StaffUserDetails?) = when {
+  private fun assertStaffMemberDetailsMatch(staffMember: StaffMember?, staffDetails: StaffDetail?) = when {
     staffMember == null -> staffDetails == null
     else ->
       staffDetails != null &&
-        staffMember.staffCode == staffDetails.staffCode &&
+        staffMember.staffCode == staffDetails.code &&
         staffMember.staffIdentifier == staffDetails.staffIdentifier &&
-        staffMember.forenames == staffDetails.staff.forenames &&
-        staffMember.surname == staffDetails.staff.surname &&
+        staffMember.forenames == staffDetails.name.forenames() &&
+        staffMember.surname == staffDetails.name.surname &&
         staffMember.username == staffDetails.username
   }
 }

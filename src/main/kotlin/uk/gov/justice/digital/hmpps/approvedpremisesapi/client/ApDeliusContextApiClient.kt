@@ -49,6 +49,7 @@ class ApDeliusContextApiClient(
     path = "/probation-case/$crn/referrals/$bookingId"
   }
 
+  @Cacheable(value = ["staffDetailsCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffDetail(username: String) = getRequest<StaffDetail> {
     path = "/staff/$username"
   }
