@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
@@ -123,26 +124,22 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     referrerProbationArea = "Referrer probation area"
 
     referrerDetails = `Given a User`(
-      staffUserDetailsConfigBlock = {
-        staffDetail(
-          probationArea = ProbationArea(
-            code = randomStringMultiCaseWithNumbers(6),
-            description = "Referrer probation area",
-          ),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = randomStringMultiCaseWithNumbers(6),
+          description = "Referrer probation area",
+        ),
+      ),
     )
     assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR),
       probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "Wales")),
-      staffUserDetailsConfigBlock = {
-        staffDetail(
-          probationArea = ProbationArea(
-            code = "N03",
-            description = randomStringMultiCaseWithNumbers(6),
-          ),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N03",
+          description = randomStringMultiCaseWithNumbers(6),
+        ),
+      ),
     )
     managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
     workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))

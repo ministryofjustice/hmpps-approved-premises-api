@@ -46,9 +46,7 @@ class ProfileTest : IntegrationTestBase() {
         id = id,
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = listOf(UserQualification.PIPE),
-        staffUserDetailsConfigBlock = {
-          staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber)
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber),
         probationRegion = region,
       ) { userEntity, jwt ->
         val userApArea = userEntity.apArea!!
@@ -249,9 +247,7 @@ class ProfileTest : IntegrationTestBase() {
         id = id,
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = listOf(UserQualification.PIPE),
-        staffUserDetailsConfigBlock = {
-          staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber)
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber),
         probationRegion = region,
       ) { userEntity, jwt ->
         val userApArea = userEntity.apArea!!

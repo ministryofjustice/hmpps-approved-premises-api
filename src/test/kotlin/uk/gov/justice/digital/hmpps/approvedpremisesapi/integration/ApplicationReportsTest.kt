@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
@@ -143,12 +144,10 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     referrerProbationArea = "Referrer probation area"
 
     referrerDetails = `Given a User`(
-      staffUserDetailsConfigBlock = {
-        staffDetail(
-          teams = listOf(referrerTeam.team()),
-          probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = referrerProbationArea),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        teams = listOf(referrerTeam.team()),
+        probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = referrerProbationArea),
+      ),
     )
     assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR),

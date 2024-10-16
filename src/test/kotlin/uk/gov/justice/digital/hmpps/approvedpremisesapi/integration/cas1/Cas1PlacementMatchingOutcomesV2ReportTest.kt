@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory.staffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
@@ -98,7 +98,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
       qualifications = UserQualification.entries,
-      staffUserDetailsConfigBlock = { staffDetail(deliusUsername = "ASSESSOR1") },
+      staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR1"),
     )
     assessor = assessorDetails.first
     assessorJwt = assessorDetails.second
@@ -447,7 +447,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   ) {
     val managerJwt = `Given a User`(
       roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER),
-      staffUserDetailsConfigBlock = { staffDetail(deliusUsername = matcherUsername) },
+      staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
       probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = matcherApAreaName)),
     ).second
 
@@ -476,7 +476,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   ) {
     val managerJwt = `Given a User`(
       roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER),
-      staffUserDetailsConfigBlock = { staffDetail(deliusUsername = matcherUsername) },
+      staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
       probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = matcherApAreaName)),
     ).second
 

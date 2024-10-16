@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
@@ -2185,14 +2186,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, emits domain event and emails`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          )
-        },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
@@ -2317,14 +2316,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements, emits domain event and emails`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          )
-        },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
@@ -2430,14 +2427,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment returns an error if the postcode cannot be found`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          )
-        },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
@@ -2509,14 +2504,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment with an outstanding clarification note sets the application status correctly`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          )
-        },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
@@ -2620,14 +2613,12 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        staffDetail(
-          probationArea = ProbationArea(
-            code = "N21",
-            description = randomStringMultiCaseWithNumbers(10),
-          ),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N21",
+          description = randomStringMultiCaseWithNumbers(10),
+        ),
+      ),
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2686,14 +2677,12 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Reject assessment with an outstanding clarification note sets the application status correctly`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = {
-        staffDetail(
-          probationArea = ProbationArea(
-            code = "N21",
-            description = randomStringMultiCaseWithNumbers(10),
-          ),
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N21",
+          description = randomStringMultiCaseWithNumbers(10),
+        ),
+      ),
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()

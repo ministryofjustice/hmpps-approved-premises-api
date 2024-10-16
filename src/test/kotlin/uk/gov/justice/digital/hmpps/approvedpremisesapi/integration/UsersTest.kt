@@ -1025,14 +1025,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to search users with approved role returns a user`(role: UserRole) {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          staffDetail(name = PersonName(forename = "SomeUserName", surname = ""))
-        },
+        staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "SomeUserName", surname = "")),
       ) { user, _ ->
         `Given a User`(
-          staffUserDetailsConfigBlock = {
-            staffDetail(name = PersonName(forename = "fail", surname = ""))
-          },
+          staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "fail", surname = "")),
         ) { _, _ ->
           `Given a User`(roles = listOf(role)) { _, jwt ->
             webTestClient.get()
@@ -1103,14 +1099,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to search users delius username with an approved role returns a user`(role: UserRole) {
       `Given a User`(
-        staffUserDetailsConfigBlock = {
-          staffDetail(deliusUsername = "SOME")
-        },
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "SOME"),
       ) { user, _ ->
         `Given a User`(
-          staffUserDetailsConfigBlock = {
-            staffDetail(name = PersonName(forename = "fail", surname = "r"))
-          },
+          staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "fail", surname = "r")),
         ) { _, _ ->
           `Given a User`(roles = listOf(role)) { _, jwt ->
             webTestClient.get()

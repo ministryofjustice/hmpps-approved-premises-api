@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
@@ -22,7 +23,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
     `Given a User`(
       probationRegion = probationRegion,
-      staffUserDetailsConfigBlock = { staffDetail(teams = listOf(TeamFactory2.team(code = "abc"))) },
+      staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactory2.team(code = "abc"))),
     ) { userEntity, _ ->
 
       userEntity.apArea = null
@@ -49,9 +50,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
     `Given a User`(
       probationRegion = probationRegion,
-      staffUserDetailsConfigBlock = {
-        staffDetail(teams = listOf(TeamFactory2.team(code = "abc")))
-      },
+      staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactory2.team(code = "abc"))),
       mockStaffUserDetailsCall = false,
     ) { userEntity, _ ->
 

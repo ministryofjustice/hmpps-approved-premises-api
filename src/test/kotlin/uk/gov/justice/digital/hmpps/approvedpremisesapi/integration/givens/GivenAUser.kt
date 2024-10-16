@@ -17,12 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
-  staffUserDetailsConfigBlock: (StaffDetailFactory.() -> Unit)? = null,
+  staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
@@ -30,14 +31,6 @@ fun IntegrationTestBase.`Given a User`(
   mockStaffUserDetailsCall: Boolean = true,
   cruManagementAreaEntity: Cas1CruManagementAreaEntity? = null,
 ): Pair<UserEntity, String> {
-  val staffUserDetailsFactory = StaffDetailFactory
-
-  if (staffUserDetailsConfigBlock != null) {
-    staffUserDetailsConfigBlock(staffUserDetailsFactory)
-  }
-
-  val staffUserDetails = staffUserDetailsFactory.staffDetail()
-
   val resolvedProbationRegion = probationRegion ?: probationRegionEntityFactory.produceAndPersist {
     withYieldedApArea { `Given an AP Area`() }
   }
@@ -45,11 +38,11 @@ fun IntegrationTestBase.`Given a User`(
 
   val user = userEntityFactory.produceAndPersist {
     withId(id)
-    withDeliusUsername(staffUserDetails.username)
-    withDeliusStaffCode(staffUserDetails.code)
-    withEmail(staffUserDetails.email)
-    withTelephoneNumber(staffUserDetails.telephoneNumber)
-    withName(staffUserDetails.name.deliusName())
+    withDeliusUsername(staffDetail.username)
+    withDeliusStaffCode(staffDetail.code)
+    withEmail(staffDetail.email)
+    withTelephoneNumber(staffDetail.telephoneNumber)
+    withName(staffDetail.name.deliusName())
     withIsActive(isActive)
     withYieldedProbationRegion { resolvedProbationRegion }
     withYieldedApArea { apArea }
@@ -70,29 +63,29 @@ fun IntegrationTestBase.`Given a User`(
     }
   }
 
-  val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffUserDetails.username)
+  val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffDetail.username)
 
   if (mockStaffUserDetailsCall) {
     val temp = StaffUserDetails(
-      username = staffUserDetails.username,
-      email = staffUserDetails.email,
-      telephoneNumber = staffUserDetails.telephoneNumber,
-      staffCode = staffUserDetails.code,
-      staffIdentifier = staffUserDetails.staffIdentifier,
+      username = staffDetail.username,
+      email = staffDetail.email,
+      telephoneNumber = staffDetail.telephoneNumber,
+      staffCode = staffDetail.code,
+      staffIdentifier = staffDetail.staffIdentifier,
       staff = StaffNames(
-        forenames = staffUserDetails.name.forenames(),
-        surname = staffUserDetails.name.surname,
+        forenames = staffDetail.name.forenames(),
+        surname = staffDetail.name.surname,
       ),
-      teams = staffUserDetails.teams.map { x ->
+      teams = staffDetail.teams.map { x ->
         StaffUserTeamMembershipFactory().withCode(x.code).withDescription(x.name).produce()
       },
       probationArea = StaffProbationArea(
-        staffUserDetails.probationArea.code,
-        staffUserDetails.probationArea.description,
+        staffDetail.probationArea.code,
+        staffDetail.probationArea.description,
       ),
     )
     CommunityAPI_mockSuccessfulStaffUserDetailsCall(temp)
-    ApDeliusContext_addStaffDetailResponse(staffUserDetails)
+    ApDeliusContext_addStaffDetailResponse(staffDetail)
   } else {
     mockOAuth2ClientCredentialsCallIfRequired {}
   }
@@ -103,7 +96,7 @@ fun IntegrationTestBase.`Given a User`(
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
-  staffUserDetailsConfigBlock: (StaffDetailFactory.() -> Unit)? = null,
+  staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
@@ -113,7 +106,7 @@ fun IntegrationTestBase.`Given a User`(
 ) {
   val (user, jwt) = `Given a User`(
     id,
-    staffUserDetailsConfigBlock,
+    staffDetail,
     roles,
     qualifications,
     probationRegion,
