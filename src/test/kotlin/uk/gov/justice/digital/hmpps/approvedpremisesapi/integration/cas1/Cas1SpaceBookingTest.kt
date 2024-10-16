@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
@@ -1226,13 +1227,15 @@ class Cas1SpaceBookingTest {
         withEmailAddress("premises@test.com")
       }
 
-      applicant = `Given a User`(staffUserDetailsConfigBlock = {
-        withEmail("applicant@test.com")
-      },).first
+      applicant = `Given a User`(
+        staffDetail =
+        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
+      ).first
 
-      placementApplicationCreator = `Given a User`(staffUserDetailsConfigBlock = {
-        withEmail("placementApplicant@test.com")
-      },).first
+      placementApplicationCreator = `Given a User`(
+        staffDetail =
+        StaffDetailFactory.staffDetail(email = "placementApplicant@test.com"),
+      ).first
 
       val (offender) = `Given an Offender`()
 

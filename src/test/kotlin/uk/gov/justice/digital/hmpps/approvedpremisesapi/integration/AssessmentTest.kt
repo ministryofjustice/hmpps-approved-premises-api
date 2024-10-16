@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
@@ -84,6 +85,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -2184,7 +2186,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, emits domain event and emails`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
@@ -2309,7 +2316,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements, emits domain event and emails`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
@@ -2415,7 +2427,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment returns an error if the postcode cannot be found`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
@@ -2487,7 +2504,12 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Accept assessment with an outstanding clarification note sets the application status correctly`() {
       `Given a User`(
-        staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
       ) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
@@ -2591,7 +2613,12 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N21",
+          description = randomStringMultiCaseWithNumbers(10),
+        ),
+      ),
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2650,7 +2677,12 @@ class AssessmentTest : IntegrationTestBase() {
   @Test
   fun `Reject assessment with an outstanding clarification note sets the application status correctly`() {
     `Given a User`(
-      staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N21",
+          description = randomStringMultiCaseWithNumbers(10),
+        ),
+      ),
     ) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
@@ -2689,29 +2721,6 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-
-        val essentialCriteria = listOf(
-          PlacementCriteria.hasEnSuite,
-          PlacementCriteria.isRecoveryFocussed,
-        )
-        val desirableCriteria = listOf(
-          PlacementCriteria.acceptsNonSexualChildOffenders,
-          PlacementCriteria.acceptsSexOffenders,
-        )
-
-        val placementDates = PlacementDates(
-          expectedArrival = LocalDate.now(),
-          duration = 12,
-        )
-
-        val placementRequirements = PlacementRequirements(
-          gender = Gender.male,
-          type = ApType.normal,
-          location = postcodeDistrict.outcode,
-          radius = 50,
-          essentialCriteria = essentialCriteria,
-          desirableCriteria = desirableCriteria,
-        )
 
         webTestClient.post()
           .uri("/assessments/${assessment.id}/rejection")
