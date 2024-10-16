@@ -9,10 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingGapReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
@@ -21,7 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvClassConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
@@ -45,8 +49,9 @@ class Cas3ReportService(
   private val bookingRepository: BookingRepository,
   private val bedUsageRepository: BedUsageRepository,
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
-  @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
+  private val cas3FutureBookingsReportRepository: Cas3FutureBookingsReportRepository,
   private val cas3BookingGapReportRepository: Cas3BookingGapReportRepository,
+  @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
 ) {
 
   fun createCas3ApplicationReferralsReport(
@@ -175,6 +180,25 @@ class Cas3ReportService(
   fun createBookingGapRangesReport(): MutableList<MutableMap<String, Any>> {
     return cas3BookingGapReportRepository
       .generateBookingGapRangesReport()
+  }
+
+  fun createFutureBookingReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
+    val bookingsInScope = cas3FutureBookingsReportRepository.findAllFutureBookings(
+      properties.startDate,
+      properties.endDate,
+      properties.probationRegionId,
+    )
+
+    val crns = bookingsInScope.map { it.crn }.sorted().toSet()
+    val personInfos = splitAndRetrievePersonInfo(crns)
+    val reportData = bookingsInScope.map {
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+      FutureBookingsReportGenerator().convert(it, personInfo)
+    }
+
+    CsvClassConsumer(
+      outputStream = outputStream,
+    ).consume(reportData)
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
