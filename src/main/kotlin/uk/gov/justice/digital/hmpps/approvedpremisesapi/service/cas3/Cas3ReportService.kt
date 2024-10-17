@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Futu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -190,7 +189,7 @@ class Cas3ReportService(
       properties.probationRegionId,
     )
 
-    val crns = bookingsInScope.map { it.crn }.sorted().toSet()
+    val crns = bookingsInScope.map { it.crn }.distinct().toSet()
     val personInfos = splitAndRetrievePersonInfo(crns)
     val reportData = bookingsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
