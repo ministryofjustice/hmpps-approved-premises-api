@@ -12,7 +12,7 @@ import java.util.UUID
 interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID> {
   @Query(
     """
-    with future_bookings as (SELECT
+    SELECT
         CAST(booking.id AS VARCHAR) AS bookingId,
         CAST(app.id AS VARCHAR) AS referralId,
         app.submitted_at AS referralDate,
@@ -51,11 +51,8 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
       AND COALESCE(cas3_assessment.accommodation_required_from_date,cas3_app.arrival_date) >= :startDate
       AND premises.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR premises.probation_region_id = :probationRegionId)
-      AND cancellation.id IS NULL)
-      
-    SELECT *  
-    FROM future_bookings
-    ORDER BY probationRegionName,pduName,accommodationRequiredDate
+      AND cancellation.id IS NULL
+    ORDER BY probation_region.name,probation_delivery_unit.name,cas3_app.arrival_date
     """,
     nativeQuery = true,
   )
