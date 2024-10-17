@@ -301,11 +301,11 @@ jobs:
           name: Run E2E tests
           command: npm run test:e2e
       - store_artifacts:
-          path: playwright-report
-          destination: playwright-report
+          path: e2e-tests/playwright-report
+          destination: e2e-tests/playwright-report
       - store_artifacts:
-          path: test-results
-          destination: test-results
+          path: e2e-tests/test_results
+          destination: e2e-tests/test_results
       - slack/notify:
           event: fail
           channel: << pipeline.parameters.alerts-slack-channel >>
