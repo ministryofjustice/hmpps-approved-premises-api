@@ -134,10 +134,9 @@ tasks {
 
 tasks.register("bootRunLocal") {
   group = "application"
-  description = "Runs this project as a Spring Boot application with the local profile"
+  description = "Runs this project as a Spring Boot application"
   doFirst {
     tasks.bootRun.configure {
-      systemProperty("spring.profiles.active", "local")
       jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
     }
   }
@@ -149,7 +148,7 @@ tasks.bootRun {
     println("Reading env vars from file $envFilePath")
     file(envFilePath).readLines().forEach {
       if (it.isNotBlank() && !it.startsWith("#")) {
-        val (key, value) = it.split('=')
+        val (key, value) = it.split("=", limit = 2)
         println("Setting env var $key")
         environment(key, value)
       }

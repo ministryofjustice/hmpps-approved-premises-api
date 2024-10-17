@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.SeedApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SeedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 
 @Service
 class SeedController(private val seedService: SeedService) : SeedApiDelegate {
