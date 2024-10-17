@@ -294,7 +294,7 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 
   @Query(
     """
-      SELECT application_id
+      SELECT distinct(application_id)
       FROM domain_events de
       JOIN approved_premises_applications apa
         ON de.application_id = apa.id
