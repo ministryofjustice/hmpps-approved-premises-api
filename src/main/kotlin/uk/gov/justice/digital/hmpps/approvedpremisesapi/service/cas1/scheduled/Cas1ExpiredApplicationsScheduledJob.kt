@@ -46,7 +46,7 @@ class Cas1ExpiredApplicationsScheduledJob(
           application.status = ApprovedPremisesApplicationStatus.EXPIRED
           applicationRepository.save(application)
 
-          log.info("Status changed to EXPIRED for application $applicationId.")
+          log.info("Status changed from $previousStatus to ${application.status} for application $applicationId.")
 
           val applicationExpired = ApplicationExpired(
             applicationId,
