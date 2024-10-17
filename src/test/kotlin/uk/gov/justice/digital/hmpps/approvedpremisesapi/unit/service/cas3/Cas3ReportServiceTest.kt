@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingGapReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
@@ -43,6 +44,7 @@ class Cas3ReportServiceTest {
   private val mockBedUsageRepository = mockk<BedUsageRepository>()
   private val mockBedUtilisationReportRepository = mockk<BedUtilisationReportRepository>()
   private val mockCas3BookingGapReportRepository = mockk<Cas3BookingGapReportRepository>()
+  private val mockCas3FutureBookingsReportRepository = mockk<Cas3FutureBookingsReportRepository>()
 
   private val cas3ReportService = Cas3ReportService(
     mockOffenderService,
@@ -55,8 +57,9 @@ class Cas3ReportServiceTest {
     mockBookingRepository,
     mockBedUsageRepository,
     mockBedUtilisationReportRepository,
-    2,
+    mockCas3FutureBookingsReportRepository,
     mockCas3BookingGapReportRepository,
+    2,
   )
 
   @Test
@@ -111,8 +114,9 @@ class Cas3ReportServiceTest {
       mockBookingRepository,
       mockBedUsageRepository,
       mockBedUtilisationReportRepository,
-      3,
+      mockCas3FutureBookingsReportRepository,
       mockCas3BookingGapReportRepository,
+      3,
     )
 
     cas3ReportServiceWithThreeMonths.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())

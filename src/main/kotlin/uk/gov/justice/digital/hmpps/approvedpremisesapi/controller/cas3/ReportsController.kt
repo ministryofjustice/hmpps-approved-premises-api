@@ -8,14 +8,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.futureBookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
@@ -24,6 +28,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
+private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 2
 
 @Service("Cas3ReportsController")
 class ReportsController(
@@ -113,6 +118,19 @@ class ReportsController(
             ServiceName.temporaryAccommodation,
             startDate = startDate,
             endDate = endDate,
+            probationRegionId = probationRegionId,
+          ),
+          outputStream,
+        )
+      }
+
+      futureBookings -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+      ) { outputStream ->
+        cas3ReportService.createFutureBookingReport(
+          FutureBookingsReportProperties(
+            startDate = startDate,
+            endDate = endDate.plusMonths(FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS.toLong()),
             probationRegionId = probationRegionId,
           ),
           outputStream,
