@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Futu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -26,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvClassConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
@@ -193,15 +193,12 @@ class Cas3ReportService(
     val personInfos = splitAndRetrievePersonInfo(crns)
     val reportData = bookingsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
-      FutureBookingsReportDataAndPersonInfo(it, personInfo)
+      FutureBookingsReportGenerator().convert(it, personInfo)
     }
 
-    FutureBookingsReportGenerator()
-      .createReport(reportData, properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
+    CsvClassConsumer(
+      outputStream = outputStream,
+    ).consume(reportData)
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {

@@ -1,15 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
+import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.DataRow
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns.Remove
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.api.toList
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.readExcel
-import org.jetbrains.kotlinx.dataframe.size
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -77,6 +77,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
+import java.io.StringReader
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -3583,6 +3584,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @Nested
   inner class GetFutureBookingsReport {
     @Test
+    @SuppressWarnings("LongMethod")
     fun `Get future bookings report returns OK with correct body`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -3795,26 +3797,130 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .consumeWith {
+            .consumeWith { response ->
+              val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
+
+              val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
+              val headers = csvReader.readNext().toList()
+
+              assertReportHeader(headers)
+
               val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<FutureBookingsReportRow>(Remove)
+                .readCSV(completeCsvString.byteInputStream())
+                .convertTo<FutureBookingsReportRow>()
+                .toList()
 
-              assertThat(actual.size().nrow).isEqualTo(5)
+              assertThat(actual.size).isEqualTo(5)
 
-              assertRow(actual[0], bookingTwo.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Provisional")
-              assertRow(actual[1], bookingFive.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Confirmed")
-              assertRow(actual[2], bookingOne.id, applicationOne, premisesOne, premisesOneAccommodationRequiredDate, null, "Provisional")
-              assertRow(actual[3], bookingFour.id, applicationTwo, premisesTwo, premisesTwoAccommodationRequiredDate, null, "Confirmed")
-              assertRow(actual[4], bookingThree.id, applicationSix, premisesSix, premisesSixAccommodationRequiredDate, premisesSixUpdatedAccommodationRequiredDate, "Provisional")
+              assertReportRow(actual[0], bookingTwo.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Provisional")
+              assertReportRow(actual[1], bookingFive.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Confirmed")
+              assertReportRow(actual[2], bookingOne.id, applicationOne, premisesOne, premisesOneAccommodationRequiredDate, null, "Provisional")
+              assertReportRow(actual[3], bookingFour.id, applicationTwo, premisesTwo, premisesTwoAccommodationRequiredDate, null, "Confirmed")
+              assertReportRow(actual[4], bookingThree.id, applicationSix, premisesSix, premisesSixAccommodationRequiredDate, premisesSixUpdatedAccommodationRequiredDate, "Provisional")
             }
         }
       }
     }
 
+    @Test
+    fun `Get future bookings report returns OK when updated accommodation required date within report dates range`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.now().minusDays(30)
+          val reportEndDate = LocalDate.now()
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+
+          // offender with updated accommodation required date within report dates range
+          val premisesFiveAccommodationRequiredDate = reportStartDate.minusDays(50)
+          val premisesFiveUpdatedAccommodationRequiredDate = reportStartDate.plusDays(23)
+          val (premisesFive, applicationFive) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesFiveAccommodationRequiredDate,
+            premisesFiveUpdatedAccommodationRequiredDate,
+          )
+
+          // provisional booking
+          val bookingTwo = createBooking(
+            applicationFive,
+            premisesFive,
+            offenderDetails.otherIds.crn,
+            reportStartDate.plusDays(3),
+            reportStartDate.plusDays(18),
+          )
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/futureBookings?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith { response ->
+              val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
+
+              val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
+              val headers = csvReader.readNext().toList()
+
+              assertReportHeader(headers)
+
+              val actual = DataFrame
+                .readCSV(completeCsvString.byteInputStream())
+                .convertTo<FutureBookingsReportRow>()
+                .toList()
+
+              assertThat(actual.size).isEqualTo(1)
+
+              assertReportRow(actual[0], bookingTwo.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Provisional")
+            }
+        }
+      }
+    }
+
+    fun assertReportHeader(headers: List<String>) {
+      assertThat(headers).contains("bookingId")
+      assertThat(headers).contains("referralId")
+      assertThat(headers).contains("referralDate")
+      assertThat(headers).contains("personName")
+      assertThat(headers).contains("gender")
+      assertThat(headers).contains("ethnicity")
+      assertThat(headers).contains("dateOfBirth")
+      assertThat(headers).contains("riskOfSeriousHarm")
+      assertThat(headers).contains("registeredSexOffender")
+      assertThat(headers).contains("historyOfSexualOffence")
+      assertThat(headers).contains("concerningSexualBehaviour")
+      assertThat(headers).contains("dutyToReferMade")
+      assertThat(headers).contains("dateDutyToReferMade")
+      assertThat(headers).contains("dutyToReferLocalAuthorityAreaName")
+      assertThat(headers).contains("probationRegion")
+      assertThat(headers).contains("pdu")
+      assertThat(headers).contains("localAuthority")
+      assertThat(headers).contains("addressLine1")
+      assertThat(headers).contains("postCode")
+      assertThat(headers).contains("crn")
+      assertThat(headers).contains("sourceOfReferral")
+      assertThat(headers).contains("prisonAtReferral")
+      assertThat(headers).contains("accommodationRequiredDate")
+      assertThat(headers).contains("updatedAccommodationRequiredDate")
+      assertThat(headers).contains("bookingStatus")
+    }
+
     @Suppress("LongParameterList")
-    fun assertRow(
-      row: DataRow<FutureBookingsReportRow>,
+    fun assertReportRow(
+      row: FutureBookingsReportRow,
       bookingId: UUID,
       application: TemporaryAccommodationApplicationEntity,
       premises: PremisesEntity,
@@ -3822,27 +3928,27 @@ class Cas3ReportsTest : IntegrationTestBase() {
       updateAccommodationRequiredDate: LocalDate?,
       bookingStatus: String,
     ) {
-      assertThat(row["bookingId"]).isEqualTo(bookingId.toString())
-      assertThat(row["referralId"]).isEqualTo(application.id.toString())
-      assertThat(row["referralDate"]).isEqualTo(application.submittedAt?.toLocalDate())
-      assertThat(row["riskOfSeriousHarm"]).isEqualTo("High")
-      assertThat(row["registeredSexOffender"]).isEqualTo(application.isRegisteredSexOffender.toYesNo())
-      assertThat(row["historyOfSexualOffence"]).isEqualTo(application.isHistoryOfSexualOffence.toYesNo())
-      assertThat(row["concerningSexualBehaviour"]).isEqualTo(application.isConcerningSexualBehaviour.toYesNo())
-      assertThat(row["dutyToReferMade"]).isEqualTo(application.isDutyToReferSubmitted.toYesNo())
-      assertThat(row["dateDutyToReferMade"]).isEqualTo(application.dutyToReferSubmissionDate)
-      assertThat(row["dutyToReferLocalAuthorityAreaName"]).isEqualTo(application.dutyToReferLocalAuthorityAreaName)
-      assertThat(row["probationRegion"]).isEqualTo(application.probationRegion.name)
-      assertThat(row["pdu"]).isEqualTo(application.probationDeliveryUnit?.name)
-      assertThat(row["localAuthority"]).isEqualTo(premises.localAuthorityArea?.name)
-      assertThat(row["addressLine1"]).isEqualTo(premises.addressLine1)
-      assertThat(row["postCode"]).isEqualTo(premises.postcode)
-      assertThat(row["crn"]).isEqualTo(application.crn)
-      assertThat(row["sourceOfReferral"]).isEqualTo(application.eligibilityReason)
-      assertThat(row["prisonAtReferral"]).isEqualTo(application.prisonNameOnCreation)
-      assertThat(row["accommodationRequiredDate"]).isEqualTo(accommodationRequiredDate)
-      assertThat(row["updatedAccommodationRequiredFromDate"]).isEqualTo(updateAccommodationRequiredDate)
-      assertThat(row["bookingStatus"]).isEqualTo(bookingStatus)
+      assertThat(row.bookingId).isEqualTo(bookingId.toString())
+      assertThat(row.referralId).isEqualTo(application.id.toString())
+      assertThat(row.referralDate).isEqualTo(application.submittedAt?.toLocalDate()?.toString())
+      assertThat(row.riskOfSeriousHarm).isEqualTo("High")
+      assertThat(row.registeredSexOffender).isEqualTo(application.isRegisteredSexOffender.toString())
+      assertThat(row.historyOfSexualOffence).isEqualTo(application.isHistoryOfSexualOffence.toString())
+      assertThat(row.concerningSexualBehaviour).isEqualTo(application.isConcerningSexualBehaviour.toString())
+      assertThat(row.dutyToReferMade).isEqualTo(application.isDutyToReferSubmitted.toString())
+      assertThat(row.dateDutyToReferMade).isEqualTo(application.dutyToReferSubmissionDate?.toString())
+      assertThat(row.dutyToReferLocalAuthorityAreaName).isEqualTo(application.dutyToReferLocalAuthorityAreaName)
+      assertThat(row.probationRegion).isEqualTo(application.probationRegion.name)
+      assertThat(row.pdu).isEqualTo(application.probationDeliveryUnit?.name)
+      assertThat(row.dutyToReferLocalAuthorityAreaName).isEqualTo(premises.localAuthorityArea?.name)
+      assertThat(row.addressLine1).isEqualTo(premises.addressLine1)
+      assertThat(row.postCode).isEqualTo(premises.postcode)
+      assertThat(row.crn).isEqualTo(application.crn)
+      assertThat(row.sourceOfReferral).isEqualTo(application.eligibilityReason)
+      assertThat(row.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
+      assertThat(row.accommodationRequiredDate).isEqualTo(accommodationRequiredDate.toString())
+      assertThat(row.updatedAccommodationRequiredDate).isEqualTo(updateAccommodationRequiredDate?.toString())
+      assertThat(row.bookingStatus).isEqualTo(bookingStatus)
     }
   }
 
@@ -3994,7 +4100,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       withApplicationSchema(applicationSchema)
       withArrivalDate(accommodationRequiredDate)
       withSubmittedAt(applicationSubmittedDate)
-      withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(10))
       withDutyToReferLocalAuthorityAreaName("London")
       withDutyToReferSubmissionDate(LocalDate.now().randomDateAfter(30))
       withHasHistoryOfArson(randomBoolean())
@@ -4109,5 +4214,5 @@ class Cas3ReportsTest : IntegrationTestBase() {
     }
   }
 
-  private fun randomBoolean() = randomInt(0, 1).toString().toBoolean()
+  private fun randomBoolean() = randomInt(0, 20) > 10
 }
