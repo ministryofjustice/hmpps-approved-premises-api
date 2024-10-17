@@ -30,9 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -105,7 +104,7 @@ class Cas1BookingDomainEventServiceTest {
     fun before() {
       every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val assigneeUserStaffDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
@@ -221,7 +220,7 @@ class Cas1BookingDomainEventServiceTest {
     fun before() {
       every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val assigneeUserStaffDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
@@ -445,7 +444,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().withStaffCode("the staff code").produce().toStaffDetail()
+      val assigneeUserStaffDetails = StaffDetailFactory.staffDetail(code = "the staff code")
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
@@ -543,7 +542,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
 
-      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail()
 
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -633,7 +632,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
 
-      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail()
 
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -733,7 +732,7 @@ class Cas1BookingDomainEventServiceTest {
         )
       } returns AuthorisableActionResult.Success(offenderDetails)
 
-      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         staffUserDetails,
