@@ -4337,6 +4337,7 @@ components:
         - approved_premises_booking_cancelled
         - approved_premises_booking_changed
         - approved_premises_application_withdrawn
+        - approved_premises_application_expired
         - approved_premises_information_request
         - approved_premises_assessment_appealed
         - approved_premises_assessment_allocated
