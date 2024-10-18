@@ -20,11 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -99,10 +98,10 @@ class Cas1PlacementApplicationDomainEventServiceTest {
           .produce(),
       )
 
-      val staffUserDetails = StaffUserDetailsFactory().produce()
+      val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = USERNAME)
       every { apDeliusContextApiClient.getStaffDetail(USERNAME) } returns ClientResult.Success(
         status = HttpStatus.OK,
-        body = staffUserDetails.toStaffDetail(),
+        body = staffUserDetails,
       )
 
       val staffMember = staffUserDetails.toStaffMember()
