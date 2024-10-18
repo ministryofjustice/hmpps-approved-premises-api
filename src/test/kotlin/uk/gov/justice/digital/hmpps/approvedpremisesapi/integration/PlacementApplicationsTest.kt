@@ -509,6 +509,37 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `updating a placement request application for an expired application returns an error`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+        ) { placementApplicationEntity ->
+
+          var application = placementApplicationEntity.application
+          application.status = ApprovedPremisesApplicationStatus.EXPIRED
+          approvedPremisesApplicationRepository.save(application)
+
+          webTestClient.put()
+            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              UpdatePlacementApplication(
+                data = mapOf("thingId" to 123),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Placement requests cannot be made for an expired application")
+        }
+      }
+    }
+
+    @Test
     fun `updating an in-progress placement request application returns successfully and updates the application`() {
       `Given a User` { user, jwt ->
         `Given a Placement Application`(

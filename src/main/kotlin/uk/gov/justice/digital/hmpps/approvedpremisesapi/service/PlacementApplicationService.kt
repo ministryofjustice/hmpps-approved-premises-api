@@ -268,6 +268,10 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = (placementApplicationAuthorisationResult as Either.Right).value
 
+    if (placementApplicationEntity.application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return CasResult.GeneralValidationError("Placement requests cannot be made for an expired application")
+    }
+
     placementApplicationEntity.data = data
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
