@@ -3841,7 +3841,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       assertThat(row["sourceOfReferral"]).isEqualTo(application.eligibilityReason)
       assertThat(row["prisonAtReferral"]).isEqualTo(application.prisonNameOnCreation)
       assertThat(row["accommodationRequiredDate"]).isEqualTo(accommodationRequiredDate)
-      assertThat(row["updatedAccommodationRequiredFromDate"]).isEqualTo(updateAccommodationRequiredDate)
+      assertThat(row["updatedAccommodationRequiredDate"]).isEqualTo(updateAccommodationRequiredDate)
       assertThat(row["bookingStatus"]).isEqualTo(bookingStatus)
     }
   }

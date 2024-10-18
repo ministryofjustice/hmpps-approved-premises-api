@@ -26,6 +26,6 @@ data class FutureBookingsReportRow(
   val sourceOfReferral: String?,
   val prisonAtReferral: String?,
   val accommodationRequiredDate: LocalDate?,
-  val updatedAccommodationRequiredFromDate: LocalDate?,
+  val updatedAccommodationRequiredDate: LocalDate?,
   val bookingStatus: String?,
 )
