@@ -155,6 +155,34 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `creating a placement application for an expired application returns an error`() {
+      `Given a User` { user, jwt ->
+        `Given an Assessment for Approved Premises`(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
+          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          application.status = ApprovedPremisesApplicationStatus.EXPIRED
+          approvedPremisesApplicationRepository.save(application)
+
+          webTestClient.post()
+            .uri("/placement-applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewPlacementApplication(
+                applicationId = application.id,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Placement requests cannot be made for an expired application")
+        }
+      }
+    }
+
+    @Test
     fun `creating a placement application when the application belongs to the user returns successfully`() {
       `Given a User` { user, jwt ->
         `Given an Assessment for Approved Premises`(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
