@@ -11,10 +11,14 @@ components:
           example: Hope House
         apArea:
           $ref: '_shared.yml#/components/schemas/NamedId'
+        bedCount:
+          type: integer
+          example: 22
       required:
         - id
         - name
         - apArea
+        - bedCount
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
