@@ -290,6 +290,10 @@ class PlacementApplicationService(
 
     val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value
 
+    if (submittedPlacementApplication.application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return CasResult.GeneralValidationError("Placement requests cannot be made for an expired application")
+    }
+
     val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(submittedPlacementApplication)
 
     val now = OffsetDateTime.now(clock)
