@@ -77,6 +77,10 @@ class PlacementApplicationService(
       return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
+    if (application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return generalError("Placement requests cannot be made for an expired application")
+    }
+
     val placementApplication = placementApplicationRepository.save(
       PlacementApplicationEntity(
         id = UUID.randomUUID(),
@@ -264,6 +268,10 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = (placementApplicationAuthorisationResult as Either.Right).value
 
+    if (placementApplicationEntity.application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return CasResult.GeneralValidationError("Placement requests cannot be made for an expired application")
+    }
+
     placementApplicationEntity.data = data
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
@@ -289,6 +297,10 @@ class PlacementApplicationService(
     }
 
     val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value
+
+    if (submittedPlacementApplication.application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return CasResult.GeneralValidationError("Placement requests cannot be made for an expired application")
+    }
 
     val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(submittedPlacementApplication)
 

@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -149,6 +150,34 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isBadRequest()
+        }
+      }
+    }
+
+    @Test
+    fun `creating a placement application for an expired application returns an error`() {
+      `Given a User` { user, jwt ->
+        `Given an Assessment for Approved Premises`(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
+          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          application.status = ApprovedPremisesApplicationStatus.EXPIRED
+          approvedPremisesApplicationRepository.save(application)
+
+          webTestClient.post()
+            .uri("/placement-applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewPlacementApplication(
+                applicationId = application.id,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Placement requests cannot be made for an expired application")
         }
       }
     }
@@ -480,6 +509,37 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `updating a placement request application for an expired application returns an error`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+        ) { placementApplicationEntity ->
+
+          var application = placementApplicationEntity.application
+          application.status = ApprovedPremisesApplicationStatus.EXPIRED
+          approvedPremisesApplicationRepository.save(application)
+
+          webTestClient.put()
+            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              UpdatePlacementApplication(
+                data = mapOf("thingId" to 123),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Placement requests cannot be made for an expired application")
+        }
+      }
+    }
+
+    @Test
     fun `updating an in-progress placement request application returns successfully and updates the application`() {
       `Given a User` { user, jwt ->
         `Given a Placement Application`(
@@ -577,6 +637,44 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isBadRequest
+        }
+      }
+    }
+
+    @Test
+    fun `submitting a placement request for an expired application returns an error`() {
+      `Given a User` { user, jwt ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+        ) { placementApplicationEntity ->
+
+          var application = placementApplicationEntity.application
+          application.status = ApprovedPremisesApplicationStatus.EXPIRED
+          approvedPremisesApplicationRepository.save(application)
+
+          webTestClient.post()
+            .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              SubmitPlacementApplication(
+                translatedDocument = mapOf("thingId" to 123),
+                placementType = PlacementType.additionalPlacement,
+                placementDates = listOf(
+                  PlacementDates(
+                    expectedArrival = LocalDate.now(),
+                    duration = 12,
+                  ),
+                ),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Placement requests cannot be made for an expired application")
         }
       }
     }
