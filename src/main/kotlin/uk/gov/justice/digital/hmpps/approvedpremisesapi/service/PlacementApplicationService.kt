@@ -77,6 +77,10 @@ class PlacementApplicationService(
       return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
+    if (application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return generalError("Placement requests cannot be made for an expired application")
+    }
+
     val placementApplication = placementApplicationRepository.save(
       PlacementApplicationEntity(
         id = UUID.randomUUID(),
