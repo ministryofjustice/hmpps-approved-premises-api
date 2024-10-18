@@ -97,6 +97,12 @@ paths:
           description: If specified, only return premises for the corresponding gender
           schema:
             $ref: '#/components/schemas/Cas1ApprovedPremisesGender'
+        - name: apAreaId
+          in: query
+          description: ID of the AP area to filter by
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -6383,10 +6389,14 @@ components:
           example: Hope House
         apArea:
           $ref: '#/components/schemas/NamedId'
+        bedCount:
+          type: integer
+          example: 22
       required:
         - id
         - name
         - apArea
+        - bedCount
     Cas1PremisesSearchResultSummary:
       type: object
       properties:

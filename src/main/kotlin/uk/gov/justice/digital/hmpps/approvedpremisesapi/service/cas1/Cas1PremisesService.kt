@@ -32,7 +32,7 @@ class Cas1PremisesService(
     )
   }
 
-  fun getPremises(gender: ApprovedPremisesGender?) = premisesRepository.findForSummaries(gender)
+  fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId)
 
   fun findPremiseById(id: UUID) = premisesRepository.findByIdOrNull(id)
 

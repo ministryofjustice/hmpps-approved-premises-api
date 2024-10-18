@@ -174,8 +174,29 @@ where
 
 @Repository
 interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUID> {
-  @Query("SELECT p as premises FROM ApprovedPremisesEntity p WHERE :gender IS NULL OR p.gender = :gender")
-  fun findForSummaries(gender: ApprovedPremisesGender?): List<ApprovedPremisesEntity>
+  @Query(
+    """
+        SELECT
+          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary(
+              p.id,
+              p.name,
+              apArea.id,
+              apArea.name,
+              CAST(COUNT(b) as int)
+              )
+        FROM 
+          ApprovedPremisesEntity p
+          LEFT JOIN p.rooms r 
+          LEFT JOIN r.beds b on (b.endDate IS NULL OR b.endDate > CURRENT_DATE) 
+          LEFT JOIN p.probationRegion region
+          LEFT JOIN region.apArea apArea
+        WHERE 
+          (:gender IS NULL OR p.gender = :gender)
+          AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId) 
+          GROUP BY p.id, p.name, apArea.id, apArea.name 
+      """,
+  )
+  fun findForSummaries(gender: ApprovedPremisesGender?, apAreaId: UUID?): List<ApprovedPremisesBasicSummary>
 }
 
 @Entity
@@ -339,6 +360,14 @@ data class TemporaryAccommodationPremisesSummary(
   val status: PropertyStatus,
   val bedCount: Int,
   val localAuthorityAreaName: String?,
+)
+
+data class ApprovedPremisesBasicSummary(
+  val id: UUID,
+  val name: String,
+  val apAreaId: UUID,
+  val apAreaName: String,
+  val bedCount: Int,
 )
 
 interface BookingSummary {

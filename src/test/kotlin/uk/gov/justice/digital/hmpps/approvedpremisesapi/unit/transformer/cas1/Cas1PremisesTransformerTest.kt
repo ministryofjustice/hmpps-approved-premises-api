@@ -12,10 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -81,29 +81,21 @@ class Cas1PremisesTransformerTest {
 
     @Test
     fun success() {
-      val apArea = ApAreaEntityFactory()
-        .withId(AP_AREA_ID)
-        .withName("the ap area name")
-        .produce()
+      val premisesSummary = ApprovedPremisesBasicSummary(
+        PREMISES_ID,
+        "the name",
+        AP_AREA_ID,
+        "the ap area name",
+        12,
+      )
 
-      val probationRegion = ProbationRegionEntityFactory()
-        .withDefaults()
-        .withApArea(apArea)
-        .produce()
+      val result = transformer.toPremiseBasicSummary(premisesSummary)
 
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .withId(PREMISES_ID)
-        .withName("the name")
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      val result = transformer.toPremiseBasicSummary(premises)
-
-      assertThat(result.id).isEqualTo(premises.id)
+      assertThat(result.id).isEqualTo(PREMISES_ID)
       assertThat(result.name).isEqualTo("the name")
       assertThat(result.apArea.id).isEqualTo(AP_AREA_ID)
       assertThat(result.apArea.name).isEqualTo("the ap area name")
+      assertThat(result.bedCount).isEqualTo(12)
     }
   }
 }
