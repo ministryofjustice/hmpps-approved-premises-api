@@ -30,12 +30,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -90,14 +88,7 @@ class Cas1ApplicationDomainEventServiceTest {
     private val caseDetails = CaseDetailFactory().produce()
     private val domainEventProbationArea = ProbationAreaFactory().produce()
 
-    private val staffUserDetails = StaffUserDetailsFactory()
-      .withTeams(
-        listOf(
-          StaffUserTeamMembershipFactory()
-            .produce(),
-        ),
-      )
-      .produce()
+    private val staffUserDetails = StaffDetailFactory.staffDetail()
 
     @BeforeEach
     fun setup() {
@@ -153,13 +144,13 @@ class Cas1ApplicationDomainEventServiceTest {
         body = caseDetails,
       )
 
-      every { mockDomainEventTransformer.toProbationArea(staffUserDetails.toStaffDetail()) } returns domainEventProbationArea
+      every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
 
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
-        staffUserDetails.toStaffDetail(),
+        staffUserDetails,
       )
     }
 

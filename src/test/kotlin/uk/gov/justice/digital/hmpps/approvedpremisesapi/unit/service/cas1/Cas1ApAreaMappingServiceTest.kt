@@ -10,10 +10,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 
 class Cas1ApAreaMappingServiceTest {
@@ -34,7 +34,7 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(usersProbationRegionApArea)
         .produce()
 
-      val staffUserDetails = StaffUserDetailsFactory().produce().toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail()
 
       val result = service.determineApArea(
         usersProbationRegion,
@@ -78,17 +78,15 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(null)
         .produce()
 
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withProbationAreaCode("XYZ")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withCode("CODE_NOT_IN_MAPPING").produce(),
-            StaffUserTeamMembershipFactory().withCode(deliusTeamCode).produce(),
-            StaffUserTeamMembershipFactory().withCode("OTHER_CODE_NOT_IN_MAPPING").produce(),
-          ),
-        )
-        .produce()
-        .toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(code = "XYA", description = "description"),
+        teams =
+        listOf(
+          TeamFactory2.team(code = "CODE_NOT_IN_MAPPING"),
+          TeamFactory2.team(code = deliusTeamCode),
+          TeamFactory2.team(code = "OTHER_CODE_NOT_IN_MAPPING"),
+        ),
+      )
 
       val retrievedApArea = ApAreaEntityFactory().produce()
       every { apAreaRepository.findByIdentifier(expectedApArea) } returns retrievedApArea
@@ -108,12 +106,12 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(null)
         .produce()
 
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withUsername("J_ALUCARD")
-        .withProbationAreaCode("N43")
-        .withTeams(emptyList())
-        .produce()
-        .toStaffDetail()
+      val staffUserDetails =
+        StaffDetailFactory.staffDetail(
+          deliusUsername = ("J_ALUCARD"),
+          probationArea = ProbationArea(code = "N43", description = "description"),
+          teams = emptyList(),
+        )
 
       val retrievedApArea = ApAreaEntityFactory().produce()
       every { apAreaRepository.findByIdentifier("NE") } returns retrievedApArea
@@ -134,17 +132,15 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(null)
         .produce()
 
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withUsername("J_ALUCARD")
-        .withProbationAreaCode("XYZ")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withCode("CODE_NOT_IN_MAPPING").produce(),
-            StaffUserTeamMembershipFactory().withCode("OTHER_CODE_NOT_IN_MAPPING").produce(),
-          ),
-        )
-        .produce()
-        .toStaffDetail()
+      val staffUserDetails = StaffDetailFactory.staffDetail(
+        deliusUsername = ("J_ALUCARD"),
+        probationArea = ProbationArea(code = "XYZ", description = "description"),
+        teams =
+        listOf(
+          TeamFactory2.team(code = "CODE_NOT_IN_MAPPING"),
+          TeamFactory2.team(code = "OTHER_CODE_NOT_IN_MAPPING"),
+        ),
+      )
 
       assertThatThrownBy {
         service.determineApArea(
@@ -165,16 +161,13 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(null)
         .produce()
 
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withProbationAreaCode("XYZ")
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().withCode("N43MID").produce(),
-          ),
-        )
-        .produce()
-        .toStaffDetail()
-
+      val staffUserDetails = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(code = "XYZ", description = "description"),
+        teams =
+        listOf(
+          TeamFactory2.team(code = "N43MID"),
+        ),
+      )
       every { apAreaRepository.findByIdentifier("Mids") } returns null
 
       assertThatThrownBy {
