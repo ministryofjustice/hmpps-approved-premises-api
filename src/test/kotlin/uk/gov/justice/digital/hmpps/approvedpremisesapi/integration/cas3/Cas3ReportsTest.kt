@@ -3583,6 +3583,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @Nested
   inner class GetFutureBookingsReport {
     @Test
+    @SuppressWarnings("LongMethod")
     fun `Get future bookings report returns OK with correct body`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -3802,11 +3803,56 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size().nrow).isEqualTo(5)
 
-              assertRow(actual[0], bookingTwo.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Provisional")
-              assertRow(actual[1], bookingFive.id, applicationFive, premisesFive, premisesFiveAccommodationRequiredDate, premisesFiveUpdatedAccommodationRequiredDate, "Confirmed")
-              assertRow(actual[2], bookingOne.id, applicationOne, premisesOne, premisesOneAccommodationRequiredDate, null, "Provisional")
-              assertRow(actual[3], bookingFour.id, applicationTwo, premisesTwo, premisesTwoAccommodationRequiredDate, null, "Confirmed")
-              assertRow(actual[4], bookingThree.id, applicationSix, premisesSix, premisesSixAccommodationRequiredDate, premisesSixUpdatedAccommodationRequiredDate, "Provisional")
+              assertRow(
+                actual[0],
+                bookingTwo.id,
+                applicationFive,
+                premisesFive,
+                bookingTwo.arrivalDate,
+                premisesFiveAccommodationRequiredDate,
+                premisesFiveUpdatedAccommodationRequiredDate,
+                "Provisional",
+              )
+              assertRow(
+                actual[1],
+                bookingFive.id,
+                applicationFive,
+                premisesFive,
+                bookingFive.arrivalDate,
+                premisesFiveAccommodationRequiredDate,
+                premisesFiveUpdatedAccommodationRequiredDate,
+                "Confirmed",
+              )
+              assertRow(
+                actual[2],
+                bookingOne.id,
+                applicationOne,
+                premisesOne,
+                bookingOne.arrivalDate,
+                premisesOneAccommodationRequiredDate,
+                null,
+                "Provisional",
+              )
+              assertRow(
+                actual[3],
+                bookingFour.id,
+                applicationTwo,
+                premisesTwo,
+                bookingFour.arrivalDate,
+                premisesTwoAccommodationRequiredDate,
+                null,
+                "Confirmed",
+              )
+              assertRow(
+                actual[4],
+                bookingThree.id,
+                applicationSix,
+                premisesSix,
+                bookingThree.arrivalDate,
+                premisesSixAccommodationRequiredDate,
+                premisesSixUpdatedAccommodationRequiredDate,
+                "Provisional",
+              )
             }
         }
       }
@@ -3818,6 +3864,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       bookingId: UUID,
       application: TemporaryAccommodationApplicationEntity,
       premises: PremisesEntity,
+      bookingStartDate: LocalDate,
       accommodationRequiredDate: LocalDate,
       updateAccommodationRequiredDate: LocalDate?,
       bookingStatus: String,
@@ -3840,6 +3887,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       assertThat(row["crn"]).isEqualTo(application.crn)
       assertThat(row["sourceOfReferral"]).isEqualTo(application.eligibilityReason)
       assertThat(row["prisonAtReferral"]).isEqualTo(application.prisonNameOnCreation)
+      assertThat(row["startDate"]).isEqualTo(bookingStartDate)
       assertThat(row["accommodationRequiredDate"]).isEqualTo(accommodationRequiredDate)
       assertThat(row["updatedAccommodationRequiredDate"]).isEqualTo(updateAccommodationRequiredDate)
       assertThat(row["bookingStatus"]).isEqualTo(bookingStatus)

@@ -18,21 +18,22 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
         app.submitted_at AS referralDate,
         cas3_app.risk_ratings->'roshRisks'->'value'->>'overallRisk' AS riskOfSeriousHarm,
         cas3_app.is_registered_sex_offender AS registeredSexOffender,
-        cas3_app.is_history_of_sexual_offence as historyOfSexualOffence,
-        cas3_app.is_concerning_sexual_behaviour as concerningSexualBehaviour,
+        cas3_app.is_history_of_sexual_offence AS historyOfSexualOffence,
+        cas3_app.is_concerning_sexual_behaviour AS concerningSexualBehaviour,
         cas3_app.is_duty_to_refer_submitted AS dutyToReferMade,
         cas3_app.duty_to_refer_submission_date AS dateDutyToReferMade,
         cas3_app.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
         probation_region.name AS probationRegionName,
-        probation_delivery_unit.name as pduName,
+        probation_delivery_unit.name AS pduName,
         local_authority_area.name AS localAuthorityAreaName,
         premises.address_line1 AS addressLine1,
         premises.postcode as postCode,
         booking.crn AS crn,
         cas3_app.eligibility_reason AS referralEligibilityReason,
-        cas3_app.prison_name_on_creation as prisonNameOnCreation,
-        cas3_app.arrival_date as accommodationRequiredDate,
-        cas3_assessment.accommodation_required_from_date as updatedAccommodationRequiredDate,
+        cas3_app.prison_name_on_creation AS prisonNameOnCreation,
+        booking.arrival_date AS startDate,
+        cas3_app.arrival_date AS accommodationRequiredDate,
+        cas3_assessment.accommodation_required_from_date AS updatedAccommodationRequiredDate,
         CAST(confirmation.id AS VARCHAR) AS confirmationId
     FROM bookings booking
     INNER JOIN premises ON premises.id = booking.premises_id
@@ -44,6 +45,7 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
     LEFT JOIN temporary_accommodation_assessments cas3_assessment on cas3_assessment.assessment_id = assessment.id
     LEFT JOIN confirmations confirmation ON confirmation.booking_id = booking.id
     LEFT JOIN cancellations cancellation ON cancellation.booking_id = booking.id
+    LEFT JOIN arrivals arrival ON arrival.booking_id = booking.id
     INNER JOIN temporary_accommodation_premises cas3_premises ON cas3_premises.premises_id = premises.id
     INNER JOIN probation_delivery_units probation_delivery_unit on probation_delivery_unit.id = cas3_premises.probation_delivery_unit_id
     WHERE
@@ -52,6 +54,7 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
       AND premises.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR premises.probation_region_id = :probationRegionId)
       AND cancellation.id IS NULL
+      AND arrival.id IS NULL
     ORDER BY probation_region.name,probation_delivery_unit.name,cas3_app.arrival_date
     """,
     nativeQuery = true,
@@ -83,6 +86,7 @@ interface FutureBookingsReportData {
   val crn: String
   val referralEligibilityReason: String?
   val prisonNameOnCreation: String?
+  val startDate: LocalDate
   val accommodationRequiredDate: Instant?
   val updatedAccommodationRequiredDate: LocalDate?
   val confirmationId: String?
