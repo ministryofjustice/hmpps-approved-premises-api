@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
@@ -189,6 +191,7 @@ class DomainEventServiceTest {
         DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to domainEventService::getBookingCancelledEvent,
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to domainEventService::getBookingChangedEvent,
         DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to domainEventService::getApplicationWithdrawnEvent,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED to domainEventService::getApplicationExpiredEvent,
         DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
         DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent,
         DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent,
@@ -728,6 +731,36 @@ class DomainEventServiceTest {
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
           emit,
+        )
+      }
+    }
+
+    @Test
+    fun `saveApplicationExpiredEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
+
+      val eventDetails = ApplicationExpiredFactory().produce()
+      val domainEventEnvelope = mockk<ApplicationExpiredEnvelope>()
+      val domainEvent = mockk<DomainEvent<ApplicationExpiredEnvelope>>()
+
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
+
+      val domainEventServiceSpy = spyk(domainEventService)
+
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
+
+      val emit = false
+
+      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent, TriggerSourceType.SYSTEM, emit)
+
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
+          triggerSource = TriggerSourceType.SYSTEM,
+          emit = emit,
         )
       }
     }

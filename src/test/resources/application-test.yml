@@ -134,6 +134,7 @@ url-templates:
       booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
+      application-expired-event-detail: http://api/events/application-expired/#eventId
       assessment-appealed-event-detail: http://api/events/assessment-appealed/#eventId
       placement-application-withdrawn-event-detail: http://api/events/placement-application-withdrawn/#eventId
       placement-application-allocated-event-detail: http://api/events/placement-application-allocated/#eventId
@@ -205,3 +206,4 @@ feature-flags:
   cas1-appeal-manager-can-assess-applications: true
   cas1-only-list-adjudications-up-to-12-months: true
   cas1-only-list-specific-prison-note-types: true
+  cas1-expired-applications-enabled: true

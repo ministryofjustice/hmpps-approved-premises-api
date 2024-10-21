@@ -42,6 +42,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> buildBookingChangedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> buildApplicationExpiredDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> buildAssessmentAllocatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
@@ -77,6 +78,11 @@ class DomainEventDescriber(
       "The application was withdrawn. The reason was: '$formattedWithdrawalReason'" +
         (data.eventDetails.otherWithdrawalReason?.let { " ($it)" } ?: "")
     }
+  }
+
+  private fun buildApplicationExpiredDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getApplicationExpiredEvent(domainEventSummary.id())
+    return event.describe { "The application has expired." }
   }
 
   private fun buildApplicationAssessedDescription(domainEventSummary: DomainEventSummary): String? {
