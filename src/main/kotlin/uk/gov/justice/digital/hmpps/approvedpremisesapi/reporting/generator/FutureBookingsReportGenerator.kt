@@ -44,6 +44,7 @@ class FutureBookingsReportGenerator : ReportGenerator<
           crn = bookingData.crn,
           sourceOfReferral = bookingData.referralEligibilityReason,
           prisonAtReferral = bookingData.prisonNameOnCreation,
+          startDate = bookingData.startDate,
           accommodationRequiredDate = bookingData.accommodationRequiredDate?.toLocalDate(),
           updatedAccommodationRequiredDate = bookingData.updatedAccommodationRequiredDate,
           bookingStatus = if (bookingData.confirmationId == null) "Provisional" else "Confirmed",
