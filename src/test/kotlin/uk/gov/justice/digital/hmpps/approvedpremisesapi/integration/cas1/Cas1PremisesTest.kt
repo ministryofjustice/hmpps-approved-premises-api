@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Out of Service Bed`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
@@ -120,35 +121,41 @@ class Cas1PremisesTest : IntegrationTestBase() {
   @Nested
   inner class GetPremisesSummaries : InitialiseDatabasePerClassTestBase() {
 
-    lateinit var premises1Man: ApprovedPremisesEntity
-    lateinit var premises2Woman: ApprovedPremisesEntity
-    lateinit var premises3Man: ApprovedPremisesEntity
+    lateinit var premises1ManInArea1: ApprovedPremisesEntity
+    lateinit var premises2WomanInArea2: ApprovedPremisesEntity
+    lateinit var premises3ManInArea2: ApprovedPremisesEntity
+
+    lateinit var apArea1: ApAreaEntity
+    lateinit var apArea2: ApAreaEntity
 
     @BeforeAll
     fun setupTestData() {
+      apArea1 = `Given an AP Area`(name = "the ap area name 1")
+      apArea2 = `Given an AP Area`(name = "the ap area name 2")
+
       val region1 = `Given a Probation Region`(
-        apArea = `Given an AP Area`(name = "the ap area name 1"),
+        apArea = apArea1,
       )
 
       val region2 = `Given a Probation Region`(
-        apArea = `Given an AP Area`(name = "the ap area name 2"),
+        apArea = apArea2,
       )
 
-      premises1Man = approvedPremisesEntityFactory.produceAndPersist {
+      premises1ManInArea1 = approvedPremisesEntityFactory.produceAndPersist {
         withName("the premises name 1")
         withGender(ApprovedPremisesGender.MAN)
         withYieldedProbationRegion { region1 }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      premises2Woman = approvedPremisesEntityFactory.produceAndPersist {
+      premises2WomanInArea2 = approvedPremisesEntityFactory.produceAndPersist {
         withName("the premises name 2")
         withGender(ApprovedPremisesGender.WOMAN)
         withYieldedProbationRegion { region2 }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      premises3Man = approvedPremisesEntityFactory.produceAndPersist {
+      premises3ManInArea2 = approvedPremisesEntityFactory.produceAndPersist {
         withName("the premises name 3")
         withGender(ApprovedPremisesGender.MAN)
         withYieldedProbationRegion { region2 }
@@ -170,17 +177,25 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(summaries).hasSize(3)
 
-      assertThat(summaries[0].id).isEqualTo(premises1Man.id)
-      assertThat(summaries[0].name).isEqualTo("the premises name 1")
-      assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 1")
-
-      assertThat(summaries[1].id).isEqualTo(premises2Woman.id)
-      assertThat(summaries[1].name).isEqualTo("the premises name 2")
-      assertThat(summaries[1].apArea.name).isEqualTo("the ap area name 2")
-
-      assertThat(summaries[2].id).isEqualTo(premises3Man.id)
-      assertThat(summaries[2].name).isEqualTo("the premises name 3")
-      assertThat(summaries[2].apArea.name).isEqualTo("the ap area name 2")
+      assertThat(summaries)
+        .anyMatch {
+          it.id == premises1ManInArea1.id &&
+            it.name == "the premises name 1" &&
+            it.apArea.name == "the ap area name 1" &&
+            it.bedCount == 0
+        }
+        .anyMatch {
+          it.id == premises2WomanInArea2.id &&
+            it.name == "the premises name 2" &&
+            it.apArea.name == "the ap area name 2" &&
+            it.bedCount == 0
+        }
+        .anyMatch {
+          it.id == premises3ManInArea2.id &&
+            it.name == "the premises name 3" &&
+            it.apArea.name == "the ap area name 2" &&
+            it.bedCount == 0
+        }
     }
 
     @Test
@@ -197,13 +212,19 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(summaries).hasSize(2)
 
-      assertThat(summaries[0].id).isEqualTo(premises1Man.id)
-      assertThat(summaries[0].name).isEqualTo("the premises name 1")
-      assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 1")
-
-      assertThat(summaries[1].id).isEqualTo(premises3Man.id)
-      assertThat(summaries[1].name).isEqualTo("the premises name 3")
-      assertThat(summaries[1].apArea.name).isEqualTo("the ap area name 2")
+      assertThat(summaries)
+        .anyMatch {
+          it.id == premises1ManInArea1.id &&
+            it.name == "the premises name 1" &&
+            it.apArea.name == "the ap area name 1" &&
+            it.bedCount == 0
+        }
+        .anyMatch {
+          it.id == premises3ManInArea2.id &&
+            it.name == "the premises name 3" &&
+            it.apArea.name == "the ap area name 2" &&
+            it.bedCount == 0
+        }
     }
 
     @Test
@@ -220,9 +241,126 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(summaries).hasSize(1)
 
-      assertThat(summaries[0].id).isEqualTo(premises2Woman.id)
+      assertThat(summaries[0].id).isEqualTo(premises2WomanInArea2.id)
       assertThat(summaries[0].name).isEqualTo("the premises name 2")
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
+      assertThat(summaries[0].bedCount).isEqualTo(0)
+    }
+
+    @Test
+    fun `Returns premises summaries for specified ap area`() {
+      val (_, jwt) = `Given a User`()
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/summary?apAreaId=${apArea1.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1PremisesBasicSummary>()
+
+      assertThat(summaries).hasSize(1)
+
+      assertThat(summaries[0].id).isEqualTo(premises1ManInArea1.id)
+      assertThat(summaries[0].name).isEqualTo("the premises name 1")
+      assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 1")
+      assertThat(summaries[0].bedCount).isEqualTo(0)
+    }
+
+    @Test
+    fun `Returns premises summaries for specified gender and ap area`() {
+      val (_, jwt) = `Given a User`()
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/summary?gender=man&apAreaId=${apArea2.id}&")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1PremisesBasicSummary>()
+
+      assertThat(summaries).hasSize(1)
+
+      assertThat(summaries[0].id).isEqualTo(premises3ManInArea2.id)
+      assertThat(summaries[0].name).isEqualTo("the premises name 3")
+      assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
+      assertThat(summaries[0].bedCount).isEqualTo(0)
+    }
+
+    @Test
+    fun `Returns correct bed count for premise summaries`() {
+      val (_, jwt) = `Given a User`()
+
+      val premises1ManRoom = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises1ManInArea1 }
+      }
+      val premises2WomanRoom = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises2WomanInArea2 }
+      }
+      val premises3ManRoom = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises3ManInArea2 }
+      }
+
+      val premises1ManLiveBeds = listOf(
+        bedEntityFactory.produceAndPersistMultiple(5) {
+          withYieldedRoom { premises1ManRoom }
+        },
+        // Beds scheduled for removal in the future
+        bedEntityFactory.produceAndPersistMultiple(2) {
+          withYieldedRoom { premises1ManRoom }
+          withEndDate { LocalDate.now().plusDays(5) }
+        },
+      ).flatten()
+      // Removed beds
+      bedEntityFactory.produceAndPersistMultiple(2) {
+        withYieldedRoom { premises1ManRoom }
+        withEndDate { LocalDate.now().minusDays(5) }
+      }
+      // Beds scheduled for removal today
+      bedEntityFactory.produceAndPersistMultiple(3) {
+        withYieldedRoom { premises1ManRoom }
+        withEndDate { LocalDate.now() }
+      }
+
+      val premises2WomanLiveBeds = listOf(
+        bedEntityFactory.produceAndPersistMultiple(2) {
+          withYieldedRoom { premises2WomanRoom }
+        },
+        // Beds scheduled for removal in the future
+        bedEntityFactory.produceAndPersistMultiple(2) {
+          withYieldedRoom { premises2WomanRoom }
+          withEndDate { LocalDate.now().plusDays(20) }
+        },
+      ).flatten()
+
+      bedEntityFactory.produceAndPersistMultiple(20) {
+        withYieldedRoom { premises3ManRoom }
+        withEndDate { LocalDate.now().minusDays(5) }
+      }
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/summary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1PremisesBasicSummary>()
+
+      assertThat(summaries).hasSize(3)
+
+      assertThat(summaries)
+        .anyMatch {
+          it.id == premises1ManInArea1.id &&
+            it.bedCount == premises1ManLiveBeds.count()
+        }
+        .anyMatch {
+          it.id == premises2WomanInArea2.id &&
+            it.bedCount == premises2WomanLiveBeds.count()
+        }
+        .anyMatch {
+          it.id == premises3ManInArea2.id &&
+            it.bedCount == 0
+        }
     }
   }
 }

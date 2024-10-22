@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 
@@ -26,12 +26,12 @@ class Cas1PremisesTransformer(
     )
   }
 
-  fun toPremiseBasicSummary(entity: PremisesEntity): Cas1PremisesBasicSummary {
-    val apArea = entity.probationRegion.apArea!!
+  fun toPremiseBasicSummary(entity: ApprovedPremisesBasicSummary): Cas1PremisesBasicSummary {
     return Cas1PremisesBasicSummary(
       id = entity.id,
       name = entity.name,
-      apArea = NamedId(apArea.id, apArea.name),
+      apArea = NamedId(entity.apAreaId, entity.apAreaName),
+      bedCount = entity.bedCount,
     )
   }
 }
