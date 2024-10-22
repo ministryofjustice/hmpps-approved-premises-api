@@ -47,7 +47,7 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
     LEFT JOIN cancellations cancellation ON cancellation.booking_id = booking.id
     LEFT JOIN arrivals arrival ON arrival.booking_id = booking.id
     INNER JOIN temporary_accommodation_premises cas3_premises ON cas3_premises.premises_id = premises.id
-    INNER JOIN probation_delivery_units probation_delivery_unit on probation_delivery_unit.id = cas3_premises.probation_delivery_unit_id
+    LEFT JOIN probation_delivery_units probation_delivery_unit on probation_delivery_unit.id = cas3_app.probation_delivery_unit_id
     WHERE
       COALESCE(cas3_assessment.accommodation_required_from_date,cas3_app.arrival_date) <= :endDate
       AND COALESCE(cas3_assessment.accommodation_required_from_date,cas3_app.arrival_date) >= :startDate
