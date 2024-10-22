@@ -180,6 +180,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
           new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary(
               p.id,
               p.name,
+              p.apCode,
               apArea.id,
               apArea.name,
               CAST(COUNT(b) as int)
@@ -193,7 +194,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
         WHERE 
           (:gender IS NULL OR p.gender = :gender)
           AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId) 
-          GROUP BY p.id, p.name, apArea.id, apArea.name 
+          GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name 
       """,
   )
   fun findForSummaries(gender: ApprovedPremisesGender?, apAreaId: UUID?): List<ApprovedPremisesBasicSummary>
@@ -365,6 +366,7 @@ data class TemporaryAccommodationPremisesSummary(
 data class ApprovedPremisesBasicSummary(
   val id: UUID,
   val name: String,
+  val apCode: String,
   val apAreaId: UUID,
   val apAreaName: String,
   val bedCount: Int,
