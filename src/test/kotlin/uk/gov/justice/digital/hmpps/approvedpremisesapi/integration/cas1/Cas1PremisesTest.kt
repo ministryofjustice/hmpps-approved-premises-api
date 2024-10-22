@@ -181,18 +181,21 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .anyMatch {
           it.id == premises1ManInArea1.id &&
             it.name == "the premises name 1" &&
+            it.apCode == premises1ManInArea1.apCode &&
             it.apArea.name == "the ap area name 1" &&
             it.bedCount == 0
         }
         .anyMatch {
           it.id == premises2WomanInArea2.id &&
             it.name == "the premises name 2" &&
+            it.apCode == premises2WomanInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
             it.bedCount == 0
         }
         .anyMatch {
           it.id == premises3ManInArea2.id &&
             it.name == "the premises name 3" &&
+            it.apCode == premises3ManInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
             it.bedCount == 0
         }
@@ -216,12 +219,14 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .anyMatch {
           it.id == premises1ManInArea1.id &&
             it.name == "the premises name 1" &&
+            it.apCode == premises1ManInArea1.apCode &&
             it.apArea.name == "the ap area name 1" &&
             it.bedCount == 0
         }
         .anyMatch {
           it.id == premises3ManInArea2.id &&
             it.name == "the premises name 3" &&
+            it.apCode == premises3ManInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
             it.bedCount == 0
         }
@@ -243,6 +248,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(summaries[0].id).isEqualTo(premises2WomanInArea2.id)
       assertThat(summaries[0].name).isEqualTo("the premises name 2")
+      assertThat(summaries[0].apCode).isEqualTo(premises2WomanInArea2.apCode)
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
       assertThat(summaries[0].bedCount).isEqualTo(0)
     }
@@ -263,6 +269,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(summaries[0].id).isEqualTo(premises1ManInArea1.id)
       assertThat(summaries[0].name).isEqualTo("the premises name 1")
+      assertThat(summaries[0].apCode).isEqualTo(premises1ManInArea1.apCode)
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 1")
       assertThat(summaries[0].bedCount).isEqualTo(0)
     }
@@ -283,6 +290,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(summaries[0].id).isEqualTo(premises3ManInArea2.id)
       assertThat(summaries[0].name).isEqualTo("the premises name 3")
+      assertThat(summaries[0].apCode).isEqualTo(premises3ManInArea2.apCode)
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
       assertThat(summaries[0].bedCount).isEqualTo(0)
     }

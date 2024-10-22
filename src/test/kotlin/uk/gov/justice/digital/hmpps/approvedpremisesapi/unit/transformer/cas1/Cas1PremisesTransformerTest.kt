@@ -84,6 +84,7 @@ class Cas1PremisesTransformerTest {
       val premisesSummary = ApprovedPremisesBasicSummary(
         PREMISES_ID,
         "the name",
+        "AP Area Code",
         AP_AREA_ID,
         "the ap area name",
         12,
@@ -93,6 +94,7 @@ class Cas1PremisesTransformerTest {
 
       assertThat(result.id).isEqualTo(PREMISES_ID)
       assertThat(result.name).isEqualTo("the name")
+      assertThat(result.apCode).isEqualTo("AP Area Code")
       assertThat(result.apArea.id).isEqualTo(AP_AREA_ID)
       assertThat(result.apArea.name).isEqualTo("the ap area name")
       assertThat(result.bedCount).isEqualTo(12)

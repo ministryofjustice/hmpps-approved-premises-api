@@ -30,6 +30,7 @@ class Cas1PremisesTransformer(
     return Cas1PremisesBasicSummary(
       id = entity.id,
       name = entity.name,
+      apCode = entity.apCode,
       apArea = NamedId(entity.apAreaId, entity.apAreaName),
       bedCount = entity.bedCount,
     )
