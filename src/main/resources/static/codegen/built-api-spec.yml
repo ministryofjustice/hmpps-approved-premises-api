@@ -3950,6 +3950,12 @@ paths:
           description: Filters the user details to those relevant to the specified service.
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: readOnly
+          in: query
+          required: false
+          description: If set to true, will not attempt to update the user from delius
+          schema:
+            type: boolean
       responses:
         200:
           description: successfully retrieved information on user
