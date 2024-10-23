@@ -61,6 +61,7 @@ class Cas1SpaceBookingTransformer(
       canonicalDepartureDate = jpa.canonicalDepartureDate,
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
       cancellation = jpa.extractCancellation(),
+      requestForPlacementId = jpa.placementRequest.placementApplication?.id ?: jpa.placementRequest.id,
     )
   }
 

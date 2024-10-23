@@ -836,6 +836,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.id).isEqualTo(spaceBooking.id)
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
+      assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest.id)
     }
   }
 
