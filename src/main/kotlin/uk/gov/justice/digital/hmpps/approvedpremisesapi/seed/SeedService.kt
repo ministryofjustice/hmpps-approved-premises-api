@@ -2,11 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import jakarta.annotation.PostConstruct
-import org.apache.commons.io.FileUtils
 import org.springframework.context.ApplicationContext
-import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
@@ -36,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingAdhocPropertySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CruManagementAreaSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DomainEventReplaySeedJob
@@ -48,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAsse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationBedspaceSeedJob
@@ -66,8 +60,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
-import java.io.File
-import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
@@ -78,78 +70,14 @@ class SeedService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
-  private val cas1AutoScript: Cas1AutoScript,
-  private val cas2AutoScript: Cas2AutoScript,
 ) {
-
-  @PostConstruct
-  fun autoSeed() {
-    if (!seedConfig.auto.enabled) {
-      return
-    }
-
-    seedLogger.info("Auto-seeding from locations: ${seedConfig.auto.filePrefixes}")
-    for (filePrefix in seedConfig.auto.filePrefixes) {
-      val csvFiles = try {
-        PathMatchingResourcePatternResolver().getResources("$filePrefix/*.csv")
-      } catch (e: IOException) {
-        seedLogger.warn(e.message!!)
-        continue
-      }
-
-      csvFiles.sortBy { it.filename }
-
-      for (csv in csvFiles) {
-        val csvName = csv.filename!!
-          .replace("\\.csv$".toRegex(), "")
-          .replace("^[0-9]+__".toRegex(), "")
-        val seedFileType = SeedFileType.values().firstOrNull { it.value == csvName }
-        if (seedFileType == null) {
-          seedLogger.warn("Seed file ${csv.file.path} does not have a known job type; skipping.")
-        } else {
-          seedLogger.info("Found seed job of type $seedFileType in $filePrefix")
-          val filePath = if (csv is ClassPathResource) {
-            csv.inputStream
-
-            val targetFile = File("${seedConfig.filePrefix}/${csv.filename}")
-            seedLogger.info("Copying class path resource ${csv.filename} to ${targetFile.absolutePath}")
-            FileUtils.copyInputStreamToFile(csv.inputStream, targetFile)
-
-            targetFile.absolutePath
-          } else {
-            csv.file.path
-          }
-
-          seedData(seedFileType, seedFileType.value) { filePath }
-        }
-      }
-    }
-
-    if (seedConfig.autoScript.cas1Enabled) {
-      autoScriptCas1()
-    }
-
-    if (seedConfig.autoScript.cas2Enabled) {
-      autoScriptCas2()
-    }
-  }
-
-  fun autoScriptCas1() {
-    seedLogger.info("**Auto-scripting CAS1**")
-    cas1AutoScript.script()
-  }
-
-  fun autoScriptCas2() {
-    seedLogger.info("**Auto-scripting CAS2**")
-    cas2AutoScript.script()
-  }
-
   @Async
   fun seedDataAsync(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename)
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
 
-  private fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
+  @SuppressWarnings("CyclomaticComplexMethod")
+  fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
     seedLogger.info("Starting seed request: $seedFileType - $filename")
 
     try {
