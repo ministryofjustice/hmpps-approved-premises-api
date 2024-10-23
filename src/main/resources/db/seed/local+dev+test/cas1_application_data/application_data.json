@@ -403,18 +403,19 @@
       "interpreterLanguage": ""
     },
     "access-needs-further-questions": {
-      "_csrf": "54GQ0iU3-nWE3ZvVDp46lWUpjhHq1xwH0gSc",
       "needsWheelchair": "no",
-      "healthConditionsDetail": "",
       "healthConditions": "no",
-      "prescribedMedicationDetail": "",
+      "healthConditionsDetail": "",
       "prescribedMedication": "no",
-      "additionalAdjustments": ""
+      "prescribedMedicationDetail": ""
     },
     "covid": {
       "boosterEligibility": "no",
       "boosterEligibilityDetail": "",
       "immunosuppressed": "no"
+    },
+    "access-needs-additional-details": {
+      "additionalAdjustments": ""
     }
   },
   "further-considerations": {
