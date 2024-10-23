@@ -6670,6 +6670,9 @@ components:
           $ref: '#/components/schemas/NamedId'
         bookedBy:
           $ref: '#/components/schemas/User'
+        requestForPlacementId:
+          type: string
+          format: uuid
         expectedArrivalDate:
           type: string
           format: date
