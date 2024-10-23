@@ -298,6 +298,8 @@ data class UserEntity(
   var apArea: ApAreaEntity?,
   /**
    * Used by CRU Members only to determine which tasks/applications they should work on.
+   *
+   * If a value is set in [cruManagementAreaOverride], the same value will also be set here
    */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_cru_management_area_id")
