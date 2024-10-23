@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.FutureBookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.tryGetDetails
@@ -26,7 +25,7 @@ class FutureBookingsReportGenerator : ReportGenerator<
           referralId = bookingData.referralId,
           referralDate = bookingData.referralDate?.toLocalDate(),
           personName = personInfo.getPersonName(),
-          gender = personInfo.getPersonGender(),
+          gender = personInfo.tryGetDetails { it.gender },
           ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
           dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
           riskOfSeriousHarm = bookingData.riskOfSeriousHarm,
