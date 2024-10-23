@@ -26,7 +26,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
-private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 2
+private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 6
 
 @Service("Cas3ReportsController")
 class ReportsController(
