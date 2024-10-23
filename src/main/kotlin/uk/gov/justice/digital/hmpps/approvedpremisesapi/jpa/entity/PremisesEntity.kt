@@ -266,7 +266,7 @@ class ApprovedPremisesEntity(
   status: PropertyStatus,
   var point: Point?, // TODO: Make not-null once Premises have had point added in all environments
   @Enumerated(value = EnumType.STRING)
-  val gender: ApprovedPremisesGender,
+  var gender: ApprovedPremisesGender,
 ) : PremisesEntity(
   id,
   name,
