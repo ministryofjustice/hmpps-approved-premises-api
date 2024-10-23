@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import java.time.ZonedDateTime
+import java.util.UUID
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(crn: String, bookingId: String, arrivedAt: ZonedDateTime?) =
   mockSuccessfulGetCallWithJsonResponse(
@@ -203,3 +205,22 @@ fun IntegrationTestBase.ApDeliusContext_mockNotFoundStaffDetailCall(username: St
     url = "/staff/$username",
     responseStatus = 404,
   )
+
+fun IntegrationTestBase.ApDeliusContext_mockSuccessfulDocumentsCall(crn: String, documents: List<Document>) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/documents/$crn/all",
+    responseBody = documents,
+  )
+
+fun IntegrationTestBase.ApDeliusContext_mockSuccessfulDocumentDownloadCall(crn: String, documentId: UUID, fileContents: ByteArray) =
+  mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/documents/$crn/$documentId"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/octet-stream")
+            .withStatus(200)
+            .withBody(fileContents),
+        ),
+    )
+  }
