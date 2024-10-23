@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3
 
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -11,6 +11,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.appendCharacteristicIfSet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.getCanonicalLocalAuthorityName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.getCanonicalRegionName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.trimToEmpty
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.trimToNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import java.util.UUID
 
