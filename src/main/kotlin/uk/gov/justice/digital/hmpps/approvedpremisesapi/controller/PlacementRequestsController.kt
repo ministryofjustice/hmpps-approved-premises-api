@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -87,7 +87,7 @@ class PlacementRequestsController(
   ): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (!user.hasPermission(UserPermission.CAS1_VIEW_CRU_DASHBOARD)) {
       throw ForbiddenProblem()
     }
 
