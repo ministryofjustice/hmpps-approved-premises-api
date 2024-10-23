@@ -29,7 +29,7 @@ class Cas1ExpiredApplicationsScheduledJob(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Scheduled(cron = "0 0/30 * * * ?")
+  @Scheduled(cron = "0 0 2 * * ?")
   @SchedulerLock(name = "cas1_expire_applications", lockAtMostFor = "5m", lockAtLeastFor = "1m")
   fun expireApplications() {
     if (featureFlagService.getBooleanFlag("cas1-expired-applications-enabled")) {
