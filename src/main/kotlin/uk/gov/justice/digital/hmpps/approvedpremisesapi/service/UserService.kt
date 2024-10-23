@@ -335,7 +335,9 @@ class UserService(
     if (forService == ServiceName.approvedPremises) {
       val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), staffDetail.username)
       user.apArea = apArea
-      user.cruManagementArea = apArea.defaultCruManagementArea
+      if (user.cruManagementAreaOverride == null) {
+        user.cruManagementArea = apArea.defaultCruManagementArea
+      }
     }
 
     return userRepository.save(user)

@@ -883,6 +883,42 @@ class UserServiceTest {
     }
 
     @Test
+    fun `it doesn't update the cru management area if an override is set`() {
+      val cruManagementAreaOverride = Cas1CruManagementAreaEntityFactory().produce()
+
+      val user =
+        userFactory
+          .withProbationRegion(probationRegion)
+          .withTeamCodes(staffDetail.teamCodes())
+          .withCruManagementArea(cruManagementAreaOverride)
+          .withCruManagementAreaOverride(cruManagementAreaOverride)
+          .produce()
+
+      val clientResultSuccess = ClientResult.Success(HttpStatus.OK, staffDetail)
+
+      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns regionMappingEntity
+      every { mockUserRepository.save(any()) } returnsArgument 0
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode(any()) } returns pdu
+
+      val apAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val apAreaForCas1 = ApAreaEntityFactory().withDefaultCruManagementArea(apAreaDefaultCruManagementArea).produce()
+
+      every {
+        mockCas1ApAreaMappingService.determineApArea(probationRegion, user.teamCodes!!, user.deliusUsername)
+      } returns apAreaForCas1
+
+      val result = userService.updateUserFromDelius(id, ServiceName.approvedPremises)
+
+      val entity = ((result as CasResult.Success<GetUserResponse>).value as GetUserResponse.Success).user
+
+      assertThat(entity.id).isEqualTo(user.id)
+      assertThat(entity.cruManagementArea).isEqualTo(cruManagementAreaOverride)
+      assertThat(entity.cruManagementAreaOverride).isEqualTo(cruManagementAreaOverride)
+    }
+
+    @Test
     fun `it stores a null email address if missing from Approved-premises-and-delius API`() {
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns regionMappingEntity
