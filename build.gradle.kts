@@ -149,7 +149,7 @@ tasks.bootRun {
     println("Reading env vars from file $envFilePath")
     file(envFilePath).readLines().forEach {
       if (it.isNotBlank() && !it.startsWith("#")) {
-        val (key, value) = it.split('=')
+        val (key, value) = it.split("=", limit = 2)
         println("Setting env var $key")
         environment(key, value)
       }
