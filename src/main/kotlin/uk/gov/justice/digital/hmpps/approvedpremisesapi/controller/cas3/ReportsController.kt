@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.futureBookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -122,7 +124,9 @@ class ReportsController(
         )
       }
 
-      futureBookings -> generateXlsxStreamingResponse { outputStream ->
+      futureBookings -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+      ) { outputStream ->
         cas3ReportService.createFutureBookingReport(
           FutureBookingsReportProperties(
             startDate = startDate,
