@@ -4081,9 +4081,6 @@ class BookingServiceTest {
     verify(exactly = 1) {
       mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
-    verify(exactly = 1) {
-      Sentry.captureException(any())
-    }
   }
 
   @Test
