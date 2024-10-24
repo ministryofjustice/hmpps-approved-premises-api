@@ -13,7 +13,7 @@ class Cas1SpaceSearchController(
   private val spaceSearchService: Cas1SpaceSearchService,
   private val spaceSearchResultTransformer: Cas1SpaceSearchResultsTransformer,
 ) : SpaceSearchesCas1Delegate {
-  override fun spacesSearchPost(cas1SpaceSearchParameters: Cas1SpaceSearchParameters): ResponseEntity<Cas1SpaceSearchResults> {
+  override fun spaceSearch(cas1SpaceSearchParameters: Cas1SpaceSearchParameters): ResponseEntity<Cas1SpaceSearchResults> {
     val results = spaceSearchService.findSpaces(cas1SpaceSearchParameters)
 
     return ResponseEntity.ok(spaceSearchResultTransformer.transformDomainToApi(cas1SpaceSearchParameters, results))
