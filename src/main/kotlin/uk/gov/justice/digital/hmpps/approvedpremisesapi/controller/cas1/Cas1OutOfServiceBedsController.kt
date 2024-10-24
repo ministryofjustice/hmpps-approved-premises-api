@@ -27,7 +27,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Service
-class OutOfServiceBedsController(
+class Cas1OutOfServiceBedsController(
   private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,

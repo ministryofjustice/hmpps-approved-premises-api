@@ -10,6 +10,7 @@ paths:
       tags:
         - space searches
       summary: Search for accommodation "spaces" which are available and match the given requirements
+      operationId: spaceSearch
       requestBody:
         content:
           'application/json':
@@ -40,6 +41,7 @@ paths:
       tags:
         - space bookings
       summary: Create a booking for a space in premises, associated with a given placement request
+      operationId: createSpaceBooking
       parameters:
         - name: placementRequestId
           in: path
@@ -607,6 +609,7 @@ paths:
       tags:
         - space bookings
       summary: Lists space bookings for the premises, given optional filtering criteria
+      operationId: getSpaceBookings
       parameters:
         - name: premisesId
           in: path
@@ -756,6 +759,7 @@ paths:
       tags:
       - space bookings
       summary: Posts an arrival to a specified space booking
+      operationId: recordArrival
       parameters:
         - name: premisesId
           in: path
@@ -805,6 +809,7 @@ paths:
       tags:
         - space bookings
       summary: Assign a keyworker to the space booking
+      operationId: assignKeyworker
       parameters:
         - name: premisesId
           in: path
@@ -853,6 +858,7 @@ paths:
       tags:
         - space bookings
       summary: Posts a departure to a specified space booking
+      operationId: recordDeparture
       parameters:
         - name: premisesId
           in: path
