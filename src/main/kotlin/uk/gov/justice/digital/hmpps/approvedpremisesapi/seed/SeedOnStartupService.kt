@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.File
 import java.io.IOException
 
@@ -19,11 +21,18 @@ class SeedOnStartupService(
   private val cas2AutoScript: Cas2AutoScript,
   private val seedService: SeedService,
   private val seedLogger: SeedLogger,
+  private val environmentService: EnvironmentService,
+  private val sentryService: SentryService,
 ) {
   @SuppressWarnings("NestedBlockDepth")
   @PostConstruct
   fun seedOnStartup() {
     if (!seedConfig.auto.enabled) {
+      return
+    }
+
+    if (environmentService.isNotATestEnvironment()) {
+      sentryService.captureErrorMessage("Auto seeding should not be enabled outside of local and dev environments")
       return
     }
 
