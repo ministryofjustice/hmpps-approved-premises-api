@@ -501,6 +501,54 @@ class ProfileTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Getting existing profile with Delius staff record with readOnly set to true does not update user details`() {
+      val id = UUID.randomUUID()
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      ApDeliusContext_addStaffDetailResponse(staffDetail.copy(name = PersonName("Up", "Dated", "")))
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = createProbationRegion(deliusCode)
+
+      probationAreaProbationRegionMappingFactory.produceAndPersist {
+        withProbationRegion(region)
+        withProbationAreaDeliusCode(deliusCode)
+      }
+
+      userEntityFactory.produceAndPersist {
+        withId(id)
+        withYieldedProbationRegion { region }
+        withDeliusUsername(deliusUsername)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+        withName("Original Name")
+      }
+
+      val response = webTestClient.get()
+        .uri("$profileV2Endpoint?readOnly=true")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!
+
+      assertThat(response.deliusUsername).isEqualTo(deliusUsername)
+      assertThat(response.user!!.name).isEqualTo("Original Name")
+    }
+
+    @Test
     fun `Getting existing CAS3 profile returns OK for CAS3_REPORTER with correct body`() {
       val id = UUID.randomUUID()
       val deliusUsername = "JIMJIMMERSON"
