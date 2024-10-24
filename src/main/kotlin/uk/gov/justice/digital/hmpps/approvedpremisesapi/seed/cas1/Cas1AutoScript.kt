@@ -9,12 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
@@ -31,6 +33,7 @@ class Cas1AutoScript(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
+  private val environmentService: EnvironmentService,
 ) {
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -38,15 +41,30 @@ class Cas1AutoScript(
   fun script() {
     seedLogger.info("Auto-Scripting for CAS1")
 
-    seedUsers()
+    if (environmentService.isLocal()) {
+      scriptLocal()
+    } else if (environmentService.isDev()) {
+      scriptDev()
+    }
+  }
+
+  fun scriptLocal() {
+    seedLogger.info("Auto-Scripting for CAS1 local")
+    seedUsers(usersToSeedLocal())
 
     createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
     createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
     createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
   }
 
+  fun scriptDev() {
+    seedLogger.info("Auto-Scripting for CAS1 dev")
+    seedUsers(usersToSeedDev())
+  }
+
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun createApplication(deliusUserName: String, crn: String) {
+    seedLogger.info("Auto-scripting application for CRN $crn")
     try {
       createApplicationInternal(deliusUserName = deliusUserName, crn = crn)
     } catch (e: Exception) {
@@ -54,12 +72,11 @@ class Cas1AutoScript(
     }
   }
 
-  private fun seedUsers() {
-    usersToSeed().forEach { seedUser(it) }
-  }
+  private fun seedUsers(usersToSeed: List<SeedUser>) = usersToSeed.forEach { seedUser(it) }
 
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun seedUser(seedUser: SeedUser) {
+    seedLogger.info("Auto-scripting user ${seedUser.username}")
     try {
       val getUserResponse = userService.getExistingUserOrCreate(username = seedUser.username)
 
@@ -69,6 +86,9 @@ class Cas1AutoScript(
           val user = getUserResponse.user
           seedUser.roles.forEach { role ->
             userService.addRoleToUser(user = user, role = role)
+          }
+          seedUser.qualifications.forEach { qualification ->
+            userService.addQualificationToUser(user, qualification)
           }
           val roles = user.roles.map { it.role }.joinToString(", ")
           seedLogger.info("  -> User '${user.name}' (${user.deliusUsername}) seeded with roles $roles")
@@ -83,7 +103,7 @@ class Cas1AutoScript(
     }
   }
 
-  private fun usersToSeed(): List<SeedUser> {
+  private fun usersToSeedLocal(): List<SeedUser> {
     return listOf(
       SeedUser(
         username = "JIMSNOWLDAP",
@@ -97,6 +117,7 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_CRU_MEMBER,
         ),
+        qualifications = UserQualification.entries.toList(),
         documentation = "For local use in development and testing",
       ),
       SeedUser(
@@ -112,6 +133,7 @@ class Cas1AutoScript(
           UserRole.CAS1_FUTURE_MANAGER,
           UserRole.CAS1_CRU_MEMBER,
         ),
+        qualifications = UserQualification.entries.toList(),
         documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
       ),
       SeedUser(
@@ -126,6 +148,7 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_FUTURE_MANAGER,
         ),
+        qualifications = UserQualification.entries.toList(),
         documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
       ),
       SeedUser(
@@ -140,11 +163,33 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_FUTURE_MANAGER,
         ),
+        qualifications = UserQualification.entries.toList(),
         cruManagementAreaOverrideId = Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID,
         documentation = "For local use in development and testing. This user's CRU Management Area is overridden to women's estate",
       ),
     )
   }
+
+  private fun usersToSeedDev(): List<SeedUser> =
+    listOf("AP_USER_TEST_1", "AP_USER_TEST_2", "AP_USER_TEST_3", "AP_USER_TEST_4", "AP_USER_TEST_5")
+      .map {
+        SeedUser(
+          username = it,
+          roles = listOf(
+            UserRole.CAS1_CRU_MEMBER,
+            UserRole.CAS1_ASSESSOR,
+            UserRole.CAS1_MATCHER,
+            UserRole.CAS1_WORKFLOW_MANAGER,
+            UserRole.CAS1_ADMIN,
+            UserRole.CAS1_REPORT_VIEWER,
+            UserRole.CAS1_APPEALS_MANAGER,
+            UserRole.CAS1_CRU_MEMBER,
+            UserRole.CAS1_FUTURE_MANAGER,
+          ),
+          qualifications = UserQualification.entries.toList(),
+          documentation = "E2E test user",
+        )
+      }
 
   private fun createApplicationInternal(deliusUserName: String, crn: String) {
     if (applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
@@ -233,6 +278,7 @@ class Cas1AutoScript(
 data class SeedUser(
   val username: String,
   val roles: List<UserRole>,
+  val qualifications: List<UserQualification>,
   val documentation: String,
   val cruManagementAreaOverrideId: UUID? = null,
 )
