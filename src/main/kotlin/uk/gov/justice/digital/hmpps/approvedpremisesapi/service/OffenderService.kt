@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -624,7 +625,7 @@ class OffenderService(
     return AuthorisableActionResult.Success(convictions)
   }
 
-  fun getDocuments(crn: String): AuthorisableActionResult<GroupedDocuments> {
+  fun getDocumentsFromCommunityApi(crn: String): AuthorisableActionResult<GroupedDocuments> {
     val documentsResult = communityApiClient.getDocuments(crn)
 
     val documents = when (documentsResult) {
@@ -640,7 +641,29 @@ class OffenderService(
     return AuthorisableActionResult.Success(documents)
   }
 
-  fun getDocument(
+  fun getDocumentsFromApDeliusApi(crn: String): AuthorisableActionResult<List<Document>> {
+    val documentsResult = apDeliusContextApiClient.getDocuments(crn)
+
+    val documents = when (documentsResult) {
+      is ClientResult.Success -> documentsResult.body
+      is ClientResult.Failure.StatusCode -> when (documentsResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> documentsResult.throwException()
+      }
+
+      is ClientResult.Failure -> documentsResult.throwException()
+    }
+    return AuthorisableActionResult.Success(documents)
+  }
+
+  fun getDocumentFromDelius(
+    crn: String,
+    documentId: String,
+    outputStream: OutputStream,
+  ) = apDeliusContextApiClient.getDocument(crn, documentId, outputStream)
+
+  fun getDocumentFromCommunityApi(
     crn: String,
     documentId: String,
     outputStream: OutputStream,

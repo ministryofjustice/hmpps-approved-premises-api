@@ -444,7 +444,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val documents = when (val documentsResult = offenderService.getDocuments(application.crn)) {
+    val documents = when (val documentsResult = offenderService.getDocumentsFromCommunityApi(application.crn)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(application.crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> documentsResult.entity

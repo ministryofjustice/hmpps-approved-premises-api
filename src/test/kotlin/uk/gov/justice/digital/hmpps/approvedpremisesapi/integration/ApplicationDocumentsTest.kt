@@ -6,13 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFromDeliusApiFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockSuccessfulDocumentDownloadCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
+import java.util.UUID
 
 class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -136,7 +141,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Download document returns 404 when not found in documents meta data`() {
+  fun `Download document - with get-documents-from-ap-delius feature-flag off - returns 404 when not found in documents meta data`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -183,7 +188,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Download document returns 200 with correct body and headers`() {
+  fun `Download document - with get-documents-from-ap-delius feature-flag off - returns 200 with correct body and headers`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -237,5 +242,96 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
         assertThat(result.responseBody).isEqualTo(fileContents)
       }
     }
+  }
+
+  @Test
+  fun `Download document - with get-documents-from-ap-delius feature-flag on - returns 404 when not found in documents meta data`() {
+    mockFeatureFlagService.setFlag("get-documents-from-ap-delius", true)
+
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+        }
+
+        val convictionLevelDocId = UUID.randomUUID()
+        val documents = stubDocumentsFromDelius(convictionLevelDocId)
+
+        ApDeliusContext_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
+
+        val notFoundDocId = UUID.randomUUID()
+        webTestClient.get()
+          .uri("/documents/${application.crn}/$notFoundDocId")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
+
+  @Test
+  fun `Download document - with get-documents-from-ap-delius feature-flag on - returns 200 with correct body and headers`() {
+    mockFeatureFlagService.setFlag("get-documents-from-ap-delius", true)
+
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+        }
+        val convictionLevelDocId = UUID.randomUUID()
+        val documents = stubDocumentsFromDelius(convictionLevelDocId)
+        val docFileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
+
+        ApDeliusContext_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
+        ApDeliusContext_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, convictionLevelDocId, docFileContents)
+
+        val result = webTestClient.get()
+          .uri("/documents/${application.crn}/$convictionLevelDocId")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader()
+          .contentDisposition(ContentDisposition.parse("attachment; filename=\"conviction_level_doc.pdf\""))
+          .expectBody()
+          .returnResult()
+
+        assertThat(result.responseBody).isEqualTo(docFileContents)
+      }
+    }
+  }
+
+  private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<Document> {
+    return listOf(
+      DocumentFromDeliusApiFactory()
+        .withId(UUID.randomUUID().toString())
+        .withDescription("Offender level doc description")
+        .withLevel("LEVEL-1")
+        .withEventNumber("2")
+        .withFilename("offender_level_doc.pdf")
+        .withTypeCode("TYPE-1")
+        .withTypeDescription("Type 1 Description")
+        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00"))
+        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00"))
+        .produce(),
+      DocumentFromDeliusApiFactory()
+        .withId(convictionLevelDocId.toString())
+        .withDescription("Conviction level doc description")
+        .withLevel("LEVEL-2")
+        .withEventNumber("1")
+        .withFilename("conviction_level_doc.pdf")
+        .withTypeCode("TYPE-2")
+        .withTypeDescription("Type 2 Description")
+        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00"))
+        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00"))
+        .produce(),
+    )
   }
 }
