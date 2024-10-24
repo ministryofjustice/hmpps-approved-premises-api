@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Futu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -26,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvClassConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.casLimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 import java.util.stream.Collectors
@@ -193,23 +194,20 @@ class Cas3ReportService(
     val personInfos = splitAndRetrievePersonInfo(crns)
     val reportData = bookingsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
-      FutureBookingsReportDataAndPersonInfo(it, personInfo)
+      FutureBookingsReportGenerator().convert(it, personInfo)
     }
 
-    FutureBookingsReportGenerator()
-      .createReport(reportData, properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
+    CsvClassConsumer(
+      outputStream = outputStream,
+    ).consume(reportData)
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
-    val deliusUsername = userService.getUserForRequest().deliusUsername
+    val user = userService.getUserForRequest()
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
-        val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername)
+        val offenderSummaries = offenderService.getPersonSummaryInfoResults(crns.toSet(), user.casLimitedAccessStrategy())
         offenderSummaries.map {
           when (it) {
             is PersonSummaryInfoResult.Success.Full -> {
@@ -234,11 +232,11 @@ class Cas3ReportService(
   }
 
   private fun splitAndRetrievePersonInfo(crns: Set<String>): Map<String, PersonSummaryInfoResult> {
-    val deliusUsername = userService.getUserForRequest().deliusUsername
+    val user = userService.getUserForRequest()
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
-        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy { it.crn }
+        offenderService.getPersonSummaryInfoResults(crns.toSet(), user.casLimitedAccessStrategy()).associateBy { it.crn }
       }.toList()
 
     return crnMap.flatMap { it.toList() }.toMap()
