@@ -24,7 +24,10 @@ class ProfileController(
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
   }
 
-  override fun profileV2Get(xServiceName: ServiceName): ResponseEntity<ProfileResponse> {
+  override fun profileV2Get(
+    xServiceName: ServiceName,
+    readOnly: Boolean?,
+  ): ResponseEntity<ProfileResponse> {
     val username = userService.getDeliusUserNameForRequest()
     val getUserResponse = userService.getUserForProfile(username)
 
@@ -42,7 +45,10 @@ class ProfileController(
     }
 
     val responseToReturn =
-      if (getUserResponse is UserService.GetUserResponse.Success && !getUserResponse.createdOnGet) {
+      if (getUserResponse is UserService.GetUserResponse.Success &&
+        !getUserResponse.createdOnGet &&
+        readOnly != true
+      ) {
         log.info("Updating user record for $username")
         userService.updateUserFromDelius(getUserResponse.user, xServiceName)
       } else {

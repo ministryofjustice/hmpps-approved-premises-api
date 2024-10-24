@@ -132,6 +132,8 @@ tasks {
   compileTestScala { enabled = false }
 }
 
+// this is deprecated in favour of bootRunDebug, which does not set an active profile
+// it will be removed once ap-tools has been updated to use bootRunDebug
 tasks.register("bootRunLocal") {
   group = "application"
   description = "Runs this project as a Spring Boot application with the local profile"
@@ -144,12 +146,23 @@ tasks.register("bootRunLocal") {
   finalizedBy("bootRun")
 }
 
+tasks.register("bootRunDebug") {
+  group = "application"
+  description = "Runs this project as a Spring Boot application with debug configuration"
+  doFirst {
+    tasks.bootRun.configure {
+      jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
+    }
+  }
+  finalizedBy("bootRun")
+}
+
 tasks.bootRun {
   System.getenv()["BOOT_RUN_ENV_FILE"]?.let { envFilePath ->
     println("Reading env vars from file $envFilePath")
     file(envFilePath).readLines().forEach {
       if (it.isNotBlank() && !it.startsWith("#")) {
-        val (key, value) = it.split('=')
+        val (key, value) = it.split("=", limit = 2)
         println("Setting env var $key")
         environment(key, value)
       }

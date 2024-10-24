@@ -40,7 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
@@ -73,12 +73,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
@@ -106,7 +107,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
   lateinit var referrerDetails: Pair<UserEntity, String>
-  lateinit var referrerTeam: StaffUserTeamMembership
   lateinit var referrerProbationArea: String
 
   lateinit var assessorDetails: Pair<UserEntity, String>
@@ -121,27 +121,25 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setup() {
-    referrerTeam = StaffUserTeamMembershipFactory().produce()
     referrerProbationArea = "Referrer probation area"
 
     referrerDetails = `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            referrerTeam,
-          ),
-        )
-        withProbationAreaDescription(
-          referrerProbationArea,
-        )
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = randomStringMultiCaseWithNumbers(6),
+          description = referrerProbationArea,
+        ),
+      ),
     )
     assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR),
       probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = "Wales")),
-      staffUserDetailsConfigBlock = {
-        withProbationAreaCode("N03")
-      },
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N03",
+          description = randomStringMultiCaseWithNumbers(6),
+        ),
+      ),
     )
     managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
     workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))

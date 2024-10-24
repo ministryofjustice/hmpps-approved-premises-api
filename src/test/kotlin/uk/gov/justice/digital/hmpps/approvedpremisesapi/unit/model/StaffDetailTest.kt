@@ -5,22 +5,26 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 class StaffDetailTest {
-  private val staffCode = "ABC123"
-  private val staffIdentifier = "123".toLong()
-  private val forename = "Bruce"
-  private val middleName = "Middle"
-  private val surname = "Lee"
-  private val username = "SOME_USERNAME"
+  private val staffCode = randomStringMultiCaseWithNumbers(10).uppercase()
+  private val staffIdentifier = randomLong()
+  private val forename = randomStringLowerCase(10)
+  private val middleName = randomStringLowerCase(10)
+  private val surname = randomStringUpperCase(10)
+  private val username = randomStringUpperCase(10)
 
   @Test
   fun `toStaffMember converts to a StaffMember`() {
-    val staffDetail = StaffDetailFactory.staffDetail().copy(
+    val staffDetail = StaffDetailFactory.staffDetail(
       code = staffCode,
       staffIdentifier = staffIdentifier,
       name = PersonName(forename = forename, surname = surname),
-      username = username,
+      deliusUsername = username,
     ).toStaffMember()
 
     val staffMember = StaffMember(
@@ -39,16 +43,24 @@ class StaffDetailTest {
 
   @Test
   fun `staff detail produces correct forenames`() {
-    val staffDetail = StaffDetailFactory.staffDetail().copy(
+    val staffDetail = StaffDetailFactory.staffDetail(
       name = PersonName(forename = forename, middleName = middleName, surname = surname),
     )
     assertThat(staffDetail.name.forenames()).isEqualTo("$forename $middleName")
   }
 
   @Test
-  fun `staff detail produces correct Delius name`() {
-    val staffDetail = StaffDetailFactory.staffDetail().copy(
+  fun `staff detail produces correct name with middle names`() {
+    val staffDetail = StaffDetailFactory.staffDetail(
       name = PersonName(forename = forename, middleName = middleName, surname = surname),
+    )
+    assertThat(staffDetail.name.deliusName()).isEqualTo("$forename $middleName $surname")
+  }
+
+  @Test
+  fun `staff detail produces correct name without middle names`() {
+    val staffDetail = StaffDetailFactory.staffDetail(
+      name = PersonName(forename = forename, surname = surname),
     )
     assertThat(staffDetail.name.deliusName()).isEqualTo("$forename $surname")
   }

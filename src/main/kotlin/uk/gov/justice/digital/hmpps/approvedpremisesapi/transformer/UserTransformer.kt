@@ -46,6 +46,7 @@ class UserTransformer(
       qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
       roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
       apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+      cruManagementArea = jpa.cruManagementArea?.toNamedId(),
     )
   }
 

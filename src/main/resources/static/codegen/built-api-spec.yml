@@ -3950,6 +3950,12 @@ paths:
           description: Filters the user details to those relevant to the specified service.
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: readOnly
+          in: query
+          required: false
+          description: If set to true, will not attempt to update the user from delius
+          schema:
+            type: boolean
       responses:
         200:
           description: successfully retrieved information on user
@@ -7558,7 +7564,13 @@ components:
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
             apArea:
-              $ref: '#/components/schemas/ApArea'
+              deprecated: true
+              description: This is deprecated. Used cruManagementArea instead as this is used to group task management
+              allOf:
+                - $ref: '#/components/schemas/ApArea'
+            cruManagementArea:
+              allOf:
+                - $ref: "#/components/schemas/NamedId"
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'

@@ -223,6 +223,7 @@ class ApprovedPremisesSeedJob(
       this.localAuthorityArea = localAuthorityArea
       this.status = row.status
       this.point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null
+      this.gender = row.gender
     }
 
     characteristics.forEach {

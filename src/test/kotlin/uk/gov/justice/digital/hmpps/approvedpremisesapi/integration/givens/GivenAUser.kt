@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
@@ -14,12 +14,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
-  staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
+  staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
@@ -27,14 +31,6 @@ fun IntegrationTestBase.`Given a User`(
   mockStaffUserDetailsCall: Boolean = true,
   cruManagementAreaEntity: Cas1CruManagementAreaEntity? = null,
 ): Pair<UserEntity, String> {
-  val staffUserDetailsFactory = StaffUserDetailsFactory()
-
-  if (staffUserDetailsConfigBlock != null) {
-    staffUserDetailsConfigBlock(staffUserDetailsFactory)
-  }
-
-  val staffUserDetails = staffUserDetailsFactory.produce()
-
   val resolvedProbationRegion = probationRegion ?: probationRegionEntityFactory.produceAndPersist {
     withYieldedApArea { `Given an AP Area`() }
   }
@@ -42,11 +38,11 @@ fun IntegrationTestBase.`Given a User`(
 
   val user = userEntityFactory.produceAndPersist {
     withId(id)
-    withDeliusUsername(staffUserDetails.username)
-    withDeliusStaffCode(staffUserDetails.staffCode)
-    withEmail(staffUserDetails.email)
-    withTelephoneNumber(staffUserDetails.telephoneNumber)
-    withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
+    withDeliusUsername(staffDetail.username)
+    withDeliusStaffCode(staffDetail.code)
+    withEmail(staffDetail.email)
+    withTelephoneNumber(staffDetail.telephoneNumber)
+    withName(staffDetail.name.deliusName())
     withIsActive(isActive)
     withYieldedProbationRegion { resolvedProbationRegion }
     withYieldedApArea { apArea }
@@ -67,11 +63,30 @@ fun IntegrationTestBase.`Given a User`(
     }
   }
 
-  val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffUserDetails.username)
+  val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffDetail.username)
 
   if (mockStaffUserDetailsCall) {
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails)
-    ApDeliusContext_addStaffDetailResponse(staffUserDetails.toStaffDetail())
+    // this will be removed when the staff code call is added to the ap-delius-integration
+    val temp = StaffUserDetails(
+      username = staffDetail.username,
+      email = staffDetail.email,
+      telephoneNumber = staffDetail.telephoneNumber,
+      staffCode = staffDetail.code,
+      staffIdentifier = staffDetail.staffIdentifier,
+      staff = StaffNames(
+        forenames = staffDetail.name.forenames(),
+        surname = staffDetail.name.surname,
+      ),
+      teams = staffDetail.teams.map { team ->
+        StaffUserTeamMembershipFactory().withCode(team.code).withDescription(team.name).produce()
+      },
+      probationArea = StaffProbationArea(
+        staffDetail.probationArea.code,
+        staffDetail.probationArea.description,
+      ),
+    )
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(temp)
+    ApDeliusContext_addStaffDetailResponse(staffDetail)
   } else {
     mockOAuth2ClientCredentialsCallIfRequired {}
   }
@@ -82,7 +97,7 @@ fun IntegrationTestBase.`Given a User`(
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
-  staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
+  staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
@@ -92,7 +107,7 @@ fun IntegrationTestBase.`Given a User`(
 ) {
   val (user, jwt) = `Given a User`(
     id,
-    staffUserDetailsConfigBlock,
+    staffDetail,
     roles,
     qualifications,
     probationRegion,

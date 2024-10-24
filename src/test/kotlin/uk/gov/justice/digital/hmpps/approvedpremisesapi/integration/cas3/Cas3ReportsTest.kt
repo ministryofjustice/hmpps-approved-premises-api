@@ -3628,7 +3628,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           )
 
           // offender with accommodation required date out of report dates range
-          val premisesFourAccommodationRequiredDate = reportEndDate.plusDays(90)
+          val premisesFourAccommodationRequiredDate = reportEndDate.plusDays(200)
           val (premisesFour, applicationFour) = createReferralAndAssessment(
             user,
             offenderDetails,
@@ -3650,7 +3650,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             premisesFiveUpdatedAccommodationRequiredDate,
           )
 
-          val premisesSixAccommodationRequiredDate = reportStartDate.plusDays(90)
+          val premisesSixAccommodationRequiredDate = reportStartDate.plusDays(210)
           val premisesSixUpdatedAccommodationRequiredDate = reportEndDate.plusDays(9)
           val (premisesSix, applicationSix) = createReferralAndAssessment(
             user,

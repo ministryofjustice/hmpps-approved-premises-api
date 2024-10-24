@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactory2
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -175,8 +175,8 @@ class UserServiceTest {
         staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "description"),
         teams = listOf(
-          TeamFactory2.team(code = "TC1", borough = borough),
-          TeamFactory2.team(code = "TC2", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC1", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC2", borough = borough),
         ),
       )
 
@@ -238,8 +238,8 @@ class UserServiceTest {
         staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "Description"),
         teams = listOf(
-          TeamFactory2.team(code = "TC1", borough = borough),
-          TeamFactory2.team(code = "TC2", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC1", borough = borough),
+          TeamFactoryDeliusContext.team(code = "TC2", borough = borough),
         ),
       )
 
@@ -645,7 +645,7 @@ class UserServiceTest {
     fun `Throw exception if can't determine PDU, no teams without end date`() {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
-        teams = listOf(TeamFactory2.team(endDate = LocalDate.now())),
+        teams = listOf(TeamFactoryDeliusContext.team(endDate = LocalDate.now())),
       )
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -663,7 +663,7 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
         teams = listOf(
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team1",
             name = "team 1",
             borough = Borough(code = "boroughcode1", description = "borough1"),
@@ -690,21 +690,21 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
         teams = listOf(
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team3",
             name = "team 3",
             borough = Borough(code = "boroughcode3", description = "borough3"),
             startDate = LocalDate.of(2024, 1, 3),
             endDate = LocalDate.of(2024, 1, 4),
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team2",
             name = "team 2",
             borough = Borough(code = "boroughcode2", description = "borough2"),
             startDate = LocalDate.of(2024, 1, 2),
             endDate = null,
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             code = "team1",
             name = "team 1",
             borough = Borough(code = "boroughcode1", description = "borough1"),
@@ -732,22 +732,22 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = "theusername",
         teams = listOf(
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "boroughcode2", description = "borough2"),
             startDate = LocalDate.of(2024, 1, 3),
             endDate = LocalDate.of(2024, 1, 4),
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "nomapping", description = "nomapping"),
             startDate = LocalDate.of(2024, 1, 3),
             endDate = null,
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "boroughcode2", description = "borough2"),
             startDate = LocalDate.of(2024, 1, 2),
             endDate = null,
           ),
-          TeamFactory2.team(
+          TeamFactoryDeliusContext.team(
             borough = Borough(code = "boroughcode1", description = "borough1"),
             startDate = LocalDate.of(2024, 1, 1),
             endDate = null,
@@ -880,6 +880,42 @@ class UserServiceTest {
         assertThat(entity.apArea).isNull()
         assertThat(entity.cruManagementArea).isNull()
       }
+    }
+
+    @Test
+    fun `it doesn't update the cru management area if an override is set`() {
+      val cruManagementAreaOverride = Cas1CruManagementAreaEntityFactory().produce()
+
+      val user =
+        userFactory
+          .withProbationRegion(probationRegion)
+          .withTeamCodes(staffDetail.teamCodes())
+          .withCruManagementArea(cruManagementAreaOverride)
+          .withCruManagementAreaOverride(cruManagementAreaOverride)
+          .produce()
+
+      val clientResultSuccess = ClientResult.Success(HttpStatus.OK, staffDetail)
+
+      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns regionMappingEntity
+      every { mockUserRepository.save(any()) } returnsArgument 0
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode(any()) } returns pdu
+
+      val apAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+      val apAreaForCas1 = ApAreaEntityFactory().withDefaultCruManagementArea(apAreaDefaultCruManagementArea).produce()
+
+      every {
+        mockCas1ApAreaMappingService.determineApArea(probationRegion, user.teamCodes!!, user.deliusUsername)
+      } returns apAreaForCas1
+
+      val result = userService.updateUserFromDelius(id, ServiceName.approvedPremises)
+
+      val entity = ((result as CasResult.Success<GetUserResponse>).value as GetUserResponse.Success).user
+
+      assertThat(entity.id).isEqualTo(user.id)
+      assertThat(entity.cruManagementArea).isEqualTo(cruManagementAreaOverride)
+      assertThat(entity.cruManagementAreaOverride).isEqualTo(cruManagementAreaOverride)
     }
 
     @Test

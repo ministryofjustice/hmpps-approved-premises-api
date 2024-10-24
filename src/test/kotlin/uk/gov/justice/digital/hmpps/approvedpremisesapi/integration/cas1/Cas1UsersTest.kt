@@ -91,11 +91,12 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Getting an Approved Premises user returns OK with correct body`() {
+    fun `Getting a CAS1 Approved Premises user returns OK with correct body`() {
       val deliusUsername = "JimJimmerson"
       val forename = "Jim"
+      val middleName = "C"
       val surname = "Jimmerson"
-      val name = "$forename $surname"
+      val name = "$forename $middleName $surname"
       val email = "foo@bar.com"
       val telephoneNumber = "123445677"
 
@@ -124,7 +125,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           teams = listOf(team()),
           probationArea = probationArea(),
           username = deliusUsername,
-          name = PersonName(forename, surname, "C"),
+          name = PersonName(forename, surname, middleName),
           code = "STAFF1",
           active = true,
         ),

@@ -5,7 +5,6 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
@@ -225,7 +224,7 @@ class NameFactory : Factory<Name> {
 }
 
 class ManagerFactory : Factory<Manager> {
-  var team: Yielded<Team> = { TeamFactory().produce() }
+  var team: Yielded<Team> = { TeamFactoryDeliusContext.team() }
 
   fun withTeam(team: Team) = apply {
     this.team = { team }
@@ -233,42 +232,5 @@ class ManagerFactory : Factory<Manager> {
 
   override fun produce(): Manager = Manager(
     team = this.team(),
-  )
-}
-
-class TeamFactory : Factory<Team> {
-  var code: Yielded<String> = { randomStringUpperCase(10) }
-  var name: Yielded<String> = { randomStringUpperCase(10) }
-  var ldu: Yielded<Ldu> = { LduFactory().produce() }
-
-  fun withName(name: String) = apply {
-    this.name = { name }
-  }
-
-  fun withLdu(ldu: Ldu) = apply {
-    this.ldu = { ldu }
-  }
-
-  override fun produce(): Team = Team(
-    code = this.code(),
-    name = this.name(),
-    ldu = this.ldu(),
-    borough = null,
-    startDate = null,
-    endDate = null,
-  )
-}
-
-class LduFactory : Factory<Ldu> {
-  var code: Yielded<String> = { randomStringUpperCase(10) }
-  var name: Yielded<String> = { randomStringUpperCase(10) }
-
-  fun withName(name: String) = apply {
-    this.name = { name }
-  }
-
-  override fun produce(): Ldu = Ldu(
-    code = this.code(),
-    name = this.name(),
   )
 }

@@ -39,7 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -72,12 +73,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
@@ -107,7 +109,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
   lateinit var referrerDetails: Pair<UserEntity, String>
-  lateinit var referrerTeam: StaffUserTeamMembership
+  lateinit var referrerTeam: TeamFactoryDeliusContext
   lateinit var referrerProbationArea: String
 
   lateinit var assessorDetails: Pair<UserEntity, String>
@@ -138,19 +140,15 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   fun setup() {
     GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-    referrerTeam = StaffUserTeamMembershipFactory().produce()
+    referrerTeam = TeamFactoryDeliusContext
     referrerProbationArea = "Referrer probation area"
 
-    referrerDetails = `Given a User`(staffUserDetailsConfigBlock = {
-      withTeams(
-        listOf(
-          referrerTeam,
-        ),
-      )
-      withProbationAreaDescription(
-        referrerProbationArea,
-      )
-    },)
+    referrerDetails = `Given a User`(
+      staffDetail = StaffDetailFactory.staffDetail(
+        teams = listOf(referrerTeam.team()),
+        probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = referrerProbationArea),
+      ),
+    )
     assessorDetails = `Given a User`(
       roles = listOf(UserRole.CAS1_ASSESSOR),
       probationRegion = probationRegionEntityFactory.produceAndPersist {
