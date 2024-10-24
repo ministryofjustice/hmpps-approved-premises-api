@@ -17,9 +17,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -27,12 +32,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 @SuppressWarnings("LargeClass")
 class BedSearchTest : IntegrationTestBase() {
@@ -361,109 +369,133 @@ class BedSearchTest : IntegrationTestBase() {
 
       `Given a User`(
         probationRegion = probationRegion,
-      ) { _, jwt ->
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+      ) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
-        }
+          val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
 
-        val roomOne = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
 
-        val roomTwo = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+            withLocalAuthorityArea(localAuthorityArea)
+            withProbationDeliveryUnit(searchPdu)
+            withProbationRegion(probationRegion)
+            withStatus(PropertyStatus.active)
+          }
 
-        val bedOne = bedEntityFactory.produceAndPersist {
-          withName("matching bed")
-          withRoom(roomOne)
-        }
+          val roomOne = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
 
-        val bedTwo = bedEntityFactory.produceAndPersist {
-          withName("matching bed, but with an overlapping booking")
-          withRoom(roomOne)
-        }
+          val roomTwo = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
 
-        val bedThree = bedEntityFactory.produceAndPersist {
-          withName("bed in a different room, with an overlapping booking")
-          withRoom(roomTwo)
-        }
+          val bedOne = bedEntityFactory.produceAndPersist {
+            withName("matching bed")
+            withRoom(roomOne)
+          }
 
-        val overlappingBookingSameRoom = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withPremises(premises)
-          withBed(bedTwo)
-          withArrivalDate(LocalDate.parse("2023-07-15"))
-          withDepartureDate(LocalDate.parse("2023-08-15"))
-          withCrn(randomStringMultiCaseWithNumbers(16))
-          withId(UUID.randomUUID())
-        }
+          val bedTwo = bedEntityFactory.produceAndPersist {
+            withName("matching bed, but with an overlapping booking")
+            withRoom(roomOne)
+          }
 
-        val overlappingBookingDifferentRoom = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withPremises(premises)
-          withBed(bedThree)
-          withArrivalDate(LocalDate.parse("2023-08-25"))
-          withDepartureDate(LocalDate.parse("2023-09-25"))
-          withCrn(randomStringMultiCaseWithNumbers(16))
-          withId(UUID.randomUUID())
-        }
+          val bedThree = bedEntityFactory.produceAndPersist {
+            withName("bed in a different room, with an overlapping booking")
+            withRoom(roomTwo)
+          }
 
-        webTestClient.post()
-          .uri("/beds/search")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            TemporaryAccommodationBedSearchParameters(
-              startDate = LocalDate.parse("2023-08-01"),
-              durationDays = 31,
-              serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
-            ),
+          val overlappingBookingSameRoom = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(application)
+            withPremises(premises)
+            withBed(bedTwo)
+            withArrivalDate(LocalDate.parse("2023-07-15"))
+            withDepartureDate(LocalDate.parse("2023-08-15"))
+            withCrn(offenderDetails.otherIds.crn)
+            withId(UUID.randomUUID())
+          }
+
+          val overlappingBookingDifferentRoom = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(application)
+            withPremises(premises)
+            withBed(bedThree)
+            withArrivalDate(LocalDate.parse("2023-08-25"))
+            withDepartureDate(LocalDate.parse("2023-09-25"))
+            withCrn(offenderDetails.otherIds.crn)
+            withId(UUID.randomUUID())
+          }
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
           )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              BedSearchResults(
-                resultsRoomCount = 1,
-                resultsPremisesCount = 1,
-                resultsBedCount = 1,
-                results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
-                    premises,
-                    roomOne,
-                    bedOne,
-                    searchPdu.name,
-                    numberOfBeds = 3,
-                    numberOfBookedBeds = 2,
-                    premisesCharacteristics = listOf(),
-                    listOf(
-                      TemporaryAccommodationBedSearchResultOverlap(
-                        crn = overlappingBookingSameRoom.crn,
-                        days = 15,
-                        bookingId = overlappingBookingSameRoom.id,
-                        roomId = roomOne.id,
-                      ),
-                      TemporaryAccommodationBedSearchResultOverlap(
-                        crn = overlappingBookingDifferentRoom.crn,
-                        days = 7,
-                        bookingId = overlappingBookingDifferentRoom.id,
-                        roomId = roomTwo.id,
+
+          webTestClient.post()
+            .uri("/beds/search")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              TemporaryAccommodationBedSearchParameters(
+                startDate = LocalDate.parse("2023-08-01"),
+                durationDays = 31,
+                serviceName = "temporary-accommodation",
+                probationDeliveryUnit = searchPdu.name,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                BedSearchResults(
+                  resultsRoomCount = 1,
+                  resultsPremisesCount = 1,
+                  resultsBedCount = 1,
+                  results = listOf(
+                    createTemporaryAccommodationBedSearchResult(
+                      premises,
+                      roomOne,
+                      bedOne,
+                      searchPdu.name,
+                      numberOfBeds = 3,
+                      numberOfBookedBeds = 2,
+                      premisesCharacteristics = listOf(),
+                      listOf(
+                        TemporaryAccommodationBedSearchResultOverlap(
+                          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+                          crn = overlappingBookingSameRoom.crn,
+                          sex = caseSummary.gender!!,
+                          days = 15,
+                          bookingId = overlappingBookingSameRoom.id,
+                          roomId = roomOne.id,
+                          assessmentId = assessment.id,
+                        ),
+                        TemporaryAccommodationBedSearchResultOverlap(
+                          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+                          crn = overlappingBookingDifferentRoom.crn,
+                          sex = caseSummary.gender!!,
+                          days = 7,
+                          bookingId = overlappingBookingDifferentRoom.id,
+                          roomId = roomTwo.id,
+                          assessmentId = assessment.id,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          )
+            )
+        }
       }
     }
 
@@ -475,136 +507,160 @@ class BedSearchTest : IntegrationTestBase() {
 
       `Given a User`(
         probationRegion = probationRegion,
-      ) { _, jwt ->
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+      ) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-        val premisesOne = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withName("Premises One")
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
-        }
+          val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
 
-        val premisesTwo = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withName("Premises Two")
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
-        }
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
 
-        val roomInPremisesOne = roomEntityFactory.produceAndPersist {
-          withPremises(premisesOne)
-        }
+          val premisesOne = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withName("Premises One")
+            withProbationRegion(probationRegion)
+            withLocalAuthorityArea(localAuthorityArea)
+            withProbationDeliveryUnit(searchPdu)
+            withProbationRegion(probationRegion)
+            withStatus(PropertyStatus.active)
+          }
 
-        val roomInPremisesTwo = roomEntityFactory.produceAndPersist {
-          withPremises(premisesTwo)
-        }
+          val premisesTwo = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withName("Premises Two")
+            withProbationRegion(probationRegion)
+            withLocalAuthorityArea(localAuthorityArea)
+            withProbationDeliveryUnit(searchPdu)
+            withProbationRegion(probationRegion)
+            withStatus(PropertyStatus.active)
+          }
 
-        val matchingBedInPremisesOne = bedEntityFactory.produceAndPersist {
-          withName("matching bed in premises one")
-          withRoom(roomInPremisesOne)
-        }
+          val roomInPremisesOne = roomEntityFactory.produceAndPersist {
+            withPremises(premisesOne)
+          }
 
-        val overlappingBedInPremisesOne = bedEntityFactory.produceAndPersist {
-          withName("overlapping bed in premises one")
-          withRoom(roomInPremisesOne)
-        }
+          val roomInPremisesTwo = roomEntityFactory.produceAndPersist {
+            withPremises(premisesTwo)
+          }
 
-        val matchingBedInPremisesTwo = bedEntityFactory.produceAndPersist {
-          withName("matching bed in premises two")
-          withRoom(roomInPremisesTwo)
-        }
+          val matchingBedInPremisesOne = bedEntityFactory.produceAndPersist {
+            withName("matching bed in premises one")
+            withRoom(roomInPremisesOne)
+          }
 
-        val overlappingBedInPremisesTwo = bedEntityFactory.produceAndPersist {
-          withName("overlapping bed in premises two")
-          withRoom(roomInPremisesTwo)
-        }
+          val overlappingBedInPremisesOne = bedEntityFactory.produceAndPersist {
+            withName("overlapping bed in premises one")
+            withRoom(roomInPremisesOne)
+          }
 
-        val overlappingBookingForBedInPremisesOne = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withPremises(premisesOne)
-          withBed(overlappingBedInPremisesOne)
-          withArrivalDate(LocalDate.parse("2023-07-15"))
-          withDepartureDate(LocalDate.parse("2023-08-15"))
-          withCrn(randomStringMultiCaseWithNumbers(16))
-          withId(UUID.randomUUID())
-        }
+          val matchingBedInPremisesTwo = bedEntityFactory.produceAndPersist {
+            withName("matching bed in premises two")
+            withRoom(roomInPremisesTwo)
+          }
 
-        val overlappingBookingForBedInPremisesTwo = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withPremises(premisesTwo)
-          withBed(overlappingBedInPremisesTwo)
-          withArrivalDate(LocalDate.parse("2023-08-25"))
-          withDepartureDate(LocalDate.parse("2023-09-25"))
-          withCrn(randomStringMultiCaseWithNumbers(16))
-          withId(UUID.randomUUID())
-        }
+          val overlappingBedInPremisesTwo = bedEntityFactory.produceAndPersist {
+            withName("overlapping bed in premises two")
+            withRoom(roomInPremisesTwo)
+          }
 
-        webTestClient.post()
-          .uri("/beds/search")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            TemporaryAccommodationBedSearchParameters(
-              startDate = LocalDate.parse("2023-08-01"),
-              durationDays = 31,
-              serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
-            ),
+          val overlappingBookingForBedInPremisesOne = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(application)
+            withPremises(premisesOne)
+            withBed(overlappingBedInPremisesOne)
+            withArrivalDate(LocalDate.parse("2023-07-15"))
+            withDepartureDate(LocalDate.parse("2023-08-15"))
+            withCrn(offenderDetails.otherIds.crn)
+            withId(UUID.randomUUID())
+          }
+
+          val overlappingBookingForBedInPremisesTwo = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(application)
+            withPremises(premisesTwo)
+            withBed(overlappingBedInPremisesTwo)
+            withArrivalDate(LocalDate.parse("2023-08-25"))
+            withDepartureDate(LocalDate.parse("2023-09-25"))
+            withCrn(offenderDetails.otherIds.crn)
+            withId(UUID.randomUUID())
+          }
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
           )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              BedSearchResults(
-                resultsRoomCount = 2,
-                resultsPremisesCount = 2,
-                resultsBedCount = 2,
-                results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
-                    premisesOne,
-                    roomInPremisesOne,
-                    matchingBedInPremisesOne,
-                    searchPdu.name,
-                    numberOfBeds = 2,
-                    numberOfBookedBeds = 1,
-                    premisesCharacteristics = listOf(),
-                    listOf(
-                      TemporaryAccommodationBedSearchResultOverlap(
-                        crn = overlappingBookingForBedInPremisesOne.crn,
-                        days = 15,
-                        bookingId = overlappingBookingForBedInPremisesOne.id,
-                        roomId = roomInPremisesOne.id,
+
+          webTestClient.post()
+            .uri("/beds/search")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              TemporaryAccommodationBedSearchParameters(
+                startDate = LocalDate.parse("2023-08-01"),
+                durationDays = 31,
+                serviceName = "temporary-accommodation",
+                probationDeliveryUnit = searchPdu.name,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                BedSearchResults(
+                  resultsRoomCount = 2,
+                  resultsPremisesCount = 2,
+                  resultsBedCount = 2,
+                  results = listOf(
+                    createTemporaryAccommodationBedSearchResult(
+                      premisesOne,
+                      roomInPremisesOne,
+                      matchingBedInPremisesOne,
+                      searchPdu.name,
+                      numberOfBeds = 2,
+                      numberOfBookedBeds = 1,
+                      premisesCharacteristics = listOf(),
+                      listOf(
+                        TemporaryAccommodationBedSearchResultOverlap(
+                          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+                          crn = overlappingBookingForBedInPremisesOne.crn,
+                          sex = caseSummary.gender!!,
+                          days = 15,
+                          bookingId = overlappingBookingForBedInPremisesOne.id,
+                          roomId = roomInPremisesOne.id,
+                          assessmentId = assessment.id,
+                        ),
                       ),
                     ),
-                  ),
-                  createTemporaryAccommodationBedSearchResult(
-                    premisesTwo,
-                    roomInPremisesTwo,
-                    matchingBedInPremisesTwo,
-                    searchPdu.name,
-                    numberOfBeds = 2,
-                    numberOfBookedBeds = 1,
-                    premisesCharacteristics = listOf(),
-                    overlaps = listOf(
-                      TemporaryAccommodationBedSearchResultOverlap(
-                        crn = overlappingBookingForBedInPremisesTwo.crn,
-                        days = 7,
-                        bookingId = overlappingBookingForBedInPremisesTwo.id,
-                        roomId = roomInPremisesTwo.id,
+                    createTemporaryAccommodationBedSearchResult(
+                      premisesTwo,
+                      roomInPremisesTwo,
+                      matchingBedInPremisesTwo,
+                      searchPdu.name,
+                      numberOfBeds = 2,
+                      numberOfBookedBeds = 1,
+                      premisesCharacteristics = listOf(),
+                      overlaps = listOf(
+                        TemporaryAccommodationBedSearchResultOverlap(
+                          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+                          crn = overlappingBookingForBedInPremisesTwo.crn,
+                          sex = caseSummary.gender!!,
+                          days = 7,
+                          bookingId = overlappingBookingForBedInPremisesTwo.id,
+                          roomId = roomInPremisesTwo.id,
+                          assessmentId = assessment.id,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            true,
-          )
+              true,
+            )
+        }
       }
     }
 
@@ -705,103 +761,115 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results which do not consider cancelled bookings as overlapping`() {
-      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
-        withProbationRegion(probationRegion)
-      }
-
       `Given a User`(
         probationRegion = probationRegion,
-      ) { _, jwt ->
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+      ) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
-        }
-
-        val roomOne = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val bedOne = bedEntityFactory.produceAndPersist {
-          withName("matching bed with no bookings")
-          withRoom(roomOne)
-        }
-
-        val bedTwo = bedEntityFactory.produceAndPersist {
-          withName("matching bed with a cancelled booking")
-          withRoom(roomOne)
-        }
-
-        val nonOverlappingBooking = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withPremises(premises)
-          withBed(bedTwo)
-          withArrivalDate(LocalDate.parse("2023-07-15"))
-          withDepartureDate(LocalDate.parse("2023-08-15"))
-          withCrn(randomStringMultiCaseWithNumbers(16))
-          withId(UUID.randomUUID())
-        }
-
-        nonOverlappingBooking.cancellations += cancellationEntityFactory.produceAndPersist {
-          withBooking(nonOverlappingBooking)
-          withYieldedReason {
-            cancellationReasonEntityFactory.produceAndPersist()
+          val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
           }
-        }
 
-        webTestClient.post()
-          .uri("/beds/search")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            TemporaryAccommodationBedSearchParameters(
-              startDate = LocalDate.parse("2023-08-01"),
-              durationDays = 31,
-              serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
-            ),
+          val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
+
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+            withLocalAuthorityArea(localAuthorityArea)
+            withProbationDeliveryUnit(searchPdu)
+            withProbationRegion(probationRegion)
+            withStatus(PropertyStatus.active)
+          }
+
+          val roomOne = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val bedOne = bedEntityFactory.produceAndPersist {
+            withName("matching bed with no bookings")
+            withRoom(roomOne)
+          }
+
+          val bedTwo = bedEntityFactory.produceAndPersist {
+            withName("matching bed with a cancelled booking")
+            withRoom(roomOne)
+          }
+
+          val nonOverlappingBooking = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(application)
+            withPremises(premises)
+            withBed(bedTwo)
+            withArrivalDate(LocalDate.parse("2023-07-15"))
+            withDepartureDate(LocalDate.parse("2023-08-15"))
+            withCrn(offenderDetails.otherIds.crn)
+            withId(UUID.randomUUID())
+          }
+
+          nonOverlappingBooking.cancellations += cancellationEntityFactory.produceAndPersist {
+            withBooking(nonOverlappingBooking)
+            withYieldedReason {
+              cancellationReasonEntityFactory.produceAndPersist()
+            }
+          }
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
           )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              BedSearchResults(
-                resultsRoomCount = 1,
-                resultsPremisesCount = 1,
-                resultsBedCount = 2,
-                results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
-                    premises,
-                    roomOne,
-                    bedOne,
-                    searchPdu.name,
-                    numberOfBeds = 2,
-                    numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(),
-                    overlaps = listOf(),
-                  ),
-                  createTemporaryAccommodationBedSearchResult(
-                    premises,
-                    roomOne,
-                    bedTwo,
-                    searchPdu.name,
-                    numberOfBeds = 2,
-                    numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(),
-                    overlaps = listOf(),
+
+          webTestClient.post()
+            .uri("/beds/search")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              TemporaryAccommodationBedSearchParameters(
+                startDate = LocalDate.parse("2023-09-01"),
+                durationDays = 31,
+                serviceName = "temporary-accommodation",
+                probationDeliveryUnit = searchPdu.name,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                BedSearchResults(
+                  resultsRoomCount = 1,
+                  resultsPremisesCount = 1,
+                  resultsBedCount = 2,
+                  results = listOf(
+                    createTemporaryAccommodationBedSearchResult(
+                      premises,
+                      roomOne,
+                      bedOne,
+                      searchPdu.name,
+                      numberOfBeds = 2,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                    createTemporaryAccommodationBedSearchResult(
+                      premises,
+                      roomOne,
+                      bedTwo,
+                      searchPdu.name,
+                      numberOfBeds = 2,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
                   ),
                 ),
               ),
-            ),
-            true,
-          )
-          .jsonPath("$.results[*].overlaps[*].bookingId").value(Matchers.not(nonOverlappingBooking.id))
-          .jsonPath("$.results[*].overlaps[*].roomId").value(Matchers.not(nonOverlappingBooking.bed?.room!!.id))
+              true,
+            )
+            .jsonPath("$.results[*].overlaps[*].bookingId").value(Matchers.not(nonOverlappingBooking.id))
+            .jsonPath("$.results[*].overlaps[*].roomId").value(Matchers.not(nonOverlappingBooking.bed?.room!!.id))
+        }
       }
     }
 
@@ -1843,6 +1911,32 @@ class BedSearchTest : IntegrationTestBase() {
         BedSearchAttributes.wheelchairAccessible -> beds = listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne, wheelchairAccessibleBedOne)
       }
       return beds
+    }
+
+    private fun createAssessment(user: UserEntity, crn: String): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
+      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+        withAddedAt(OffsetDateTime.now())
+      }
+
+      val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+        withCrn(crn)
+        withCreatedByUser(user)
+        withProbationRegion(user.probationRegion)
+        withApplicationSchema(applicationSchema)
+      }
+
+      val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+        withApplication(application)
+        withAssessmentSchema(assessmentSchema)
+      }
+      assessment.schemaUpToDate = true
+
+      return Pair(application, assessment)
     }
   }
 }
