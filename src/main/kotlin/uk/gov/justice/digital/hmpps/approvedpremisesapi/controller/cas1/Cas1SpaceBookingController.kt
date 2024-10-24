@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.util.UUID
 
 @Service
-class SpaceBookingController(
+class Cas1SpaceBookingController(
   private val userAccessService: UserAccessService,
   private val userService: UserService,
   private val offenderService: OffenderService,

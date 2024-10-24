@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 
 @Service
-class SpaceSearchController(
+class Cas1SpaceSearchController(
   private val spaceSearchService: Cas1SpaceSearchService,
   private val spaceSearchResultTransformer: Cas1SpaceSearchResultsTransformer,
 ) : SpaceSearchesCas1Delegate {

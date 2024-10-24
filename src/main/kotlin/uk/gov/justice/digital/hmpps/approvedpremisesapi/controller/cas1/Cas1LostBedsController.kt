@@ -25,7 +25,7 @@ import java.util.UUID
 
 @Deprecated(message = "List Beds functionality has been replaced with Out of Service Beds", replaceWith = ReplaceWith("OutOfServiceBedsController"))
 @Service
-class LostBedsController(
+class Cas1LostBedsController(
   private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
   private val bookingService: BookingService,
