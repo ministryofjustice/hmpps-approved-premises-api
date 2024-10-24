@@ -363,12 +363,14 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `transformJpaToAPIUserWithWorkload should return AP area`() {
+    fun `transformJpaToAPIUserWithWorkload should return areas`() {
       val apAreaEntity = ApAreaEntityFactory().produce()
+      val cruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
 
       val user = buildUserEntity(
         role = CAS1_MATCHER,
         apArea = apAreaEntity,
+        cruManagementArea = cruManagementArea,
       )
 
       val workload = UserWorkload(
@@ -382,6 +384,8 @@ class UserTransformerTest {
       val result = userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
 
       assertThat(result.apArea).isEqualTo(apArea)
+      assertThat(result.cruManagementArea!!.id).isEqualTo(cruManagementArea.id)
+      assertThat(result.cruManagementArea!!.name).isEqualTo(cruManagementArea.name)
     }
   }
 
