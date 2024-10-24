@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Tra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.tryGetDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 
 class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
   TransitionalAccommodationReferralReportDataAndPersonInfo,

@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 import java.util.UUID
 
 fun UUID.toShortBase58(): String {
@@ -41,11 +41,4 @@ fun PersonSummaryInfoResult.getPersonGender(): String {
     "Prefer to self-describe" -> "Prefer to self-describe"
     else -> this.tryGetDetails { it.profile?.genderIdentity }
   }.toString()
-}
-
-fun <V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
-  return when (this) {
-    is PersonSummaryInfoResult.Success.Full -> value(this.summary)
-    else -> null
-  }
 }
