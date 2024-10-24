@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface CacheRefreshExclusionsInmateDetailsRepository : JpaRepository<ExternalUserEntity, UUID> {
+interface CacheRefreshExclusionsInmateDetailsRepository : JpaRepository<CacheRefreshExclusionsInmateDetailsEntity, UUID> {
   @Query("SELECT DISTINCT(nomsNumber) FROM CacheRefreshExclusionsInmateDetailsEntity")
   fun getDistinctNomsNumbers(): List<String>
 }
