@@ -68,7 +68,7 @@ dependencies {
 
   implementation(kotlin("reflect"))
 
-  implementation("com.networknt:json-schema-validator:1.1.0")
+  implementation("com.networknt:json-schema-validator:1.5.2")
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.3")
 
