@@ -132,12 +132,25 @@ tasks {
   compileTestScala { enabled = false }
 }
 
+// this is deprecated in favour of bootRunDebug, which does not set an active profile
+// it will be removed once ap-tools has been updated to use bootRunDebug
 tasks.register("bootRunLocal") {
   group = "application"
   description = "Runs this project as a Spring Boot application with the local profile"
   doFirst {
     tasks.bootRun.configure {
       systemProperty("spring.profiles.active", "local")
+      jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
+    }
+  }
+  finalizedBy("bootRun")
+}
+
+tasks.register("bootRunDebug") {
+  group = "application"
+  description = "Runs this project as a Spring Boot application with debug configuration"
+  doFirst {
+    tasks.bootRun.configure {
       jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
     }
   }
