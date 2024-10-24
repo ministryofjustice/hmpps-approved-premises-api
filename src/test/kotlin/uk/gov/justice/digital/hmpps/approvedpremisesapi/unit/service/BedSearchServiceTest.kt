@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
@@ -17,9 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
@@ -29,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -41,6 +45,7 @@ class BedSearchServiceTest {
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
+  private val mockOffenderService = mockk<OffenderService>()
 
   private val bedSearchService = BedSearchService(
     mockBedSearchRepository,
@@ -49,6 +54,7 @@ class BedSearchServiceTest {
     mockBookingRepository,
     mockWorkingDayService,
     mockProbationDeliveryUnitRepository,
+    mockOffenderService,
   )
 
   @Test
@@ -626,9 +632,22 @@ class BedSearchServiceTest {
       .withProbationRegion(user.probationRegion)
       .produce()
 
+    val caseSummary = CaseSummaryFactory()
+      .produce()
+
+    val overlapBookingsSearchResult = TestOverlapBookingsSearchResult(
+      bookingId = UUID.randomUUID(),
+      crn = caseSummary.crn,
+      arrivalDate = LocalDate.parse("2023-02-15"),
+      departureDate = LocalDate.parse("2023-03-10"),
+      premisesId = UUID.randomUUID(),
+      roomId = UUID.randomUUID(),
+      assessmentId = UUID.randomUUID(),
+    )
+
     val repositorySearchResults = listOf(
       TemporaryAccommodationBedSearchResult(
-        premisesId = UUID.randomUUID(),
+        premisesId = overlapBookingsSearchResult.premisesId,
         premisesName = "Premises Name",
         premisesAddressLine1 = "1 Someplace",
         premisesAddressLine2 = null,
@@ -644,7 +663,7 @@ class BedSearchServiceTest {
         premisesNotes = "Premises notes",
         premisesBedCount = 3,
         bookedBedCount = 0,
-        roomId = UUID.randomUUID(),
+        roomId = overlapBookingsSearchResult.roomId,
         roomName = "Room Name",
         bedId = UUID.randomUUID(),
         bedName = "Bed Name",
@@ -656,11 +675,14 @@ class BedSearchServiceTest {
         ),
         overlaps = mutableListOf(
           TemporaryAccommodationBedSearchResultOverlap(
-            crn = "crn0123456789",
+            name = caseSummary.name.forename,
+            sex = caseSummary.gender,
+            crn = overlapBookingsSearchResult.crn,
             days = 7,
-            premisesId = UUID.randomUUID(),
-            roomId = UUID.randomUUID(),
-            bookingId = UUID.randomUUID(),
+            premisesId = overlapBookingsSearchResult.premisesId,
+            roomId = overlapBookingsSearchResult.roomId,
+            bookingId = overlapBookingsSearchResult.bookingId,
+            assessmentId = overlapBookingsSearchResult.assessmentId,
           ),
         ),
       ),
@@ -678,10 +700,13 @@ class BedSearchServiceTest {
 
     every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
     every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
+    every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns
+      listOf(overlapBookingsSearchResult)
     every {
       mockProbationDeliveryUnitRepository.findByName(probationDeliveryUnit.name)
     } returns probationDeliveryUnit
+    every { mockOffenderService.getPersonSummaryInfoResults(setOf(caseSummary.crn), any()) } returns
+      listOf(PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary))
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
@@ -874,6 +899,8 @@ class BedSearchServiceTest {
 
     every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
 
+    every { mockOffenderService.getPersonSummaryInfoResults(any(), any()) } returns listOf()
+
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
@@ -890,4 +917,15 @@ class BedSearchServiceTest {
 
     assertThat(result).isEqualTo(expectedResults)
   }
+
+  @Suppress("LongParameterList")
+  class TestOverlapBookingsSearchResult(
+    override val bookingId: UUID,
+    override val crn: String,
+    override val arrivalDate: LocalDate,
+    override val departureDate: LocalDate,
+    override val premisesId: UUID,
+    override val roomId: UUID,
+    override val assessmentId: UUID,
+  ) : OverlapBookingsSearchResult
 }
