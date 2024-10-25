@@ -9,25 +9,16 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MoveOnCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrived
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDeparted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedDestination
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -55,7 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -94,10 +84,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
@@ -111,7 +99,6 @@ class BookingService(
   private val applicationService: ApplicationService,
   private val workingDayService: WorkingDayService,
   private val placementRequestService: PlacementRequestService,
-  private val communityApiClient: CommunityApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -122,7 +109,6 @@ class BookingService(
   private val departureRepository: DepartureRepository,
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val destinationProviderRepository: DestinationProviderRepository,
   private val nonArrivalRepository: NonArrivalRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
@@ -724,128 +710,6 @@ class BookingService(
     return success(turnaround)
   }
 
-  @Transactional
-  fun createCas1Arrival(
-    user: UserEntity? = null,
-    booking: BookingEntity,
-    arrivalDateTime: Instant,
-    expectedDepartureDate: LocalDate,
-    notes: String?,
-    keyWorkerStaffCode: String?,
-  ) = validated<ArrivalEntity> {
-    val premises = booking.premises
-
-    if (premises !is ApprovedPremisesEntity) {
-      return generalError("CAS1 Arrivals cannot be set on non-CAS1 premises")
-    }
-
-    val occurredAt = OffsetDateTime.now()
-    val arrivalDate = LocalDate.ofInstant(arrivalDateTime, ZoneOffset.UTC)
-
-    if (booking.arrival != null) {
-      return generalError("This Booking already has an Arrival set")
-    }
-
-    if (expectedDepartureDate.isBefore(arrivalDate)) {
-      return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
-    }
-
-    if (keyWorkerStaffCode == null) {
-      return "$.keyWorkerStaffCode" hasSingleValidationError "empty"
-    }
-
-    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
-
-    if (staffMemberResponse !is AuthorisableActionResult.Success) {
-      return "$.keyWorkerStaffId" hasSingleValidationError "notFound"
-    }
-
-    updateBooking(booking.apply { this.keyWorkerStaffCode = keyWorkerStaffCode })
-
-    val arrivalEntity = arrivalRepository.save(
-      ArrivalEntity(
-        id = UUID.randomUUID(),
-        arrivalDate = arrivalDate,
-        arrivalDateTime = arrivalDateTime,
-        expectedDepartureDate = expectedDepartureDate,
-        notes = notes,
-        booking = booking,
-        createdAt = occurredAt,
-      ),
-    )
-
-    booking.arrivalDate = arrivalDate
-    booking.departureDate = expectedDepartureDate
-    booking.status = BookingStatus.arrived
-    updateBooking(booking)
-
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      val domainEventId = UUID.randomUUID()
-
-      val offenderDetails =
-        when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, true)) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          else -> null
-        }
-
-      val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(keyWorkerStaffCode!!)
-      val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
-        is ClientResult.Success -> keyWorkerStaffDetailsResult.body
-        is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
-      }
-
-      val (applicationId, eventNumber, submittedAt) = getApplicationDetailsForBooking(booking)
-      val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-      domainEventService.savePersonArrivedEvent(
-        emit = !arrivedAndDepartedDomainEventsDisabled,
-        domainEvent = DomainEvent(
-          id = domainEventId,
-          applicationId = applicationId,
-          crn = booking.crn,
-          nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-          occurredAt = arrivalDateTime,
-          bookingId = booking.id,
-          data = PersonArrivedEnvelope(
-            id = domainEventId,
-            timestamp = occurredAt.toInstant(),
-            eventType = EventType.personArrived,
-            eventDetails = PersonArrived(
-              applicationId = applicationId,
-              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-              bookingId = booking.id,
-              personReference = PersonReference(
-                crn = booking.crn,
-                noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
-              ),
-              deliusEventNumber = eventNumber,
-              premises = Premises(
-                id = approvedPremises.id,
-                name = approvedPremises.name,
-                apCode = approvedPremises.apCode,
-                legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-              ),
-              applicationSubmittedOn = submittedAt.toLocalDate(),
-              keyWorker = StaffMember(
-                staffCode = keyWorkerStaffCode,
-                staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
-                forenames = keyWorkerStaffDetails.staff.forenames,
-                surname = keyWorkerStaffDetails.staff.surname,
-                username = null,
-              ),
-              arrivedAt = arrivalDateTime,
-              expectedDepartureOn = expectedDepartureDate,
-              notes = notes,
-            ),
-          ),
-        ),
-      )
-    }
-
-    return success(arrivalEntity)
-  }
-
   @SuppressWarnings("UnusedParameter")
   @Transactional
   fun createArrival(
@@ -1278,176 +1142,13 @@ class BookingService(
     dateTime: OffsetDateTime,
     reasonId: UUID,
     moveOnCategoryId: UUID,
-    destinationProviderId: UUID?,
     notes: String?,
   ) = when (booking.premises) {
-    is ApprovedPremisesEntity ->
-      createCas1Departure(user, booking, dateTime, reasonId, moveOnCategoryId, destinationProviderId, notes)
-
     is TemporaryAccommodationPremisesEntity ->
       createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes, user)
 
     else ->
       throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
-  }
-
-  private fun createCas1Departure(
-    user: UserEntity?,
-    booking: BookingEntity,
-    dateTime: OffsetDateTime,
-    reasonId: UUID,
-    moveOnCategoryId: UUID,
-    destinationProviderId: UUID?,
-    notes: String?,
-  ) = validated<DepartureEntity> {
-    if (booking.premises !is ApprovedPremisesEntity) {
-      throw RuntimeException("Only CAS1 bookings are supported")
-    }
-
-    val occurredAt = OffsetDateTime.now()
-
-    if (booking.departure != null) {
-      return generalError("This Booking already has a Departure set")
-    }
-
-    if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
-      "$.dateTime" hasValidationError "beforeBookingArrivalDate"
-    }
-
-    val reason = departureReasonRepository.findByIdOrNull(reasonId)
-    if (reason == null) {
-      "$.reasonId" hasValidationError "doesNotExist"
-    } else if (!reason.serviceScopeMatches(booking.service)) {
-      "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
-    }
-
-    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
-    if (moveOnCategory == null) {
-      "$.moveOnCategoryId" hasValidationError "doesNotExist"
-    } else if (!moveOnCategory.serviceScopeMatches(booking.service)) {
-      "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
-    }
-
-    val destinationProvider = when (destinationProviderId) {
-      null -> {
-        "$.destinationProviderId" hasValidationError "empty"
-        null
-      }
-
-      else -> {
-        val result = destinationProviderRepository.findByIdOrNull(destinationProviderId)
-        if (result == null) {
-          "$.destinationProviderId" hasValidationError "doesNotExist"
-        }
-        result
-      }
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-
-    val departureEntity = departureRepository.save(
-      DepartureEntity(
-        id = UUID.randomUUID(),
-        dateTime = dateTime,
-        reason = reason!!,
-        moveOnCategory = moveOnCategory!!,
-        destinationProvider = destinationProvider,
-        notes = notes,
-        booking = booking,
-        createdAt = OffsetDateTime.now(),
-      ),
-    )
-
-    booking.departureDate = dateTime.toLocalDate()
-    booking.status = BookingStatus.departed
-    updateBooking(booking)
-    booking.departures += departureEntity
-
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      val domainEventId = UUID.randomUUID()
-      val user = user as UserEntity
-
-      val offenderDetails = when (
-        val offenderDetailsResult = offenderService.getOffenderByCrn(
-          booking.crn,
-          user.deliusUsername,
-          user.hasQualification(UserQualification.LAO),
-        )
-      ) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
-        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
-      }
-
-      val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(booking.keyWorkerStaffCode!!)
-      val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
-        is ClientResult.Success -> keyWorkerStaffDetailsResult.body
-        is ClientResult.Failure -> keyWorkerStaffDetailsResult.throwException()
-      }
-
-      val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
-      val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-      domainEventService.savePersonDepartedEvent(
-        emit = !arrivedAndDepartedDomainEventsDisabled,
-        domainEvent = DomainEvent(
-          id = domainEventId,
-          applicationId = applicationId,
-          crn = booking.crn,
-          nomsNumber = offenderDetails.otherIds.nomsNumber,
-          occurredAt = dateTime.toInstant(),
-          bookingId = booking.id,
-          data = PersonDepartedEnvelope(
-            id = domainEventId,
-            timestamp = occurredAt.toInstant(),
-            eventType = EventType.personDeparted,
-            eventDetails = PersonDeparted(
-              applicationId = applicationId,
-              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-              bookingId = booking.id,
-              personReference = PersonReference(
-                crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-              ),
-              deliusEventNumber = eventNumber,
-              premises = Premises(
-                id = approvedPremises.id,
-                name = approvedPremises.name,
-                apCode = approvedPremises.apCode,
-                legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-              ),
-              keyWorker = StaffMember(
-                staffCode = keyWorkerStaffDetails.staffCode,
-                staffIdentifier = keyWorkerStaffDetails.staffIdentifier,
-                forenames = keyWorkerStaffDetails.staff.forenames,
-                surname = keyWorkerStaffDetails.staff.surname,
-                username = null,
-              ),
-              departedAt = dateTime.toInstant(),
-              reason = reason.name,
-              legacyReasonCode = reason.legacyDeliusReasonCode!!,
-              destination = PersonDepartedDestination(
-                moveOnCategory = MoveOnCategory(
-                  description = moveOnCategory.name,
-                  legacyMoveOnCategoryCode = moveOnCategory.legacyDeliusCategoryCode!!,
-                  id = moveOnCategory.id,
-                ),
-                destinationProvider = DestinationProvider(
-                  description = destinationProvider!!.name,
-                  id = destinationProvider.id,
-                ),
-                premises = null,
-              ),
-            ),
-          ),
-        ),
-      )
-    }
-
-    return success(departureEntity)
   }
 
   private fun createCas3Departure(

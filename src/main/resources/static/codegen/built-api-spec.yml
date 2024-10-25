@@ -512,7 +512,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts an arrival to a specified approved premises booking
+      summary: Posts an arrival to a specified booking
       parameters:
         - name: premisesId
           in: path
@@ -671,7 +671,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts a departure to a specified approved premises booking
+      summary: Posts a departure to a specified booking
       parameters:
         - name: premisesId
           in: path
@@ -5333,19 +5333,8 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          CAS1: '#/components/schemas/NewCas1Arrival'
           CAS2: '#/components/schemas/NewCas2Arrival'
           CAS3: '#/components/schemas/NewCas3Arrival'
-    NewCas1Arrival:
-      allOf:
-        - $ref: '#/components/schemas/NewArrival'
-        - type: object
-          properties:
-            arrivalDateTime:
-              type: string
-              format: date-time
-          required:
-            - arrivalDateTime
     NewCas2Arrival:
       allOf:
         - $ref: '#/components/schemas/NewArrival'
