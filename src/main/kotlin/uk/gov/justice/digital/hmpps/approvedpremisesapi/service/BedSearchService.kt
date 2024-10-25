@@ -188,7 +188,7 @@ class BedSearchService(
         val crns = overlappedBookings.map { it.crn }.distinct().toSet()
         val offenderSummaries = offenderService.getPersonSummaryInfoResults(
           crns = crns.toSet(),
-          limitedAccessStrategy = user.casLimitedAccessStrategy(),
+          limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
         )
 
         val groupedOverlappedBookings = overlappedBookings
