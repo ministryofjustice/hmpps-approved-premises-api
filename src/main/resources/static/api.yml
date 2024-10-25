@@ -510,7 +510,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts an arrival to a specified approved premises booking
+      summary: Posts an arrival to a specified booking
       parameters:
         - name: premisesId
           in: path
@@ -669,7 +669,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts a departure to a specified approved premises booking
+      summary: Posts a departure to a specified booking
       parameters:
         - name: premisesId
           in: path
