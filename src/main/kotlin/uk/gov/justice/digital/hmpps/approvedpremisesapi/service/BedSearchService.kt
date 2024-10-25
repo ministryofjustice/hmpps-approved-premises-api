@@ -104,47 +104,33 @@ class BedSearchService(
     )
   }
 
-  @Deprecated("After the UI work finish the property probationDeliveryUnit will be removed from the bedspace search API it will be replaced with probationDeliveryUnits")
   @Suppress("detekt:CyclomaticComplexMethod")
   fun findTemporaryAccommodationBeds(
     user: UserEntity,
-    probationDeliveryUnit: String?,
-    probationDeliveryUnits: List<UUID>?,
+    probationDeliveryUnits: List<UUID>,
     startDate: LocalDate,
     durationInDays: Int,
     propertyBedAttributes: List<BedSearchAttributes>?,
   ): AuthorisableActionResult<ValidatableActionResult<List<TemporaryAccommodationBedSearchResult>>> {
     return AuthorisableActionResult.Success(
       validated {
-        val probationDeliveryUnitIds: MutableList<UUID> = mutableListOf()
+        val probationDeliveryUnitIds = mutableListOf<UUID>()
 
         if (durationInDays < 1) {
           "$.durationDays" hasValidationError "mustBeAtLeast1"
         }
 
-        when (probationDeliveryUnits) {
-          null -> {
-            if (probationDeliveryUnit.isNullOrBlank()) {
-              "$.probationDeliveryUnit" hasValidationError "empty"
+        if (probationDeliveryUnits.isEmpty()) {
+          "$.probationDeliveryUnits" hasValidationError "empty"
+        } else if (probationDeliveryUnits.size > MAX_NUMBER_PDUS) {
+          "$.probationDeliveryUnits" hasValidationError "maxNumberProbationDeliveryUnits"
+        } else {
+          probationDeliveryUnits.mapIndexed { index, id ->
+            val probationDeliveryUnitEntityExist = probationDeliveryUnitRepository.existsById(id)
+            if (!probationDeliveryUnitEntityExist) {
+              "$.probationDeliveryUnits[$index]" hasValidationError "doesNotExist"
             } else {
-              val probationDeliveryUnitEntity = probationDeliveryUnitRepository.findByName(probationDeliveryUnit)
-              probationDeliveryUnitEntity?.let { probationDeliveryUnitIds.add(it.id) }
-            }
-          }
-          else -> {
-            if (probationDeliveryUnits.isEmpty()) {
-              "$.probationDeliveryUnits" hasValidationError "empty"
-            } else if (probationDeliveryUnits.size > MAX_NUMBER_PDUS) {
-              "$.probationDeliveryUnits" hasValidationError "maxNumberProbationDeliveryUnits"
-            } else {
-              probationDeliveryUnits.mapIndexed { index, id ->
-                val probationDeliveryUnitEntityExist = probationDeliveryUnitRepository.existsById(id)
-                if (!probationDeliveryUnitEntityExist) {
-                  "$.probationDeliveryUnits[$index]" hasValidationError "doesNotExist"
-                } else {
-                  probationDeliveryUnitIds.add(id)
-                }
-              }
+              probationDeliveryUnitIds.add(id)
             }
           }
         }

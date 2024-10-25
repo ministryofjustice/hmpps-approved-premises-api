@@ -222,7 +222,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2023-03-23"),
               durationDays = 7,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
             ),
           )
           .exchange()
@@ -302,7 +302,7 @@ class BedSearchTest : IntegrationTestBase() {
           jwt,
           LocalDate.parse("2023-03-23"),
           7,
-          searchPdu.name,
+          searchPdu.id,
         )
       }
     }
@@ -356,7 +356,7 @@ class BedSearchTest : IntegrationTestBase() {
           jwt,
           LocalDate.parse("2023-03-21"),
           7,
-          searchPdu.name,
+          searchPdu.id,
         )
       }
     }
@@ -448,7 +448,7 @@ class BedSearchTest : IntegrationTestBase() {
                 startDate = LocalDate.parse("2023-08-01"),
                 durationDays = 31,
                 serviceName = "temporary-accommodation",
-                probationDeliveryUnit = searchPdu.name,
+                probationDeliveryUnits = listOf(searchPdu.id),
               ),
             )
             .exchange()
@@ -601,7 +601,7 @@ class BedSearchTest : IntegrationTestBase() {
                 startDate = LocalDate.parse("2023-08-01"),
                 durationDays = 31,
                 serviceName = "temporary-accommodation",
-                probationDeliveryUnit = searchPdu.name,
+                probationDeliveryUnits = listOf(searchPdu.id),
               ),
             )
             .exchange()
@@ -715,7 +715,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2023-08-01"),
               durationDays = 31,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
             ),
           )
           .exchange()
@@ -828,7 +828,7 @@ class BedSearchTest : IntegrationTestBase() {
                 startDate = LocalDate.parse("2023-09-01"),
                 durationDays = 31,
                 serviceName = "temporary-accommodation",
-                probationDeliveryUnit = searchPdu.name,
+                probationDeliveryUnits = listOf(searchPdu.id),
               ),
             )
             .exchange()
@@ -904,7 +904,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2024-08-27"),
               durationDays = 84,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
               attributes = listOf(BedSearchAttributes.sharedProperty),
             ),
           )
@@ -1011,7 +1011,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2024-08-27"),
               durationDays = 84,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
               attributes = listOf(BedSearchAttributes.singleOccupancy),
             ),
           )
@@ -1118,7 +1118,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2024-08-27"),
               durationDays = 84,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
               attributes = listOf(BedSearchAttributes.wheelchairAccessible),
             ),
           )
@@ -1201,7 +1201,7 @@ class BedSearchTest : IntegrationTestBase() {
         val searchStartDate = LocalDate.parse("2023-03-23")
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, searchStartDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.name)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
@@ -1213,7 +1213,7 @@ class BedSearchTest : IntegrationTestBase() {
         val bedEndDate = searchStartDate.plusDays(2)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.name)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
@@ -1225,7 +1225,7 @@ class BedSearchTest : IntegrationTestBase() {
         val bedEndDate = searchStartDate.plusDays(durationDays.toLong() - 1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.name)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
@@ -1237,7 +1237,7 @@ class BedSearchTest : IntegrationTestBase() {
         val bedEndDate = searchStartDate.minusDays(1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.name)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
@@ -1289,7 +1289,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = searchStartDate,
               durationDays = durationDays,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
             ),
           )
           .exchange()
@@ -1359,7 +1359,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = searchStartDate,
               durationDays = durationDays,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
             ),
           )
           .exchange()
@@ -1398,7 +1398,7 @@ class BedSearchTest : IntegrationTestBase() {
         val bedEndDate = searchStartDate.plusDays(1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.name)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
@@ -1487,7 +1487,7 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = searchStartDate,
               durationDays = durationDays,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = searchPdu.name,
+              probationDeliveryUnits = listOf(searchPdu.id),
             ),
           )
           .exchange()
@@ -1595,7 +1595,6 @@ class BedSearchTest : IntegrationTestBase() {
               startDate = searchStartDate,
               durationDays = durationDays,
               serviceName = "temporary-accommodation",
-              probationDeliveryUnit = null,
               probationDeliveryUnits = listOf(pduOne.id, pduThree.id),
             ),
           )
@@ -1652,7 +1651,7 @@ class BedSearchTest : IntegrationTestBase() {
       jwt: String,
       searchStartDate: LocalDate,
       durationDays: Int,
-      pduName: String,
+      pduId: UUID,
     ) {
       webTestClient.post()
         .uri("/beds/search")
@@ -1662,7 +1661,7 @@ class BedSearchTest : IntegrationTestBase() {
             startDate = searchStartDate,
             durationDays = durationDays,
             serviceName = "temporary-accommodation",
-            probationDeliveryUnit = pduName,
+            probationDeliveryUnits = listOf(pduId),
           ),
         )
         .exchange()

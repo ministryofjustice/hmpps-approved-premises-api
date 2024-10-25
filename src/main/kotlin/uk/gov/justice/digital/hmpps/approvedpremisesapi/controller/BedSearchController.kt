@@ -35,7 +35,6 @@ class BedSearchController(
       )
       is TemporaryAccommodationBedSearchParameters -> bedSearchService.findTemporaryAccommodationBeds(
         user = user,
-        probationDeliveryUnit = bedSearchParameters.probationDeliveryUnit,
         probationDeliveryUnits = bedSearchParameters.probationDeliveryUnits,
         startDate = bedSearchParameters.startDate,
         durationInDays = bedSearchParameters.durationDays,
