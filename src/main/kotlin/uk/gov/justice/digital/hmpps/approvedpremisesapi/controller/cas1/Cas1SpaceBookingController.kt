@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.util.UUID
 
 @Service
-class SpaceBookingController(
+class Cas1SpaceBookingController(
   private val userAccessService: UserAccessService,
   private val userService: UserService,
   private val offenderService: OffenderService,
@@ -49,7 +49,7 @@ class SpaceBookingController(
     return super.getSpaceBookingTimeline(premisesId, bookingId)
   }
 
-  override fun placementRequestsPlacementRequestIdSpaceBookingsPost(
+  override fun createSpaceBooking(
     placementRequestId: UUID,
     body: NewCas1SpaceBooking,
   ): ResponseEntity<Cas1SpaceBooking> {
@@ -68,7 +68,7 @@ class SpaceBookingController(
     return ResponseEntity.ok(toCas1SpaceBooking(booking))
   }
 
-  override fun premisesPremisesIdSpaceBookingsGet(
+  override fun getSpaceBookings(
     premisesId: UUID,
     residency: Cas1SpaceBookingResidency?,
     crnOrName: String?,
@@ -125,7 +125,7 @@ class SpaceBookingController(
       .body(toCas1SpaceBooking(booking))
   }
 
-  override fun premisesPremisesIdSpaceBookingsBookingIdArrivalPost(
+  override fun recordArrival(
     premisesId: UUID,
     bookingId: UUID,
     cas1NewArrival: Cas1NewArrival,
@@ -142,7 +142,7 @@ class SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun premisesPremisesIdSpaceBookingsBookingIdDeparturePost(
+  override fun recordDeparture(
     premisesId: UUID,
     bookingId: UUID,
     cas1NewDeparture: Cas1NewDeparture,
@@ -159,7 +159,7 @@ class SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun premisesPremisesIdSpaceBookingsBookingIdKeyworkerPost(
+  override fun assignKeyworker(
     premisesId: UUID,
     bookingId: UUID,
     cas1AssignKeyWorker: Cas1AssignKeyWorker,
