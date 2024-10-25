@@ -505,15 +505,14 @@ class BedSearchServiceTest {
       .produce()
 
     every {
-      mockProbationDeliveryUnitRepository.findByName(probationDeliveryUnit.name)
-    } returns probationDeliveryUnit
+      mockProbationDeliveryUnitRepository.existsById(probationDeliveryUnit.id)
+    } returns true
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
-      probationDeliveryUnit = probationDeliveryUnit.name,
-      probationDeliveryUnits = null,
+      probationDeliveryUnits = listOf(probationDeliveryUnit.id),
       propertyBedAttributes = null,
     )
 
@@ -523,29 +522,6 @@ class BedSearchServiceTest {
     val validationError = authorisableResult.entity as ValidatableActionResult.FieldValidationError
 
     assertThat(validationError.validationMessages["$.durationDays"]).isEqualTo("mustBeAtLeast1")
-  }
-
-  @Test
-  fun `findTemporaryAccommodationBeds returns FieldValidationError when no pdu is provided`() {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val result = bedSearchService.findTemporaryAccommodationBeds(
-      user = user,
-      startDate = LocalDate.parse("2024-08-27"),
-      durationInDays = 16,
-      probationDeliveryUnit = null,
-      probationDeliveryUnits = null,
-      propertyBedAttributes = null,
-    )
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationError = result.entity as ValidatableActionResult.FieldValidationError
-
-    assertThat(validationError.validationMessages["$.probationDeliveryUnit"]).isEqualTo("empty")
   }
 
   @Test
@@ -566,7 +542,6 @@ class BedSearchServiceTest {
       user = user,
       startDate = LocalDate.parse("2024-08-22"),
       durationInDays = 30,
-      probationDeliveryUnit = null,
       probationDeliveryUnits = probationDeliveryUnitIds,
       propertyBedAttributes = null,
     )
@@ -608,7 +583,6 @@ class BedSearchServiceTest {
       user = user,
       startDate = LocalDate.parse("2024-08-28"),
       durationInDays = 84,
-      probationDeliveryUnit = null,
       probationDeliveryUnits = probationDeliveryUnitIds,
       propertyBedAttributes = null,
     )
@@ -703,17 +677,16 @@ class BedSearchServiceTest {
     every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns
       listOf(overlapBookingsSearchResult)
     every {
-      mockProbationDeliveryUnitRepository.findByName(probationDeliveryUnit.name)
-    } returns probationDeliveryUnit
+      mockProbationDeliveryUnitRepository.existsById(probationDeliveryUnit.id)
+    } returns true
     every { mockOffenderService.getPersonSummaryInfoResults(setOf(caseSummary.crn), any()) } returns
       listOf(PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary))
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
+      probationDeliveryUnits = listOf(probationDeliveryUnit.id),
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      probationDeliveryUnit = probationDeliveryUnit.name,
-      probationDeliveryUnits = null,
       propertyBedAttributes = null,
     )
 
@@ -901,12 +874,15 @@ class BedSearchServiceTest {
 
     every { mockOffenderService.getPersonSummaryInfoResults(any(), any()) } returns listOf()
 
+    every {
+      mockProbationDeliveryUnitRepository.existsById(probationDeliveryUnit.id)
+    } returns true
+
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
       user = user,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      probationDeliveryUnit = probationDeliveryUnit.name,
-      probationDeliveryUnits = null,
+      probationDeliveryUnits = listOf(probationDeliveryUnit.id),
       propertyBedAttributes = null,
     )
 

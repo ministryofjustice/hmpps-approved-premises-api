@@ -4347,9 +4347,6 @@ components:
         - $ref: '#/components/schemas/BedSearchParameters'
         - type: object
           properties:
-            probationDeliveryUnit:
-              type: string
-              description: The pdu to search within
             probationDeliveryUnits:
               type: array
               description: The list of pdus Ids to search within
@@ -4361,6 +4358,8 @@ components:
               description: Bedspace and property attributes to filter on
               items:
                 $ref: "#/components/schemas/BedSearchAttributes"
+          required:
+            - probationDeliveryUnits
     BedSearchResults:
       type: object
       properties:
