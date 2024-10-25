@@ -69,12 +69,32 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     endDate: LocalDate,
   ): List<BookingSummaryForAvailability>
 
-  @Query("SELECT b FROM BookingEntity b WHERE b.premises.id IN :premisesIds AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND SIZE(b.cancellations) = 0")
+  @Query(
+    """
+    SELECT
+        bk.id as bookingId,
+        bk.crn as crn,
+        bk.arrival_date as arrivalDate,
+        bk.departure_date as departureDate,
+        bk.premises_id as premisesId,
+        r.id as roomId,
+        a.id as assessmentId
+    FROM bookings bk
+             INNER JOIN premises p ON bk.premises_id = p.id
+             INNER JOIN beds b ON bk.bed_id = b.id
+             INNER JOIN rooms r ON b.room_id = r.id
+             LEFT JOIN applications ap ON bk.application_id = ap.id
+             LEFT JOIN assessments a ON ap.id = a.application_id
+             LEFT JOIN cancellations c ON b.id = c.booking_id
+    WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
+    """,
+    nativeQuery = true,
+  )
   fun findAllNotCancelledByPremisesIdsAndOverlappingDate(
     premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
-  ): List<BookingEntity>
+  ): List<OverlapBookingsSearchResult>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
@@ -418,4 +438,14 @@ interface BookingSearchResult {
   fun getRoomName(): String
   fun getBedId(): UUID
   fun getBedName(): String
+}
+
+interface OverlapBookingsSearchResult {
+  val bookingId: UUID
+  val crn: String
+  val arrivalDate: LocalDate
+  val departureDate: LocalDate
+  val premisesId: UUID
+  val roomId: UUID
+  val assessmentId: UUID
 }

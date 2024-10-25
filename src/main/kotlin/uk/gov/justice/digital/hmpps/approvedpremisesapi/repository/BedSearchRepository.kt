@@ -431,9 +431,12 @@ data class CharacteristicNames(
 )
 
 data class TemporaryAccommodationBedSearchResultOverlap(
+  val name: String,
   val crn: String,
+  val sex: String?,
   val days: Int,
   val premisesId: UUID,
   val roomId: UUID,
   val bookingId: UUID,
+  val assessmentId: UUID?,
 )

@@ -5549,7 +5549,11 @@ components:
     TemporaryAccommodationBedSearchResultOverlap:
       type: object
       properties:
+        name:
+          type: string
         crn:
+          type: string
+        sex:
           type: string
         days:
           type: integer
@@ -5559,7 +5563,11 @@ components:
         roomId:
           type: string
           format: uuid
+        assessmentId:
+          type: string
+          format: uuid
       required:
+        - name
         - crn
         - days
         - bookingId

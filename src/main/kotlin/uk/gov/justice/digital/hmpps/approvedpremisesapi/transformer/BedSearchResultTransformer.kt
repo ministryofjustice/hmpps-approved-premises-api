@@ -93,10 +93,13 @@ class BedSearchResultTransformer {
       serviceName = ServiceName.temporaryAccommodation,
       overlaps = result.overlaps.map {
         ApiTemporaryAccommodationBedSearchResultOverlap(
+          name = it.name,
           crn = it.crn,
           days = it.days,
           bookingId = it.bookingId,
           roomId = it.roomId,
+          sex = it.sex,
+          assessmentId = it.assessmentId,
         )
       },
     )

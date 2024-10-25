@@ -4,12 +4,14 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
@@ -19,6 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService.Constants.MAX_NUMBER_PDUS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.countOverlappingDays
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 import java.time.LocalDate
 import java.util.UUID
 
@@ -30,6 +34,7 @@ class BedSearchService(
   private val bookingRepository: BookingRepository,
   private val workingDayService: WorkingDayService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
+  private val offenderService: OffenderService,
 ) {
   object Constants {
     const val MAX_NUMBER_PDUS = 5
@@ -180,8 +185,14 @@ class BedSearchService(
 
         val distinctIds = results.map { it.premisesId }.distinct()
         val overlappedBookings = bookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(distinctIds, startDate, endDate)
+        val crns = overlappedBookings.map { it.crn }.distinct().toSet()
+        val offenderSummaries = offenderService.getPersonSummaryInfoResults(
+          crns = crns.toSet(),
+          limitedAccessStrategy = user.casLimitedAccessStrategy(),
+        )
+
         val groupedOverlappedBookings = overlappedBookings
-          .map { transformBookingToOverlap(it, startDate, endDate) }
+          .map { transformBookingToOverlap(it, startDate, endDate, offenderSummaries.forCrn(it.crn)) }
           .groupBy { it.premisesId }
 
         results.forEach {
@@ -196,16 +207,24 @@ class BedSearchService(
     )
   }
 
-  fun transformBookingToOverlap(booking: BookingEntity, startDate: LocalDate, endDate: LocalDate): TemporaryAccommodationBedSearchResultOverlap {
+  fun transformBookingToOverlap(
+    overlappedBooking: OverlapBookingsSearchResult,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    personSummaryInfo: PersonSummaryInfoResult,
+  ): TemporaryAccommodationBedSearchResultOverlap {
     val queryDuration = startDate..endDate
-    val bookingDuration = booking.arrivalDate..booking.departureDate
+    val bookingDuration = overlappedBooking.arrivalDate..overlappedBooking.departureDate
 
     return TemporaryAccommodationBedSearchResultOverlap(
-      crn = booking.crn,
+      name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
+      crn = overlappedBooking.crn,
+      sex = personSummaryInfo.tryGetDetails { it.gender },
       days = bookingDuration countOverlappingDays queryDuration,
-      premisesId = booking.premises.id,
-      roomId = booking.bed?.room!!.id,
-      bookingId = booking.id,
+      premisesId = overlappedBooking.premisesId,
+      roomId = overlappedBooking.roomId,
+      bookingId = overlappedBooking.bookingId,
+      assessmentId = overlappedBooking.assessmentId,
     )
   }
 }
