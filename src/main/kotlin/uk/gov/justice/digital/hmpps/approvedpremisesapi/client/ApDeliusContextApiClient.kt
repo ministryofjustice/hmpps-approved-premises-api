@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.IS_NOT_SUCCESSFUL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
@@ -61,7 +61,7 @@ class ApDeliusContextApiClient(
     path = "/staff/$username"
   }
 
-  fun getDocuments(crn: String) = getRequest<List<Document>> {
+  fun getDocuments(crn: String) = getRequest<List<APDeliusDocument>> {
     path = "/documents/$crn/all"
   }
 

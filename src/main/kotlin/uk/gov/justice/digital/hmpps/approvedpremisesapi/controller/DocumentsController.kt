@@ -8,7 +8,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.DocumentsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -82,7 +82,7 @@ class DocumentsController(
   }
 
   private fun getDocumentFileName(documentsMetaData: List<*>, documentId: UUID): String {
-    val doc = documentsMetaData.firstOrNull { doc -> (doc as Document).id == documentId.toString() } as Document?
+    val doc = documentsMetaData.firstOrNull { doc -> (doc as APDeliusDocument).id == documentId.toString() } as APDeliusDocument?
       ?: throw NotFoundProblem(documentId, "Document")
     return doc.filename
   }

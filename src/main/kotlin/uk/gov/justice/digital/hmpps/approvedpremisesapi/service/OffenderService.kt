@@ -25,9 +25,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Convicti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -641,7 +641,7 @@ class OffenderService(
     return AuthorisableActionResult.Success(documents)
   }
 
-  fun getDocumentsFromApDeliusApi(crn: String): AuthorisableActionResult<List<Document>> {
+  fun getDocumentsFromApDeliusApi(crn: String): AuthorisableActionResult<List<APDeliusDocument>> {
     val documentsResult = apDeliusContextApiClient.getDocuments(crn)
 
     val documents = when (documentsResult) {

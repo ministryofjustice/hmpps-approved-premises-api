@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ContentDisposition
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFromDeliusApiFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
@@ -14,9 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
@@ -33,7 +33,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application documents returns 200`() {
+  fun `Get application documents - with get-documents-from-ap-delius feature-flag off - returns 200`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -78,7 +78,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              documentTransformer.transformToApiUnfiltered(groupedDocuments),
+              documentTransformer.transformToApi(groupedDocuments),
             ),
           )
       }
@@ -86,56 +86,31 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application documents for Temporary Accommodation returns 200`() {
+  fun `Get application documents - with get-documents-from-ap-delius feature-flag on - returns 200`() {
+    mockFeatureFlagService.setFlag("get-documents-from-ap-delius", true)
+
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withConvictionId(12345)
-          withApplicationSchema(temporaryAccommodationApplicationJsonSchemaRepository.findAll().first())
-          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
 
-        val groupedDocuments = GroupedDocumentsFactory()
-          .withOffenderLevelDocument(
-            DocumentFactory()
-              .withId("b0df5ec4-5685-4b02-8a95-91b6da80156f")
-              .withDocumentName("offender_level_doc.pdf")
-              .withTypeCode("TYPE-1")
-              .withTypeDescription("Type 1 Description")
-              .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
-              .withExtendedDescription("Extended Description 1")
-              .produce(),
-          )
-          .withConvictionLevelDocument(
-            "12345",
-            DocumentFactory()
-              .withId("457af8a5-82b1-449a-ad03-032b39435865")
-              .withDocumentName("conviction_level_doc.pdf")
-              .withTypeCode("TYPE-2")
-              .withTypeDescription("Type 2 Description")
-              .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-              .withExtendedDescription("Extended Description 2")
-              .produce(),
-          )
-          .produce()
+        val convictionLevelDocId = UUID.randomUUID()
+        val documents = stubDocumentsFromDelius(convictionLevelDocId)
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        ApDeliusContext_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
           .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              documentTransformer.transformToApiUnfiltered(groupedDocuments),
-            ),
-          )
+          .json(objectMapper.writeValueAsString(documentTransformer.transformToApi(documents)))
       }
     }
   }
@@ -308,7 +283,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<Document> {
+  private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<APDeliusDocument> {
     return listOf(
       DocumentFromDeliusApiFactory()
         .withId(UUID.randomUUID().toString())
@@ -318,8 +293,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
         .withFilename("offender_level_doc.pdf")
         .withTypeCode("TYPE-1")
         .withTypeDescription("Type 1 Description")
-        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00"))
-        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00"))
+        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.systemDefault()))
+        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.systemDefault()))
         .produce(),
       DocumentFromDeliusApiFactory()
         .withId(convictionLevelDocId.toString())
@@ -329,8 +304,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
         .withFilename("conviction_level_doc.pdf")
         .withTypeCode("TYPE-2")
         .withTypeDescription("Type 2 Description")
-        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00"))
-        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00"))
+        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00").atZone(ZoneId.systemDefault()))
+        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00").atZone(ZoneId.systemDefault()))
         .produce(),
     )
   }
