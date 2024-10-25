@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 import java.util.stream.Collectors
@@ -205,11 +206,11 @@ class Cas3ReportService(
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
-    val deliusUsername = userService.getUserForRequest().deliusUsername
+    val user = userService.getUserForRequest()
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
-        val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername)
+        val offenderSummaries = offenderService.getPersonSummaryInfoResults(crns.toSet(), user.cas3LimitedAccessStrategy())
         offenderSummaries.map {
           when (it) {
             is PersonSummaryInfoResult.Success.Full -> {
@@ -234,11 +235,11 @@ class Cas3ReportService(
   }
 
   private fun splitAndRetrievePersonInfo(crns: Set<String>): Map<String, PersonSummaryInfoResult> {
-    val deliusUsername = userService.getUserForRequest().deliusUsername
+    val user = userService.getUserForRequest()
 
     val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
       .stream().map { crns ->
-        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy { it.crn }
+        offenderService.getPersonSummaryInfoResults(crns.toSet(), user.cas3LimitedAccessStrategy()).associateBy { it.crn }
       }.toList()
 
     return crnMap.flatMap { it.toList() }.toMap()

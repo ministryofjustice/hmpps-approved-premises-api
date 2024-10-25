@@ -712,8 +712,10 @@ class OffenderService(
   }
 }
 
-fun UserEntity.casLimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
+fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LimitedAccessStrategy.IgnoreLimitedAccess
 } else {
   LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
 }
+
+fun UserEntity.cas3LimitedAccessStrategy() = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)

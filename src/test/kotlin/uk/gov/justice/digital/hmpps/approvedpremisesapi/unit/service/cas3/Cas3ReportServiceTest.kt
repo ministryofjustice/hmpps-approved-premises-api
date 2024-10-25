@@ -72,7 +72,7 @@ class Cas3ReportServiceTest {
 
     every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+    every { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) } returns listOf(
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
@@ -86,7 +86,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify(exactly = 1) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -99,7 +99,7 @@ class Cas3ReportServiceTest {
 
     every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+    every { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) } returns listOf(
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
@@ -129,7 +129,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify(exactly = 1) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -141,7 +141,7 @@ class Cas3ReportServiceTest {
 
     every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns emptyList()
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns emptyList()
+    every { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) } returns emptyList()
 
     cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
@@ -153,7 +153,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify(exactly = 1) { mockUserService.getUserForRequest() }
-    verify(exactly = 0) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 0) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -175,7 +175,7 @@ class Cas3ReportServiceTest {
       createDBReferralReportData("crn3"),
     )
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+    every { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) } returns listOf(
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
@@ -189,7 +189,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify(exactly = 2) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 2) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -211,10 +211,10 @@ class Cas3ReportServiceTest {
       createDBReferralReportData("crn3"),
     )
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2"), any()) } returns listOf(
+    every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn1", "crn2"), any()) } returns listOf(
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
-    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn3"), any()) } throws RuntimeException("some exception")
+    every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn3"), any()) } throws RuntimeException("some exception")
 
     Assertions.assertThatExceptionOfType(RuntimeException::class.java)
       .isThrownBy {
@@ -229,7 +229,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify(exactly = 2) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 2) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -243,7 +243,7 @@ class Cas3ReportServiceTest {
 
     every { mockBookingsReportRepository.findAllByOverlappingDate(startDate, endDate, ServiceName.temporaryAccommodation.value, probationRegionId) } returns listOf(bookingsReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+    every { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) } returns listOf(
       PersonSummaryInfoResult.Success.Full(crn, CaseSummaryFactory().produce()),
     )
 
@@ -258,7 +258,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify(exactly = 1) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -282,7 +282,7 @@ class Cas3ReportServiceTest {
       createBookingReportData(crns[2]),
     )
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
-    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+    every { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) } returns listOf(
       PersonSummaryInfoResult.Success.Full(crns[0], CaseSummaryFactory().produce()),
       PersonSummaryInfoResult.Success.Full(crns[1], CaseSummaryFactory().produce()),
       PersonSummaryInfoResult.Success.Full(crns[2], CaseSummaryFactory().produce()),
@@ -299,7 +299,7 @@ class Cas3ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify(exactly = 2) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 2) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
   private fun createDBReferralReportData(): TestTransitionalAccommodationReferralReportData {
