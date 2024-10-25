@@ -292,6 +292,9 @@ components:
           $ref: '_shared.yml#/components/schemas/NamedId'
         bookedBy:
           $ref: '_shared.yml#/components/schemas/User'
+        requestForPlacementId:
+          type: string
+          format: uuid
         expectedArrivalDate:
           type: string
           format: date

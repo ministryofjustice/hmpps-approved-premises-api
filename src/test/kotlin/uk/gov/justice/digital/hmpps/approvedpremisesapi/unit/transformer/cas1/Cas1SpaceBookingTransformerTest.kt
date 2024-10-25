@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
@@ -173,6 +174,83 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalArrivalDate).isEqualTo(LocalDate.parse("2025-04-06"))
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalDepartureDate).isEqualTo(LocalDate.parse("2025-05-07"))
+      assertThat(result.requestForPlacementId).isEqualTo(placementRequest.id)
+    }
+
+    @Test
+    fun `Space booking is transformed correctly via placement application`() {
+      val personInfo = PersonInfoResult.Success.Full(
+        "SOMECRN",
+        CaseSummaryFactory().produce().asOffenderDetailSummary(),
+        null,
+      )
+
+      val expectedPerson = RestrictedPerson(
+        "SOMECRN",
+        PersonType.restrictedPerson,
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withRiskRatings(
+          PersonRisksFactory()
+            .withTier(RiskWithStatus(RiskStatus.Retrieved, RiskTier("A", LocalDate.now())))
+            .produce(),
+        )
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withPlacementRequest(placementRequest)
+        .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .withKeyworkerName("Mr Key Worker")
+        .withKeyworkerStaffCode("K123")
+        .withKeyworkerAssignedAt(LocalDateTime.parse("2007-12-03T10:15:30").toInstant(ZoneOffset.UTC))
+        .withActualArrivalDateTime(Instant.parse("2009-02-05T11:25:10.00Z"))
+        .withActualDepartureDateTime(Instant.parse("2012-12-25T00:00:00.00Z"))
+        .withCancellationOccurredAt(LocalDate.parse("2039-12-28"))
+        .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
+        .withCancellationReasonNotes("some extra info on cancellation")
+        .produce()
+
+      val expectedRequirements = Cas1SpaceBookingRequirements(
+        apType = ApType.pipe,
+        gender = Gender.female,
+        essentialCharacteristics = listOf(),
+        desirableCharacteristics = listOf(),
+      )
+
+      val expectedUser = ApprovedPremisesUserFactory().produce()
+
+      val otherBookings = listOf(
+        Cas1SpaceBookingAtPremisesImpl(
+          id = UUID.randomUUID(),
+          canonicalArrivalDate = LocalDate.parse("2025-04-06"),
+          canonicalDepartureDate = LocalDate.parse("2025-05-07"),
+        ),
+      )
+
+      every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
+      every { requirementsTransformer.transformJpaToApi(spaceBooking.placementRequest.placementRequirements) } returns expectedRequirements
+      every {
+        userTransformer.transformJpaToApi(
+          spaceBooking.createdBy,
+          ServiceName.approvedPremises,
+        )
+      } returns expectedUser
+
+      val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
+
+      assertThat(result.requestForPlacementId).isEqualTo(placementApplication.id)
     }
   }
 
