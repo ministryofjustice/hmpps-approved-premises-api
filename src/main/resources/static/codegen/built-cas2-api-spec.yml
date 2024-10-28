@@ -5550,6 +5550,7 @@ components:
         - bedUsage
         - bedOccupancy
         - futureBookings
+        - futureBookingsCsv
     Cas2ReportName:
       type: string
       enum:
