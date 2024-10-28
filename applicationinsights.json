@@ -8,6 +8,9 @@
   "instrumentation": {
     "logging": {
       "level": "DEBUG"
+    },
+    "redis": {
+      "enabled": false
     }
   },
   "selfDiagnostics": {
@@ -22,9 +25,14 @@
               "key": "http.url",
               "value": "https?://[^/]+/health.*",
               "matchType": "regexp"
+            },
+            {
+              "key": "http.url",
+              "value": "https?://[^/]+/info.*",
+              "matchType": "regexp"
             }
           ],
-          "percentage": 10
+          "percentage": 5
         }
       ]
     }
