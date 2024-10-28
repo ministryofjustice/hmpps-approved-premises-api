@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -209,22 +208,14 @@ class Cas1SpaceBookingTest {
             Cas1SpaceCharacteristic.isCatered,
           )
 
-          val essentialCriteria = essentialCharacteristics.map {
-            it.asCharacteristicEntity()
-          }
-
-          val desirableCriteria = desirableCharacteristics.map {
-            it.asCharacteristicEntity()
-          }
-
           placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
             withYieldedPostcodeDistrict {
               postCodeDistrictFactory.produceAndPersist()
             }
             withApplication(application as ApprovedPremisesApplicationEntity)
             withAssessment(placementRequest.assessment)
-            withEssentialCriteria(essentialCriteria)
-            withDesirableCriteria(desirableCriteria)
+            withEssentialCriteria(emptyList())
+            withDesirableCriteria(emptyList())
           }
 
           placementRequestRepository.saveAndFlush(placementRequest)
@@ -265,9 +256,7 @@ class Cas1SpaceBookingTest {
           assertThat(result.requirements.essentialCharacteristics).containsExactlyInAnyOrderElementsOf(
             essentialCharacteristics,
           )
-          assertThat(result.requirements.desirableCharacteristics).containsExactlyInAnyOrderElementsOf(
-            desirableCharacteristics,
-          )
+          assertThat(result.requirements.desirableCharacteristics).isEmpty()
           assertThat(result.premises.id).isEqualTo(premises.id)
           assertThat(result.premises.name).isEqualTo(premises.name)
           assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)
@@ -291,13 +280,6 @@ class Cas1SpaceBookingTest {
             .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
         }
       }
-    }
-
-    private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicEntityFactory.produceAndPersist {
-      withName(this@asCharacteristicEntity.value)
-      withPropertyName(this@asCharacteristicEntity.value)
-      withServiceScope(ServiceName.approvedPremises.value)
-      withModelScope("*")
     }
   }
 

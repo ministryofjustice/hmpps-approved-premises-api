@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -95,6 +96,11 @@ class Cas1SpaceBookingTransformerTest {
 
       val cancellationReason = CancellationReasonEntityFactory().produce()
 
+      val criteria = listOf(
+        CharacteristicEntityFactory().produce(),
+        CharacteristicEntityFactory().produce(),
+      )
+
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withPlacementRequest(placementRequest)
         .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -107,6 +113,7 @@ class Cas1SpaceBookingTransformerTest {
         .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
         .withCancellationReason(cancellationReason)
         .withCancellationReasonNotes("some extra info on cancellation")
+        .withCriteria(criteria)
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(
@@ -134,7 +141,12 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
-      every { requirementsTransformer.transformJpaToApi(spaceBooking.placementRequest.placementRequirements) } returns expectedRequirements
+      every {
+        requirementsTransformer.transformJpaToApi(
+          jpa = spaceBooking.placementRequest.placementRequirements,
+          criteria = criteria,
+        )
+      } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
           spaceBooking.createdBy,
@@ -209,6 +221,11 @@ class Cas1SpaceBookingTransformerTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
+      val criteria = listOf(
+        CharacteristicEntityFactory().produce(),
+        CharacteristicEntityFactory().produce(),
+      )
+
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withPlacementRequest(placementRequest)
         .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -220,6 +237,7 @@ class Cas1SpaceBookingTransformerTest {
         .withCancellationOccurredAt(LocalDate.parse("2039-12-28"))
         .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
         .withCancellationReasonNotes("some extra info on cancellation")
+        .withCriteria(criteria)
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(
@@ -240,7 +258,12 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
-      every { requirementsTransformer.transformJpaToApi(spaceBooking.placementRequest.placementRequirements) } returns expectedRequirements
+      every {
+        requirementsTransformer.transformJpaToApi(
+          jpa = spaceBooking.placementRequest.placementRequirements,
+          criteria = criteria,
+        )
+      } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
           spaceBooking.createdBy,

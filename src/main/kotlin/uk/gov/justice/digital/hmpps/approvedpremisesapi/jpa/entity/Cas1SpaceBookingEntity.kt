@@ -4,6 +4,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.domain.Page
@@ -149,6 +151,13 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "cancellation_reason_id")
   var cancellationReason: CancellationReasonEntity?,
   var cancellationReasonNotes: String?,
+  @ManyToMany
+  @JoinTable(
+    name = "cas1_space_bookings_criteria",
+    joinColumns = [JoinColumn(name = "space_booking_id")],
+    inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
+  )
+  val criteria: List<CharacteristicEntity>,
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
