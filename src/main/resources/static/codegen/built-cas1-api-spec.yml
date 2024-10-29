@@ -6560,6 +6560,8 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         desirableCharacteristics:
           type: array
+          deprecated: true
+          description: desirable characteristics are not required and will be removed in the future
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         gender:
@@ -6567,6 +6569,7 @@ components:
       required:
         - apType
         - gender
+        - essentialCharacteristics
     Cas1SpaceSearchRequirements:
       type: object
       properties:

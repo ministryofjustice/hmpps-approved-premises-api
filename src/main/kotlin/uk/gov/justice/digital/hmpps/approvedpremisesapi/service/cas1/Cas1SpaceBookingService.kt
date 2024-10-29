@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -61,6 +62,7 @@ class Cas1SpaceBookingService(
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     createdBy: UserEntity,
+    characteristics: List<CharacteristicEntity>,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
     val premises = cas1PremisesService.findPremiseById(premisesId)
     if (premises == null) {
@@ -120,6 +122,7 @@ class Cas1SpaceBookingService(
         cancellationReasonNotes = null,
         departureMoveOnCategory = null,
         departureReason = null,
+        criteria = characteristics,
       ),
     )
 

@@ -8,11 +8,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 
 @Component
 class Cas1SpaceBookingRequirementsTransformer {
-  fun transformJpaToApi(jpa: PlacementRequirementsEntity) = Cas1SpaceBookingRequirements(
+  fun transformJpaToApi(jpa: PlacementRequirementsEntity, criteria: List<CharacteristicEntity>) = Cas1SpaceBookingRequirements(
     apType = jpa.apType,
     gender = jpa.gender,
-    essentialCharacteristics = jpa.essentialCriteria.mapNotNull { it.asCas1SpaceCharacteristic() },
-    desirableCharacteristics = jpa.desirableCriteria.mapNotNull { it.asCas1SpaceCharacteristic() },
+    essentialCharacteristics = criteria.mapNotNull { it.asCas1SpaceCharacteristic() },
+    desirableCharacteristics = emptyList(),
   )
 
   private fun CharacteristicEntity.asCas1SpaceCharacteristic() = try {

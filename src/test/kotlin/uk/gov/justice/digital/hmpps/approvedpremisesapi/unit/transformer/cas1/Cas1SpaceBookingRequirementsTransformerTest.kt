@@ -18,19 +18,20 @@ class Cas1SpaceBookingRequirementsTransformerTest {
 
   @Test
   fun `Placement requirements are transformed correctly`() {
-    val cas1SpaceCharacteristics = Cas1SpaceCharacteristic.entries.map { it.toCharacteristicEntity() }
+    val cas1EssentialSpaceCharacteristics = Cas1SpaceCharacteristic.entries.map { it.toCharacteristicEntity() }
+    val cas1DesirableSpaceCharacteristics = Cas1SpaceCharacteristic.entries.map { it.toCharacteristicEntity() }
 
     val placementRequirements = PlacementRequirementsEntityFactory()
       .withDefaults()
-      .withEssentialCriteria(cas1SpaceCharacteristics)
-      .withDesirableCriteria(cas1SpaceCharacteristics)
+      .withEssentialCriteria(emptyList())
+      .withDesirableCriteria(cas1DesirableSpaceCharacteristics)
       .produce()
 
-    val result = transformer.transformJpaToApi(placementRequirements)
+    val result = transformer.transformJpaToApi(placementRequirements, cas1EssentialSpaceCharacteristics)
 
     assertThat(result.apType).isEqualTo(placementRequirements.apType)
     assertThat(result.gender).isEqualTo(placementRequirements.gender)
-    assertThat(result.desirableCharacteristics).isEqualTo(Cas1SpaceCharacteristic.entries)
+    assertThat(result.desirableCharacteristics).isEmpty()
     assertThat(result.essentialCharacteristics).isEqualTo(Cas1SpaceCharacteristic.entries)
   }
 

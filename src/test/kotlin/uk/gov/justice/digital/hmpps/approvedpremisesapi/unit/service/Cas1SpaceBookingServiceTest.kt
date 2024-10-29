@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -134,6 +135,7 @@ class Cas1SpaceBookingServiceTest {
         arrivalDate = LocalDate.now(),
         departureDate = LocalDate.now().plusDays(1),
         createdBy = user,
+        characteristics = emptyList(),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -163,6 +165,7 @@ class Cas1SpaceBookingServiceTest {
         arrivalDate = LocalDate.now(),
         departureDate = LocalDate.now().plusDays(1),
         createdBy = user,
+        characteristics = emptyList(),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -196,6 +199,7 @@ class Cas1SpaceBookingServiceTest {
         arrivalDate = LocalDate.now().plusDays(1),
         departureDate = LocalDate.now(),
         createdBy = user,
+        characteristics = emptyList(),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -235,6 +239,7 @@ class Cas1SpaceBookingServiceTest {
         arrivalDate = LocalDate.now(),
         departureDate = LocalDate.now().plusDays(1),
         createdBy = user,
+        characteristics = emptyList(),
       )
 
       assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
@@ -298,6 +303,10 @@ class Cas1SpaceBookingServiceTest {
         arrivalDate = arrivalDate,
         departureDate = departureDate,
         createdBy = user,
+        characteristics = listOf(
+          CharacteristicEntityFactory().withName("c1").produce(),
+          CharacteristicEntityFactory().withName("c2").produce(),
+        ),
       )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
@@ -318,6 +327,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.crn).isEqualTo(application.crn)
       assertThat(persistedBooking.keyWorkerStaffCode).isNull()
       assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
+      assertThat(persistedBooking.criteria).hasSize(2)
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
     }
