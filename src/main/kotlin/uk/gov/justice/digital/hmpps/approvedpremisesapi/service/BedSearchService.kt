@@ -143,14 +143,18 @@ class BedSearchService(
           when (it) {
             BedSearchAttributes.singleOccupancy -> "Single occupancy"
             BedSearchAttributes.sharedProperty -> "Shared property"
-            BedSearchAttributes.wheelchairAccessible -> "Wheelchair accessible"
+            BedSearchAttributes.wheelchairAccessible -> ""
           }
         }
 
-        val premisesCharacteristicIds = premisesCharacteristicsNames?.let {
-          val premisesCharacteristics = characteristicService.getCharacteristicsByNames(premisesCharacteristicsNames)
-          premisesCharacteristics.filter { it.isActive && it.matches(ServiceName.temporaryAccommodation.value, "premises") }.map { it.id }.toList()
-        } ?: emptyList()
+        val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsNames, "premises")
+
+        val roomCharacteristicsNames = when {
+          propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("Wheelchair accessible")
+          else -> null
+        }
+
+        val roomCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(roomCharacteristicsNames, "room")
 
         val endDate = startDate.plusDays(durationInDays.toLong() - 1)
 
@@ -160,6 +164,7 @@ class BedSearchService(
           endDate = endDate,
           probationRegionId = user.probationRegion.id,
           premisesCharacteristicIds,
+          roomCharacteristicIds,
         )
 
         val bedIds = candidateResults.map { it.bedId }
@@ -212,5 +217,14 @@ class BedSearchService(
       bookingId = overlappedBooking.bookingId,
       assessmentId = overlappedBooking.assessmentId,
     )
+  }
+
+  private fun getTemporaryAccommodationCharacteristicsIds(characteristicsNames: List<String>?, modelScope: String): List<UUID> {
+    return characteristicsNames?.let {
+      val characteristics = characteristicService.getCharacteristicsByNames(characteristicsNames)
+      characteristics.filter {
+        it.isActive && it.matches(ServiceName.temporaryAccommodation.value, modelScope)
+      }.map { it.id }.toList()
+    } ?: emptyList()
   }
 }

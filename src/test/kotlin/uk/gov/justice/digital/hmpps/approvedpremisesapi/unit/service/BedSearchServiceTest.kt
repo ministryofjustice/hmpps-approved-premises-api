@@ -669,6 +669,7 @@ class BedSearchServiceTest {
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
         premisesCharacteristicsIds = listOf(),
+        roomCharacteristicsIds = listOf(),
       )
     } returns repositorySearchResults
 
@@ -787,6 +788,7 @@ class BedSearchServiceTest {
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
         premisesCharacteristicsIds = listOf(),
+        roomCharacteristicsIds = listOf(),
       )
     } returns repositorySearchResults
 
