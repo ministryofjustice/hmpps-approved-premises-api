@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -33,6 +35,7 @@ class Cas1SpaceBookingManagementDomainEventService(
   val offenderService: OffenderService,
   val communityApiClient: CommunityApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  private val applicationTimelineTransformer: ApplicationTimelineTransformer,
 ) {
 
   fun arrivalRecorded(
@@ -149,6 +152,13 @@ class Cas1SpaceBookingManagementDomainEventService(
         ),
       ),
     )
+  }
+
+  fun getTimeline(bookingId: UUID): List<TimelineEvent> {
+    val domainEvents = domainEventService.getAllDomainEventsForSpaceBooking(bookingId)
+    return domainEvents.map {
+      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
+    }
   }
 
   private fun getStaffMemberDetails(staffCode: String?): StaffMember? {

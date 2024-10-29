@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
@@ -44,12 +45,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
   private val domainEventService = mockk<DomainEventService>()
   private val offenderService = mockk<OffenderService>()
   private val communityApiClient = mockk<CommunityApiClient>()
+  private val applicationTimelineTransformer = mockk<ApplicationTimelineTransformer>()
 
   val service = Cas1SpaceBookingManagementDomainEventService(
     domainEventService,
     offenderService,
     communityApiClient,
     UrlTemplate("http://frontend/applications/#id"),
+    applicationTimelineTransformer,
   )
 
   @Nested

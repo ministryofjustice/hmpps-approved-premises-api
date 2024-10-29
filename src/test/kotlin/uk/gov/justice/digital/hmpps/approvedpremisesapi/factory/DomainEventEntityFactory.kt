@@ -48,6 +48,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.bookingId = { bookingId }
   }
 
+  fun withCas1SpaceBookingId(cas1SpaceBookingId: UUID?) = apply {
+    this.cas1SpaceBookingId = { cas1SpaceBookingId }
+  }
+
   fun withCrn(crn: String) = apply {
     this.crn = { crn }
   }

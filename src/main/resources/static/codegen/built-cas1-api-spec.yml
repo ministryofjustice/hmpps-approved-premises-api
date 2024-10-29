@@ -748,7 +748,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/TimelineEvent'
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineEvent'
         401:
           $ref: '#/components/responses/401Response'
         403:

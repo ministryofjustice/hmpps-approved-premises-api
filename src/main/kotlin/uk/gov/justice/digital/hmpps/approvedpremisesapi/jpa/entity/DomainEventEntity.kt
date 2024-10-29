@@ -51,10 +51,19 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
       LEFT OUTER JOIN Cas1SpaceBookingEntity sb ON sb.id = d.cas1SpaceBookingId
       LEFT OUTER JOIN AppealEntity a ON a.application.id = d.applicationId 
       LEFT OUTER JOIN UserEntity u ON u.id = d.triggeredByUserId
-      WHERE d.applicationId = :applicationId
+      WHERE
+        (
+            (:applicationId IS NULL) OR (
+                d.applicationId = :applicationId
+            )
+        ) AND (
+            (:spaceBookingId IS NULL) OR (
+                d.cas1SpaceBookingId = :spaceBookingId
+            )
+        )
     """,
   )
-  fun findAllTimelineEventsByApplicationId(applicationId: UUID): List<DomainEventSummary>
+  fun findAllTimelineEventsByIds(applicationId: UUID?, spaceBookingId: UUID?): List<DomainEventSummary>
 
   @Query(
     "SELECT * FROM domain_events domain_event " +
