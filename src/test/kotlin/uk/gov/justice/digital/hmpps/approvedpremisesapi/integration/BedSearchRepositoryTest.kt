@@ -740,6 +740,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       endDate = LocalDate.parse("2023-03-15"),
       probationRegionId = probationRegion.id,
       listOf(),
+      listOf(),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -937,6 +938,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
       listOf(premisesSharedPropertyCharacteristic.id),
+      listOf(),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -1134,6 +1136,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
       listOf(premisesSingleOccupancyCharacteristic.id),
+      listOf(),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
@@ -1328,6 +1331,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       endDate = LocalDate.parse("2024-09-15"),
       probationRegionId = probationRegion.id,
       listOf(premisesWheelchairAccessibleCharacteristic.id),
+      listOf(),
     )
 
     assertThat(results.size).isEqualTo(bedsThatShouldAppearInSearchResults.size)
