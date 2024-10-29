@@ -3495,7 +3495,7 @@ components:
         isWithdrawn:
           type: boolean
         domainEvent:
-          type: object
+          $ref: '#/components/schemas/AnyValue'
     ReferralHistoryDomainEventNote:
       type: object
       allOf:

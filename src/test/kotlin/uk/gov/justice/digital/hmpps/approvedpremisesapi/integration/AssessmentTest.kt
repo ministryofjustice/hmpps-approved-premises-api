@@ -2916,12 +2916,12 @@ class AssessmentTest : IntegrationTestBase() {
           .referralHistoryNotes!!
 
         assertThat(response.size).isEqualTo(2)
-        val releaseDateUpdatedEvent = objectMapper.readValue(
-          response[0].messageDetails!!.domainEvent as String,
+        val releaseDateUpdatedEvent = objectMapper.convertValue(
+          response[0].messageDetails!!.domainEvent,
           CAS3AssessmentUpdatedEvent::class.java,
         )
-        val accommodationReqFromUpdatedEvent = objectMapper.readValue(
-          response[1].messageDetails!!.domainEvent as String,
+        val accommodationReqFromUpdatedEvent = objectMapper.convertValue(
+          response[1].messageDetails!!.domainEvent,
           CAS3AssessmentUpdatedEvent::class.java,
         )
 
