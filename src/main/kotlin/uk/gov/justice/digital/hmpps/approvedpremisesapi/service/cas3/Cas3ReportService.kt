@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.FutureBookingsCsvReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvObjectListConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
@@ -203,6 +205,25 @@ class Cas3ReportService(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),
       )
+  }
+
+  fun createFutureBookingCsvReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
+    val bookingsInScope = cas3FutureBookingsReportRepository.findAllFutureBookings(
+      properties.startDate,
+      properties.endDate,
+      properties.probationRegionId,
+    )
+
+    val crns = bookingsInScope.map { it.crn }.distinct().toSet()
+    val personInfos = splitAndRetrievePersonInfo(crns)
+    val reportData = bookingsInScope.map {
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+      FutureBookingsCsvReportGenerator().convert(it, personInfo)
+    }
+
+    CsvObjectListConsumer(
+      outputStream = outputStream,
+    ).consume(reportData)
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {

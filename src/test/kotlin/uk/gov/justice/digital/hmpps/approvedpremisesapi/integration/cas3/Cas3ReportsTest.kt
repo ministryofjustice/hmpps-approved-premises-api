@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
+import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.DataRow
@@ -8,6 +9,7 @@ import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.api.toList
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.jetbrains.kotlinx.dataframe.size
 import org.junit.jupiter.api.Nested
@@ -77,6 +79,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
+import java.io.StringReader
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -3806,6 +3809,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertRow(
                 actual[0],
                 bookingTwo.id,
+                offenderDetails,
                 applicationFive,
                 premisesFive,
                 bookingTwo.arrivalDate,
@@ -3816,6 +3820,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertRow(
                 actual[1],
                 bookingFive.id,
+                offenderDetails,
                 applicationFive,
                 premisesFive,
                 bookingFive.arrivalDate,
@@ -3826,6 +3831,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertRow(
                 actual[2],
                 bookingOne.id,
+                offenderDetails,
                 applicationOne,
                 premisesOne,
                 bookingOne.arrivalDate,
@@ -3836,6 +3842,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertRow(
                 actual[3],
                 bookingFour.id,
+                offenderDetails,
                 applicationTwo,
                 premisesTwo,
                 bookingFour.arrivalDate,
@@ -3846,6 +3853,300 @@ class Cas3ReportsTest : IntegrationTestBase() {
               assertRow(
                 actual[4],
                 bookingThree.id,
+                offenderDetails,
+                applicationSix,
+                premisesSix,
+                bookingThree.arrivalDate,
+                premisesSixAccommodationRequiredDate,
+                premisesSixUpdatedAccommodationRequiredDate,
+                "Provisional",
+              )
+            }
+        }
+      }
+    }
+
+    @Test
+    @SuppressWarnings("LongMethod")
+    fun `Get future bookings report in Csv format returns OK with correct body`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.now().minusDays(30)
+          val reportEndDate = LocalDate.now()
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+
+          // offender with accommodation required date within report dates
+          val premisesOneAccommodationRequiredDate = reportStartDate.plusDays(7)
+          val (premisesOne, applicationOne) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesOneAccommodationRequiredDate,
+            null,
+          )
+
+          val premisesTwoAccommodationRequiredDate = reportStartDate.plusDays(21)
+          val (premisesTwo, applicationTwo) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesTwoAccommodationRequiredDate,
+            null,
+          )
+
+          // offender with accommodation required date before report start date
+          val premisesThreeAccommodationRequiredDate = reportStartDate.minusDays(60)
+          val (premisesThree, applicationThree) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesThreeAccommodationRequiredDate,
+            null,
+          )
+
+          // offender with accommodation required date out of report dates range
+          val premisesFourAccommodationRequiredDate = reportEndDate.plusDays(200)
+          val (premisesFour, applicationFour) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesFourAccommodationRequiredDate,
+            null,
+          )
+
+          // offender with updated accommodation required date within report dates range
+          val premisesFiveAccommodationRequiredDate = reportStartDate.minusDays(50)
+          val premisesFiveUpdatedAccommodationRequiredDate = reportStartDate.plusDays(23)
+          val (premisesFive, applicationFive) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesFiveAccommodationRequiredDate,
+            premisesFiveUpdatedAccommodationRequiredDate,
+          )
+
+          val premisesSixAccommodationRequiredDate = reportStartDate.plusDays(210)
+          val premisesSixUpdatedAccommodationRequiredDate = reportEndDate.plusDays(9)
+          val (premisesSix, applicationSix) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            premisesSixAccommodationRequiredDate,
+            premisesSixUpdatedAccommodationRequiredDate,
+          )
+
+          // offender with updated accommodation required date out of report dates range
+          val premisesSevenAccommodationRequiredDate = reportStartDate.minusDays(6)
+          val (premisesSeven, applicationSeven) = createReferralAndAssessment(
+            user,
+            offenderDetails,
+            probationDeliveryUnit,
+            OffsetDateTime.now().randomDateTimeBefore(10),
+            reportEndDate.plusDays(3),
+            premisesSevenAccommodationRequiredDate,
+          )
+
+          // provisional booking
+          val bookingOne = createBooking(
+            applicationOne,
+            premisesOne,
+            offenderDetails.otherIds.crn,
+            reportEndDate.plusDays(6),
+            reportEndDate.plusDays(30),
+          )
+
+          val bookingTwo = createBooking(
+            applicationFive,
+            premisesFive,
+            offenderDetails.otherIds.crn,
+            reportStartDate.plusDays(3),
+            reportStartDate.plusDays(18),
+          )
+
+          val bookingThree = createBooking(
+            applicationSix,
+            premisesSix,
+            offenderDetails.otherIds.crn,
+            reportStartDate.plusDays(13),
+            reportStartDate.plusDays(56),
+          )
+
+          // old booking
+          createBooking(
+            applicationThree,
+            premisesThree,
+            offenderDetails.otherIds.crn,
+            reportStartDate.minusDays(90),
+            reportStartDate.minusDays(15),
+          )
+
+          // confirmed booking
+          val bookingFour = createBooking(
+            applicationTwo,
+            premisesTwo,
+            offenderDetails.otherIds.crn,
+            reportStartDate.randomDateAfter(10),
+            reportEndDate.randomDateAfter(20),
+          )
+          bookingFour.let {
+            it.confirmation = confirmationEntityFactory.produceAndPersist {
+              withBooking(it)
+            }
+          }
+
+          // cancelled booking
+          createBooking(
+            applicationOne,
+            premisesOne,
+            offenderDetails.otherIds.crn,
+            reportStartDate.plusDays(8),
+            reportStartDate.plusDays(30),
+          ).let {
+            it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+              withBooking(it)
+              withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+            }.toMutableList()
+          }
+
+          // future confirmed booking
+          val bookingFive = createBooking(
+            applicationFive,
+            premisesFive,
+            offenderDetails.otherIds.crn,
+            reportEndDate.randomDateAfter(10),
+            reportEndDate.randomDateAfter(40),
+          )
+          bookingFive.let {
+            it.confirmation = confirmationEntityFactory.produceAndPersist {
+              withBooking(it)
+            }
+          }
+
+          // future booking out of report dates range
+          createBooking(
+            applicationFour,
+            premisesFour,
+            offenderDetails.otherIds.crn,
+            reportEndDate.randomDateAfter(70),
+            reportEndDate.randomDateAfter(90),
+          )
+
+          // future confirmed booking out of report dates range
+          createBooking(
+            applicationFour,
+            premisesFour,
+            offenderDetails.otherIds.crn,
+            reportEndDate.plusDays(90),
+            reportEndDate.plusDays(120),
+          ).let {
+            it.confirmation = confirmationEntityFactory.produceAndPersist {
+              withBooking(it)
+            }
+          }
+
+          createBooking(
+            applicationSeven,
+            premisesSeven,
+            offenderDetails.otherIds.crn,
+            reportEndDate.plusDays(70),
+            reportEndDate.plusDays(85),
+          ).let {
+            it.confirmation = confirmationEntityFactory.produceAndPersist {
+              withBooking(it)
+            }
+          }
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/futureBookingsCsv?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith { response ->
+              val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
+
+              val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
+              val headers = csvReader.readNext().toList()
+
+              assertReportHeader(headers)
+
+              val actual = DataFrame
+                .readCSV(completeCsvString.byteInputStream())
+                .convertTo<FutureBookingsReportRow>()
+                .toList()
+
+              assertThat(actual.size).isEqualTo(5)
+
+              assertReportRow(
+                actual[0],
+                bookingTwo.id,
+                offenderDetails,
+                applicationFive,
+                premisesFive,
+                bookingTwo.arrivalDate,
+                premisesFiveAccommodationRequiredDate,
+                premisesFiveUpdatedAccommodationRequiredDate,
+                "Provisional",
+              )
+
+              assertReportRow(
+                actual[1],
+                bookingFive.id,
+                offenderDetails,
+                applicationFive,
+                premisesFive,
+                bookingFive.arrivalDate,
+                premisesFiveAccommodationRequiredDate,
+                premisesFiveUpdatedAccommodationRequiredDate,
+                "Confirmed",
+              )
+
+              assertReportRow(
+                actual[2],
+                bookingOne.id,
+                offenderDetails,
+                applicationOne,
+                premisesOne,
+                bookingOne.arrivalDate,
+                premisesOneAccommodationRequiredDate,
+                null,
+                "Provisional",
+              )
+
+              assertReportRow(
+                actual[3],
+                bookingFour.id,
+                offenderDetails,
+                applicationTwo,
+                premisesTwo,
+                bookingFour.arrivalDate,
+                premisesTwoAccommodationRequiredDate,
+                null,
+                "Confirmed",
+              )
+
+              assertReportRow(
+                actual[4],
+                bookingThree.id,
+                offenderDetails,
                 applicationSix,
                 premisesSix,
                 bookingThree.arrivalDate,
@@ -3862,6 +4163,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun assertRow(
       row: DataRow<FutureBookingsReportRow>,
       bookingId: UUID,
+      offenderDetails: OffenderDetailSummary,
       application: TemporaryAccommodationApplicationEntity,
       premises: PremisesEntity,
       bookingStartDate: LocalDate,
@@ -3869,9 +4171,21 @@ class Cas3ReportsTest : IntegrationTestBase() {
       updateAccommodationRequiredDate: LocalDate?,
       bookingStatus: String,
     ) {
+      val expectedPersonName = if (offenderDetails.middleNames.isNullOrEmpty()) {
+        "${offenderDetails.firstName} ${offenderDetails.surname}"
+      } else {
+        (listOf(offenderDetails.firstName) + offenderDetails.middleNames + offenderDetails.surname).joinToString(
+          " ",
+        )
+      }
+
       assertThat(row["bookingId"]).isEqualTo(bookingId.toString())
       assertThat(row["referralId"]).isEqualTo(application.id.toString())
       assertThat(row["referralDate"]).isEqualTo(application.submittedAt?.toLocalDate())
+      assertThat(row["personName"]).isEqualTo(expectedPersonName)
+      assertThat(row["gender"]).isEqualTo(offenderDetails.gender)
+      assertThat(row["ethnicity"]).isEqualTo(offenderDetails.offenderProfile.ethnicity)
+      assertThat(row["dateOfBirth"]).isEqualTo(offenderDetails.dateOfBirth)
       assertThat(row["riskOfSeriousHarm"]).isEqualTo("High")
       assertThat(row["registeredSexOffender"]).isEqualTo(application.isRegisteredSexOffender.toYesNo())
       assertThat(row["historyOfSexualOffence"]).isEqualTo(application.isHistoryOfSexualOffence.toYesNo())
@@ -3891,6 +4205,83 @@ class Cas3ReportsTest : IntegrationTestBase() {
       assertThat(row["accommodationRequiredDate"]).isEqualTo(accommodationRequiredDate)
       assertThat(row["updatedAccommodationRequiredDate"]).isEqualTo(updateAccommodationRequiredDate)
       assertThat(row["bookingStatus"]).isEqualTo(bookingStatus)
+    }
+
+    fun assertReportHeader(headers: List<String>) {
+      assertThat(headers).contains("bookingId")
+      assertThat(headers).contains("referralId")
+      assertThat(headers).contains("referralDate")
+      assertThat(headers).contains("personName")
+      assertThat(headers).contains("gender")
+      assertThat(headers).contains("ethnicity")
+      assertThat(headers).contains("dateOfBirth")
+      assertThat(headers).contains("riskOfSeriousHarm")
+      assertThat(headers).contains("registeredSexOffender")
+      assertThat(headers).contains("historyOfSexualOffence")
+      assertThat(headers).contains("concerningSexualBehaviour")
+      assertThat(headers).contains("dutyToReferMade")
+      assertThat(headers).contains("dateDutyToReferMade")
+      assertThat(headers).contains("dutyToReferLocalAuthorityAreaName")
+      assertThat(headers).contains("probationRegion")
+      assertThat(headers).contains("pdu")
+      assertThat(headers).contains("localAuthority")
+      assertThat(headers).contains("addressLine1")
+      assertThat(headers).contains("postCode")
+      assertThat(headers).contains("crn")
+      assertThat(headers).contains("sourceOfReferral")
+      assertThat(headers).contains("prisonAtReferral")
+      assertThat(headers).contains("startDate")
+      assertThat(headers).contains("accommodationRequiredDate")
+      assertThat(headers).contains("updatedAccommodationRequiredDate")
+      assertThat(headers).contains("bookingStatus")
+    }
+
+    @Suppress("LongParameterList")
+    fun assertReportRow(
+      row: FutureBookingsReportRow,
+      bookingId: UUID,
+      offenderDetails: OffenderDetailSummary,
+      application: TemporaryAccommodationApplicationEntity,
+      premises: PremisesEntity,
+      bookingStartDate: LocalDate,
+      accommodationRequiredDate: LocalDate,
+      updateAccommodationRequiredDate: LocalDate?,
+      bookingStatus: String,
+    ) {
+      val expectedPersonName = if (offenderDetails.middleNames.isNullOrEmpty()) {
+        "${offenderDetails.firstName} ${offenderDetails.surname}"
+      } else {
+        (listOf(offenderDetails.firstName) + offenderDetails.middleNames + offenderDetails.surname).joinToString(
+          " ",
+        )
+      }
+
+      assertThat(row.bookingId).isEqualTo(bookingId.toString())
+      assertThat(row.referralId).isEqualTo(application.id.toString())
+      assertThat(row.referralDate).isEqualTo(application.submittedAt?.toLocalDate())
+      assertThat(row.personName).isEqualTo(expectedPersonName)
+      assertThat(row.gender).isEqualTo(offenderDetails.gender)
+      assertThat(row.ethnicity).isEqualTo(offenderDetails.offenderProfile.ethnicity)
+      assertThat(row.dateOfBirth).isEqualTo(offenderDetails.dateOfBirth)
+      assertThat(row.riskOfSeriousHarm).isEqualTo("High")
+      assertThat(row.registeredSexOffender).isEqualTo(application.isRegisteredSexOffender.toString())
+      assertThat(row.historyOfSexualOffence).isEqualTo(application.isHistoryOfSexualOffence.toString())
+      assertThat(row.concerningSexualBehaviour).isEqualTo(application.isConcerningSexualBehaviour.toString())
+      assertThat(row.dutyToReferMade).isEqualTo(application.isDutyToReferSubmitted.toString())
+      assertThat(row.dateDutyToReferMade).isEqualTo(application.dutyToReferSubmissionDate)
+      assertThat(row.dutyToReferLocalAuthorityAreaName).isEqualTo(application.dutyToReferLocalAuthorityAreaName)
+      assertThat(row.probationRegion).isEqualTo(application.probationRegion.name)
+      assertThat(row.pdu).isEqualTo(application.probationDeliveryUnit?.name)
+      assertThat(row.localAuthority).isEqualTo(premises.localAuthorityArea?.name)
+      assertThat(row.addressLine1).isEqualTo(premises.addressLine1)
+      assertThat(row.postCode).isEqualTo(premises.postcode)
+      assertThat(row.crn).isEqualTo(application.crn)
+      assertThat(row.sourceOfReferral).isEqualTo(application.eligibilityReason)
+      assertThat(row.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
+      assertThat(row.startDate).isEqualTo(bookingStartDate.toString())
+      assertThat(row.accommodationRequiredDate).isEqualTo(accommodationRequiredDate.toString())
+      assertThat(row.updatedAccommodationRequiredDate).isEqualTo(updateAccommodationRequiredDate)
+      assertThat(row.bookingStatus).isEqualTo(bookingStatus)
     }
   }
 
