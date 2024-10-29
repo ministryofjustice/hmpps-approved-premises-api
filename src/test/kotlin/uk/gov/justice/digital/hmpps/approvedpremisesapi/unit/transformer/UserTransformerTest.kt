@@ -27,6 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordKeyworker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingView
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingWithdraw
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userManagement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
@@ -52,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_APPEALS_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_USER_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
@@ -212,6 +215,7 @@ class UserTransformerTest {
     @EnumSource(
       value = UserRole::class,
       names = [
+        "CAS1_ADMIN",
         "CAS1_JANITOR",
         "CAS1_APPEALS_MANAGER",
         "CAS1_ASSESSOR",
@@ -222,6 +226,7 @@ class UserTransformerTest {
         "CAS1_MANAGER",
         "CAS1_LEGACY_MANAGER",
         "CAS1_REPORT_VIEWER",
+        "CAS1_USER_MANAGER",
       ],
       mode = EnumSource.Mode.EXCLUDE,
     )
@@ -268,6 +273,8 @@ class UserTransformerTest {
           spaceBookingList,
           spaceBookingRecordArrival,
           spaceBookingWithdraw,
+          userList,
+          userManagement,
           viewAssignedAssessments,
           viewCruDashboard,
           viewManageTasks,
@@ -284,7 +291,7 @@ class UserTransformerTest {
     @Test
     fun `transformJpaToApi CAS1 should return version`() {
       val user = buildUserEntity(
-        role = CAS1_JANITOR,
+        role = CAS1_USER_MANAGER,
         apArea = ApAreaEntityFactory().produce(),
         cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
@@ -295,7 +302,7 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.version).isNotNull()
-      assertThat(result.version).isEqualTo(1460833655)
+      assertThat(result.version).isEqualTo(-1893754805)
     }
 
     @Test

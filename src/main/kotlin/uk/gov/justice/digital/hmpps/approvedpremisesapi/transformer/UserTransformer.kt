@@ -143,6 +143,8 @@ class UserTransformer(
         UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
         UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
         UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
+        UserPermission.CAS1_USER_LIST -> ApiUserPermission.userList
+        UserPermission.CAS1_USER_MANAGEMENT -> ApiUserPermission.userManagement
         UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
         UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
         UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks

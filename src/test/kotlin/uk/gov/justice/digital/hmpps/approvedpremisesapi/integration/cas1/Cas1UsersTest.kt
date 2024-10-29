@@ -202,7 +202,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `Updating a user returns OK`(role: UserRole) {
       val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
       val roles = listOf(
@@ -296,7 +296,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `Deleting a user with an approved role deletes successfully`(role: UserRole) {
       userEntityFactory.produceAndPersist {
         withId(id)

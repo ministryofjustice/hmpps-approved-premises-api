@@ -95,7 +95,7 @@ class UsersController(
     cruManagementAreaId: UUID? = null,
     resultTransformer: (UserEntity) -> T,
   ): ResponseEntity<List<T>> {
-    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
+    if (!userAccessService.currentUserCanListUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
@@ -148,7 +148,7 @@ class UsersController(
   }
 
   override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
-    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
+    if (!userAccessService.currentUserCanListUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
@@ -159,7 +159,7 @@ class UsersController(
   }
 
   override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
-    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
+    if (!userAccessService.currentUserCanListUsers(xServiceName)) {
       throw ForbiddenProblem()
     }
 
