@@ -27,8 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -116,7 +114,6 @@ class BookingService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val turnaroundRepository: TurnaroundRepository,
-  private val bedMoveRepository: BedMoveRepository,
   private val premisesRepository: PremisesRepository,
   private val assessmentRepository: AssessmentRepository,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
@@ -300,51 +297,6 @@ class BookingService(
       )
 
       return@validated success(booking)
-    }
-
-    return AuthorisableActionResult.Success(validationResult)
-  }
-
-  @Transactional
-  fun moveBooking(
-    booking: BookingEntity,
-    bedId: UUID,
-    notes: String?,
-    user: UserEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    if (user != null && (!user.hasRole(UserRole.CAS1_MANAGER))) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    val newBed =
-      bedRepository.findByIdOrNull(bedId) ?: return AuthorisableActionResult.NotFound("Bed", bedId.toString())
-
-    val validationResult = validated {
-      if (newBed.room.premises !is ApprovedPremisesEntity) {
-        "$.bedId" hasValidationError "mustBelongToApprovedPremises"
-      } else if (newBed.room.premises != booking.premises) {
-        "$.bedId" hasValidationError "mustBelongToTheSamePremises"
-      }
-
-      if (validationErrors.any()) {
-        return@validated fieldValidationError
-      }
-
-      val bedMove = BedMoveEntity(
-        id = UUID.randomUUID(),
-        booking = booking,
-        previousBed = booking.bed,
-        newBed = newBed,
-        createdAt = OffsetDateTime.now(),
-        notes = notes,
-      )
-
-      booking.bed = newBed
-
-      bookingRepository.save(booking)
-      bedMoveRepository.save(bedMove)
-
-      success(booking)
     }
 
     return AuthorisableActionResult.Success(validationResult)

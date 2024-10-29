@@ -71,8 +71,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -169,7 +167,6 @@ class BookingServiceTest {
   private val mockPlacementRequestRepository = mockk<PlacementRequestRepository>()
   private val mockLostBedsRepository = mockk<LostBedsRepository>()
   private val mockTurnaroundRepository = mockk<TurnaroundRepository>()
-  private val mockBedMoveRepository = mockk<BedMoveRepository>()
   private val mockPremisesRepository = mockk<PremisesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserService = mockk<UserService>()
@@ -207,7 +204,6 @@ class BookingServiceTest {
       placementRequestRepository = mockPlacementRequestRepository,
       lostBedsRepository = mockLostBedsRepository,
       turnaroundRepository = mockTurnaroundRepository,
-      bedMoveRepository = mockBedMoveRepository,
       premisesRepository = mockPremisesRepository,
       assessmentRepository = mockAssessmentRepository,
       applicationUrlTemplate = "http://frontend/applications/#id",
@@ -5965,207 +5961,6 @@ class BookingServiceTest {
       val result = bookingService.getWithdrawableState(booking, user)
 
       assertThat(result.blockingReason).isEqualTo(BlockingReason.ArrivalRecordedInDelius)
-    }
-  }
-
-  @Nested
-  inner class MoveBooking {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_MANAGER)
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withProbationRegion(
-        ProbationRegionEntityFactory()
-          .withApArea(
-            ApAreaEntityFactory()
-              .produce(),
-          )
-          .produce(),
-      )
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory()
-          .produce(),
-      )
-      .produce()
-
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
-
-    private val newRoom = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-
-    private val newBed = BedEntityFactory()
-      .withRoom(newRoom)
-      .produce()
-
-    val booking = BookingEntityFactory()
-      .withPremises(premises)
-      .withBed(bed)
-      .produce()
-
-    @BeforeEach
-    fun setup() {
-      every { mockBedRepository.findByIdOrNull(newBed.id) } answers { newBed }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockBedMoveRepository.save(any()) } answers { it.invocation.args[0] as BedMoveEntity }
-    }
-
-    @Test
-    fun `it returns unauthorised when the user is does not have a CAS1_MANAGER role`() {
-      val result = bookingService.moveBooking(
-        booking,
-        newBed.id,
-        "Some Notes",
-        UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-      )
-
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
-    }
-
-    @Test
-    fun `it returns NotFound when the bed cannot be found`() {
-      every { mockBedRepository.findByIdOrNull(any()) } answers { null }
-
-      val result = bookingService.moveBooking(
-        booking,
-        newBed.id,
-        "Some Notes",
-        user,
-      )
-
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
-    }
-
-    @Test
-    fun `it returns a validation error when the bed does not belong to the same premises`() {
-      every { mockBedRepository.findByIdOrNull(any()) } answers {
-        val premises = ApprovedPremisesEntityFactory()
-          .withProbationRegion(
-            ProbationRegionEntityFactory()
-              .withApArea(
-                ApAreaEntityFactory()
-                  .produce(),
-              )
-              .produce(),
-          )
-          .withLocalAuthorityArea(
-            LocalAuthorityEntityFactory()
-              .produce(),
-          )
-          .produce()
-
-        val room = RoomEntityFactory()
-          .withPremises(premises)
-          .produce()
-
-        BedEntityFactory()
-          .withRoom(room)
-          .produce()
-      }
-
-      val result = bookingService.moveBooking(
-        booking,
-        newBed.id,
-        "Some Notes",
-        user,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
-      val validationError = result.entity as ValidatableActionResult.FieldValidationError
-
-      assertThat(validationError.validationMessages["$.bedId"]).isEqualTo("mustBelongToTheSamePremises")
-    }
-
-    @Test
-    fun `it returns a validation error when the bed does not belong to an approved premises`() {
-      every { mockBedRepository.findByIdOrNull(any()) } answers {
-        val premises = TemporaryAccommodationPremisesEntityFactory()
-          .withProbationRegion(
-            ProbationRegionEntityFactory()
-              .withApArea(
-                ApAreaEntityFactory()
-                  .produce(),
-              )
-              .produce(),
-          )
-          .withLocalAuthorityArea(
-            LocalAuthorityEntityFactory()
-              .produce(),
-          )
-          .produce()
-
-        val room = RoomEntityFactory()
-          .withPremises(premises)
-          .produce()
-
-        BedEntityFactory()
-          .withRoom(room)
-          .produce()
-      }
-
-      val result = bookingService.moveBooking(
-        booking,
-        newBed.id,
-        "Some Notes",
-        user,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity is ValidatableActionResult.FieldValidationError).isTrue
-      val validationError = result.entity as ValidatableActionResult.FieldValidationError
-
-      assertThat(validationError.validationMessages["$.bedId"]).isEqualTo("mustBelongToApprovedPremises")
-    }
-
-    @Test
-    fun `updates the booking and creates a new BedMoveEntity`() {
-      val result = bookingService.moveBooking(
-        booking,
-        newBed.id,
-        "Some Notes",
-        user,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val updatedBookingEntity = validatableActionResult.entity
-
-      assertThat(updatedBookingEntity.bed).isEqualTo(newBed)
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(
-          match {
-            it.id == booking.id &&
-              it.bed!!.id == newBed.id
-          },
-        )
-      }
-
-      verify(exactly = 1) {
-        mockBedMoveRepository.save(
-          match {
-            it.booking.id == booking.id &&
-              it.previousBed!!.id == bed.id &&
-              it.newBed.id == newBed.id &&
-              it.notes == "Some Notes"
-          },
-        )
-      }
     }
   }
 
