@@ -746,7 +746,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/TimelineEvent'
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/TimelineEvent'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

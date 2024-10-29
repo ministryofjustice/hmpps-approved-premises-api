@@ -17,13 +17,21 @@ class DomainEventAsserter(
   fun blockForEmittedDomainEvent(eventType: DomainEventType) = snsDomainEventListener.blockForMessage(eventType)
 
   fun assertDomainEventStoreCount(applicationId: UUID, expectedCount: Int) {
-    assertThat(domainEventRepository.findAllTimelineEventsByApplicationId(applicationId)).hasSize(expectedCount)
+    assertThat(
+      domainEventRepository.findAllTimelineEventsByIds(
+        applicationId = applicationId,
+        spaceBookingId = null,
+      ),
+    ).hasSize(expectedCount)
   }
 
   fun assertDomainEventOfTypeStored(applicationId: UUID, eventType: DomainEventType): DomainEventEntity {
     assertThat(
       domainEventRepository
-        .findAllTimelineEventsByApplicationId(applicationId)
+        .findAllTimelineEventsByIds(
+          applicationId = applicationId,
+          spaceBookingId = null,
+        )
         .map { it.type },
     ).contains(eventType)
 
@@ -33,7 +41,10 @@ class DomainEventAsserter(
   fun assertDomainEventsOfTypeStored(applicationId: UUID, eventType: DomainEventType, expectedCount: Int) {
     assertThat(
       domainEventRepository
-        .findAllTimelineEventsByApplicationId(applicationId)
+        .findAllTimelineEventsByIds(
+          applicationId = applicationId,
+          spaceBookingId = null,
+        )
         .count { it.type == eventType },
     ).isEqualTo(expectedCount)
   }

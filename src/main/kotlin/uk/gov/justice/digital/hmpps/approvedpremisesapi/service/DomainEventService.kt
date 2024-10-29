@@ -267,7 +267,13 @@ class DomainEventService(
     )
 
   fun getAllDomainEventsForApplication(applicationId: UUID) =
-    domainEventRepository.findAllTimelineEventsByApplicationId(applicationId).distinctBy { it.id }
+    getAllDomainEventsById(applicationId = applicationId)
+
+  fun getAllDomainEventsForSpaceBooking(spaceBookingId: UUID) =
+    getAllDomainEventsById(spaceBookingId = spaceBookingId)
+
+  private fun getAllDomainEventsById(applicationId: UUID? = null, spaceBookingId: UUID? = null) =
+    domainEventRepository.findAllTimelineEventsByIds(applicationId, spaceBookingId).distinctBy { it.id }
 
   @Transactional
   fun saveAndEmit(
