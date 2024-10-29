@@ -30,6 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 
 class SeedOnStartupServiceTest {
@@ -40,6 +42,8 @@ class SeedOnStartupServiceTest {
   private val mockCas1AutoScript = mockk<Cas1AutoScript>()
   private val mockCas2AutoScript = mockk<Cas2AutoScript>()
   private val mockSeedService = mockk<SeedService>()
+  private val mockEnvironmentService = mockk<EnvironmentService>()
+  private val mockSentryService = mockk<SentryService>()
   private val logEntries = mutableListOf<LogEntry>()
 
   private val seedService = SeedOnStartupService(
@@ -48,6 +52,8 @@ class SeedOnStartupServiceTest {
     mockCas2AutoScript,
     mockSeedService,
     mockSeedLogger,
+    mockEnvironmentService,
+    mockSentryService,
   )
 
   @BeforeEach
@@ -72,15 +78,31 @@ class SeedOnStartupServiceTest {
   fun `autoSeed does nothing if automatic seeding is not enabled`() {
     seedConfig.auto.enabled = false
 
+    every { mockEnvironmentService.isNotATestEnvironment() } returns false
+
     seedService.seedOnStartup()
 
     verify { listOf(mockApplicationContext, mockTransactionTemplate, mockSeedLogger) wasNot called }
   }
 
   @Test
+  fun `autoSeed does nothing and raises alert if not in a test environment`() {
+    seedConfig.auto.enabled = true
+
+    every { mockEnvironmentService.isNotATestEnvironment() } returns true
+    every { mockSentryService.captureErrorMessage(any()) } returns Unit
+
+    seedService.seedOnStartup()
+
+    verify { mockSentryService.captureErrorMessage("Auto seeding should not be enabled outside of local and dev environments") }
+  }
+
+  @Test
   fun `autoSeed logs a warning if a file prefix corresponds to a location that does not exist`() {
     seedConfig.auto.enabled = true
     seedConfig.auto.filePrefixes = listOf("classpath:does/not/exist")
+
+    every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
     seedService.seedOnStartup()
 
@@ -95,6 +117,8 @@ class SeedOnStartupServiceTest {
     seedConfig.auto.enabled = true
     seedConfig.auto.filePrefixes = listOf("classpath:db/seed/unknown-job-type")
 
+    every { mockEnvironmentService.isNotATestEnvironment() } returns false
+
     seedService.seedOnStartup()
 
     assertThat(logEntries).anyMatch {
@@ -108,6 +132,8 @@ class SeedOnStartupServiceTest {
   fun `autoSeed runs the jobs for a CSV file with the name of the job type in the correct order`() {
     seedConfig.auto.enabled = true
     seedConfig.auto.filePrefixes = listOf("classpath:db/seed/known-job-type")
+
+    every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
     val mockPremisesRepository = mockk<PremisesRepository>()
     val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
@@ -167,8 +193,10 @@ class SeedOnStartupServiceTest {
     @Test
     fun `does nothing if autoScript is NOT enabled`() {
       seedConfig.auto.enabled = true
-
       seedConfig.autoScript.cas1Enabled = false
+
+      every { mockEnvironmentService.isNotATestEnvironment() } returns false
+
       seedService.seedOnStartup()
 
       verify { mockCas1AutoScript wasNot Called }
@@ -178,8 +206,10 @@ class SeedOnStartupServiceTest {
     @Test
     fun `runs Cas1AutoScript when autoScript IS enabled (along with auto-seeding)`() {
       seedConfig.auto.enabled = true
-
       seedConfig.autoScript.cas1Enabled = true
+
+      every { mockEnvironmentService.isNotATestEnvironment() } returns false
+
       seedService.seedOnStartup()
 
       verify { mockCas1AutoScript.script() }
@@ -192,8 +222,10 @@ class SeedOnStartupServiceTest {
     @Test
     fun `does nothing if autoScript is NOT enabled`() {
       seedConfig.auto.enabled = true
-
       seedConfig.autoScript.cas2Enabled = false
+
+      every { mockEnvironmentService.isNotATestEnvironment() } returns false
+
       seedService.seedOnStartup()
 
       verify { mockCas1AutoScript wasNot Called }
@@ -203,8 +235,10 @@ class SeedOnStartupServiceTest {
     @Test
     fun `runs Cas2AutoScript when autoScript IS enabled (along with auto-seeding)`() {
       seedConfig.auto.enabled = true
-
       seedConfig.autoScript.cas2Enabled = true
+
+      every { mockEnvironmentService.isNotATestEnvironment() } returns false
+
       seedService.seedOnStartup()
 
       verify { mockCas1AutoScript wasNot Called }
