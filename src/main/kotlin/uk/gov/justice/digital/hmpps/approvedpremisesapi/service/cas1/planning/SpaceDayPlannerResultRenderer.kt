@@ -13,28 +13,32 @@ object SpaceDayPlannerResultRenderer {
 
     if (result.planned.isNotEmpty()) {
       output.appendLine("")
-      output.appendLine("| Bed             | Booking         | Bed Characteristics            |")
-      output.appendLine("| --------------- | --------------- | ------------------------------ |")
-      beds.sortedBy { it.label }.forEach { bed ->
 
-        output.append("| ${bed.label.padEnd(15)} ")
-
+      val body = beds.sortedBy { it.label }.map { bed ->
         val booking = result.planned.firstOrNull { it.bed == bed }?.booking
-        output.append("| ${(booking?.label ?: "").padEnd(15)} ")
 
         val bedCharacteristics = bed.room.characteristics.joinToString(",") { bedCharacteristic ->
           val matched = booking?.let {
-            if (booking.requiredCharacteristics.contains(bedCharacteristic)) {
-              "(+)"
-            } else {
-              "(-)"
-            }
+            if (booking.requiredCharacteristics.contains(bedCharacteristic)) { "(+)" } else { "(-)" }
           }
 
           bedCharacteristic.name + (matched ?: "")
         }
-        output.appendLine("| ${bedCharacteristics.padEnd(30)} |")
+
+        listOf(
+          bed.label,
+          booking?.label ?: "",
+          bedCharacteristics,
+        )
       }
+
+      output.append(
+        MarkdownTableRenderer.render(
+          headers = listOf("Bed", "Booking", "Bed Characteristics"),
+          body = body,
+          colWidths = listOf(15, 15, 30),
+        ),
+      )
 
       output.appendLine("")
     }
@@ -42,14 +46,20 @@ object SpaceDayPlannerResultRenderer {
     output.appendLine("Unplanned: ${result.unplanned.size}")
     if (result.unplanned.isNotEmpty()) {
       output.appendLine("")
-      output.appendLine("| Booking         | Characteristics                |")
-      output.appendLine("| --------------- | ------------------------------ |")
-      result.unplanned.sortedBy { it.booking.label }.forEach { unplanned ->
-        val booking = unplanned.booking
-        output.append("| ${booking.label.padEnd(15)} |")
-        output.appendLine(" ${booking.requiredCharacteristics.joinToString(",") { it.name }.padEnd(30)} |")
-      }
+      output.append(
+        MarkdownTableRenderer.render(
+          headers = listOf("Booking", "Characteristics"),
+          body = result.unplanned.sortedBy { it.booking.label }.map { unplanned ->
+            listOf(
+              unplanned.booking.label,
+              unplanned.booking.requiredCharacteristics.joinToString(",") { it.name },
+            )
+          },
+          colWidths = listOf(15, 30),
+        ),
+      )
     }
+
     return output.toString().trimIndent()
   }
 }
