@@ -428,7 +428,7 @@ class UserAccessServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `currentUserCanManageUsers returns false if user does not have CAS1_USER_MANAGEMENT permission`(userRole: UserRole) {
       user.addRoleForUnitTest(userRole)
 
