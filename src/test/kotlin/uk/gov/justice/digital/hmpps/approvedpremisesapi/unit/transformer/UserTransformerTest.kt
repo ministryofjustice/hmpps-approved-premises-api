@@ -12,27 +12,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.adhocBookingCreate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.applicationWithdrawOthers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.bookingCreate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.bookingWithdraw
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.outOfServiceBedCreate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.premisesViewSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.requestForPlacementWithdrawOthers
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordArrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingRecordKeyworker
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingView
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.spaceBookingWithdraw
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.reportsView
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userManagement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewCruDashboard
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewManageTasks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewOutOfServiceBeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
@@ -52,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_APPEALS_MANAGER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_USER_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
@@ -248,11 +232,11 @@ class UserTransformerTest {
     @Test
     fun `transformJpaToApi CAS1 should return distinct permissions for Approved Premises roles which have the same permissions defined`() {
       val user = buildUserEntity(
-        role = CAS1_JANITOR,
+        role = CAS1_USER_MANAGER,
         apArea = ApAreaEntityFactory().produce(),
         cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
-      user.addRoleForUnitTest(CAS1_APPEALS_MANAGER)
+      user.addRoleForUnitTest(UserRole.CAS1_REPORT_VIEWER)
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
 
@@ -261,29 +245,9 @@ class UserTransformerTest {
 
       assertThat(result.permissions).hasSameElementsAs(
         listOf(
-          adhocBookingCreate,
-          applicationWithdrawOthers,
-          assessAppealedApplication,
-          bookingCreate,
-          bookingWithdraw,
-          premisesViewSummary,
-          processAnAppeal,
-          outOfServiceBedCreate,
-          requestForPlacementWithdrawOthers,
-          spaceBookingList,
-          spaceBookingRecordArrival,
-          spaceBookingWithdraw,
+          reportsView,
           userList,
           userManagement,
-          viewAssignedAssessments,
-          viewCruDashboard,
-          viewManageTasks,
-          viewOutOfServiceBeds,
-          spaceBookingList,
-          spaceBookingRecordArrival,
-          spaceBookingRecordDeparture,
-          spaceBookingRecordKeyworker,
-          spaceBookingView,
         ),
       )
     }

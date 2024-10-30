@@ -2404,7 +2404,7 @@ class TasksTest {
     fun `Get an Assessment Task for an appealed application returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User`(
-          roles = listOf(UserRole.CAS1_JANITOR),
+          roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { user, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_APPEALS_MANAGER),
@@ -2468,7 +2468,7 @@ class TasksTest {
     fun `Get an Assessment Task for an application created from appeal returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User`(
-          roles = listOf(UserRole.CAS1_JANITOR),
+          roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { janitor, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_MATCHER),
@@ -2511,12 +2511,12 @@ class TasksTest {
     fun `Get an Assessment Task for an accepted application returns user with ASSESSOR role`() {
       `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
         `Given a User`(
-          roles = listOf(UserRole.CAS1_JANITOR),
+          roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { user, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Offender` { offenderDetails, _ ->
               `Given an Assessment for Approved Premises`(
                 allocatedToUser = user,
                 createdByUser = user,

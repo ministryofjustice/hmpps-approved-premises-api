@@ -1194,7 +1194,7 @@ class UserServiceTest {
         UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
       )
 
-      verify(exactly = 1) { mockUserRepository.findActiveUsersWithAtLeastOneRole(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER)) }
+      verify(exactly = 1) { mockUserRepository.findActiveUsersWithAtLeastOneRole(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_JANITOR)) }
     }
   }
 
