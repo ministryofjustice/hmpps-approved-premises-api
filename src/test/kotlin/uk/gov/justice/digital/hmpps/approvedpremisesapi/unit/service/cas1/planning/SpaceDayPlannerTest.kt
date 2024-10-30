@@ -7,10 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Ch
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBookingDayPlanner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBookingDayPlannerResultRenderer.render
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceDayPlannerResultRenderer.render
 import java.util.UUID
 
-class SpaceBookingDayPlannerTest {
+class SpaceDayPlannerTest {
 
   companion object Constants {
     val CHARACTERISTIC_1 = Characteristic(UUID.randomUUID(), "c1", weighting = 100)

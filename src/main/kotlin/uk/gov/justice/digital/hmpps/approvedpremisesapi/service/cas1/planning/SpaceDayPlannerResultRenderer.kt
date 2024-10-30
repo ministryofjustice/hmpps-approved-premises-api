@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning
 
-object SpaceBookingDayPlannerResultRenderer {
+object SpaceDayPlannerResultRenderer {
 
   @SuppressWarnings("MagicNumber")
   fun render(
