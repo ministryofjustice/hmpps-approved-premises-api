@@ -85,7 +85,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
              INNER JOIN rooms r ON b.room_id = r.id
              LEFT JOIN applications ap ON bk.application_id = ap.id
              LEFT JOIN assessments a ON ap.id = a.application_id
-             LEFT JOIN cancellations c ON b.id = c.booking_id
+             LEFT JOIN cancellations c ON bk.id = c.booking_id
     WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
     """,
     nativeQuery = true,
