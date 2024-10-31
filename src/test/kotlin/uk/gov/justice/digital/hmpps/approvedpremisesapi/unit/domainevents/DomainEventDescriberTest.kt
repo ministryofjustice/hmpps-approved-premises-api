@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
@@ -448,6 +450,67 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
+  }
+
+  @Test
+  fun `Returns expected description for booking keyworker assigned event without previous keyworker`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED)
+
+    val arrivalDate = LocalDate.of(2024, 1, 1)
+    val departureDate = LocalDate.of(2024, 4, 1)
+
+    every { mockDomainEventService.getBookingKeyWorkerAssignedEvent(any()) } returns buildDomainEvent {
+      BookingKeyWorkerAssignedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingChanged,
+        eventDetails = BookingKeyWorkerAssignedFactory()
+          .withArrivalDate(arrivalDate)
+          .withDepartureDate(departureDate)
+          .withAssignedKeyWorkerName("assigned keyWorker")
+          .withPremises(
+            EventPremisesFactory()
+              .withName("The Premises Name")
+              .produce(),
+          )
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 set to assigned keyWorker")
+  }
+
+  @Test
+  fun `Returns expected description for booking keyworker assigned event with previous keyworker`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED)
+
+    val arrivalDate = LocalDate.of(2024, 1, 1)
+    val departureDate = LocalDate.of(2024, 4, 1)
+
+    every { mockDomainEventService.getBookingKeyWorkerAssignedEvent(any()) } returns buildDomainEvent {
+      BookingKeyWorkerAssignedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingChanged,
+        eventDetails = BookingKeyWorkerAssignedFactory()
+          .withArrivalDate(arrivalDate)
+          .withDepartureDate(departureDate)
+          .withAssignedKeyWorkerName("assigned keyWorker")
+          .withPreviousKeyWorkerName("previous keyWorker")
+          .withPremises(
+            EventPremisesFactory()
+              .withName("The Premises Name")
+              .produce(),
+          )
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 changes from previous keyWorker to assigned keyWorker")
   }
 
   @Test

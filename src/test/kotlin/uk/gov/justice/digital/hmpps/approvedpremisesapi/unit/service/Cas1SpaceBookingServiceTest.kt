@@ -874,7 +874,7 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns validation error if no premises exist with the given premisesId`() {
       every { cas1PremisesService.findPremiseById(any()) } returns null
 
-      val result = service.recordKeyWorkerForBooking(
+      val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
         keyWorker = Cas1AssignKeyWorker(keyWorker.code),
@@ -892,7 +892,7 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns validation error if no space booking exists with the given bookingId`() {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
-      val result = service.recordKeyWorkerForBooking(
+      val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
         keyWorker = Cas1AssignKeyWorker(keyWorker.code),
@@ -910,7 +910,7 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns validation error if no staff record exists with the given staff code`() {
       every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound()
 
-      val result = service.recordKeyWorkerForBooking(
+      val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
         keyWorker = Cas1AssignKeyWorker(keyWorker.code),
@@ -925,12 +925,13 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Updates existing space booking with key worker information `() {
+    fun `Updates existing space booking with key worker information and raises domain event`() {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(any(), any(), any()) } returns Unit
 
-      val result = service.recordKeyWorkerForBooking(
+      val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
         keyWorker = Cas1AssignKeyWorker(keyWorker.code),

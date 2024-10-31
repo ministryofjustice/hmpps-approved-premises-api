@@ -232,6 +232,12 @@ enum class DomainEventType(
     "An Approved Premises Booking has been changed",
     TimelineEventType.approvedPremisesBookingChanged,
   ),
+  APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED(
+    DomainEventCas.CAS1,
+    Cas1EventType.bookingKeyWorkerAssigned.value,
+    "A keyworker has been assigned to the booking",
+    TimelineEventType.approvedPremisesBookingKeyworkerAssigned,
+  ),
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.applicationWithdrawn.value,

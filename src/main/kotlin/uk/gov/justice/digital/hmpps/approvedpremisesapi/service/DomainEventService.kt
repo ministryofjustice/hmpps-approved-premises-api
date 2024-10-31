@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
@@ -63,6 +64,7 @@ class DomainEventService(
   fun getBookingNotMadeEvent(id: UUID) = get(id, BookingNotMadeEnvelope::class)
   fun getBookingCancelledEvent(id: UUID) = get(id, BookingCancelledEnvelope::class)
   fun getBookingChangedEvent(id: UUID) = get(id, BookingChangedEnvelope::class)
+  fun getBookingKeyWorkerAssignedEvent(id: UUID) = get(id, BookingKeyWorkerAssignedEnvelope::class)
   fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawnEnvelope::class)
   fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpiredEnvelope::class)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawnEnvelope::class)
@@ -94,6 +96,7 @@ class DomainEventService(
         (type == PersonDepartedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED) ||
         (type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE) ||
         (type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED) ||
+        (type == BookingKeyWorkerAssignedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED) ||
         (type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN) ||
         (type == ApplicationExpiredEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED) ||
         (type == AssessmentAppealedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) ||
@@ -263,6 +266,14 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+      emit = emit,
+    )
+
+  @Transactional
+  fun saveKeyWorkerAssignedEvent(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>, emit: Boolean) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
       emit = emit,
     )
 

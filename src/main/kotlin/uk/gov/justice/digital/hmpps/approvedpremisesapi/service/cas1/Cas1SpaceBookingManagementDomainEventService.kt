@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssigned
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrived
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -159,6 +162,58 @@ class Cas1SpaceBookingManagementDomainEventService(
     return domainEvents.map {
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
     }
+  }
+
+  fun keyWorkerAssigned(
+    updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    assignedKeyWorkerName: String,
+    previousKeyWorkerName: String?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = OffsetDateTime.now().toInstant()
+
+    val application = updatedCas1SpaceBooking.application
+    val premises = updatedCas1SpaceBooking.premises
+    val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
+
+    domainEventService.saveKeyWorkerAssignedEvent(
+      emit = false,
+      domainEvent = DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = updatedCas1SpaceBooking.crn,
+        nomsNumber = offenderDetails?.nomsId,
+        occurredAt = eventOccurredAt,
+        cas1SpaceBookingId = updatedCas1SpaceBooking.id,
+        bookingId = null,
+        data = BookingKeyWorkerAssignedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.bookingKeyWorkerAssigned,
+          eventDetails = BookingKeyWorkerAssigned(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            bookingId = updatedCas1SpaceBooking.id,
+            personReference = PersonReference(
+              crn = updatedCas1SpaceBooking.crn,
+              noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
+            ),
+            deliusEventNumber = application.eventNumber,
+            premises = Premises(
+              id = premises.id,
+              name = premises.name,
+              apCode = premises.apCode,
+              legacyApCode = premises.qCode,
+              localAuthorityAreaName = premises.localAuthorityArea!!.name,
+            ),
+            previousKeyWorkerName = previousKeyWorkerName,
+            assignedKeyWorkerName = assignedKeyWorkerName,
+            arrivalDate = updatedCas1SpaceBooking.canonicalArrivalDate.toLocalDateTime().toLocalDate(),
+            departureDate = updatedCas1SpaceBooking.canonicalDepartureDate.toLocalDateTime().toLocalDate(),
+          ),
+        ),
+      ),
+    )
   }
 
   private fun getStaffMemberDetails(staffCode: String?): StaffMember? {

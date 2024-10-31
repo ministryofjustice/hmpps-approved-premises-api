@@ -41,6 +41,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> buildBookingChangedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> buildBookingKeyWorkerAssignedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> buildApplicationExpiredDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
@@ -104,6 +105,16 @@ class DomainEventDescriber(
     return event.describe {
       "A placement at ${it.eventDetails.premises.name} had its arrival and/or departure date changed to " +
         "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
+    }
+  }
+
+  private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getBookingKeyWorkerAssignedEvent(domainEventSummary.id())
+    val keyWorkersDetail = event?.data?.eventDetails?.previousKeyWorkerName?.let {
+      "changes from $it to ${event?.data?.eventDetails?.assignedKeyWorkerName}"
+    } ?: "set to ${event?.data?.eventDetails?.assignedKeyWorkerName}"
+    return event.describe {
+      "Keyworker for placement at ${it.eventDetails.premises.name} for ${it.eventDetails.arrivalDate.toUiFormat()} to ${it.eventDetails.departureDate.toUiFormat()} $keyWorkersDetail".trimMargin()
     }
   }
 

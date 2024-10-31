@@ -25,6 +25,7 @@ class DomainEventUrlConfig {
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> cas1["booking-not-made-event-detail"]
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> cas1["booking-cancelled-event-detail"]
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> cas1["booking-changed-event-detail"]
+      DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> cas1["booking-keyworker-assigned-event-detail"]
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> cas1["application-withdrawn-event-detail"]
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> cas1["assessment-appealed-event-detail"]
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> cas1["assessment-allocated-event-detail"]
