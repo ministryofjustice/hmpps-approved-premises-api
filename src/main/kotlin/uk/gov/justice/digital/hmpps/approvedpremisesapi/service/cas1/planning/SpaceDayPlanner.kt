@@ -26,16 +26,16 @@ class SpaceBookingDayPlanner {
    *   be placed into rooms with the least beds (ensuring minimum 'wastage' in these scenarios)</li>
    * </ol>
    *
-   * @param beds All beds available on the day being planned (i.e. won't include out of service beds or beds inactive according to start/end date)
-   * @param bookings All required bookings. The code assumes that the premise level characteristics have already been met
+   * @param availableBeds All beds available on the day being planned (i.e. won't include out of service beds or beds inactive according to start/end date)
+   * @param bookings All required bookings on the day being planned. The code assumes that the premise level characteristics have already been met
    */
   fun plan(
-    beds: Set<Bed>,
+    availableBeds: Set<Bed>,
     bookings: Set<SpaceBooking>,
   ): DayPlannerResult {
-    val bedLedger = BedLedger(beds)
-    val planned = mutableListOf<DayPlannerPlannedBooking>()
-    val unplanned = mutableListOf<DayPlannerUnplannedBooking>()
+    val bedLedger = BedLedger(availableBeds)
+    val planned = mutableListOf<BedBooking>()
+    val unplanned = mutableListOf<UnplannedBooking>()
 
     val sortedBookings = bookings.toList()
       .sortedByDescending { b -> b.requiredCharacteristics.sumOf { c -> c.weighting } }
@@ -54,7 +54,7 @@ class SpaceBookingDayPlanner {
         is FindBedResult.BedsFound -> {
           findResult.beds.forEach { bed ->
             planned.add(
-              DayPlannerPlannedBooking(
+              BedBooking(
                 bed = bed,
                 booking = booking,
               ),
@@ -65,7 +65,7 @@ class SpaceBookingDayPlanner {
 
         is FindBedResult.BedNotFound -> {
           unplanned.add(
-            DayPlannerUnplannedBooking(
+            UnplannedBooking(
               booking = booking,
             ),
           )
@@ -139,15 +139,15 @@ sealed interface FindBedResult {
 }
 
 data class DayPlannerResult(
-  val planned: List<DayPlannerPlannedBooking>,
-  val unplanned: Set<DayPlannerUnplannedBooking>,
+  val planned: List<BedBooking>,
+  val unplanned: Set<UnplannedBooking>,
 )
 
-data class DayPlannerPlannedBooking(
+data class BedBooking(
   val bed: Bed,
   val booking: SpaceBooking,
 )
 
-data class DayPlannerUnplannedBooking(
+data class UnplannedBooking(
   val booking: SpaceBooking,
 )
