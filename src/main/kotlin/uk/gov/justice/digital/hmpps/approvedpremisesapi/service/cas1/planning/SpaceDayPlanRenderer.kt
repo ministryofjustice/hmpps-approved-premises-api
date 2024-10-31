@@ -11,11 +11,11 @@ object SpaceDayPlanRenderer {
 
     output.appendLine("Planned: ${result.planned.size}")
 
-    if (result.planned.isNotEmpty()) {
+    if (result.plan.isNotEmpty()) {
       output.appendLine("")
 
       val body = beds.sortedBy { it.label }.map { bed ->
-        val booking = result.planned.firstOrNull { it.bed == bed }?.booking
+        val booking = result.plan.firstOrNull { it.bed == bed }?.booking
         val bedCharacteristics = characteristicsMatchingSummary(bed, booking).joinToString(",")
 
         listOf(
@@ -42,10 +42,10 @@ object SpaceDayPlanRenderer {
       output.append(
         MarkdownTableRenderer.render(
           headers = listOf("Booking", "Characteristics"),
-          body = result.unplanned.sortedBy { it.booking.label }.map { unplanned ->
+          body = result.unplanned.sortedBy { it.label }.map { unplanned ->
             listOf(
-              unplanned.booking.label,
-              unplanned.booking.requiredCharacteristics.joinToString(",") { it.label },
+              unplanned.label,
+              unplanned.requiredCharacteristics.joinToString(",") { it.label },
             )
           },
           colWidths = listOf(15, 30),

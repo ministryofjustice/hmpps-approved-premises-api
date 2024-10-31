@@ -323,7 +323,7 @@ class SpaceDayPlannerTest {
       beds = setOf(room1Bed1, room1Bed2, room2Bed1, room2Bed2),
       bookings = setOf(booking1, booking2),
       expected = """
-      Planned: 3
+      Planned: 2
     
       | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
@@ -356,7 +356,7 @@ class SpaceDayPlannerTest {
       beds = setOf(room1Bed1, room1Bed2, room2Bed1, room2Bed2, room2Bed3),
       bookings = setOf(booking1, booking2, booking3),
       expected = """
-      Planned: 5
+      Planned: 2
       
       | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
@@ -392,7 +392,7 @@ class SpaceDayPlannerTest {
       beds = setOf(room1Bed1, room1Bed2, room1Bed3, room2Bed1, room2Bed2),
       bookings = setOf(booking2),
       expected = """
-      Planned: 2
+      Planned: 1
     
       | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
