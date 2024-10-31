@@ -9,7 +9,7 @@ data class APDeliusDocument(
   val filename: String,
   val typeCode: String,
   val typeDescription: String,
-  val dateSaved: ZonedDateTime?,
-  val dateCreated: ZonedDateTime?,
+  val dateSaved: ZonedDateTime,
+  val dateCreated: ZonedDateTime,
   val description: String?,
 )
