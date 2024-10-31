@@ -378,7 +378,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - /demo-.*/
       - hmpps/deploy_env:
           name: deploy_demo
           env: "demo"
