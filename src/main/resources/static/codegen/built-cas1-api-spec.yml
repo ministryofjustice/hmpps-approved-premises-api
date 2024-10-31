@@ -4634,7 +4634,6 @@ components:
         - id
         - level
         - fileName
-        - createdAt
         - typeCode
         - typeDescription
     PersonalTimeline:

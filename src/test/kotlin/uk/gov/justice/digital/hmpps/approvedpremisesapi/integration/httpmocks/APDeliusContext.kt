@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
@@ -206,7 +206,7 @@ fun IntegrationTestBase.ApDeliusContext_mockNotFoundStaffDetailCall(username: St
     responseStatus = 404,
   )
 
-fun IntegrationTestBase.ApDeliusContext_mockSuccessfulDocumentsCall(crn: String, documents: List<Document>) =
+fun IntegrationTestBase.ApDeliusContext_mockSuccessfulDocumentsCall(crn: String, documents: List<APDeliusDocument>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/documents/$crn/all",
     responseBody = documents,

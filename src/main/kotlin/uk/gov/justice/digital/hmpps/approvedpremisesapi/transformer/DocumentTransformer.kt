@@ -4,8 +4,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.ConvictionDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import java.time.ZoneOffset
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Document as CommunityApiDocument
 
@@ -14,16 +14,7 @@ class DocumentTransformer {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun transformToApiFiltered(groupedDocuments: GroupedDocuments, convictionId: Long?) =
-    transformToApi(groupedDocuments) { it.convictionId == convictionId.toString() }
-
-  fun transformToApiUnfiltered(groupedDocuments: GroupedDocuments) =
-    transformToApi(groupedDocuments) { true }
-
-  fun transformToApi(
-    groupedDocuments: GroupedDocuments,
-    convictionDocFilter: (ConvictionDocuments) -> Boolean,
-  ): List<Document> {
+  fun transformToApi(groupedDocuments: GroupedDocuments): List<Document> {
     val offenderDocuments = documentsWithIdsAndNames(groupedDocuments.documents).map {
       Document(
         id = it.id!!,
@@ -36,12 +27,11 @@ class DocumentTransformer {
       )
     }
 
-    val filteredConvictionDocuments = groupedDocuments
+    val convictionDocuments = groupedDocuments
       .convictions
-      .filter(convictionDocFilter)
       .flatMap { it.documents }
 
-    val convictionDocuments = documentsWithIdsAndNames(filteredConvictionDocuments).map {
+    val filteredConvictionDocuments = documentsWithIdsAndNames(convictionDocuments).map {
       Document(
         id = it.id!!,
         level = DocumentLevel.conviction,
@@ -53,8 +43,26 @@ class DocumentTransformer {
       )
     }
 
-    return offenderDocuments + convictionDocuments
+    return offenderDocuments + filteredConvictionDocuments
   }
+
+  fun transformToApi(documents: List<APDeliusDocument>): List<Document> =
+    documents
+      .filter { it.id != null }
+      .map {
+        Document(
+          id = it.id!!,
+          level = when (it.level) {
+            "Conviction" -> DocumentLevel.conviction
+            else -> DocumentLevel.offender
+          },
+          fileName = it.filename,
+          createdAt = it.dateCreated?.toInstant(),
+          typeCode = it.typeCode,
+          typeDescription = it.typeDescription,
+          description = it.description,
+        )
+      }
 
   /**
    * If a document doesn't have an ID we have no way to retrieve it for download, so it's filtered out

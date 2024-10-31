@@ -34,10 +34,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
@@ -82,6 +84,7 @@ class ApplicationsController(
   private val appealTransformer: AppealTransformer,
   private val requestForPlacementService: RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -444,19 +447,28 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val documents = when (val documentsResult = offenderService.getDocumentsFromCommunityApi(application.crn)) {
+    val documentsFromApDeliusFlag = featureFlagService.getBooleanFlag("get-documents-from-ap-delius")
+    val documents = when (val documentsResult = getDocuments(isDocumentFromAPDelius = documentsFromApDeliusFlag, application.crn)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(application.crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> documentsResult.entity
     }
 
-    val transformedDocuments = when (application) {
-      is ApprovedPremisesApplicationEntity -> documentTransformer.transformToApiUnfiltered(documents)
-      is TemporaryAccommodationApplicationEntity -> documentTransformer.transformToApiFiltered(documents, application.convictionId)
-      else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
+    val transformedDocuments = when (documents) {
+      is GroupedDocuments -> documentTransformer.transformToApi(documents)
+      is List<*> -> documentTransformer.transformToApi(
+        documents.filterIsInstance<APDeliusDocument>(),
+      )
+      else -> emptyList()
     }
 
     return ResponseEntity(transformedDocuments, HttpStatus.OK)
+  }
+
+  private fun getDocuments(isDocumentFromAPDelius: Boolean, crn: String) = if (isDocumentFromAPDelius) {
+    offenderService.getDocumentsFromApDeliusApi(crn)
+  } else {
+    offenderService.getDocumentsFromCommunityApi(crn)
   }
 
   override fun applicationsApplicationIdAppealsAppealIdGet(
