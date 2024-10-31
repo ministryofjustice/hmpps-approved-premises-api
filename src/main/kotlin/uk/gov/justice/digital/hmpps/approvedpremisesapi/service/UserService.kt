@@ -61,7 +61,6 @@ class UserService(
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
   private val cas1ApAreaMappingService: Cas1ApAreaMappingService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
-  private val featureFlagService: FeatureFlagService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) {
@@ -183,10 +182,7 @@ class UserService(
       userQualifications.add(UserQualification.LAO)
     }
 
-    var requiredRole = UserRole.getAllRolesForPermission(permission)
-    if (!featureFlagService.getBooleanFlag("cas1-appeal-manager-can-assess-applications")) {
-      requiredRole = requiredRole.filter { it != UserRole.CAS1_APPEALS_MANAGER }
-    }
+    val requiredRole = UserRole.getAllRolesForPermission(permission)
 
     var users = userRepository.findActiveUsersWithAtLeastOneRole(requiredRole)
 
