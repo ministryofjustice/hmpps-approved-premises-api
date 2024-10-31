@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TriggerSourceT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Component
@@ -21,6 +22,7 @@ class ApplicationTimelineTransformer(
   @Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
   private val domainEventDescriber: DomainEventDescriber,
   private val userTransformer: UserTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) {
 
   fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): TimelineEvent {
@@ -72,6 +74,10 @@ class ApplicationTimelineTransformer(
   }
 
   private fun bookingUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.bookingId?.let {
+    if (featureFlagService.getBooleanFlag("cas1-hide-timeline-placement-link")) {
+      return null
+    }
+
     domainEventSummary.premisesId?.let {
       TimelineEventAssociatedUrl(
         TimelineEventUrlType.booking,

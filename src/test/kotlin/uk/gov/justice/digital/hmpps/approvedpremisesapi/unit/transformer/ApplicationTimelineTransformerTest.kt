@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -30,6 +31,7 @@ import java.util.UUID
 class ApplicationTimelineTransformerTest {
   private val mockDomainEventDescriber = mockk<DomainEventDescriber>()
   private val mockUserTransformer = mockk<UserTransformer>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val applicationTimelineTransformer = ApplicationTimelineTransformer(
     applicationUrlTemplate = UrlTemplate("http://somehost:3000/applications/#id"),
@@ -39,6 +41,7 @@ class ApplicationTimelineTransformerTest {
     appealUrlTemplate = UrlTemplate("http://somehost:3000/applications/#applicationId/appeals/#appealId"),
     mockDomainEventDescriber,
     mockUserTransformer,
+    mockFeatureFlagService,
   )
 
   data class DomainEventSummaryImpl(
@@ -218,6 +221,7 @@ class ApplicationTimelineTransformerTest {
       )
 
       every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+      every { mockFeatureFlagService.getBooleanFlag("cas1-hide-timeline-placement-link") } returns false
 
       assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
         TimelineEvent(
@@ -230,6 +234,38 @@ class ApplicationTimelineTransformerTest {
               "http://somehost:3000/premises/$premisesId/bookings/$bookingId",
             ),
           ),
+          content = "Some event",
+        ),
+      )
+    }
+
+    @Test
+    fun `hide bookingUrl if feature flag enabled`() {
+      val bookingId = UUID.randomUUID()
+      val premisesId = UUID.randomUUID()
+      val domainEvent = DomainEventSummaryImpl(
+        id = UUID.randomUUID().toString(),
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+        occurredAt = OffsetDateTime.now(),
+        bookingId = bookingId,
+        applicationId = null,
+        assessmentId = null,
+        premisesId = premisesId,
+        appealId = null,
+        cas1SpaceBookingId = null,
+        triggerSource = null,
+        triggeredByUser = null,
+      )
+
+      every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+      every { mockFeatureFlagService.getBooleanFlag("cas1-hide-timeline-placement-link") } returns true
+
+      assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
+        TimelineEvent(
+          id = domainEvent.id,
+          type = TimelineEventType.approvedPremisesBookingMade,
+          occurredAt = domainEvent.occurredAt.toInstant(),
+          associatedUrls = emptyList(),
           content = "Some event",
         ),
       )
@@ -413,6 +449,7 @@ class ApplicationTimelineTransformerTest {
       )
 
       every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+      every { mockFeatureFlagService.getBooleanFlag("cas1-hide-timeline-placement-link") } returns false
 
       Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent))
         .isEqualTo(
