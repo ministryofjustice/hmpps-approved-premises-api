@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryDomainEventNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
@@ -15,7 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 
 @Component
-class AssessmentReferralHistoryNoteTransformer {
+class AssessmentReferralHistoryNoteTransformer(
+  private val objectMapper: ObjectMapper,
+) {
 
   fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryNote = when (jpa) {
     is AssessmentReferralHistoryUserNoteEntity -> { transformJpaToReferralHistoryUserNote(jpa) }
@@ -48,7 +51,7 @@ class AssessmentReferralHistoryNoteTransformer {
     ReferralHistoryDomainEventNote(
       id = domainEventEntity.id,
       createdAt = domainEventEntity.createdAt.toInstant(),
-      messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = domainEventEntity.data),
+      messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = objectMapper.readTree(domainEventEntity.data)),
       createdByUserName = user.name,
       type = "domainEvent",
     )
