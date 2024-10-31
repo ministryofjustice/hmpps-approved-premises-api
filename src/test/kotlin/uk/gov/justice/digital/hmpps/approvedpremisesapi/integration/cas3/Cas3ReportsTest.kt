@@ -3487,99 +3487,181 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get booking gap report returns OK with correct body`() {
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 6, 30)
 
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(yorkshireRegion!!)
-        }
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
 
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(yorkshireRegion!!)
-          withProbationDeliveryUnit(probationDeliveryUnit)
-        }
-
-        val booking1DepartureDate = LocalDate.of(2023, 4, 12)
-
-        val bedOne = bedEntityFactory.produceAndPersist {
-          withRoom(
-            roomEntityFactory.produceAndPersist {
-              withPremises(premises)
-              withName("room1")
-            },
-          )
-        }
-
-        val booking1 = createBooking(premises, bedOne, offenderDetails.otherIds.crn, LocalDate.of(2023, 4, 5), booking1DepartureDate)
-
-        confirmationEntityFactory.produceAndPersist {
-          withBooking(booking1)
-        }
-
-        val booking2DepartureDate = LocalDate.of(2023, 4, 21)
-
-        val bedTwo = bedEntityFactory.produceAndPersist {
-          withRoom(
-            roomEntityFactory.produceAndPersist {
-              withPremises(premises)
-              withName("room2")
-            },
-          )
-        }
-
-        val booking2 = createBooking(premises, bedTwo, offenderDetails.otherIds.crn, LocalDate.of(2023, 4, 19), booking2DepartureDate)
-
-        confirmationEntityFactory.produceAndPersist {
-          withBooking(booking2)
-        }
-
-        val booking3 = createBooking(premises, bedTwo, offenderDetails.otherIds.crn, LocalDate.of(2024, 3, 8), LocalDate.of(2024, 4, 21))
-
-        cancellationEntityFactory.produceAndPersist {
-          withBooking(booking3)
-          withYieldedReason {
-            cancellationReasonEntityFactory.produceAndPersist()
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
           }
+
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationRegion(yorkshireRegion!!)
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+
+          val bedOne = bedEntityFactory.produceAndPersist {
+            withRoom(
+              roomEntityFactory.produceAndPersist {
+                withPremises(premises)
+                withName("room1")
+              },
+            )
+          }
+
+          val booking1 = createBooking(
+            premises,
+            bedOne,
+            offenderDetails.otherIds.crn,
+            LocalDate.of(2024, 4, 5),
+            LocalDate.of(2024, 4, 12),
+          )
+
+          confirmationEntityFactory.produceAndPersist {
+            withBooking(booking1)
+          }
+
+          val bedTwo = bedEntityFactory.produceAndPersist {
+            withRoom(
+              roomEntityFactory.produceAndPersist {
+                withPremises(premises)
+                withName("room2")
+              },
+            )
+          }
+
+          val booking2 = createBooking(
+            premises,
+            bedTwo,
+            offenderDetails.otherIds.crn,
+            LocalDate.of(2024, 4, 19),
+            LocalDate.of(2024, 4, 21),
+          )
+
+          confirmationEntityFactory.produceAndPersist {
+            withBooking(booking2)
+          }
+
+          val booking3 = createBooking(
+            premises,
+            bedTwo,
+            offenderDetails.otherIds.crn,
+            LocalDate.of(2024, 3, 8),
+            LocalDate.of(2024, 4, 21),
+          )
+
+          cancellationEntityFactory.produceAndPersist {
+            withBooking(booking3)
+            withYieldedReason {
+              cancellationReasonEntityFactory.produceAndPersist()
+            }
+          }
+
+          val booking4 = createBooking(
+            premises,
+            bedTwo,
+            offenderDetails.otherIds.crn,
+            LocalDate.of(2024, 5, 12),
+            LocalDate.of(2024, 7, 17),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith { response ->
+              val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
+
+              val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
+              val headers = csvReader.readNext().toList()
+
+              assertReportHeader(headers)
+
+              val actual = DataFrame
+                .readCSV(completeCsvString.byteInputStream())
+                .convertTo<BookingGapReportRow>()
+                .toList()
+
+              assertThat(actual.size).isEqualTo(4)
+
+              assertReportRow(
+                actual[0],
+                premises.probationRegion.name,
+                probationDeliveryUnit.name,
+                premises.name,
+                bedOne.room.name,
+                reportStartDate,
+                booking1.arrivalDate,
+              )
+
+              assertReportRow(
+                actual[1],
+                premises.probationRegion.name,
+                probationDeliveryUnit.name,
+                premises.name,
+                bedOne.room.name,
+                booking1.departureDate.plusDays(1),
+                reportEndDate,
+              )
+
+              assertReportRow(
+                actual[2],
+                premises.probationRegion.name,
+                probationDeliveryUnit.name,
+                premises.name,
+                bedTwo.room.name,
+                reportStartDate,
+                booking2.arrivalDate,
+              )
+
+              assertReportRow(
+                actual[3],
+                premises.probationRegion.name,
+                probationDeliveryUnit.name,
+                premises.name,
+                bedTwo.room.name,
+                booking2.departureDate.plusDays(1),
+                booking4.arrivalDate,
+              )
+            }
         }
-
-        val booking4ArrivalDate = LocalDate.of(2024, 5, 12)
-        val booking4DepartureDate = LocalDate.of(2024, 7, 17)
-        createBooking(premises, bedTwo, offenderDetails.otherIds.crn, booking4ArrivalDate, booking4DepartureDate)
-
-        val gapRangesReport = cas3ReportService.createBookingGapRangesReport()
-
-        val today = LocalDate.now()
-
-        val expectedGapRangesReport = listOf(
-          mutableMapOf<String, Any?>(
-            "probation_region" to premises.probationRegion.name,
-            "pdu_name" to probationDeliveryUnit.name,
-            "premises_name" to premises.name,
-            "room_name" to "room1",
-            "gap" to "[${booking1DepartureDate.plusDays(1)},$today)",
-            "gap_days" to ChronoUnit.DAYS.between(booking1DepartureDate.plusDays(1), LocalDate.now()).toInt(),
-          ),
-          mutableMapOf<String, Any?>(
-            "probation_region" to premises.probationRegion.name,
-            "pdu_name" to probationDeliveryUnit.name,
-            "premises_name" to premises.name,
-            "room_name" to "room2",
-            "gap" to "[${booking2DepartureDate.plusDays(1)},$booking4ArrivalDate)",
-            "gap_days" to ChronoUnit.DAYS.between(booking2DepartureDate.plusDays(1), booking4ArrivalDate).toInt(),
-          ),
-          mutableMapOf<String, Any?>(
-            "probation_region" to premises.probationRegion.name,
-            "pdu_name" to probationDeliveryUnit.name,
-            "premises_name" to premises.name,
-            "room_name" to "room2",
-            "gap" to "[${booking4DepartureDate.plusDays(1)},$today)",
-            "gap_days" to ChronoUnit.DAYS.between(booking4DepartureDate.plusDays(1), LocalDate.now()).toInt(),
-          ),
-        )
-
-        assertThat(gapRangesReport).isEqualTo(expectedGapRangesReport)
       }
+    }
+
+    private fun assertReportHeader(headers: List<String>) {
+      assertThat(headers).contains("probation_region")
+      assertThat(headers).contains("pdu_name")
+      assertThat(headers).contains("premises_name")
+      assertThat(headers).contains("bed_name")
+      assertThat(headers).contains("gap")
+      assertThat(headers).contains("gap_days")
+      assertThat(headers).contains("turnaround_days")
+    }
+
+    @Suppress("LongParameterList")
+    private fun assertReportRow(
+      row: BookingGapReportRow,
+      probationRegionName: String,
+      probationDeliveryUnitName: String,
+      premisesName: String,
+      bedName: String,
+      gapStartDate: LocalDate,
+      gapEndDate: LocalDate,
+    ) {
+      assertThat(row.probation_region).isEqualTo(probationRegionName)
+      assertThat(row.pdu_name).isEqualTo(probationDeliveryUnitName)
+      assertThat(row.premises_name).isEqualTo(premisesName)
+      assertThat(row.bed_name).isEqualTo(bedName)
+      assertThat(row.gap).isEqualTo("[$gapStartDate,$gapEndDate)")
+      assertThat(row.gap_days).isEqualTo(ChronoUnit.DAYS.between(gapStartDate, gapEndDate).toString())
     }
   }
 
@@ -4549,4 +4631,14 @@ class Cas3ReportsTest : IntegrationTestBase() {
   }
 
   private fun randomBoolean() = randomInt(0, 20) > 10
+
+  @SuppressWarnings("ConstructorParameterNaming")
+  data class BookingGapReportRow(
+    val probation_region: String,
+    val pdu_name: String,
+    val premises_name: String,
+    val bed_name: String,
+    val gap: String,
+    val gap_days: String?,
+  )
 }

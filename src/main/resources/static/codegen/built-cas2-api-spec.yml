@@ -5551,6 +5551,7 @@ components:
         - bedOccupancy
         - futureBookings
         - futureBookingsCsv
+        - bookingGap
     Cas2ReportName:
       type: string
       enum:
