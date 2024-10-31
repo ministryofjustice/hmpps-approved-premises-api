@@ -4,7 +4,7 @@ import java.util.UUID
 
 data class Characteristic(
   val id: UUID,
-  val name: String,
+  val label: String,
   val weighting: Int,
   val singleRoom: Boolean = false,
 )

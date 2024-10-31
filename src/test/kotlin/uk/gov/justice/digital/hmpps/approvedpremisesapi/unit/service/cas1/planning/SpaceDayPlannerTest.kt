@@ -7,17 +7,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Ch
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBookingDayPlanner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceDayPlannerResultRenderer.render
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceDayPlanRenderer.render
 import java.util.UUID
 
 class SpaceDayPlannerTest {
 
   companion object Constants {
-    val CHARACTERISTIC_1 = Characteristic(UUID.randomUUID(), "c1", weighting = 100)
-    val CHARACTERISTIC_2 = Characteristic(UUID.randomUUID(), "c2", weighting = 100)
-    val CHARACTERISTIC_3 = Characteristic(UUID.randomUUID(), "c3", weighting = 100)
-    val CHARACTERISTIC_4 = Characteristic(UUID.randomUUID(), "c4", weighting = 100)
-    val CHARACTERISTIC_5_WEIGHTING_1000 = Characteristic(UUID.randomUUID(), "c5", weighting = 1000)
+    val CHARACTERISTIC_1 = Characteristic(UUID.randomUUID(), "c1", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_2 = Characteristic(UUID.randomUUID(), "c2", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_3 = Characteristic(UUID.randomUUID(), "c3", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_4 = Characteristic(UUID.randomUUID(), "c4", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_5_WEIGHTING_1000 = Characteristic(UUID.randomUUID(), "c5", weighting = 1000, singleRoom = false)
     val CHARACTERISTIC_SINGLE_ROOM = Characteristic(UUID.randomUUID(), "single", weighting = 100, singleRoom = true)
   }
 
@@ -69,7 +69,7 @@ class SpaceDayPlannerTest {
       expected = """
         Planned: 2
         
-        | Bed             | Booking         | Bed Characteristics            |
+        | Bed             | Booking         | Characteristics                |
         | --------------- | --------------- | ------------------------------ |
         | bed1            | booking1        |                                |
         | bed2            | booking2        |                                |
@@ -93,10 +93,10 @@ class SpaceDayPlannerTest {
       expected = """
         Planned: 2
         
-        | Bed             | Booking         | Bed Characteristics            |
+        | Bed             | Booking         | Characteristics                |
         | --------------- | --------------- | ------------------------------ |
-        | bed1            | booking2        | c1(+)                          |
-        | bed2            | booking1        | c2(+)                          |
+        | bed1            | booking2        | c1(rb)                         |
+        | bed2            | booking1        | c2(rb)                         |
         
         Unplanned: 0
       """,
@@ -141,9 +141,9 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 1
   
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | bed1            | booking1        | c1(+)                          |
+      | bed1            | booking1        | c1(rb)                         |
       | bed2            |                 |                                |
       
       Unplanned: 1
@@ -170,10 +170,10 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 2
       
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | bed1            | booking3        | c1(+),c2(+),c3(-),c4(+)        |
-      | bed2            | booking2        | c1(+),c2(-),c3(+),c4(-)        |
+      | bed1            | booking3        | c1(rb),c2(rb),c3(r),c4(rb)     |
+      | bed2            | booking2        | c1(rb),c2(r),c3(rb),c4(r)      |
       
       Unplanned: 1
       
@@ -203,12 +203,12 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 4
   
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | bed1            |                 | c1,c2,c3,c4                    |
-      | bed2            | booking2        | c1(+),c3(+)                    |
-      | bed3            | booking3        | c1(+),c2(+)                    |
-      | bed4            | booking4        | c4(+)                          |
+      | bed1            |                 | c1(r),c2(r),c3(r),c4(r)        |
+      | bed2            | booking2        | c1(rb),c3(rb)                  |
+      | bed3            | booking3        | c1(rb),c2(rb)                  |
+      | bed4            | booking4        | c4(rb)                         |
       | bed5            | booking1        |                                |
       
       Unplanned: 0
@@ -231,9 +231,9 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 1
       
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | bed1            | booking2        | c1(-),c2(-),c3(-),c4(-),c5(+)  |
+      | bed1            | booking2        | c1(r),c2(r),c3(r),c4(r),c5(rb) |
       | bed2            |                 |                                |
       | bed3            |                 |                                |
       
@@ -262,11 +262,11 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 1
   
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | room1 bed1      | booking1        | c1(+),c2(+)                    |
-      | room1 bed2      |                 | c1,c2                          |
-      | room1 bed3      |                 | c1,c2                          |
+      | room1 bed1      | booking1        | c1(rb),c2(rb)                  |
+      | room1 bed2      |                 | c1(r),c2(r)                    |
+      | room1 bed3      |                 | c1(r),c2(r)                    |
       
       Unplanned: 1
       
@@ -292,10 +292,10 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 2
       
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | bed1            | booking3        | c1(+)                          |
-      | bed2            | booking2        | c1(-)                          |
+      | bed1            | booking3        | c1(rb),single(b)               |
+      | bed2            | booking2        | c1(r),single(b)                |
       
       Unplanned: 1
       
@@ -325,12 +325,12 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 3
     
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | room1 bed1      | booking1        | c1(+),c2(+)                    |
-      | room1 bed2      |                 | c1,c2                          |
-      | room2 bed1      | booking2        | c1(-),c2(-),c4(-)              |
-      | room2 bed2      | booking2        | c1(-),c2(-),c4(-)              |
+      | room1 bed1      | booking1        | c1(rb),c2(rb)                  |
+      | room1 bed2      |                 | c1(r),c2(r)                    |
+      | room2 bed1      | booking2        | c1(r),c2(r),c4(r),single(b)    |
+      | room2 bed2      | booking2        | c1(r),c2(r),c4(r),single(b)    |
       
       Unplanned: 0
       """,
@@ -358,13 +358,13 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 5
       
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
-      | room1 bed1      | booking1        |                                |
-      | room1 bed2      | booking1        |                                |
-      | room2 bed1      | booking2        |                                |
-      | room2 bed2      | booking2        |                                |
-      | room2 bed3      | booking2        |                                |
+      | room1 bed1      | booking1        | single(b)                      |
+      | room1 bed2      | booking1        | single(b)                      |
+      | room2 bed1      | booking2        | single(b)                      |
+      | room2 bed2      | booking2        | single(b)                      |
+      | room2 bed3      | booking2        | single(b)                      |
       
       Unplanned: 1
       
@@ -394,13 +394,13 @@ class SpaceDayPlannerTest {
       expected = """
       Planned: 2
     
-      | Bed             | Booking         | Bed Characteristics            |
+      | Bed             | Booking         | Characteristics                |
       | --------------- | --------------- | ------------------------------ |
       | room1 bed1      |                 |                                |
       | room1 bed2      |                 |                                |
       | room1 bed3      |                 |                                |
-      | room2 bed1      | booking1        |                                |
-      | room2 bed2      | booking1        |                                |
+      | room2 bed1      | booking1        | single(b)                      |
+      | room2 bed2      | booking1        | single(b)                      |
       
       Unplanned: 0
       """,
