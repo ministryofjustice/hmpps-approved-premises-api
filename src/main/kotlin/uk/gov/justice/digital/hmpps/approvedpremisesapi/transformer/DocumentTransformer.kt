@@ -57,7 +57,7 @@ class DocumentTransformer {
             else -> DocumentLevel.offender
           },
           fileName = it.filename,
-          createdAt = it.dateCreated?.toInstant(),
+          createdAt = it.dateCreated.toInstant(),
           typeCode = it.typeCode,
           typeDescription = it.typeDescription,
           description = it.description,
