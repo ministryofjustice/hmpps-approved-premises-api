@@ -30,8 +30,9 @@ class SpaceDayPlannerTest {
       bookings = emptySet(),
       expected = """
         Planned: 0
+        
         Unplanned: 0
-      """,
+        """,
     )
   }
 
@@ -45,13 +46,13 @@ class SpaceDayPlannerTest {
       bookings = setOf(booking1, booking2),
       expected = """
         Planned: 0
+        
         Unplanned: 2
         
         | Booking         | Characteristics                |
         | --------------- | ------------------------------ |
         | booking1        |                                |
-        | booking2        |                                |
-      """,
+        | booking2        |                                |""",
     )
   }
 
@@ -118,12 +119,13 @@ class SpaceDayPlannerTest {
       bookings = setOf(bookingWithCharacteristic),
       expected = """
         Planned: 0
+        
         Unplanned: 1
         
         | Booking         | Characteristics                |
         | --------------- | ------------------------------ |
         | booking1        | c1                             |
-      """,
+        """,
     )
   }
 
@@ -332,8 +334,7 @@ class SpaceDayPlannerTest {
       | room2 bed1      | booking2        | c1(r),c2(r),c4(r),single(b)    |
       | room2 bed2      | booking2        | c1(r),c2(r),c4(r),single(b)    |
       
-      Unplanned: 0
-      """,
+      Unplanned: 0""",
     )
   }
 

@@ -91,6 +91,18 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     premisesId: UUID,
     crn: String,
   ): List<Cas1SpaceBookingAtPremises>
+
+  @Query(
+    value =
+    """
+    SELECT b FROM Cas1SpaceBookingEntity b
+    WHERE b.premises.id = :premisesId
+    AND b.cancellationOccurredAt IS NULL 
+    AND b.canonicalArrivalDate <= :day 
+    AND b.canonicalDepartureDate > :day
+  """,
+  )
+  fun findAllBookingsOnGivenDayForPremises(premisesId: UUID, day: LocalDate): List<Cas1SpaceBookingEntity>
 }
 
 interface Cas1SpaceBookingSearchResult {
@@ -154,7 +166,7 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "cancellation_reason_id")
   var cancellationReason: CancellationReasonEntity?,
   var cancellationReasonNotes: String?,
-  @ManyToMany
+  @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
     name = "cas1_space_bookings_criteria",
     joinColumns = [JoinColumn(name = "space_booking_id")],

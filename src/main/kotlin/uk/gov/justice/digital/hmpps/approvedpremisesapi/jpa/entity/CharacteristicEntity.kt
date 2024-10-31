@@ -11,7 +11,7 @@ import java.util.UUID
 interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
 
   companion object Constants {
-    val SINGLE_ROOM_CHARACTERISTIC: UUID = UUID.fromString("7d59280e-aca0-4842-994e-b22cbc076fe8")
+    val CAS1_SINGLE_ROOM_CHARACTERISTIC_ID: UUID = UUID.fromString("7d59280e-aca0-4842-994e-b22cbc076fe8")
   }
 
   @Query("SELECT c FROM CharacteristicEntity c WHERE c.serviceScope = :serviceName")

@@ -28,16 +28,14 @@ object MarkdownTableRenderer {
       output.append("".padEnd(width, '-'))
       output.append(" |")
     }
-    output.appendLine()
-
     body.forEach { row ->
+      output.appendLine()
       output.append("|")
       row.forEachIndexed { i, col ->
         output.append(" ")
         output.append(col.padEnd(colWidths[i], ' '))
         output.append(" |")
       }
-      output.appendLine()
     }
 
     return output.toString()

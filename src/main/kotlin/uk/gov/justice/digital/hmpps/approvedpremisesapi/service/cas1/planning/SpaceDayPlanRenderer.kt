@@ -36,6 +36,7 @@ object SpaceDayPlanRenderer {
       output.appendLine("")
     }
 
+    output.appendLine()
     output.appendLine("Unplanned: ${result.unplanned.size}")
     if (result.unplanned.isNotEmpty()) {
       output.appendLine("")

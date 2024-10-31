@@ -139,9 +139,15 @@ data class Cas1OutOfServiceBedEntity(
   val reason: Cas1OutOfServiceBedReasonEntity
     get() = latestRevision.reason
 
+  /**
+   * inclusive
+   */
   val startDate
     get() = latestRevision.startDate
 
+  /**
+   * inclusive
+   */
   val endDate
     get() = latestRevision.endDate
 
@@ -150,4 +156,10 @@ data class Cas1OutOfServiceBedEntity(
 
   val notes
     get() = latestRevision.notes
+
+  fun isApplicable(now: LocalDate, candidate: BedEntity): Boolean {
+    return bed.id == candidate.id &&
+      cancellation == null &&
+      (!now.isBefore(startDate) && !now.isAfter(endDate))
+  }
 }

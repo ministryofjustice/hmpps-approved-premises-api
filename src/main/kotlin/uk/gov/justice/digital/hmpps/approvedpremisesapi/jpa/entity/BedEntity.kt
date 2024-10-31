@@ -119,7 +119,10 @@ data class BedEntity(
   @CreationTimestamp
   var createdAt: OffsetDateTime?,
 ) {
-
+  fun isActive(now: LocalDate): Boolean {
+    val endDateConst = endDate
+    return endDateConst == null || endDateConst.isAfter(now)
+  }
   override fun toString() = "BedEntity: $id"
 }
 
