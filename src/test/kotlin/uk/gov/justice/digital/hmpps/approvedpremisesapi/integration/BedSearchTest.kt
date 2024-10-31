@@ -588,6 +588,22 @@ class BedSearchTest : IntegrationTestBase() {
             withId(UUID.randomUUID())
           }
 
+          val cancelledOverlappingBookingForBedInPremisesTwo = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(application)
+            withPremises(premisesTwo)
+            withBed(overlappingBedInPremisesTwo)
+            withArrivalDate(LocalDate.parse("2023-07-25"))
+            withDepartureDate(LocalDate.parse("2023-08-05"))
+            withCrn(offenderDetails.otherIds.crn)
+            withId(UUID.randomUUID())
+          }
+
+          cancellationEntityFactory.produceAndPersist {
+            withBooking(cancelledOverlappingBookingForBedInPremisesTwo)
+            withReason(cancellationReasonEntityFactory.produceAndPersist())
+          }
+
           ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
