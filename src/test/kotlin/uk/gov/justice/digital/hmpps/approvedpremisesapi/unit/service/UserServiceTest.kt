@@ -49,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Boro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -74,7 +73,6 @@ class UserServiceTest {
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
@@ -91,7 +89,6 @@ class UserServiceTest {
     mockProbationAreaProbationRegionMappingRepository,
     mockCas1ApAreaMappingService,
     mockProbationDeliveryUnitRepository,
-    mockFeatureFlagService,
     mockApDeliusContextApiClient,
     mockCas1CruManagementAreaRepository,
   )
@@ -1171,7 +1168,6 @@ class UserServiceTest {
         .produce()
 
       every { mockUserRepository.findActiveUsersWithAtLeastOneRole(any()) } returns listOf(userWithLao, userWithoutLao)
-      every { mockFeatureFlagService.getBooleanFlag(any()) } returns true
 
       val allocatableUser = userService.getAllocatableUsersForAllocationType(
         "crn",
@@ -1191,7 +1187,6 @@ class UserServiceTest {
         .produce()
 
       every { mockUserRepository.findActiveUsersWithAtLeastOneRole(any()) } returns listOf(user)
-      every { mockFeatureFlagService.getBooleanFlag(any()) } returns true
 
       val allocatableUser = userService.getAllocatableUsersForAllocationType(
         "crn",
