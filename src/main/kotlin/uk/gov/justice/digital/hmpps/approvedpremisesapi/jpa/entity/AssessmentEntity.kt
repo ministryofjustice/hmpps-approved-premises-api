@@ -134,10 +134,10 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
              join applications ap on a.application_id = ap.id
              left outer join temporary_accommodation_applications taa on ap.id = taa.id
              left outer join probation_delivery_units pdu on taa.probation_delivery_unit_id = pdu.id
-       where taa.probation_region_id = ?1
-             and (?2 is null OR ap.crn = ?2 OR lower(taa.name) LIKE CONCAT('%', lower(?2),'%'))
+       where taa.probation_region_id = :probationRegionId
+             and (:crnOrName is null OR lower(ap.crn) = lower(:crnOrName) OR lower(taa.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
              and a.reallocated_at is null
-             and ((?3) is null OR
+             and ((:statuses) is null OR
                                 (
                                   CASE
                                     WHEN a.decision='REJECTED' THEN 'REJECTED'
@@ -146,7 +146,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                                     WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
                                     WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
                                   END  
-                                ) IN (?3)                       
+                                ) IN (:statuses)                       
                 )
     """,
     countQuery = """
@@ -155,10 +155,10 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                join assessments a on aa.assessment_id = a.id
                join applications ap on a.application_id = ap.id
                left outer join temporary_accommodation_applications taa on ap.id = taa.id
-         where taa.probation_region_id = ?1
-               and (?2 is null OR ap.crn = ?2)
+         where taa.probation_region_id = :probationRegionId
+               and (:crnOrName is null OR lower(ap.crn) = lower(:crnOrName))
                and a.reallocated_at is null
-               and ((?3) is null OR
+               and ((:statuses) is null OR
                                 (
                                   CASE
                                     WHEN a.decision='REJECTED' THEN 'REJECTED'
@@ -167,7 +167,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                                     WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
                                     WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
                                   END  
-                                ) IN (?3)                       
+                                ) IN (:statuses)                       
                 )
     """,
     nativeQuery = true,

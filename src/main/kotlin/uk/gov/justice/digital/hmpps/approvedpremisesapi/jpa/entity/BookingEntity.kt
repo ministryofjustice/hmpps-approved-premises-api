@@ -266,7 +266,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       WHERE b.service = 'temporary-accommodation'
       AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crnOrName is null OR b.crn = :crnOrName OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
+      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
     countQuery = """
       $OFFENDERS_QUERY
@@ -280,7 +280,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       WHERE b.service = 'temporary-accommodation'
       AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crnOrName is null OR b.crn = :crnOrName OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
+      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
     nativeQuery = true,
   )

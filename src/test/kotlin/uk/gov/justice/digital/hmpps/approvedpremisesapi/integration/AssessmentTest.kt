@@ -1453,10 +1453,21 @@ class AssessmentTest : IntegrationTestBase() {
 
           otherAssessment.schemaUpToDate = true
 
+          // when CRN is upper case
           assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?crnOrName=${offender.first.otherIds.crn}",
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ),
+          )
+
+          // when CRN is lower case
+          assertResponseForUrl(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crnOrName=${offender.first.otherIds.crn.lowercase()}",
             ExpectedResponse.OK(
               assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
             ),
