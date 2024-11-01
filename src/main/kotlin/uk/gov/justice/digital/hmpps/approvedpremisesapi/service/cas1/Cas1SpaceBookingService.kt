@@ -123,6 +123,9 @@ class Cas1SpaceBookingService(
         departureMoveOnCategory = null,
         departureReason = null,
         criteria = characteristics,
+        nonArrivalConfirmedAt = null,
+        nonArrivalNotes = null,
+        nonArrivalReason = null,
       ),
     )
 

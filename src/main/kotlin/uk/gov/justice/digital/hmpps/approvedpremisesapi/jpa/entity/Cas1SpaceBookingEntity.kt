@@ -158,6 +158,11 @@ data class Cas1SpaceBookingEntity(
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
   val criteria: List<CharacteristicEntity>,
+  var nonArrivalConfirmedAt: Instant?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "non_arrival_reason_id")
+  var nonArrivalReason: NonArrivalReasonEntity?,
+  var nonArrivalNotes: String?,
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
