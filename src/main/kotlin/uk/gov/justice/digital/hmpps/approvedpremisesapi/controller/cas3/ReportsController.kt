@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bookingGap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.futureBookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.futureBookingsCsv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.referral
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingGapReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
@@ -144,6 +146,18 @@ class ReportsController(
             startDate = startDate,
             endDate = endDate.plusMonths(FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS.toLong()),
             probationRegionId = probationRegionId,
+          ),
+          outputStream,
+        )
+      }
+
+      bookingGap -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+      ) { outputStream ->
+        cas3ReportService.createBookingGapReport(
+          BookingGapReportProperties(
+            startDate = startDate,
+            endDate = endDate,
           ),
           outputStream,
         )

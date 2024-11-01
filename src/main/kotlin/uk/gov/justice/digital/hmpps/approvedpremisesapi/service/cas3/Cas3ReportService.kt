@@ -24,9 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonIn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingGapReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvObjectListConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
@@ -180,9 +182,16 @@ class Cas3ReportService(
       )
   }
 
-  fun createBookingGapRangesReport(): MutableList<MutableMap<String, Any>> {
-    return cas3BookingGapReportRepository
-      .generateBookingGapRangesReport()
+  fun createBookingGapReport(properties: BookingGapReportProperties, outputStream: OutputStream) {
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+    ).use { consumer ->
+      cas3BookingGapReportRepository.generateBookingGapReport(
+        properties.startDate,
+        properties.endDate,
+        consumer,
+      )
+    }
   }
 
   fun createFutureBookingReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
