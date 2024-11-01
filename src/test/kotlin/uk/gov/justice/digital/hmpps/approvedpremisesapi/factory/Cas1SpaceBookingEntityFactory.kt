@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -41,6 +42,9 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var departureReason: Yielded<DepartureReasonEntity?> = { null }
   private var departureMoveOnCategory: Yielded<MoveOnCategoryEntity?> = { null }
   private var criteria: Yielded<List<CharacteristicEntity>> = { emptyList() }
+  private var nonArrivalConfirmedAt: Yielded<Instant?> = { null }
+  private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
+  private var nonArrivalNotes: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -168,6 +172,18 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.criteria = { criteria }
   }
 
+  fun withNonArrivalConfirmedAt(nonArrivalConfirmedAt: Instant?) = apply {
+    this.nonArrivalConfirmedAt = { nonArrivalConfirmedAt }
+  }
+
+  fun withNonArrivalNotes(nonArrivalNotes: String?) = apply {
+    this.nonArrivalNotes = { nonArrivalNotes }
+  }
+
+  fun withNonArrivalReason(reason: NonArrivalReasonEntity?) = apply {
+    this.nonArrivalReason = { reason }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
@@ -192,5 +208,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     departureReason = this.departureReason(),
     departureMoveOnCategory = this.departureMoveOnCategory(),
     criteria = this.criteria(),
+    nonArrivalConfirmedAt = this.nonArrivalConfirmedAt(),
+    nonArrivalNotes = this.nonArrivalNotes(),
+    nonArrivalReason = this.nonArrivalReason(),
   )
 }

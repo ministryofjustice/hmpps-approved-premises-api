@@ -328,6 +328,9 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.keyWorkerStaffCode).isNull()
       assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
       assertThat(persistedBooking.criteria).hasSize(2)
+      assertThat(persistedBooking.nonArrivalReason).isNull()
+      assertThat(persistedBooking.nonArrivalNotes).isNull()
+      assertThat(persistedBooking.nonArrivalReason).isNull()
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
     }
