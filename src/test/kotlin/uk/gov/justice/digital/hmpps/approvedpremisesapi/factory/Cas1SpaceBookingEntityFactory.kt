@@ -186,6 +186,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.nonArrivalReason = { reason }
   }
 
+  fun withMigratedFromBooking(booking: BookingEntity?) = apply {
+    this.migratedFromBooking = { booking }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),

@@ -23,6 +23,8 @@ import java.util.UUID
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
   fun findByPremisesIdAndPlacementRequestId(premisesId: UUID, placementRequestId: UUID): Cas1SpaceBookingEntity?
 
+  fun deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId: UUID): Long
+
   @Query(
     value = """
       SELECT 
@@ -171,4 +173,5 @@ data class Cas1SpaceBookingEntity(
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
   fun hasArrival() = actualArrivalDateTime != null
+  override fun toString() = "Cas1SpaceBookingEntity:$id"
 }

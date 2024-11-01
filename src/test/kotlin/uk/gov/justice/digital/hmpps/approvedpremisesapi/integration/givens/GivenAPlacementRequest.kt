@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -52,6 +53,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   application: ApprovedPremisesApplicationEntity? = null,
+  essentialCriteria: List<CharacteristicEntity>? = null,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -117,7 +119,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
       characteristicEntityFactory.produceAndPersistMultiple(5),
     )
     withEssentialCriteria(
-      characteristicEntityFactory.produceAndPersistMultiple(3),
+      essentialCriteria ?: characteristicEntityFactory.produceAndPersistMultiple(3),
     )
   }
 
