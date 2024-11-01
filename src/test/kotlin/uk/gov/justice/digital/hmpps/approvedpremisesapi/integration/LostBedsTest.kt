@@ -369,7 +369,7 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".referenceNumber").isEqualTo("REF-123")
         .jsonPath(".notes").isEqualTo("notes")
         .jsonPath(".status").isEqualTo("active")
-        .jsonPath(".cancellation").isEqualTo(null)
+        .jsonPath(".cancellation").doesNotExist()
     }
   }
 
@@ -562,7 +562,7 @@ class LostBedsTest : IntegrationTestBase() {
         .jsonPath(".referenceNumber").isEqualTo("REF-123")
         .jsonPath(".notes").isEqualTo("notes")
         .jsonPath(".status").isEqualTo("active")
-        .jsonPath(".cancellation").isEqualTo(null)
+        .jsonPath(".cancellation").doesNotExist()
     }
   }
 
@@ -893,7 +893,7 @@ class LostBedsTest : IntegrationTestBase() {
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath(".cancellation").doesNotExist()
       }
     }
   }
@@ -1013,7 +1013,7 @@ class LostBedsTest : IntegrationTestBase() {
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath(".cancellation").doesNotExist()
       }
     }
   }
@@ -1148,7 +1148,7 @@ class LostBedsTest : IntegrationTestBase() {
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath(".cancellation").doesNotExist()
       }
     }
   }
@@ -1282,7 +1282,7 @@ class LostBedsTest : IntegrationTestBase() {
           .jsonPath(".referenceNumber").isEqualTo("REF-123")
           .jsonPath(".notes").isEqualTo("notes")
           .jsonPath(".status").isEqualTo("active")
-          .jsonPath(".cancellation").isEqualTo(null)
+          .jsonPath(".cancellation").doesNotExist()
       }
     }
   }
