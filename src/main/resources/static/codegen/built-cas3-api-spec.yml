@@ -3907,7 +3907,6 @@ components:
         - update_users_from_api
         - approved_premises_ap_staff_users
         - approved_premises_cancel_bookings
-        - approved_premises_booking_adhoc_property
         - approved_premises_assessment_more_info_bug_fix
         - approved_premises_redact_assessment_details
         - approved_premises_withdraw_placement_request
@@ -3935,15 +3934,11 @@ components:
         - update_cas2_applications_with_assessments
         - update_cas2_status_updates_with_assessments
         - update_cas2_notes_with_assessments
-        - update_cas1_user_details
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types
         - update_cas1_backfill_user_ap_area
-        - update_cas1_lost_beds_to_out_of_service_beds
         - update_cas3_application_offender_name
-        - update_cas1_populate_app_reason_for_short_notice_metadata
         - update_cas3_domain_event_type_for_person_departed_updated
-        - update_cas1_truncate_oosb_for_beds_with_end_date
     PlacementDates:
       type: object
       properties:
