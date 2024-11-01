@@ -188,7 +188,7 @@ class Cas1SpaceBookingService(
   }
 
   @Transactional
-  fun recordKeyWorkerForBooking(
+  fun recordKeyWorkerAssignedForBooking(
     premisesId: UUID,
     bookingId: UUID,
     keyWorker: Cas1AssignKeyWorker,
@@ -211,15 +211,24 @@ class Cas1SpaceBookingService(
     if (staffMemberResponse !is AuthorisableActionResult.Success) {
       return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
     }
-    val staffKeyWorker = extractEntityFromAuthorisableActionResult(staffMemberResponse)
+    val assignedKeyWorker = extractEntityFromAuthorisableActionResult(staffMemberResponse)
+    val assignedKeyWorkerName = "${assignedKeyWorker.name.forename} ${assignedKeyWorker.name.surname}"
 
     existingCas1SpaceBooking!!
 
-    existingCas1SpaceBooking.keyWorkerStaffCode = staffKeyWorker.code
-    existingCas1SpaceBooking.keyWorkerName = "${staffKeyWorker.name.forename} ${staffKeyWorker.name.surname}"
+    val previousKeyWorkerName = existingCas1SpaceBooking.keyWorkerName ?: null
+
+    existingCas1SpaceBooking.keyWorkerStaffCode = assignedKeyWorker.code
+    existingCas1SpaceBooking.keyWorkerName = assignedKeyWorkerName
     existingCas1SpaceBooking.keyWorkerAssignedAt = OffsetDateTime.now().toInstant()
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
+
+    cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(
+      existingCas1SpaceBooking,
+      assignedKeyWorkerName,
+      previousKeyWorkerName,
+    )
 
     success(result)
   }

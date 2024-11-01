@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
@@ -44,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
@@ -190,6 +192,7 @@ class DomainEventServiceTest {
         DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to domainEventService::getBookingNotMadeEvent,
         DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to domainEventService::getBookingCancelledEvent,
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to domainEventService::getBookingChangedEvent,
+        DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED to domainEventService::getBookingKeyWorkerAssignedEvent,
         DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to domainEventService::getApplicationWithdrawnEvent,
         DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED to domainEventService::getApplicationExpiredEvent,
         DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
@@ -703,6 +706,34 @@ class DomainEventServiceTest {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+        )
+      }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `saveBookingKeyWorkerAssignedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
+
+      val eventDetails = BookingKeyWorkerAssignedFactory().produce()
+      val domainEventEnvelope = mockk<BookingKeyWorkerAssignedEnvelope>()
+      val domainEvent = mockk<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
+
+      val domainEventServiceSpy = spyk(domainEventService)
+
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+
+      domainEventServiceSpy.saveKeyWorkerAssignedEvent(domainEvent, emit)
+
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+          emit,
         )
       }
     }

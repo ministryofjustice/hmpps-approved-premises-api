@@ -177,7 +177,7 @@ class Cas1SpaceBookingController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER)
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.recordKeyWorkerForBooking(
+      cas1SpaceBookingService.recordKeyWorkerAssignedForBooking(
         premisesId,
         bookingId,
         cas1AssignKeyWorker,

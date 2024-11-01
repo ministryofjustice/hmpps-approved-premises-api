@@ -25,13 +25,18 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(crn: St
     ),
   )
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) =
+fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/approved-premises/$qCode/staff",
     responseBody = StaffMembersPage(
       content = listOf(staffMember),
     ),
   )
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/secure/staff/staffCode/${staffMember.code}",
+    responseBody = staffMember,
+  )
+}
 
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) =
   mockSuccessfulGetCallWithJsonResponse(

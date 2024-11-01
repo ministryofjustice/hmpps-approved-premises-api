@@ -63,6 +63,7 @@ generic-service:
     URL-TEMPLATES_API_CAS1_BOOKING-NOT-MADE-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-cancelled/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-CHANGED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-changed/#eventId
+    URL-TEMPLATES_API_CAS1_BOOKING-KEYWORKER-ASSIGNED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-keyworker-assigned/#eventId
     URL-TEMPLATES_API_CAS1_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
     URL-TEMPLATES_API_CAS1_APPLICATION-EXPIRED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-expired/#eventId
     URL-TEMPLATES_API_CAS1_ASSESSMENT-APPEALED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/assessment-appealed/#eventId

@@ -247,6 +247,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/booking-keyworker-assigned/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Manage' events"
+      summary: A 'booking-keyworker-assigned' event
+      responses:
+        '200':
+          description: The 'booking-keyworker-assigned' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingKeyWorkerAssignedEnvelope'
+        404:
+          description: No 'booking-keyworker-changed' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/booking-not-made/{eventId}:
     parameters:
       - name: eventId
@@ -1229,6 +1256,61 @@ components:
         - premises
         - arrivalOn
         - departureOn
+    BookingKeyWorkerAssignedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        eventDetails:
+          $ref: '#/components/schemas/BookingKeyWorkerAssigned'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    BookingKeyWorkerAssigned:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        bookingId:
+          $ref: '#/components/schemas/BookingId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        premises:
+          $ref: '#/components/schemas/Premises'
+        arrivalDate:
+          type: string
+          example: '2023-02-12'
+          format: date
+        departureDate:
+          type: string
+          example: '2023-02-12'
+          format: date
+        previousKeyWorkerName:
+          type: string
+        assignedKeyWorkerName:
+          type: string
+      required:
+        - applicationId
+        - applicationUrl
+        - bookingId
+        - personReference
+        - deliusEventNumber
+        - premises
+        - arrivalDate
+        - departureDate
+        - assignedKeyWorkerName
     BookingNotMadeEnvelope:
       type: object
       properties:
@@ -1986,6 +2068,7 @@ components:
           - approved-premises.booking.not-made
           - approved-premises.booking.cancelled
           - approved-premises.booking.changed
+          - approved-premises.booking.keyworker.assigned
           - approved-premises.application.withdrawn
           - approved-premises.application.expired
           - approved-premises.assessment.appealed
@@ -2006,6 +2089,7 @@ components:
         - bookingNotMade
         - bookingCancelled
         - bookingChanged
+        - bookingKeyWorkerAssigned
         - applicationWithdrawn
         - applicationExpired
         - assessmentAppealed

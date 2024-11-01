@@ -232,6 +232,7 @@ url-templates:
       booking-not-made-event-detail: http://localhost:3000/events/booking-not-made/#eventId
       booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
       booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
+      booking-keyworker-assigned-event-detail: http://localhost:3000/events/booking-keyworker-assigned/#eventId
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
       application-expired-event-detail: http://localhost:3000/events/application-expired/#eventId
       assessment-appealed-event-detail: http://localhost:3000/events/assessment-appealed/#eventId

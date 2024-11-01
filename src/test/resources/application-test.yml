@@ -133,6 +133,7 @@ url-templates:
       booking-not-made-event-detail: http://api/events/booking-not-made/#eventId
       booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
+      booking-keyworker-assigned-event-detail: http://api/events/booking-keyworker-assigned/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
       application-expired-event-detail: http://api/events/application-expired/#eventId
       assessment-appealed-event-detail: http://api/events/assessment-appealed/#eventId

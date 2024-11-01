@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffWithoutUsernameUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -307,6 +309,144 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventMoveOnCategory.id).isEqualTo(moveOnCategory.id)
       assertThat(domainEventMoveOnCategory.description).isEqualTo(moveOnCategory.name)
       assertThat(domainEventMoveOnCategory.legacyMoveOnCategoryCode).isEqualTo(moveOnCategory.legacyDeliusCategoryCode)
+    }
+  }
+
+  @Nested
+  inner class KeyWorkerAssigned {
+
+    private val arrivalDate = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    private val departureDate = LocalDate.now().plusMonths(3)
+
+    private val application = ApprovedPremisesApplicationEntityFactory()
+      .withSubmittedAt(OffsetDateTime.parse("2024-10-01T12:00:00Z"))
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
+      .produce()
+
+    private val caseSummary = CaseSummaryFactory()
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    val keyWorker = StaffWithoutUsernameUserDetailsFactory()
+      .produce()
+
+    val keyWorkerName = "${keyWorker.staff.forenames} ${keyWorker.staff.surname}"
+    val previousKeyWorkerName = "Previous $keyWorkerName"
+
+    private val spaceBookingWithoutKeyWorker = Cas1SpaceBookingEntityFactory()
+      .withApplication(application)
+      .withPremises(premises)
+      .withActualArrivalDateTime(arrivalDate)
+      .withCanonicalArrivalDate(arrivalDate.toLocalDate())
+      .withExpectedDepartureDate(departureDate)
+      .withCanonicalDepartureDate(departureDate)
+      .produce()
+
+    private val spaceBookingWithKeyWorker = Cas1SpaceBookingEntityFactory()
+      .withApplication(application)
+      .withPremises(premises)
+      .withActualArrivalDateTime(arrivalDate)
+      .withCanonicalArrivalDate(arrivalDate.toLocalDate())
+      .withExpectedDepartureDate(departureDate)
+      .withCanonicalDepartureDate(departureDate)
+      .withKeyworkerStaffCode(keyWorker.staffCode)
+      .withKeyworkerName(previousKeyWorkerName)
+      .produce()
+
+    @BeforeEach
+    fun before() {
+      every { domainEventService.saveKeyWorkerAssignedEvent(any(), any()) } just Runs
+
+      every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
+        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
+
+      every { communityApiClient.getStaffUserDetailsForStaffCode(any()) } returns ClientResult.Success(
+        HttpStatus.OK,
+        keyWorker,
+      )
+    }
+
+    @Test
+    fun `record keyWorker assigned and emits domain event with newly assigned key worker`() {
+      service.keyWorkerAssigned(
+        spaceBookingWithoutKeyWorker,
+        assignedKeyWorkerName = keyWorkerName,
+        previousKeyWorkerName = null,
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveKeyWorkerAssignedEvent(
+          capture(domainEventArgument),
+          emit = false,
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      checkDomainEventBookingProperties(domainEvent, spaceBookingWithoutKeyWorker)
+      val domainEventEventDetails = domainEvent.data.eventDetails
+      assertThat(domainEventEventDetails.previousKeyWorkerName).isEqualTo(null)
+      assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
+    }
+
+    @Test
+    fun `record keyWorker assigned and emits domain event with previous and newly assigned key worker`() {
+      service.keyWorkerAssigned(
+        spaceBookingWithKeyWorker,
+        assignedKeyWorkerName = keyWorkerName,
+        previousKeyWorkerName = previousKeyWorkerName,
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveKeyWorkerAssignedEvent(
+          capture(domainEventArgument),
+          emit = false,
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      checkDomainEventBookingProperties(domainEvent, spaceBookingWithKeyWorker)
+      val domainEventEventDetails = domainEvent.data.eventDetails
+      assertThat(domainEventEventDetails.previousKeyWorkerName).isEqualTo(previousKeyWorkerName)
+      assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
+    }
+
+    private fun checkDomainEventBookingProperties(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>, spaceBooking: Cas1SpaceBookingEntity) {
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingKeyWorkerAssigned)
+      assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.bookingId).isNull()
+      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
+      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
+      val domainEventEventDetails = domainEvent.data.eventDetails
+      assertThat(domainEventEventDetails.applicationId).isEqualTo(application.id)
+      assertThat(domainEventEventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(domainEventEventDetails.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEventEventDetails.personReference.crn).isEqualTo(spaceBooking.crn)
+      assertThat(domainEventEventDetails.personReference.noms).isEqualTo(caseSummary.nomsId)
+      assertThat(domainEventEventDetails.deliusEventNumber).isEqualTo(application.eventNumber)
+      assertThat(domainEventEventDetails.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
+      assertThat(domainEventEventDetails.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
+      val domainEventPremises = domainEventEventDetails.premises
+      assertThat(domainEventPremises.id).isEqualTo(premises.id)
+      assertThat(domainEventPremises.name).isEqualTo(premises.name)
+      assertThat(domainEventPremises.apCode).isEqualTo(premises.apCode)
+      assertThat(domainEventPremises.legacyApCode).isEqualTo(premises.qCode)
+      assertThat(domainEventPremises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
     }
   }
 }

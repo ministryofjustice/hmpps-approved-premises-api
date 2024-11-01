@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -1019,7 +1020,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording key worker returns OK`() {
+    fun `Recording key worker returns OK and emits domain event`() {
       val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -1036,6 +1037,13 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
+
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED)
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorker.name.forename} ${keyWorker.name.surname}")
+      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo(keyWorker.code)
+      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
     }
   }
 

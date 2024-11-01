@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
@@ -36,6 +37,8 @@ class DomainEventsController(
   override fun eventsBookingCancelledEventIdGet(eventId: UUID) = getDomainEvent<BookingCancelledEnvelope>(eventId)
 
   override fun eventsBookingChangedEventIdGet(eventId: UUID) = getDomainEvent<BookingChangedEnvelope>(eventId)
+
+  override fun eventsBookingKeyworkerAssignedEventIdGet(eventId: UUID) = getDomainEvent<BookingKeyWorkerAssignedEnvelope>(eventId)
 
   override fun eventsApplicationAssessedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationAssessedEnvelope>(eventId)
 
@@ -83,6 +86,7 @@ class DomainEventsController(
       PlacementApplicationWithdrawnEnvelope::class -> domainEventService::getPlacementApplicationWithdrawnEvent
       BookingCancelledEnvelope::class -> domainEventService::getBookingCancelledEvent
       BookingChangedEnvelope::class -> domainEventService::getBookingChangedEvent
+      BookingKeyWorkerAssignedEnvelope::class -> domainEventService::getBookingKeyWorkerAssignedEvent
       BookingNotMadeEnvelope::class -> domainEventService::getBookingNotMadeEvent
       PersonArrivedEnvelope::class -> domainEventService::getPersonArrivedEvent
       PersonDepartedEnvelope::class -> domainEventService::getPersonDepartedEvent
