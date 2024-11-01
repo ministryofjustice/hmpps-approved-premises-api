@@ -68,7 +68,11 @@ class BookingSearchTest : IntegrationTestBase() {
           createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
 
+        // when CRN is upper case
         callApiAndAssertResponse("/bookings/search?crnOrName=$crn", jwt, expectedResponse, true)
+
+        // when CRN is lower case
+        callApiAndAssertResponse("/bookings/search?crnOrName=${crn.lowercase()}", jwt, expectedResponse, true)
       }
     }
   }
@@ -83,7 +87,11 @@ class BookingSearchTest : IntegrationTestBase() {
         createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
         val expectedResponse = getExpectedResponse(expectedBookingInSearchResult, offenderDetails)
 
+        // when CRN is upper case
         callApiAndAssertResponse("/bookings/search?crnOrName=${offenderDetails.otherIds.crn}", jwt, expectedResponse, true)
+
+        // when CRN is lower case
+        callApiAndAssertResponse("/bookings/search?crnOrName=${offenderDetails.otherIds.crn.lowercase()}", jwt, expectedResponse, true)
       }
     }
   }
