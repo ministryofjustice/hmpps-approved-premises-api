@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.sentry.Sentry
 import jakarta.persistence.EntityManager
 import org.springframework.context.ApplicationContext
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPduJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ReasonForShortNoticeMetadataMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteMigrationJob
@@ -131,13 +129,6 @@ class MigrationJobService(
           getBean(EntityManager::class),
           pageSize,
           getBean(MigrationLogger::class),
-        )
-
-        MigrationJobType.cas1PopulateAppReasonForShortNoticeMetadata -> Cas1ReasonForShortNoticeMetadataMigrationJob(
-          getBean(ApplicationRepository::class),
-          getBean(DomainEventRepository::class),
-          getBean(TransactionTemplate::class),
-          getBean(JdbcTemplate::class),
         )
 
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
