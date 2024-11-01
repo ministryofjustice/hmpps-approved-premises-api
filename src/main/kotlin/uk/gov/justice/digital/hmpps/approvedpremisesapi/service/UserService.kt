@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasSimpleResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
@@ -286,8 +285,8 @@ class UserService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun updateUserPduById(id: UUID): AuthorisableActionResult<UserEntity> {
-    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  fun updateUserPduById(id: UUID): CasResult<UserEntity> {
+    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
 
     val deliusUser = when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
       is ClientResult.Success -> staffUserDetailsResponse.body
@@ -307,7 +306,7 @@ class UserService(
       }
     }
 
-    return AuthorisableActionResult.Success(user)
+    return CasResult.Success(user)
   }
 
   fun updateUserEntity(
