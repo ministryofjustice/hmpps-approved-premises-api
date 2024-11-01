@@ -8292,7 +8292,6 @@ components:
         - update_cas3_application_offender_name
         - update_cas1_populate_app_reason_for_short_notice_metadata
         - update_cas3_domain_event_type_for_person_departed_updated
-        - update_cas1_truncate_oosb_for_beds_with_end_date
     PlacementDates:
       type: object
       properties:
