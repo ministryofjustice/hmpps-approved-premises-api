@@ -102,20 +102,6 @@ class UserServiceTest {
   inner class GetExistingUserOrCreate {
 
     @Test
-    fun `getExistingUserOrCreateDeprecated calls overloaded function with throwExceptionOnStaffRecordNotFound parameter set false`() {
-      val username = "SOMEPERSON"
-
-      val user = UserEntityFactory()
-        .withDefaults()
-        .produce()
-
-      every { mockUserRepository.findByDeliusUsername(username) } returns user
-
-      assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
-      verify(exactly = 1) { userService.getExistingUserOrCreate(username) }
-    }
-
-    @Test
     fun `getExistingUserOrCreate when user has no delius staff record`() {
       val username = "SOMEPERSON"
 
@@ -152,7 +138,11 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-      assertThat(userService.getExistingUserOrCreateDeprecated(username)).isEqualTo(user)
+      val result = userService.getExistingUserOrCreate(username)
+      assertThat(result).isInstanceOf(GetUserResponse.Success::class.java)
+      result as GetUserResponse.Success
+
+      assertThat(result.user).isEqualTo(user)
 
       verify(exactly = 0) { mockUserRepository.save(any()) }
     }
@@ -248,7 +238,7 @@ class UserServiceTest {
       every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns null
 
       assertThatThrownBy {
-        userService.getExistingUserOrCreateDeprecated(username)
+        userService.getExistingUserOrCreate(username)
       }
         .hasMessage("Unknown probation region code 'AREACODE' for user 'SOMEPERSON'")
         .isInstanceOf(RuntimeException::class.java)

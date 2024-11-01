@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import java.util.UUID
 /**
  * Seeds users, along with their roles and qualifications.
@@ -74,13 +75,13 @@ class UsersSeedJob(
     return roles
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun processRow(row: UsersSeedCsvRow) {
     log.info("Setting roles for ${row.deliusUsername} to exactly ${row.roles.joinToString(",")}, qualifications to exactly: ${row.qualifications.joinToString(",")}")
 
-    val user = try {
-      userService.getExistingUserOrCreateDeprecated(row.deliusUsername)
-    } catch (exception: Exception) {
-      throw RuntimeException("Could not get user ${row.deliusUsername}", exception)
+    val user = when (val getUserResponse = userService.getExistingUserOrCreate(row.deliusUsername)) {
+      GetUserResponse.StaffRecordNotFound -> throw RuntimeException("Could not get user ${row.deliusUsername} from delius, staff record not found")
+      is GetUserResponse.Success -> getUserResponse.user
     }
 
     useRolesForServices.forEach { userService.clearRolesForService(user, it) }

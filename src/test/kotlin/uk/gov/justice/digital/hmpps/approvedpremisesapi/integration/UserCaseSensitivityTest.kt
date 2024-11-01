@@ -13,7 +13,7 @@ class UserCaseSensitivityTest : IntegrationTestBase() {
   @Test
   fun `Fetching a user with lowercase username returns the user with normalised uppercase username`() {
     `Given a User` { userEntity, _ ->
-      val returnedUser = userService.getExistingUserOrCreateDeprecated(userEntity.deliusUsername.lowercase())
+      val returnedUser = (userService.getExistingUserOrCreate(userEntity.deliusUsername.lowercase()) as UserService.GetUserResponse.Success).user
 
       assertThat(returnedUser.id).isEqualTo(userEntity.id)
     }

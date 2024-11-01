@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -33,11 +34,11 @@ class ApStaffUsersSeedJob(
   override fun processRow(row: ApStaffUserSeedCsvRow) {
     seedLogger.info("Processing AP Staff seeding for ${row.deliusUsername}")
 
-    val user = try {
-      userService.getExistingUserOrCreateDeprecated(row.deliusUsername)
-    } catch (exception: Exception) {
-      throw RuntimeException("Could not get user ${row.deliusUsername}", exception)
+    val user = when (val getUserResponse = userService.getExistingUserOrCreate(row.deliusUsername)) {
+      GetUserResponse.StaffRecordNotFound -> throw RuntimeException("Could not get user ${row.deliusUsername} from delius, staff record not found")
+      is GetUserResponse.Success -> getUserResponse.user
     }
+
     seedLogger.info(seedingReport(user))
   }
 

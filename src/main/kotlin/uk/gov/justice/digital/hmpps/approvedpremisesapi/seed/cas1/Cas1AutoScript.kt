@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
@@ -216,7 +217,10 @@ class Cas1AutoScript(
         is PersonInfoResult.Success.Full -> personInfoResult
       }
 
-    val createdByUser = userService.getExistingUserOrCreateDeprecated(deliusUserName)
+    val createdByUser = when (val getUserResponse = userService.getExistingUserOrCreate(deliusUserName)) {
+      GetUserResponse.StaffRecordNotFound -> error("Could not get user $deliusUserName from delius, staff record not found")
+      is GetUserResponse.Success -> getUserResponse.user
+    }
 
     val newApplicationEntity = extractEntityFromValidatableActionResult(
       applicationService.createApprovedPremisesApplication(

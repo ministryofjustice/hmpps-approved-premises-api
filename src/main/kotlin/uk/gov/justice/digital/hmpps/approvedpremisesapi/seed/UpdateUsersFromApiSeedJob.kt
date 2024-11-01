@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import java.util.UUID
 
 class UpdateUsersFromApiSeedJob(
@@ -28,10 +29,14 @@ class UpdateUsersFromApiSeedJob(
     val service = row.serviceName
 
     log.info("Updating user with username $username for service $service")
-    val user = userService.getExistingUserOrCreateDeprecated(username)
+    val user = when (val getUserResponse = userService.getExistingUserOrCreate(username)) {
+      GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
+      is GetUserResponse.Success -> getUserResponse.user
+    }
+
     when (userService.updateUserFromDelius(user, service)) {
-      UserService.GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
-      is UserService.GetUserResponse.Success -> { }
+      GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
+      is GetUserResponse.Success -> { }
     }
   }
 }
