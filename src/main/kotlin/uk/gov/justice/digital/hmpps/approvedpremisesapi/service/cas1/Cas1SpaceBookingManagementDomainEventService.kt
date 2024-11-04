@@ -51,6 +51,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val premises = updatedCas1SpaceBooking.premises
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(updatedCas1SpaceBooking.keyWorkerStaffCode)
+    val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     val actualArrivalDate = updatedCas1SpaceBooking.actualArrivalDateTime!!
 
@@ -76,7 +77,7 @@ class Cas1SpaceBookingManagementDomainEventService(
               crn = updatedCas1SpaceBooking.crn,
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
-            deliusEventNumber = application.eventNumber,
+            deliusEventNumber = eventNumber,
             premises = Premises(
               id = premises.id,
               name = premises.name,
@@ -107,6 +108,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val premises = departedCas1SpaceBooking.premises
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
+    val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
 
     val actualDepartureDate = departedCas1SpaceBooking.actualDepartureDateTime!!
 
@@ -132,7 +134,7 @@ class Cas1SpaceBookingManagementDomainEventService(
               crn = departedCas1SpaceBooking.crn,
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
-            deliusEventNumber = application.eventNumber,
+            deliusEventNumber = eventNumber,
             premises = Premises(
               id = premises.id,
               name = premises.name,
@@ -175,6 +177,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val application = updatedCas1SpaceBooking.application
     val premises = updatedCas1SpaceBooking.premises
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
+    val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.saveKeyWorkerAssignedEvent(
       emit = false,
@@ -198,7 +201,7 @@ class Cas1SpaceBookingManagementDomainEventService(
               crn = updatedCas1SpaceBooking.crn,
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
-            deliusEventNumber = application.eventNumber,
+            deliusEventNumber = eventNumber,
             premises = Premises(
               id = premises.id,
               name = premises.name,
@@ -219,12 +222,12 @@ class Cas1SpaceBookingManagementDomainEventService(
   private fun getStaffMemberDetails(staffCode: String?): StaffMember? {
     val staffMember = staffCode?.let {
       val staffMemberDetailsResult =
-        communityApiClient.getStaffUserDetailsForStaffCode(staffCode!!)
+        communityApiClient.getStaffUserDetailsForStaffCode(staffCode)
       when (staffMemberDetailsResult) {
         is ClientResult.Success -> {
           val keyWorker = staffMemberDetailsResult.body
           StaffMember(
-            staffCode = keyWorker.staffCode!!,
+            staffCode = keyWorker.staffCode,
             staffIdentifier = keyWorker.staffIdentifier,
             forenames = keyWorker.staff.forenames,
             surname = keyWorker.staff.surname,
@@ -233,7 +236,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         }
         is ClientResult.Failure -> staffMemberDetailsResult.throwException()
       }
-    } ?: null
+    }
     return staffMember
   }
 

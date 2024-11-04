@@ -947,6 +947,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerName(user.name)
         withKeyworkerStaffCode(user.deliusStaffCode)
         withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("25")
       }
 
       webTestClient.post()
@@ -1000,6 +1001,7 @@ class Cas1SpaceBookingTest {
         withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
         withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
         withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("75")
       }
     }
 
@@ -1178,6 +1180,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerName(user.name)
         withKeyworkerStaffCode(user.deliusStaffCode)
         withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("50")
       }
 
       webTestClient.post()

@@ -57,6 +57,10 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     applicationTimelineTransformer,
   )
 
+  companion object Constants {
+    const val DELIUS_EVENT_NUMBER = "52"
+  }
+
   @Nested
   inner class ArrivalRecorded {
 
@@ -90,6 +94,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withExpectedDepartureDate(departureDate)
       .withCanonicalDepartureDate(departureDate)
       .withKeyworkerStaffCode(keyWorker.staffCode)
+      .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .produce()
 
     @BeforeEach
@@ -134,7 +139,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.applicationSubmittedOn).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.arrivedAt).isEqualTo(arrivalDate)
-      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
+      assertThat(data.deliusEventNumber).isEqualTo(DELIUS_EVENT_NUMBER)
       assertThat(data.premises.id).isEqualTo(premises.id)
       assertThat(data.premises.name).isEqualTo(premises.name)
       assertThat(data.premises.apCode).isEqualTo(premises.apCode)
@@ -150,6 +155,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     fun `record arrival and emits domain event with no keyWorker information if keyWorker is not present in original booking`() {
       val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
+        .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
         .withPremises(premises)
         .withActualArrivalDateTime(arrivalDate)
         .withCanonicalArrivalDate(arrivalDate.toLocalDate())
@@ -224,6 +230,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     private val departedSpaceBooking = Cas1SpaceBookingEntityFactory()
       .withApplication(application)
+      .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivedDate)
       .withCanonicalArrivalDate(arrivedDate.toLocalDate())
@@ -290,7 +297,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventEventDetails.bookingId).isEqualTo(departedSpaceBooking.id)
       assertThat(domainEventEventDetails.personReference.crn).isEqualTo(departedSpaceBooking.crn)
       assertThat(domainEventEventDetails.personReference.noms).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEventEventDetails.deliusEventNumber).isEqualTo(application.eventNumber)
+      assertThat(domainEventEventDetails.deliusEventNumber).isEqualTo(DELIUS_EVENT_NUMBER)
       assertThat(domainEventEventDetails.departedAt).isEqualTo(departedDate.toLocalDateTime(ZoneOffset.UTC).toInstant())
       assertThat(domainEventEventDetails.reason).isEqualTo(departureReason.name)
       assertThat(domainEventEventDetails.legacyReasonCode).isEqualTo(departureReason.legacyDeliusReasonCode)
@@ -337,11 +344,12 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     val keyWorker = StaffWithoutUsernameUserDetailsFactory()
       .produce()
 
-    val keyWorkerName = "${keyWorker.staff.forenames} ${keyWorker.staff.surname}"
-    val previousKeyWorkerName = "Previous $keyWorkerName"
+    private val keyWorkerName = "${keyWorker.staff.forenames} ${keyWorker.staff.surname}"
+    private val previousKeyWorkerName = "Previous $keyWorkerName"
 
     private val spaceBookingWithoutKeyWorker = Cas1SpaceBookingEntityFactory()
       .withApplication(application)
+      .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
       .withCanonicalArrivalDate(arrivalDate.toLocalDate())
@@ -351,6 +359,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     private val spaceBookingWithKeyWorker = Cas1SpaceBookingEntityFactory()
       .withApplication(application)
+      .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
       .withCanonicalArrivalDate(arrivalDate.toLocalDate())
@@ -438,7 +447,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventEventDetails.bookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEventEventDetails.personReference.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEventEventDetails.personReference.noms).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEventEventDetails.deliusEventNumber).isEqualTo(application.eventNumber)
+      assertThat(domainEventEventDetails.deliusEventNumber).isEqualTo(DELIUS_EVENT_NUMBER)
       assertThat(domainEventEventDetails.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
       assertThat(domainEventEventDetails.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
       val domainEventPremises = domainEventEventDetails.premises
