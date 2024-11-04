@@ -121,8 +121,10 @@ class Cas1BookingToSpaceBookingSeedJob(
   }
 
   private fun getCreatedByUser(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): UserEntity {
-    val createdByUsername = bookingMadeDomainEvent.data.eventDetails.bookedBy.staffMember!!.username ?: error("Can't find created by username for booking ${bookingMadeDomainEvent.bookingId}")
-    return userRepository.findByDeliusUsername(createdByUsername) ?: error("Can't find user with username $createdByUsername")
+    val createdByUsernameUpper =
+      bookingMadeDomainEvent.data.eventDetails.bookedBy.staffMember!!.username?.uppercase()
+        ?: error("Can't find created by username for booking ${bookingMadeDomainEvent.bookingId}")
+    return userRepository.findByDeliusUsername(createdByUsernameUpper) ?: error("Can't find user with username $createdByUsernameUpper")
   }
 
   private fun getDomainEventNumber(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): String {
