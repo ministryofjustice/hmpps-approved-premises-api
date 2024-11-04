@@ -3864,31 +3864,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /profile:
-    get:
-      tags:
-        - Auth
-      summary: Returns information on the logged in user
-      parameters:
-        - name: X-Service-Name
-          in: header
-          required: true
-          description: Filters the user details to those relevant to the specified service.
-          schema:
-            $ref: '#/components/schemas/ServiceName'
-      responses:
-        200:
-          description: successfully retrieved information on user
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/User'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /profile/v2:
     get:
       tags:

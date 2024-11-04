@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -30,189 +28,6 @@ import java.util.UUID
 class ProfileTest : IntegrationTestBase() {
 
   @Nested
-  inner class Profile {
-    val profileEndpoint = "/profile"
-
-    @Test
-    fun `Getting own Approved Premises profile returns OK with correct body`() {
-      val id = UUID.randomUUID()
-      val deliusUsername = "JIMJIMMERSON"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      val region = createProbationRegion()
-
-      `Given a User`(
-        id = id,
-        roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.PIPE),
-        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = deliusUsername, email = email, telephoneNumber = telephoneNumber),
-        probationRegion = region,
-      ) { userEntity, jwt ->
-        val userApArea = userEntity.apArea!!
-
-        webTestClient.get()
-          .uri(profileEndpoint)
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              ApprovedPremisesUser(
-                id = id,
-                region = ProbationRegion(region.id, region.name),
-                deliusUsername = deliusUsername,
-                email = email,
-                name = userEntity.name,
-                telephoneNumber = telephoneNumber,
-                roles = listOf(ApprovedPremisesUserRole.assessor),
-                qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
-                service = "CAS1",
-                isActive = true,
-                apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
-                cruManagementArea = NamedId(
-                  id = userEntity.cruManagementArea!!.id,
-                  name = userEntity.cruManagementArea!!.name,
-                ),
-                cruManagementAreaDefault = NamedId(
-                  id = userApArea.defaultCruManagementArea.id,
-                  name = userApArea.defaultCruManagementArea.name,
-                ),
-                cruManagementAreaOverride = null,
-                permissions = listOf(
-                  ApprovedPremisesUserPermission.assessApplication,
-                  ApprovedPremisesUserPermission.assessAppealedApplication,
-                  ApprovedPremisesUserPermission.assessPlacementApplication,
-                  ApprovedPremisesUserPermission.viewAssignedAssessments,
-                ),
-                version = 1950528466,
-              ),
-            ),
-          )
-      }
-    }
-
-    @Test
-    fun `Getting own Temporary Accommodation profile returns OK with correct body`() {
-      val id = UUID.randomUUID()
-      val deliusUsername = "JIMJIMMERSON"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = deliusUsername,
-        authSource = "delius",
-        roles = listOf("ROLE_PROBATION"),
-      )
-
-      val region = createProbationRegion()
-
-      val userEntity = userEntityFactory.produceAndPersist {
-        withId(id)
-        withYieldedProbationRegion { region }
-        withDeliusUsername(deliusUsername)
-        withEmail(email)
-        withTelephoneNumber(telephoneNumber)
-      }
-
-      userRoleAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withRole(UserRole.CAS3_ASSESSOR)
-      }
-
-      userQualificationAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withQualification(UserQualification.PIPE)
-      }
-
-      webTestClient.get()
-        .uri(profileEndpoint)
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(
-          objectMapper.writeValueAsString(
-            TemporaryAccommodationUser(
-              id = id,
-              region = ProbationRegion(region.id, region.name),
-              deliusUsername = deliusUsername,
-              email = email,
-              name = userEntity.name,
-              telephoneNumber = telephoneNumber,
-              roles = listOf(TemporaryAccommodationUserRole.assessor),
-              service = "CAS3",
-              isActive = true,
-            ),
-          ),
-        )
-    }
-
-    @Test
-    fun `Getting own Temporary Accommodation profile returns OK for CAS3_REPORTER with correct body`() {
-      val id = UUID.randomUUID()
-      val deliusUsername = "JIMJIMMERSON"
-      val email = "foo@bar.com"
-      val telephoneNumber = "123445677"
-
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = deliusUsername,
-        authSource = "delius",
-        roles = listOf("ROLE_PROBATION"),
-      )
-
-      val region = createProbationRegion()
-
-      val userEntity = userEntityFactory.produceAndPersist {
-        withId(id)
-        withYieldedProbationRegion { region }
-        withDeliusUsername(deliusUsername)
-        withEmail(email)
-        withTelephoneNumber(telephoneNumber)
-      }
-
-      userRoleAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withRole(UserRole.CAS3_REPORTER)
-      }
-
-      userQualificationAssignmentEntityFactory.produceAndPersist {
-        withUser(userEntity)
-        withQualification(UserQualification.PIPE)
-      }
-
-      webTestClient.get()
-        .uri(profileEndpoint)
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(
-          objectMapper.writeValueAsString(
-            TemporaryAccommodationUser(
-              id = id,
-              region = ProbationRegion(region.id, region.name),
-              deliusUsername = deliusUsername,
-              email = email,
-              name = userEntity.name,
-              telephoneNumber = telephoneNumber,
-              roles = listOf(TemporaryAccommodationUserRole.reporter),
-              service = "CAS3",
-              isActive = true,
-            ),
-          ),
-        )
-    }
-  }
-
-  @Nested
   inner class ProfileV2 {
     private val profileV2Endpoint = "/profile/v2"
     private val deliusUsername = "JIMJIMMERSON"
@@ -228,6 +43,45 @@ class ProfileTest : IntegrationTestBase() {
           telephoneNumber = telephoneNumber,
           probationArea = probationArea,
         )
+
+    @Test
+    fun `Getting own profile without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/profile/v2")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting own profile with a non-Delius JWT returns 403`() {
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+      )
+
+      webTestClient.get()
+        .uri("/profile/v2")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Getting own profile with no X-Service-Name header returns 400`() {
+      `Given a User` { userEntity, jwt ->
+        webTestClient.get()
+          .uri("/profile/v2")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("detail").isEqualTo("Missing required header X-Service-Name")
+      }
+    }
 
     @Test
     fun `Getting existing CAS1 profile returns OK with correct body`() {
@@ -699,52 +553,6 @@ class ProfileTest : IntegrationTestBase() {
             ),
           ),
         )
-    }
-  }
-
-  @Nested
-  inner class ProblemsCommonTests {
-
-    @ParameterizedTest
-    @ValueSource(strings = ["/profile", "/profile/v2"])
-    fun `Getting own profile without a JWT returns 401`(endpoint: String) {
-      webTestClient.get()
-        .uri(endpoint)
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = ["/profile", "/profile/v2"])
-    fun `Getting own profile with a non-Delius JWT returns 403`(endpoint: String) {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "nomis",
-      )
-
-      webTestClient.get()
-        .uri(endpoint)
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = ["/profile", "/profile/v2"])
-    fun `Getting own profile with no X-Service-Name header returns 400`(endpoint: String) {
-      `Given a User` { userEntity, jwt ->
-        webTestClient.get()
-          .uri(endpoint)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("detail").isEqualTo("Missing required header X-Service-Name")
-      }
     }
   }
 
