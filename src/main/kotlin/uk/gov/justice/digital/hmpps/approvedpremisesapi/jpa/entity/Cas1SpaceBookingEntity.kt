@@ -169,6 +169,7 @@ data class Cas1SpaceBookingEntity(
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "migrated_from_booking_id")
   val migratedFromBooking: BookingEntity?,
+  val deliusEventNumber: String?,
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null

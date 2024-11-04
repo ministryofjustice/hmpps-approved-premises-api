@@ -38,7 +38,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     val criteria1 = characteristicEntityFactory.produceAndPersist()
     val criteria2 = characteristicEntityFactory.produceAndPersist()
 
-    val application1 = `Given a CAS1 Application`(createdByUser = otherUser)
+    val application1 = `Given a CAS1 Application`(createdByUser = otherUser, eventNumber = "25")
     val booking1 = `Given a Booking`(
       crn = "CRN1",
       premises = premises,
@@ -62,7 +62,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       placementRequest1,
     )
 
-    val application2 = `Given a CAS1 Application`(createdByUser = otherUser)
+    val application2 = `Given a CAS1 Application`(createdByUser = otherUser, eventNumber = "50")
     val booking2 = `Given a Booking`(
       crn = "CRN2",
       premises = premises,
@@ -144,6 +144,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.departureMoveOnCategory).isNull()
     assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1.id)
     assertThat(migratedBooking1.criteria).containsOnly(criteria1, criteria2)
+    assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
 
     val migratedBooking2 = premiseSpaceBookings[1]
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
@@ -168,6 +169,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.departureMoveOnCategory).isNull()
     assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2.id)
     assertThat(migratedBooking2.criteria).isEmpty()
+    assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
   }
 
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {

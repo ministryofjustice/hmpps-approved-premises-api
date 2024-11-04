@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.util.UUID
@@ -70,13 +72,25 @@ class Cas1BookingToSpaceBookingSeedJob(
       error("Can't currently migrate adhoc booking $bookingId")
     }
 
+    if (booking.placementRequest == null) {
+      error("Can't currently migrate booking $bookingId as it doesn't have a placement request")
+    }
+
+    if (booking.application == null) {
+      error("Can't currently migrate booking $bookingId as it isn't linked to an application")
+    }
+
+    val application = booking.application!! as ApprovedPremisesApplicationEntity
+    val bookingMadeDomainEvent = getBookingMadeDomainEvent(bookingId)
+      ?: error("Can't find booking made domain event for booking $bookingId")
+
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
         id = UUID.randomUUID(),
         premises = premises,
-        application = booking.application!! as ApprovedPremisesApplicationEntity,
+        application = application,
         placementRequest = booking.placementRequest!!,
-        createdBy = getCreatedByUser(bookingId),
+        createdBy = getCreatedByUser(bookingMadeDomainEvent),
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
@@ -99,21 +113,29 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         migratedFromBooking = booking,
+        deliusEventNumber = getDomainEventNumber(bookingMadeDomainEvent),
       ),
     )
 
     log.info("Have migrated booking $bookingId to space booking ${spaceBooking.id}")
   }
 
-  private fun getCreatedByUser(bookingId: UUID): UserEntity {
+  private fun getCreatedByUser(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): UserEntity {
+    val createdByUsername = bookingMadeDomainEvent.data.eventDetails.bookedBy.staffMember!!.username ?: error("Can't find created by username for booking ${bookingMadeDomainEvent.bookingId}")
+    return userRepository.findByDeliusUsername(createdByUsername) ?: error("Can't find user with username $createdByUsername")
+  }
+
+  private fun getDomainEventNumber(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): String {
+    return bookingMadeDomainEvent.data.eventDetails.deliusEventNumber
+  }
+
+  private fun getBookingMadeDomainEvent(bookingId: UUID): DomainEvent<BookingMadeEnvelope>? {
     val createdDomainEvents = domainEventRepository.findIdsByTypeAndBookingId(DomainEventType.APPROVED_PREMISES_BOOKING_MADE, bookingId)
     if (createdDomainEvents.isEmpty()) {
       error("Can't find a booking made domain event for booking $bookingId")
     }
 
-    val createdDomainEventBody = domainEventService.getBookingMadeEvent(createdDomainEvents.first())
-    val createdByUsername = createdDomainEventBody!!.data.eventDetails.bookedBy.staffMember!!.username ?: error("Can't find created by username for booking $bookingId")
-    return userRepository.findByDeliusUsername(createdByUsername) ?: error("Can't find user with username $createdByUsername")
+    return domainEventService.getBookingMadeEvent(createdDomainEvents.first())
   }
 }
 

@@ -114,6 +114,7 @@ class Cas1SpaceBookingTransformerTest {
         .withCancellationReason(cancellationReason)
         .withCancellationReasonNotes("some extra info on cancellation")
         .withCriteria(criteria)
+        .withDeliusEventNumber("97")
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(
@@ -182,6 +183,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.cancellation!!.recordedAt).isEqualTo(Instant.parse("2023-12-29T11:25:10.00Z"))
       assertThat(result.cancellation!!.reason).isEqualTo(expectedCancellationReason)
       assertThat(result.cancellation!!.reasonNotes).isEqualTo("some extra info on cancellation")
+      assertThat(result.deliusEventNumber).isEqualTo("97")
 
       assertThat(result.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalArrivalDate).isEqualTo(LocalDate.parse("2025-04-06"))
