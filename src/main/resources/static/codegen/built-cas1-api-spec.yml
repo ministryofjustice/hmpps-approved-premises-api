@@ -6492,6 +6492,8 @@ components:
             $ref: '#/components/schemas/Cas1SpaceBookingDates'
         cancellation:
           $ref: '#/components/schemas/Cas1SpaceBookingCancellation'
+        deliusEventNumber:
+          type: string
       required:
         - id
         - applicationId

@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 
@@ -11,13 +12,15 @@ fun IntegrationTestBase.`Given a CAS1 Application`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   submittedAt: OffsetDateTime? = null,
+  eventNumber: String = randomInt(1, 9).toString(),
   block: (application: ApplicationEntity) -> Unit = {},
-) = `Given an Application`(createdByUser, crn, submittedAt, block)
+) = `Given an Application`(createdByUser, crn, submittedAt, eventNumber, block)
 
 fun IntegrationTestBase.`Given an Application`(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   submittedAt: OffsetDateTime? = null,
+  eventNumber: String = randomInt(1, 9).toString(),
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -29,6 +32,7 @@ fun IntegrationTestBase.`Given an Application`(
     withCreatedByUser(createdByUser)
     withApplicationSchema(applicationSchema)
     withSubmittedAt(submittedAt)
+    withEventNumber(eventNumber)
   }
 
   block(application)

@@ -252,7 +252,11 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Creates new booking if all data is valid, updates application status, raises domain event and sends email`() {
       val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
-      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withEventNumber("42")
+        .produce()
+
       val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
 
       val placementRequest = PlacementRequestEntityFactory()
@@ -331,6 +335,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.nonArrivalReason).isNull()
       assertThat(persistedBooking.nonArrivalNotes).isNull()
       assertThat(persistedBooking.nonArrivalReason).isNull()
+      assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
     }
