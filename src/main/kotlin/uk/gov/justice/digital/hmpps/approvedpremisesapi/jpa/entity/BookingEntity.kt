@@ -313,6 +313,14 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Modifying
   @Query("UPDATE BookingEntity b set b.adhoc = :adhoc where b.id = :bookingId")
   fun updateBookingAdhocStatus(bookingId: UUID, adhoc: Boolean): Int
+
+  @Query(
+    """
+      SELECT id from bookings where premises_id = :premisesId 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllIdsByPremisesId(premisesId: UUID): List<UUID>
 }
 
 @Entity

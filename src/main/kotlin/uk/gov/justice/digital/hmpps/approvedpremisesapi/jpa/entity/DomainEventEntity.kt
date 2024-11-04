@@ -77,6 +77,11 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByType(type: DomainEventType): List<DomainEventEntity>
 
+  @Query(
+    """SELECT id FROM DomainEventEntity where type = :type AND bookingId = :bookingId""",
+  )
+  fun findIdsByTypeAndBookingId(type: DomainEventType, bookingId: UUID): List<UUID>
+
   fun getByApplicationIdAndType(applicationId: UUID, type: DomainEventType): DomainEventEntity
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>

@@ -7,6 +7,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -21,6 +22,8 @@ import java.util.UUID
 @Repository
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
   fun findByPremisesIdAndPlacementRequestId(premisesId: UUID, placementRequestId: UUID): Cas1SpaceBookingEntity?
+
+  fun deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId: UUID): Long
 
   @Query(
     value = """
@@ -163,8 +166,12 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "non_arrival_reason_id")
   var nonArrivalReason: NonArrivalReasonEntity?,
   var nonArrivalNotes: String?,
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "migrated_from_booking_id")
+  val migratedFromBooking: BookingEntity?,
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
   fun hasArrival() = actualArrivalDateTime != null
+  override fun toString() = "Cas1SpaceBookingEntity:$id"
 }
