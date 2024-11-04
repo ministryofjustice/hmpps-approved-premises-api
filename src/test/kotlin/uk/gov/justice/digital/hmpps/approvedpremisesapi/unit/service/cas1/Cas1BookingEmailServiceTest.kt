@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
@@ -464,15 +463,19 @@ class Cas1BookingEmailServiceTest {
         .withEmail(APPLICANT_EMAIL)
         .produce()
 
-      val (application, booking) = createApplicationAndSpaceBooking(
-        applicant,
-        premises,
-        arrivalDate = LocalDate.of(2023, 2, 1),
-        departureDate = LocalDate.of(2023, 2, 14),
+      val application = createApplication(
+        applicant = applicant,
         caseManagerNotApplicant = true,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
           .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
           .produce(),
+      )
+
+      val booking = createSpaceBooking(
+        application,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
       )
 
       service.spaceBookingWithdrawn(
@@ -535,15 +538,18 @@ class Cas1BookingEmailServiceTest {
         .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
         .produce()
 
-      val (_, booking) = createApplicationAndSpaceBooking(
-        applicant,
-        premises,
-        apArea = ApAreaEntityFactory().produce(),
-        arrivalDate = LocalDate.of(2023, 2, 1),
-        departureDate = LocalDate.of(2023, 2, 14),
+      val application = createApplication(
+        applicant = applicant,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
           .withEmailAddress(null)
           .produce(),
+      )
+
+      val booking = createSpaceBooking(
+        application,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
       )
 
       service.spaceBookingWithdrawn(
@@ -561,15 +567,19 @@ class Cas1BookingEmailServiceTest {
         .withEmail(APPLICANT_EMAIL)
         .produce()
 
-      val (application, booking) = createApplicationAndSpaceBooking(
-        applicant,
-        premises,
-        arrivalDate = LocalDate.of(2023, 2, 1),
-        departureDate = LocalDate.of(2023, 2, 14),
+      val application = createApplication(
+        applicant = applicant,
         caseManagerNotApplicant = true,
         cruManagementArea = Cas1CruManagementAreaEntityFactory()
           .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
           .produce(),
+      )
+
+      val booking = createSpaceBooking(
+        application,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
       )
 
       service.spaceBookingWithdrawn(
@@ -642,32 +652,23 @@ class Cas1BookingEmailServiceTest {
   }
 
   @SuppressWarnings("LongParameterList")
-  private fun createApplicationAndSpaceBooking(
-    applicant: UserEntity,
+  private fun createSpaceBooking(
+    application: ApprovedPremisesApplicationEntity,
     premises: ApprovedPremisesEntity,
-    apArea: ApAreaEntity = ApAreaEntityFactory().produce(),
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    caseManagerNotApplicant: Boolean = false,
-    cruManagementArea: Cas1CruManagementAreaEntity? = null,
-  ): Pair<ApprovedPremisesApplicationEntity, Cas1SpaceBookingEntity> {
-    val application = createApplication(applicant, apArea, caseManagerNotApplicant, cruManagementArea)
-
-    val spaceBooking = Cas1SpaceBookingEntityFactory()
-      .withApplication(application)
-      .withPremises(premises)
-      .withCanonicalArrivalDate(arrivalDate)
-      .withCanonicalDepartureDate(departureDate)
-      .produce()
-
-    return Pair(application, spaceBooking)
-  }
+  ) = Cas1SpaceBookingEntityFactory()
+    .withApplication(application)
+    .withPremises(premises)
+    .withCanonicalArrivalDate(arrivalDate)
+    .withCanonicalDepartureDate(departureDate)
+    .produce()
 
   private fun createApplication(
     applicant: UserEntity,
     apArea: ApAreaEntity = ApAreaEntityFactory().produce(),
     caseManagerNotApplicant: Boolean = false,
-    cruManagementArea: Cas1CruManagementAreaEntity?,
+    cruManagementArea: Cas1CruManagementAreaEntity? = null,
   ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(CRN)
     .withCreatedByUser(applicant)
