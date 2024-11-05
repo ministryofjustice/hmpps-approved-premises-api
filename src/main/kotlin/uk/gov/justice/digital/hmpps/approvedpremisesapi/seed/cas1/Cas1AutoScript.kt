@@ -5,10 +5,14 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -18,14 +22,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
-@SuppressWarnings("MagicNumber", "MaxLineLength")
+@SuppressWarnings("MagicNumber", "MaxLineLength", "TooGenericExceptionCaught")
 @Component
 class Cas1AutoScript(
   private val seedLogger: SeedLogger,
@@ -34,9 +41,10 @@ class Cas1AutoScript(
   private val offenderService: OffenderService,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val environmentService: EnvironmentService,
+  private val premisesService: PremisesService,
+  private val bookingRepository: BookingRepository,
 ) {
 
-  @SuppressWarnings("TooGenericExceptionCaught")
   @Transactional
   fun script() {
     seedLogger.info("Auto-Scripting for CAS1")
@@ -55,6 +63,7 @@ class Cas1AutoScript(
     createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
     createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
     createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
+    createOfflineApplicationWithBooking(crn = "X320741")
   }
 
   fun scriptDev() {
@@ -72,6 +81,15 @@ class Cas1AutoScript(
     }
   }
 
+  private fun createOfflineApplicationWithBooking(crn: String) {
+    seedLogger.info("Auto-scripting offline for CRN $crn")
+    try {
+      createOfflineApplicationInternal(crn = crn)
+    } catch (e: Exception) {
+      seedLogger.error("Creating offline application with crn $crn failed", e)
+    }
+  }
+
   private fun seedUsers(usersToSeed: List<SeedUser>) = usersToSeed.forEach { seedUser(it) }
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -81,8 +99,8 @@ class Cas1AutoScript(
       val getUserResponse = userService.getExistingUserOrCreate(username = seedUser.username)
 
       when (getUserResponse) {
-        UserService.GetUserResponse.StaffRecordNotFound -> seedLogger.error("Seeding user with ${seedUser.username} failed as staff record not found")
-        is UserService.GetUserResponse.Success -> {
+        GetUserResponse.StaffRecordNotFound -> seedLogger.error("Seeding user with ${seedUser.username} failed as staff record not found")
+        is GetUserResponse.Success -> {
           val user = getUserResponse.user
           seedUser.roles.forEach { role ->
             userService.addRoleToUser(user = user, role = role)
@@ -205,30 +223,14 @@ class Cas1AutoScript(
 
   private fun createApplicationInternal(deliusUserName: String, crn: String) {
     if (applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
-      seedLogger.info("Already have CAS1 application for $crn, not seeding new applications")
+      seedLogger.info("Already have CAS1 application for $crn, not seeding a new application")
       return
     }
 
     seedLogger.info("Auto creating a CAS1 application for $crn")
 
-    val personInfo =
-      when (
-        val personInfoResult = offenderService.getPersonInfoResult(
-          crn = crn,
-          deliusUsername = null,
-          ignoreLaoRestrictions = true,
-        )
-      ) {
-        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
-          personInfoResult.crn,
-          "Offender",
-        )
-
-        is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
-        is PersonInfoResult.Success.Full -> personInfoResult
-      }
-
-    val createdByUser = userService.getExistingUserOrCreateDeprecated(deliusUserName)
+    val personInfo = getPersonInfo(crn)
+    val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user
 
     val newApplicationEntity = extractEntityFromValidatableActionResult(
       applicationService.createApprovedPremisesApplication(
@@ -266,6 +268,75 @@ class Cas1AutoScript(
       user = null,
     )
   }
+
+  private fun createOfflineApplicationInternal(crn: String) {
+    if (applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
+      seedLogger.info("Already have an offline CAS1 application for $crn, not seeding a new application")
+      return
+    }
+
+    val personInfo = getPersonInfo(crn)
+
+    val offlineApplication = applicationService.createOfflineApplication(
+      OfflineApplicationEntity(
+        id = UUID.randomUUID(),
+        crn = crn,
+        service = ServiceName.approvedPremises.value,
+        createdAt = OffsetDateTime.now(),
+        eventNumber = "2",
+      ),
+    )
+
+    val arrivalDate = LocalDate.of(2027, 1, 2)
+    val departureDate = LocalDate.of(2027, 1, 6)
+
+    bookingRepository.save(
+      BookingEntity(
+        id = UUID.randomUUID(),
+        crn = crn,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+        keyWorkerStaffCode = null,
+        arrivals = mutableListOf(),
+        departures = mutableListOf(),
+        nonArrival = null,
+        cancellations = mutableListOf(),
+        confirmation = null,
+        extensions = mutableListOf(),
+        premises = premisesService.getAllPremisesForService(ServiceName.approvedPremises).first().getPremises(),
+        bed = null,
+        service = ServiceName.approvedPremises.value,
+        originalArrivalDate = arrivalDate,
+        originalDepartureDate = departureDate,
+        createdAt = OffsetDateTime.now(),
+        application = null,
+        offlineApplication = offlineApplication,
+        turnarounds = mutableListOf(),
+        dateChanges = mutableListOf(),
+        nomsNumber = personInfo.offenderDetailSummary.otherIds.nomsNumber,
+        placementRequest = null,
+        status = BookingStatus.confirmed,
+        adhoc = true,
+      ),
+    )
+  }
+
+  private fun getPersonInfo(crn: String) =
+    when (
+      val personInfoResult = offenderService.getPersonInfoResult(
+        crn = crn,
+        deliusUsername = null,
+        ignoreLaoRestrictions = true,
+      )
+    ) {
+      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+        personInfoResult.crn,
+        "Offender",
+      )
+
+      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonInfoResult.Success.Full -> personInfoResult
+    }
 
   private fun applicationData(): String {
     return dataFixtureFor(questionnaire = "application")
