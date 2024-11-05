@@ -237,8 +237,8 @@ class DocumentTransformerTest {
         .withFilename("offender_level_doc.pdf")
         .withTypeCode("TYPE-1")
         .withTypeDescription("Type 1 Description")
-        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.systemDefault()))
-        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.systemDefault()))
+        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.of("UTC")))
+        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.of("UTC")))
         .produce(),
       DocumentFromDeliusApiFactory()
         .withId(convictionDocId.toString())
@@ -248,8 +248,8 @@ class DocumentTransformerTest {
         .withFilename("conviction_level_doc.pdf")
         .withTypeCode("TYPE-2")
         .withTypeDescription("Type 2 Description")
-        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00").atZone(ZoneId.systemDefault()))
-        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00").atZone(ZoneId.systemDefault()))
+        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00").atZone(ZoneId.of("UTC")))
+        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00").atZone(ZoneId.of("UTC")))
         .produce(),
     )
 }
