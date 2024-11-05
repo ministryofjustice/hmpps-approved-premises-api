@@ -123,7 +123,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
 
     val migratedBooking1 = premiseSpaceBookings[0]
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
-    assertThat(migratedBooking1.placementRequest.id).isEqualTo(placementRequest1.id)
+    assertThat(migratedBooking1.placementRequest!!.id).isEqualTo(placementRequest1.id)
     assertThat(migratedBooking1.createdBy.id).isEqualTo(booking1CreatedByUser.id)
     assertThat(migratedBooking1.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
     assertThat(migratedBooking1.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 5, 5))
@@ -148,7 +148,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
 
     val migratedBooking2 = premiseSpaceBookings[1]
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
-    assertThat(migratedBooking2.placementRequest.id).isEqualTo(placementRequest2.id)
+    assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
     assertThat(migratedBooking2.createdBy.id).isEqualTo(booking2CreatedByUser.id)
     assertThat(migratedBooking2.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
     assertThat(migratedBooking2.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 6, 5))

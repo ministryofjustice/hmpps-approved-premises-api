@@ -128,7 +128,7 @@ class Cas1BookingEmailService(
       departureDate = canonicalDepartureDate,
       premises = premises,
       application = application,
-      placementApplication = placementRequest.placementApplication,
+      placementApplication = placementRequest?.placementApplication,
     )
 
   private fun BookingEntity.toBookingInfo(

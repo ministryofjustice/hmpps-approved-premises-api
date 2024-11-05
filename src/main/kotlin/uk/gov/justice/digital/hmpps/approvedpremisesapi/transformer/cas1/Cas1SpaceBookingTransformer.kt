@@ -32,11 +32,12 @@ class Cas1SpaceBookingTransformer(
     otherBookingsAtPremiseForCrn: List<Cas1SpaceBookingAtPremises>,
   ): Cas1SpaceBooking {
     val placementRequest = jpa.placementRequest
-    val application = placementRequest.application
+    val application = jpa.application
+    val applicationId = application?.id ?: jpa.offlineApplication!!.id
     return Cas1SpaceBooking(
       id = jpa.id,
-      applicationId = application.id,
-      assessmentId = placementRequest.assessment.id,
+      applicationId = applicationId,
+      assessmentId = placementRequest?.assessment?.id,
       person = personTransformer.transformModelToPersonApi(person),
       requirements = spaceBookingRequirementsTransformer.transformJpaToApi(
         cas1SpaceBookingEntity = jpa,
@@ -55,7 +56,7 @@ class Cas1SpaceBookingTransformer(
       expectedArrivalDate = jpa.expectedArrivalDate,
       expectedDepartureDate = jpa.expectedDepartureDate,
       createdAt = jpa.createdAt.toInstant(),
-      tier = application.riskRatings?.tier?.value?.level,
+      tier = application?.riskRatings?.tier?.value?.level,
       keyWorkerAllocation = jpa.extractKeyWorkerAllocation(),
       actualArrivalDate = jpa.actualArrivalDateTime,
       actualDepartureDate = jpa.actualDepartureDateTime,
@@ -63,7 +64,7 @@ class Cas1SpaceBookingTransformer(
       canonicalDepartureDate = jpa.canonicalDepartureDate,
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
       cancellation = jpa.extractCancellation(),
-      requestForPlacementId = jpa.placementRequest.placementApplication?.id ?: jpa.placementRequest.id,
+      requestForPlacementId = jpa.placementRequest?.placementApplication?.id ?: jpa.placementRequest?.id,
       deliusEventNumber = jpa.deliusEventNumber,
     )
   }

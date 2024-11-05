@@ -6487,7 +6487,6 @@ components:
       required:
         - id
         - applicationId
-        - assessmentId
         - person
         - requirements
         - premises

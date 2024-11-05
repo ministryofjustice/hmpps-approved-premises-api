@@ -89,7 +89,6 @@ class Cas1SpaceBookingTransformerTest {
 
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
-        .withApplication(application)
         .produce()
 
       val cancellationReason = CancellationReasonEntityFactory().produce()
@@ -100,6 +99,7 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withApplication(application)
         .withPlacementRequest(placementRequest)
         .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
         .withKeyworkerName("Mr Key Worker")

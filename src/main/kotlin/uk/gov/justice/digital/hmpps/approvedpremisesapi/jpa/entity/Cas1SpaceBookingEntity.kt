@@ -141,9 +141,12 @@ data class Cas1SpaceBookingEntity(
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "offline_application_id")
   var offlineApplication: OfflineApplicationEntity?,
+  /**
+   * Placement request will only be null for migrated [BookingEntity]s, where adhoc = true
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
-  val placementRequest: PlacementRequestEntity,
+  val placementRequest: PlacementRequestEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_user_id")
   val createdBy: UserEntity,

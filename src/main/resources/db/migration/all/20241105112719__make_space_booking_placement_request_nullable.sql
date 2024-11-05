@@ -1,0 +1,1 @@
+ALTER TABLE cas1_space_bookings ALTER COLUMN placement_request_id DROP NOT NULL;
