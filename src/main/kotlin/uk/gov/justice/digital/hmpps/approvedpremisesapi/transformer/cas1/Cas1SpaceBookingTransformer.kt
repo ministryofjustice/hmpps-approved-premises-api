@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.SpaceBookingDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -25,6 +26,7 @@ class Cas1SpaceBookingTransformer(
   private val spaceBookingRequirementsTransformer: Cas1SpaceBookingRequirementsTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val userTransformer: UserTransformer,
+  private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
 ) {
   fun transformJpaToApi(
     person: PersonInfoResult,
@@ -129,5 +131,14 @@ class Cas1SpaceBookingTransformer(
         ),
       )
     },
+    status = spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(
+      SpaceBookingDates(
+        searchResult.expectedArrivalDate,
+        searchResult.expectedDepartureDate,
+        searchResult.actualArrivalDateTime,
+        searchResult.actualDepartureDateTime,
+        searchResult.nonArrivalConfirmedAtDateTime,
+      ),
+    ),
   )
 }
