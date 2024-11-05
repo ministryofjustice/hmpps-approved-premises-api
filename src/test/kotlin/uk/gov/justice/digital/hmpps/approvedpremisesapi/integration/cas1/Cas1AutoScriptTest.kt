@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 
@@ -15,9 +15,9 @@ class Cas1AutoScriptTest : IntegrationTestBase() {
 
   @Test
   fun `ensure local auto script runs`() {
-    `Given an Offender` { offenderDetails, _ ->
+    givenAnOffender { offenderDetails, _ ->
 
-      APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+      apDeliusContextMockSuccessfulTeamsManagingCaseCall(
         offenderDetails.otherIds.crn,
         ManagingTeamsResponse(
           teamCodes = listOf("TEAM1"),

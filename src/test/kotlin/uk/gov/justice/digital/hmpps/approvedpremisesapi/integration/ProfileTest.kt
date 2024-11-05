@@ -15,9 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
@@ -70,7 +70,7 @@ class ProfileTest : IntegrationTestBase() {
 
     @Test
     fun `Getting own profile with no X-Service-Name header returns 400`() {
-      `Given a User` { userEntity, jwt ->
+      givenAUser { userEntity, jwt ->
         webTestClient.get()
           .uri("/profile/v2")
           .header("Authorization", "Bearer $jwt")
@@ -97,7 +97,7 @@ class ProfileTest : IntegrationTestBase() {
         withProbationAreaDeliusCode(deliusCode)
       }
 
-      `Given a User`(
+      givenAUser(
         id = id,
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = listOf(UserQualification.PIPE),
@@ -106,7 +106,7 @@ class ProfileTest : IntegrationTestBase() {
       ) { userEntity, jwt ->
         val userApArea = userEntity.apArea!!
 
-        ApDeliusContext_addStaffDetailResponse(staffDetail = staffDetail)
+        apDeliusContextAddStaffDetailResponse(staffDetail = staffDetail)
 
         val expectedName = staffDetail.name.deliusName()
 
@@ -199,7 +199,7 @@ class ProfileTest : IntegrationTestBase() {
         telephoneNumber = telephoneNumber,
       )
 
-      ApDeliusContext_addStaffDetailResponse(staffUserDetail)
+      apDeliusContextAddStaffDetailResponse(staffUserDetail)
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -303,7 +303,7 @@ class ProfileTest : IntegrationTestBase() {
       val email = "foo@bar.com"
       val telephoneNumber = "123445677"
 
-      ApDeliusContext_addStaffDetailResponse(staffDetail.copy(name = PersonName("Up", "Dated", "")))
+      apDeliusContextAddStaffDetailResponse(staffDetail.copy(name = PersonName("Up", "Dated", "")))
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -361,7 +361,7 @@ class ProfileTest : IntegrationTestBase() {
       val email = "foo@bar.com"
       val telephoneNumber = "123445677"
 
-      ApDeliusContext_addStaffDetailResponse(staffDetail.copy(name = PersonName("Up", "Dated", "")))
+      apDeliusContextAddStaffDetailResponse(staffDetail.copy(name = PersonName("Up", "Dated", "")))
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -443,7 +443,7 @@ class ProfileTest : IntegrationTestBase() {
         telephoneNumber = telephoneNumber,
       )
 
-      ApDeliusContext_addStaffDetailResponse(staffUserDetail)
+      apDeliusContextAddStaffDetailResponse(staffUserDetail)
 
       mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
 
@@ -508,7 +508,7 @@ class ProfileTest : IntegrationTestBase() {
         withProbationAreaDeliusCode(deliusCode)
       }
 
-      ApDeliusContext_addStaffDetailResponse(
+      apDeliusContextAddStaffDetailResponse(
         StaffDetailFactory.staffDetail(
           deliusUsername = deliusUsername,
           email = email,
@@ -558,6 +558,6 @@ class ProfileTest : IntegrationTestBase() {
 
   fun IntegrationTestBase.createProbationRegion(deliusCode: String? = null) = probationRegionEntityFactory.produceAndPersist {
     withDeliusCode(deliusCode ?: randomStringMultiCaseWithNumbers(10))
-    withYieldedApArea { `Given an AP Area`() }
+    withYieldedApArea { givenAnApArea() }
   }
 }

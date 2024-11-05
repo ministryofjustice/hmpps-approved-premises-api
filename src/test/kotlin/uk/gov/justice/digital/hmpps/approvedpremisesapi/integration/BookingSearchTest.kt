@@ -17,11 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -48,8 +48,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for Temporary Accommodation bookings returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
 
@@ -60,8 +60,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for Temporary Accommodation bookings correctly filtered single booking for a specific crn`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val crn = "S121978"
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResult =
@@ -79,8 +79,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking for a specific crn`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val crn = "S121978"
         val expectedBookingInSearchResult =
           create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
@@ -99,8 +99,8 @@ class BookingSearchTest : IntegrationTestBase() {
   @ParameterizedTest
   @CsvSource("S121978", "PersonName")
   fun `Searching for Temporary Accommodation bookings with crn or name not exists in the database return empty response`(queryParameterValue: String) {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResults = BookingSearchResults(resultsCount = 0, results = emptyList())
 
@@ -111,8 +111,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking when name is used in crnOrName query parameter`() {
-    `Given a User` { userEntity, jwt ->
-      `Given Some Offenders` { offenderSequence ->
+    givenAUser { userEntity, jwt ->
+      givenSomeOffenders { offenderSequence ->
 
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -170,8 +170,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Results are filtered by booking status when query parameter is supplied`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
           withProbationRegion(userEntity.probationRegion)
           withYieldedLocalAuthorityArea {
@@ -295,8 +295,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Results are only returned for the user's probation region for Temporary Accommodation`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val expectedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
           withProbationRegion(userEntity.probationRegion)
           withYieldedLocalAuthorityArea {
@@ -305,7 +305,7 @@ class BookingSearchTest : IntegrationTestBase() {
         }
 
         val unexpectedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
           withYieldedLocalAuthorityArea {
             localAuthorityEntityFactory.produceAndPersist()
           }
@@ -367,8 +367,8 @@ class BookingSearchTest : IntegrationTestBase() {
     bookingSearchSort: BookingSearchSortField,
     sortOrder: SortOrder,
   ) {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val sortDirection = when (sortOrder) {
           SortOrder.ascending -> "ascending"
           SortOrder.descending -> "descending"
@@ -414,7 +414,7 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the start date when multiple booking have the same arrival date when the query parameters are supplied with Pagination`(
     sortOrder: SortOrder,
   ) {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val sortDirection = when (sortOrder) {
         SortOrder.ascending -> "ascending"
         SortOrder.descending -> "descending"
@@ -516,7 +516,7 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the end date when multiple booking have the same arrival date when the query parameters are supplied with Pagination`(
     sortOrder: SortOrder,
   ) {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val sortDirection = when (sortOrder) {
         SortOrder.ascending -> "ascending"
         SortOrder.descending -> "descending"
@@ -614,8 +614,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Results are ordered by the person crn and sorted descending order when the query parameters are supplied with Pagination`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val sortedByDescending = allBookings.sortedByDescending { it.crn }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
@@ -638,8 +638,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Get all results ordered by the person crn in descending order when the query parameters supplied without Pagination`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val sortedByDescending = allBookings.sortedByDescending { it.crn }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
@@ -654,7 +654,7 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the person name when the query parameters are supplied with Pagination`(
     sortOrder: SortOrder,
   ) {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val sortDirection = when (sortOrder) {
         SortOrder.ascending -> "ascending"
         SortOrder.descending -> "descending"
@@ -744,8 +744,8 @@ class BookingSearchTest : IntegrationTestBase() {
 
   @Test
   fun `No Results returned when searching for cancelled booking status and all existing bookings are confirmed`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         allBookings.sortedByDescending { it.crn }
         val expectedResponse = getExpectedResponse(emptyList(), offenderDetails)
@@ -1055,7 +1055,7 @@ class BookingSearchTest : IntegrationTestBase() {
       }
     }
 
-    ApDeliusContext_addListCaseSummaryToBulkResponse(cases)
+    apDeliusContextAddListCaseSummaryToBulkResponse(cases)
   }
 
   private fun getSortedBooking(bookings: MutableList<BookingEntity>, sortBy: BookingSearchSortField, sortOrder: SortOrder) {

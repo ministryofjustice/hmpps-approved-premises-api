@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -32,7 +32,7 @@ class NPlus1QueriesTest : IntegrationTestBase() {
   @Test
   @Disabled("Load tests are not run by default")
   fun `Listing a large number of Temporary Accommodation premises does not result in the N+1 queries problem`() {
-    `Given a User` { user, jwt ->
+    givenAUser { user, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(200) {
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()

@@ -12,9 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Admin`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -90,8 +90,8 @@ class Cas2AssessmentTest : IntegrationTestBase() {
     fun `assessors create note returns 201`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      `Given a CAS2 POM User` { referrer, _ ->
-        `Given a CAS2 Assessor` { assessor, jwt ->
+      givenACas2PomUser { referrer, _ ->
+        givenACas2Assessor { assessor, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -199,8 +199,8 @@ class Cas2AssessmentTest : IntegrationTestBase() {
     fun `assessors update assessment returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      `Given a CAS2 POM User` { referrer, _ ->
-        `Given a CAS2 Assessor` { assessor, jwt ->
+      givenACas2PomUser { referrer, _ ->
+        givenACas2Assessor { assessor, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -234,8 +234,8 @@ class Cas2AssessmentTest : IntegrationTestBase() {
     fun `admins get assessment returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      `Given a CAS2 POM User` { referrer, _ ->
-        `Given a CAS2 Admin` { admin, jwt ->
+      givenACas2PomUser { referrer, _ ->
+        givenACas2Admin { admin, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment

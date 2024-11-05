@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -53,7 +53,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   @Test
   fun `it updates all tasks without a due date`() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     val assessments = List(10) { createAssessment() }
     val placementRequests = List(5) { createPlacementRequest() }
@@ -85,7 +85,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   private fun createPlacementApplication(): PlacementApplicationEntity {
     val user = userEntityFactory.produceAndPersist {
-      withProbationRegion(`Given a Probation Region`())
+      withProbationRegion(givenAProbationRegion())
     }
 
     val assessment = createAssessment()
@@ -127,7 +127,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   private fun createAssessment(): ApprovedPremisesAssessmentEntity {
     val user = userEntityFactory.produceAndPersist {
-      withProbationRegion(`Given a Probation Region`())
+      withProbationRegion(givenAProbationRegion())
     }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {

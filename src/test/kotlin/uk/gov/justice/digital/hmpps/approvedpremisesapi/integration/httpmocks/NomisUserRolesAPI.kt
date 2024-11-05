@@ -4,7 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.nomisuserroles.NomisUserDetail
 
-fun IntegrationTestBase.NomisUserRoles_mockSuccessfulGetUserDetailsCall(
+fun IntegrationTestBase.nomisUserRolesMockSuccessfulGetUserDetailsCall(
   jwt: String,
   nomisUserDetails: NomisUserDetail,
 ) =

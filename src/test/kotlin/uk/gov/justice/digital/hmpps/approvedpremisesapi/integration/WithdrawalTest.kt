@@ -14,12 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -86,9 +86,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns application only for a sparse application if user is not the applicant`() {
-      `Given a User` { applicationCreator, _ ->
-        `Given a User` { _, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicationCreator, _ ->
+        givenAUser { _, jwt ->
+          givenAnOffender { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
             val expected = Withdrawables(
@@ -129,8 +129,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns application only for a sparse application if user is applicant`() {
-      `Given a User` { applicationCreator, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicationCreator, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
           val expected = Withdrawables(
@@ -176,9 +176,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns match request for the original app dates only`() {
-      `Given a User` { applicant, jwt ->
-        `Given a User` { allocatedTo, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAUser { allocatedTo, _ ->
+          givenAnOffender { offenderDetails, _ ->
 
             val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
@@ -248,9 +248,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns requests for placements applications`() {
-      `Given a User` { applicant, jwt ->
-        `Given a User` { allocatedTo, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAUser { allocatedTo, _ ->
+          givenAnOffender { offenderDetails, _ ->
 
             val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
@@ -350,10 +350,10 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 blocking bookings`() {
-      `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-          `Given a User` { requestForPlacementAssessor, _ ->
-            `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+          givenAUser { requestForPlacementAssessor, _ ->
+            givenAnOffender { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
               val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
@@ -462,10 +462,10 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns all possible types when a user can manage bookings, with booking arrivals in Delius blocking bookings`() {
-      `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
-          `Given a User` { requestForPlacementAssessor, _ ->
-            `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+          givenAUser { requestForPlacementAssessor, _ ->
+            givenAnOffender { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
               val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
@@ -573,10 +573,10 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 and Delius blocking bookings`() {
-      `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-          `Given a User` { requestForPlacementAssessor, _ ->
-            `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+          givenAUser { requestForPlacementAssessor, _ ->
+            givenAnOffender { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
               val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
@@ -689,9 +689,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Returns all possible types when a user cannot manage bookings, with booking and space booking arrivals in CAS1 blocking bookings`() {
-      `Given a User` { applicant, jwt ->
-        `Given a User` { requestForPlacementAssessor, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAUser { requestForPlacementAssessor, _ ->
+          givenAnOffender { offenderDetails, _ ->
             val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
             val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
@@ -776,9 +776,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing an application cascades to an assessment and sends mail to assessor if pending`() {
-      `Given a User` { applicant, jwt ->
-        `Given a User` { assessor, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAUser { assessor, _ ->
+          givenAnOffender { offenderDetails, _ ->
             val caseManagerEmail = "caseManager@test.com"
 
             val (application, assessment) = createApplicationAndAssessment(
@@ -832,9 +832,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing an application cascades to applicable entities`() {
-      `Given a User` { applicant, jwt ->
-        `Given a User` { requestForPlacementAssessor, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAUser { requestForPlacementAssessor, _ ->
+          givenAnOffender { offenderDetails, _ ->
             val caseManagerEmail = "caseManager@test.com"
 
             val (application, assessment) = createApplicationAndAssessment(
@@ -997,8 +997,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing an application is not allowed if has a booking with arrivals`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val placementApplication = createPlacementApplication(application, DateSpan(now(), duration = 2))
@@ -1040,8 +1040,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing an application is not allowed if has a space with arrivals`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val placementApplication = createPlacementApplication(application, DateSpan(now(), duration = 2))
@@ -1089,9 +1089,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a request for placement cascades to applicable entities`() {
-      `Given a User` { applicant, _ ->
-        `Given a User` { placementAppCreator, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, _ ->
+        givenAUser { placementAppCreator, jwt ->
+          givenAnOffender { offenderDetails, _ ->
             val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
             val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = placementAppCreator)
@@ -1196,8 +1196,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a request for placement does not cascade to incorrectly linked adhoc placements`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
@@ -1290,8 +1290,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a match request for original app dates without booking emails CRU`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
             applicant = applicant,
             assignee = applicant,
@@ -1340,8 +1340,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a match request for original app dates cascades to applicable booking entity and updates the application status`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
             applicant = applicant,
             assignee = applicant,
@@ -1402,8 +1402,8 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a match request for original app dates cascades to applicable space booking entity and updates the application status`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
             applicant = applicant,
             assignee = applicant,
@@ -1639,7 +1639,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
-    val apArea = `Given an AP Area`()
+    val apArea = givenAnApArea()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -1647,7 +1647,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withApplicationSchema(applicationSchema)
       withSubmittedAt(OffsetDateTime.now())
       withApArea(apArea)
-      withCruManagementArea(`Given a CAS1 CRU Management Area`())
+      withCruManagementArea(givenACas1CruManagementArea())
       withReleaseType("licence")
       withCaseManagerUserDetails(caseManager)
       withCaseManagerIsNotApplicant(caseManager != null)
@@ -1802,7 +1802,7 @@ class WithdrawalTest : IntegrationTestBase() {
   ): BookingEntity {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     val booking = bookingEntityFactory.produceAndPersist {
@@ -1821,7 +1821,7 @@ class WithdrawalTest : IntegrationTestBase() {
       }
     }
 
-    APDeliusContext_mockSuccessfulGetReferralDetails(
+    apDeliusContextMockSuccessfulGetReferralDetails(
       crn = booking.crn,
       bookingId = booking.id.toString(),
       arrivedAt = if (hasArrivalInDelius) {
@@ -1844,7 +1844,7 @@ class WithdrawalTest : IntegrationTestBase() {
   ): Cas1SpaceBookingEntity {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {

@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
@@ -59,10 +59,10 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk To Self for a CRN that does not exist returns 404`() {
-    `Given a CAS2 POM User` { userEntity, jwt ->
+    givenACas2PomUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      communityAPIMockNotFoundOffenderDetailsCall(crn)
 
       webTestClient.get()
         .uri("/cas2/people/$crn/oasys/risk-to-self")
@@ -75,13 +75,13 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk to Self for a CRN returns OK with correct body`() {
-    `Given a CAS2 POM User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenACas2PomUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        apOASysContextMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
@@ -104,10 +104,10 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk to Self when upstream times out returns 404`() {
-    `Given a CAS2 POM User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenACas2PomUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
+        apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")

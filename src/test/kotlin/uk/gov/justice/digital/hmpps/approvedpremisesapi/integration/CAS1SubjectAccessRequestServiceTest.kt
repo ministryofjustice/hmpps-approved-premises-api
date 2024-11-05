@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -40,7 +40,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 Information - No Results`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertJsonEquals(
@@ -71,7 +71,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 Information - Test Null Dates`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
     assertJsonEquals(
@@ -102,7 +102,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 Information - Have Application`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
 
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
@@ -139,7 +139,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have application note`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
 
     val timelineNotes = applicationTimelineNoteEntity(application)
@@ -176,7 +176,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have assessment`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val assessment = approvedPremisesAssessmentEntity(application)
@@ -210,7 +210,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have assessment with clarification notes`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
     val assessment = approvedPremisesAssessmentEntity(application)
     val clarificationNote = approvedPremisesAssessmentClarificationNoteEntity(assessment)
@@ -249,7 +249,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have a booking`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val booking = bookingEntity(offenderDetails, application)
@@ -284,7 +284,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have a booking with an offline application`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
     val offlineApplication = offlineApplicationEntity(offenderDetails)
     val booking = bookingEntity(offenderDetails, application, offlineApplication)
@@ -319,7 +319,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have a booking with extension`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val booking = bookingEntity(offenderDetails, application)
@@ -355,7 +355,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS1 information - have a booking cancellation`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val booking = bookingEntity(offenderDetails, application)
@@ -391,7 +391,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS1 information - has a bed move`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
     val booking = bookingEntity(offender, application)
 
@@ -427,7 +427,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS1 information - has an appeal`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
     val appeal = appealEntity(application, assessment)
@@ -461,7 +461,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS1 information - has a placement application`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
 
     val placementApplication = placementApplicationEntity(application)
@@ -494,7 +494,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS1 information - has a placement request with requirements`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
     val booking = bookingEntity(offender, application)
@@ -531,7 +531,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS1 information - has bookings not made`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
     val booking = bookingEntity(offender, application)
@@ -569,7 +569,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS1 information - Domain Events`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
 
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)

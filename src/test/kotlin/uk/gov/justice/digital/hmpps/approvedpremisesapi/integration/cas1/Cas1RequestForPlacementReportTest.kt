@@ -39,10 +39,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -98,9 +98,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-    val assessorDetails = `Given a User`(
+    val assessorDetails = givenAUser(
       roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
       qualifications = UserQualification.entries,
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR1"),
@@ -127,7 +127,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with no applications`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = 2020, month = 2, includePii = true))
@@ -151,7 +151,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with applications, include PII`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = 2021, month = 3, includePii = true))
@@ -194,7 +194,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with applications, exclude PII by default and always exclude internal columns`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = 2021, month = 3, includePii = null))
@@ -560,14 +560,14 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     submittedAt: LocalDateTime,
     arrivalDateOnApplication: LocalDate?,
   ): ApprovedPremisesApplicationEntity {
-    val (applicant, jwt) = `Given a User`()
-    val (offenderDetails, _) = `Given an Offender`(
+    val (applicant, jwt) = givenAUser()
+    val (offenderDetails, _) = givenAnOffender(
       offenderDetailsConfigBlock = {
         withCrn(crn)
       },
     )
 
-    APDeliusContext_mockSuccessfulCaseDetailCall(
+    apDeliusContextMockSuccessfulCaseDetailCall(
       crn,
       CaseDetailFactory().from(offenderDetails.asCaseDetail()).produce(),
     )
@@ -696,7 +696,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     paroleDecisionDate: LocalDate,
     submittedAt: LocalDateTime,
   ) {
-    val creatorJwt = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     clock.setNow(submittedAt)
 

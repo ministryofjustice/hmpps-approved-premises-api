@@ -9,10 +9,10 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -38,7 +38,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    val userArgs = `Given a User`()
+    val userArgs = givenAUser()
 
     user = userArgs.first
 
@@ -73,12 +73,12 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
     }
 
     premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
     }
 
-    val (offender) = `Given an Offender`()
-    val (placementRequest) = `Given a Placement Request`(
+    val (offender) = givenAnOffender()
+    val (placementRequest) = givenAPlacementRequest(
       placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,
@@ -121,7 +121,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get space booking timeline with non existent id parameters returns 404`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       webTestClient.get()
         .uri("/premises/1/space-bookings/2/timeline")
         .header("Authorization", "Bearer $jwt")
@@ -134,7 +134,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get space booking timeline returns all expected items`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
 
       val rawResponseBody = webTestClient.get()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/timeline")

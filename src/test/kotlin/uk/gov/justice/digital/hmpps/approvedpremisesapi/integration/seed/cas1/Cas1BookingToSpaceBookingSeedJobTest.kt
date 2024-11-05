@@ -6,15 +6,15 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Booking`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Booking for an Offline Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 Space Booking`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offline Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABookingForAnOfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
@@ -40,21 +40,21 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
   @SuppressWarnings("LongMethod")
   @Test
   fun `Migrate bookings, removing existing`() {
-    val premises = `Given an Approved Premises`("Premises 1")
-    val otherUser = `Given a User`().first
+    val premises = givenAnApprovedPremises("Premises 1")
+    val otherUser = givenAUser().first
     val roomCriteria1 = characteristicEntityFactory.produceAndPersist { withModelScope("*") }
     val roomCriteria2 = characteristicEntityFactory.produceAndPersist { withModelScope("room") }
     val premisesCriteria = characteristicEntityFactory.produceAndPersist { withModelScope("premises") }
 
-    val application1 = `Given a CAS1 Application`(createdByUser = otherUser, eventNumber = "25")
-    val booking1DeliusManagementInfo = `Given a Booking`(
+    val application1 = givenACas1Application(createdByUser = otherUser, eventNumber = "25")
+    val booking1DeliusManagementInfo = givenABooking(
       crn = "CRN1",
       premises = premises,
       application = application1,
       arrivalDate = LocalDate.of(2024, 5, 1),
       departureDate = LocalDate.of(2024, 5, 5),
     )
-    val placementRequest1 = `Given a Placement Request`(
+    val placementRequest1 = givenAPlacementRequest(
       application = application1,
       placementRequestAllocatedTo = otherUser,
       assessmentAllocatedTo = otherUser,
@@ -62,22 +62,22 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       booking = booking1DeliusManagementInfo,
       essentialCriteria = listOf(premisesCriteria, roomCriteria1, roomCriteria2),
     ).first
-    val (booking1CreatedByUser) = `Given a User`()
+    val (booking1CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
       application1,
       booking1DeliusManagementInfo,
       booking1CreatedByUser,
       placementRequest1,
     )
-    APDeliusContext_mockSuccessfulGetReferralDetails(
+    apDeliusContextMockSuccessfulGetReferralDetails(
       crn = "CRN1",
       bookingId = booking1DeliusManagementInfo.id.toString(),
       arrivedAt = ZonedDateTime.of(LocalDateTime.of(2024, 5, 2, 10, 15, 30, 0), ZoneOffset.systemDefault()),
       departedAt = ZonedDateTime.of(LocalDateTime.of(2024, 5, 4, 18, 45, 20, 0), ZoneOffset.systemDefault()),
     )
 
-    val application2 = `Given a CAS1 Application`(createdByUser = otherUser, eventNumber = "50")
-    val booking2LegacyCas1ManagementInfo = `Given a Booking`(
+    val application2 = givenACas1Application(createdByUser = otherUser, eventNumber = "50")
+    val booking2LegacyCas1ManagementInfo = givenABooking(
       crn = "CRN2",
       premises = premises,
       application = application2,
@@ -86,7 +86,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       actualArrivalDate = LocalDateTime.of(2024, 6, 3, 20, 0, 5),
       actualDepartureDate = LocalDateTime.of(2024, 6, 6, 9, 48, 0),
     )
-    val placementRequest2 = `Given a Placement Request`(
+    val placementRequest2 = givenAPlacementRequest(
       application = application2,
       placementRequestAllocatedTo = otherUser,
       assessmentAllocatedTo = otherUser,
@@ -94,7 +94,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       booking = booking2LegacyCas1ManagementInfo,
       essentialCriteria = listOf(),
     ).first
-    val (booking2CreatedByUser) = `Given a User`()
+    val (booking2CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
       application2,
       booking2LegacyCas1ManagementInfo,
@@ -110,18 +110,18 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       withOtherReason("cancellation other reason")
     }
 
-    val offlineApplication = `Given an Offline Application`(
+    val offlineApplication = givenAnOfflineApplication(
       crn = "CRN3",
       eventNumber = "75",
     )
-    val booking3OfflineApplication = `Given a Booking for an Offline Application`(
+    val booking3OfflineApplication = givenABookingForAnOfflineApplication(
       crn = "CRN3",
       premises = premises,
       offlineApplication = offlineApplication,
       arrivalDate = LocalDate.of(2024, 7, 1),
       departureDate = LocalDate.of(2024, 7, 5),
     )
-    val (booking3CreatedByUser) = `Given a User`()
+    val (booking3CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.adhocBookingMade(
       onlineApplication = null,
       offlineApplication = offlineApplication,
@@ -130,7 +130,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       user = booking3CreatedByUser,
     )
 
-    val booking4OfflineNoDomainEvent = `Given a Booking for an Offline Application`(
+    val booking4OfflineNoDomainEvent = givenABookingForAnOfflineApplication(
       crn = "CRN4",
       premises = premises,
       offlineApplication = offlineApplication,
@@ -138,7 +138,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       departureDate = LocalDate.of(2024, 8, 5),
     )
 
-    val existingMigratedSpaceBooking1ToRemove = `Given a CAS1 Space Booking`(
+    val existingMigratedSpaceBooking1ToRemove = givenACas1SpaceBooking(
       crn = "CRN1",
       premises = premises,
       migratedFromBooking = booking1DeliusManagementInfo,

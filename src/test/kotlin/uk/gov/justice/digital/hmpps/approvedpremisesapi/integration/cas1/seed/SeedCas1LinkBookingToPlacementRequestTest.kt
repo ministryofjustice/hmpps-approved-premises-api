@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -22,8 +22,8 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
 
   @Test
   fun `Links placement request to adhoc booking on same application`() {
-    val (user, _) = `Given a User`()
-    val (offenderDetails, _) = `Given an Offender`()
+    val (user, _) = givenAUser()
+    val (offenderDetails, _) = givenAnOffender()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -95,7 +95,7 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
     val booking = bookingEntityFactory.produceAndPersist {
       withPremises(
         approvedPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(`Given a Probation Region`())
+          withProbationRegion(givenAProbationRegion())
           withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
         },
       )

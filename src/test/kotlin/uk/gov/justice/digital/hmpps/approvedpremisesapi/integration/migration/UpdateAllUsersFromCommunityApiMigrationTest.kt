@@ -5,14 +5,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockNotFoundStaffDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockNotFoundStaffDetailCall
 
 class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
   @Test
   fun `All users are updated from Community API with a 50ms artificial delay`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val userOne = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER1")
@@ -29,11 +29,11 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
     val staffuserDetail1 =
       StaffDetailFactory.staffDetail(deliusUsername = userOne.deliusUsername, code = "STAFFCODE1")
 
-    ApDeliusContext_addStaffDetailResponse(staffuserDetail1)
+    apDeliusContextAddStaffDetailResponse(staffuserDetail1)
 
     val staffUserDetail2 = StaffDetailFactory.staffDetail(deliusUsername = userTwo.deliusUsername, code = "STAFFCODE2")
 
-    ApDeliusContext_addStaffDetailResponse(staffUserDetail2)
+    apDeliusContextAddStaffDetailResponse(staffUserDetail2)
 
     val startTime = System.currentTimeMillis()
     migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi, 1)
@@ -50,7 +50,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
   @Test
   fun `Failure to update individual user does not stop processing - Update all users`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val userOne = userEntityFactory.produceAndPersist {
       withDeliusUsername("USER1")
@@ -64,11 +64,11 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    ApDeliusContext_mockNotFoundStaffDetailCall(userOne.deliusUsername)
+    apDeliusContextMockNotFoundStaffDetailCall(userOne.deliusUsername)
 
     val staffUserDetail = StaffDetailFactory.staffDetail(deliusUsername = userTwo.deliusUsername, code = "STAFFCODE2")
 
-    ApDeliusContext_addStaffDetailResponse(staffUserDetail)
+    apDeliusContextAddStaffDetailResponse(staffUserDetail)
 
     migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi)
 

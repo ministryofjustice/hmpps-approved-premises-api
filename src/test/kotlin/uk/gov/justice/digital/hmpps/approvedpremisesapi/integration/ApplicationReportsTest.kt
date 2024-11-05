@@ -43,12 +43,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -138,29 +138,29 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     referrerTeam = TeamFactoryDeliusContext
     referrerProbationArea = "Referrer probation area"
 
-    referrerDetails = `Given a User`(
+    referrerDetails = givenAUser(
       staffDetail = StaffDetailFactory.staffDetail(
         teams = listOf(referrerTeam.team()),
         probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = referrerProbationArea),
       ),
     )
-    assessorDetails = `Given a User`(
+    assessorDetails = givenAUser(
       roles = listOf(UserRole.CAS1_ASSESSOR),
       probationRegion = probationRegionEntityFactory.produceAndPersist {
         withYieldedApArea {
-          `Given an AP Area`(name = "Wales")
+          givenAnApArea(name = "Wales")
         }
       },
     )
-    managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
-    workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
-    matcherDetails = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))
-    appealManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
+    managerDetails = givenAUser(roles = listOf(UserRole.CAS1_MANAGER))
+    workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+    matcherDetails = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
+    appealManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -214,7 +214,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns 403 Forbidden if user does not have all regions access`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       webTestClient.get()
         .uri("/cas1/reports/applications?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -227,7 +227,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns 400 if month is provided and not within 1-12`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/cas1/reports/applications?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
@@ -242,7 +242,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with correct applications`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       val now = LocalDate.now()
       val year = now.year.toString()
       val month = now.monthValue.toString()
@@ -414,11 +414,11 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
-    val (offenderDetails, _) = `Given an Offender`(
+    val (offenderDetails, _) = givenAnOffender(
       offenderDetailsConfigBlock = { withCrn(crn) },
     )
 
-    CommunityAPI_mockSuccessfulRegistrationsCall(
+    communityAPIMockSuccessfulRegistrationsCall(
       offenderDetails.otherIds.crn,
       Registrations(
         registrations = listOf(
@@ -432,7 +432,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       ),
     )
 
-    APDeliusContext_mockSuccessfulCaseDetailCall(
+    apDeliusContextMockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,
       CaseDetailFactory()
         .from(offenderDetails.asCaseDetail())
@@ -528,7 +528,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity, shortNotice: Boolean = false): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     assessment.data = if (shortNotice) {
@@ -582,7 +582,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
-    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+    val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
 
     assessment.data = "{}"
     assessment.allocatedToUser = assessorEntity
@@ -612,7 +612,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
           withYieldedApArea {
-            `Given an AP Area`()
+            givenAnApArea()
           }
         }
       }
@@ -648,7 +648,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
     val (_, jwt) = workflowManagerDetails
-    val (assigneeUser, _) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR))
+    val (assigneeUser, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
 
     val existingAssessment = application.getLatestAssessment()!!
 

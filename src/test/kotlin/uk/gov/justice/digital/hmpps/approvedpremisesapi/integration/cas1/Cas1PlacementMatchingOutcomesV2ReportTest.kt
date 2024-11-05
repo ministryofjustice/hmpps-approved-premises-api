@@ -42,12 +42,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -93,9 +93,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   @BeforeAll
   fun setup() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-    val assessorDetails = `Given a User`(
+    val assessorDetails = givenAUser(
       roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
       qualifications = UserQualification.entries,
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR1"),
@@ -120,7 +120,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   @Test
   fun `Get report is empty if no applications`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = REPORT_YEAR - 1, month = REPORT_MONTH, includePii = true))
@@ -144,7 +144,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   @Test
   fun `Get report returns OK with correct applications, exclude PII by default`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = REPORT_YEAR, month = REPORT_MONTH, includePii = null))
@@ -177,7 +177,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   @Test
   fun `Get report returns OK with correct applications, including PII`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = REPORT_YEAR, month = REPORT_MONTH, includePii = true))
@@ -445,15 +445,15 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     matcherApAreaName: String,
     matcherUsername: String,
   ) {
-    val managerJwt = `Given a User`(
+    val managerJwt = givenAUser(
       roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER),
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
-      probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = matcherApAreaName)),
+      probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     cas1SimpleApiClient.bookingForPlacementRequest(
@@ -474,10 +474,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     matcherApAreaName: String,
     matcherUsername: String,
   ) {
-    val managerJwt = `Given a User`(
+    val managerJwt = givenAUser(
       roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER),
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
-      probationRegion = `Given a Probation Region`(apArea = `Given an AP Area`(name = matcherApAreaName)),
+      probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
 
     cas1SimpleApiClient.placementRequestBookingNotMade(
@@ -492,14 +492,14 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     crn: String,
     arrivalDateOnApplication: LocalDate?,
   ): ApprovedPremisesApplicationEntity {
-    val (applicant, jwt) = `Given a User`()
-    val (offenderDetails, _) = `Given an Offender`(
+    val (applicant, jwt) = givenAUser()
+    val (offenderDetails, _) = givenAnOffender(
       offenderDetailsConfigBlock = {
         withCrn(crn)
       },
     )
 
-    APDeliusContext_mockSuccessfulCaseDetailCall(
+    apDeliusContextMockSuccessfulCaseDetailCall(
       crn,
       CaseDetailFactory().from(offenderDetails.asCaseDetail()).produce(),
     )
@@ -602,7 +602,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     placementType: PlacementType,
     placementDates: List<PlacementDates>,
   ) {
-    val creatorJwt = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     cas1SimpleApiClient.placementApplicationCreate(
       this,

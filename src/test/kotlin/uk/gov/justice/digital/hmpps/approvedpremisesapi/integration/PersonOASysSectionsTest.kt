@@ -7,15 +7,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskManagementPlanCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoSHSummaryCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
@@ -63,10 +63,10 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      communityAPIMockNotFoundOffenderDetailsCall(crn)
 
       webTestClient.get()
         .uri("/people/$crn/oasys/sections")
@@ -79,19 +79,19 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val roshSummary = RoshSummaryFactory().produce()
-        APOASysContext_mockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
+        apOASysContextMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        apOASysContextMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         val riskManagementPlan = RiskManagementPlanFactory().produce()
-        APOASysContext_mockSuccessfulRiskManagementPlanCall(offenderDetails.otherIds.crn, riskManagementPlan)
+        apOASysContextMockSuccessfulRiskManagementPlanCall(offenderDetails.otherIds.crn, riskManagementPlan)
 
         val needsDetails = NeedsDetailsFactory().apply {
           withAssessmentId(34853487)
@@ -100,7 +100,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        APOASysContext_mockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
+        apOASysContextMockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")
@@ -127,8 +127,8 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections when upstream times out returns 404`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val needsDetails = NeedsDetailsFactory().apply {
           withAssessmentId(34853487)
           withAccommodationIssuesDetails("Accommodation", true, false)
@@ -136,7 +136,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+        apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")

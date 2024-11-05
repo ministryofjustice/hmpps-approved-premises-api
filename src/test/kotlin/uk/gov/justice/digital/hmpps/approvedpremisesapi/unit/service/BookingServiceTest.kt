@@ -2768,7 +2768,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, any())
     }
     verify(exactly = 0) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(any())
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(any())
     }
   }
 
@@ -2789,7 +2789,7 @@ class BookingServiceTest {
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
-    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+    every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
     every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
     mockkStatic(Sentry::class)
 
@@ -2817,7 +2817,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, assessment.id)
     }
     verify(exactly = 1) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
     verify(exactly = 0) {
       Sentry.captureException(any())
@@ -2835,7 +2835,7 @@ class BookingServiceTest {
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
-    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
+    every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
 
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
@@ -2858,7 +2858,7 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
     verify(exactly = 1) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
     verify(exactly = 0) {
       mockAssessmentService.closeAssessment(user, any())
@@ -2881,7 +2881,7 @@ class BookingServiceTest {
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
-    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+    every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
     every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Unauthorised()
     mockkStatic(Sentry::class)
     every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
@@ -2910,7 +2910,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, assessment.id)
     }
     verify(exactly = 1) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
     verify(exactly = 1) {
       Sentry.captureException(any())
@@ -2952,7 +2952,7 @@ class BookingServiceTest {
       mockAssessmentService.closeAssessment(user, any())
     }
     verify(exactly = 0) {
-      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+      mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
     }
   }
 

@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given an Offline Application`(
+fun IntegrationTestBase.givenAnOfflineApplication(
   crn: String,
   eventNumber: String? = randomStringMultiCaseWithNumbers(6),
 ) = offlineApplicationEntityFactory.produceAndPersist {

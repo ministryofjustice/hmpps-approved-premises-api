@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
@@ -259,12 +259,12 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
   protected fun probationRegionEntity() = probationRegionEntityFactory.produceAndPersist {
     withName("Probation Region ${randomStringMultiCaseWithNumbers(5)}")
-    withApArea(`Given an AP Area`(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
+    withApArea(givenAnApArea(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
   }
 
   protected fun userEntity(): UserEntity =
     userEntityFactory.produceAndPersist {
-      withProbationRegion(`Given a Probation Region`())
+      withProbationRegion(givenAProbationRegion())
     }
 
   protected fun personRisks() =

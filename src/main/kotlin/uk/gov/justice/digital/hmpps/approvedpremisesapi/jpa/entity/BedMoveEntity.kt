@@ -14,7 +14,7 @@ import java.util.UUID
 @Repository
 interface BedMoveRepository : JpaRepository<BedMoveEntity, UUID> {
   @Query("SELECT b FROM BedMoveEntity b WHERE b.booking.id = :bookingId")
-  fun findByBooking_IdOrNull(bookingId: UUID): BedMoveEntity?
+  fun findByBookingIdOrNull(bookingId: UUID): BedMoveEntity?
 }
 
 @Entity

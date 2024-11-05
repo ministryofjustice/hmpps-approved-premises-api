@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
@@ -23,7 +23,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS2 Information - No Results`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertJsonEquals(
@@ -43,7 +43,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   fun `Get CAS2 Information - null date Check`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
     assertJsonEquals(
@@ -64,7 +64,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS2 Information - Applications`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
@@ -78,7 +78,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
    {
-      "Applications": [${Cas2ApplicationsJson(application)}],
+      "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [ ],
       "Assessments": [ ],
       "StatusUpdates": [ ],
@@ -92,7 +92,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS2 Information - Application with assessment`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
@@ -107,9 +107,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
    {
-      "Applications": [${Cas2ApplicationsJson(application)}],
+      "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [ ],
-      "Assessments": [${Cas2AssessmentsJson(assessment)}],
+      "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [ ],
       "StatusUpdateDetails": [ ],
       "DomainEvents":  [ ],
@@ -121,7 +121,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS2 Information - Application with Note`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
@@ -138,9 +138,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
    {
-      "Applications": [${Cas2ApplicationsJson(application)}],
-      "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
-      "Assessments": [${Cas2AssessmentsJson(assessment)}],
+      "Applications": [${cas2ApplicationsJson(application)}],
+      "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
+      "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [ ],
       "StatusUpdateDetails": [ ],
       "DomainEvents":  [ ],
@@ -153,7 +153,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS2 Information - Application with Note and Status update`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
     val externalAssessor = externalUserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
@@ -172,11 +172,11 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
    {
-      "Applications": [${Cas2ApplicationsJson(application)}],
-      "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
-      "Assessments": [${Cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [${Cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${Cas2StatusUpdateDetails(statusUpdateDetail)}],
+      "Applications": [${cas2ApplicationsJson(application)}],
+      "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
+      "Assessments": [${cas2AssessmentsJson(assessment)}],
+      "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
+      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
       "DomainEvents":  [ ],
       "DomainEventsMetadata": [ ]
       
@@ -187,7 +187,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS2 Information - Domain Events`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
     val externalAssessor = externalUserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
@@ -207,11 +207,11 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
     val expectedJson = """
    {
-      "Applications": [${Cas2ApplicationsJson(application)}],
-      "ApplicationNotes": [${Cas2ApplicationNotesJson(applicationNotes)}],
-      "Assessments": [${Cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [${Cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${Cas2StatusUpdateDetails(statusUpdateDetail)}],
+      "Applications": [${cas2ApplicationsJson(application)}],
+      "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
+      "Assessments": [${cas2AssessmentsJson(assessment)}],
+      "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
+      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
       "DomainEvents": [${domainEventJson(domainEvent,null)}],
       "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
    }
@@ -219,7 +219,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     assertJsonEquals(expectedJson, result)
   }
 
-  private fun Cas2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
+  private fun cas2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
     {
         "crn": "${statusUpdateDetail.statusUpdate.application.crn}",
         "noms_number": "${statusUpdateDetail.statusUpdate.application.nomsNumber}", 
@@ -232,7 +232,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
   """.trimIndent()
 
-  private fun Cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
+  private fun cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
     {
       	"id": "${statusUpdate.id}",
       	"crn": "${statusUpdate.application.crn}",
@@ -247,7 +247,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }    
   """.trimIndent()
 
-  private fun Cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
+  private fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
       "id": "${applicationNotes.id}",
       "crn": "${applicationNotes.application.crn}",
@@ -260,7 +260,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
   """.trimIndent()
 
-  private fun Cas2AssessmentsJson(assessment: Cas2AssessmentEntity): String = """
+  private fun cas2AssessmentsJson(assessment: Cas2AssessmentEntity): String = """
     {
         "id": "${assessment.id}",
         "crn": "${assessment.application.crn}",
@@ -272,7 +272,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
   """.trimIndent()
 
-  private fun Cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
+  private fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
     {
       "id": "${application.id}",
       "crn": "${application.crn}",

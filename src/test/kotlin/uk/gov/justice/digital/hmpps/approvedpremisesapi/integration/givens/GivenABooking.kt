@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a Booking`(
+fun IntegrationTestBase.givenABooking(
   crn: String,
   application: ApplicationEntity,
   premises: PremisesEntity? = null,
@@ -51,7 +51,7 @@ fun IntegrationTestBase.`Given a Booking`(
 }
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a Booking for an Offline Application`(
+fun IntegrationTestBase.givenABookingForAnOfflineApplication(
   crn: String,
   offlineApplication: OfflineApplicationEntity,
   premises: PremisesEntity? = null,

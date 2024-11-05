@@ -19,11 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -49,7 +49,7 @@ class BedSearchTest : IntegrationTestBase() {
 
   @BeforeEach
   fun before() {
-    probationRegion = `Given a Probation Region`()
+    probationRegion = givenAProbationRegion()
   }
 
   @Nested
@@ -75,7 +75,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for an Approved Premises Bed without MATCHER role returns 403`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.post()
           .uri("/beds/search")
           .header("Authorization", "Bearer $jwt")
@@ -97,7 +97,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for an Approved Premises Bed returns 200 with correct body`() {
-      `Given a User`(
+      givenAUser(
         roles = listOf(UserRole.CAS1_MATCHER),
       ) { _, jwt ->
         val postCodeDistrictLatLong = LatLong(50.1044, -2.3992)
@@ -191,7 +191,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -260,7 +260,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -297,7 +297,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         booking.turnarounds = mutableListOf(turnaround)
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
           jwt,
@@ -314,7 +314,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -351,7 +351,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         booking.turnarounds = mutableListOf(turnaround)
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
           jwt,
@@ -368,10 +368,10 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+        givenAnOffender { offenderDetails, _ ->
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
           val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
@@ -434,7 +434,7 @@ class BedSearchTest : IntegrationTestBase() {
             withId(UUID.randomUUID())
           }
 
-          ApDeliusContext_addResponseToUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -507,10 +507,10 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+        givenAnOffender { offenderDetails, _ ->
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
           val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
@@ -604,7 +604,7 @@ class BedSearchTest : IntegrationTestBase() {
             withReason(cancellationReasonEntityFactory.produceAndPersist())
           }
 
-          ApDeliusContext_addResponseToUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -690,7 +690,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -783,10 +783,10 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed returns results which do not consider cancelled bookings as overlapping`() {
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+        givenAnOffender { offenderDetails, _ ->
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
           val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
@@ -835,7 +835,7 @@ class BedSearchTest : IntegrationTestBase() {
             }
           }
 
-          ApDeliusContext_addResponseToUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(offenderDetails.otherIds.crn)
               .produce(),
@@ -903,7 +903,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -1018,7 +1018,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -1133,7 +1133,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
@@ -1254,7 +1254,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search start date`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val durationDays = 7
         val searchStartDate = LocalDate.parse("2023-03-23")
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, searchStartDate)
@@ -1265,7 +1265,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is between search start date and end date`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val durationDays = 7
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(2)
@@ -1277,7 +1277,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search end date`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val durationDays = 7
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(durationDays.toLong() - 1)
@@ -1289,7 +1289,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate less than than search start date`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val durationDays = 7
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.minusDays(1)
@@ -1305,7 +1305,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val searchStartDate = LocalDate.parse("2023-03-23")
@@ -1385,7 +1385,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val durationDays = 7
@@ -1452,7 +1452,7 @@ class BedSearchTest : IntegrationTestBase() {
 
     @Test
     fun `Searching for a Temporary Accommodation Bed should return no bed when given premises has got 2 rooms where one with endDate in the passed and another room with matching end date`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val durationDays = 7
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(1)
@@ -1474,7 +1474,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val searchStartDate = LocalDate.parse("2024-03-12")
@@ -1608,7 +1608,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
       }
 
-      `Given a User`(
+      givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
         val searchStartDate = LocalDate.parse("2024-08-12")

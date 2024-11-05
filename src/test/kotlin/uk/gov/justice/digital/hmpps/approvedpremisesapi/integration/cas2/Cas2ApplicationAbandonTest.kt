@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Licence Case Admin User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -92,8 +92,8 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
     inner class PomUsers {
       @Test
       fun `Abandon existing CAS2 application returns 200 with correct body`() {
-        `Given a CAS2 POM User` { submittingUser, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
+        givenACas2PomUser { submittingUser, jwt ->
+          givenAnOffender { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
             webTestClient.put()
@@ -113,8 +113,8 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
     inner class LicenceCaseAdminUsers {
       @Test
       fun `Abandon existing CAS2 application returns 200 with correct body`() {
-        `Given a CAS2 Licence Case Admin User` { submittingUser, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
+        givenACas2LicenceCaseAdminUser { submittingUser, jwt ->
+          givenAnOffender { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
             webTestClient.put()

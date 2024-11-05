@@ -38,11 +38,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
@@ -86,7 +86,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setup() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
@@ -102,7 +102,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report is empty if no applications`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = 2019, month = 2, includePii = true))
@@ -126,7 +126,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with correct applications, including PII`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = 2020, month = 2, includePii = true))
@@ -155,7 +155,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report returns OK with correct applications, excludes PII by default`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
         .uri(getReportUrl(year = 2020, month = 2, includePii = null))
@@ -199,7 +199,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
-      val (assessor1, assessor1Jwt) = `Given a User`(
+      val (assessor1, assessor1Jwt) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffDetail = StaffDetailFactory.staffDetail(
@@ -207,18 +207,18 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           name = PersonName(forename = "Judy", middleName = "Jude", surname = "Juderson"),
         ),
         probationRegion = probationRegionEntityFactory.produceAndPersist {
-          withApArea(`Given an AP Area`(name = "Ap Area 1"))
+          withApArea(givenAnApArea(name = "Ap Area 1"))
         },
       )
 
-      val (assessor2, assessor2Jwt) = `Given a User`(
+      val (assessor2, assessor2Jwt) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR2"),
       )
 
       application = createAndSubmitApplication(
-        applicantDetails = `Given a User`(
+        applicantDetails = givenAUser(
           staffDetail = StaffDetailFactory.staffDetail(
             deliusUsername = "USER1",
             name = PersonName(forename = "Jeff", middleName = "Jeffity", surname = "Jefferson"),
@@ -397,7 +397,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
-      val (assessor4, assessor4jwt) = `Given a User`(
+      val (assessor4, assessor4jwt) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffDetail = StaffDetailFactory.staffDetail(
@@ -405,12 +405,12 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           name = PersonName(forename = "Assessor", surname = "Assessing"),
         ),
         probationRegion = probationRegionEntityFactory.produceAndPersist {
-          withApArea(`Given an AP Area`(name = "Ap Area 4"))
+          withApArea(givenAnApArea(name = "Ap Area 4"))
         },
       )
 
       application = createAndSubmitApplication(
-        applicantDetails = `Given a User`(
+        applicantDetails = givenAUser(
           staffDetail = StaffDetailFactory.staffDetail(
             deliusUsername = "USER3",
             name = PersonName(forename = "Test", surname = "Testing"),
@@ -518,14 +518,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
-      val (assessor3, _) = `Given a User`(
+      val (assessor3, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
         staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR3"),
       )
 
       application = createAndSubmitApplication(
-        applicantDetails = `Given a User`(
+        applicantDetails = givenAUser(
           staffDetail = StaffDetailFactory.staffDetail(
             deliusUsername = "USER2",
             name = PersonName(forename = "App", surname = "Licant"),
@@ -620,7 +620,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun createApplication() {
       application = createAndSubmitApplication(
-        applicantDetails = `Given a User`(),
+        applicantDetails = givenAUser(),
         nomsNumber = "noms10",
         apType = ApType.esap,
         crn = "appWithdrawnDuringReportingPeriod",
@@ -663,7 +663,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun createApplication() {
       application = createAndSubmitApplication(
-        applicantDetails = `Given a User`(),
+        applicantDetails = givenAUser(),
         nomsNumber = "noms2",
         apType = ApType.esap,
         crn = "submittedAppBeforeReportDate",
@@ -693,7 +693,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun createApplication() {
       application = createAndSubmitApplication(
-        applicantDetails = `Given a User`(),
+        applicantDetails = givenAUser(),
         nomsNumber = "noms2",
         apType = ApType.esap,
         crn = "submittedAppBeforeReportDate",
@@ -796,7 +796,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
     arrivalDate: LocalDate?,
   ): ApprovedPremisesApplicationEntity {
     val (applicant, jwt) = applicantDetails
-    val (offenderDetails, _) = `Given an Offender`(
+    val (offenderDetails, _) = givenAnOffender(
       offenderDetailsConfigBlock = {
         withCrn(crn)
         withDateOfBirth(dateOfBirth)
@@ -805,7 +805,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       },
     )
 
-    APDeliusContext_mockSuccessfulCaseDetailCall(
+    apDeliusContextMockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,
       CaseDetailFactory()
         .from(offenderDetails.asCaseDetail())
@@ -859,7 +859,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     clock.setNow(submittedAt)
 
-    val apArea = `Given an AP Area`(name = apAreaName)
+    val apArea = givenAnApArea(name = apAreaName)
 
     cas1SimpleApiClient.applicationSubmit(
       this,

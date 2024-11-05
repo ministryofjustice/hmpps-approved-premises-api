@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner
@@ -80,7 +80,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
     }.apply {
       this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withCreatedBy(`Given a User`().first)
+        withCreatedBy(givenAUser().first)
         withOutOfServiceBed(this@apply)
         withStartDate(LocalDate.of(2020, 5, 7))
         withEndDate(LocalDate.of(2020, 5, 8))
@@ -175,8 +175,8 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
     crn: String,
     configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
   ): Cas1SpaceBookingEntity {
-    val (user) = `Given a User`()
-    val (placementRequest) = `Given a Placement Request`(
+    val (user) = givenAUser()
+    val (placementRequest) = givenAPlacementRequest(
       placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,

@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-fun IntegrationTestBase.`Given an Out of Service Bed`(
+fun IntegrationTestBase.givenAnOutOfServiceBed(
   bed: BedEntity,
   startDate: LocalDate = LocalDate.now(),
   endDate: LocalDate = LocalDate.now(),
@@ -19,7 +19,7 @@ fun IntegrationTestBase.`Given an Out of Service Bed`(
 
   outOfServiceBed.apply {
     this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-      withCreatedBy(`Given a User`().first)
+      withCreatedBy(givenAUser().first)
       withOutOfServiceBed(this@apply)
       withStartDate(startDate)
       withEndDate(endDate)

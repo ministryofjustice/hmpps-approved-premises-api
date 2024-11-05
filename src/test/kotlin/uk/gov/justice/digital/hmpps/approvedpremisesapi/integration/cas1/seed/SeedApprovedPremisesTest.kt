@@ -11,7 +11,7 @@ import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -55,7 +55,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an Approved Premises with an invalid Local Authority Area logs an error`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     withCsv(
       "invalid-local-authority",
@@ -83,7 +83,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an Approved Premises with an incorrectly service-scoped characteristic logs an error`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -121,7 +121,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an Approved Premises with an incorrectly model-scoped characteristic logs an error`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -215,7 +215,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
   @Test
   fun `Creating a new Approved Premises persists correctly`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -272,9 +272,9 @@ class SeedApprovedPremisesTest : SeedTestBase() {
 
   @Test
   fun `Updating an existing Approved Premises persists correctly`() {
-    val originalProbationRegion = `Given a Probation Region`()
+    val originalProbationRegion = givenAProbationRegion()
 
-    val updatedProbationRegion = `Given a Probation Region`()
+    val updatedProbationRegion = givenAProbationRegion()
 
     val originalLocalAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 

@@ -368,7 +368,7 @@ class PlacementRequestService(
    * See [uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob] for more information.
    */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
-    placementRequestRepository.findByApplication_id(applicationId)
+    placementRequestRepository.findByApplicationId(applicationId)
       .filter { it.isForApplicationsArrivalDate() }
       .filter { !it.isReallocated() }
 

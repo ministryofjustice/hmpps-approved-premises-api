@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -17,9 +17,9 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findNonWithdrawnApprovedPremisesSummariesForUser query works as described`() {
-    `Given a User` { user, _ ->
-      `Given a User` { differentUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
+    givenAUser { user, _ ->
+      givenAUser { differentUser, _ ->
+        givenAnOffender { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -112,8 +112,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findAllTemporaryAccommodationSummariesCreatedByUser query works as described`() {
-    `Given a User` { user, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { user, _ ->
+      givenAnOffender { offenderDetails, _ ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -122,7 +122,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withPermissiveSchema()
         }
 
-        val probationRegion = `Given a Probation Region`()
+        val probationRegion = givenAProbationRegion()
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withProbationRegion(probationRegion)

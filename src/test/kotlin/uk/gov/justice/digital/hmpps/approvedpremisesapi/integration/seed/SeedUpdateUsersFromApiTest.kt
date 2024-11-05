@@ -6,8 +6,8 @@ import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -22,12 +22,12 @@ class SeedUpdateUsersFromApiTest : SeedTestBase() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername(USERNAME)
       withEmail("oldemail@localhost")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = USERNAME, email = "updatedemail@localhost")
 
-    ApDeliusContext_addStaffDetailResponse(staffUserDetails)
+    apDeliusContextAddStaffDetailResponse(staffUserDetails)
 
     val csv = CsvBuilder()
       .withUnquotedFields(

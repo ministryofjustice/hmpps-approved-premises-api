@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.MigrationJobService
@@ -25,7 +25,7 @@ class UpdateSentenceTypeAndSituationJobTest : IntegrationTestBase() {
       withPermissiveSchema()
     }
 
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val user = userEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)

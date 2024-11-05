@@ -6,9 +6,9 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockNotFoundStaffDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockNotFoundStaffDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
 import java.time.LocalDate
@@ -16,7 +16,7 @@ import java.time.LocalDate
 class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
   @Test
   fun `All users pdu are updated from AP-delius integration with a 50ms artificial delay`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode("PDUCODE1")
@@ -74,7 +74,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REFERRER)
     }
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userOneCas3Assessor.deliusUsername,
         teams = listOf(
@@ -94,7 +94,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       ),
     )
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userTwoCas3Referrer.deliusUsername,
         teams = listOf(
@@ -114,7 +114,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       ),
     )
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userThreeCas1Assessor.deliusUsername,
         teams = listOf(
@@ -125,7 +125,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       ),
     )
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userFourCas3Referrer.deliusUsername,
         teams = listOf(
@@ -161,7 +161,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
 
   @Test
   fun `Failure to update individual user does not stop processing - PDU migration`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val probationDeliveryUnitTwo = probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode("PDUCODE2")
@@ -194,9 +194,9 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       withRole(UserRole.CAS3_REFERRER)
     }
 
-    ApDeliusContext_mockNotFoundStaffDetailCall(userOne.deliusUsername)
+    apDeliusContextMockNotFoundStaffDetailCall(userOne.deliusUsername)
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userTwo.deliusUsername,
         teams = listOf(
@@ -227,7 +227,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
 
   @Test
   fun `When probation delivery unit not exist in CAS does not stop processing other users`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     probationDeliveryUnitFactory.produceAndPersist {
       withDeliusCode("PDUCODE1")
@@ -253,7 +253,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       withUser(userTwo)
       withRole(UserRole.CAS3_REPORTER)
     }
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userOne.deliusUsername,
         teams = listOf(
@@ -264,7 +264,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       ),
     )
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = userTwo.deliusUsername,
         teams = listOf(

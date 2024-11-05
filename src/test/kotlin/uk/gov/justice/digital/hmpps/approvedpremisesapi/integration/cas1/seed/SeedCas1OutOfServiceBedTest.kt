@@ -5,8 +5,8 @@ import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises Bed`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -79,7 +79,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
   @Test
   fun `Logs an error if no bed exists with the given ID`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
       }
@@ -169,7 +169,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Logs an error if no reason exists with the given ID`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val row = Cas1OutOfServiceBedSeedCsvRowFactory()
         .withPremisesId(bed.room.premises.id)
         .withBedId(bed.id)
@@ -190,7 +190,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Creates an out-of-service bed with the correct data`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
       val row = Cas1OutOfServiceBedSeedCsvRowFactory()
@@ -228,7 +228,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Creates a cancelled out-of-service bed with the correct data`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
       val row = Cas1OutOfServiceBedSeedCsvRowFactory()
@@ -267,7 +267,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Creates an updated out-of-service bed with the correct data`() {
-    `Given an Approved Premises Bed` { bed ->
+    givenAnApprovedPremisesBed { bed ->
       val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
       val factory = Cas1OutOfServiceBedSeedCsvRowFactory()
@@ -313,8 +313,8 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Creates multiple out-of-service bed with the correct data`() {
-    `Given an Approved Premises Bed` { firstBed ->
-      `Given an Approved Premises Bed` { secondBed ->
+    givenAnApprovedPremisesBed { firstBed ->
+      givenAnApprovedPremisesBed { secondBed ->
         val firstReason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
         val secondReason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 

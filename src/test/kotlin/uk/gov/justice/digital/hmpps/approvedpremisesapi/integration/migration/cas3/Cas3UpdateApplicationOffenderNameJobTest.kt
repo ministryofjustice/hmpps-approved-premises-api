@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 
@@ -19,7 +19,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Test
   fun `all applications offender name are updated from Community API`() {
-    `Given an Offender`(
+    givenAnOffender(
       offenderDetailsConfigBlock = {
         withNomsNumber(null)
       },
@@ -29,7 +29,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withPermissiveSchema()
       }
 
-      val probationRegion = `Given a Probation Region`()
+      val probationRegion = givenAProbationRegion()
 
       val user = userEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
@@ -55,7 +55,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      ApDeliusContext_addListCaseSummaryToBulkResponse(cases)
+      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
 
       migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
 
@@ -69,7 +69,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Test
   fun `all applications offender name are updated from Community API when delius name is empty`() {
-    `Given an Offender`(
+    givenAnOffender(
       offenderDetailsConfigBlock = {
         withNomsNumber(null)
       },
@@ -79,7 +79,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withPermissiveSchema()
       }
 
-      val probationRegion = `Given a Probation Region`()
+      val probationRegion = givenAProbationRegion()
 
       val user = userEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
@@ -105,7 +105,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      ApDeliusContext_addListCaseSummaryToBulkResponse(cases)
+      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
 
       mockOffenderUserAccessCommunityApiCall("", temporaryAccommodationApplications.first().crn, true, true)
 
@@ -121,7 +121,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Test
   fun `when offender is not found in Community Api throws an exception`() {
-    `Given an Offender`(
+    givenAnOffender(
       offenderDetailsConfigBlock = {
         withNomsNumber(null)
       },
@@ -131,7 +131,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withPermissiveSchema()
       }
 
-      val probationRegion = `Given a Probation Region`()
+      val probationRegion = givenAProbationRegion()
 
       val user = userEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
@@ -143,7 +143,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withCreatedByUser(user)
       }
 
-      ApDeliusContext_addListCaseSummaryToBulkResponse(listOf())
+      apDeliusContextAddListCaseSummaryToBulkResponse(listOf())
 
       mockOffenderUserAccessCommunityApiCall("", temporaryAccommodationApplication.crn, true, true)
 

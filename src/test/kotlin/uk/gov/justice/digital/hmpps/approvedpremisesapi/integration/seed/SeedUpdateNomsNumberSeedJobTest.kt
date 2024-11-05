@@ -6,8 +6,8 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UpdateNomsNumberSeedRow
@@ -29,7 +29,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
 
   @Test
   fun `Update Application and Booking NOMS Numbers`() {
-    val (applicant, _) = `Given a User`()
+    val (applicant, _) = givenAUser()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withDefaults()
@@ -39,7 +39,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
           withPermissiveSchema()
         },
       )
-      withApArea(`Given an AP Area`())
+      withApArea(givenAnApArea())
       withCrn(CRN)
       withNomsNumber(OLD_NOMS)
     }
@@ -52,7 +52,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
           withPermissiveSchema()
         },
       )
-      withApArea(`Given an AP Area`())
+      withApArea(givenAnApArea())
       withCrn(CRN)
       withNomsNumber(NEW_NOMS)
     }
@@ -65,7 +65,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
           withPermissiveSchema()
         },
       )
-      withApArea(`Given an AP Area`())
+      withApArea(givenAnApArea())
       withCrn(OTHER_CRN)
       withNomsNumber(OTHER_NOMS)
     }
@@ -75,7 +75,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
         approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { `Given an AP Area`() } }
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { givenAnApArea() } }
           }
         },
       )
@@ -88,7 +88,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
         approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { `Given an AP Area`() } }
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { givenAnApArea() } }
           }
         },
       )

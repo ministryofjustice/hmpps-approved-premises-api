@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
-fun IntegrationTestBase.`Given an Approved Premises`(
+fun IntegrationTestBase.givenAnApprovedPremises(
   name: String = randomStringMultiCaseWithNumbers(8),
 ): ApprovedPremisesEntity {
   return approvedPremisesEntityFactory
