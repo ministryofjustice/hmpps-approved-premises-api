@@ -125,7 +125,7 @@ class Cas1WithdrawableTreeBuilder(
   fun treeForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableTree {
     return WithdrawableTree(
       WithdrawableTreeNode(
-        applicationId = spaceBooking.application.id,
+        applicationId = spaceBooking.application?.id,
         entityType = WithdrawableEntityType.SpaceBooking,
         entityId = spaceBooking.id,
         status = cas1SpaceBookingService.getWithdrawableState(spaceBooking, user),

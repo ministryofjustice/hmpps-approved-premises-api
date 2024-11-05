@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -23,7 +24,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<ApprovedPremisesEntity> = { ApprovedPremisesEntityFactory().withDefaults().produce() }
   private var placementRequest: Yielded<PlacementRequestEntity> = { PlacementRequestEntityFactory().withDefaults().produce() }
-  private var application: Yielded<ApprovedPremisesApplicationEntity> = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
+  private var application: Yielded<ApprovedPremisesApplicationEntity?> = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
+  private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
   private var createdBy: Yielded<UserEntity> = { UserEntityFactory().withDefaults().produce() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var expectedArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
@@ -127,8 +129,12 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.actualDepartureDateTime = { actualDepartureDateTime }
   }
 
-  fun withApplication(application: ApprovedPremisesApplicationEntity) = apply {
+  fun withApplication(application: ApprovedPremisesApplicationEntity?) = apply {
     this.application = { application }
+  }
+
+  fun withOfflineApplication(offlineApplication: OfflineApplicationEntity?) = apply {
+    this.offlineApplication = { offlineApplication }
   }
 
   fun withCrn(crn: String) = apply {
@@ -212,6 +218,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     keyWorkerName = this.keyWorkerName(),
     keyWorkerAssignedAt = this.keyWorkerAssignedAt(),
     application = this.application(),
+    offlineApplication = this.offlineApplication(),
     cancellationOccurredAt = cancellationOccurredAt(),
     cancellationRecordedAt = cancellationRecordedAt(),
     cancellationReason = cancellationReason(),

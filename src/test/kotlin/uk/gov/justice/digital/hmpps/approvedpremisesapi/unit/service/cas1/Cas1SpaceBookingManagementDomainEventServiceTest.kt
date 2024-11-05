@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffWithoutUsernameUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -87,6 +88,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .produce()
 
     private val spaceBookingFactory = Cas1SpaceBookingEntityFactory()
+      .withApplication(null)
+      .withOfflineApplication(null)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
       .withCanonicalArrivalDate(arrivalDate.toLocalDate())
@@ -149,6 +152,33 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.keyWorker!!.surname).isEqualTo(keyWorker.staff.surname)
       assertThat(data.keyWorker!!.forenames).isEqualTo(keyWorker.staff.forenames)
       assertThat(data.keyWorker!!.staffIdentifier).isEqualTo(keyWorker.staffIdentifier)
+    }
+
+    @Test
+    fun `record arrival and emits domain event, with offline application`() {
+      val offlineApplication = OfflineApplicationEntityFactory().produce()
+
+      val spaceBooking = spaceBookingFactory.withOfflineApplication(offlineApplication).produce()
+
+      service.arrivalRecorded(spaceBooking)
+
+      val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.savePersonArrivedEvent(
+          capture(domainEventArgument),
+          emit = false,
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(data.applicationSubmittedOn).isEqualTo(offlineApplication.createdAt.toLocalDate())
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
     }
 
     @Test
@@ -231,6 +261,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .produce()
 
     private val departedSpaceBookingFactory = Cas1SpaceBookingEntityFactory()
+      .withApplication(null)
+      .withOfflineApplication(null)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivedDate)
@@ -319,6 +351,32 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventMoveOnCategory.description).isEqualTo(moveOnCategory.name)
       assertThat(domainEventMoveOnCategory.legacyMoveOnCategoryCode).isEqualTo(moveOnCategory.legacyDeliusCategoryCode)
     }
+
+    @Test
+    fun `record departure and emits domain event for offline application`() {
+      val offlineApplication = OfflineApplicationEntityFactory().produce()
+
+      val departedSpaceBooking = departedSpaceBookingFactory.withOfflineApplication(offlineApplication).produce()
+
+      service.departureRecorded(departedSpaceBooking, departureReason, moveOnCategory)
+
+      val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.savePersonDepartedEvent(
+          capture(domainEventArgument),
+          emit = false,
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(domainEvent.crn).isEqualTo(departedSpaceBooking.crn)
+      val domainEventEventDetails = domainEvent.data.eventDetails
+      assertThat(domainEventEventDetails.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(domainEventEventDetails.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
+    }
   }
 
   @Nested
@@ -350,6 +408,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     private val previousKeyWorkerName = "Previous $keyWorkerName"
 
     private val spaceBookingWithoutKeyWorkerFactory = Cas1SpaceBookingEntityFactory()
+      .withApplication(null)
+      .withOfflineApplication(null)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
@@ -358,6 +418,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withCanonicalDepartureDate(departureDate)
 
     private val spaceBookingWithKeyWorkerFactory = Cas1SpaceBookingEntityFactory()
+      .withApplication(null)
+      .withOfflineApplication(null)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
@@ -401,7 +463,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       val domainEvent = domainEventArgument.captured
 
-      checkDomainEventBookingProperties(domainEvent, spaceBookingWithoutKeyWorker)
+      checkDomainEventBookingProperties(domainEvent, spaceBookingWithoutKeyWorker, application.id)
       val domainEventEventDetails = domainEvent.data.eventDetails
       assertThat(domainEventEventDetails.previousKeyWorkerName).isEqualTo(null)
       assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
@@ -428,24 +490,57 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       val domainEvent = domainEventArgument.captured
 
-      checkDomainEventBookingProperties(domainEvent, spaceBookingWithKeyWorker)
+      checkDomainEventBookingProperties(domainEvent, spaceBookingWithKeyWorker, application.id)
       val domainEventEventDetails = domainEvent.data.eventDetails
       assertThat(domainEventEventDetails.previousKeyWorkerName).isEqualTo(previousKeyWorkerName)
       assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
     }
 
-    private fun checkDomainEventBookingProperties(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>, spaceBooking: Cas1SpaceBookingEntity) {
+    @Test
+    fun `record keyWorker assigned and emits domain event with offline application`() {
+      val offlineApplication = OfflineApplicationEntityFactory().produce()
+
+      val spaceBookingWithKeyWorker = spaceBookingWithKeyWorkerFactory.withOfflineApplication(offlineApplication).produce()
+
+      service.keyWorkerAssigned(
+        spaceBookingWithKeyWorker,
+        assignedKeyWorkerName = keyWorkerName,
+        previousKeyWorkerName = previousKeyWorkerName,
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveKeyWorkerAssignedEvent(
+          capture(domainEventArgument),
+          emit = false,
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      checkDomainEventBookingProperties(domainEvent, spaceBookingWithKeyWorker, offlineApplication.id)
+      val domainEventEventDetails = domainEvent.data.eventDetails
+      assertThat(domainEventEventDetails.previousKeyWorkerName).isEqualTo(previousKeyWorkerName)
+      assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
+    }
+
+    private fun checkDomainEventBookingProperties(
+      domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>,
+      spaceBooking: Cas1SpaceBookingEntity,
+      applicationId: UUID,
+    ) {
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingKeyWorkerAssigned)
       assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
-      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.applicationId).isEqualTo(applicationId)
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val domainEventEventDetails = domainEvent.data.eventDetails
-      assertThat(domainEventEventDetails.applicationId).isEqualTo(application.id)
-      assertThat(domainEventEventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(domainEventEventDetails.applicationId).isEqualTo(applicationId)
+      assertThat(domainEventEventDetails.applicationUrl).isEqualTo("http://frontend/applications/$applicationId")
       assertThat(domainEventEventDetails.bookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEventEventDetails.personReference.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEventEventDetails.personReference.noms).isEqualTo(caseSummary.nomsId)

@@ -47,11 +47,12 @@ class Cas1SpaceBookingManagementDomainEventService(
   ) {
     val domainEventId = UUID.randomUUID()
 
-    val application = updatedCas1SpaceBooking.application
     val premises = updatedCas1SpaceBooking.premises
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(updatedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
+    val applicationId = updatedCas1SpaceBooking.applicationIdForDomainEvent()
+    val applicationSubmittedAt = updatedCas1SpaceBooking.applicationSubmittedOnForDomainEvent()
 
     val actualArrivalDate = updatedCas1SpaceBooking.actualArrivalDateTime!!
 
@@ -59,7 +60,7 @@ class Cas1SpaceBookingManagementDomainEventService(
       emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
-        applicationId = application.id,
+        applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = actualArrivalDate,
@@ -70,8 +71,8 @@ class Cas1SpaceBookingManagementDomainEventService(
           timestamp = OffsetDateTime.now().toInstant(),
           eventType = EventType.personArrived,
           eventDetails = PersonArrived(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
@@ -85,7 +86,7 @@ class Cas1SpaceBookingManagementDomainEventService(
               legacyApCode = premises.qCode,
               localAuthorityAreaName = premises.localAuthorityArea!!.name,
             ),
-            applicationSubmittedOn = application.submittedAt!!.toLocalDate(),
+            applicationSubmittedOn = applicationSubmittedAt.toLocalDate(),
             keyWorker = keyWorker,
             arrivedAt = actualArrivalDate,
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
@@ -104,7 +105,7 @@ class Cas1SpaceBookingManagementDomainEventService(
   ) {
     val domainEventId = UUID.randomUUID()
 
-    val application = departedCas1SpaceBooking.application
+    val applicationId = departedCas1SpaceBooking.applicationIdForDomainEvent()
     val premises = departedCas1SpaceBooking.premises
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
@@ -116,7 +117,7 @@ class Cas1SpaceBookingManagementDomainEventService(
       emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
-        applicationId = application.id,
+        applicationId = applicationId,
         crn = departedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = actualDepartureDate,
@@ -127,8 +128,8 @@ class Cas1SpaceBookingManagementDomainEventService(
           timestamp = OffsetDateTime.now().toInstant(),
           eventType = EventType.personDeparted,
           eventDetails = PersonDeparted(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = departedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = departedCas1SpaceBooking.crn,
@@ -174,7 +175,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now().toInstant()
 
-    val application = updatedCas1SpaceBooking.application
+    val applicationId = updatedCas1SpaceBooking.applicationIdForDomainEvent()
     val premises = updatedCas1SpaceBooking.premises
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
@@ -183,7 +184,7 @@ class Cas1SpaceBookingManagementDomainEventService(
       emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
-        applicationId = application.id,
+        applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = eventOccurredAt,
@@ -194,8 +195,8 @@ class Cas1SpaceBookingManagementDomainEventService(
           timestamp = eventOccurredAt,
           eventType = EventType.bookingKeyWorkerAssigned,
           eventDetails = BookingKeyWorkerAssigned(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
@@ -255,4 +256,7 @@ class Cas1SpaceBookingManagementDomainEventService(
       }
     return offenderDetails
   }
+
+  fun Cas1SpaceBookingEntity.applicationIdForDomainEvent() = application?.id ?: offlineApplication!!.id
+  fun Cas1SpaceBookingEntity.applicationSubmittedOnForDomainEvent() = application?.submittedAt ?: offlineApplication!!.createdAt
 }

@@ -312,7 +312,7 @@ class Cas1BookingDomainEventService(
       CancellationInfo(
         bookingId = spaceBooking.id,
         application = spaceBooking.application,
-        offlineApplication = null,
+        offlineApplication = spaceBooking.offlineApplication,
         cancellationId = null,
         crn = spaceBooking.crn,
         cancelledAt = spaceBooking.cancellationOccurredAt!!,

@@ -694,7 +694,7 @@ class Cas1BookingDomainEventServiceTest {
   inner class SpaceBookingCancelled {
 
     @Test
-    fun `success`() {
+    fun `linked to application`() {
       val user = UserEntityFactory()
         .withDefaults()
         .withDeliusUsername("THEDELIUSUSERNAME")
@@ -770,6 +770,95 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
       assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
       assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
+
+      assertThat(data.premises.id).isEqualTo(premises.id)
+      assertThat(data.premises.name).isEqualTo(premises.name)
+      assertThat(data.premises.apCode).isEqualTo(premises.apCode)
+      assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
+      assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
+
+      assertThat(data.cancelledBy.staffCode).isEqualTo(staffUserDetails.code)
+      assertThat(data.cancelledAt).isEqualTo(Instant.parse("2025-11-15T00:00:00.00Z"))
+      assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2025-11-15"))
+      assertThat(data.cancellationReason).isEqualTo("the reason name")
+      assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
+    }
+
+    @Test
+    fun `linked to offline application`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .withDeliusUsername("THEDELIUSUSERNAME")
+        .produce()
+
+      val offlineApplication = OfflineApplicationEntityFactory().produce()
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withName("the premises name")
+        .withApCode("the premises ap code")
+        .withQCode("the premises qcode")
+        .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(null)
+        .withOfflineApplication(offlineApplication)
+        .withCrn(offlineApplication.crn)
+        .withCancellationOccurredAt(LocalDate.parse("2025-11-15"))
+        .produce()
+
+      every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(spaceBooking.crn)
+        .produce()
+      every {
+        offenderService.getOffenderByCrn(
+          spaceBooking.crn,
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val staffUserDetails = StaffDetailFactory.staffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
+
+      service.spaceBookingCancelled(
+        spaceBooking = spaceBooking,
+        user = user,
+        reason = CancellationReasonEntityFactory()
+          .withName("the reason name")
+          .produce(),
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+      verify(exactly = 1) {
+        domainEventService.saveBookingCancelledEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(domainEvent.bookingId).isNull()
+      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEvent.crn).isEqualTo(offlineApplication.crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
+      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
+      assertThat(data.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
+      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.deliusEventNumber).isEqualTo(offlineApplication.eventNumber)
 
       assertThat(data.premises.id).isEqualTo(premises.id)
       assertThat(data.premises.name).isEqualTo(premises.name)
