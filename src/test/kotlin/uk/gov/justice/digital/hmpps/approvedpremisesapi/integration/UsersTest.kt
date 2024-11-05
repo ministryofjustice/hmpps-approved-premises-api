@@ -1011,7 +1011,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `GET to user search with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/users/search?name=some")
           .header("Authorization", "Bearer $jwt")
@@ -1085,7 +1085,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `GET to user search delius username with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=some")
           .header("Authorization", "Bearer $jwt")
@@ -1194,7 +1194,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Updating a users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.put()
           .uri("/users/$id")
@@ -1296,7 +1296,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Deleting a user with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/users/$id")
@@ -1311,7 +1311,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `Deleting a user with no X-Service-Name is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/users/$id")

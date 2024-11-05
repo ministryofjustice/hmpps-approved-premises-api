@@ -206,7 +206,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           deliusUsername = "ASSESSOR1",
           name = PersonName(forename = "Judy", middleName = "Jude", surname = "Juderson"),
         ),
-        probationRegion = probationRegionEntityFactory.produceAndPersist() {
+        probationRegion = probationRegionEntityFactory.produceAndPersist {
           withApArea(`Given an AP Area`(name = "Ap Area 1"))
         },
       )

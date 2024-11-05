@@ -1671,7 +1671,7 @@ class PremisesTest {
     @Test
     fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { `Given a Probation Region`() }
         }.also {
@@ -1895,7 +1895,7 @@ class PremisesTest {
 
     @BeforeAll
     fun setup() {
-      premises = approvedPremisesEntityFactory.produceAndPersist() {
+      premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { `Given a Probation Region`() }
       }
@@ -2146,7 +2146,7 @@ class PremisesTest {
     @Test
     fun `Get all Rooms for Premises returns OK with correct body`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { `Given a Probation Region`() }
         }
@@ -2201,7 +2201,7 @@ class PremisesTest {
     @Test
     fun `Get all Rooms for Premises returns OK with correct body with end-date`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { `Given a Probation Region`() }
         }

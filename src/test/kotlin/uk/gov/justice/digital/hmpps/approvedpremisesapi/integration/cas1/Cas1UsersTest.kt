@@ -268,7 +268,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Deleting a user with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/cas1/users/$id")

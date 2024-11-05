@@ -673,7 +673,7 @@ class Cas2SubmissionTest(
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
       val telephoneNumber = "123 456 7891"
 
-      `Given a CAS2 POM User`() { submittingUser, jwt ->
+      `Given a CAS2 POM User` { submittingUser, jwt ->
         `Given an Offender`(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
@@ -764,7 +764,7 @@ class Cas2SubmissionTest(
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
-      `Given a CAS2 POM User`() { submittingUser, jwt ->
+      `Given a CAS2 POM User` { submittingUser, jwt ->
         `Given an Offender`(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
@@ -844,7 +844,7 @@ class Cas2SubmissionTest(
 
     @Test
     fun `When there's an error fetching the referred person's prison code, the application is not saved`() {
-      `Given a CAS2 POM User`() { submittingUser, jwt ->
+      `Given a CAS2 POM User` { submittingUser, jwt ->
         `Given an Offender`(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 

@@ -2655,7 +2655,7 @@ class BookingTest : IntegrationTestBase() {
                 withCruManagementArea(`Given a CAS1 CRU Management Area`())
               }
 
-              val placementApplication = placementApplicationFactory.produceAndPersist() {
+              val placementApplication = placementApplicationFactory.produceAndPersist {
                 withCreatedByUser(placementApplicationCreator)
                 withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist())
                 withApplication(application)
@@ -2698,7 +2698,7 @@ class BookingTest : IntegrationTestBase() {
                 withApplication(application)
               }
 
-              placementRequestFactory.produceAndPersist() {
+              placementRequestFactory.produceAndPersist {
                 withAllocatedToUser(applicant)
                 withApplication(application)
                 withAssessment(assessment)
@@ -3939,7 +3939,7 @@ class BookingTest : IntegrationTestBase() {
   )
 
   private fun createTemporaryAccommodationPremises(userEntity: UserEntity) =
-    temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+    temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(userEntity.probationRegion)
       withYieldedLocalAuthorityArea {
         localAuthorityEntityFactory.produceAndPersist()
@@ -3950,7 +3950,7 @@ class BookingTest : IntegrationTestBase() {
     premises: TemporaryAccommodationPremisesEntity,
     offenderDetails: OffenderDetailSummary,
   ): BookingEntity {
-    val room = roomEntityFactory.produceAndPersist() {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
     val bed = bedEntityFactory.produceAndPersist {

@@ -286,7 +286,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       ).produce()
 
   protected fun approvedPremisesAssessmentClarificationNoteEntity(assessment: ApprovedPremisesAssessmentEntity): AssessmentClarificationNoteEntity =
-    assessmentClarificationNoteEntityFactory.produceAndPersist() {
+    assessmentClarificationNoteEntityFactory.produceAndPersist {
       withAssessment(assessment)
       withCreatedBy(assessment.allocatedToUser!!)
       withQuery("some query")
