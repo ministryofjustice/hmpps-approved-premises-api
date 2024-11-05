@@ -448,6 +448,16 @@ components:
       required:
         - expectedDepartureDate
         - arrivalDateTime
+    Cas1NonArrival:
+      type: object
+      properties:
+        reason:
+          type: string
+          format: uuid
+        notes:
+          type: string
+      required:
+        - reason
     Cas1NewDeparture:
       type: object
       properties:
