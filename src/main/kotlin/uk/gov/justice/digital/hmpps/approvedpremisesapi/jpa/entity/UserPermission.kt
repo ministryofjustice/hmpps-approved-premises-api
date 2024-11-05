@@ -11,6 +11,13 @@ enum class UserPermission {
   CAS1_BOOKING_CHANGE_DATES,
   CAS1_OUT_OF_SERVICE_BED_CREATE,
   CAS1_PROCESS_AN_APPEAL,
+
+  /**
+   * Used for both listing user summaries (e.g. for drop-downs) and listing complete
+   * user information (e.g. for user management). Ideally this would be split
+   */
+  CAS1_USER_LIST,
+  CAS1_USER_MANAGEMENT,
   CAS1_VIEW_ASSIGNED_ASSESSMENTS,
   CAS1_VIEW_CRU_DASHBOARD,
   CAS1_VIEW_MANAGE_TASKS,

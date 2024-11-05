@@ -3178,6 +3178,8 @@ components:
         - cas1_booking_withdraw
         - cas1_out_of_service_bed_create
         - cas1_process_an_appeal
+        - cas1_user_list
+        - cas1_user_management
         - cas1_view_assigned_assessments
         - cas1_view_cru_dashboard
         - cas1_view_manage_tasks

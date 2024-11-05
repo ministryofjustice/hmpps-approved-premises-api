@@ -54,6 +54,8 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
     ),
   ),
+
+  @Deprecated("This role will be removed in the future")
   CAS1_WORKFLOW_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.workflowManager,
@@ -71,6 +73,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
       UserPermission.CAS1_SPACE_BOOKING_VIEW,
       UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
+      UserPermission.CAS1_USER_LIST,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
     ),
@@ -93,13 +96,22 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
       UserPermission.CAS1_SPACE_BOOKING_VIEW,
       UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
+      UserPermission.CAS1_USER_LIST,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
     ),
   ),
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
-  CAS1_ADMIN(ServiceName.approvedPremises, ApprovedPremisesUserRole.roleAdmin),
+
+  @Deprecated("This role will be removed in the future")
+  CAS1_ADMIN(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.roleAdmin,
+    listOf(
+      UserPermission.CAS1_USER_LIST,
+    ),
+  ),
   CAS1_REPORT_VIEWER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.reportViewer,
@@ -131,28 +143,16 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_JANITOR(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.janitor,
+    UserPermission.entries.toList(),
+  ),
+  CAS1_USER_MANAGER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.userManager,
     listOf(
-      UserPermission.CAS1_ADHOC_BOOKING_CREATE,
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-      UserPermission.CAS1_BOOKING_CREATE,
-      UserPermission.CAS1_BOOKING_WITHDRAW,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
-      UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
-      UserPermission.CAS1_PROCESS_AN_APPEAL,
-      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-      UserPermission.CAS1_SPACE_BOOKING_LIST,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-      UserPermission.CAS1_SPACE_BOOKING_VIEW,
-      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
-      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
-      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
-      UserPermission.CAS1_VIEW_MANAGE_TASKS,
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+      UserPermission.CAS1_USER_LIST,
+      UserPermission.CAS1_USER_MANAGEMENT,
     ),
   ),
-  CAS1_USER_MANAGER(ServiceName.approvedPremises, ApprovedPremisesUserRole.userManager),
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
   CAS3_REPORTER(ServiceName.temporaryAccommodation, null),

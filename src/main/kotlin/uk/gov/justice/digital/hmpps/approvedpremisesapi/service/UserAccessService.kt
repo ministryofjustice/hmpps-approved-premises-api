@@ -219,16 +219,19 @@ class UserAccessService(
     else -> false
   }
 
+  fun currentUserCanListUsers(xServiceName: ServiceName): Boolean {
+    val user = userService.getUserForRequest()
+    return (
+      xServiceName == ServiceName.approvedPremises &&
+        user.hasPermission(UserPermission.CAS1_USER_LIST)
+      )
+  }
+
   fun currentUserCanManageUsers(xServiceName: ServiceName): Boolean {
     val user = userService.getUserForRequest()
     return (
       xServiceName == ServiceName.approvedPremises &&
-        user.hasAnyRole(
-          UserRole.CAS1_ADMIN,
-          UserRole.CAS1_WORKFLOW_MANAGER,
-          UserRole.CAS1_JANITOR,
-          UserRole.CAS1_USER_MANAGER,
-        )
+        user.hasPermission(UserPermission.CAS1_USER_MANAGEMENT)
       )
   }
 
