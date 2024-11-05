@@ -539,7 +539,7 @@ class PremisesService(
         }
 
         result
-      },)
+      })
     }
 
     return probationDeliveryUnit
