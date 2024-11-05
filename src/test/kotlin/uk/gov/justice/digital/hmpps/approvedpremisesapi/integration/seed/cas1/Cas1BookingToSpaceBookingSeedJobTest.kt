@@ -14,15 +14,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offline Application`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
@@ -33,6 +36,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
   @Autowired
   lateinit var cas1BookingDomainEventSet: Cas1BookingDomainEventService
 
+  @SuppressWarnings("LongMethod")
   @Test
   fun `Migrate bookings, removing existing`() {
     val premises = `Given an Approved Premises`("Premises 1")
@@ -62,6 +66,12 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       booking1,
       booking1CreatedByUser,
       placementRequest1,
+    )
+    APDeliusContext_mockSuccessfulGetReferralDetails(
+      crn = "CRN1",
+      bookingId = booking1.id.toString(),
+      arrivedAt = ZonedDateTime.of(LocalDateTime.of(2024, 5, 2, 10, 15, 30, 0), ZoneOffset.systemDefault()),
+      departedAt = ZonedDateTime.of(LocalDateTime.of(2024, 5, 4, 18, 45, 20, 0), ZoneOffset.systemDefault()),
     )
 
     val application2 = `Given a CAS1 Application`(createdByUser = otherUser, eventNumber = "50")
@@ -148,8 +158,8 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.createdBy!!.id).isEqualTo(booking1CreatedByUser.id)
     assertThat(migratedBooking1.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
     assertThat(migratedBooking1.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 5, 5))
-    assertThat(migratedBooking1.actualArrivalDateTime).isNull()
-    assertThat(migratedBooking1.actualDepartureDateTime).isNull()
+    assertThat(migratedBooking1.actualArrivalDateTime).isEqualTo(Instant.parse("2024-05-02T10:15:30Z"))
+    assertThat(migratedBooking1.actualDepartureDateTime).isEqualTo(Instant.parse("2024-05-04T18:45:20Z"))
     assertThat(migratedBooking1.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
     assertThat(migratedBooking1.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 5, 5))
     assertThat(migratedBooking1.crn).isEqualTo("CRN1")
