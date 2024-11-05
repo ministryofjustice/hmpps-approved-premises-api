@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import java.time.ZonedDateTime
 
 class DeliusServiceTest {
-
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   private val service = DeliusService(apDeliusContextApiClient)
@@ -35,6 +34,7 @@ class DeliusServiceTest {
           HttpStatus.OK,
           ReferralDetail(
             arrivedAt = ZonedDateTime.now(),
+            departedAt = ZonedDateTime.now().plusDays(1),
           ),
         )
 
@@ -50,6 +50,7 @@ class DeliusServiceTest {
           HttpStatus.OK,
           ReferralDetail(
             arrivedAt = null,
+            departedAt = null,
           ),
         )
 

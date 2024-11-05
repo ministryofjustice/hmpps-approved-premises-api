@@ -89,4 +89,5 @@ data class CaseSummaries(
 
 data class ReferralDetail(
   val arrivedAt: ZonedDateTime?,
+  val departedAt: ZonedDateTime?,
 )
