@@ -26,16 +26,17 @@ class SpaceBookingDayPlanner {
    *   be placed into rooms with the least beds (ensuring minimum 'wastage' in these scenarios)</li>
    * </ol>
    *
-   * @param beds All beds available on the day being planned (i.e. won't include out of service beds or beds inactive according to start/end date)
-   * @param bookings All required bookings. The code assumes that the premise level characteristics have already been met
+   * @param availableBeds All beds available on the day being planned (i.e. won't include out of service beds or beds inactive according to start/end date)
+   * @param bookings All required bookings on the day being planned. The code assumes that the premise level characteristics have already been met
    */
   fun plan(
-    beds: Set<Bed>,
+    availableBeds: Set<Bed>,
     bookings: Set<SpaceBooking>,
   ): DayPlannerResult {
-    val bedLedger = BedLedger(beds)
-    val planned = mutableListOf<DayPlannerPlannedBooking>()
-    val unplanned = mutableListOf<DayPlannerUnplannedBooking>()
+    val bedLedger = BedLedger(availableBeds)
+    val plan = mutableListOf<BedBooking>()
+    val planned = mutableListOf<SpaceBooking>()
+    val unplanned = mutableListOf<SpaceBooking>()
 
     val sortedBookings = bookings.toList()
       .sortedByDescending { b -> b.requiredCharacteristics.sumOf { c -> c.weighting } }
@@ -53,28 +54,26 @@ class SpaceBookingDayPlanner {
       ) {
         is FindBedResult.BedsFound -> {
           findResult.beds.forEach { bed ->
-            planned.add(
-              DayPlannerPlannedBooking(
+            plan.add(
+              BedBooking(
                 bed = bed,
                 booking = booking,
               ),
             )
             bedLedger.reserve(bed)
+            planned.add(booking)
           }
         }
 
         is FindBedResult.BedNotFound -> {
-          unplanned.add(
-            DayPlannerUnplannedBooking(
-              booking = booking,
-            ),
-          )
+          unplanned.add(booking)
         }
       }
     }
 
     return DayPlannerResult(
-      planned = planned.toList(),
+      plan = plan.toList(),
+      planned = planned.toSet(),
       unplanned = unplanned.toSet(),
     )
   }
@@ -139,15 +138,12 @@ sealed interface FindBedResult {
 }
 
 data class DayPlannerResult(
-  val planned: List<DayPlannerPlannedBooking>,
-  val unplanned: Set<DayPlannerUnplannedBooking>,
+  val plan: List<BedBooking>,
+  val planned: Set<SpaceBooking>,
+  val unplanned: Set<SpaceBooking>,
 )
 
-data class DayPlannerPlannedBooking(
+data class BedBooking(
   val bed: Bed,
-  val booking: SpaceBooking,
-)
-
-data class DayPlannerUnplannedBooking(
   val booking: SpaceBooking,
 )

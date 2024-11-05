@@ -195,6 +195,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.deliusEventNumber = { deliusEventNumber }
   }
 
+  fun withCriteria(vararg criteria: CharacteristicEntity) = apply {
+    this.criteria = { criteria.toList() }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),

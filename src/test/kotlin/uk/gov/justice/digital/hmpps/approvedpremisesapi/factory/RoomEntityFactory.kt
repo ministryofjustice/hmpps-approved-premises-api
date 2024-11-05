@@ -18,6 +18,11 @@ class RoomEntityFactory : Factory<RoomEntity> {
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var premises: Yielded<PremisesEntity>? = null
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
+  private var beds: Yielded<MutableList<BedEntity>> = { mutableListOf() }
+
+  fun withDefaults() = apply {
+    withPremises(ApprovedPremisesEntityFactory().withDefaults().produce())
+  }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -47,14 +52,26 @@ class RoomEntityFactory : Factory<RoomEntity> {
     this.characteristics = { characteristics }
   }
 
+  fun withCharacteristics(vararg characteristics: CharacteristicEntity) = apply {
+    this.characteristics = { characteristics.toMutableList() }
+  }
+
   fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+
+  fun withBeds(beds: MutableList<BedEntity>) = apply {
+    this.beds = { beds }
+  }
+
+  fun withBeds(vararg beds: BedEntity) = apply {
+    this.beds = { beds.toMutableList() }
+  }
 
   override fun produce() = RoomEntity(
     id = this.id(),
     name = this.name(),
     code = this.code(),
     notes = this.notes(),
-    beds = mutableListOf(),
+    beds = this.beds(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a premises"),
     characteristics = this.characteristics(),
   )
@@ -67,6 +84,10 @@ class BedEntityFactory : Factory<BedEntity> {
   private var room: Yielded<RoomEntity>? = null
   private var endDate: Yielded<LocalDate?>? = null
   private var createdAt: Yielded<OffsetDateTime>? = { OffsetDateTime.now() }
+
+  fun withDefaults() = apply {
+    withRoom(RoomEntityFactory().withDefaults().produce())
+  }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -91,6 +112,11 @@ class BedEntityFactory : Factory<BedEntity> {
   fun withYieldedRoom(room: Yielded<RoomEntity>) = apply {
     this.room = room
   }
+
+  fun withEndDate(endDate: LocalDate?) = apply {
+    this.endDate = { endDate }
+  }
+
   fun withEndDate(endDate: Yielded<LocalDate?>) = apply {
     this.endDate = endDate
   }
