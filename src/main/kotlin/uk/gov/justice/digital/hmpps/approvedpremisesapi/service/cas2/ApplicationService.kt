@@ -88,8 +88,7 @@ class ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedApplicationForAssessor(applicationId: UUID):
-    AuthorisableActionResult<Cas2ApplicationEntity> {
+  fun getSubmittedApplicationForAssessor(applicationId: UUID): AuthorisableActionResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findSubmittedApplicationById(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -156,8 +155,7 @@ class ApplicationService(
     }
 
   @SuppressWarnings("ReturnCount")
-  fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+  fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -195,8 +193,7 @@ class ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonApplication(applicationId: UUID, user: NomisUserEntity):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+  fun abandonApplication(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 

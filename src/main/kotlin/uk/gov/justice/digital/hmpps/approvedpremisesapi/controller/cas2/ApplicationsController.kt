@@ -58,8 +58,7 @@ class ApplicationsController(
     ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
-  override fun applicationsApplicationIdGet(applicationId: UUID):
-    ResponseEntity<Application> {
+  override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val application = when (
@@ -78,8 +77,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication):
-    ResponseEntity<Application> {
+  override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
     val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
@@ -155,8 +153,7 @@ class ApplicationsController(
     return ResponseEntity.ok(Unit)
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>):
-    List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)

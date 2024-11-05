@@ -209,8 +209,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     }
   }
 
-  private fun cas2ApplicationSeedCsvRowsToCsv(rows: List<Cas2ApplicationSeedUntypedEnumsCsvRow>):
-    String {
+  private fun cas2ApplicationSeedCsvRowsToCsv(rows: List<Cas2ApplicationSeedUntypedEnumsCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "id",
