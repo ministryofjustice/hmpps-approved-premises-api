@@ -51,15 +51,20 @@ class Cas1BookingToSpaceBookingSeedJob(
     log.info("Have deleted $deletedCount existing migrated space bookings")
 
     val bookingIds = bookingRepository.findAllIdsByPremisesId(premisesId)
-    log.info("Have found ${bookingIds.size} bookings for premise ${premises.name}")
+    val bookingsToMigrateSize = bookingIds.size
+    log.info("Have found $bookingsToMigrateSize bookings for premise ${premises.name}")
 
+    var migrated = 0
     bookingIds.forEach { bookingId ->
       try {
         migrateBooking(premises, bookingId)
+        migrated++
       } catch (e: Throwable) {
         log.error("Error migrating booking $bookingId", e)
       }
     }
+
+    log.info("Have successfully migrated $migrated of $bookingsToMigrateSize bookings for premise ${premises.name}")
   }
 
   private fun migrateBooking(
@@ -89,6 +94,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         id = UUID.randomUUID(),
         premises = premises,
         application = application,
+        offlineApplication = null,
         placementRequest = booking.placementRequest!!,
         createdBy = getCreatedByUser(bookingMadeDomainEvent),
         createdAt = booking.createdAt,

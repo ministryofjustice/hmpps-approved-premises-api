@@ -103,6 +103,7 @@ class Cas1SpaceBookingService(
         id = UUID.randomUUID(),
         premises = premises,
         application = application,
+        offlineApplication = null,
         placementRequest = placementRequest,
         createdBy = createdBy,
         createdAt = OffsetDateTime.now(),
@@ -140,7 +141,7 @@ class Cas1SpaceBookingService(
       placementRequest = placementRequest,
     )
 
-    cas1BookingEmailService.spaceBookingMade(spaceBooking)
+    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     success(spaceBooking)
   }
@@ -387,10 +388,13 @@ class Cas1SpaceBookingService(
     }
     cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason)
 
-    cas1BookingEmailService.spaceBookingWithdrawn(
-      spaceBooking = spaceBooking,
-      withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
-    )
+    spaceBooking.application?.let {
+      cas1BookingEmailService.spaceBookingWithdrawn(
+        spaceBooking = spaceBooking,
+        application = it,
+        withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
+      )
+    }
 
     return CasResult.Success(Unit)
   }

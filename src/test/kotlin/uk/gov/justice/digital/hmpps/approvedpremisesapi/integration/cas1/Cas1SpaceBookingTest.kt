@@ -962,7 +962,7 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
     }
   }
 
@@ -1040,7 +1040,7 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
 
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED)
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED)
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
       assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorker.name.forename} ${keyWorker.name.surname}")
@@ -1196,7 +1196,7 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
     }
   }
 
