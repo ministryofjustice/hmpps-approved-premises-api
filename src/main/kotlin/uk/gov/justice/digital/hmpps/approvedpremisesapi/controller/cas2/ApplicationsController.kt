@@ -106,8 +106,7 @@ class ApplicationsController(
   @Transactional
   override fun applicationsApplicationIdPut(
     applicationId: UUID,
-    body:
-      UpdateApplication,
+    body: UpdateApplication,
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
