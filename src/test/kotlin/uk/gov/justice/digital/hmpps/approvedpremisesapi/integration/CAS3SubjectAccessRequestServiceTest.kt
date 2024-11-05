@@ -318,8 +318,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "completed_at": "$SUBMITTED_AT",
          "referral_rejection_reason_category": "${assessment.referralRejectionReason?.name}",
          "referral_rejection_reason_detail": "${assessment.referralRejectionReasonDetail}",
-         "release_date": "$ARRIVED_AT_DATE_ONLY",
-         "accommodation_required_from_date": "$ARRIVED_AT_DATE_ONLY"      
+         "release_date": "$arrivedAtDateOnly",
+         "accommodation_required_from_date": "$arrivedAtDateOnly"      
       }
     """.trimIndent()
 
@@ -343,14 +343,14 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "risk_ratings":${risksJson()},
         "arrival_date": "$ARRIVED_AT",
         "is_duty_to_refer_submitted": ${temporaryAccommodationApplication.isDutyToReferSubmitted},
-        "duty_to_refer_submission_date": "$SUBMITTED_AT_DATE_ONLY",
+        "duty_to_refer_submission_date": "$submittedAtDateOnly",
         "duty_to_refer_outcome": null,
         "duty_to_refer_local_authority_area_name": "${temporaryAccommodationApplication.dutyToReferLocalAuthorityAreaName}",
         "is_eligible": ${temporaryAccommodationApplication.isEligible},
         "eligibility_reason": "${temporaryAccommodationApplication.eligibilityReason}",
         "prison_name_on_creation": "${temporaryAccommodationApplication.prisonNameOnCreation}",
         "prison_release_types": "${temporaryAccommodationApplication.prisonReleaseTypes}",
-        "person_release_date": "$ARRIVED_AT_DATE_ONLY",
+        "person_release_date": "$arrivedAtDateOnly",
         "pdu": "${temporaryAccommodationApplication.pdu}",
         "needs_accessible_property": ${temporaryAccommodationApplication.needsAccessibleProperty},
         "has_history_of_arson": ${temporaryAccommodationApplication.hasHistoryOfArson},
@@ -390,8 +390,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         },
       )
       withReferralRejectionReasonDetail("Some Reason Detail")
-      withReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-      withAccommodationRequiredFromDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withReleaseDate(LocalDate.parse(arrivedAtDateOnly))
+      withAccommodationRequiredFromDate(LocalDate.parse(arrivedAtDateOnly))
     }
   }
 
@@ -413,7 +413,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withDocument(DOCUMENT_JSON_SIMPLE)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
       withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withPersonReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withPersonReleaseDate(LocalDate.parse(arrivedAtDateOnly))
       withCreatedByUser(user)
       withApplicationSchema(temporaryAccommodationApplicationJsonSchemaEntity())
       withConvictionId(CONVICTION_ID)
@@ -423,7 +423,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withOffenceId(OFFENCE_ID)
       withRiskRatings(risk1)
       withDutyToReferLocalAuthorityAreaName(randomStringMultiCaseWithNumbers(10))
-      withDutyToReferSubmissionDate(LocalDate.parse(SUBMITTED_AT_DATE_ONLY))
+      withDutyToReferSubmissionDate(LocalDate.parse(submittedAtDateOnly))
       withDutyToReferOutcome(null)
       withEligiblilityReason("Not eligible")
       withEventNumber("1")

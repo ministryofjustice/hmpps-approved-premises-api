@@ -648,7 +648,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "crn": "${placementRequest.application.crn}",
         "noms_number": "${placementRequest.application.nomsNumber}",
-        "expected_arrival": "$ARRIVED_AT_DATE_ONLY",
+        "expected_arrival": "$arrivedAtDateOnly",
         "duration": ${placementRequest.duration},
         "created_at": "$CREATED_AT",
         "placement_application_id": "${placementRequest.placementApplication?.id}",
@@ -864,7 +864,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withAllocatedToUser(allocatedUser)
     withDueAt(OffsetDateTime.parse(DUE_AT))
     withDuration(5)
-    withExpectedArrival(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+    withExpectedArrival(LocalDate.parse(arrivedAtDateOnly))
     withIsParole(false)
     withIsWithdrawn(true)
     withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)

@@ -285,8 +285,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "referring_prison_code": "${application.referringPrisonCode}",
       "preferred_areas": "${application.preferredAreas}",
       "telephone_number": "${application.telephoneNumber}",
-      "hdc_eligibility_date": "$ARRIVED_AT_DATE_ONLY",
-      "conditional_release_date": "$ARRIVED_AT_DATE_ONLY",
+      "hdc_eligibility_date": "$arrivedAtDateOnly",
+      "conditional_release_date": "$arrivedAtDateOnly",
       "abandoned_at": null
     }
   """.trimIndent()
@@ -357,8 +357,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withReferringPrisonCode(randomStringMultiCaseWithNumbers(3))
     withTelephoneNumber(randomStringMultiCaseWithNumbers(7))
 
-    withConditionalReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-    withHdcEligibilityDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+    withConditionalReleaseDate(LocalDate.parse(arrivedAtDateOnly))
+    withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
     withPreferredAreas("some areas")
   }
 

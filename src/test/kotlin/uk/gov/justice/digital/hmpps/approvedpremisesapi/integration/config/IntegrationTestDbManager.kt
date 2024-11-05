@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.queryForObject
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isPerClass
@@ -24,9 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCa
  */
 object IntegrationTestDbManager {
 
-  private const val configPathDatasourceUrl = "spring.datasource.url"
-  private const val configPathDatabaseName = "spring.datasource.database-name"
-  private const val configPathTemplateDatabaseName = "spring.datasource.template-database-name"
+  private const val CONFIG_PATH_DATASOURCE_URL = "spring.datasource.url"
+  private const val CONFIG_PATH_DATABASE_NAME = "spring.datasource.database-name"
+  private const val CONFIG_PATH_TEMPLATE_DATABASE_NAME = "spring.datasource.template-database-name"
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -54,9 +53,9 @@ object IntegrationTestDbManager {
     )
 
     return mapOf(
-      configPathDatasourceUrl to databaseUrl,
-      configPathDatabaseName to databaseName,
-      configPathTemplateDatabaseName to templateDatabaseName,
+      CONFIG_PATH_DATASOURCE_URL to databaseUrl,
+      CONFIG_PATH_DATABASE_NAME to databaseName,
+      CONFIG_PATH_TEMPLATE_DATABASE_NAME to templateDatabaseName,
     )
   }
 
@@ -95,8 +94,8 @@ object IntegrationTestDbManager {
 
   fun recreateDatabaseFromTemplate(context: ApplicationContext) =
     recreateDatabaseFromTemplate(
-      databaseName = context.environment.getProperty(configPathDatabaseName)!!,
-      templateDatabaseName = context.environment.getProperty(configPathTemplateDatabaseName)!!,
+      databaseName = context.environment.getProperty(CONFIG_PATH_DATABASE_NAME)!!,
+      templateDatabaseName = context.environment.getProperty(CONFIG_PATH_TEMPLATE_DATABASE_NAME)!!,
     )
 
   fun recreateDatabaseFromTemplate(

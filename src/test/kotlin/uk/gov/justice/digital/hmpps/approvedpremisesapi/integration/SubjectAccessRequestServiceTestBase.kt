@@ -62,12 +62,12 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
-    var ARRIVED_AT_DATE_ONLY = ARRIVED_AT.substring(0..9)
-    var SUBMITTED_AT_DATE_ONLY = SUBMITTED_AT.substring(0..9)
-    var DEPARTED_AT_DATE_ONLY = DEPARTED_AT.substring(0..9)
-    var PREVIOUS_DEPARTURE_DATE_ONLY = DEPARTED_AT.substring(0..9)
-    var NEW_DEPARTURE_DATE_ONLY = NEW_DEPARTED_AT.substring(0..9)
-    var CANCELLATION_DATE_ONLY = CANCELLATION_DATE.substring(0..9)
+    var arrivedAtDateOnly = ARRIVED_AT.substring(0..9)
+    var submittedAtDateOnly = SUBMITTED_AT.substring(0..9)
+    var departedAtDateOnly = DEPARTED_AT.substring(0..9)
+    var previousDepartureDateOnly = DEPARTED_AT.substring(0..9)
+    var newDepartureDateOnly = NEW_DEPARTED_AT.substring(0..9)
+    var cancellationDateOnly = CANCELLATION_DATE.substring(0..9)
   }
 
   protected fun OffsetDateTime.toStandardisedFormat(): String = this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
@@ -78,7 +78,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
           "crn": "${cancellation.booking.crn}",
           "noms_number": "${cancellation.booking.nomsNumber}",
           "notes": "${cancellation.notes}",
-          "cancellation_date": "$CANCELLATION_DATE_ONLY",
+          "cancellation_date": "$cancellationDateOnly",
           "cancellation_reason": "${cancellation.reason.name}",
           "other_reason": "${cancellation.otherReason}",
           "created_at": "$CREATED_AT"
@@ -92,8 +92,8 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
         "crn": "${bookingExtension.booking.crn}",
         "noms_number": "${bookingExtension.booking.nomsNumber}",
-        "previous_departure_date": "$PREVIOUS_DEPARTURE_DATE_ONLY",
-        "new_departure_date": "$NEW_DEPARTURE_DATE_ONLY",
+        "previous_departure_date": "$previousDepartureDateOnly",
+        "new_departure_date": "$newDepartureDateOnly",
         "notes": "${bookingExtension.notes}",
         "created_at": "$CREATED_AT"
       }
@@ -188,7 +188,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withBooking(booking)
       withNotes("some notes")
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withDate(LocalDate.parse(CANCELLATION_DATE_ONLY))
+      withDate(LocalDate.parse(cancellationDateOnly))
       withOtherReason("some other reason")
     }
 
@@ -197,8 +197,8 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withBooking(booking)
       withNotes("some notes")
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withPreviousDepartureDate(LocalDate.parse(PREVIOUS_DEPARTURE_DATE_ONLY))
-      withNewDepartureDate(LocalDate.parse(NEW_DEPARTURE_DATE_ONLY))
+      withPreviousDepartureDate(LocalDate.parse(previousDepartureDateOnly))
+      withNewDepartureDate(LocalDate.parse(newDepartureDateOnly))
     }
   }
 
@@ -216,11 +216,11 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
       withAdhoc(true)
       withOfflineApplication(offlineApplication)
-      withDepartureDate(LocalDate.parse(DEPARTED_AT_DATE_ONLY))
+      withDepartureDate(LocalDate.parse(departedAtDateOnly))
       withApplication(application)
-      withArrivalDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-      withOriginalArrivalDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-      withOriginalDepartureDate(LocalDate.parse(DEPARTED_AT_DATE_ONLY))
+      withArrivalDate(LocalDate.parse(arrivedAtDateOnly))
+      withOriginalArrivalDate(LocalDate.parse(arrivedAtDateOnly))
+      withOriginalDepartureDate(LocalDate.parse(departedAtDateOnly))
       withPremises(bed.room.premises)
       withStaffKeyWorkerCode("KEYWORKERSTAFFCODE")
       withStatus(BookingStatus.arrived)
