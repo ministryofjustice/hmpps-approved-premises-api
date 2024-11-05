@@ -445,8 +445,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           assertThat(timeline).anyMatch {
             it.type == TimelineEventType.approvedPremisesAssessmentAppealed &&
               it.associatedUrls?.contains(
-              TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
-            ) == true
+                TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
+              ) == true
           }
         }
       }

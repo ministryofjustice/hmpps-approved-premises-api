@@ -14,10 +14,10 @@ class AdjudicationTransformer {
       result.adjudicationCharges
         .filter {
           if (getLast12MonthsOnly) {
-          result.reportTime.toLocalDate().isAfter(LocalDate.now().minusMonths(12))
-        } else {
-          true
-        }
+            result.reportTime.toLocalDate().isAfter(LocalDate.now().minusMonths(12))
+          } else {
+            true
+          }
         }
         .map { charge ->
           Adjudication(

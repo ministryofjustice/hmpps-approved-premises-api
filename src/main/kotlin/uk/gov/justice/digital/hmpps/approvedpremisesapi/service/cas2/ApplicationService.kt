@@ -111,7 +111,7 @@ class ApplicationService(
     return if (canAccess) {
       AuthorisableActionResult.Success(
         jsonSchemaService.checkSchemaOutdated
-        (applicationEntity),
+          (applicationEntity),
       )
     } else {
       AuthorisableActionResult.Unauthorised()
