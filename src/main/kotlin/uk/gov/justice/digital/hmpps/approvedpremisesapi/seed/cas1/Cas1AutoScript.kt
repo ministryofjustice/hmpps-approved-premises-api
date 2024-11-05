@@ -171,7 +171,7 @@ class Cas1AutoScript(
   }
 
   private fun usersToSeedDev(): List<SeedUser> =
-    listOf("AP_USER_TEST_1", "AP_USER_TEST_2", "AP_USER_TEST_3", "AP_USER_TEST_4", "AP_USER_TEST_5")
+    listOf("AP_USER_TEST_1", "AP_USER_TEST_3", "AP_USER_TEST_4", "AP_USER_TEST_5")
       .map {
         SeedUser(
           username = it,
@@ -187,9 +187,21 @@ class Cas1AutoScript(
             UserRole.CAS1_FUTURE_MANAGER,
           ),
           qualifications = UserQualification.entries.toList(),
-          documentation = "E2E test user",
+          documentation = "Generic E2E test user",
         )
-      }
+      } +
+      listOf(
+        SeedUser(
+          username = "AP_USER_TEST_2",
+          roles = listOf(
+            UserRole.CAS1_ADMIN,
+            UserRole.CAS1_USER_MANAGER,
+            UserRole.CAS1_REPORT_VIEWER,
+          ),
+          qualifications = emptyList(),
+          documentation = "Admin and Reports Test User",
+        ),
+      )
 
   private fun createApplicationInternal(deliusUserName: String, crn: String) {
     if (applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
