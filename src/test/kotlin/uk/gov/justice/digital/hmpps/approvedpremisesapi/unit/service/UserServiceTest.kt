@@ -1146,7 +1146,7 @@ class UserServiceTest {
   }
 
   @Nested
-  inner class getAllocatableUsersForAllocationType {
+  inner class GetAllocatableUsersForAllocationType {
 
     @Test
     fun `getAllocatableUsersForAllocationType asserts lao qualification if offender is lao`() {
