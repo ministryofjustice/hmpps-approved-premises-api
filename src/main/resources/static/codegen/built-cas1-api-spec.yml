@@ -6491,7 +6491,6 @@ components:
         - requirements
         - premises
         - apArea
-        - bookedBy
         - expectedArrivalDate
         - expectedDepartureDate
         - canonicalArrivalDate

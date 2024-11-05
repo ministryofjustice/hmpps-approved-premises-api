@@ -147,9 +147,13 @@ data class Cas1SpaceBookingEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
   val placementRequest: PlacementRequestEntity?,
+  /**
+   * createdAt will only be null for migrated [BookingEntity]s where no 'Booking Made' domain event
+   * existed for the booking (i.e. those migrated into the system when it went live)
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_user_id")
-  val createdBy: UserEntity,
+  val createdBy: UserEntity?,
   val createdAt: OffsetDateTime,
   val expectedArrivalDate: LocalDate,
   var expectedDepartureDate: LocalDate,

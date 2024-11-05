@@ -142,7 +142,7 @@ class Cas1SpaceBookingTransformerTest {
       } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
-          spaceBooking.createdBy,
+          spaceBooking.createdBy!!,
           ServiceName.approvedPremises,
         )
       } returns expectedUser
@@ -254,7 +254,7 @@ class Cas1SpaceBookingTransformerTest {
       } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
-          spaceBooking.createdBy,
+          spaceBooking.createdBy!!,
           ServiceName.approvedPremises,
         )
       } returns expectedUser

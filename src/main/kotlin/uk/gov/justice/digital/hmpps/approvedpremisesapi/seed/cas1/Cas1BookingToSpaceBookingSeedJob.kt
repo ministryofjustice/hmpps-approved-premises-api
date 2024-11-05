@@ -77,7 +77,6 @@ class Cas1BookingToSpaceBookingSeedJob(
     val offlineApplication = booking.offlineApplication
 
     val bookingMadeDomainEvent = getBookingMadeDomainEvent(bookingId)
-      ?: error("Can't find booking made domain event for booking $bookingId")
 
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
@@ -86,7 +85,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         application = application,
         offlineApplication = offlineApplication,
         placementRequest = booking.placementRequest,
-        createdBy = getCreatedByUser(bookingMadeDomainEvent),
+        createdBy = bookingMadeDomainEvent?.let { getCreatedByUser(it) },
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
@@ -109,7 +108,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         migratedFromBooking = booking,
-        deliusEventNumber = getDomainEventNumber(bookingMadeDomainEvent),
+        deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
       ),
     )
 

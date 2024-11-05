@@ -1,0 +1,1 @@
+ALTER TABLE cas1_space_bookings ALTER COLUMN created_by_user_id DROP NOT NULL;

@@ -52,7 +52,7 @@ class Cas1SpaceBookingTransformer(
           name = it.name,
         )
       },
-      bookedBy = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),
+      bookedBy = jpa.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
       expectedArrivalDate = jpa.expectedArrivalDate,
       expectedDepartureDate = jpa.expectedDepartureDate,
       createdAt = jpa.createdAt.toInstant(),
