@@ -165,23 +165,11 @@ components:
     Cas1SpaceBookingRequirements:
       type: object
       properties:
-        apType:
-          $ref: '_shared.yml#/components/schemas/ApType'
         essentialCharacteristics:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
-        desirableCharacteristics:
-          type: array
-          deprecated: true
-          description: desirable characteristics are not required and will be removed in the future
-          items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
-        gender:
-          $ref: '_shared.yml#/components/schemas/Gender'
       required:
-        - apType
-        - gender
         - essentialCharacteristics
     Cas1SpaceSearchRequirements:
       type: object
