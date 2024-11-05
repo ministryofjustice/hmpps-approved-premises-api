@@ -729,6 +729,57 @@ paths:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
+
+  /premises/{premisesId}/space-bookings/{bookingId}/non-arrival:
+    post:
+      tags:
+        - space bookings
+      summary: Posts a non arrival to a specified space booking
+      operationId: recordNonArrival
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1NonArrival'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+
+
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
@@ -6596,6 +6647,16 @@ components:
       required:
         - expectedDepartureDate
         - arrivalDateTime
+    Cas1NonArrival:
+      type: object
+      properties:
+        reason:
+          type: string
+          format: uuid
+        notes:
+          type: string
+      required:
+        - reason
     Cas1NewDeparture:
       type: object
       properties:
