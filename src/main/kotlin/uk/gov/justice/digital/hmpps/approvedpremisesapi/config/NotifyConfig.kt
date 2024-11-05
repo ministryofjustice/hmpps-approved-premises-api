@@ -50,7 +50,9 @@ class NotifyTemplates {
 }
 
 enum class NotifyMode {
-  DISABLED, TEST_AND_GUEST_LIST, ENABLED
+  DISABLED,
+  TEST_AND_GUEST_LIST,
+  ENABLED,
 }
 
 @Configuration
