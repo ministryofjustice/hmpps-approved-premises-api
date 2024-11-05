@@ -86,8 +86,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     val keyWorker = StaffWithoutUsernameUserDetailsFactory()
       .produce()
 
-    private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withApplication(application)
+    private val spaceBookingFactory = Cas1SpaceBookingEntityFactory()
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
       .withCanonicalArrivalDate(arrivalDate.toLocalDate())
@@ -95,7 +94,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withCanonicalDepartureDate(departureDate)
       .withKeyworkerStaffCode(keyWorker.staffCode)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
-      .produce()
 
     @BeforeEach
     fun before() {
@@ -112,7 +110,9 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @Test
     fun `record arrival and emits domain event`() {
-      service.arrivalRecorded(existingSpaceBooking)
+      val spaceBooking = spaceBookingFactory.withApplication(application).produce()
+
+      service.arrivalRecorded(spaceBooking)
 
       val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
 
@@ -129,10 +129,10 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.bookingId).isNull()
-      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(existingSpaceBooking.id)
-      assertThat(domainEvent.crn).isEqualTo(existingSpaceBooking.crn)
+      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEvent.occurredAt).isEqualTo(existingSpaceBooking.actualArrivalDateTime)
+      assertThat(domainEvent.occurredAt).isEqualTo(spaceBooking.actualArrivalDateTime)
       val data = domainEvent.data.eventDetails
       assertThat(data.previousExpectedDepartureOn).isNull()
       assertThat(data.applicationId).isEqualTo(application.id)
@@ -183,8 +183,10 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @Test
     fun `record arrival and emits domain event recognising change in expected departure date`() {
+      val spaceBooking = spaceBookingFactory.withApplication(application).produce()
+
       val previousExpectedDepartureDate = departureDate.plusMonths(1)
-      service.arrivalRecorded(existingSpaceBooking, previousExpectedDepartureDate)
+      service.arrivalRecorded(spaceBooking, previousExpectedDepartureDate)
 
       val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
 
@@ -228,8 +230,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     val keyWorker = StaffWithoutUsernameUserDetailsFactory()
       .produce()
 
-    private val departedSpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withApplication(application)
+    private val departedSpaceBookingFactory = Cas1SpaceBookingEntityFactory()
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivedDate)
@@ -238,7 +239,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withCanonicalDepartureDate(departedDate)
       .withActualDepartureDateTime(departedDate.toLocalDateTime(ZoneOffset.UTC).toInstant())
       .withKeyworkerStaffCode(keyWorker.staffCode)
-      .produce()
 
     private val departureReason = DepartureReasonEntity(
       id = UUID.randomUUID(),
@@ -270,6 +270,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @Test
     fun `record departure and emits domain event`() {
+      val departedSpaceBooking = departedSpaceBookingFactory.withApplication(application).produce()
+
       service.departureRecorded(departedSpaceBooking, departureReason, moveOnCategory)
 
       val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
@@ -347,18 +349,15 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     private val keyWorkerName = "${keyWorker.staff.forenames} ${keyWorker.staff.surname}"
     private val previousKeyWorkerName = "Previous $keyWorkerName"
 
-    private val spaceBookingWithoutKeyWorker = Cas1SpaceBookingEntityFactory()
-      .withApplication(application)
+    private val spaceBookingWithoutKeyWorkerFactory = Cas1SpaceBookingEntityFactory()
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
       .withCanonicalArrivalDate(arrivalDate.toLocalDate())
       .withExpectedDepartureDate(departureDate)
       .withCanonicalDepartureDate(departureDate)
-      .produce()
 
-    private val spaceBookingWithKeyWorker = Cas1SpaceBookingEntityFactory()
-      .withApplication(application)
+    private val spaceBookingWithKeyWorkerFactory = Cas1SpaceBookingEntityFactory()
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
       .withActualArrivalDateTime(arrivalDate)
@@ -367,7 +366,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withCanonicalDepartureDate(departureDate)
       .withKeyworkerStaffCode(keyWorker.staffCode)
       .withKeyworkerName(previousKeyWorkerName)
-      .produce()
 
     @BeforeEach
     fun before() {
@@ -384,6 +382,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @Test
     fun `record keyWorker assigned and emits domain event with newly assigned key worker`() {
+      val spaceBookingWithoutKeyWorker = spaceBookingWithoutKeyWorkerFactory.withApplication(application).produce()
+
       service.keyWorkerAssigned(
         spaceBookingWithoutKeyWorker,
         assignedKeyWorkerName = keyWorkerName,
@@ -409,6 +409,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @Test
     fun `record keyWorker assigned and emits domain event with previous and newly assigned key worker`() {
+      val spaceBookingWithKeyWorker = spaceBookingWithKeyWorkerFactory.withApplication(application).produce()
+
       service.keyWorkerAssigned(
         spaceBookingWithKeyWorker,
         assignedKeyWorkerName = keyWorkerName,
