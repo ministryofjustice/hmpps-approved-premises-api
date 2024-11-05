@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingRequirementsTransformer
 
@@ -17,7 +19,7 @@ class Cas1SpaceBookingRequirementsTransformerTest {
   private lateinit var transformer: Cas1SpaceBookingRequirementsTransformer
 
   @Test
-  fun `Placement requirements are transformed correctly`() {
+  fun `Placement requirements are transformed correctly when placement request defined`() {
     val cas1EssentialSpaceCharacteristics = Cas1SpaceCharacteristic.entries.map { it.toCharacteristicEntity() }
     val cas1DesirableSpaceCharacteristics = Cas1SpaceCharacteristic.entries.map { it.toCharacteristicEntity() }
 
@@ -27,7 +29,17 @@ class Cas1SpaceBookingRequirementsTransformerTest {
       .withDesirableCriteria(cas1DesirableSpaceCharacteristics)
       .produce()
 
-    val result = transformer.transformJpaToApi(placementRequirements, cas1EssentialSpaceCharacteristics)
+    val placementRequest = PlacementRequestEntityFactory()
+      .withDefaults()
+      .withPlacementRequirements(placementRequirements)
+      .produce()
+
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withPlacementRequest(placementRequest)
+      .withCriteria(cas1EssentialSpaceCharacteristics)
+      .produce()
+
+    val result = transformer.transformJpaToApi(spaceBooking)
 
     assertThat(result.apType).isEqualTo(placementRequirements.apType)
     assertThat(result.gender).isEqualTo(placementRequirements.gender)

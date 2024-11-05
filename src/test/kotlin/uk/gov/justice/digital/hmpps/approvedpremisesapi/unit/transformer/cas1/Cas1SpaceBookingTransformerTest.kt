@@ -143,10 +143,7 @@ class Cas1SpaceBookingTransformerTest {
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
       every {
-        requirementsTransformer.transformJpaToApi(
-          jpa = spaceBooking.placementRequest.placementRequirements,
-          criteria = criteria,
-        )
+        requirementsTransformer.transformJpaToApi(spaceBooking = spaceBooking)
       } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
@@ -261,10 +258,7 @@ class Cas1SpaceBookingTransformerTest {
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
       every {
-        requirementsTransformer.transformJpaToApi(
-          jpa = spaceBooking.placementRequest.placementRequirements,
-          criteria = criteria,
-        )
+        requirementsTransformer.transformJpaToApi(spaceBooking = spaceBooking)
       } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(

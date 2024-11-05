@@ -38,10 +38,7 @@ class Cas1SpaceBookingTransformer(
       applicationId = application.id,
       assessmentId = placementRequest.assessment.id,
       person = personTransformer.transformModelToPersonApi(person),
-      requirements = spaceBookingRequirementsTransformer.transformJpaToApi(
-        jpa = placementRequest.placementRequirements,
-        criteria = jpa.criteria,
-      ),
+      requirements = spaceBookingRequirementsTransformer.transformJpaToApi(spaceBooking = jpa),
       premises = NamedId(
         id = jpa.premises.id,
         name = jpa.premises.name,
