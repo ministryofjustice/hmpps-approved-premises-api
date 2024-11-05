@@ -587,7 +587,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class SubmitPlacementApplicationTest {
+  inner class SubmitPlacementApp {
     @Test
     fun `submitting a placement request application without a JWT returns 401`() {
       webTestClient.post()
@@ -1257,7 +1257,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
    * Note - Withdrawal cascading is tested in [WithdrawalTest]
    */
   @Nested
-  inner class WithdrawPlacementApplicationTest {
+  inner class WithdrawPlacementApplication {
 
     @Test
     fun `withdrawing a placement application JWT returns 401`() {

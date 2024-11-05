@@ -928,7 +928,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  inner class Cas3GetApplication {
+  inner class Cas3Get {
 
     @Test
     fun `Get single application returns 200 with correct body for Temporary Accommodation when requesting user created application`() {
