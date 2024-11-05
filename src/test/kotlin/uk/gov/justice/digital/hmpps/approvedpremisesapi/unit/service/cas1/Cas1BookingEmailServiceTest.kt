@@ -480,6 +480,7 @@ class Cas1BookingEmailServiceTest {
 
       service.spaceBookingWithdrawn(
         spaceBooking = booking,
+        application = application,
         withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawingUser),
       )
 
@@ -554,6 +555,7 @@ class Cas1BookingEmailServiceTest {
 
       service.spaceBookingWithdrawn(
         spaceBooking = booking,
+        application = application,
         withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawingUser),
       )
 
@@ -584,6 +586,7 @@ class Cas1BookingEmailServiceTest {
 
       service.spaceBookingWithdrawn(
         spaceBooking = booking,
+        application = application,
         withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
       )
 

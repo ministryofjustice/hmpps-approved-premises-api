@@ -94,6 +94,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         id = UUID.randomUUID(),
         premises = premises,
         application = application,
+        offlineApplication = null,
         placementRequest = booking.placementRequest!!,
         createdBy = getCreatedByUser(bookingMadeDomainEvent),
         createdAt = booking.createdAt,

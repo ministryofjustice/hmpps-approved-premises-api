@@ -130,9 +130,17 @@ data class Cas1SpaceBookingEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "premises_id")
   val premises: ApprovedPremisesEntity,
+  /**
+   * A booking will always be associated with either an [ApprovedPremisesApplicationEntity], or
+   * an [OfflineApplicationEntity]. All new bookings will only be associated with an
+   * [ApprovedPremisesApplicationEntity]
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "approved_premises_application_id")
-  val application: ApprovedPremisesApplicationEntity,
+  val application: ApprovedPremisesApplicationEntity?,
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "offline_application_id")
+  var offlineApplication: OfflineApplicationEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
   val placementRequest: PlacementRequestEntity,

@@ -296,7 +296,7 @@ class Cas1SpaceBookingServiceTest {
         )
       } returns Unit
 
-      every { cas1BookingEmailService.spaceBookingMade(any()) } returns Unit
+      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
@@ -1130,6 +1130,7 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `success`() {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withApplication(application)
         .withCancellationOccurredAt(null)
         .produce()
 
@@ -1145,7 +1146,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
 
-      every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, WithdrawalTriggeredByUser(user)) } returns Unit
+      every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
 
       val result = service.withdraw(

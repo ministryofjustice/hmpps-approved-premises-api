@@ -20,7 +20,7 @@ class Cas1ApplicationStatusService(
   }
 
   fun spaceBookingMade(spaceBooking: Cas1SpaceBookingEntity) {
-    bookingMade(spaceBooking.application)
+    bookingMade(spaceBooking.application!!)
   }
 
   private fun bookingMade(application: ApprovedPremisesApplicationEntity) {
