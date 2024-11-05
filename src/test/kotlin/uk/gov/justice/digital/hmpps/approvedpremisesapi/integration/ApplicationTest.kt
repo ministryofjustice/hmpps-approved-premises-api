@@ -927,7 +927,7 @@ class ApplicationTest : IntegrationTestBase() {
   inner class Cas3GetApplication {
 
     @Test
-    fun `Get single application returns 200 with correct body for Temporary Accommodation when requesting user created application`() {
+    fun `Get single application returns 200 with correct body when requesting user created application`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
@@ -985,7 +985,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns 200 with correct body for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
+    fun `Get single application returns 200 with correct body when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -1190,7 +1190,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
+    fun `Get single application returns 403 Forbidden when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAUser { createdByUser, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -1236,7 +1236,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
+    fun `Get single application returns 403 Forbidden when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
       givenAUser { userEntity, jwt ->
         givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
           givenAnOffender { offenderDetails, _ ->

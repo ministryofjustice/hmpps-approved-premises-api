@@ -1043,7 +1043,7 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetBedUtilizationReport {
+  inner class GetBedUtilReport {
     @Test
     fun `Get bed utilisation report for all regions returns 403 Forbidden if user does not have all regions access`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->

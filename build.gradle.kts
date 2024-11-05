@@ -1,7 +1,7 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.6"
   kotlin("plugin.spring") version "1.9.22"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
