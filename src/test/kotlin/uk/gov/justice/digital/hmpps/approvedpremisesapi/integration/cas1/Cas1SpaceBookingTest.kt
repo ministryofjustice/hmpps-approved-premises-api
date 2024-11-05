@@ -8,7 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
@@ -16,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -98,10 +96,7 @@ class Cas1SpaceBookingTest {
               departureDate = LocalDate.now().plusDays(8),
               premisesId = premises.id,
               requirements = Cas1SpaceBookingRequirements(
-                apType = ApType.esap,
-                gender = Gender.male,
                 essentialCharacteristics = listOf(),
-                desirableCharacteristics = listOf(),
               ),
             ),
           )
@@ -131,10 +126,7 @@ class Cas1SpaceBookingTest {
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = UUID.randomUUID(),
                 requirements = Cas1SpaceBookingRequirements(
-                  apType = ApType.esap,
-                  gender = Gender.male,
                   essentialCharacteristics = listOf(),
-                  desirableCharacteristics = listOf(),
                 ),
               ),
             )
@@ -172,10 +164,7 @@ class Cas1SpaceBookingTest {
                 departureDate = LocalDate.now(),
                 premisesId = premises.id,
                 requirements = Cas1SpaceBookingRequirements(
-                  apType = ApType.esap,
-                  gender = Gender.male,
                   essentialCharacteristics = listOf(),
-                  desirableCharacteristics = listOf(),
                 ),
               ),
             )
@@ -200,13 +189,6 @@ class Cas1SpaceBookingTest {
           val essentialCharacteristics = listOf(
             Cas1SpaceCharacteristic.hasBrailleSignage,
             Cas1SpaceCharacteristic.hasTactileFlooring,
-          )
-
-          val desirableCharacteristics = listOf(
-            Cas1SpaceCharacteristic.hasEnSuite,
-            Cas1SpaceCharacteristic.hasCallForAssistance,
-            Cas1SpaceCharacteristic.isGroundFloor,
-            Cas1SpaceCharacteristic.isCatered,
           )
 
           placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
@@ -237,10 +219,7 @@ class Cas1SpaceBookingTest {
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = premises.id,
                 requirements = Cas1SpaceBookingRequirements(
-                  apType = placementRequest.placementRequirements.apType,
-                  gender = Gender.male,
                   essentialCharacteristics = essentialCharacteristics,
-                  desirableCharacteristics = desirableCharacteristics,
                 ),
               ),
             )
@@ -252,12 +231,9 @@ class Cas1SpaceBookingTest {
           val result = response.responseBody.blockFirst()!!
 
           assertThat(result.person)
-          assertThat(result.requirements.apType).isEqualTo(placementRequest.placementRequirements.apType)
-          assertThat(result.requirements.gender).isEqualTo(placementRequest.placementRequirements.gender)
           assertThat(result.requirements.essentialCharacteristics).containsExactlyInAnyOrderElementsOf(
             essentialCharacteristics,
           )
-          assertThat(result.requirements.desirableCharacteristics).isEmpty()
           assertThat(result.premises.id).isEqualTo(premises.id)
           assertThat(result.premises.name).isEqualTo(premises.name)
           assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)

@@ -8,10 +8,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
@@ -118,10 +116,7 @@ class Cas1SpaceBookingTransformerTest {
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(
-        apType = ApType.pipe,
-        gender = Gender.female,
         essentialCharacteristics = listOf(),
-        desirableCharacteristics = listOf(),
       )
 
       val expectedCancellationReason = CancellationReason(
@@ -143,10 +138,7 @@ class Cas1SpaceBookingTransformerTest {
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
       every {
-        requirementsTransformer.transformJpaToApi(
-          jpa = spaceBooking.placementRequest.placementRequirements,
-          criteria = criteria,
-        )
+        requirementsTransformer.transformJpaToApi(spaceBooking)
       } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
@@ -243,10 +235,7 @@ class Cas1SpaceBookingTransformerTest {
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(
-        apType = ApType.pipe,
-        gender = Gender.female,
         essentialCharacteristics = listOf(),
-        desirableCharacteristics = listOf(),
       )
 
       val expectedUser = ApprovedPremisesUserFactory().produce()
@@ -261,10 +250,7 @@ class Cas1SpaceBookingTransformerTest {
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
       every {
-        requirementsTransformer.transformJpaToApi(
-          jpa = spaceBooking.placementRequest.placementRequirements,
-          criteria = criteria,
-        )
+        requirementsTransformer.transformJpaToApi(spaceBooking)
       } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
