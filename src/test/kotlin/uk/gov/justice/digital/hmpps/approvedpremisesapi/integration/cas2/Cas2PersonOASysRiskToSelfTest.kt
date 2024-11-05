@@ -42,8 +42,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting oasys sections for a CRN without ROLE_PROBATION or ROLE_POM returns 403`
-  () {
+  fun `Getting oasys sections for a CRN without ROLE_PROBATION or ROLE_POM returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
