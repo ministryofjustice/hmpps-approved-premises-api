@@ -791,5 +791,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
     "/cas1/reports/requestsForPlacement?year=$year&month=$month" +
-      if (includePii != null) { "&includePii=$includePii" } else { "" }
+      if (includePii != null) {
+        "&includePii=$includePii"
+      } else {
+        ""
+      }
 }

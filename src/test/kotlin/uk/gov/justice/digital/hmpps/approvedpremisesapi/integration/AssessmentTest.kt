@@ -645,16 +645,28 @@ class AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is personName`() {
       `Given a User` { user, jwt ->
-        val (offender1, inmate1) = `Given an Offender`({ withFirstName("Zendaya"); withLastName("") })
+        val (offender1, inmate1) = `Given an Offender`({
+          withFirstName("Zendaya")
+          withLastName("")
+        })
         val assessZendaya = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
 
-        val (offender2, inmate2) = `Given an Offender`({ withFirstName("Arthur"); withLastName("") })
+        val (offender2, inmate2) = `Given an Offender`({
+          withFirstName("Arthur")
+          withLastName("")
+        })
         val assessArthur = createApprovedPremisesAssessmentForStatus(user, offender2, cas1InProgress)
 
-        val (offender3, inmate3) = `Given an Offender`({ withFirstName("Agatha"); withLastName("") })
+        val (offender3, inmate3) = `Given an Offender`({
+          withFirstName("Agatha")
+          withLastName("")
+        })
         val assessAgatha = createApprovedPremisesAssessmentForStatus(user, offender3, cas1InProgress)
 
-        val (offender4, inmate4) = `Given an Offender`({ withFirstName("Bagatha"); withLastName("") })
+        val (offender4, inmate4) = `Given an Offender`({
+          withFirstName("Bagatha")
+          withLastName("")
+        })
         val assessBagatha = createApprovedPremisesAssessmentForStatus(user, offender4, cas1InProgress)
 
         ApDeliusContext_addListCaseSummaryToBulkResponse(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))

@@ -260,10 +260,14 @@ class CacheKeySet(
   private val key: String,
 ) {
   val metadataKey: String
-    get() { return "$prefix-$cacheName-$key-metadata" }
+    get() {
+      return "$prefix-$cacheName-$key-metadata"
+    }
 
   val dataKey: String
-    get() { return "$prefix-$cacheName-$key-data" }
+    get() {
+      return "$prefix-$cacheName-$key-data"
+    }
 }
 
 enum class PreemptiveCacheEntryStatus {

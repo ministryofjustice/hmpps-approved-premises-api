@@ -1824,7 +1824,11 @@ class WithdrawalTest : IntegrationTestBase() {
     APDeliusContext_mockSuccessfulGetReferralDetails(
       crn = booking.crn,
       bookingId = booking.id.toString(),
-      arrivedAt = if (hasArrivalInDelius) { ZonedDateTime.now() } else { null },
+      arrivedAt = if (hasArrivalInDelius) {
+        ZonedDateTime.now()
+      } else {
+        null
+      },
       departedAt = null,
     )
 

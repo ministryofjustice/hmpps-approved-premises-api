@@ -1076,5 +1076,9 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
     "/cas1/reports/applicationsV2?year=$year&month=$month" +
-      if (includePii != null) { "&includePii=$includePii" } else { "" }
+      if (includePii != null) {
+        "&includePii=$includePii"
+      } else {
+        ""
+      }
 }

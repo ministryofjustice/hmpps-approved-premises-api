@@ -147,7 +147,9 @@ class TasksController(
 
         val requiredPermission = if (assessment.createdFromAppeal) {
           UserPermission.CAS1_ASSESS_APPEALED_APPLICATION
-        } else { UserPermission.CAS1_ASSESS_APPLICATION }
+        } else {
+          UserPermission.CAS1_ASSESS_APPLICATION
+        }
 
         TaskInfo(
           transformedTask = getAssessmentTask(assessment, offenderSummaries),

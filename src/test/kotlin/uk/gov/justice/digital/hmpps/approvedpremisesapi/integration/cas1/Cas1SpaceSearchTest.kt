@@ -212,7 +212,11 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results.resultsCount).isEqualTo(5)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      val expectedApType = if (apType == ApType.mhapElliottHouse) { ApType.mhapStJosephs } else { apType }
+      val expectedApType = if (apType == ApType.mhapElliottHouse) {
+        ApType.mhapStJosephs
+      } else {
+        apType
+      }
 
       assertThatResultMatches(results.results[0], expectedPremises[0], expectedApType)
       assertThatResultMatches(results.results[1], expectedPremises[1], expectedApType)

@@ -233,7 +233,11 @@ class PlacementApplicationService(
       return CasResult.Success(placementApplication)
     }
 
-    val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) { placementApplication.allocatedToUser } else null
+    val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) {
+      placementApplication.allocatedToUser
+    } else {
+      null
+    }
 
     placementApplication.isWithdrawn = true
     placementApplication.withdrawalReason = when (withdrawalContext.triggeringEntityType) {

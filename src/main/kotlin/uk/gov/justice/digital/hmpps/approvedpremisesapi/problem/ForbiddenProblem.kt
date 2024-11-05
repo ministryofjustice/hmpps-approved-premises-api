@@ -9,7 +9,11 @@ class ForbiddenProblem(detail: String? = null) :
     null,
     "Forbidden",
     Status.FORBIDDEN,
-    "You are not authorized to access this endpoint" + if (detail != null) { " $detail" } else { "" },
+    "You are not authorized to access this endpoint" + if (detail != null) {
+      " $detail"
+    } else {
+      ""
+    },
   ) {
   override fun getCause(): Exceptional? {
     return null

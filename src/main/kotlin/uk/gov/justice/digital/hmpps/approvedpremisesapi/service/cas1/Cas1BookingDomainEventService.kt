@@ -239,8 +239,16 @@ class Cas1BookingDomainEventService(
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = bookingCreatedAt.toInstant(),
-        bookingId = if (isSpaceBooking) { null } else { bookingInfo.id },
-        cas1SpaceBookingId = if (isSpaceBooking) { bookingInfo.id } else { null },
+        bookingId = if (isSpaceBooking) {
+          null
+        } else {
+          bookingInfo.id
+        },
+        cas1SpaceBookingId = if (isSpaceBooking) {
+          bookingInfo.id
+        } else {
+          null
+        },
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
@@ -356,8 +364,16 @@ class Cas1BookingDomainEventService(
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = now.toInstant(),
-        bookingId = if (isSpaceBooking) { null } else { bookingId },
-        cas1SpaceBookingId = if (isSpaceBooking) { bookingId } else { null },
+        bookingId = if (isSpaceBooking) {
+          null
+        } else {
+          bookingId
+        },
+        cas1SpaceBookingId = if (isSpaceBooking) {
+          bookingId
+        } else {
+          null
+        },
         schemaVersion = 2,
         data = BookingCancelledEnvelope(
           id = domainEventId,

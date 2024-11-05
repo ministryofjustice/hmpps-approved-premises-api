@@ -459,7 +459,9 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
                 "reason" to "theReasonForShortNoticeReason",
                 "other" to "theReasonForShortNoticeOther",
               )
-            } else { null },
+            } else {
+              null
+            },
           ).toMap(),
       )
 
