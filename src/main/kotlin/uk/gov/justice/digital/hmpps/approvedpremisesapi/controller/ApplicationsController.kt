@@ -105,7 +105,7 @@ class ApplicationsController(
       avoid breaking behaviour for other callers), where we filter out any response from
       offenderService.getInfoForPerson of type PersonInfoResult.Restricted. This will most likely have
       to be optional as to not 'break' other functions using getPersonDetailAndTransformToSummary
-    */
+       */
     return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
   }
 

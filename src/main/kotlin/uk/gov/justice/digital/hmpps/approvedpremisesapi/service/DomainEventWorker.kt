@@ -112,15 +112,15 @@ class AsyncDomainEventWorker(
 
   companion object {
     /*
-    * The MAX_ATTEMPTS_RETRY_EXPONENTIAL of 166 is worked out like this:
-    * the multiplier is the default of two so we have
-    * 1 2 4 8 16 32 64 128 256 512 which gives us around 25 minutes. After that our max interval is ten minutes
-    * so we have four of them to give us the first hour which is 14 attempts. We follow that with 23 * 6 for the rest
-    * of the fist day which gives us 14 + 138 = 152. We want to retry for 7 days so we have another 6 * 6 * 24 = 864.
-    * Total is 864 + 152 = 1016
-    *
-    * MAX_ATTEMPTS_RETRY is used in the tests with a FixedBackOffPolicy
-    * */
+     * The MAX_ATTEMPTS_RETRY_EXPONENTIAL of 166 is worked out like this:
+     * the multiplier is the default of two so we have
+     * 1 2 4 8 16 32 64 128 256 512 which gives us around 25 minutes. After that our max interval is ten minutes
+     * so we have four of them to give us the first hour which is 14 attempts. We follow that with 23 * 6 for the rest
+     * of the fist day which gives us 14 + 138 = 152. We want to retry for 7 days so we have another 6 * 6 * 24 = 864.
+     * Total is 864 + 152 = 1016
+     *
+     * MAX_ATTEMPTS_RETRY is used in the tests with a FixedBackOffPolicy
+     * */
     const val MAX_ATTEMPTS_RETRY_EXPONENTIAL = 1016
     const val MAX_ATTEMPTS_RETRY = 4
     const val BACK_OFF_PERIOD = 1000.toLong()

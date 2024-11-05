@@ -131,14 +131,14 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findByBedIds(bedIds: List<UUID>): List<BookingEntity>
 
   /*
-  * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
-  *
-  * AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
+   * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
+   *
+   * AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
 
-  * * https://hibernate.atlassian.net/browse/HHH-4795
+   * * https://hibernate.atlassian.net/browse/HHH-4795
 
-  * * https://stackoverflow.com/questions/52839973/hql-to-check-for-null-in-onetoone-relation
-  * */
+   * * https://stackoverflow.com/questions/52839973/hql-to-check-for-null-in-onetoone-relation
+   * */
   @Query(
     "SELECT b FROM BookingEntity b " +
       "WHERE b.bed.id = :bedId " +
@@ -152,7 +152,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   /*
     This query is to find the closest booking to the start date for the current bedspace search
     The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
-  */
+   */
   @Query(
     """
       WITH ClosestBooking AS
