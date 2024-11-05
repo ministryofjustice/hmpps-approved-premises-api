@@ -259,7 +259,8 @@ data class Cas2ApplicationSeedUntypedEnumsCsvRow(
   val createdBy: String,
   val createdAt: OffsetDateTime,
   val submittedAt: OffsetDateTime?,
-  val state: String, // NOT_STARTED | IN-PROGRESS | SUBMITTED | IN_REVIEW
+  // NOT_STARTED | IN-PROGRESS | SUBMITTED | IN_REVIEW
+  val state: String,
   val statusUpdates: String,
   val location: String?,
   val referringPrisonCode: String?,
