@@ -41,8 +41,9 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
   fun `Migrate bookings, removing existing`() {
     val premises = `Given an Approved Premises`("Premises 1")
     val otherUser = `Given a User`().first
-    val criteria1 = characteristicEntityFactory.produceAndPersist()
-    val criteria2 = characteristicEntityFactory.produceAndPersist()
+    val roomCriteria1 = characteristicEntityFactory.produceAndPersist { withModelScope("*") }
+    val roomCriteria2 = characteristicEntityFactory.produceAndPersist { withModelScope("room") }
+    val premisesCriteria = characteristicEntityFactory.produceAndPersist { withModelScope("premises") }
 
     val application1 = `Given a CAS1 Application`(createdByUser = otherUser, eventNumber = "25")
     val booking1 = `Given a Booking`(
@@ -58,7 +59,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
       booking = booking1,
-      essentialCriteria = listOf(criteria1, criteria2),
+      essentialCriteria = listOf(premisesCriteria, roomCriteria1, roomCriteria2),
     ).first
     val (booking1CreatedByUser) = `Given a User`()
     cas1BookingDomainEventSet.bookingMade(
@@ -175,7 +176,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.departureReason).isNull()
     assertThat(migratedBooking1.departureMoveOnCategory).isNull()
     assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1.id)
-    assertThat(migratedBooking1.criteria).containsOnly(criteria1, criteria2)
+    assertThat(migratedBooking1.criteria).containsOnly(roomCriteria1, roomCriteria2)
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
 
     val migratedBooking2 = premiseSpaceBookings[1]

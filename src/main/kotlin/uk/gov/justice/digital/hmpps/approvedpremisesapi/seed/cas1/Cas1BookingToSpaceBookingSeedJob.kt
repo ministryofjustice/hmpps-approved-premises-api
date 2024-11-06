@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -124,7 +125,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         cancellationReasonNotes = booking.cancellation?.otherReason,
         departureMoveOnCategory = null,
         departureReason = null,
-        criteria = booking.placementRequest?.placementRequirements?.essentialCriteria?.toList() ?: emptyList(),
+        criteria = booking.getEssentialRoomCriteria(),
         nonArrivalReason = null,
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
@@ -135,6 +136,10 @@ class Cas1BookingToSpaceBookingSeedJob(
 
     log.info("Have migrated booking $bookingId to space booking ${spaceBooking.id}")
   }
+
+  private fun BookingEntity.getEssentialRoomCriteria() =
+    placementRequest?.placementRequirements?.essentialCriteria?.filter { it.isModelScopeRoom() }?.toList()
+      ?: emptyList()
 
   private fun getCreatedByUser(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): UserEntity {
     val createdByUsernameUpper =

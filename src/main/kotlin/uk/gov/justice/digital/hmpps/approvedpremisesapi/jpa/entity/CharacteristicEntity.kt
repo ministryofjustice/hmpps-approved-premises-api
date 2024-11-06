@@ -72,6 +72,7 @@ data class CharacteristicEntity(
   var modelScope: String,
   var isActive: Boolean,
 ) {
+  fun isModelScopeRoom() = modelMatches("room")
   fun matches(entityServiceScope: String, entityModelScope: String) = serviceMatches(entityServiceScope) && modelMatches(entityModelScope)
   fun serviceMatches(entityServiceScope: String) = serviceScope == "*" || entityServiceScope == serviceScope
   fun modelMatches(entityModelScope: String) = modelScope == "*" || entityModelScope == modelScope
