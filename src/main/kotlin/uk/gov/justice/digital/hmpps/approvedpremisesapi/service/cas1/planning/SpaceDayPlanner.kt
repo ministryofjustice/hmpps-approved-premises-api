@@ -39,12 +39,12 @@ class SpaceBookingDayPlanner {
     val unplanned = mutableListOf<SpaceBooking>()
 
     val sortedBookings = bookings.toList()
-      .sortedByDescending { b -> b.requiredCharacteristics.sumOf { c -> c.weighting } }
+      .sortedByDescending { b -> b.requiredRoomCharacteristics.sumOf { c -> c.weighting } }
       .toMutableList()
 
     sortedBookings.forEach { booking ->
-      val requiresSingleRoom = booking.requiredCharacteristics.any { it.singleRoom }
-      val characteristicsExcludingSingleRoom = booking.requiredCharacteristics.filter { !it.singleRoom }.toSet()
+      val requiresSingleRoom = booking.requiredRoomCharacteristics.any { it.singleRoom }
+      val characteristicsExcludingSingleRoom = booking.requiredRoomCharacteristics.filter { !it.singleRoom }.toSet()
 
       when (
         val findResult = bedLedger.findBed(

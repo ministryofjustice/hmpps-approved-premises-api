@@ -41,7 +41,7 @@ class SpacePlanningModelsFactory(
         SpaceBooking(
           id = booking.id,
           label = booking.crn,
-          requiredCharacteristics = toCharacteristics(booking.criteria),
+          requiredRoomCharacteristics = toRoomCharacteristics(booking.criteria),
         )
       }
 
@@ -65,12 +65,13 @@ class SpacePlanningModelsFactory(
     room = Room(
       id = this.room.id,
       label = this.room.name,
-      characteristics = toCharacteristics(this.room.characteristics),
+      characteristics = toRoomCharacteristics(this.room.characteristics),
     ),
   )
 
-  private fun toCharacteristics(characteristicEntities: List<CharacteristicEntity>) = characteristicEntities
+  private fun toRoomCharacteristics(characteristicEntities: List<CharacteristicEntity>) = characteristicEntities
     .filter { it.isActive }
+    .filter { it.isModelScopeRoom() }
     .map { toCharacteristic(it) }
     .toSet()
 

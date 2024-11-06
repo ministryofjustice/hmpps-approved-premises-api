@@ -46,7 +46,7 @@ object SpaceDayPlanRenderer {
           body = result.unplanned.sortedBy { it.label }.map { unplanned ->
             listOf(
               unplanned.label,
-              unplanned.requiredCharacteristics.joinToString(",") { it.label },
+              unplanned.requiredRoomCharacteristics.joinToString(",") { it.label },
             )
           },
           colWidths = listOf(15, 30),
@@ -62,7 +62,7 @@ object SpaceDayPlanRenderer {
     booking: SpaceBooking?,
   ): List<String> {
     val allCharacteristics =
-      (bed.room.characteristics + (booking?.requiredCharacteristics ?: emptyList()))
+      (bed.room.characteristics + (booking?.requiredRoomCharacteristics ?: emptyList()))
         .toList()
         .sortedBy { it.label }
 
@@ -73,7 +73,7 @@ object SpaceDayPlanRenderer {
       if (bed.room.characteristics.contains(characteristic)) {
         description.append("r")
       }
-      if (booking != null && booking.requiredCharacteristics.contains(characteristic)) {
+      if (booking != null && booking.requiredRoomCharacteristics.contains(characteristic)) {
         description.append("b")
       }
       description.append(")")

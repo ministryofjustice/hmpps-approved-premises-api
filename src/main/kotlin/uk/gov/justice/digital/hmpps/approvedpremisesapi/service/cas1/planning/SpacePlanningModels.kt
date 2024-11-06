@@ -38,5 +38,5 @@ data class Room(
 data class SpaceBooking(
   val id: UUID,
   val label: String,
-  val requiredCharacteristics: Set<Characteristic>,
+  val requiredRoomCharacteristics: Set<Characteristic>,
 )

@@ -31,15 +31,16 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `all room and bed properties including active characteristics are correctly mapped`() {
-      val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).produce()
-      val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).produce()
-      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).produce()
+      val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).withModelScope("room").produce()
+      val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("room").produce()
+      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).withModelScope("room").produce()
+      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).withModelScope("room").produce()
+      val characteristicPremise = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("premises").produce()
 
       val roomEntity = RoomEntityFactory()
         .withDefaults()
         .withName("the room name")
-        .withCharacteristics(characteristic1, characteristicDisabled, characteristic2, characteristicSingleRoom)
+        .withCharacteristics(characteristic1, characteristicDisabled, characteristic2, characteristicSingleRoom, characteristicPremise)
         .produce()
 
       val bedEntity = BedEntityFactory()
@@ -124,15 +125,16 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `all room and bed properties including active characteristics are correctly mapped`() {
-      val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).produce()
-      val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).produce()
-      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).produce()
+      val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).withModelScope("room").produce()
+      val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("room").produce()
+      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).withModelScope("room").produce()
+      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).withModelScope("room").produce()
+      val characteristicPremise = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("premises").produce()
 
       val roomEntity = RoomEntityFactory()
         .withDefaults()
         .withName("the room name")
-        .withCharacteristics(characteristic1, characteristicDisabled, characteristic2, characteristicSingleRoom)
+        .withCharacteristics(characteristic1, characteristicDisabled, characteristic2, characteristicSingleRoom, characteristicPremise)
         .produce()
 
       val bedEntity = BedEntityFactory()
@@ -322,20 +324,21 @@ class SpacePlanningModelsFactoryTest {
     }
 
     @Test
-    fun `all booking properties including active characteristics are correctly mapped`() {
-      val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).produce()
-      val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).produce()
-      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).produce()
+    fun `all booking properties including active room characteristics are correctly mapped`() {
+      val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).withModelScope("room").produce()
+      val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("room").produce()
+      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withModelScope("room").withIsActive(true).produce()
+      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).withModelScope("room").produce()
+      val characteristicPremise = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("premises").produce()
 
       val booking1 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking1")
-        .withCriteria(listOf(characteristic1, characteristic2))
+        .withCriteria(listOf(characteristic1, characteristic2, characteristicPremise))
         .produce()
 
       val booking2 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking2")
-        .withCriteria(listOf(characteristicSingleRoom, characteristicDisabled))
+        .withCriteria(listOf(characteristicSingleRoom, characteristicDisabled, characteristicPremise))
         .produce()
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
@@ -357,7 +360,7 @@ class SpacePlanningModelsFactoryTest {
         SpaceBooking(
           id = booking1.id,
           label = "booking1",
-          requiredCharacteristics = setOf(
+          requiredRoomCharacteristics = setOf(
             Characteristic(
               id = characteristic1.id,
               label = characteristic1.propertyName!!,
@@ -375,7 +378,7 @@ class SpacePlanningModelsFactoryTest {
         SpaceBooking(
           id = booking2.id,
           label = "booking2",
-          requiredCharacteristics = setOf(
+          requiredRoomCharacteristics = setOf(
             Characteristic(
               id = characteristicSingleRoom.id,
               label = characteristicSingleRoom.propertyName!!,
