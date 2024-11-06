@@ -83,3 +83,5 @@ seed/**
 
 # Git patch files
 *.patch
+
+.editorconfig
