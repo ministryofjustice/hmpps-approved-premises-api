@@ -73,30 +73,19 @@ class Cas1BookingToSpaceBookingSeedJob(
   ) {
     val booking = bookingRepository.findByIdOrNull(bookingId)!!
 
-    if (booking.adhoc == true) {
-      error("Can't currently migrate adhoc booking $bookingId")
-    }
+    val application = booking.application as ApprovedPremisesApplicationEntity?
+    val offlineApplication = booking.offlineApplication
 
-    if (booking.placementRequest == null) {
-      error("Can't currently migrate booking $bookingId as it doesn't have a placement request")
-    }
-
-    if (booking.application == null) {
-      error("Can't currently migrate booking $bookingId as it isn't linked to an application")
-    }
-
-    val application = booking.application!! as ApprovedPremisesApplicationEntity
     val bookingMadeDomainEvent = getBookingMadeDomainEvent(bookingId)
-      ?: error("Can't find booking made domain event for booking $bookingId")
 
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
         id = UUID.randomUUID(),
         premises = premises,
         application = application,
-        offlineApplication = null,
-        placementRequest = booking.placementRequest!!,
-        createdBy = getCreatedByUser(bookingMadeDomainEvent),
+        offlineApplication = offlineApplication,
+        placementRequest = booking.placementRequest,
+        createdBy = bookingMadeDomainEvent?.let { getCreatedByUser(it) },
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
@@ -114,12 +103,12 @@ class Cas1BookingToSpaceBookingSeedJob(
         cancellationReasonNotes = booking.cancellation?.otherReason,
         departureMoveOnCategory = null,
         departureReason = null,
-        criteria = booking.placementRequest!!.placementRequirements.essentialCriteria.toList(),
+        criteria = booking.placementRequest?.placementRequirements?.essentialCriteria?.toList() ?: emptyList(),
         nonArrivalReason = null,
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         migratedFromBooking = booking,
-        deliusEventNumber = getDomainEventNumber(bookingMadeDomainEvent),
+        deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
       ),
     )
 
@@ -140,7 +129,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private fun getBookingMadeDomainEvent(bookingId: UUID): DomainEvent<BookingMadeEnvelope>? {
     val createdDomainEvents = domainEventRepository.findIdsByTypeAndBookingId(DomainEventType.APPROVED_PREMISES_BOOKING_MADE, bookingId)
     if (createdDomainEvents.isEmpty()) {
-      error("Can't find a booking made domain event for booking $bookingId")
+      return null
     }
 
     return domainEventService.getBookingMadeEvent(createdDomainEvents.first())

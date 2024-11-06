@@ -23,10 +23,10 @@ import java.util.UUID
 class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<ApprovedPremisesEntity> = { ApprovedPremisesEntityFactory().withDefaults().produce() }
-  private var placementRequest: Yielded<PlacementRequestEntity> = { PlacementRequestEntityFactory().withDefaults().produce() }
+  private var placementRequest: Yielded<PlacementRequestEntity?> = { PlacementRequestEntityFactory().withDefaults().produce() }
   private var application: Yielded<ApprovedPremisesApplicationEntity?> = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
-  private var createdBy: Yielded<UserEntity> = { UserEntityFactory().withDefaults().produce() }
+  private var createdBy: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var expectedArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
   private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now() }
@@ -67,7 +67,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.premises = premises
   }
 
-  fun withPlacementRequest(placementRequest: PlacementRequestEntity) = apply {
+  fun withPlacementRequest(placementRequest: PlacementRequestEntity?) = apply {
     this.placementRequest = { placementRequest }
   }
 
@@ -79,7 +79,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.placementRequest = placementRequest
   }
 
-  fun withCreatedBy(createdBy: UserEntity) = apply {
+  fun withCreatedBy(createdBy: UserEntity?) = apply {
     this.createdBy = { createdBy }
   }
 

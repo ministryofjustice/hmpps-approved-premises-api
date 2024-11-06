@@ -216,7 +216,7 @@ class Cas1SpaceBookingController(
     val user = userService.getUserForRequest()
 
     val person = offenderService.getPersonInfoResult(
-      booking.placementRequest.application.crn,
+      booking.crn,
       user.deliusUsername,
       user.hasQualification(UserQualification.LAO),
     )

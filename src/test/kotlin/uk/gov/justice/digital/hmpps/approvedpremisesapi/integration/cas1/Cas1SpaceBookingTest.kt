@@ -238,9 +238,9 @@ class Cas1SpaceBookingTest {
           assertThat(result.premises.name).isEqualTo(premises.name)
           assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)
           assertThat(result.apArea.name).isEqualTo(premises.probationRegion.apArea!!.name)
-          assertThat(result.bookedBy.id).isEqualTo(applicant.id)
-          assertThat(result.bookedBy.name).isEqualTo(applicant.name)
-          assertThat(result.bookedBy.deliusUsername).isEqualTo(applicant.deliusUsername)
+          assertThat(result.bookedBy!!.id).isEqualTo(applicant.id)
+          assertThat(result.bookedBy!!.name).isEqualTo(applicant.name)
+          assertThat(result.bookedBy!!.deliusUsername).isEqualTo(applicant.deliusUsername)
           assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
           assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
           assertThat(result.createdAt).satisfies(
@@ -795,7 +795,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.id).isEqualTo(spaceBooking.id)
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
-      assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest.id)
+      assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
     }
   }
 

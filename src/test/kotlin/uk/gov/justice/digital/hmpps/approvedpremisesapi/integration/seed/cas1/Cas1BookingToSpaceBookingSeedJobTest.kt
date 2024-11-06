@@ -7,11 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Booking`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Booking for an Offline Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 Space Booking`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offline Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -85,7 +87,6 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       booking2CreatedByUser,
       placementRequest2,
     )
-
     val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
     cancellationEntityFactory.produceAndPersist {
       withBooking(booking2)
@@ -95,12 +96,32 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       withOtherReason("cancellation other reason")
     }
 
-    // ignored adhoc booking
-    `Given a Booking`(
+    val offlineApplication = `Given an Offline Application`(
+      crn = "CRN3-offline",
+      eventNumber = "75",
+    )
+    val booking3OfflineApplication = `Given a Booking for an Offline Application`(
       crn = "CRN3",
       premises = premises,
-      application = application1,
-      adhoc = true,
+      offlineApplication = offlineApplication,
+      arrivalDate = LocalDate.of(2024, 7, 1),
+      departureDate = LocalDate.of(2024, 7, 5),
+    )
+    val (booking3CreatedByUser) = `Given a User`()
+    cas1BookingDomainEventSet.adhocBookingMade(
+      onlineApplication = null,
+      offlineApplication = offlineApplication,
+      eventNumber = "75",
+      booking = booking3OfflineApplication,
+      user = booking3CreatedByUser,
+    )
+
+    val booking4OfflineNoDomainEvent = `Given a Booking for an Offline Application`(
+      crn = "CRN4",
+      premises = premises,
+      offlineApplication = offlineApplication,
+      arrivalDate = LocalDate.of(2024, 8, 1),
+      departureDate = LocalDate.of(2024, 8, 5),
     )
 
     val existingMigratedSpaceBooking1ToRemove = `Given a CAS1 Space Booking`(
@@ -119,12 +140,12 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(cas1SpaceBookingRepository.findByIdOrNull(existingMigratedSpaceBooking1ToRemove.id)).isNull()
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
-    assertThat(premiseSpaceBookings).hasSize(2)
+    assertThat(premiseSpaceBookings).hasSize(4)
 
     val migratedBooking1 = premiseSpaceBookings[0]
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
-    assertThat(migratedBooking1.placementRequest.id).isEqualTo(placementRequest1.id)
-    assertThat(migratedBooking1.createdBy.id).isEqualTo(booking1CreatedByUser.id)
+    assertThat(migratedBooking1.placementRequest!!.id).isEqualTo(placementRequest1.id)
+    assertThat(migratedBooking1.createdBy!!.id).isEqualTo(booking1CreatedByUser.id)
     assertThat(migratedBooking1.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
     assertThat(migratedBooking1.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 5, 5))
     assertThat(migratedBooking1.actualArrivalDateTime).isNull()
@@ -136,6 +157,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.keyWorkerStaffCode).isNull()
     assertThat(migratedBooking1.keyWorkerAssignedAt).isNull()
     assertThat(migratedBooking1.application!!.id).isEqualTo(application1.id)
+    assertThat(migratedBooking1.offlineApplication).isNull()
     assertThat(migratedBooking1.cancellationReason).isNull()
     assertThat(migratedBooking1.cancellationOccurredAt).isNull()
     assertThat(migratedBooking1.cancellationRecordedAt).isNull()
@@ -148,8 +170,8 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
 
     val migratedBooking2 = premiseSpaceBookings[1]
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
-    assertThat(migratedBooking2.placementRequest.id).isEqualTo(placementRequest2.id)
-    assertThat(migratedBooking2.createdBy.id).isEqualTo(booking2CreatedByUser.id)
+    assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
+    assertThat(migratedBooking2.createdBy!!.id).isEqualTo(booking2CreatedByUser.id)
     assertThat(migratedBooking2.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
     assertThat(migratedBooking2.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 6, 5))
     assertThat(migratedBooking2.actualArrivalDateTime).isNull()
@@ -161,6 +183,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.keyWorkerStaffCode).isNull()
     assertThat(migratedBooking2.keyWorkerAssignedAt).isNull()
     assertThat(migratedBooking2.application!!.id).isEqualTo(application2.id)
+    assertThat(migratedBooking2.offlineApplication).isNull()
     assertThat(migratedBooking2.cancellationReason).isEqualTo(cancellationReason)
     assertThat(migratedBooking2.cancellationOccurredAt).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(migratedBooking2.cancellationRecordedAt).isEqualTo(LocalDateTime.of(2025, 1, 2, 3, 4, 5).toInstant(ZoneOffset.UTC))
@@ -170,6 +193,58 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2.id)
     assertThat(migratedBooking2.criteria).isEmpty()
     assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
+
+    val migratedBooking3 = premiseSpaceBookings[2]
+    assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
+    assertThat(migratedBooking3.placementRequest).isNull()
+    assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
+    assertThat(migratedBooking3.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
+    assertThat(migratedBooking3.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
+    assertThat(migratedBooking3.actualArrivalDateTime).isNull()
+    assertThat(migratedBooking3.actualDepartureDateTime).isNull()
+    assertThat(migratedBooking3.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
+    assertThat(migratedBooking3.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
+    assertThat(migratedBooking3.crn).isEqualTo("CRN3")
+    assertThat(migratedBooking3.keyWorkerName).isNull()
+    assertThat(migratedBooking3.keyWorkerStaffCode).isNull()
+    assertThat(migratedBooking3.keyWorkerAssignedAt).isNull()
+    assertThat(migratedBooking3.application).isNull()
+    assertThat(migratedBooking3.offlineApplication!!.id).isEqualTo(offlineApplication.id)
+    assertThat(migratedBooking3.cancellationReason).isNull()
+    assertThat(migratedBooking3.cancellationOccurredAt).isNull()
+    assertThat(migratedBooking3.cancellationRecordedAt).isNull()
+    assertThat(migratedBooking3.cancellationReasonNotes).isNull()
+    assertThat(migratedBooking3.departureReason).isNull()
+    assertThat(migratedBooking3.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
+    assertThat(migratedBooking3.criteria).isEmpty()
+    assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
+
+    val migratedBooking4 = premiseSpaceBookings[3]
+    assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
+    assertThat(migratedBooking4.placementRequest).isNull()
+    assertThat(migratedBooking4.createdBy).isNull()
+    assertThat(migratedBooking4.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
+    assertThat(migratedBooking4.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
+    assertThat(migratedBooking4.actualArrivalDateTime).isNull()
+    assertThat(migratedBooking4.actualDepartureDateTime).isNull()
+    assertThat(migratedBooking4.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
+    assertThat(migratedBooking4.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
+    assertThat(migratedBooking4.crn).isEqualTo("CRN4")
+    assertThat(migratedBooking4.keyWorkerName).isNull()
+    assertThat(migratedBooking4.keyWorkerStaffCode).isNull()
+    assertThat(migratedBooking4.keyWorkerAssignedAt).isNull()
+    assertThat(migratedBooking4.application).isNull()
+    assertThat(migratedBooking4.offlineApplication!!.id).isEqualTo(offlineApplication.id)
+    assertThat(migratedBooking4.cancellationReason).isNull()
+    assertThat(migratedBooking4.cancellationOccurredAt).isNull()
+    assertThat(migratedBooking4.cancellationRecordedAt).isNull()
+    assertThat(migratedBooking4.cancellationReasonNotes).isNull()
+    assertThat(migratedBooking4.departureReason).isNull()
+    assertThat(migratedBooking4.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking4.migratedFromBooking!!.id).isEqualTo(booking4OfflineNoDomainEvent.id)
+    assertThat(migratedBooking4.criteria).isEmpty()
+    assertThat(migratedBooking4.deliusEventNumber).isNull()
   }
 
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {
