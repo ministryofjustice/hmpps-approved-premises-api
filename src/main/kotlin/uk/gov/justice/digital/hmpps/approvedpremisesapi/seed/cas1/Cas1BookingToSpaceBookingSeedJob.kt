@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.lang.Thread.sleep
 import java.time.Duration
 import java.util.UUID
@@ -95,6 +96,9 @@ class Cas1BookingToSpaceBookingSeedJob(
       log.error("Could not retrieve referral details from delius for booking $bookingId")
     }
 
+    val actualArrivalDateTime = referralDetails?.arrivedAt?.toInstant()
+    val actualDepartureDateTime = referralDetails?.departedAt?.toInstant()
+
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
         id = UUID.randomUUID(),
@@ -106,10 +110,10 @@ class Cas1BookingToSpaceBookingSeedJob(
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
-        actualArrivalDateTime = referralDetails?.arrivedAt?.toInstant(),
-        actualDepartureDateTime = referralDetails?.departedAt?.toInstant(),
-        canonicalArrivalDate = booking.arrivalDate,
-        canonicalDepartureDate = booking.departureDate,
+        actualArrivalDateTime = actualArrivalDateTime,
+        actualDepartureDateTime = actualDepartureDateTime,
+        canonicalArrivalDate = actualArrivalDateTime?.toLocalDate() ?: booking.arrivalDate,
+        canonicalDepartureDate = actualDepartureDateTime?.toLocalDate() ?: booking.departureDate,
         crn = booking.crn,
         keyWorkerStaffCode = null,
         keyWorkerName = null,
