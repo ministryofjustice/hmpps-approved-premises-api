@@ -4215,6 +4215,7 @@ components:
         - cas1_space_booking_list
         - cas1_space_booking_record_arrival
         - cas1_space_booking_record_departure
+        - cas1_space_booking_record_non_arrival
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_space_booking_withdraw

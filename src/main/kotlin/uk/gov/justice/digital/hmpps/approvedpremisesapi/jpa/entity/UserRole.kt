@@ -49,6 +49,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_SPACE_BOOKING_LIST,
       UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
       UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL,
       UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
       UserPermission.CAS1_SPACE_BOOKING_VIEW,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,

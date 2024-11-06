@@ -22,6 +22,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -43,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
@@ -106,6 +109,9 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var cancellationReasonRepository: CancellationReasonRepository
+
+  @MockK
+  private lateinit var nonArrivalReasonRepository: NonArrivalReasonRepository
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -602,6 +608,179 @@ class Cas1SpaceBookingServiceTest {
       assertThat(arrivalDateTime.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalArrivalDate)
       assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.expectedDepartureDate)
       assertThat(updatedExpectedDepartureDate).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
+    }
+  }
+
+  @Nested
+  inner class RecordNonArrival {
+
+    private val originalNonArrivalDate = LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC)
+
+    private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val recordedBy = UserEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val nonArrivalReason =
+      NonArrivalReasonEntityFactory()
+        .produce()
+
+    private val cas1NonArrival =
+      Cas1NonArrival(nonArrivalReason.id, "non arrival notes")
+
+    @Test
+    fun `Returns validation error if no premises with the given premisesId exists`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.premisesId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no booking with the given bookingId exists`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.bookingId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if no non arrival reason with the given reasonId exists`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.reasonId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking record already has a non arrival recorded with different data`() {
+      val existingSpaceBookingWithNonArrivalDate =
+        existingSpaceBooking.copy(
+          nonArrivalConfirmedAt = originalNonArrivalDate,
+          nonArrivalReason = nonArrivalReason,
+          nonArrivalNotes = "new non arrival notes",
+        )
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrivalDate
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("A non-arrival is already recorded for this Space Booking")
+    }
+
+    @Test
+    fun `Returns success if the space booking record already has a non arrival recorded with same data`() {
+      val existingSpaceBookingWithNonArrivalDate =
+        existingSpaceBooking.copy(
+          nonArrivalConfirmedAt = originalNonArrivalDate,
+          nonArrivalReason = nonArrivalReason,
+          nonArrivalNotes = cas1NonArrival.notes,
+        )
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrivalDate
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+    }
+
+    @Test
+    fun `Updates existing space booking with non arrival information and raises domain event`() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(any(), any(), any(), any()) } returns Unit
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
+      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
+      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
+      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
+      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
+      assertThat(existingSpaceBooking.actualDepartureDateTime).isEqualTo(updatedSpaceBooking.actualDepartureDateTime)
+      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
+      assertThat(existingSpaceBooking.keyWorkerStaffCode).isEqualTo(updatedSpaceBooking.keyWorkerStaffCode)
+      assertThat(existingSpaceBooking.keyWorkerAssignedAt).isEqualTo(updatedSpaceBooking.keyWorkerAssignedAt)
+      assertThat(existingSpaceBooking.expectedArrivalDate).isEqualTo(updatedSpaceBooking.expectedArrivalDate)
+
+      assertThat(nonArrivalReason).isEqualTo(updatedSpaceBooking.nonArrivalReason)
+      assertThat("non arrival notes").isEqualTo(updatedSpaceBooking.nonArrivalNotes)
+      assertThat(updatedSpaceBooking.nonArrivalConfirmedAt).isWithinTheLastMinute()
     }
   }
 
