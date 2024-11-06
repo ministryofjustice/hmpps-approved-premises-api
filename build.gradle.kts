@@ -1,14 +1,5 @@
 import org.apache.commons.io.FileUtils
 
-// temporary plugin downgrades. should be removed via CAS-453
-buildscript {
-  configurations.all {
-    resolutionStrategy {
-      force("org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin:11.6.1")
-    }
-  }
-}
-
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.22"
