@@ -152,6 +152,7 @@ class UserTransformer(
         UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
         UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
         UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL -> ApiUserPermission.spaceBookingRecordNonArrival
         UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.spaceBookingRecordKeyworker
         UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
         UserPermission.CAS1_SPACE_BOOKING_WITHDRAW -> ApiUserPermission.spaceBookingWithdraw

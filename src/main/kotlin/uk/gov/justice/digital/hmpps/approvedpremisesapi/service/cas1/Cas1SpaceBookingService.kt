@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
@@ -54,6 +56,7 @@ class Cas1SpaceBookingService(
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val staffMemberService: StaffMemberService,
   private val cancellationReasonRepository: CancellationReasonRepository,
+  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
 ) {
   @Transactional
   fun createNewBooking(
@@ -188,6 +191,59 @@ class Cas1SpaceBookingService(
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
       existingCas1SpaceBooking,
       previousExpectedDepartureOn,
+    )
+
+    success(result)
+  }
+
+  @Transactional
+  fun recordNonArrivalForBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1NonArrival: Cas1NonArrival,
+    recordedBy: UserEntity,
+  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+    if (premises == null) {
+      "$.premisesId" hasValidationError "doesNotExist"
+    }
+
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
+    if (existingCas1SpaceBooking == null) {
+      "$.bookingId" hasValidationError "doesNotExist"
+    }
+
+    val reason = nonArrivalReasonRepository.findByIdOrNull(cas1NonArrival.reason)
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    existingCas1SpaceBooking!!
+
+    if (existingCas1SpaceBooking.nonArrivalConfirmedAt != null) {
+      return if (existingCas1SpaceBooking.nonArrivalReason != reason || existingCas1SpaceBooking.nonArrivalNotes != cas1NonArrival.notes) {
+        existingCas1SpaceBooking.id hasConflictError "A non-arrival is already recorded for this Space Booking"
+      } else {
+        success(existingCas1SpaceBooking)
+      }
+    }
+
+    val cas1NonArrivalNotes = cas1NonArrival.notes
+    existingCas1SpaceBooking.nonArrivalConfirmedAt = OffsetDateTime.now().toInstant()
+    existingCas1SpaceBooking.nonArrivalReason = reason
+    existingCas1SpaceBooking.nonArrivalNotes = cas1NonArrivalNotes
+
+    val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
+
+    cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(
+      recordedBy,
+      existingCas1SpaceBooking,
+      reason!!,
+      cas1NonArrivalNotes,
     )
 
     success(result)

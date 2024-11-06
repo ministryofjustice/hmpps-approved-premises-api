@@ -11,15 +11,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDeparted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedDestination
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
@@ -47,7 +52,7 @@ class Cas1SpaceBookingManagementDomainEventService(
   ) {
     val domainEventId = UUID.randomUUID()
 
-    val premises = updatedCas1SpaceBooking.premises
+    val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(updatedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
@@ -79,19 +84,62 @@ class Cas1SpaceBookingManagementDomainEventService(
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
             deliusEventNumber = eventNumber,
-            premises = Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ),
+            premises = premises,
             applicationSubmittedOn = applicationSubmittedAt.toLocalDate(),
             keyWorker = keyWorker,
             arrivedAt = actualArrivalDate,
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
             previousExpectedDepartureOn = previousExpectedDepartureOn,
             notes = null,
+          ),
+        ),
+      ),
+    )
+  }
+
+  fun nonArrivalRecorded(
+    user: UserEntity,
+    updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    reason: NonArrivalReasonEntity,
+    notes: String?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = OffsetDateTime.now().toInstant()
+
+    val application = updatedCas1SpaceBooking.application
+    val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
+    val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
+    val staffUser = getStaffMemberDetails(user.deliusStaffCode)
+
+    domainEventService.savePersonNotArrivedEvent(
+      emit = false,
+      domainEvent = DomainEvent(
+        id = domainEventId,
+        applicationId = application!!.id,
+        crn = updatedCas1SpaceBooking.crn,
+        nomsNumber = offenderDetails?.nomsId,
+        occurredAt = eventOccurredAt,
+        cas1SpaceBookingId = updatedCas1SpaceBooking.id,
+        bookingId = null,
+        data = PersonNotArrivedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.personNotArrived,
+          eventDetails = PersonNotArrived(
+            applicationId = application!!.id,
+            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            bookingId = updatedCas1SpaceBooking.id,
+            personReference = PersonReference(
+              crn = updatedCas1SpaceBooking.crn,
+              noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
+            ),
+            deliusEventNumber = application!!.eventNumber,
+            premises = premises,
+            expectedArrivalOn = updatedCas1SpaceBooking.canonicalArrivalDate,
+            recordedBy = staffUser!!,
+            notes = notes,
+            reason = reason.name,
+            legacyReasonCode = reason.legacyDeliusReasonCode!!,
           ),
         ),
       ),
@@ -106,7 +154,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val domainEventId = UUID.randomUUID()
 
     val applicationId = departedCas1SpaceBooking.applicationIdForDomainEvent()
-    val premises = departedCas1SpaceBooking.premises
+    val premises = mapApprovedPremisesEntityToPremises(departedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
@@ -136,13 +184,7 @@ class Cas1SpaceBookingManagementDomainEventService(
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
             deliusEventNumber = eventNumber,
-            premises = Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ),
+            premises = premises,
             keyWorker = keyWorker!!,
             departedAt = actualDepartureDate,
             reason = departureReason.name,
@@ -176,7 +218,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventOccurredAt = OffsetDateTime.now().toInstant()
 
     val applicationId = updatedCas1SpaceBooking.applicationIdForDomainEvent()
-    val premises = updatedCas1SpaceBooking.premises
+    val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
@@ -203,13 +245,7 @@ class Cas1SpaceBookingManagementDomainEventService(
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
             deliusEventNumber = eventNumber,
-            premises = Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ),
+            premises = premises,
             previousKeyWorkerName = previousKeyWorkerName,
             assignedKeyWorkerName = assignedKeyWorkerName,
             arrivalDate = updatedCas1SpaceBooking.canonicalArrivalDate.toLocalDateTime().toLocalDate(),
@@ -256,6 +292,15 @@ class Cas1SpaceBookingManagementDomainEventService(
       }
     return offenderDetails
   }
+
+  private fun mapApprovedPremisesEntityToPremises(aPEntity: ApprovedPremisesEntity) =
+    Premises(
+      id = aPEntity.id,
+      name = aPEntity.name,
+      apCode = aPEntity.apCode,
+      legacyApCode = aPEntity.qCode,
+      localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
+    )
 
   fun Cas1SpaceBookingEntity.applicationIdForDomainEvent() = application?.id ?: offlineApplication!!.id
   fun Cas1SpaceBookingEntity.applicationSubmittedOnForDomainEvent() = application?.submittedAt ?: offlineApplication!!.createdAt

@@ -11,6 +11,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -264,6 +266,7 @@ class Cas1SpaceBookingTest {
   inner class SearchForSpaceBookings : InitialiseDatabasePerClassTestBase() {
     lateinit var premisesWithNoBooking: ApprovedPremisesEntity
     lateinit var premisesWithBookings: ApprovedPremisesEntity
+    lateinit var nonArrivalReason: NonArrivalReasonEntity
 
     lateinit var currentSpaceBooking1: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
@@ -271,6 +274,7 @@ class Cas1SpaceBookingTest {
     lateinit var upcomingSpaceBookingWithKeyWorker: Cas1SpaceBookingEntity
     lateinit var upcomingCancelledSpaceBooking: Cas1SpaceBookingEntity
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var nonArrivedSpaceBooking: Cas1SpaceBookingEntity
 
     lateinit var keyWorker: UserEntity
 
@@ -278,6 +282,11 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       val region = `Given a Probation Region`()
       keyWorker = `Given a User`().first
+
+      nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
+        withName("nonArrivalName")
+        withLegacyDeliusReasonCode("legacyDeliusCode")
+      }
 
       premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -367,6 +376,22 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(null)
         withCancellationOccurredAt(LocalDate.now())
       }
+
+      nonArrivedSpaceBooking = createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tier = "A") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2024-01-02"))
+        withExpectedDepartureDate(LocalDate.parse("2024-02-02"))
+        withActualArrivalDateTime(null)
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2024-01-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2024-02-02"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
+        withNonArrivalNotes("Non Arrival Notes")
+        withNonArrivalReason(nonArrivalReason)
+        withNonArrivalConfirmedAt(Instant.now())
+      }
     }
 
     private fun createSpaceBooking(
@@ -441,12 +466,13 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(5)
+      assertThat(response).hasSize(6)
       assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[4].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -461,8 +487,9 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(1)
+      assertThat(response).hasSize(2)
       assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[1].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -582,12 +609,13 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(5)
-      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[4].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response).hasSize(6)
+      assertThat(response[0].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[5].person.crn).isEqualTo("CRN_DEPARTED")
     }
 
     @Test
@@ -602,12 +630,13 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(5)
+      assertThat(response).hasSize(6)
       assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[4].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -640,7 +669,7 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(5)
+      assertThat(response).hasSize(6)
 
       assertThat(response[0].tier).isEqualTo("U")
       assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
@@ -656,6 +685,9 @@ class Cas1SpaceBookingTest {
 
       assertThat(response[4].tier).isEqualTo("A")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
+
+      assertThat(response[5].tier).isEqualTo("A")
+      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
   }
 
@@ -939,6 +971,159 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+    }
+  }
+
+  @Nested
+  inner class RecordNonArrival : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var nonArrivalReason: NonArrivalReasonEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      region = `Given a Probation Region`()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
+        withName("nonArrivalName")
+        withLegacyDeliusReasonCode("legacyDeliusCode")
+      }
+
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerAssignedAt(Instant.now())
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/non-arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NonArrival(
+            reason = nonArrivalReason.id,
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid offender CRN )`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = `Given a User`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      val unknownKeyWorker = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn("unknownCRN")
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(unknownKeyWorker.name)
+        withKeyworkerStaffCode(unknownKeyWorker.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/non-arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NonArrival(
+            reason = nonArrivalReason.id,
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Internal Server Error")
+        .jsonPath("status").isEqualTo(500)
+        .jsonPath("detail").isEqualTo("There was an unexpected problem")
+    }
+
+    @Test
+    fun `Recording non-arrival returns OK and creates a domain event`() {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = `Given a User`()
+      val (offender) = `Given an Offender`()
+      val (placementRequest) = `Given a Placement Request`(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("25")
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/non-arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NonArrival(
+            reason = nonArrivalReason.id,
+            notes = "non arrival reason notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.nonArrivalNotes).isEqualTo("non arrival reason notes")
+      assertThat(updatedSpaceBooking.nonArrivalReason).isEqualTo(nonArrivalReason)
+      assertThat(updatedSpaceBooking.nonArrivalConfirmedAt).isWithinTheLastMinute()
     }
   }
 
