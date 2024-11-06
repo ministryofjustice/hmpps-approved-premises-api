@@ -17,11 +17,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.User
 import java.time.ZonedDateTime
 import java.util.UUID
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(crn: String, bookingId: String, arrivedAt: ZonedDateTime?) =
+fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(
+  crn: String,
+  bookingId: String,
+  arrivedAt: ZonedDateTime?,
+  departedAt: ZonedDateTime?,
+) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/probation-case/$crn/referrals/$bookingId",
     responseBody = ReferralDetail(
       arrivedAt = arrivedAt,
+      departedAt = departedAt,
     ),
   )
 

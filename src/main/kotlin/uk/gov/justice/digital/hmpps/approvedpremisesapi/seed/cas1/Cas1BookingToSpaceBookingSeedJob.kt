@@ -15,7 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import java.lang.Thread.sleep
+import java.time.Duration
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -27,6 +30,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val domainEventRepository: DomainEventRepository,
   private val domainEventService: DomainEventService,
   private val userRepository: UserRepository,
+  private val deliusService: DeliusService,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
@@ -54,19 +58,20 @@ class Cas1BookingToSpaceBookingSeedJob(
     val bookingsToMigrateSize = bookingIds.size
     log.info("Have found $bookingsToMigrateSize bookings for premise ${premises.name}")
 
-    var migrated = 0
+    var migratedCount = 0
     bookingIds.forEach { bookingId ->
       try {
         migrateBooking(premises, bookingId)
-        migrated++
+        migratedCount++
       } catch (e: Throwable) {
         log.error("Error migrating booking $bookingId", e)
       }
     }
 
-    log.info("Have successfully migrated $migrated of $bookingsToMigrateSize bookings for premise ${premises.name}")
+    log.info("Have successfully migrated $migratedCount of $bookingsToMigrateSize bookings for premise ${premises.name}")
   }
 
+  @SuppressWarnings("MagicNumber")
   private fun migrateBooking(
     premises: ApprovedPremisesEntity,
     bookingId: UUID,
@@ -77,6 +82,18 @@ class Cas1BookingToSpaceBookingSeedJob(
     val offlineApplication = booking.offlineApplication
 
     val bookingMadeDomainEvent = getBookingMadeDomainEvent(bookingId)
+
+    val shouldExistInDelius = !booking.isCancelled
+    val referralDetails = if (shouldExistInDelius) {
+      sleep(Duration.ofMillis(50))
+      deliusService.getReferralDetails(booking)
+    } else {
+      null
+    }
+
+    if (shouldExistInDelius && referralDetails == null) {
+      log.error("Could not retrieve referral details from delius for booking $bookingId")
+    }
 
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
@@ -89,8 +106,8 @@ class Cas1BookingToSpaceBookingSeedJob(
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
-        actualArrivalDateTime = null,
-        actualDepartureDateTime = null,
+        actualArrivalDateTime = referralDetails?.arrivedAt?.toInstant(),
+        actualDepartureDateTime = referralDetails?.departedAt?.toInstant(),
         canonicalArrivalDate = booking.arrivalDate,
         canonicalDepartureDate = booking.departureDate,
         crn = booking.crn,

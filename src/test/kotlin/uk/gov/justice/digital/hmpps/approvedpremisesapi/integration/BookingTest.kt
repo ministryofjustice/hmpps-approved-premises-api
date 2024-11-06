@@ -2716,6 +2716,7 @@ class BookingTest : IntegrationTestBase() {
                 crn = booking.crn,
                 bookingId = booking.id.toString(),
                 arrivedAt = null,
+                departedAt = null,
               )
 
               webTestClient.post()

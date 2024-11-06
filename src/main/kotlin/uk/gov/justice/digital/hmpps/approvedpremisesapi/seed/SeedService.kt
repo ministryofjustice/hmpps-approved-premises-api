@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -236,6 +237,7 @@ class SeedService(
           getBean(DomainEventRepository::class),
           getBean(DomainEventService::class),
           getBean(UserRepository::class),
+          getBean(DeliusService::class),
         )
       }
 

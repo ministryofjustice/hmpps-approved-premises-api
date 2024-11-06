@@ -1825,6 +1825,7 @@ class WithdrawalTest : IntegrationTestBase() {
       crn = booking.crn,
       bookingId = booking.id.toString(),
       arrivedAt = if (hasArrivalInDelius) { ZonedDateTime.now() } else { null },
+      departedAt = null,
     )
 
     return booking
