@@ -4805,6 +4805,7 @@ components:
         - approved_premises_link_booking_to_placement_request
         - approved_premises_out_of_service_beds
         - approved_premises_cru_management_areas
+        - approved_premises_space_planning_dry_run
     MigrationJobRequest:
       type: object
       properties:
