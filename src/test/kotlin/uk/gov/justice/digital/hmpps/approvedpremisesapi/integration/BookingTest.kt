@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
@@ -3800,48 +3799,6 @@ class BookingTest : IntegrationTestBase() {
 
         assertCAS3AssessmentIsClosed(assessment)
       }
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
-    role: UserRole,
-  ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-      val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
-
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withQCode("QCODE")
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
-          }
-        }
-      }
-
-      val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
-
-      webTestClient.post()
-        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewNonarrival(
-            date = booking.arrivalDate,
-            reason = nonArrivalReason.id,
-            notes = "Notes",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-        .jsonPath("$.date").isEqualTo(booking.arrivalDate.toString())
-        .jsonPath("$.reason.id").isEqualTo(nonArrivalReason.id.toString())
-        .jsonPath("$.notes").isEqualTo("Notes")
     }
   }
 

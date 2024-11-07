@@ -10,8 +10,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrived
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -48,9 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -107,8 +102,6 @@ class BookingService(
   private val departureRepository: DepartureRepository,
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val nonArrivalRepository: NonArrivalRepository,
-  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val bedRepository: BedRepository,
   private val placementRequestRepository: PlacementRequestRepository,
@@ -117,7 +110,6 @@ class BookingService(
   private val premisesRepository: PremisesRepository,
   private val assessmentRepository: AssessmentRepository,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
-  @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
@@ -748,110 +740,6 @@ class BookingService(
     }
 
     return success(arrivalEntity)
-  }
-
-  fun createNonArrival(
-    user: UserEntity?,
-    booking: BookingEntity,
-    date: LocalDate,
-    reasonId: UUID,
-    notes: String?,
-  ) = validated<NonArrivalEntity> {
-    val occurredAt = OffsetDateTime.now()
-
-    if (booking.nonArrival != null) {
-      return generalError("This Booking already has a Non Arrival set")
-    }
-
-    if (booking.arrivalDate.isAfter(date)) {
-      "$.date" hasValidationError "afterBookingArrivalDate"
-    }
-
-    val reason = nonArrivalReasonRepository.findByIdOrNull(reasonId)
-    if (reason == null) {
-      "$.reason" hasValidationError "doesNotExist"
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-
-    val nonArrivalEntity = nonArrivalRepository.save(
-      NonArrivalEntity(
-        id = UUID.randomUUID(),
-        date = date,
-        notes = notes,
-        reason = reason!!,
-        booking = booking,
-        createdAt = occurredAt,
-      ),
-    )
-
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      val domainEventId = UUID.randomUUID()
-      val user = user as UserEntity
-
-      val offenderDetails = when (
-        val offenderDetailsResult = offenderService.getOffenderByCrn(
-          booking.crn,
-          user.deliusUsername,
-          user.hasQualification(UserQualification.LAO),
-        )
-      ) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
-        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
-      }
-
-      val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
-        is ClientResult.Success -> staffDetailsResult.body
-        is ClientResult.Failure -> staffDetailsResult.throwException()
-      }
-
-      val (applicationId, eventNumber, _) = getApplicationDetailsForBooking(booking)
-      val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-      domainEventService.savePersonNotArrivedEvent(
-        emit = !arrivedAndDepartedDomainEventsDisabled,
-        domainEvent = DomainEvent(
-          id = domainEventId,
-          applicationId = applicationId,
-          crn = booking.crn,
-          nomsNumber = offenderDetails.otherIds.nomsNumber,
-          occurredAt = date.toLocalDateTime().toInstant(),
-          bookingId = booking.id,
-          data = PersonNotArrivedEnvelope(
-            id = domainEventId,
-            timestamp = occurredAt.toInstant(),
-            eventType = EventType.personNotArrived,
-            eventDetails = PersonNotArrived(
-              applicationId = applicationId,
-              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-              bookingId = booking.id,
-              personReference = PersonReference(
-                crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-              ),
-              deliusEventNumber = eventNumber,
-              premises = Premises(
-                id = approvedPremises.id,
-                name = approvedPremises.name,
-                apCode = approvedPremises.apCode,
-                legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-              ),
-              expectedArrivalOn = booking.originalArrivalDate,
-              recordedBy = staffDetails.toStaffMember(),
-              notes = notes,
-              reason = reason.name,
-              legacyReasonCode = reason.legacyDeliusReasonCode!!,
-            ),
-          ),
-        ),
-      )
-    }
-
-    return success(nonArrivalEntity)
   }
 
   fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState {

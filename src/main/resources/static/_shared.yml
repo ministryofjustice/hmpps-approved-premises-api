@@ -917,20 +917,6 @@ components:
         - date
         - reason
         - createdAt
-    NewNonarrival:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-        reason:
-          type: string
-          format: uuid
-        notes:
-          type: string
-      required:
-        - date
-        - reason
     NewCancellation:
       type: object
       properties:

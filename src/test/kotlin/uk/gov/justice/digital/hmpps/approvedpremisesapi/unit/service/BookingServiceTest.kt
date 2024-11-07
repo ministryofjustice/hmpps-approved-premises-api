@@ -51,8 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -89,9 +87,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -157,11 +152,9 @@ class BookingServiceTest {
   private val mockExtensionRepository = mockk<ExtensionRepository>()
   private val mockDateChangeRepository = mockk<DateChangeRepository>()
   private val mockDepartureRepository = mockk<DepartureRepository>()
-  private val mockNonArrivalRepository = mockk<NonArrivalRepository>()
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
   private val mockDestinationProviderRepository = mockk<DestinationProviderRepository>()
-  private val mockNonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
   private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val mockBedRepository = mockk<BedRepository>()
   private val mockPlacementRequestRepository = mockk<PlacementRequestRepository>()
@@ -178,7 +171,7 @@ class BookingServiceTest {
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
-  fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
+  fun createBookingService(): BookingService {
     return BookingService(
       premisesService = mockPremisesService,
       staffMemberService = mockStaffMemberService,
@@ -195,10 +188,8 @@ class BookingServiceTest {
       extensionRepository = mockExtensionRepository,
       dateChangeRepository = mockDateChangeRepository,
       departureRepository = mockDepartureRepository,
-      nonArrivalRepository = mockNonArrivalRepository,
       departureReasonRepository = mockDepartureReasonRepository,
       moveOnCategoryRepository = mockMoveOnCategoryRepository,
-      nonArrivalReasonRepository = mockNonArrivalReasonRepository,
       cancellationReasonRepository = mockCancellationReasonRepository,
       bedRepository = mockBedRepository,
       placementRequestRepository = mockPlacementRequestRepository,
@@ -207,7 +198,6 @@ class BookingServiceTest {
       premisesRepository = mockPremisesRepository,
       assessmentRepository = mockAssessmentRepository,
       applicationUrlTemplate = "http://frontend/applications/#id",
-      arrivedAndDepartedDomainEventsDisabled = arrivedAndDepartedDomainEventsDisabled,
       userService = mockUserService,
       userAccessService = mockUserAccessService,
       assessmentService = mockAssessmentService,
@@ -219,8 +209,7 @@ class BookingServiceTest {
     )
   }
 
-  private val bookingService = createBookingService(arrivedAndDepartedDomainEventsDisabled = false)
-  private val bookingServiceWithArrivedAndDepartedDomainEventsDisabled = createBookingService(arrivedAndDepartedDomainEventsDisabled = true)
+  private val bookingService = createBookingService()
 
   private val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()
@@ -1076,369 +1065,6 @@ class BookingServiceTest {
       }
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
-  }
-
-  @Nested
-  inner class CreateNonArrival {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
-
-    @Test
-    fun `createNonArrival returns GeneralValidationError with correct message when Booking already has a NonArrival`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val nonArrivalEntity = NonArrivalEntityFactory()
-        .withBooking(bookingEntity)
-        .withYieldedReason { NonArrivalReasonEntityFactory().produce() }
-        .produce()
-
-      bookingEntity.nonArrival = nonArrivalEntity
-
-      val result = bookingService.createNonArrival(
-        user = UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-        booking = bookingEntity,
-        date = LocalDate.parse("2022-08-25"),
-        reasonId = UUID.randomUUID(),
-        notes = "notes",
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Non Arrival set")
-    }
-
-    @Test
-    fun `createNonArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
-      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
-
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-26"))
-        .withPremises(premises)
-        .produce()
-
-      every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns null
-
-      val result = bookingService.createNonArrival(
-        user = UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-        booking = bookingEntity,
-        date = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
-        notes = "notes",
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.date", "afterBookingArrivalDate"),
-        entry("$.reason", "doesNotExist"),
-      )
-    }
-
-    @Test
-    fun `createNonArrival returns Success with correct result when validation passed, does not save Domain Event when associated with Offline Application with no event number`() {
-      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
-
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-24"))
-        .withPremises(premises)
-        .withOfflineApplication(
-          OfflineApplicationEntityFactory()
-            .withEventNumber(null)
-            .produce(),
-        )
-        .produce()
-
-      val reasonEntity = NonArrivalReasonEntityFactory().produce()
-
-      every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
-      every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
-
-      val result = bookingService.createNonArrival(
-        user = UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-        booking = bookingEntity,
-        date = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
-        notes = "notes",
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify { mockDomainEventService wasNot Called }
-    }
-
-    @Test
-    fun `createNonArrival returns Success with correct result when validation passed, saves and emits Domain Event when associated with Online Application`() {
-      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withCrn(application.crn)
-        .withArrivalDate(LocalDate.parse("2022-08-24"))
-        .withPremises(premises)
-        .withApplication(application)
-        .produce()
-
-      val reasonEntity = NonArrivalReasonEntityFactory().produce()
-
-      every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
-      every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
-      val staffUserDetails = StaffDetailFactory.staffDetail()
-
-      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-
-      every { mockDomainEventService.savePersonNotArrivedEvent(any(), any()) } just Runs
-
-      val result = bookingService.createNonArrival(
-        user = user,
-        booking = bookingEntity,
-        date = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
-        notes = "notes",
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify(exactly = 1) {
-        mockDomainEventService.savePersonNotArrivedEvent(
-          emit = true,
-          domainEvent = match {
-            val data = it.data.eventDetails
-            val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
-
-            it.applicationId == application.id &&
-              it.crn == bookingEntity.crn &&
-              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-              it.bookingId == bookingEntity.id &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
-              data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
-              data.recordedBy == staffUserDetails.toStaffMember() &&
-              data.reason == reasonEntity.name &&
-              data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
-          },
-        )
-      }
-    }
-
-    @Test
-    fun `createNonArrival returns Success with correct result when validation passed, saves and emits Domain Event when associated with offline application with event number`() {
-      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber("123")
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withCrn(application.crn)
-        .withArrivalDate(LocalDate.parse("2022-08-24"))
-        .withPremises(premises)
-        .withOfflineApplication(application)
-        .produce()
-
-      val reasonEntity = NonArrivalReasonEntityFactory().produce()
-
-      every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
-      every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
-      val staffUserDetails = StaffDetailFactory.staffDetail()
-
-      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-
-      every { mockDomainEventService.savePersonNotArrivedEvent(any(), any()) } just Runs
-
-      val result = bookingService.createNonArrival(
-        user = user,
-        booking = bookingEntity,
-        date = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
-        notes = "notes",
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify(exactly = 1) {
-        mockDomainEventService.savePersonNotArrivedEvent(
-          emit = true,
-          domainEvent = match {
-            val data = it.data.eventDetails
-            val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
-
-            it.applicationId == application.id &&
-              it.crn == bookingEntity.crn &&
-              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
-              data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
-              data.recordedBy == staffUserDetails.toStaffMember() &&
-              data.reason == reasonEntity.name &&
-              data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
-          },
-        )
-      }
-    }
-
-    @Test
-    fun `createNonArrival returns Success, saves but does not emit domain event when associated with Application but arrivedAndDepartedDomainEventsDisabled is true`() {
-      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withCrn(application.crn)
-        .withArrivalDate(LocalDate.parse("2022-08-24"))
-        .withPremises(premises)
-        .withApplication(application)
-        .produce()
-
-      val reasonEntity = NonArrivalReasonEntityFactory().produce()
-
-      every { mockNonArrivalReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
-      every { mockNonArrivalRepository.save(any()) } answers { it.invocation.args[0] as NonArrivalEntity }
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
-      every {
-        mockOffenderService.getOffenderByCrn(
-          bookingEntity.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(offenderDetails)
-
-      val staffUserDetails = StaffDetailFactory.staffDetail()
-
-      every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-
-      every { mockDomainEventService.savePersonNotArrivedEvent(any(), any()) } just Runs
-
-      val result = bookingServiceWithArrivedAndDepartedDomainEventsDisabled.createNonArrival(
-        user = user,
-        booking = bookingEntity,
-        date = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
-        notes = "notes",
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify(exactly = 1) {
-        mockDomainEventService.savePersonNotArrivedEvent(
-          emit = false,
-          domainEvent = match {
-            val data = it.data.eventDetails
-            val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
-
-            it.applicationId == application.id &&
-              it.crn == bookingEntity.crn &&
-              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
-              it.bookingId == bookingEntity.id &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.premises == Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ) &&
-              data.expectedArrivalOn == bookingEntity.originalArrivalDate &&
-              data.recordedBy == staffUserDetails.toStaffMember() &&
-              data.reason == reasonEntity.name &&
-              data.legacyReasonCode == reasonEntity.legacyDeliusReasonCode
-          },
-        )
-      }
-    }
   }
 
   @Nested
