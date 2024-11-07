@@ -34,11 +34,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
@@ -85,7 +83,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
@@ -113,7 +110,6 @@ class PremisesController(
   private val bookingTransformer: BookingTransformer,
   private val lostBedsTransformer: LostBedsTransformer,
   private val arrivalTransformer: ArrivalTransformer,
-  private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val confirmationTransformer: ConfirmationTransformer,
   private val departureTransformer: DepartureTransformer,
@@ -491,32 +487,6 @@ class PremisesController(
     val arrival = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
-  }
-
-  override fun premisesPremisesIdBookingsBookingIdNonArrivalsPost(
-    premisesId: UUID,
-    bookingId: UUID,
-    body: NewNonarrival,
-  ): ResponseEntity<Nonarrival> {
-    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
-
-    val user = usersService.getUserForRequest()
-
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val result = bookingService.createNonArrival(
-      user = user,
-      booking = booking,
-      date = body.date,
-      reasonId = body.reason,
-      notes = body.notes,
-    )
-
-    val nonArrivalEntity = extractResultEntityOrThrow(result)
-
-    return ResponseEntity.ok(nonArrivalTransformer.transformJpaToApi(nonArrivalEntity))
   }
 
   override fun premisesPremisesIdBookingsBookingIdCancellationsPost(

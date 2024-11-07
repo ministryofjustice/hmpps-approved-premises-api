@@ -671,59 +671,6 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /premises/{premisesId}/bookings/{bookingId}/non-arrivals:
-    post:
-      tags:
-        - Operations on bookings
-      summary: Posts an non-arrival to a specified approved premises booking
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises the booking is related to
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: bookingId
-          in: path
-          description: ID of the booking
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: details of the non-arrival
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/NewNonarrival'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Nonarrival'
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid premises ID or booking ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
-      x-codegen-request-body-name: body
   /premises/{premisesId}/bookings/{bookingId}/cancellations:
     post:
       tags:
@@ -5335,20 +5282,6 @@ components:
         - date
         - reason
         - createdAt
-    NewNonarrival:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-        reason:
-          type: string
-          format: uuid
-        notes:
-          type: string
-      required:
-        - date
-        - reason
     NewCancellation:
       type: object
       properties:
