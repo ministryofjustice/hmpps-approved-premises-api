@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.lang.Thread.sleep
 import java.time.Duration
 import java.util.UUID
@@ -95,6 +97,9 @@ class Cas1BookingToSpaceBookingSeedJob(
       log.error("Could not retrieve referral details from delius for booking $bookingId")
     }
 
+    val actualArrivalDateTime = referralDetails?.arrivedAt?.toInstant()
+    val actualDepartureDateTime = referralDetails?.departedAt?.toInstant()
+
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
         id = UUID.randomUUID(),
@@ -106,10 +111,10 @@ class Cas1BookingToSpaceBookingSeedJob(
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
-        actualArrivalDateTime = referralDetails?.arrivedAt?.toInstant(),
-        actualDepartureDateTime = referralDetails?.departedAt?.toInstant(),
-        canonicalArrivalDate = booking.arrivalDate,
-        canonicalDepartureDate = booking.departureDate,
+        actualArrivalDateTime = actualArrivalDateTime,
+        actualDepartureDateTime = actualDepartureDateTime,
+        canonicalArrivalDate = actualArrivalDateTime?.toLocalDate() ?: booking.arrivalDate,
+        canonicalDepartureDate = actualDepartureDateTime?.toLocalDate() ?: booking.departureDate,
         crn = booking.crn,
         keyWorkerStaffCode = null,
         keyWorkerName = null,
@@ -120,7 +125,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         cancellationReasonNotes = booking.cancellation?.otherReason,
         departureMoveOnCategory = null,
         departureReason = null,
-        criteria = booking.placementRequest?.placementRequirements?.essentialCriteria?.toList() ?: emptyList(),
+        criteria = booking.getEssentialRoomCriteria(),
         nonArrivalReason = null,
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
@@ -131,6 +136,10 @@ class Cas1BookingToSpaceBookingSeedJob(
 
     log.info("Have migrated booking $bookingId to space booking ${spaceBooking.id}")
   }
+
+  private fun BookingEntity.getEssentialRoomCriteria() =
+    placementRequest?.placementRequirements?.essentialCriteria?.filter { it.isModelScopeRoom() }?.toList()
+      ?: emptyList()
 
   private fun getCreatedByUser(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): UserEntity {
     val createdByUsernameUpper =

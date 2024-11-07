@@ -112,8 +112,8 @@ object SpacePlanRenderer {
   private fun unplannedBookingDescription(booking: SpaceBooking): String {
     val result = StringBuilder()
     result.append(booking.label.bold())
-    if (booking.requiredCharacteristics.isNotEmpty()) {
-      result.append(booking.requiredCharacteristics.joinToString(prefix = "<br/>") { it.label })
+    if (booking.requiredRoomCharacteristics.isNotEmpty()) {
+      result.append(booking.requiredRoomCharacteristics.joinToString(prefix = "<br/>") { it.label })
     }
     return result.toString()
   }
