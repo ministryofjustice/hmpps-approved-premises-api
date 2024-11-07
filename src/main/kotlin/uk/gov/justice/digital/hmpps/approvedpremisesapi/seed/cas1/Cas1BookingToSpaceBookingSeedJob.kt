@@ -74,7 +74,6 @@ class Cas1BookingToSpaceBookingSeedJob(
     log.info("Have successfully migrated $migratedCount of $bookingsToMigrateSize bookings for premise ${premises.name}")
   }
 
-  @SuppressWarnings("MagicNumber")
   private fun migrateBooking(
     premises: ApprovedPremisesEntity,
     bookingId: UUID,
@@ -123,6 +122,7 @@ class Cas1BookingToSpaceBookingSeedJob(
     log.info("Have migrated booking $bookingId to space booking ${spaceBooking.id}")
   }
 
+  @SuppressWarnings("MagicNumber")
   private fun getManagementInfo(booking: BookingEntity): ManagementInfo? {
     val shouldExistInDelius = !booking.isCancelled
     val referralDetails = if (shouldExistInDelius) {
@@ -144,6 +144,14 @@ class Cas1BookingToSpaceBookingSeedJob(
       )
     }
 
+    if (booking.hasArrivals()) {
+      return ManagementInfo(
+        source = ManagementInfoSource.LegacyCas1,
+        arrivedAt = booking.arrival?.arrivalDateTime,
+        departedAt = booking.departure?.dateTime?.toInstant(),
+      )
+    }
+
     return null
   }
 
@@ -155,6 +163,7 @@ class Cas1BookingToSpaceBookingSeedJob(
 
   enum class ManagementInfoSource {
     Delius,
+    LegacyCas1,
   }
 
   private fun BookingEntity.getEssentialRoomCriteria() =
