@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offline Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
@@ -110,7 +111,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     }
 
     val offlineApplication = `Given an Offline Application`(
-      crn = "CRN3-offline",
+      crn = "CRN3",
       eventNumber = "75",
     )
     val booking3OfflineApplication = `Given a Booking for an Offline Application`(
@@ -177,9 +178,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.cancellationReasonNotes).isNull()
     assertThat(migratedBooking1.departureReason).isNull()
     assertThat(migratedBooking1.departureMoveOnCategory).isNull()
-    assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.criteria).containsOnly(roomCriteria1, roomCriteria2)
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
+    assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1DeliusManagementInfo.id)
+    assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking2 = premiseSpaceBookings[1]
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
@@ -203,9 +205,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.cancellationReasonNotes).isEqualTo("cancellation other reason")
     assertThat(migratedBooking2.departureReason).isNull()
     assertThat(migratedBooking2.departureMoveOnCategory).isNull()
-    assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.criteria).isEmpty()
     assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
+    assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
+    assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking3 = premiseSpaceBookings[2]
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
@@ -229,9 +232,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.cancellationReasonNotes).isNull()
     assertThat(migratedBooking3.departureReason).isNull()
     assertThat(migratedBooking3.departureMoveOnCategory).isNull()
-    assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
     assertThat(migratedBooking3.criteria).isEmpty()
     assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
+    assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
+    assertThat(migratedBooking3.migratedManagementInfoFrom).isNull()
 
     val migratedBooking4 = premiseSpaceBookings[3]
     assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
@@ -255,9 +259,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking4.cancellationReasonNotes).isNull()
     assertThat(migratedBooking4.departureReason).isNull()
     assertThat(migratedBooking4.departureMoveOnCategory).isNull()
-    assertThat(migratedBooking4.migratedFromBooking!!.id).isEqualTo(booking4OfflineNoDomainEvent.id)
     assertThat(migratedBooking4.criteria).isEmpty()
     assertThat(migratedBooking4.deliusEventNumber).isNull()
+    assertThat(migratedBooking4.migratedFromBooking!!.id).isEqualTo(booking4OfflineNoDomainEvent.id)
+    assertThat(migratedBooking4.migratedManagementInfoFrom).isNull()
   }
 
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {

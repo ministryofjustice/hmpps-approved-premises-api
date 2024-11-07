@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
@@ -197,13 +199,20 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "non_arrival_reason_id")
   var nonArrivalReason: NonArrivalReasonEntity?,
   var nonArrivalNotes: String?,
+  val deliusEventNumber: String?,
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "migrated_from_booking_id")
   val migratedFromBooking: BookingEntity?,
-  val deliusEventNumber: String?,
+  @Enumerated(EnumType.STRING)
+  val migratedManagementInfoFrom: ManagementInfoSource?,
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
   fun hasArrival() = actualArrivalDateTime != null
   override fun toString() = "Cas1SpaceBookingEntity:$id"
+}
+
+enum class ManagementInfoSource {
+  DELIUS,
+  LEGACY_CAS_1,
 }

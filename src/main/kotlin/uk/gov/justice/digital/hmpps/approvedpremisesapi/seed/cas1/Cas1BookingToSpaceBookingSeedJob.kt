@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -116,6 +117,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalNotes = null,
         migratedFromBooking = booking,
         deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
+        migratedManagementInfoFrom = managementInfo?.source?.entityEquivalent,
       ),
     )
 
@@ -138,7 +140,7 @@ class Cas1BookingToSpaceBookingSeedJob(
 
     if (referralDetails != null) {
       return ManagementInfo(
-        source = ManagementInfoSource.Delius,
+        source = SeedManagementInfoSource.Delius,
         arrivedAt = referralDetails.arrivedAt?.toInstant(),
         departedAt = referralDetails.departedAt?.toInstant(),
       )
@@ -146,7 +148,7 @@ class Cas1BookingToSpaceBookingSeedJob(
 
     if (booking.hasArrivals()) {
       return ManagementInfo(
-        source = ManagementInfoSource.LegacyCas1,
+        source = SeedManagementInfoSource.LegacyCas1,
         arrivedAt = booking.arrival?.arrivalDateTime,
         departedAt = booking.departure?.dateTime?.toInstant(),
       )
@@ -155,15 +157,17 @@ class Cas1BookingToSpaceBookingSeedJob(
     return null
   }
 
-  data class ManagementInfo(
-    val source: ManagementInfoSource,
+  private data class ManagementInfo(
+    val source: SeedManagementInfoSource,
     val arrivedAt: Instant?,
     val departedAt: Instant?,
   )
 
-  enum class ManagementInfoSource {
-    Delius,
-    LegacyCas1,
+  private enum class SeedManagementInfoSource(
+    val entityEquivalent: ManagementInfoSource,
+  ) {
+    Delius(ManagementInfoSource.DELIUS),
+    LegacyCas1(ManagementInfoSource.LEGACY_CAS_1),
   }
 
   private fun BookingEntity.getEssentialRoomCriteria() =

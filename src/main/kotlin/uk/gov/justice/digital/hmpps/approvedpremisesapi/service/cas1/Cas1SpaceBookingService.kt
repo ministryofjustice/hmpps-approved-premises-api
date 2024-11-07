@@ -130,8 +130,9 @@ class Cas1SpaceBookingService(
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         nonArrivalReason = null,
-        migratedFromBooking = null,
         deliusEventNumber = application.eventNumber,
+        migratedFromBooking = null,
+        migratedManagementInfoFrom = null,
       ),
     )
 
