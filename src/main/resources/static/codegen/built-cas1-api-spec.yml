@@ -6575,6 +6575,8 @@ components:
           type: string
         keyWorkerAllocation:
           $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+        status:
+          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
       required:
         - id
         - person
@@ -6588,6 +6590,19 @@ components:
         - canonicalDepartureDate
         - keyWorkerName
         - tier
+    Cas1SpaceBookingSummaryStatus:
+      type: string
+      enum:
+        - arrivingWithin6Weeks
+        - arrivingWithin2Weeks
+        - arrivingToday
+        - overdueArrival
+        - arrived
+        - notArrived
+        - departingWithin2Weeks
+        - departingToday
+        - overdueDeparture
+        - departed
     Cas1SpaceBookingResidency:
       type: string
       enum:

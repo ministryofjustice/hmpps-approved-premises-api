@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
@@ -35,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingRequirementsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -58,6 +60,9 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var userTransformer: UserTransformer
+
+  @MockK
+  private lateinit var spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer
 
   @InjectMockKs
   private lateinit var transformer: Cas1SpaceBookingTransformer
@@ -279,6 +284,7 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(
@@ -286,6 +292,11 @@ class Cas1SpaceBookingTransformerTest {
           crn = "the crn",
           canonicalArrivalDate = LocalDate.parse("2023-12-13"),
           canonicalDepartureDate = LocalDate.parse("2023-01-02"),
+          expectedArrivalDate = LocalDate.parse("2023-12-13"),
+          expectedDepartureDate = LocalDate.parse("2023-01-02"),
+          actualArrivalDateTime = null,
+          actualDepartureDateTime = null,
+          nonArrivalConfirmedAtDateTime = null,
           tier = "A",
           keyWorkerStaffCode = "the staff code",
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
@@ -302,6 +313,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
     }
 
     @Test
@@ -315,6 +327,7 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(
@@ -322,6 +335,11 @@ class Cas1SpaceBookingTransformerTest {
           crn = "the crn",
           canonicalArrivalDate = LocalDate.parse("2023-12-13"),
           canonicalDepartureDate = LocalDate.parse("2023-01-02"),
+          expectedArrivalDate = LocalDate.parse("2023-12-13"),
+          expectedDepartureDate = LocalDate.parse("2023-01-02"),
+          actualArrivalDateTime = null,
+          actualDepartureDateTime = null,
+          nonArrivalConfirmedAtDateTime = null,
           tier = "A",
           keyWorkerStaffCode = null,
           keyWorkerAssignedAt = null,
@@ -341,6 +359,11 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val crn: String,
   override val canonicalArrivalDate: LocalDate,
   override val canonicalDepartureDate: LocalDate,
+  override val expectedArrivalDate: LocalDate,
+  override val expectedDepartureDate: LocalDate,
+  override val actualArrivalDateTime: LocalDateTime?,
+  override val actualDepartureDateTime: LocalDateTime?,
+  override val nonArrivalConfirmedAtDateTime: LocalDateTime?,
   override val tier: String?,
   override val keyWorkerStaffCode: String?,
   override val keyWorkerAssignedAt: Instant?,

@@ -5,7 +5,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
@@ -43,6 +46,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.TestCaseForSpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -51,6 +56,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import java.util.stream.Stream
 
 class Cas1SpaceBookingTest {
 
@@ -263,12 +269,7 @@ class Cas1SpaceBookingTest {
   }
 
   @Nested
-  inner class SearchForSpaceBookings : InitialiseDatabasePerClassTestBase() {
-    lateinit var premisesWithNoBooking: ApprovedPremisesEntity
-    lateinit var premisesWithBookings: ApprovedPremisesEntity
-    lateinit var nonArrivalReason: NonArrivalReasonEntity
-
-    lateinit var currentSpaceBooking1: Cas1SpaceBookingEntity
+  inner class SearchForSpaceBookings : SpaceBookingIntegrationTestBase() {
     lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
     lateinit var upcomingSpaceBookingWithKeyWorker: Cas1SpaceBookingEntity
@@ -276,27 +277,9 @@ class Cas1SpaceBookingTest {
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
     lateinit var nonArrivedSpaceBooking: Cas1SpaceBookingEntity
 
-    lateinit var keyWorker: UserEntity
-
     @BeforeAll
     fun setupTestData() {
-      val region = `Given a Probation Region`()
-      keyWorker = `Given a User`().first
-
-      nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
-        withName("nonArrivalName")
-        withLegacyDeliusReasonCode("legacyDeliusCode")
-      }
-
-      premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
-
-      premisesWithBookings = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      super.setupRegionAndKeyWorkerAndPremises()
 
       currentSpaceBooking1 = createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tier = "A") {
         withPremises(premisesWithBookings)
@@ -391,39 +374,6 @@ class Cas1SpaceBookingTest {
         withNonArrivalNotes("Non Arrival Notes")
         withNonArrivalReason(nonArrivalReason)
         withNonArrivalConfirmedAt(Instant.now())
-      }
-    }
-
-    private fun createSpaceBooking(
-      crn: String,
-      firstName: String,
-      lastName: String,
-      tier: String,
-      configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
-    ): Cas1SpaceBookingEntity {
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`(offenderDetailsConfigBlock = {
-        withCrn(crn)
-        withFirstName(firstName)
-        withLastName(lastName)
-      },)
-      val (placementRequest) = `Given a Placement Request`(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        crn = offender.otherIds.crn,
-        name = "$firstName $lastName",
-        tier = tier,
-      )
-
-      return cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withPremises(premisesWithBookings)
-        withPlacementRequest(placementRequest)
-        withApplication(placementRequest.application)
-        withCreatedBy(user)
-
-        configuration.invoke(this)
       }
     }
 
@@ -688,6 +638,58 @@ class Cas1SpaceBookingTest {
 
       assertThat(response[5].tier).isEqualTo("A")
       assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+    }
+  }
+
+  @Nested
+  inner class StatusesForSpaceBooking : SpaceBookingIntegrationTestBase() {
+
+    @BeforeAll
+    fun setupTestData() {
+      super.setupRegionAndKeyWorkerAndPremises()
+    }
+
+    @ParameterizedTest
+    @MethodSource("spaceBookingSummaryStatusCases")
+    fun `Search generates the correct statuses`(
+      testCaseForSpaceBookingSummaryStatus: TestCaseForSpaceBookingSummaryStatus,
+      expectedResultStatus: Cas1SpaceBookingSummaryStatus,
+    ) {
+      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val crnForStatusTest = UUID.randomUUID().toString()
+
+      currentSpaceBooking1 = createSpaceBooking(crn = crnForStatusTest, firstName = "curt", lastName = "rent 1", tier = "A") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
+        withExpectedDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
+        withActualArrivalDateTime(testCaseForSpaceBookingSummaryStatus.actualArrivalDateTime?.toInstant(ZoneOffset.UTC))
+        withActualDepartureDateTime(testCaseForSpaceBookingSummaryStatus.actualDepartureDateTime?.toInstant(ZoneOffset.UTC))
+        withCanonicalArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
+        withCanonicalDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
+        withNonArrivalConfirmedAt(testCaseForSpaceBookingSummaryStatus.nonArrivalConfirmedAtDateTime?.toInstant(ZoneOffset.UTC))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      val result = response
+        .first { it.person.crn == crnForStatusTest }
+
+      assertThat(result.person.crn).isEqualTo(crnForStatusTest)
+      assertThat(result.status).isEqualTo(expectedResultStatus)
+    }
+
+    fun spaceBookingSummaryStatusCases(): Stream<Arguments> {
+      return Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
     }
   }
 
@@ -1400,7 +1402,7 @@ class Cas1SpaceBookingTest {
         withCruManagementArea(`Given a CAS1 CRU Management Area`())
       }
 
-      val placementApplication = placementApplicationFactory.produceAndPersist() {
+      val placementApplication = placementApplicationFactory.produceAndPersist {
         withCreatedByUser(placementApplicationCreator)
         withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist())
         withApplication(application)
@@ -1495,6 +1497,68 @@ class Cas1SpaceBookingTest {
       emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+    }
+  }
+}
+
+abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestBase() {
+  lateinit var premisesWithNoBooking: ApprovedPremisesEntity
+  lateinit var premisesWithBookings: ApprovedPremisesEntity
+  lateinit var nonArrivalReason: NonArrivalReasonEntity
+  lateinit var currentSpaceBooking1: Cas1SpaceBookingEntity
+
+  lateinit var keyWorker: UserEntity
+
+  protected fun setupRegionAndKeyWorkerAndPremises() {
+    val region = `Given a Probation Region`()
+    keyWorker = `Given a User`().first
+
+    nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
+      withName("nonArrivalName")
+      withLegacyDeliusReasonCode("legacyDeliusCode")
+    }
+
+    premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedProbationRegion { region }
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+    }
+
+    premisesWithBookings = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedProbationRegion { region }
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+    }
+  }
+
+  protected fun createSpaceBooking(
+    crn: String,
+    firstName: String,
+    lastName: String,
+    tier: String,
+    configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
+  ): Cas1SpaceBookingEntity {
+    val (user) = `Given a User`()
+    val (offender) = `Given an Offender`(offenderDetailsConfigBlock = {
+      withCrn(crn)
+      withFirstName(firstName)
+      withLastName(lastName)
+    },)
+    val (placementRequest) = `Given a Placement Request`(
+      placementRequestAllocatedTo = user,
+      assessmentAllocatedTo = user,
+      createdByUser = user,
+      crn = offender.otherIds.crn,
+      name = "$firstName $lastName",
+      tier = tier,
+    )
+
+    return cas1SpaceBookingEntityFactory.produceAndPersist {
+      withCrn(offender.otherIds.crn)
+      withPremises(premisesWithBookings)
+      withPlacementRequest(placementRequest)
+      withApplication(placementRequest.application)
+      withCreatedBy(user)
+
+      configuration.invoke(this)
     }
   }
 }

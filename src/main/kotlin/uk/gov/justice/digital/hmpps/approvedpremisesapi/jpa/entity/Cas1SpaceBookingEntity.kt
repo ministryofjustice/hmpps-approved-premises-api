@@ -18,6 +18,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -34,6 +35,11 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.crn as crn,
       b.canonical_arrival_date as canonicalArrivalDate,
       b.canonical_departure_date as canonicalDepartureDate,
+      b.expected_arrival_date as expectedArrivalDate,
+      b.expected_departure_date as expectedDepartureDate,
+      b.actual_arrival_date_time as actualArrivalDateTime,
+      b.actual_departure_date_time as actualDepartureDateTime,
+      b.non_arrival_confirmed_at as nonArrivalConfirmedAtDateTime,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       b.key_worker_staff_code as keyWorkerStaffCode,
       b.key_worker_assigned_at as keyWorkerAssignedAt,
@@ -116,6 +122,11 @@ interface Cas1SpaceBookingSearchResult {
   val crn: String
   val canonicalArrivalDate: LocalDate
   val canonicalDepartureDate: LocalDate
+  val expectedArrivalDate: LocalDate
+  val expectedDepartureDate: LocalDate
+  val actualArrivalDateTime: LocalDateTime?
+  val actualDepartureDateTime: LocalDateTime?
+  val nonArrivalConfirmedAtDateTime: LocalDateTime?
   val tier: String?
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
