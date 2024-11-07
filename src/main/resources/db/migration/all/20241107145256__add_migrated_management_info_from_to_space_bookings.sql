@@ -1,0 +1,1 @@
+ALTER TABLE cas1_space_bookings ADD migrated_management_info_from TEXT NULL;

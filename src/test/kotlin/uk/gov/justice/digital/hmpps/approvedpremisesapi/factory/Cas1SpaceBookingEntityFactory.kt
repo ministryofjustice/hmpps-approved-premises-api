@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -49,6 +50,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
   private var nonArrivalNotes: Yielded<String?> = { null }
   private var migratedFromBooking: Yielded<BookingEntity?> = { null }
+  private var migratedManagementInfoFrom: Yielded<ManagementInfoSource?> = { null }
   private var deliusEventNumber: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
@@ -233,7 +235,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     nonArrivalConfirmedAt = this.nonArrivalConfirmedAt(),
     nonArrivalNotes = this.nonArrivalNotes(),
     nonArrivalReason = this.nonArrivalReason(),
-    migratedFromBooking = this.migratedFromBooking(),
     deliusEventNumber = this.deliusEventNumber(),
+    migratedFromBooking = this.migratedFromBooking(),
+    migratedManagementInfoFrom = this.migratedManagementInfoFrom(),
   )
 }
