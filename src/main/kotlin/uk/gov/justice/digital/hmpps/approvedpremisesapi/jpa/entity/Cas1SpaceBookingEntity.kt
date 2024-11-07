@@ -200,6 +200,15 @@ data class Cas1SpaceBookingEntity(
   var nonArrivalReason: NonArrivalReasonEntity?,
   var nonArrivalNotes: String?,
   val deliusEventNumber: String?,
+  /**
+   * If true, the booking should be treated as departed
+   *
+   * This is typically only true on space bookings migrated from legacy
+   * bookings table where departure information wasn't available, and the
+   * departure date was significantly enough in the past at the point
+   * of migration
+   */
+  val assumedDeparted: Boolean,
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "migrated_from_booking_id")
   val migratedFromBooking: BookingEntity?,

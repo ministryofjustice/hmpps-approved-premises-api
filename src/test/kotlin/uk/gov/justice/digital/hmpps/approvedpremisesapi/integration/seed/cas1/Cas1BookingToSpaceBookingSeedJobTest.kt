@@ -180,6 +180,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.departureMoveOnCategory).isNull()
     assertThat(migratedBooking1.criteria).containsOnly(roomCriteria1, roomCriteria2)
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
+    assertThat(migratedBooking1.assumedDeparted).isEqualTo(false)
     assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
@@ -207,6 +208,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.departureMoveOnCategory).isNull()
     assertThat(migratedBooking2.criteria).isEmpty()
     assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
+    assertThat(migratedBooking2.assumedDeparted).isEqualTo(false)
     assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
@@ -234,6 +236,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.departureMoveOnCategory).isNull()
     assertThat(migratedBooking3.criteria).isEmpty()
     assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
+    assertThat(migratedBooking3.assumedDeparted).isEqualTo(false)
     assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
     assertThat(migratedBooking3.migratedManagementInfoFrom).isNull()
 
@@ -261,6 +264,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking4.departureMoveOnCategory).isNull()
     assertThat(migratedBooking4.criteria).isEmpty()
     assertThat(migratedBooking4.deliusEventNumber).isNull()
+    assertThat(migratedBooking4.assumedDeparted).isEqualTo(false)
     assertThat(migratedBooking4.migratedFromBooking!!.id).isEqualTo(booking4OfflineNoDomainEvent.id)
     assertThat(migratedBooking4.migratedManagementInfoFrom).isNull()
   }

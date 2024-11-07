@@ -52,6 +52,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var migratedFromBooking: Yielded<BookingEntity?> = { null }
   private var migratedManagementInfoFrom: Yielded<ManagementInfoSource?> = { null }
   private var deliusEventNumber: Yielded<String?> = { null }
+  private var assumedDeparted: Yielded<Boolean> = { false }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -236,6 +237,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     nonArrivalNotes = this.nonArrivalNotes(),
     nonArrivalReason = this.nonArrivalReason(),
     deliusEventNumber = this.deliusEventNumber(),
+    assumedDeparted = this.assumedDeparted(),
     migratedFromBooking = this.migratedFromBooking(),
     migratedManagementInfoFrom = this.migratedManagementInfoFrom(),
   )

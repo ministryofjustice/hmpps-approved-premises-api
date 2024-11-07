@@ -342,6 +342,9 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.nonArrivalNotes).isNull()
       assertThat(persistedBooking.nonArrivalReason).isNull()
       assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
+      assertThat(persistedBooking.assumedDeparted).isFalse()
+      assertThat(persistedBooking.migratedFromBooking).isNull()
+      assertThat(persistedBooking.migratedManagementInfoFrom).isNull()
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
     }

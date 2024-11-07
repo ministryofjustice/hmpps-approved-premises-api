@@ -115,8 +115,9 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalReason = null,
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
-        migratedFromBooking = booking,
         deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
+        assumedDeparted = false,
+        migratedFromBooking = booking,
         migratedManagementInfoFrom = managementInfo?.source?.entityEquivalent,
       ),
     )
