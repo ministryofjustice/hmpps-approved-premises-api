@@ -39,31 +39,6 @@ class ReportsController(
   private val cas3ReportService: Cas3ReportService,
 ) : ReportsCas3Delegate {
 
-  override fun reportsReferralsGet(
-    xServiceName: ServiceName,
-    year: Int,
-    month: Int,
-    probationRegionId: UUID?,
-  ): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
-    validateParameters(probationRegionId, month)
-
-    val startDate = LocalDate.of(year, month, 1)
-    val endDate = LocalDate.of(year, month, startDate.month.length(startDate.isLeapYear))
-    val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
-
-    return when (xServiceName) {
-      ServiceName.temporaryAccommodation -> {
-        generateXlsxStreamingResponse { outputStream ->
-          cas3ReportService.createCas3ApplicationReferralsReport(properties, outputStream)
-        }
-      }
-      else -> throw UnsupportedOperationException("Only supported for CAS3")
-    }
-  }
-
   override fun reportsReportNameGet(
     reportName: Cas3ReportType,
     startDate: LocalDate,
@@ -162,14 +137,6 @@ class ReportsController(
           outputStream,
         )
       }
-    }
-  }
-
-  private fun validateParameters(probationRegionId: UUID?, month: Int) {
-    validateUserAccessibility(probationRegionId)
-
-    if (month < 1 || month > 12) {
-      throw BadRequestProblem(errorDetail = "month must be between 1 and 12")
     }
   }
 

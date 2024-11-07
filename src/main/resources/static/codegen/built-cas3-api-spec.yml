@@ -7,45 +7,6 @@ info:
 servers:
   - url: /cas3
 paths:
-  /reports/referrals:
-    get:
-      tags:
-        - CAS3 Reports
-      summary: Returns a spreadsheet of all cas3 referrals for specified duration and (optional) region
-      parameters:
-        - name: X-Service-Name
-          in: header
-          required: true
-          description: Only bookings for this service will be returned
-          schema:
-            $ref: '#/components/schemas/ServiceName'
-        - name: probationRegionId
-          in: query
-          required: false
-          description: If provided, only bookings for this region will be returned
-          schema:
-            type: string
-            format: uuid
-        - name: year
-          in: query
-          required: true
-          description: If provided, only bookings for this year will be returned
-          schema:
-            type: integer
-        - name: month
-          in: query
-          required: true
-          description: If provided, only bookings for this month will be returned - must be provided with year
-          schema:
-            type: integer
-      responses:
-        200:
-          description: Successfully retrieved the report
-          content:
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-              schema:
-                type: string
-                format: binary
   /reports/{reportName}:
     get:
       tags:
