@@ -68,6 +68,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.nio.file.Path
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
 
@@ -250,9 +252,12 @@ class SeedService(
         )
       }
 
+      val seedStarted = LocalDateTime.now()
+
       transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
 
-      seedLogger.info("Seed request complete")
+      val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
+      seedLogger.info("Seed request complete. Took $timeTaken millis")
     } catch (exception: Exception) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }

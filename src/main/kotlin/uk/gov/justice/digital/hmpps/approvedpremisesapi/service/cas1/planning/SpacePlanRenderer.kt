@@ -26,6 +26,17 @@ object SpacePlanRenderer {
     output.appendLine("Space Plan for ${criteria.premises.name} from ${criteria.startDate} to ${criteria.endDate}")
     output.appendLine()
 
+    val daysWithUnplannedBookings = plan.dayPlans.filter { it.planningResult.unplanned.isNotEmpty() }
+
+    if (daysWithUnplannedBookings.isNotEmpty()) {
+      output.appendLine("There are ${daysWithUnplannedBookings.size} days with unplanned bookings:")
+      output.appendLine()
+      daysWithUnplannedBookings.forEach { unplannedDay ->
+        output.appendLine("${unplannedDay.day} has ${unplannedDay.planningResult.unplanned.size}")
+      }
+      output.appendLine()
+    }
+
     val headers =
       listOf(roomsHeader(plan)) +
         plan.dayPlans.map { dayHeader(it) }
