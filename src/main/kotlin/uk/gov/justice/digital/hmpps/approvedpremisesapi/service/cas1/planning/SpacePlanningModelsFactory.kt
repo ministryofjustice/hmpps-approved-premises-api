@@ -36,7 +36,7 @@ class SpacePlanningModelsFactory(
     }
 
   fun spaceBookingsForDay(day: LocalDate, premises: ApprovedPremisesEntity): List<SpaceBooking> =
-    spaceBookingRepository.findAllBookingsOnGivenDayForPremises(premises.id, day)
+    spaceBookingRepository.findAllBookingsOnGivenDayWithCriteria(premises.id, day)
       .map { booking ->
         SpaceBooking(
           id = booking.id,
