@@ -655,7 +655,7 @@ class Cas1SpaceBookingTest {
       testCaseForSpaceBookingSummaryStatus: TestCaseForSpaceBookingSummaryStatus,
       expectedResultStatus: Cas1SpaceBookingSummaryStatus,
     ) {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val crnForStatusTest = UUID.randomUUID().toString()
 
@@ -983,7 +983,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = `Given a Probation Region`()
+      region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -995,9 +995,9 @@ class Cas1SpaceBookingTest {
         withLegacyDeliusReasonCode("legacyDeliusCode")
       }
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1017,7 +1017,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/non-arrival")
@@ -1035,10 +1035,10 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid offender CRN )`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1081,11 +1081,11 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording non-arrival returns OK and creates a domain event`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1510,8 +1510,8 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
   lateinit var keyWorker: UserEntity
 
   protected fun setupRegionAndKeyWorkerAndPremises() {
-    val region = `Given a Probation Region`()
-    keyWorker = `Given a User`().first
+    val region = givenAProbationRegion()
+    keyWorker = givenAUser().first
 
     nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
       withName("nonArrivalName")
@@ -1536,13 +1536,13 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
     tier: String,
     configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
   ): Cas1SpaceBookingEntity {
-    val (user) = `Given a User`()
-    val (offender) = `Given an Offender`(offenderDetailsConfigBlock = {
+    val (user) = givenAUser()
+    val (offender) = givenAnOffender(offenderDetailsConfigBlock = {
       withCrn(crn)
       withFirstName(firstName)
       withLastName(lastName)
-    },)
-    val (placementRequest) = `Given a Placement Request`(
+    })
+    val (placementRequest) = givenAPlacementRequest(
       placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,

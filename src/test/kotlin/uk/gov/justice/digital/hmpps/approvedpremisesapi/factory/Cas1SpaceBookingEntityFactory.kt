@@ -73,20 +73,12 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.placementRequest = { placementRequest }
   }
 
-  fun withPlacementRequest(configuration: PlacementRequestEntityFactory.() -> Unit) = apply {
-    this.placementRequest = { PlacementRequestEntityFactory().apply(configuration).produce() }
-  }
-
   fun withYieldedPlacementRequest(placementRequest: Yielded<PlacementRequestEntity>) = apply {
     this.placementRequest = placementRequest
   }
 
   fun withCreatedBy(createdBy: UserEntity?) = apply {
     this.createdBy = { createdBy }
-  }
-
-  fun withCreatedBy(configuration: UserEntityFactory.() -> Unit) = apply {
-    this.createdBy = { UserEntityFactory().apply(configuration).produce() }
   }
 
   fun withYieldedCreatedBy(createdBy: Yielded<UserEntity>) = apply {
