@@ -99,13 +99,14 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     value =
     """
     SELECT b FROM Cas1SpaceBookingEntity b
+    LEFT JOIN FETCH b.criteria
     WHERE b.premises.id = :premisesId
     AND b.cancellationOccurredAt IS NULL 
     AND b.canonicalArrivalDate <= :day 
     AND b.canonicalDepartureDate > :day
   """,
   )
-  fun findAllBookingsOnGivenDayForPremises(premisesId: UUID, day: LocalDate): List<Cas1SpaceBookingEntity>
+  fun findAllBookingsOnGivenDayWithCriteria(premisesId: UUID, day: LocalDate): List<Cas1SpaceBookingEntity>
 }
 
 interface Cas1SpaceBookingSearchResult {

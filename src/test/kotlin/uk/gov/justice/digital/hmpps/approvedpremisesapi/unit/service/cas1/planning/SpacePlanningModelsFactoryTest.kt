@@ -309,7 +309,7 @@ class SpacePlanningModelsFactoryTest {
       val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
 
       every {
-        spaceBookingRepository.findAllBookingsOnGivenDayForPremises(
+        spaceBookingRepository.findAllBookingsOnGivenDayWithCriteria(
           premisesId = premises.id,
           day = LocalDate.of(2020, 4, 4),
         )
@@ -344,7 +344,7 @@ class SpacePlanningModelsFactoryTest {
       val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
 
       every {
-        spaceBookingRepository.findAllBookingsOnGivenDayForPremises(
+        spaceBookingRepository.findAllBookingsOnGivenDayWithCriteria(
           premisesId = premises.id,
           day = LocalDate.of(2020, 4, 4),
         )
