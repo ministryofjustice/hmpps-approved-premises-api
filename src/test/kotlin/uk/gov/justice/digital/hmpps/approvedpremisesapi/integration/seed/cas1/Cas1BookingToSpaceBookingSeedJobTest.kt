@@ -118,8 +118,8 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       crn = "CRN3",
       premises = premises,
       offlineApplication = offlineApplication,
-      arrivalDate = LocalDate.of(2024, 7, 1),
-      departureDate = LocalDate.of(2024, 7, 5),
+      arrivalDate = LocalDate.of(2024, 5, 1),
+      departureDate = LocalDate.of(2024, 5, 31),
     )
     val (booking3CreatedByUser) = `Given a User`()
     cas1BookingDomainEventSet.adhocBookingMade(
@@ -216,12 +216,12 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking3.placementRequest).isNull()
     assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
-    assertThat(migratedBooking3.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
-    assertThat(migratedBooking3.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
+    assertThat(migratedBooking3.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
+    assertThat(migratedBooking3.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 5, 31))
     assertThat(migratedBooking3.actualArrivalDateTime).isNull()
     assertThat(migratedBooking3.actualDepartureDateTime).isNull()
-    assertThat(migratedBooking3.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
-    assertThat(migratedBooking3.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
+    assertThat(migratedBooking3.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
+    assertThat(migratedBooking3.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 5, 31))
     assertThat(migratedBooking3.crn).isEqualTo("CRN3")
     assertThat(migratedBooking3.keyWorkerName).isNull()
     assertThat(migratedBooking3.keyWorkerStaffCode).isNull()
@@ -236,7 +236,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.departureMoveOnCategory).isNull()
     assertThat(migratedBooking3.criteria).isEmpty()
     assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
-    assertThat(migratedBooking3.assumedDeparted).isEqualTo(false)
+    assertThat(migratedBooking3.assumedDeparted).isEqualTo(true)
     assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
     assertThat(migratedBooking3.migratedManagementInfoFrom).isNull()
 

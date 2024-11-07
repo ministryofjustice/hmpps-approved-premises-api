@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.lang.Thread.sleep
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -43,6 +44,14 @@ class Cas1BookingToSpaceBookingSeedJob(
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  companion object Constants {
+    /**
+     * If a booking is migrated and departure information could not be found,
+     * AND its expected departure is before this date, we will assume it has been departed
+     */
+    val ASSUME_DEPARTED_THRESHOLD: LocalDate = LocalDate.of(2024, 6, 1)
+  }
 
   override fun deserializeRow(columns: Map<String, String>) = Cas1BookingToSpaceBookingSeedCsvRow(
     premisesId = UUID.fromString(columns["premises_id"]!!.trim()),
@@ -116,7 +125,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
-        assumedDeparted = false,
+        assumedDeparted = managementInfo?.departedAt == null && booking.departureDate.isBefore(ASSUME_DEPARTED_THRESHOLD),
         migratedFromBooking = booking,
         migratedManagementInfoFrom = managementInfo?.source?.entityEquivalent,
       ),
