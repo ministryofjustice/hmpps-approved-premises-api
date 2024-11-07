@@ -265,9 +265,9 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetReferralReport {
     @Test
     fun `Get CAS3 referral report returns 403 Forbidden if user does not have CAS3 role`() {
-      `Given a User` { _, jwt ->
+      `Given a User` { user, jwt ->
         webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2023&month=4")
+          .uri("/cas3/reports/referral?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
@@ -280,7 +280,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `Get CAS3 referral report returns 403 Forbidden if user role is CAS3_ASSESSOR role and the region is not allowed region`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
+          .uri("/cas3/reports/referral?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
@@ -289,775 +289,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get CAS3 referral report OK response if user role is CAS3_ASSESSOR and requested regionId is allowed region`() {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER and allow access to all region when no region is requested `() {
-      `Given a User`(roles = listOf(CAS3_REPORTER)) { _, jwt ->
-        webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2024&month=1")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER the request region not matched to user region`() {
-      `Given a User`(roles = listOf(CAS3_REPORTER)) { user, jwt ->
-        webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${UUID.randomUUID()}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral report returns 403 Forbidden if a user does not have the CAS3_ASSESSOR role`() {
-      `Given a User` { user, jwt ->
-        webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral report returns 400 if month is provided and not within 1-12`() {
-      `Given a User`(roles = listOf(CAS3_REPORTER)) { _, jwt ->
-        webTestClient.get()
-          .uri("/cas3/reports/referrals?year=2023&month=-1")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("month must be between 1 and 12")
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource
-    @NullSource
-    fun `Get CAS3 referral report successfully with single matching referral in the report with different 'assessmentDecision'`(
-      assessmentDecision: AssessmentDecision?,
-    ) {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withProbationRegion(user.probationRegion)
-            withApplicationSchema(applicationSchema)
-            withArrivalDate(LocalDate.now().randomDateAfter(14))
-            withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
-            withCreatedAt(OffsetDateTime.now())
-            withDutyToReferLocalAuthorityAreaName("London")
-            withDutyToReferSubmissionDate(LocalDate.now())
-            withHasHistoryOfArson(false)
-            withIsConcerningArsonBehaviour(true)
-            withIsDutyToReferSubmitted(true)
-            withHasRegisteredSexOffender(null)
-            withHasHistoryOfSexualOffence(false)
-            withIsConcerningSexualBehaviour(true)
-            withNeedsAccessibleProperty(true)
-            withRiskRatings {
-              withRoshRisks(
-                RiskWithStatus(
-                  value = RoshRisks(
-                    overallRisk = "High",
-                    riskToChildren = "Medium",
-                    riskToPublic = "Low",
-                    riskToKnownAdult = "High",
-                    riskToStaff = "High",
-                    lastUpdated = null,
-                  ),
-                ),
-              )
-            }
-            withPrisonNameAtReferral("HM Hounslow")
-            withPersonReleaseDate(LocalDate.now())
-            withProbationDeliveryUnit(user.probationDeliveryUnit)
-          }
-
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withDecision(assessmentDecision)
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            assessmentDecision?.let { withSubmittedAt(OffsetDateTime.now()) }
-            withRejectionRationale(if (REJECTED.name == assessmentDecision?.name) "some reason" else null)
-          }
-          assessment.schemaUpToDate = true
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual.size).isEqualTo(1)
-              assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0], "No")
-            }
-        }
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS3_ASSESSOR", "CAS3_REPORTER"])
-    fun `Get CAS3 referral successfully with multiple referrals in the report and filter by start and endDate period`(
-      userRole: UserRole,
-    ) {
-      `Given a User`(roles = listOf(userRole)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val assessmentInReview = createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3InReview,
-            LocalDate.parse("2024-01-01"),
-          )
-          val assessmentUnAllocated = createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3Unallocated,
-            LocalDate.parse("2024-01-31"),
-          )
-          val assessmentReadyToPlace = createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3ReadyToPlace,
-            LocalDate.parse("2024-01-15"),
-          )
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3ReadyToPlace,
-            LocalDate.parse("2024-02-15"),
-          )
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3ReadyToPlace,
-            LocalDate.parse("2023-12-15"),
-          )
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith { res ->
-              val actual = DataFrame
-                .readExcel(res.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual.size).isEqualTo(3)
-              assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(
-                assessmentInReview,
-                actual.find { it.referralId == assessmentInReview.application.id.toString() }!!,
-                "No",
-              )
-              assertCorrectReferralDetails(
-                assessmentUnAllocated,
-                actual.find { it.referralId == assessmentUnAllocated.application.id.toString() }!!,
-                "No",
-              )
-              assertCorrectReferralDetails(
-                assessmentReadyToPlace,
-                actual.find { it.referralId == assessmentReadyToPlace.application.id.toString() }!!,
-                "No",
-              )
-            }
-        }
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral successfully with referral has been offered with booking`() {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-            withProbationRegion(user.probationRegion)
-          }
-
-          val (premises, application) = createReferralAndAssessment(
-            user,
-            offenderDetails,
-            probationDeliveryUnit,
-            LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC),
-            LocalDate.now().randomDateAfter(30),
-            null,
-          )
-
-          bookingEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withCrn(offenderDetails.otherIds.crn)
-            withArrivalDate(LocalDate.of(2024, 1, 1))
-            withDepartureDate(LocalDate.of(2024, 1, 1))
-            withApplication(application)
-          }
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual.size).isEqualTo(1)
-              assertCorrectPersonDetail(caseSummary, actual[0])
-              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
-              assertThat(actual[0].town).isEqualTo(premises.town)
-              assertThat(actual[0].postCode).isEqualTo(premises.postcode)
-            }
-        }
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral report successfully with multiple assessment for single referral`() {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-            withProbationRegion(user.probationRegion)
-          }
-
-          val (premises, application) = createReferralAndAssessment(
-            user,
-            offenderDetails,
-            probationDeliveryUnit,
-            LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC),
-            LocalDate.now().randomDateAfter(30),
-            null,
-          )
-
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-          temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withApplication(application)
-            withAssessmentSchema(applicationSchema)
-            withDecision(REJECTED)
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            withSubmittedAt(OffsetDateTime.now())
-          }
-
-          bookingEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withCrn(offenderDetails.otherIds.crn)
-            withArrivalDate(LocalDate.of(2024, 1, 1))
-            withDepartureDate(LocalDate.of(2024, 1, 1))
-            withApplication(application)
-          }
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual.size).isEqualTo(2)
-              assertCorrectPersonDetail(caseSummary, actual[0])
-              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
-            }
-        }
-      }
-    }
-
-    @Test
-    fun `Get empty CAS3 referral report when no matching application found in DB`() {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3InReview,
-            LocalDate.parse("2024-01-01"),
-          )
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3Unallocated,
-            LocalDate.parse("2024-01-31"),
-          )
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3ReadyToPlace,
-            LocalDate.parse("2024-01-15"),
-          )
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3ReadyToPlace,
-            LocalDate.parse("2024-02-15"),
-          )
-          createTemporaryAccommodationAssessmentForStatus(
-            user,
-            offenderDetails,
-            cas3ReadyToPlace,
-            LocalDate.parse("2023-12-15"),
-          )
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2025&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual).isEmpty()
-            }
-        }
-      }
-    }
-
-    @ParameterizedTest
-    @ValueSource(
-      strings = [
-        "21b8569c-ef2e-4059-8676-323098d16aa5",
-        "11506230-49a8-48b5-bdf5-20f51324e8a5",
-        "a1c7d402-77b5-4335-a67b-eba6a71c70bf",
-        "88c3b8d5-77c8-4c52-84f0-ec9073e4df50",
-        "90e9d919-9a39-45cd-b405-7039b5640668",
-        "155ee6dc-ac2a-40d2-a350-90b63fb34a06",
-        "85799bf8-8b64-4903-9ab8-b08a77f1a9d3",
-      ],
-    )
-    fun `Get CAS3 referral report successfully with single matching referral in the report with different Referral Rejection Reasons`(
-      referralRejectionReasonId: UUID,
-    ) {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withProbationRegion(user.probationRegion)
-            withProbationDeliveryUnit(user.probationDeliveryUnit)
-            withApplicationSchema(applicationSchema)
-            withArrivalDate(LocalDate.now().randomDateAfter(14))
-            withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
-            withCreatedAt(OffsetDateTime.now())
-            withDutyToReferLocalAuthorityAreaName("London")
-            withDutyToReferSubmissionDate(LocalDate.now())
-            withHasHistoryOfArson(false)
-            withIsConcerningArsonBehaviour(true)
-            withIsDutyToReferSubmitted(true)
-            withHasRegisteredSexOffender(null)
-            withHasHistoryOfSexualOffence(false)
-            withIsConcerningSexualBehaviour(true)
-            withNeedsAccessibleProperty(true)
-            withRiskRatings {
-              withRoshRisks(
-                RiskWithStatus(
-                  value = RoshRisks(
-                    overallRisk = "High",
-                    riskToChildren = "Medium",
-                    riskToPublic = "Low",
-                    riskToKnownAdult = "High",
-                    riskToStaff = "High",
-                    lastUpdated = null,
-                  ),
-                ),
-              )
-            }
-            withPrisonNameAtReferral("HM Hounslow")
-            withPersonReleaseDate(LocalDate.now())
-          }
-
-          val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId)
-
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withDecision(REJECTED)
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
-            withRejectionRationale("some reason")
-            withReferralRejectionReason(referralRejectionReason!!)
-          }
-
-          if (referralRejectionReason?.id == UUID.fromString("85799bf8-8b64-4903-9ab8-b08a77f1a9d3")) {
-            assessment.referralRejectionReasonDetail = randomStringLowerCase(100)
-            temporaryAccommodationAssessmentRepository.save(assessment)
-          }
-
-          assessment.schemaUpToDate = true
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual.size).isEqualTo(1)
-              assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0], "Yes")
-            }
-
-          assertThat(referralRejectionReason).isNotNull()
-        }
-      }
-    }
-
-    @Test
-    fun `Get CAS3 referral report successfully with single matching referral in the report with type of prison release`() {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
-          val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withProbationRegion(user.probationRegion)
-            withProbationDeliveryUnit(user.probationDeliveryUnit)
-            withApplicationSchema(applicationSchema)
-            withArrivalDate(LocalDate.now().randomDateAfter(14))
-            withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
-            withCreatedAt(OffsetDateTime.now())
-            withDutyToReferLocalAuthorityAreaName("London")
-            withDutyToReferSubmissionDate(LocalDate.now())
-            withHasHistoryOfArson(false)
-            withIsConcerningArsonBehaviour(true)
-            withIsDutyToReferSubmitted(true)
-            withHasRegisteredSexOffender(null)
-            withHasHistoryOfSexualOffence(false)
-            withIsConcerningSexualBehaviour(true)
-            withNeedsAccessibleProperty(true)
-            withPrisonReleaseTypes(prisonReleaseTypes)
-            withRiskRatings {
-              withRoshRisks(
-                RiskWithStatus(
-                  value = RoshRisks(
-                    overallRisk = "High",
-                    riskToChildren = "Medium",
-                    riskToPublic = "Low",
-                    riskToKnownAdult = "High",
-                    riskToStaff = "High",
-                    lastUpdated = null,
-                  ),
-                ),
-              )
-            }
-            withPrisonNameAtReferral("HM Hounslow")
-            withPersonReleaseDate(LocalDate.now())
-          }
-
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withDecision(REJECTED)
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
-            withRejectionRationale("some reason")
-          }
-
-          assessment.schemaUpToDate = true
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient.get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                .toList()
-
-              assertThat(actual.size).isEqualTo(1)
-              assertCorrectPersonDetail(caseSummary, actual[0])
-              assertCorrectReferralDetails(assessment, actual[0], "No")
-              assertThat(prisonReleaseTypes).isEqualTo(actual[0].prisonReleaseType)
-            }
-        }
-      }
-    }
-
-    @Test
-    fun `CAS3 referral report shows updatedReleaseDate and updatedAccommodationRequiredFrom dates in report when they have been updated`() {
-      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val applicationSchema =
-            temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
-
-          val assessmentSchema =
-            temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-              withAddedAt(OffsetDateTime.now())
-            }
-
-          val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
-          val application =
-            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(user)
-              withProbationRegion(user.probationRegion)
-              withApplicationSchema(applicationSchema)
-              withArrivalDate(LocalDate.now().plusDays(1))
-              withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
-              withCreatedAt(OffsetDateTime.now())
-              withDutyToReferLocalAuthorityAreaName("London")
-              withDutyToReferSubmissionDate(LocalDate.now())
-              withHasHistoryOfArson(false)
-              withIsConcerningArsonBehaviour(true)
-              withIsDutyToReferSubmitted(true)
-              withHasRegisteredSexOffender(null)
-              withHasHistoryOfSexualOffence(false)
-              withIsConcerningSexualBehaviour(true)
-              withNeedsAccessibleProperty(true)
-              withPrisonReleaseTypes(prisonReleaseTypes)
-              withRiskRatings {
-                withRoshRisks(
-                  RiskWithStatus(
-                    value =
-                    RoshRisks(
-                      overallRisk = "High",
-                      riskToChildren = "Medium",
-                      riskToPublic = "Low",
-                      riskToKnownAdult = "High",
-                      riskToStaff = "High",
-                      lastUpdated = null,
-                    ),
-                  ),
-                )
-              }
-              withPrisonNameAtReferral("HM Hounslow")
-              withPersonReleaseDate(LocalDate.now())
-              withPdu("Probation Delivery Unit Test")
-            }
-
-          val assessment =
-            temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-              withApplication(application)
-              withAssessmentSchema(assessmentSchema)
-              withDecision(REJECTED)
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-              REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
-              withRejectionRationale("some reason")
-              withReleaseDate(LocalDate.now().plusDays(9))
-              withAccommodationRequiredFromDate(LocalDate.now().plusDays(10))
-            }
-
-          assessment.schemaUpToDate = true
-
-          ApDeliusContext_addResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-            user.deliusUsername,
-          )
-
-          webTestClient
-            .get()
-            .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val reportRow =
-                DataFrame
-                  .readExcel(it.responseBody!!.inputStream())
-                  .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
-                  .toList()[0]
-
-              assertThat(reportRow.releaseDate).isEqualTo(application.personReleaseDate)
-              assertThat(reportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate!!.toLocalDate())
-              assertThat(reportRow.updatedReleaseDate).isEqualTo(assessment.releaseDate)
-              assertThat(reportRow.updatedAccommodationRequiredFromDate).isEqualTo(assessment.accommodationRequiredFromDate)
-            }
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class GetReferralReportNew {
     @Test
     fun `Get CAS3 referral report OK response if user role is CAS3_ASSESSOR and requested regionId is allowed region`() {
       `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
@@ -1473,6 +704,324 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 .toList()
 
               assertThat(actual).isEmpty()
+            }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+      strings = [
+        "21b8569c-ef2e-4059-8676-323098d16aa5",
+        "11506230-49a8-48b5-bdf5-20f51324e8a5",
+        "a1c7d402-77b5-4335-a67b-eba6a71c70bf",
+        "88c3b8d5-77c8-4c52-84f0-ec9073e4df50",
+        "90e9d919-9a39-45cd-b405-7039b5640668",
+        "155ee6dc-ac2a-40d2-a350-90b63fb34a06",
+        "85799bf8-8b64-4903-9ab8-b08a77f1a9d3",
+      ],
+    )
+    fun `Get CAS3 referral report successfully with single matching referral in the report with different Referral Rejection Reasons`(
+      referralRejectionReasonId: UUID,
+    ) {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withProbationDeliveryUnit(user.probationDeliveryUnit)
+            withApplicationSchema(applicationSchema)
+            withArrivalDate(LocalDate.now().randomDateAfter(14))
+            withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
+            withCreatedAt(OffsetDateTime.now())
+            withDutyToReferLocalAuthorityAreaName("London")
+            withDutyToReferSubmissionDate(LocalDate.now())
+            withHasHistoryOfArson(false)
+            withIsConcerningArsonBehaviour(true)
+            withIsDutyToReferSubmitted(true)
+            withHasRegisteredSexOffender(null)
+            withHasHistoryOfSexualOffence(false)
+            withIsConcerningSexualBehaviour(true)
+            withNeedsAccessibleProperty(true)
+            withRiskRatings {
+              withRoshRisks(
+                RiskWithStatus(
+                  value = RoshRisks(
+                    overallRisk = "High",
+                    riskToChildren = "Medium",
+                    riskToPublic = "Low",
+                    riskToKnownAdult = "High",
+                    riskToStaff = "High",
+                    lastUpdated = null,
+                  ),
+                ),
+              )
+            }
+            withPrisonNameAtReferral("HM Hounslow")
+            withPersonReleaseDate(LocalDate.now())
+          }
+
+          val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId)
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(REJECTED)
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
+            withRejectionRationale("some reason")
+            withReferralRejectionReason(referralRejectionReason!!)
+          }
+
+          if (referralRejectionReason?.id == UUID.fromString("85799bf8-8b64-4903-9ab8-b08a77f1a9d3")) {
+            assessment.referralRejectionReasonDetail = randomStringLowerCase(100)
+            temporaryAccommodationAssessmentRepository.save(assessment)
+          }
+
+          assessment.schemaUpToDate = true
+
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/referral?startDate=2024-01-01&endDate=2024-01-30&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
+                .toList()
+
+              assertThat(actual.size).isEqualTo(1)
+              assertCorrectPersonDetail(caseSummary, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0], "Yes")
+            }
+
+          assertThat(referralRejectionReason).isNotNull()
+        }
+      }
+    }
+
+    @Test
+    fun `Get CAS3 referral report successfully with single matching referral in the report with type of prison release`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withProbationDeliveryUnit(user.probationDeliveryUnit)
+            withApplicationSchema(applicationSchema)
+            withArrivalDate(LocalDate.now().randomDateAfter(14))
+            withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
+            withCreatedAt(OffsetDateTime.now())
+            withDutyToReferLocalAuthorityAreaName("London")
+            withDutyToReferSubmissionDate(LocalDate.now())
+            withHasHistoryOfArson(false)
+            withIsConcerningArsonBehaviour(true)
+            withIsDutyToReferSubmitted(true)
+            withHasRegisteredSexOffender(null)
+            withHasHistoryOfSexualOffence(false)
+            withIsConcerningSexualBehaviour(true)
+            withNeedsAccessibleProperty(true)
+            withPrisonReleaseTypes(prisonReleaseTypes)
+            withRiskRatings {
+              withRoshRisks(
+                RiskWithStatus(
+                  value = RoshRisks(
+                    overallRisk = "High",
+                    riskToChildren = "Medium",
+                    riskToPublic = "Low",
+                    riskToKnownAdult = "High",
+                    riskToStaff = "High",
+                    lastUpdated = null,
+                  ),
+                ),
+              )
+            }
+            withPrisonNameAtReferral("HM Hounslow")
+            withPersonReleaseDate(LocalDate.now())
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(REJECTED)
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
+            withRejectionRationale("some reason")
+          }
+
+          assessment.schemaUpToDate = true
+
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/referral?startDate=2024-01-01&endDate=2024-01-30&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
+                .toList()
+
+              assertThat(actual.size).isEqualTo(1)
+              assertCorrectPersonDetail(caseSummary, actual[0])
+              assertCorrectReferralDetails(assessment, actual[0], "No")
+              assertThat(prisonReleaseTypes).isEqualTo(actual[0].prisonReleaseType)
+            }
+        }
+      }
+    }
+
+    @Test
+    fun `CAS3 referral report shows updatedReleaseDate and updatedAccommodationRequiredFrom dates in report when they have been updated`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          val applicationSchema =
+            temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+          val assessmentSchema =
+            temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+          val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
+          val application =
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withProbationRegion(user.probationRegion)
+              withApplicationSchema(applicationSchema)
+              withArrivalDate(LocalDate.now().plusDays(1))
+              withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
+              withCreatedAt(OffsetDateTime.now())
+              withDutyToReferLocalAuthorityAreaName("London")
+              withDutyToReferSubmissionDate(LocalDate.now())
+              withHasHistoryOfArson(false)
+              withIsConcerningArsonBehaviour(true)
+              withIsDutyToReferSubmitted(true)
+              withHasRegisteredSexOffender(null)
+              withHasHistoryOfSexualOffence(false)
+              withIsConcerningSexualBehaviour(true)
+              withNeedsAccessibleProperty(true)
+              withPrisonReleaseTypes(prisonReleaseTypes)
+              withRiskRatings {
+                withRoshRisks(
+                  RiskWithStatus(
+                    value =
+                    RoshRisks(
+                      overallRisk = "High",
+                      riskToChildren = "Medium",
+                      riskToPublic = "Low",
+                      riskToKnownAdult = "High",
+                      riskToStaff = "High",
+                      lastUpdated = null,
+                    ),
+                  ),
+                )
+              }
+              withPrisonNameAtReferral("HM Hounslow")
+              withPersonReleaseDate(LocalDate.now())
+              withPdu("Probation Delivery Unit Test")
+            }
+
+          val assessment =
+            temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+              withDecision(REJECTED)
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
+              withRejectionRationale("some reason")
+              withReleaseDate(LocalDate.now().plusDays(9))
+              withAccommodationRequiredFromDate(LocalDate.now().plusDays(10))
+            }
+
+          assessment.schemaUpToDate = true
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient
+            .get()
+            .uri("/cas3/reports/referral?startDate=2024-01-01&endDate=2024-01-30&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val reportRow =
+                DataFrame
+                  .readExcel(it.responseBody!!.inputStream())
+                  .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
+                  .toList()[0]
+
+              assertThat(reportRow.releaseDate).isEqualTo(application.personReleaseDate)
+              assertThat(reportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate!!.toLocalDate())
+              assertThat(reportRow.updatedReleaseDate).isEqualTo(assessment.releaseDate)
+              assertThat(reportRow.updatedAccommodationRequiredFromDate).isEqualTo(assessment.accommodationRequiredFromDate)
             }
         }
       }
