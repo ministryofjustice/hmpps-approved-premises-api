@@ -876,7 +876,6 @@ class Cas1SpaceBookingTest {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1NewArrival(
-            expectedDepartureDate = LocalDate.now().plusMonths(1),
             arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
           ),
         )
@@ -919,7 +918,6 @@ class Cas1SpaceBookingTest {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1NewArrival(
-            expectedDepartureDate = LocalDate.now().plusMonths(1),
             arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
           ),
         )
@@ -963,7 +961,6 @@ class Cas1SpaceBookingTest {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1NewArrival(
-            expectedDepartureDate = LocalDate.now().plusMonths(1),
             arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
           ),
         )
