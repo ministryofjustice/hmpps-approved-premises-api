@@ -174,23 +174,13 @@ class Cas1SpaceBookingService(
       return existingCas1SpaceBooking.id hasConflictError "An arrival is already recorded for this Space Booking"
     }
 
-    val previousExpectedDepartureOn =
-      if (existingCas1SpaceBooking.expectedDepartureDate != cas1NewArrival.expectedDepartureDate) {
-        existingCas1SpaceBooking.expectedDepartureDate
-      } else {
-        null
-      }
-
     existingCas1SpaceBooking.actualArrivalDateTime = cas1NewArrival.arrivalDateTime
     existingCas1SpaceBooking.canonicalArrivalDate = LocalDate.ofInstant(cas1NewArrival.arrivalDateTime, ZoneId.systemDefault())
-    existingCas1SpaceBooking.expectedDepartureDate = cas1NewArrival.expectedDepartureDate
-    existingCas1SpaceBooking.canonicalDepartureDate = cas1NewArrival.expectedDepartureDate
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
       existingCas1SpaceBooking,
-      previousExpectedDepartureOn,
     )
 
     success(result)

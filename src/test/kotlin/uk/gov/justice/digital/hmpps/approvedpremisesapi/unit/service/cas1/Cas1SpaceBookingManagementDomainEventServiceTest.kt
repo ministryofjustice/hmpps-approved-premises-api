@@ -210,29 +210,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       val data = domainEvent.data.eventDetails
       assertThat(data.keyWorker).isNull()
     }
-
-    @Test
-    fun `record arrival and emits domain event recognising change in expected departure date`() {
-      val spaceBooking = spaceBookingFactory.withApplication(application).produce()
-
-      val previousExpectedDepartureDate = departureDate.plusMonths(1)
-      service.arrivalRecorded(spaceBooking, previousExpectedDepartureDate)
-
-      val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
-
-      verify(exactly = 1) {
-        domainEventService.savePersonArrivedEvent(
-          capture(domainEventArgument),
-          emit = false,
-        )
-      }
-
-      val domainEvent = domainEventArgument.captured
-
-      val data = domainEvent.data.eventDetails
-      assertThat(data.previousExpectedDepartureOn).isEqualTo(previousExpectedDepartureDate)
-      assertThat(data.expectedDepartureOn).isEqualTo(departureDate)
-    }
   }
 
   @Nested

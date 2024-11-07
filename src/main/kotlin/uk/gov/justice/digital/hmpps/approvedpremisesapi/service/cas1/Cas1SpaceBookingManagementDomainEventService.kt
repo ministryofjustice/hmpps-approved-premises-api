@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -48,7 +47,6 @@ class Cas1SpaceBookingManagementDomainEventService(
 
   fun arrivalRecorded(
     updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
-    previousExpectedDepartureOn: LocalDate? = null,
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -89,7 +87,6 @@ class Cas1SpaceBookingManagementDomainEventService(
             keyWorker = keyWorker,
             arrivedAt = actualArrivalDate,
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
-            previousExpectedDepartureOn = previousExpectedDepartureOn,
             notes = null,
           ),
         ),
