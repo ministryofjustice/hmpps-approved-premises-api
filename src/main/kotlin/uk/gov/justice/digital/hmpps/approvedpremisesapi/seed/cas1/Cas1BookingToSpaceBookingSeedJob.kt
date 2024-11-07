@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.lang.Thread.sleep
 import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -82,23 +83,8 @@ class Cas1BookingToSpaceBookingSeedJob(
 
     val application = booking.application as ApprovedPremisesApplicationEntity?
     val offlineApplication = booking.offlineApplication
-
     val bookingMadeDomainEvent = getBookingMadeDomainEvent(bookingId)
-
-    val shouldExistInDelius = !booking.isCancelled
-    val referralDetails = if (shouldExistInDelius) {
-      sleep(Duration.ofMillis(50))
-      deliusService.getReferralDetails(booking)
-    } else {
-      null
-    }
-
-    if (shouldExistInDelius && referralDetails == null) {
-      log.error("Could not retrieve referral details from delius for booking $bookingId")
-    }
-
-    val actualArrivalDateTime = referralDetails?.arrivedAt?.toInstant()
-    val actualDepartureDateTime = referralDetails?.departedAt?.toInstant()
+    val managementInfo = getManagementInfo(booking)
 
     val spaceBooking = spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
@@ -111,10 +97,10 @@ class Cas1BookingToSpaceBookingSeedJob(
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
-        actualArrivalDateTime = actualArrivalDateTime,
-        actualDepartureDateTime = actualDepartureDateTime,
-        canonicalArrivalDate = actualArrivalDateTime?.toLocalDate() ?: booking.arrivalDate,
-        canonicalDepartureDate = actualDepartureDateTime?.toLocalDate() ?: booking.departureDate,
+        actualArrivalDateTime = managementInfo?.arrivedAt,
+        actualDepartureDateTime = managementInfo?.departedAt,
+        canonicalArrivalDate = managementInfo?.arrivedAt?.toLocalDate() ?: booking.arrivalDate,
+        canonicalDepartureDate = managementInfo?.departedAt?.toLocalDate() ?: booking.departureDate,
         crn = booking.crn,
         keyWorkerStaffCode = null,
         keyWorkerName = null,
@@ -135,6 +121,40 @@ class Cas1BookingToSpaceBookingSeedJob(
     )
 
     log.info("Have migrated booking $bookingId to space booking ${spaceBooking.id}")
+  }
+
+  private fun getManagementInfo(booking: BookingEntity): ManagementInfo? {
+    val shouldExistInDelius = !booking.isCancelled
+    val referralDetails = if (shouldExistInDelius) {
+      sleep(Duration.ofMillis(50))
+      deliusService.getReferralDetails(booking)
+    } else {
+      null
+    }
+
+    if (shouldExistInDelius && referralDetails == null) {
+      log.warn("Could not retrieve referral details from delius for booking ${booking.id}")
+    }
+
+    if (referralDetails != null) {
+      return ManagementInfo(
+        source = ManagementInfoSource.Delius,
+        arrivedAt = referralDetails.arrivedAt?.toInstant(),
+        departedAt = referralDetails.departedAt?.toInstant(),
+      )
+    }
+
+    return null
+  }
+
+  data class ManagementInfo(
+    val source: ManagementInfoSource,
+    val arrivedAt: Instant?,
+    val departedAt: Instant?,
+  )
+
+  enum class ManagementInfoSource {
+    Delius,
   }
 
   private fun BookingEntity.getEssentialRoomCriteria() =
