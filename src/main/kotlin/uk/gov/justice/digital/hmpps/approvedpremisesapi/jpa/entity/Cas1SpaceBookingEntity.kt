@@ -49,19 +49,22 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           (
             :residency = 'upcoming' AND 
             b.actual_arrival_date_time IS NULL AND 
-            b.non_arrival_confirmed_at IS NULL
+            b.non_arrival_confirmed_at IS NULL AND
+            b.assumed_departed = FALSE
           ) OR
           (
             :residency = 'current' AND 
             b.actual_arrival_date_time IS NOT NULL AND 
             b.actual_departure_date_time IS NULL AND 
-            b.non_arrival_confirmed_at IS NULL
+            b.non_arrival_confirmed_at IS NULL AND
+            b.assumed_departed = FALSE
           ) OR
           (
             :residency = 'historic' AND 
             (
                 b.actual_departure_date_time IS NOT NULL OR 
-                b.non_arrival_confirmed_at IS NOT NULL
+                b.non_arrival_confirmed_at IS NOT NULL OR
+                b.assumed_departed = TRUE
             )
           )
         ) 

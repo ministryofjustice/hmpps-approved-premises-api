@@ -208,6 +208,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.criteria = { criteria.toList() }
   }
 
+  fun withAssumedDeparted(assumedDeparted: Boolean) = apply {
+    this.assumedDeparted = { assumedDeparted }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
