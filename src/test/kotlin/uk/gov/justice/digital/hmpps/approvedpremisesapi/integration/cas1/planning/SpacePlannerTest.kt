@@ -151,7 +151,13 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
     ).isEqualTo(
       """
       Space Plan for Premises 1 from 2020-05-06 to 2020-05-10
-
+      
+      There are 3 days with unplanned bookings:
+      
+      2020-05-06 has 1
+      2020-05-07 has 2
+      2020-05-08 has 2
+      
       | Room (6)             | **2020-05-06**<br/>capacity: 6<br/>planned: 3<br/>unplanned: 1         | **2020-05-07**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 2         | **2020-05-08**<br/>capacity: 4<br/>planned: 3<br/>unplanned: 2         | **2020-05-09**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 0         | **2020-05-10**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 0         |
       | -------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
       | **Room 1 - Bed 1**   | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     |
