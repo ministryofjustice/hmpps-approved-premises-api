@@ -67,8 +67,8 @@ class UserEntityFactory : Factory<UserEntity> {
     this.name = { name }
   }
 
-  fun withDeliusUsername(deliusUsername: String) = apply {
-    this.deliusUsername = { deliusUsername }
+  fun withDeliusUsername(deliusUsername: String?) = apply {
+    this.deliusUsername = { deliusUsername!! }
   }
 
   fun withDeliusStaffCode(deliusStaffCode: String) = apply {

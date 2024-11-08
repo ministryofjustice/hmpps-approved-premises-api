@@ -47,6 +47,7 @@ class Cas1BackfillUserApArea(
             user,
             staffDetailsResult.body,
             ServiceName.approvedPremises,
+            user.deliusUsername,
           )
 
           log.info(

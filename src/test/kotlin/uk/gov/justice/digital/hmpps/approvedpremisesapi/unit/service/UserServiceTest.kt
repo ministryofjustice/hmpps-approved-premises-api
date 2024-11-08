@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -194,7 +195,7 @@ class UserServiceTest {
       val apAreaDefaultCruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
       val apArea = ApAreaEntityFactory().withDefaultCruManagementArea(apAreaDefaultCruManagementArea).produce()
 
-      every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
+      every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser, username) } returns apArea
 
       every { mockProbationDeliveryUnitRepository.findByDeliusCode(pduDeliusCode) } returns ProbationDeliveryUnitEntityFactory()
         .withProbationRegion(probationRegion)
@@ -317,7 +318,7 @@ class UserServiceTest {
 
       val apArea = ApAreaEntityFactory().produce()
 
-      every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
+      every { mockCas1ApAreaMappingService.determineApArea(probationRegion, deliusUser, username) } returns apArea
 
       assertThat(userService.getUserForRequest()).matches {
         it.name == "Jim Jimmerson"
@@ -837,7 +838,7 @@ class UserServiceTest {
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns clientResultSuccess
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) } returns regionMappingEntity
-      every { mockCas1ApAreaMappingService.determineApArea(any(), any()) } returns apArea
+      every { mockCas1ApAreaMappingService.determineApArea(any(), any(StaffDetail::class), any()) } returns apArea
       every { mockUserRepository.save(any()) } returnsArgument 0
       every { mockProbationDeliveryUnitRepository.findByDeliusCode(any()) } returns pdu
 

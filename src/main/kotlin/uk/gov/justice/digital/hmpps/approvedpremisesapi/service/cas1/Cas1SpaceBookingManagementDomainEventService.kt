@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -37,12 +39,19 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
+class Cas1SpaceBookingManagementDomainEventServiceConfig(
+  @Value("\${url-templates.frontend.application}") val applicationUrlTemplate: UrlTemplate,
+)
+
+@Service
 class Cas1SpaceBookingManagementDomainEventService(
   val domainEventService: DomainEventService,
   val offenderService: OffenderService,
   val communityApiClient: CommunityApiClient,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  private val cas1SpaceBookingManagementConfig: Cas1SpaceBookingManagementDomainEventServiceConfig,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val featureFlagService: FeatureFlagService,
 ) {
 
   fun arrivalRecorded(
@@ -75,7 +84,7 @@ class Cas1SpaceBookingManagementDomainEventService(
           eventType = EventType.personArrived,
           eventDetails = PersonArrived(
             applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
@@ -124,7 +133,7 @@ class Cas1SpaceBookingManagementDomainEventService(
           eventType = EventType.personNotArrived,
           eventDetails = PersonNotArrived(
             applicationId = application!!.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+            applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", application.id.toString()),
             bookingId = updatedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
@@ -174,7 +183,7 @@ class Cas1SpaceBookingManagementDomainEventService(
           eventType = EventType.personDeparted,
           eventDetails = PersonDeparted(
             applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = departedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = departedCas1SpaceBooking.crn,
@@ -235,7 +244,7 @@ class Cas1SpaceBookingManagementDomainEventService(
           eventType = EventType.bookingKeyWorkerAssigned,
           eventDetails = BookingKeyWorkerAssigned(
             applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
@@ -254,24 +263,31 @@ class Cas1SpaceBookingManagementDomainEventService(
   }
 
   private fun getStaffMemberDetails(staffCode: String?): StaffMember? {
-    val staffMember = staffCode?.let {
-      val staffMemberDetailsResult =
-        communityApiClient.getStaffUserDetailsForStaffCode(staffCode)
-      when (staffMemberDetailsResult) {
-        is ClientResult.Success -> {
-          val keyWorker = staffMemberDetailsResult.body
-          StaffMember(
-            staffCode = keyWorker.staffCode,
-            staffIdentifier = keyWorker.staffIdentifier,
-            forenames = keyWorker.staff.forenames,
-            surname = keyWorker.staff.surname,
-            username = null,
-          )
+    return if (featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled")) {
+      staffCode?.let {
+        when (val staffDetailResponse = apDeliusContextApiClient.getStaffDetailByStaffCode(staffCode)) {
+          is ClientResult.Success -> staffDetailResponse.body.toStaffMember()
+          is ClientResult.Failure -> staffDetailResponse.throwException()
         }
-        is ClientResult.Failure -> staffMemberDetailsResult.throwException()
+      }
+    } else {
+      staffCode?.let {
+        when (val staffMemberDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(staffCode)) {
+          is ClientResult.Success -> {
+            val keyWorker = staffMemberDetailsResult.body
+            StaffMember(
+              staffCode = keyWorker.staffCode,
+              staffIdentifier = keyWorker.staffIdentifier,
+              forenames = keyWorker.staff.forenames,
+              surname = keyWorker.staff.surname,
+              username = null,
+            )
+          }
+
+          is ClientResult.Failure -> staffMemberDetailsResult.throwException()
+        }
       }
     }
-    return staffMember
   }
 
   private fun getOffenderForCrn(offenderCrn: String): CaseSummary? {

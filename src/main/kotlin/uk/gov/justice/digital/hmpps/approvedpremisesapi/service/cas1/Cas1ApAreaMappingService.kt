@@ -45,7 +45,8 @@ class Cas1ApAreaMappingService(
   fun determineApArea(
     usersProbationRegion: ProbationRegionEntity,
     deliusUser: StaffDetail,
-  ): ApAreaEntity = determineApArea(usersProbationRegion, deliusUser.teamCodes(), deliusUser.username)
+    username: String,
+  ): ApAreaEntity = determineApArea(usersProbationRegion, deliusUser.teamCodes(), username)
 
   fun determineApArea(
     usersProbationRegion: ProbationRegionEntity,

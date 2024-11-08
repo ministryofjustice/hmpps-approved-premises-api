@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
@@ -22,7 +24,7 @@ object StaffDetailFactory {
     staffIdentifier: Long = randomInt(Int.MIN_VALUE, Int.MAX_VALUE).toLong(),
     teams: List<Team> = listOf(team()),
     probationArea: ProbationArea = probationArea(),
-    deliusUsername: String = randomStringUpperCase(10),
+    deliusUsername: String? = randomStringUpperCase(10),
     name: PersonName = PersonName(randomStringLowerCase(6), randomStringLowerCase(6), randomStringLowerCase(6)),
     code: String = randomStringUpperCase(10),
     active: Boolean = true,
@@ -52,3 +54,11 @@ object StaffDetailFactory {
   fun probationArea() =
     ProbationArea(code = randomStringUpperCase(10), description = randomStringMultiCaseWithNumbers(50))
 }
+
+fun StaffDetail.toStaffMemberWithoutUsername() = StaffWithoutUsernameUserDetails(
+  staffCode = this.code,
+  staffIdentifier = this.staffIdentifier,
+  staff = StaffNames(this.name.forenames(), this.name.surname),
+  teams = emptyList(),
+  probationArea = null,
+)

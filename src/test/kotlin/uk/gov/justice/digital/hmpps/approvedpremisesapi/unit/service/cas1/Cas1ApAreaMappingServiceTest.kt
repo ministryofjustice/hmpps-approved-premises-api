@@ -39,6 +39,7 @@ class Cas1ApAreaMappingServiceTest {
       val result = service.determineApArea(
         usersProbationRegion,
         staffUserDetails,
+        staffUserDetails.username!!,
       )
 
       assertThat(result).isEqualTo(usersProbationRegionApArea)
@@ -94,6 +95,7 @@ class Cas1ApAreaMappingServiceTest {
       val result = service.determineApArea(
         usersProbationRegion,
         staffUserDetails,
+        staffUserDetails.username!!,
       )
 
       assertThat(result).isEqualTo(retrievedApArea)
@@ -106,9 +108,10 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(null)
         .produce()
 
+      val username = "J_ALUCARD"
       val staffUserDetails =
         StaffDetailFactory.staffDetail(
-          deliusUsername = ("J_ALUCARD"),
+          deliusUsername = username,
           probationArea = ProbationArea(code = "N43", description = "description"),
           teams = emptyList(),
         )
@@ -119,6 +122,7 @@ class Cas1ApAreaMappingServiceTest {
       val result = service.determineApArea(
         usersProbationRegion,
         staffUserDetails,
+        username,
       )
 
       assertThat(result).isEqualTo(retrievedApArea)
@@ -132,8 +136,9 @@ class Cas1ApAreaMappingServiceTest {
         .withApArea(null)
         .produce()
 
+      val username = "J_ALUCARD"
       val staffUserDetails = StaffDetailFactory.staffDetail(
-        deliusUsername = ("J_ALUCARD"),
+        deliusUsername = username,
         probationArea = ProbationArea(code = "XYZ", description = "description"),
         teams =
         listOf(
@@ -146,6 +151,7 @@ class Cas1ApAreaMappingServiceTest {
         service.determineApArea(
           usersProbationRegion,
           staffUserDetails,
+          username,
         )
       }.hasMessage(
         "Internal Server Error: Could not find a delius team mapping for delius user J_ALUCARD " +
@@ -174,6 +180,7 @@ class Cas1ApAreaMappingServiceTest {
         service.determineApArea(
           usersProbationRegion,
           staffUserDetails,
+          staffUserDetails.username!!,
         )
       }.hasMessage(
         "Internal Server Error: Could not find AP Area for code Mids",

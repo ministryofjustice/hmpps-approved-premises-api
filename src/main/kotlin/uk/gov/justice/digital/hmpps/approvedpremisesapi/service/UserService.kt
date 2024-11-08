@@ -277,7 +277,7 @@ class UserService(
     is ClientResult.Failure -> clientResult.throwException()
     is ClientResult.Success -> {
       val staffDetail = clientResult.body
-      GetUserResponse.Success(updateUserEntity(user, staffDetail, forService))
+      GetUserResponse.Success(updateUserEntity(user, staffDetail, forService, user.deliusUsername))
     }
   }
 
@@ -310,6 +310,7 @@ class UserService(
     user: UserEntity,
     staffDetail: StaffDetail,
     forService: ServiceName,
+    username: String,
   ): UserEntity {
     user.name = staffDetail.name.deliusName()
     user.email = staffDetail.email
@@ -329,7 +330,7 @@ class UserService(
     }
 
     if (forService == ServiceName.approvedPremises) {
-      val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), staffDetail.username)
+      val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), username)
       user.apArea = apArea
       if (user.cruManagementAreaOverride == null) {
         user.cruManagementArea = apArea.defaultCruManagementArea
@@ -402,7 +403,7 @@ class UserService(
 
     val pduResult = findDeliusUserLastPdu(staffUserDetails)
 
-    val apArea = cas1ApAreaMappingService.determineApArea(staffProbationRegion, staffUserDetails)
+    val apArea = cas1ApAreaMappingService.determineApArea(staffProbationRegion, staffUserDetails, normalisedUsername)
 
     val savedUser = userRepository.save(
       UserEntity(
