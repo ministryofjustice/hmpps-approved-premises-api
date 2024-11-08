@@ -93,11 +93,6 @@ class Cas1LegacyManagerUserAccessTest {
     }
 
     @Test
-    fun `may view premises capacity`() {
-      assertThat(userAccessService.userCanViewPremisesCapacity(legacyManager, approvedPremises)).isTrue
-    }
-
-    @Test
     fun `may view premises staff`() {
       assertThat(userAccessService.userCanViewPremisesStaff(legacyManager, approvedPremises)).isTrue
     }

@@ -178,34 +178,6 @@ class ApplicationService(
     }
   }
 
-  fun getAllOfflineApplicationsForUsername(
-    deliusUsername: String,
-    serviceName: ServiceName,
-  ): List<OfflineApplicationEntity> {
-    val userEntity = userRepository.findByDeliusUsername(deliusUsername)
-      ?: return emptyList()
-
-    val applications =
-      if (
-        userEntity.hasAnyRole(
-          UserRole.CAS1_WORKFLOW_MANAGER,
-          UserRole.CAS1_ASSESSOR,
-          UserRole.CAS1_MATCHER,
-          UserRole.CAS1_MANAGER,
-        )
-      ) {
-        offlineApplicationRepository.findAllByService(serviceName.value)
-      } else {
-        emptyList()
-      }
-
-    val crns = applications.map { it.crn }.distinct()
-    val offendersAccess = offenderService.canAccessOffenders(deliusUsername, crns)
-    return applications.filter {
-      offendersAccess.containsKey(it.crn) && offendersAccess[it.crn] == true
-    }
-  }
-
   fun getApplicationForUsername(
     applicationId: UUID,
     userDistinguishedName: String,

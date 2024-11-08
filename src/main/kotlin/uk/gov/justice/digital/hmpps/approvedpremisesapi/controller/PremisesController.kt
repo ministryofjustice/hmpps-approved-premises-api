@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExtendedPremisesSummary
@@ -768,19 +767,6 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(lostBedCancellationTransformer.transformJpaToApi(cancellation))
-  }
-
-  override fun premisesPremisesIdCapacityGet(premisesId: UUID): ResponseEntity<List<DateCapacity>> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremisesCapacity(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(
-      premisesService.getDateCapacities(premises),
-    )
   }
 
   override fun premisesPremisesIdStaffGet(premisesId: UUID): ResponseEntity<List<StaffMember>> {
