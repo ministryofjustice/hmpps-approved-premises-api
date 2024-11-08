@@ -518,7 +518,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Returns conflict error if the space booking record already has an arrival date recorded`() {
+    fun `Returns conflict error if the space booking record already has an arrival date recorded that does not match the received arrival date or arrival time`() {
       val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(actualArrivalDateTime = originalArrivalDate)
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
@@ -534,6 +534,61 @@ class Cas1SpaceBookingServiceTest {
       result as CasResult.ConflictError
 
       assertThat(result.message).isEqualTo("An arrival is already recorded for this Space Booking")
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking record already has an arrival date recorded that matches the received arrival date but does not match the arrival time`() {
+      val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(
+        actualArrivalDateTime = originalArrivalDate,
+        canonicalArrivalDate = originalArrivalDate.toLocalDate(),
+      )
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(originalArrivalDate.plusMillis(1)),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("An arrival is already recorded for this Space Booking")
+    }
+
+    @Test
+    fun `Returns success if the space booking record already has an arrival date recorded that matches the received arrival date and arrival time`() {
+      val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(
+        actualArrivalDateTime = originalArrivalDate,
+        canonicalArrivalDate = originalArrivalDate.toLocalDate(),
+      )
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewArrival = Cas1NewArrival(originalArrivalDate),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val extractedResult = (result as CasResult.Success).value
+      assertThat(existingSpaceBookingWithArrivalDate.premises).isEqualTo(extractedResult.premises)
+      assertThat(existingSpaceBookingWithArrivalDate.placementRequest).isEqualTo(extractedResult.placementRequest)
+      assertThat(existingSpaceBookingWithArrivalDate.application).isEqualTo(extractedResult.application)
+      assertThat(existingSpaceBookingWithArrivalDate.createdAt).isEqualTo(extractedResult.createdAt)
+      assertThat(existingSpaceBookingWithArrivalDate.createdBy).isEqualTo(extractedResult.createdBy)
+      assertThat(existingSpaceBookingWithArrivalDate.actualDepartureDateTime).isEqualTo(extractedResult.actualDepartureDateTime)
+      assertThat(existingSpaceBookingWithArrivalDate.crn).isEqualTo(extractedResult.crn)
+      assertThat(existingSpaceBookingWithArrivalDate.keyWorkerStaffCode).isEqualTo(extractedResult.keyWorkerStaffCode)
+      assertThat(existingSpaceBookingWithArrivalDate.keyWorkerAssignedAt).isEqualTo(extractedResult.keyWorkerAssignedAt)
+      assertThat(existingSpaceBookingWithArrivalDate.expectedArrivalDate).isEqualTo(extractedResult.expectedArrivalDate)
+      assertThat(originalArrivalDate).isEqualTo(extractedResult.actualArrivalDateTime)
+      assertThat(originalArrivalDate.toLocalDate()).isEqualTo(extractedResult.canonicalArrivalDate)
     }
 
     @Test

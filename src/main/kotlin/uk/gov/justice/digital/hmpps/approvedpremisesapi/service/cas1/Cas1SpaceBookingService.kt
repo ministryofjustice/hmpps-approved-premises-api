@@ -172,7 +172,11 @@ class Cas1SpaceBookingService(
     existingCas1SpaceBooking!!
 
     if (existingCas1SpaceBooking.actualArrivalDateTime != null) {
-      return existingCas1SpaceBooking.id hasConflictError "An arrival is already recorded for this Space Booking"
+      return if (cas1NewArrival.arrivalDateTime == existingCas1SpaceBooking.actualArrivalDateTime) {
+        success(existingCas1SpaceBooking)
+      } else {
+        existingCas1SpaceBooking.id hasConflictError "An arrival is already recorded for this Space Booking"
+      }
     }
 
     existingCas1SpaceBooking.actualArrivalDateTime = cas1NewArrival.arrivalDateTime
