@@ -6,6 +6,7 @@ abstract class SeedJob<RowType> (
   val id: UUID = UUID.randomUUID(),
   val fileName: String,
   val requiredHeaders: Set<String>? = null,
+  val runInTransaction: Boolean = true,
 ) {
   init {
     if (fileName.contains("/") || fileName.contains("\\")) {
