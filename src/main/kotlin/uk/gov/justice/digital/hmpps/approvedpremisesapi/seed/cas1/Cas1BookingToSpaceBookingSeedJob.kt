@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -35,12 +36,14 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val domainEventService: DomainEventService,
   private val userRepository: UserRepository,
   private val deliusService: DeliusService,
+  private val transactionTemplate: TransactionTemplate,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
   requiredHeaders = setOf(
     "premises_id",
   ),
+  runInTransaction = false,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -48,10 +51,14 @@ class Cas1BookingToSpaceBookingSeedJob(
     premisesId = UUID.fromString(columns["premises_id"]!!.trim()),
   )
 
-  @SuppressWarnings("TooGenericExceptionCaught")
   override fun processRow(row: Cas1BookingToSpaceBookingSeedCsvRow) {
-    val premisesId = row.premisesId
+    transactionTemplate.executeWithoutResult {
+      migratePremise(row.premisesId)
+    }
+  }
 
+  @SuppressWarnings("TooGenericExceptionCaught")
+  private fun migratePremise(premisesId: UUID) {
     val premises = approvedPremisesRepository.findByIdOrNull(premisesId) ?: error("Premises with id $premisesId not found")
 
     log.info("Deleting all existing migrated space bookings for premises ${premises.name}")
@@ -128,7 +135,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private fun getManagementInfo(booking: BookingEntity): ManagementInfo? {
     val shouldExistInDelius = !booking.isCancelled
     val referralDetails = if (shouldExistInDelius) {
-      sleep(Duration.ofMillis(50))
+      sleep(Duration.ofMillis(20))
       deliusService.getReferralDetails(booking)
     } else {
       null

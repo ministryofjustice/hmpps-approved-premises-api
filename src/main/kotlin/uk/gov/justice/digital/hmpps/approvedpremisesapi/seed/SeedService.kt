@@ -243,6 +243,7 @@ class SeedService(
           getBean(DomainEventService::class),
           getBean(UserRepository::class),
           getBean(DeliusService::class),
+          getBean(TransactionTemplate::class),
         )
 
         SeedFileType.approvedPremisesSpacePlanningDryRun -> Cas1PlanSpacePlanningDryRunSeedJob(
@@ -254,7 +255,11 @@ class SeedService(
 
       val seedStarted = LocalDateTime.now()
 
-      transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
+      if (job.runInTransaction) {
+        transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
+      } else {
+        processJob(job, resolveCsvPath)
+      }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Seed request complete. Took $timeTaken millis")
