@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
-import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -9,12 +8,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockForbiddenOffenderSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockNotFoundSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockServerErrorSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockForbiddenOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockNotFoundSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockServerErrorSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
@@ -68,8 +67,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
 
       @Test
       fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
-        `Given a CAS2 POM User` { userEntity, jwt ->
-          ProbationOffenderSearchAPI_mockForbiddenOffenderSearchCall()
+        givenACas2PomUser { userEntity, jwt ->
+          probationOffenderSearchAPIMockForbiddenOffenderSearchCall()
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -82,7 +81,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
 
       @Test
       fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
-        `Given a CAS2 POM User` { userEntity, jwt ->
+        givenACas2PomUser { userEntity, jwt ->
 
           val offender = ProbationOffenderDetailFactory()
             .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
@@ -108,8 +107,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             )
             .produce()
 
-          ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
-          PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
+          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
+          prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS456")
@@ -122,8 +121,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
 
       @Test
       fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
-        `Given a CAS2 POM User` { userEntity, jwt ->
-          ProbationOffenderSearchAPI_mockNotFoundSearchCall()
+        givenACas2PomUser { userEntity, jwt ->
+          probationOffenderSearchAPIMockNotFoundSearchCall()
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -136,8 +135,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
 
       @Test
       fun `Searching for a NOMIS ID returns server error when there is a server error`() {
-        `Given a CAS2 POM User` { userEntity, jwt ->
-          ProbationOffenderSearchAPI_mockServerErrorSearchCall()
+        givenACas2PomUser { userEntity, jwt ->
+          probationOffenderSearchAPIMockServerErrorSearchCall()
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -153,7 +152,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     inner class WhenSuccessful {
       @Test
       fun `Searching for a NOMIS ID returns OK with correct body`() {
-        `Given a CAS2 POM User`(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { userEntity, jwt ->
+        givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { userEntity, jwt ->
           val offender = ProbationOffenderDetailFactory()
             .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
             .withFirstName("James")
@@ -178,8 +177,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             )
             .produce()
 
-          ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall("NOMS321", listOf(offender))
-          PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
+          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS321", listOf(offender))
+          prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")

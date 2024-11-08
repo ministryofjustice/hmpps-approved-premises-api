@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
 
@@ -49,7 +49,7 @@ class Cas1SimpleApiClient {
     id: UUID,
     body: NewWithdrawal,
   ) {
-    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/applications/$id/withdrawal")
@@ -65,7 +65,7 @@ class Cas1SimpleApiClient {
     applicationId: UUID,
     body: NewAppeal,
   ) {
-    val appealsManagerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)).second
+    val appealsManagerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/applications/$applicationId/appeals")
@@ -126,7 +126,7 @@ class Cas1SimpleApiClient {
     assessmentId: UUID,
     targetUserId: UUID,
   ) {
-    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/tasks/assessment/$assessmentId/allocations")
@@ -240,7 +240,7 @@ class Cas1SimpleApiClient {
     placementApplicationId: UUID,
     body: NewReallocation,
   ) {
-    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/tasks/placement-application/$placementApplicationId/allocations")
@@ -257,7 +257,7 @@ class Cas1SimpleApiClient {
     placementApplicationId: UUID,
     body: WithdrawPlacementApplication,
   ) {
-    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/placement-applications/$placementApplicationId/withdraw")
@@ -274,7 +274,7 @@ class Cas1SimpleApiClient {
     placementRequestId: UUID,
     body: WithdrawPlacementRequest,
   ) {
-    val managerJwt = integrationTestBase.`Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/placement-requests/$placementRequestId/withdrawal")

@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.util.UUID
@@ -17,7 +17,7 @@ import java.util.UUID
 class CacheClearTest : IntegrationTestBase() {
   @Test
   fun `Clearing a regular cache results in upstream calls being made again`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val premisesId = UUID.fromString("d687f947-ff80-431e-9c72-75f704730978")
       val qCode = "FOUND"
 
@@ -62,7 +62,7 @@ class CacheClearTest : IntegrationTestBase() {
       .produce()
 
     // Given a Booking for an Offender
-    CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+    communityAPIMockSuccessfulOffenderDetailsCall(offenderDetails)
     setupBookingForOffender(offenderDetails)
 
     // Then OffenderDetailsCacheRefreshWorker should pick up the CRN and preemptively load it
@@ -81,7 +81,7 @@ class CacheClearTest : IntegrationTestBase() {
 
   private fun setupBookingForOffender(offenderDetails: OffenderDetailSummary) {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(`Given a Probation Region`())
+      withProbationRegion(givenAProbationRegion())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
@@ -124,11 +124,11 @@ class CacheClearTest : IntegrationTestBase() {
     approvedPremisesEntityFactory.produceAndPersist {
       withId(premisesId)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
       withQCode(qCode)
     }
 
-    APDeliusContext_mockSuccessfulStaffMembersCall(ContextStaffMemberFactory().produce(), qCode)
+    apDeliusContextMockSuccessfulStaffMembersCall(ContextStaffMemberFactory().produce(), qCode)
   }
 
   private fun validateUpstreamOffenderDetailsRequestMade(crn: String, times: Int) =

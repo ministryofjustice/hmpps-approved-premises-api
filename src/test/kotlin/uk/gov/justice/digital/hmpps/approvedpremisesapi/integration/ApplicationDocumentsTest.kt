@@ -7,12 +7,12 @@ import org.springframework.http.ContentDisposition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFromDeliusApiFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockSuccessfulDocumentDownloadCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockSuccessfulDocumentsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentDownloadCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentDownloadCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulDocumentDownloadCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulDocumentsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
@@ -34,8 +34,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application documents - with get-documents-from-ap-delius feature-flag off - returns 200`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -67,7 +67,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityAPIMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -89,8 +89,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   fun `Get application documents - with get-documents-from-ap-delius feature-flag on - returns 200`() {
     mockFeatureFlagService.setFlag("get-documents-from-ap-delius", true)
 
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -101,7 +101,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
         val convictionLevelDocId = UUID.randomUUID()
         val documents = stubDocumentsFromDelius(convictionLevelDocId)
 
-        ApDeliusContext_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
+        apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -117,8 +117,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Download document - with get-documents-from-ap-delius feature-flag off - returns 404 when not found in documents meta data`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -150,7 +150,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityAPIMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/documents/${application.crn}/ace0baaf-d7ee-4ea0-9010-da588387c880")
@@ -164,8 +164,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Download document - with get-documents-from-ap-delius feature-flag off - returns 200 with correct body and headers`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -197,11 +197,11 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        communityAPIMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
 
         val fileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
 
-        CommunityAPI_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
+        communityAPIMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
 
         val result = webTestClient.get()
           .uri("/documents/${application.crn}/457af8a5-82b1-449a-ad03-032b39435865")
@@ -223,8 +223,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   fun `Download document - with get-documents-from-ap-delius feature-flag on - returns 404 when not found in documents meta data`() {
     mockFeatureFlagService.setFlag("get-documents-from-ap-delius", true)
 
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -235,7 +235,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
         val convictionLevelDocId = UUID.randomUUID()
         val documents = stubDocumentsFromDelius(convictionLevelDocId)
 
-        ApDeliusContext_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
+        apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
 
         val notFoundDocId = UUID.randomUUID()
         webTestClient.get()
@@ -252,8 +252,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   fun `Download document - with get-documents-from-ap-delius feature-flag on - returns 200 with correct body and headers`() {
     mockFeatureFlagService.setFlag("get-documents-from-ap-delius", true)
 
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
@@ -264,8 +264,8 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
         val documents = stubDocumentsFromDelius(convictionLevelDocId)
         val docFileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
 
-        ApDeliusContext_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
-        ApDeliusContext_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, convictionLevelDocId, docFileContents)
+        apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
+        apDeliusContextMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, convictionLevelDocId, docFileContents)
 
         val result = webTestClient.get()
           .uri("/documents/${application.crn}/$convictionLevelDocId")

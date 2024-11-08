@@ -22,10 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
@@ -110,10 +110,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
     fun `Get All Out-Of-Service Beds returns OK with correct body when user has the role WORKFLOW_MANAGER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -158,10 +158,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
     fun `Get All Out-Of-Service Beds ignores cancelled out-of-service-bed records`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -226,10 +226,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds filters by premises ID correctly`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -242,7 +242,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val otherBed = bedEntityFactory.produceAndPersist {
@@ -301,10 +301,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds filters by AP area ID correctly`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -317,7 +317,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val otherBed = bedEntityFactory.produceAndPersist {
@@ -384,7 +384,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       private fun initialiseOosBedsForAllTemporalities(user: UserEntity) {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -438,7 +438,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns the latest revision information for an out of service bed when all temporalities are requested`() {
-        `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -464,7 +464,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns no out of service bed when specified temporality is past and latest revision is not in the past`() {
-        `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -486,7 +486,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns no out of service bed when specified temporality is current and the latest revision is not current`() {
-        `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -508,7 +508,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns out of service bed when specified temporality is future and the latest revision is the future`() {
-        `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -553,10 +553,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @Suppress("detekt:CyclomaticComplexMethod")
     fun `Get All Out-Of-Service Beds sorts correctly`(sortField: Cas1OutOfServiceBedSortField, sortDirection: SortDirection) {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -569,7 +569,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val otherBed = bedEntityFactory.produceAndPersist {
@@ -638,10 +638,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds paginates correctly`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -700,7 +700,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Get All Out-Of-Service Beds On Premises without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
       webTestClient.get()
@@ -725,10 +725,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -788,10 +788,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class GetOutOfServiceBed {
     @Test
     fun `Get Out-Of-Service Bed without JWT returns 401`() {
-      `Given a User` { user, _ ->
+      givenAUser { user, _ ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -838,10 +838,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get Out-Of-Service Bed for non-existent out-of-service bed returns 404`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         webTestClient.get()
@@ -856,10 +856,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Get Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -904,7 +904,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Create Out-Of-Service Beds without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -930,10 +930,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Beds returns 400 Bad Request if the bed ID does not reference a bed on the premises`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
@@ -963,10 +963,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Create Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(3) {
@@ -1040,10 +1040,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Bed succeeds even if overlapping with Booking`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1124,10 +1124,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Beds for current day does not break GET all Premises endpoint`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1174,11 +1174,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Bed returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
-        `Given an Offender` { _, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+        givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1231,11 +1231,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Create Out-Of-Service Bed returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
-        `Given an Offender` { _, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+        givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1354,10 +1354,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class UpdateOutOfServiceBed {
     @Test
     fun `Update Out-Of-Service Bed without JWT returns 401`() {
-      `Given a User` { user, _ ->
+      givenAUser { user, _ ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -1431,7 +1431,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Update Out-Of-Service Bed for non-existent out-of-service bed returns 404`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -1456,10 +1456,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
     fun `Update Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {
@@ -1568,10 +1568,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds succeeds even if overlapping with Booking`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1606,7 +1606,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
         webTestClient.put()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
@@ -1628,11 +1628,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1753,11 +1753,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
-        `Given an Offender` { _, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+        givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1822,11 +1822,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
-        `Given an Offender` { _, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+        givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -1980,10 +1980,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   inner class CancelOutOfServiceBed {
     @Test
     fun `Cancel Out-Of-Service Bed without JWT returns 401`() {
-      `Given a User` { user, _ ->
+      givenAUser { user, _ ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -2041,7 +2041,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     fun `Cancel Out-Of-Service Bed for non-existent out-of-service bed returns 404`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -2062,10 +2062,10 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_JANITOR" ])
     fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the JANITOR role`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { user, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         bedEntityFactory.produceAndPersistMultiple(2) {

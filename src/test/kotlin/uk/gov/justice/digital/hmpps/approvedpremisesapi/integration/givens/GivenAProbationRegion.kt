@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import java.util.UUID
 
-fun IntegrationTestBase.`Given a Probation Region`(
+fun IntegrationTestBase.givenAProbationRegion(
   id: UUID = UUID.randomUUID(),
   name: String? = null,
   apArea: ApAreaEntity? = null,
@@ -21,7 +21,7 @@ fun IntegrationTestBase.`Given a Probation Region`(
       withApArea(apArea)
     } else {
       withYieldedApArea {
-        `Given an AP Area`()
+        givenAnApArea()
       }
     }
     if (deliusCode != null) {

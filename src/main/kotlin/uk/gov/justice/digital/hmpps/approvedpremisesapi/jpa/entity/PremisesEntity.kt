@@ -264,7 +264,8 @@ class ApprovedPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
-  var point: Point?, // TODO: Make not-null once Premises have had point added in all environments
+  // TODO: Make not-null once Premises have had point added in all environments
+  var point: Point?,
   @Enumerated(value = EnumType.STRING)
   var gender: ApprovedPremisesGender,
 ) : PremisesEntity(

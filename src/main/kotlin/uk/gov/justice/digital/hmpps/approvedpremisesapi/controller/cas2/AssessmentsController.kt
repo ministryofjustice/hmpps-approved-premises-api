@@ -56,8 +56,7 @@ class AssessmentsController(
   override fun assessmentsAssessmentIdPut(
     assessmentId: java.util.UUID,
     updateCas2Assessment: UpdateCas2Assessment,
-  ):
-    ResponseEntity<Cas2Assessment> {
+  ): ResponseEntity<Cas2Assessment> {
     val assessmentResult = assessmentService.updateAssessment(assessmentId, updateCas2Assessment)
     val validationResult = when (assessmentResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")

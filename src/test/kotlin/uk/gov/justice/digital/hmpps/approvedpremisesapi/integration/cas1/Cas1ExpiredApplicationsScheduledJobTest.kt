@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -47,8 +47,8 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
 
   @Test
   fun `sets the application status to EXPIRED for the correct applications when the job is run`() {
-    `Given a Probation Region` { probationRegion ->
-      `Given a User`(probationRegion = probationRegion) { user, jwt ->
+    givenAProbationRegion { probationRegion ->
+      givenAUser(probationRegion = probationRegion) { user, jwt ->
 
         val unexpiredOccurredAt = OffsetDateTime.now().randomDateTimeBefore(365) // between 1 and 365 days
         val expiredOccurredAt = unexpiredOccurredAt.minusYears(1) // between 366 and 730 days

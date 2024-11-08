@@ -173,7 +173,7 @@ class ReferenceDataController(
   override fun referenceDataProbationDeliveryUnitsGet(probationRegionId: UUID?): ResponseEntity<List<ProbationDeliveryUnit>> {
     val probationDeliveryUnits = when (probationRegionId) {
       null -> probationDeliveryUnitRepository.findAll()
-      else -> probationDeliveryUnitRepository.findAllByProbationRegion_Id(probationRegionId)
+      else -> probationDeliveryUnitRepository.findAllByProbationRegionId(probationRegionId)
     }
 
     return ResponseEntity.ok(probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi))

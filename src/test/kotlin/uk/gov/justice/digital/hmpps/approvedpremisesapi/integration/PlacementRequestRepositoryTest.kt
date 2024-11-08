@@ -9,8 +9,8 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import java.time.LocalDate
@@ -71,7 +71,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     @BeforeEach
     fun setup() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(`Given a Probation Region`())
+        withProbationRegion(givenAProbationRegion())
         withLocalAuthorityArea(
           localAuthorityEntityFactory.produceAndPersist(),
         )
@@ -259,11 +259,14 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
   private fun createPlacementRequests(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null, name: String? = null, expectedArrival: LocalDate? = null, tier: String? = null): List<PlacementRequestEntity> {
     val user = userEntityFactory.produceAndPersist {
-      withProbationRegion(`Given a Probation Region`())
+      withProbationRegion(givenAProbationRegion())
     }
 
     return List(count) {
-      `Given a Placement Request`(user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn, isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier).first
+      givenAPlacementRequest(
+        user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn,
+        isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier,
+      ).first
     }
   }
 }

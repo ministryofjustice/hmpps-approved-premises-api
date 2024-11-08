@@ -105,7 +105,7 @@ class ApplicationsController(
       avoid breaking behaviour for other callers), where we filter out any response from
       offenderService.getInfoForPerson of type PersonInfoResult.Restricted. This will most likely have
       to be optional as to not 'break' other functions using getPersonDetailAndTransformToSummary
-    */
+       */
     return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
   }
 
@@ -188,8 +188,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?):
-    ResponseEntity<Application> {
+  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -349,8 +348,7 @@ class ApplicationsController(
     )
   }
 
-  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName):
-    ResponseEntity<List<TimelineEvent>> {
+  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName): ResponseEntity<List<TimelineEvent>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }

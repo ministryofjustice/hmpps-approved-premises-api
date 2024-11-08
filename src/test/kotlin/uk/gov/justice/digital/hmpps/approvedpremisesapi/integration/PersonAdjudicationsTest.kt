@@ -6,10 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAdjudicationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import java.time.LocalDateTime
 
@@ -58,10 +58,10 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      communityAPIMockNotFoundOffenderDetailsCall(crn)
 
       webTestClient.get()
         .uri("/people/$crn/adjudications")
@@ -75,8 +75,8 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications alerts for a CRN without a NOMS number returns 404`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender`(
+    givenAUser { _, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },
@@ -94,8 +94,8 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications for a CRN returns OK with correct body`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val adjudicationsResponse = AdjudicationsPageFactory()
           .withResults(
             listOf(
@@ -111,7 +111,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        PrisonAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        prisonAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
@@ -130,8 +130,8 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications for temporary accommodation returns correct records when 12 month time filter is not applied`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val adjudicationsResponse = AdjudicationsPageFactory()
           .withResults(
             listOf(
@@ -150,7 +150,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        PrisonAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        prisonAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
@@ -169,8 +169,8 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting adjudications for approved premises returns correct records when 12 month time filter is applied`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val adjudicationsResponse = AdjudicationsPageFactory()
           .withResults(
             listOf(
@@ -194,7 +194,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        PrisonAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        prisonAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")

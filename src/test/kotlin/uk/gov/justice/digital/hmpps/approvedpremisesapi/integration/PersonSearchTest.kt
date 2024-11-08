@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import java.time.LocalDate
@@ -87,7 +87,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       wiremockServer.stubFor(
         get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
           .willReturn(
@@ -108,8 +108,8 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN returns OK with correct body`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender`(
+    givenAUser { _, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withCrn("CRN")
           withDateOfBirth(LocalDate.parse("1985-05-05"))
@@ -168,8 +168,8 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender`(
+    givenAUser { _, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withCrn("CRN")
           withDateOfBirth(LocalDate.parse("1985-05-05"))

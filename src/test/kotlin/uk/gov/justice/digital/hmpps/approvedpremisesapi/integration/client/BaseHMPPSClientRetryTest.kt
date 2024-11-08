@@ -21,8 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockUnsuccesfullCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccesfullCaseDetailCall
 
 class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
 
@@ -75,7 +75,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
   @ParameterizedTest
   @MethodSource("successHttpStatusCode")
   fun `Don't retry for success outcomes`(httpStatusCode: Int) {
-    APDeliusContext_mockSuccessfulCaseDetailCall(
+    apDeliusContextMockSuccessfulCaseDetailCall(
       crn = CRN,
       response = CaseDetailFactory().produce(),
       responseStatus = httpStatusCode,
@@ -92,7 +92,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Dont retry if maxRetries is 0`() {
-    APDeliusContext_mockUnsuccesfullCaseDetailCall(
+    apDeliusContextMockUnsuccesfullCaseDetailCall(
       crn = CRN,
       responseStatus = 500,
     )
@@ -109,7 +109,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
   @ParameterizedTest
   @MethodSource("errorHttpStatusCodesForRetries")
   fun `Retry for all applicable error status codes`(httpStatusCode: Int) {
-    APDeliusContext_mockUnsuccesfullCaseDetailCall(
+    apDeliusContextMockUnsuccesfullCaseDetailCall(
       crn = CRN,
       responseStatus = httpStatusCode,
     )
@@ -128,7 +128,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
   @ParameterizedTest
   @MethodSource("errorHttpStatusCodeThatDontRetry")
   fun `Don't retry for all applicable error status codes`(httpStatusCode: Int) {
-    APDeliusContext_mockUnsuccesfullCaseDetailCall(
+    apDeliusContextMockUnsuccesfullCaseDetailCall(
       crn = CRN,
       responseStatus = httpStatusCode,
     )

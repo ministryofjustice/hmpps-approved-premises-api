@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.User
 import java.time.ZonedDateTime
 import java.util.UUID
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(
+fun IntegrationTestBase.apDeliusContextMockSuccessfulGetReferralDetails(
   crn: String,
   bookingId: String,
   arrivedAt: ZonedDateTime?,
@@ -31,7 +31,7 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulGetReferralDetails(
     ),
   )
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) {
+fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/approved-premises/$qCode/staff",
     responseBody = StaffMembersPage(
@@ -44,31 +44,31 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffMembersCall(staffMemb
   )
 }
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) =
+fun IntegrationTestBase.apDeliusContextMockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/probation-cases/$crn/details",
     responseBody = response,
     responseStatus = responseStatus,
   )
 
-fun IntegrationTestBase.APDeliusContext_mockUnsuccesfullCaseDetailCall(crn: String, responseStatus: Int) =
+fun IntegrationTestBase.apDeliusContextMockUnsuccesfullCaseDetailCall(crn: String, responseStatus: Int) =
   mockUnsuccessfulGetCall(
     url = "/probation-cases/$crn/details",
     responseStatus = responseStatus,
   )
 
-fun IntegrationTestBase.APDeliusContext_mockSuccessfulTeamsManagingCaseCall(crn: String, response: ManagingTeamsResponse) =
+fun IntegrationTestBase.apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn: String, response: ManagingTeamsResponse) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/teams/managingCase/$crn",
     responseBody = response,
   )
 
-fun IntegrationTestBase.ApDeliusContext_mockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
-  ApDeliusContext_addResponseToUserAccessCall(caseAccess, username)
-  ApDeliusContext_addSingleResponseToUserAccessCall(caseAccess, username)
+fun IntegrationTestBase.apDeliusContextMockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
+  apDeliusContextAddResponseToUserAccessCall(caseAccess, username)
+  apDeliusContextAddSingleResponseToUserAccessCall(caseAccess, username)
 }
 
-fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
+fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
   val url = "/users/access"
   val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
 
@@ -110,7 +110,7 @@ fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: 
   }
 }
 
-fun IntegrationTestBase.ApDeliusContext_addSingleResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
+fun IntegrationTestBase.apDeliusContextAddSingleResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/users/access",
     requestBody = WireMock.equalToJson(
@@ -128,12 +128,12 @@ fun IntegrationTestBase.ApDeliusContext_addSingleResponseToUserAccessCall(caseAc
   }
 }
 
-fun IntegrationTestBase.ApDeliusContext_mockCaseSummary(caseSummary: CaseSummary) {
-  this.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary)
-  this.ApDeliusContext_addSingleCaseSummaryToBulkResponse(caseSummary)
+fun IntegrationTestBase.apDeliusContextMockCaseSummary(caseSummary: CaseSummary) {
+  this.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary)
+  this.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary)
 }
 
-fun IntegrationTestBase.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
+fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
   val url = "/probation-cases/summaries"
   val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
 
@@ -172,7 +172,7 @@ fun IntegrationTestBase.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary
   }
 }
 
-fun IntegrationTestBase.ApDeliusContext_addSingleCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
+fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
@@ -188,7 +188,7 @@ fun IntegrationTestBase.ApDeliusContext_addSingleCaseSummaryToBulkResponse(caseS
   )
 }
 
-fun IntegrationTestBase.ApDeliusContext_addListCaseSummaryToBulkResponse(casesSummary: List<CaseSummary>) {
+fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(casesSummary: List<CaseSummary>) {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
@@ -204,26 +204,26 @@ fun IntegrationTestBase.ApDeliusContext_addListCaseSummaryToBulkResponse(casesSu
   )
 }
 
-fun IntegrationTestBase.ApDeliusContext_addStaffDetailResponse(staffDetail: StaffDetail) {
+fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: StaffDetail) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/staff/${staffDetail.username}",
     responseBody = staffDetail,
   )
 }
 
-fun IntegrationTestBase.ApDeliusContext_mockNotFoundStaffDetailCall(username: String) =
+fun IntegrationTestBase.apDeliusContextMockNotFoundStaffDetailCall(username: String) =
   mockUnsuccessfulGetCall(
     url = "/staff/$username",
     responseStatus = 404,
   )
 
-fun IntegrationTestBase.ApDeliusContext_mockSuccessfulDocumentsCall(crn: String, documents: List<APDeliusDocument>) =
+fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentsCall(crn: String, documents: List<APDeliusDocument>) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/documents/$crn/all",
     responseBody = documents,
   )
 
-fun IntegrationTestBase.ApDeliusContext_mockSuccessfulDocumentDownloadCall(crn: String, documentId: UUID, fileContents: ByteArray) =
+fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentDownloadCall(crn: String, documentId: UUID, fileContents: ByteArray) =
   mockOAuth2ClientCredentialsCallIfRequired {
     wiremockServer.stubFor(
       WireMock.get(WireMock.urlEqualTo("/documents/$crn/$documentId"))

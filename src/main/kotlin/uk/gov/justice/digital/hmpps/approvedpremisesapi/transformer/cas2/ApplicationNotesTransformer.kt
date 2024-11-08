@@ -9,8 +9,7 @@ class ApplicationNotesTransformer {
 
   fun transformJpaToApi(
     jpa: Cas2ApplicationNoteEntity,
-  ):
-    Cas2ApplicationNote {
+  ): Cas2ApplicationNote {
     val name = jpa.getUser().name
     val email = jpa.getUser().email ?: "Not found"
     return Cas2ApplicationNote(

@@ -12,11 +12,11 @@ import java.util.UUID
 
 @Repository
 interface ProbationDeliveryUnitRepository : JpaRepository<ProbationDeliveryUnitEntity, UUID> {
-  fun findAllByProbationRegion_Id(probationRegionId: UUID): List<ProbationDeliveryUnitEntity>
+  fun findAllByProbationRegionId(probationRegionId: UUID): List<ProbationDeliveryUnitEntity>
 
-  fun findByIdAndProbationRegion_Id(id: UUID, probationRegionId: UUID): ProbationDeliveryUnitEntity?
+  fun findByIdAndProbationRegionId(id: UUID, probationRegionId: UUID): ProbationDeliveryUnitEntity?
 
-  fun findByNameAndProbationRegion_Id(name: String, probationRegionId: UUID): ProbationDeliveryUnitEntity?
+  fun findByNameAndProbationRegionId(name: String, probationRegionId: UUID): ProbationDeliveryUnitEntity?
 
   fun findByName(name: String): ProbationDeliveryUnitEntity?
 

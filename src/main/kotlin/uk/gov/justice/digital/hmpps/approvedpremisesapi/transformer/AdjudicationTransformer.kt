@@ -12,7 +12,13 @@ class AdjudicationTransformer {
   fun transformToApi(adjudicationsPage: AdjudicationsPage, getLast12MonthsOnly: Boolean) =
     adjudicationsPage.results.flatMap { result ->
       result.adjudicationCharges
-        .filter { if (getLast12MonthsOnly) { result.reportTime.toLocalDate().isAfter(LocalDate.now().minusMonths(12)) } else true }
+        .filter {
+          if (getLast12MonthsOnly) {
+            result.reportTime.toLocalDate().isAfter(LocalDate.now().minusMonths(12))
+          } else {
+            true
+          }
+        }
         .map { charge ->
           Adjudication(
             id = result.adjudicationNumber,

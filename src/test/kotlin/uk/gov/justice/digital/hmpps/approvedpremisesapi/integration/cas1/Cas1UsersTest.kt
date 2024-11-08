@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory.probationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory.team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -106,7 +106,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         roles = listOf("ROLE_PROBATION"),
       )
 
-      val region = `Given a Probation Region`()
+      val region = givenAProbationRegion()
 
       userEntityFactory.produceAndPersist {
         withId(id)
@@ -117,7 +117,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         withYieldedProbationRegion { region }
       }
 
-      ApDeliusContext_addStaffDetailResponse(
+      apDeliusContextAddStaffDetailResponse(
         StaffDetail(
           email = email,
           telephoneNumber = telephoneNumber,
@@ -164,7 +164,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Updating a user without an approved role is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.put()
           .uri("/cas1/users/$id")
@@ -184,7 +184,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Updating a users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.put()
           .uri("/cas1/users/$id")
@@ -213,12 +213,12 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
       )
 
-      val apArea = `Given an AP Area`()
-      val userId = `Given a User`(probationRegion = `Given a Probation Region`(apArea = apArea)).first.id
+      val apArea = givenAnApArea()
+      val userId = givenAUser(probationRegion = givenAProbationRegion(apArea = apArea)).first.id
 
-      val cruManagementAreaOverride = `Given a CAS1 CRU Management Area`()
+      val cruManagementAreaOverride = givenACas1CruManagementArea()
 
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.put()
           .uri("/cas1/users/$userId")
           .header("Authorization", "Bearer $jwt")
@@ -254,7 +254,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Deleting a user with an unapproved role is forbidden`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/cas1/users/$id")
@@ -268,7 +268,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Deleting a user with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      givenAUser { _, jwt ->
         val id = UUID.randomUUID()
         webTestClient.delete()
           .uri("/cas1/users/$id")
@@ -300,10 +300,10 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     fun `Deleting a user with an approved role deletes successfully`(role: UserRole) {
       userEntityFactory.produceAndPersist {
         withId(id)
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.delete()
           .uri("/cas1/users/$id")
           .header("Authorization", "Bearer $jwt")
@@ -319,7 +319,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Deleting a user without an approved role is forbidden `(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.delete()
           .uri("/cas1/users/$id")
           .header("Authorization", "Bearer $jwt")

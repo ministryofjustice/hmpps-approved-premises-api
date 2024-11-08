@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.util.UUID
@@ -12,8 +12,8 @@ import java.util.UUID
 class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Create Turnaround returns 404 Not Found if the premises was not found`() {
-    `Given a User` { _, jwt ->
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    givenAUser { _, jwt ->
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${UUID.randomUUID()}/bookings/${UUID.randomUUID()}/turnarounds")
@@ -31,7 +31,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 404 Not Found if the booking was not found on the premises`() {
-    `Given a User` { userEntity, jwt ->
+    givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -39,7 +39,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${UUID.randomUUID()}/turnarounds")
@@ -57,7 +57,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 400 Bad Request if the number of working days is not a positive integer`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -78,7 +78,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withBed(bed)
       }
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
@@ -99,7 +99,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing booking`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -129,7 +129,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withDepartureDate(LocalDate.of(2023, 8, 5))
       }
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
@@ -151,7 +151,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing lost bed`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -184,7 +184,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
@@ -206,7 +206,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Create Turnaround returns 200 OK with the created turnaround`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(userEntity.probationRegion)
         withYieldedLocalAuthorityArea {
@@ -227,7 +227,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withBed(bed)
       }
 
-      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")

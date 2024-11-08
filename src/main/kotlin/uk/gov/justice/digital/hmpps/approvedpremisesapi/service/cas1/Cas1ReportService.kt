@@ -69,7 +69,11 @@ class Cas1ReportService(
   }
 
   fun createApplicationReportV2(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+    val columnsToExclude = if (properties.includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,
@@ -133,7 +137,11 @@ class Cas1ReportService(
   }
 
   fun createRequestForPlacementReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+    val columnsToExclude = if (properties.includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,
@@ -160,7 +168,11 @@ class Cas1ReportService(
   }
 
   fun createPlacementMatchingOutcomesV2Report(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) { emptyList() } else { PII_COLUMN_NAMES }
+    val columnsToExclude = if (properties.includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,

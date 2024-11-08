@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
@@ -21,7 +21,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 Information - No Results`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertJsonEquals(
@@ -43,7 +43,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 Information - Null dates check`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
     assertJsonEquals(
@@ -65,7 +65,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 Information - Applications`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
@@ -88,7 +88,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 Information - Assessments`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
@@ -112,7 +112,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 Information - Assessment Referral History Notes`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
@@ -139,7 +139,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 information - have a booking`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
 
@@ -166,7 +166,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 information - have a booking with extension`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
 
@@ -194,7 +194,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `Get CAS3 information - have a booking cancellation`() {
-    val (offenderDetails, _) = `Given an Offender`()
+    val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val booking = bookingEntity(offenderDetails, application, null, ServiceName.temporaryAccommodation)
@@ -221,7 +221,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   @Test
   fun `get CAS3 information - Domain Events`() {
-    val (offender, _) = `Given an Offender`()
+    val (offender, _) = givenAnOffender()
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offender, user)
     val assessment = temporaryAccommodationAssessmentEntity(application)
@@ -318,8 +318,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "completed_at": "$SUBMITTED_AT",
          "referral_rejection_reason_category": "${assessment.referralRejectionReason?.name}",
          "referral_rejection_reason_detail": "${assessment.referralRejectionReasonDetail}",
-         "release_date": "$ARRIVED_AT_DATE_ONLY",
-         "accommodation_required_from_date": "$ARRIVED_AT_DATE_ONLY"      
+         "release_date": "$arrivedAtDateOnly",
+         "accommodation_required_from_date": "$arrivedAtDateOnly"      
       }
     """.trimIndent()
 
@@ -343,14 +343,14 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "risk_ratings":${risksJson()},
         "arrival_date": "$ARRIVED_AT",
         "is_duty_to_refer_submitted": ${temporaryAccommodationApplication.isDutyToReferSubmitted},
-        "duty_to_refer_submission_date": "$SUBMITTED_AT_DATE_ONLY",
+        "duty_to_refer_submission_date": "$submittedAtDateOnly",
         "duty_to_refer_outcome": null,
         "duty_to_refer_local_authority_area_name": "${temporaryAccommodationApplication.dutyToReferLocalAuthorityAreaName}",
         "is_eligible": ${temporaryAccommodationApplication.isEligible},
         "eligibility_reason": "${temporaryAccommodationApplication.eligibilityReason}",
         "prison_name_on_creation": "${temporaryAccommodationApplication.prisonNameOnCreation}",
         "prison_release_types": "${temporaryAccommodationApplication.prisonReleaseTypes}",
-        "person_release_date": "$ARRIVED_AT_DATE_ONLY",
+        "person_release_date": "$arrivedAtDateOnly",
         "pdu": "${temporaryAccommodationApplication.pdu}",
         "needs_accessible_property": ${temporaryAccommodationApplication.needsAccessibleProperty},
         "has_history_of_arson": ${temporaryAccommodationApplication.hasHistoryOfArson},
@@ -390,8 +390,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         },
       )
       withReferralRejectionReasonDetail("Some Reason Detail")
-      withReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
-      withAccommodationRequiredFromDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withReleaseDate(LocalDate.parse(arrivedAtDateOnly))
+      withAccommodationRequiredFromDate(LocalDate.parse(arrivedAtDateOnly))
     }
   }
 
@@ -413,7 +413,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withDocument(DOCUMENT_JSON_SIMPLE)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
       withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withPersonReleaseDate(LocalDate.parse(ARRIVED_AT_DATE_ONLY))
+      withPersonReleaseDate(LocalDate.parse(arrivedAtDateOnly))
       withCreatedByUser(user)
       withApplicationSchema(temporaryAccommodationApplicationJsonSchemaEntity())
       withConvictionId(CONVICTION_ID)
@@ -423,7 +423,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withOffenceId(OFFENCE_ID)
       withRiskRatings(risk1)
       withDutyToReferLocalAuthorityAreaName(randomStringMultiCaseWithNumbers(10))
-      withDutyToReferSubmissionDate(LocalDate.parse(SUBMITTED_AT_DATE_ONLY))
+      withDutyToReferSubmissionDate(LocalDate.parse(submittedAtDateOnly))
       withDutyToReferOutcome(null)
       withEligiblilityReason("Not eligible")
       withEventNumber("1")

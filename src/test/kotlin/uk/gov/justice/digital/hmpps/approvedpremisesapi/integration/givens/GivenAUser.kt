@@ -4,9 +4,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.NomisUserRoles_mockSuccessfulGetUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a User`(
+fun IntegrationTestBase.givenAUser(
   id: UUID = UUID.randomUUID(),
   staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
@@ -32,7 +32,7 @@ fun IntegrationTestBase.`Given a User`(
   cruManagementAreaEntity: Cas1CruManagementAreaEntity? = null,
 ): Pair<UserEntity, String> {
   val resolvedProbationRegion = probationRegion ?: probationRegionEntityFactory.produceAndPersist {
-    withYieldedApArea { `Given an AP Area`() }
+    withYieldedApArea { givenAnApArea() }
   }
   val apArea = resolvedProbationRegion.apArea!!
 
@@ -85,8 +85,8 @@ fun IntegrationTestBase.`Given a User`(
         staffDetail.probationArea.description,
       ),
     )
-    CommunityAPI_mockSuccessfulStaffUserDetailsCall(temp)
-    ApDeliusContext_addStaffDetailResponse(staffDetail)
+    communityAPIMockSuccessfulStaffUserDetailsCall(temp)
+    apDeliusContextAddStaffDetailResponse(staffDetail)
   } else {
     mockOAuth2ClientCredentialsCallIfRequired {}
   }
@@ -95,7 +95,7 @@ fun IntegrationTestBase.`Given a User`(
 }
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a User`(
+fun IntegrationTestBase.givenAUser(
   id: UUID = UUID.randomUUID(),
   staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
@@ -105,7 +105,7 @@ fun IntegrationTestBase.`Given a User`(
   mockStaffUserDetailsCall: Boolean = true,
   block: (userEntity: UserEntity, jwt: String) -> Unit,
 ) {
-  val (user, jwt) = `Given a User`(
+  val (user, jwt) = givenAUser(
     id,
     staffDetail,
     roles,
@@ -118,7 +118,7 @@ fun IntegrationTestBase.`Given a User`(
   return block(user, jwt)
 }
 
-fun IntegrationTestBase.`Given a CAS2 POM User`(
+fun IntegrationTestBase.givenACas2PomUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
@@ -141,12 +141,12 @@ fun IntegrationTestBase.`Given a CAS2 POM User`(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
 
-  NomisUserRoles_mockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
 
-fun IntegrationTestBase.`Given a CAS2 Licence Case Admin User`(
+fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
@@ -169,12 +169,12 @@ fun IntegrationTestBase.`Given a CAS2 Licence Case Admin User`(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
 
-  NomisUserRoles_mockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
 
-fun IntegrationTestBase.`Given a CAS2 Assessor`(
+fun IntegrationTestBase.givenACas2Assessor(
   id: UUID = UUID.randomUUID(),
   block: (externalUserEntity: ExternalUserEntity, jwt: String) -> Unit,
 ) {
@@ -188,7 +188,7 @@ fun IntegrationTestBase.`Given a CAS2 Assessor`(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.`Given a CAS2 Admin`(
+fun IntegrationTestBase.givenACas2Admin(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
@@ -210,7 +210,7 @@ fun IntegrationTestBase.`Given a CAS2 Admin`(
 
   val jwt = jwtAuthHelper.createValidAdminAuthorisationCodeJwt(nomisUserDetails.username)
 
-  NomisUserRoles_mockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }

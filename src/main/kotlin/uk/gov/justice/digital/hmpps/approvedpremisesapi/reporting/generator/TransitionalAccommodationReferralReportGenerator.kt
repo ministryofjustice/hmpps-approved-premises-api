@@ -12,7 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 
 class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
   TransitionalAccommodationReferralReportDataAndPersonInfo,
-  TransitionalAccommodationReferralReportRow, TransitionalAccommodationReferralReportProperties,
+  TransitionalAccommodationReferralReportRow,
+  TransitionalAccommodationReferralReportProperties,
   >(
   TransitionalAccommodationReferralReportRow::class,
 ) {

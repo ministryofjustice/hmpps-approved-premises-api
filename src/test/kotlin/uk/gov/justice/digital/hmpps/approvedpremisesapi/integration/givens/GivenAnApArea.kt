@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import java.util.UUID
 
-fun IntegrationTestBase.`Given an AP Area`(
+fun IntegrationTestBase.givenAnApArea(
   id: UUID = UUID.randomUUID(),
   name: String? = null,
   defaultCruManagementArea: Cas1CruManagementAreaEntity? = null,
@@ -15,6 +15,6 @@ fun IntegrationTestBase.`Given an AP Area`(
     if (name != null) {
       withName(name)
     }
-    withDefaultCruManagementArea(defaultCruManagementArea ?: `Given a CAS1 CRU Management Area`())
+    withDefaultCruManagementArea(defaultCruManagementArea ?: givenACas1CruManagementArea())
   }
 }

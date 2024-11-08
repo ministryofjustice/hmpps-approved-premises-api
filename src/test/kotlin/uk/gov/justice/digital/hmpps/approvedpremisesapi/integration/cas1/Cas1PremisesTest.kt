@@ -8,10 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Out of Service Bed`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
@@ -30,8 +30,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @BeforeAll
     fun setupTestData() {
-      val region = `Given a Probation Region`(
-        apArea = `Given an AP Area`(name = "The ap area name"),
+      val region = givenAProbationRegion(
+        apArea = givenAnApArea(name = "The ap area name"),
       )
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -45,7 +45,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.get()
         .uri("/cas1/premises/${premises.id}")
@@ -57,7 +57,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns 404 if premise doesn't exist`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       webTestClient.get()
         .uri("/cas1/premises/${UUID.randomUUID()}")
@@ -70,7 +70,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Returns premises summary`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
@@ -80,20 +80,20 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      val currentOutOfServiceBedCancelled = `Given an Out of Service Bed`(
+      val currentOutOfServiceBedCancelled = givenAnOutOfServiceBed(
         bed = beds[0],
         startDate = LocalDate.now().minusDays(1),
         endDate = LocalDate.now().plusDays(4),
         cancelled = true,
       )
 
-      val futureOutOfServiceBed = `Given an Out of Service Bed`(
+      val futureOutOfServiceBed = givenAnOutOfServiceBed(
         bed = beds[0],
         startDate = LocalDate.now().plusDays(2),
         endDate = LocalDate.now().plusDays(4),
       )
 
-      val currentOutOfServiceBed = `Given an Out of Service Bed`(
+      val currentOutOfServiceBed = givenAnOutOfServiceBed(
         bed = beds[0],
         startDate = LocalDate.now().minusDays(2),
         endDate = LocalDate.now().plusDays(2),
@@ -130,14 +130,14 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @BeforeAll
     fun setupTestData() {
-      apArea1 = `Given an AP Area`(name = "the ap area name 1")
-      apArea2 = `Given an AP Area`(name = "the ap area name 2")
+      apArea1 = givenAnApArea(name = "the ap area name 1")
+      apArea2 = givenAnApArea(name = "the ap area name 2")
 
-      val region1 = `Given a Probation Region`(
+      val region1 = givenAProbationRegion(
         apArea = apArea1,
       )
 
-      val region2 = `Given a Probation Region`(
+      val region2 = givenAProbationRegion(
         apArea = apArea2,
       )
 
@@ -165,7 +165,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns premises summaries with no filters applied`() {
-      val (_, jwt) = `Given a User`()
+      val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
         .uri("/cas1/premises/summary")
@@ -203,7 +203,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns premises summaries where gender is man`() {
-      val (_, jwt) = `Given a User`()
+      val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
         .uri("/cas1/premises/summary?gender=man")
@@ -234,7 +234,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns premises summaries where gender is woman`() {
-      val (_, jwt) = `Given a User`()
+      val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
         .uri("/cas1/premises/summary?gender=woman")
@@ -255,7 +255,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns premises summaries for specified ap area`() {
-      val (_, jwt) = `Given a User`()
+      val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
         .uri("/cas1/premises/summary?apAreaId=${apArea1.id}")
@@ -276,7 +276,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns premises summaries for specified gender and ap area`() {
-      val (_, jwt) = `Given a User`()
+      val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
         .uri("/cas1/premises/summary?gender=man&apAreaId=${apArea2.id}&")
@@ -297,7 +297,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Returns correct bed count for premise summaries`() {
-      val (_, jwt) = `Given a User`()
+      val (_, jwt) = givenAUser()
 
       val premises1ManRoom = roomEntityFactory.produceAndPersist {
         withYieldedPremises { premises1ManInArea1 }

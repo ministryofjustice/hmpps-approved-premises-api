@@ -22,11 +22,9 @@ class SubmissionsTransformer(
 
   fun transformJpaToApiRepresentation(
     jpa: Cas2ApplicationEntity,
-    personInfo:
-      PersonInfoResult
+    personInfo: PersonInfoResult
       .Success,
-  ):
-    Cas2SubmittedApplication {
+  ): Cas2SubmittedApplication {
     return Cas2SubmittedApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),

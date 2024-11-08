@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
-fun<T> Collection<T>.containsAny(vararg values: T): Boolean = values.toSet().intersect(this.toSet()).isNotEmpty()
+fun <T> Collection<T>.containsAny(vararg values: T): Boolean = values.toSet().intersect(this.toSet()).isNotEmpty()
 
-fun<T, U, ID> Iterable<T>.zipBy(
+fun <T, U, ID> Iterable<T>.zipBy(
   other: Iterable<U>,
   keySelector1: T.() -> ID,
   keySelector2: U.() -> ID,

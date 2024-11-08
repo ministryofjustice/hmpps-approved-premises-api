@@ -74,7 +74,7 @@ class TemporaryAccommodationPremisesSeedJob(
         ?: throw RuntimeException("Characteristic $it does not exist")
     }
 
-    val probationDeliveryUnit = probationDeliveryUnitRepository.findByNameAndProbationRegion_Id(row.pdu, probationRegion.id)
+    val probationDeliveryUnit = probationDeliveryUnitRepository.findByNameAndProbationRegionId(row.pdu, probationRegion.id)
       ?: throw RuntimeException("Probation Delivery Unit ${row.pdu} does not exist")
 
     if (existingPremises != null) {

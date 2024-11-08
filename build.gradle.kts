@@ -1,14 +1,5 @@
 import org.apache.commons.io.FileUtils
 
-// temporary plugin downgrades. should be removed via CAS-453
-buildscript {
-  configurations.all {
-    resolutionStrategy {
-      force("org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin:11.6.1")
-    }
-  }
-}
-
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.22"
@@ -214,7 +205,7 @@ if (isTestInvokedFromIntellij) {
 fun addOpenApiConfigOptions(
   configOptions: MapProperty<String, String>,
   apiSuffix: String? = null,
-  useTags: Boolean = false
+  useTags: Boolean = false,
 ) {
   configOptions.apply {
     put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
@@ -222,7 +213,14 @@ fun addOpenApiConfigOptions(
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
     put("useBeanValidation", "false")
-    put("useTags", if (useTags) { "true" } else { "false" })
+    put(
+      "useTags",
+      if (useTags) {
+        "true"
+      } else {
+        "false"
+      },
+    )
     apiSuffix?.let {
       put("apiSuffix", it)
     }
@@ -250,7 +248,7 @@ registerAdditionalOpenApiGenerateTask(
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
   apiSuffix = "Cas1",
-  useTags = true
+  useTags = true,
 )
 
 registerAdditionalOpenApiGenerateTask(
@@ -258,7 +256,7 @@ registerAdditionalOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas2"
+  apiSuffix = "Cas2",
 )
 
 registerAdditionalOpenApiGenerateTask(
@@ -266,14 +264,14 @@ registerAdditionalOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas3"
+  apiSuffix = "Cas3",
 )
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateDomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model"
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model",
 )
 
 registerAdditionalOpenApiGenerateTask(
@@ -281,7 +279,7 @@ registerAdditionalOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model",
-  useTags = true
+  useTags = true,
 )
 
 registerAdditionalOpenApiGenerateTask(
@@ -289,7 +287,7 @@ registerAdditionalOpenApiGenerateTask(
   ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
-  useTags = true
+  useTags = true,
 )
 
 fun registerAdditionalOpenApiGenerateTask(
@@ -298,7 +296,7 @@ fun registerAdditionalOpenApiGenerateTask(
   apiPackageName: String,
   modelPackageName: String,
   apiSuffix: String? = null,
-  useTags: Boolean = false
+  useTags: Boolean = false,
 ) {
   tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(name) {
     generatorName.set("kotlin-spring")
@@ -324,7 +322,7 @@ tasks.register("openApiPreCompilation") {
 
   val sharedComponents = FileUtils.readFileToString(
     File("$rootDir/src/main/resources/static/_shared.yml"),
-    "UTF-8"
+    "UTF-8",
   )
 
   fun rewriteRefsForLocalComponents(file: File) {
@@ -338,19 +336,19 @@ tasks.register("openApiPreCompilation") {
   fun buildSpecWithSharedComponentsAppended(
     outputFileName: String,
     inputSpec: String,
-    inputSchemas: String? = null
+    inputSchemas: String? = null,
   ) {
     val apiFileName = "$rootDir/src/main/resources/static/$inputSpec"
     val api = FileUtils.readFileToString(
       File(apiFileName),
-      "UTF-8"
+      "UTF-8",
     )
 
     val schemas = if (inputSchemas != null) {
       val schemasFileName = "$rootDir/src/main/resources/static/$inputSchemas"
       FileUtils.readFileToString(
         File(schemasFileName),
-        "UTF-8"
+        "UTF-8",
       ).lines().filter {
         !it.matches(""".*components\:.*""".toRegex()) &&
           !it.matches(""".*schemas\:.*""".toRegex())
@@ -365,7 +363,7 @@ tasks.register("openApiPreCompilation") {
     FileUtils.writeStringToFile(
       compiledSpecFile,
       (notice + api + sharedComponents + schemas),
-      "UTF-8"
+      "UTF-8",
     )
 
     rewriteRefsForLocalComponents(compiledSpecFile)
@@ -373,20 +371,20 @@ tasks.register("openApiPreCompilation") {
 
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-api-spec.yml",
-    inputSpec = "api.yml"
+    inputSpec = "api.yml",
   )
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas1-api-spec.yml",
     inputSpec = "cas1-api.yml",
-    inputSchemas = "cas1-schemas.yml"
+    inputSchemas = "cas1-schemas.yml",
   )
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas2-api-spec.yml",
-    inputSpec = "cas2-api.yml"
+    inputSpec = "cas2-api.yml",
   )
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas3-api-spec.yml",
-    inputSpec = "cas3-api.yml"
+    inputSpec = "cas3-api.yml",
   )
 }
 
@@ -397,7 +395,7 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiPreCompilation",
   "openApiGenerateCas1Namespace",
   "openApiGenerateCas2Namespace",
-  "openApiGenerateCas3Namespace"
+  "openApiGenerateCas3Namespace",
 )
 
 tasks.get("openApiGenerate").doLast {

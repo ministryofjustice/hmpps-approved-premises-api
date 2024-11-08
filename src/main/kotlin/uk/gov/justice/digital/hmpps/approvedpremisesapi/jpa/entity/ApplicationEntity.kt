@@ -119,7 +119,7 @@ AND (
   ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
-  fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
+  fun <T : ApplicationEntity> findAllByCreatedByUserId(id: UUID, type: Class<T>): List<ApplicationEntity>
 
   @Query(
     "SELECT * FROM approved_premises_applications apa " +

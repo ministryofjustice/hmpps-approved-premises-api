@@ -22,11 +22,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Admin`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ManageUsers_mockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -172,7 +172,7 @@ class Cas2SubmissionTest(
         .withUsername(username)
         .produce()
 
-      ManageUsers_mockSuccessfulExternalUsersCall(
+      manageUsersMockSuccessfulExternalUsersCall(
         username = username,
         externalUserDetails = externalUserDetails,
       )
@@ -193,9 +193,9 @@ class Cas2SubmissionTest(
 
     @Test
     fun `Assessor can view ALL submitted applications`() {
-      `Given a CAS2 Assessor` { _externalUserEntity, jwt ->
-        `Given a CAS2 POM User` { user, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenACas2Assessor { _externalUserEntity, jwt ->
+        givenACas2PomUser { user, _ ->
+          givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationSchema =
@@ -344,7 +344,7 @@ class Cas2SubmissionTest(
         .withUsername(username)
         .produce()
 
-      ManageUsers_mockSuccessfulExternalUsersCall(
+      manageUsersMockSuccessfulExternalUsersCall(
         username = username,
         externalUserDetails = externalUserDetails,
       )
@@ -365,9 +365,9 @@ class Cas2SubmissionTest(
 
     @Test
     fun `Assessor can view single submitted application`() {
-      `Given a CAS2 Assessor` { assessor, jwt ->
-        `Given a CAS2 POM User` { user, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenACas2Assessor { assessor, jwt ->
+        givenACas2PomUser { user, _ ->
+          givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -492,9 +492,9 @@ class Cas2SubmissionTest(
 
     @Test
     fun `Assessor can NOT view single in-progress application`() {
-      `Given a CAS2 Assessor` { _, jwt ->
-        `Given a CAS2 POM User` { user, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      givenACas2Assessor { _, jwt ->
+        givenACas2PomUser { user, _ ->
+          givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -526,10 +526,10 @@ class Cas2SubmissionTest(
     inner class ControlsOnCas2Admin {
       @Test
       fun `Admin can view single submitted application`() {
-        `Given a CAS2 Assessor` { assessor, _ ->
-          `Given a CAS2 Admin` { admin, jwt ->
-            `Given a CAS2 POM User` { user, _ ->
-              `Given an Offender` { offenderDetails, _ ->
+        givenACas2Assessor { assessor, _ ->
+          givenACas2Admin { admin, jwt ->
+            givenACas2PomUser { user, _ ->
+              givenAnOffender { offenderDetails, _ ->
                 cas2ApplicationJsonSchemaRepository.deleteAll()
 
                 val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -633,9 +633,9 @@ class Cas2SubmissionTest(
 
       @Test
       fun `Admin can NOT view single in-progress application`() {
-        `Given a CAS2 Admin` { _, jwt ->
-          `Given a CAS2 POM User` { user, _ ->
-            `Given an Offender` { offenderDetails, _ ->
+        givenACas2Admin { _, jwt ->
+          givenACas2PomUser { user, _ ->
+            givenAnOffender { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -673,8 +673,8 @@ class Cas2SubmissionTest(
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
       val telephoneNumber = "123 456 7891"
 
-      `Given a CAS2 POM User`() { submittingUser, jwt ->
-        `Given an Offender`(
+      givenACas2PomUser { submittingUser, jwt ->
+        givenAnOffender(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
               AssignedLivingUnit(
@@ -764,8 +764,8 @@ class Cas2SubmissionTest(
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
-      `Given a CAS2 POM User`() { submittingUser, jwt ->
-        `Given an Offender`(
+      givenACas2PomUser { submittingUser, jwt ->
+        givenAnOffender(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
               AssignedLivingUnit(
@@ -844,8 +844,8 @@ class Cas2SubmissionTest(
 
     @Test
     fun `When there's an error fetching the referred person's prison code, the application is not saved`() {
-      `Given a CAS2 POM User`() { submittingUser, jwt ->
-        `Given an Offender`(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
+      givenACas2PomUser { submittingUser, jwt ->
+        givenAnOffender(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = cas2ApplicationJsonSchemaEntityFactory

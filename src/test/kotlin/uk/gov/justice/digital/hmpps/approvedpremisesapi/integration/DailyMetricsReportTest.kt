@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeBookedByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
@@ -41,7 +41,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
 
   @Test
   fun `Get daily metrics report for returns 403 Forbidden if user does not have access`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas1/reports/dailyMetrics?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -55,7 +55,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(ServiceName::class, names = ["approvedPremises"], mode = EnumSource.Mode.EXCLUDE)
   fun `Get daily metrics report for returns not allowed if the service is not Approved Premises`(serviceName: ServiceName) {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
         .uri("/cas1/reports/dailyMetrics?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
@@ -68,12 +68,12 @@ class DailyMetricsReportTest : IntegrationTestBase() {
 
   @Test
   fun `Get daily metrics report for returns a report for the given month`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       val month = 4
       val year = 2023
 
       val user = userEntityFactory.produceAndPersist {
-        withProbationRegion(`Given a Probation Region`())
+        withProbationRegion(givenAProbationRegion())
       }
 
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {

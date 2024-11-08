@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisT
 import java.time.OffsetDateTime
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a Placement Application`(
+fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
   schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
@@ -35,10 +35,10 @@ fun IntegrationTestBase.`Given a Placement Application`(
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   isWithdrawn: Boolean = false,
 ): PlacementApplicationEntity {
-  val userApArea = `Given an AP Area`()
+  val userApArea = givenAnApArea()
 
-  val (assessmentAllocatedToUser) = `Given a User`(
-    probationRegion = `Given a Probation Region`(apArea = userApArea),
+  val (assessmentAllocatedToUser) = givenAUser(
+    probationRegion = givenAProbationRegion(apArea = userApArea),
   )
 
   val assessmentCreatedByUser = userEntityFactory.produceAndPersist {
@@ -50,7 +50,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     withApArea(userApArea)
   }
 
-  val (_, application) = `Given an Assessment for Approved Premises`(
+  val (_, application) = givenAnAssessmentForApprovedPremises(
     decision = assessmentDecision,
     submittedAt = OffsetDateTime.now(),
     crn = crn,
@@ -85,7 +85,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
 }
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.`Given a Placement Application`(
+fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
   schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
@@ -98,7 +98,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
 ): PlacementApplicationEntity {
-  val placementApplication = `Given a Placement Application`(
+  val placementApplication = givenAPlacementApplication(
     assessmentDecision = assessmentDecision,
     createdByUser = createdByUser,
     schema = schema ?: approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {

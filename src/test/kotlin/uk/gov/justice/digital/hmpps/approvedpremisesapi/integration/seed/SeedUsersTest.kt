@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class SeedUsersTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a non existent user logs an error`() {
-    CommunityAPI_mockNotFoundOffenderDetailsCall("INVALID-USER")
+    communityAPIMockNotFoundOffenderDetailsCall("INVALID-USER")
 
     withCsv(
       "invalid-user",
@@ -50,13 +50,13 @@ class SeedUsersTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed a real but currently unknown user succeeds`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
       withProbationRegion(probationRegion)
     }
 
-    ApDeliusContext_addStaffDetailResponse(
+    apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = "UNKNOWN-USER",
         staffIdentifier = 6789,
@@ -100,7 +100,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to assign roles to a currently known user succeeds`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("KNOWN-USER")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     withCsv(
@@ -134,7 +134,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to assign a non-existent role logs an error`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("known-user")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     withCsv(
@@ -165,7 +165,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to assign a non-existent qualification logs an error`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("known-user")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     withCsv(
@@ -195,7 +195,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to assign legacy roles to a user succeeds`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("KNOWN-USER")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     withCsv(
@@ -233,7 +233,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Service specific user seed jobs only overwrite roles for that service`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("MULTI-SERVICE-USER")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     val roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS3_ASSESSOR).map { role ->
@@ -271,7 +271,7 @@ class SeedUsersTest : SeedTestBase() {
 
   @Test
   fun `Seeding same users multiple times works every time for base user seed job`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -317,7 +317,7 @@ class SeedUsersTest : SeedTestBase() {
     )
 
     seedInfos.forEach {
-      ApDeliusContext_addStaffDetailResponse(
+      apDeliusContextAddStaffDetailResponse(
         it.staffUserDetails,
       )
     }
@@ -365,7 +365,7 @@ class SeedUsersTest : SeedTestBase() {
 
   @Test
   fun `Seeding same users multiple times works every time for AP user seed job`() {
-    val probationRegion = `Given a Probation Region`()
+    val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -405,7 +405,7 @@ class SeedUsersTest : SeedTestBase() {
     )
 
     seedInfos.forEach {
-      ApDeliusContext_addStaffDetailResponse(
+      apDeliusContextAddStaffDetailResponse(
         it.staffUserDetails,
       )
     }
@@ -455,7 +455,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to assign new role CAS3_REPORTER to a currently known user succeeds`() {
     userEntityFactory.produceAndPersist {
       withDeliusUsername("KNOWN-USER")
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     withCsv(

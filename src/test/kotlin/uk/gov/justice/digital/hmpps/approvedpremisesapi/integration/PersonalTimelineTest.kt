@@ -16,9 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
@@ -99,7 +99,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
 
   @Test
   fun `Getting a personal timeline for a CRN that does not exist returns 404`() {
-    `Given a User` { _, jwt ->
+    givenAUser { _, jwt ->
       wiremockServer.stubFor(
         get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
           .willReturn(
@@ -120,9 +120,9 @@ class PersonalTimelineTest : IntegrationTestBase() {
 
   @Test
   fun `Getting a personal timeline for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        `Given an Application`(userEntity, crn = offenderDetails.otherIds.crn) { application ->
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnApplication(userEntity, crn = offenderDetails.otherIds.crn) { application ->
           val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
             withCrn(offenderDetails.otherIds.crn)
             withApplicationId(application.id)
@@ -224,8 +224,8 @@ class PersonalTimelineTest : IntegrationTestBase() {
 
   @Test
   fun `Getting a personal timeline for a CRN with no applications returns OK with correct body`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val personInfoResult = PersonInfoResult.Success.Full(
           crn = offenderDetails.otherIds.crn,
           offenderDetailSummary = offenderDetails,
@@ -253,13 +253,13 @@ class PersonalTimelineTest : IntegrationTestBase() {
 
   @Test
   fun `Getting a personal timeline for a CRN without a NomsNumber returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender`(
+    givenAUser { userEntity, jwt ->
+      givenAnOffender(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
         },
       ) { offenderDetails, _ ->
-        `Given an Application`(userEntity, crn = offenderDetails.otherIds.crn) { application ->
+        givenAnApplication(userEntity, crn = offenderDetails.otherIds.crn) { application ->
           val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
             withCrn(offenderDetails.otherIds.crn)
             withApplicationId(application.id)
@@ -361,8 +361,8 @@ class PersonalTimelineTest : IntegrationTestBase() {
 
   @Test
   fun `Getting a personal timeline for a CRN with an offline application returns OK with correct body`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
         val personInfoResult = PersonInfoResult.Success.Full(
           crn = offenderDetails.otherIds.crn,
           offenderDetailSummary = offenderDetails,

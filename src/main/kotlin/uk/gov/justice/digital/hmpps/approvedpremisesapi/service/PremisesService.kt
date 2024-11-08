@@ -524,7 +524,7 @@ class PremisesService(
           onValidationError("$.pdu", "empty")
         }
 
-        val result = probationDeliveryUnitRepository.findByNameAndProbationRegion_Id(name, probationRegionId)
+        val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
 
         if (result == null) {
           onValidationError("$.pdu", "doesNotExist")
@@ -532,14 +532,14 @@ class PremisesService(
 
         result
       }, { id ->
-        val result = probationDeliveryUnitRepository.findByIdAndProbationRegion_Id(id, probationRegionId)
+        val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
 
         if (result == null) {
           onValidationError("$.probationDeliveryUnitId", "doesNotExist")
         }
 
         result
-      },)
+      })
     }
 
     return probationDeliveryUnit

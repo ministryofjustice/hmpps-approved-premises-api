@@ -29,12 +29,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -61,8 +61,8 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeEach
   fun setup() {
-    val (offenderDetails) = `Given an Offender`()
-    val (user, jwt) = `Given a User`(
+    val (offenderDetails) = givenAnOffender()
+    val (user, jwt) = givenAUser(
       roles = listOf(
         UserRole.CAS1_ASSESSOR,
         UserRole.CAS1_MATCHER,
@@ -80,26 +80,26 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       withPermissiveSchema()
     }
 
-    APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+    apDeliusContextMockSuccessfulTeamsManagingCaseCall(
       offenderDetails.otherIds.crn,
       ManagingTeamsResponse(
         teamCodes = listOf("TEAM1"),
       ),
     )
 
-    APOASysContext_mockSuccessfulNeedsDetailsCall(
+    apOASysContextMockSuccessfulNeedsDetailsCall(
       offenderDetails.otherIds.crn,
       NeedsDetailsFactory().produce(),
     )
 
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     this.offenderDetails = offenderDetails
     this.user1 = user
     this.jwt = jwt
     this.applicationId = createApplication()
 
-    this.user2 = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)).first
+    this.user2 = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)).first
   }
 
   @Test
@@ -268,7 +268,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { `Given a Probation Region`() }
+      withYieldedProbationRegion { givenAProbationRegion() }
     }
 
     val room = roomEntityFactory.produceAndPersist {

@@ -815,7 +815,11 @@ class ApplicationService(
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
       this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(
         existingEntry = this.caseManagerUserDetails,
-        updatedValues = if (submitApplication.caseManagerIsNotApplicant == true) { submitApplication.caseManagerUserDetails } else null,
+        updatedValues = if (submitApplication.caseManagerIsNotApplicant == true) {
+          submitApplication.caseManagerUserDetails
+        } else {
+          null
+        },
       )
       this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
     }

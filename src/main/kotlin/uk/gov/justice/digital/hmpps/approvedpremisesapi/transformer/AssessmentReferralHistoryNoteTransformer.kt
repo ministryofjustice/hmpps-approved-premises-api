@@ -21,7 +21,9 @@ class AssessmentReferralHistoryNoteTransformer(
 ) {
 
   fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryNote = when (jpa) {
-    is AssessmentReferralHistoryUserNoteEntity -> { transformJpaToReferralHistoryUserNote(jpa) }
+    is AssessmentReferralHistoryUserNoteEntity -> {
+      transformJpaToReferralHistoryUserNote(jpa)
+    }
     is AssessmentReferralHistorySystemNoteEntity -> ReferralHistorySystemNote(
       id = jpa.id,
       createdAt = jpa.createdAt.toInstant(),
@@ -34,7 +36,9 @@ class AssessmentReferralHistoryNoteTransformer(
   }
 
   fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity, assessmentEntity: TemporaryAccommodationAssessmentEntity): ReferralHistoryNote = when (jpa) {
-    is AssessmentReferralHistoryUserNoteEntity -> { transformJpaToReferralHistoryUserNote(jpa) }
+    is AssessmentReferralHistoryUserNoteEntity -> {
+      transformJpaToReferralHistoryUserNote(jpa)
+    }
     is AssessmentReferralHistorySystemNoteEntity -> ReferralHistorySystemNote(
       id = jpa.id,
       createdAt = jpa.createdAt.toInstant(),

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -24,8 +24,8 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
 
   @BeforeEach
   fun before() {
-    probationRegion = `Given a Probation Region`()
-    otherProbationRegion = `Given a Probation Region`()
+    probationRegion = givenAProbationRegion()
+    otherProbationRegion = givenAProbationRegion()
   }
 
   // Searching for a Bed returns Beds ordered by their distance from the postcode district that:

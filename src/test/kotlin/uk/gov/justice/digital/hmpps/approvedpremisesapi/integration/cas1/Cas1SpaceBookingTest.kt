@@ -26,13 +26,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -68,8 +68,8 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space without JWT returns 401`() {
-      `Given a User` { user, _ ->
-        `Given a Placement Request`(
+      givenAUser { user, _ ->
+        givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -85,9 +85,9 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
-      `Given a User` { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedProbationRegion { `Given a Probation Region`() }
+          withYieldedProbationRegion { givenAProbationRegion() }
           withYieldedLocalAuthorityArea {
             localAuthorityEntityFactory.produceAndPersist()
           }
@@ -119,8 +119,8 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown premises returns 400 Bad Request`() {
-      `Given a User` { user, jwt ->
-        `Given a Placement Request`(
+      givenAUser { user, jwt ->
+        givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -150,14 +150,14 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
-      `Given a User` { user, jwt ->
-        `Given a Placement Request`(
+      givenAUser { user, jwt ->
+        givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
             withYieldedLocalAuthorityArea {
               localAuthorityEntityFactory.produceAndPersist()
             }
@@ -188,8 +188,8 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space returns OK with the correct data, updates app status, emits domain event and emails`() {
-      `Given a User` { applicant, jwt ->
-        `Given a Placement Request`(
+      givenAUser { applicant, jwt ->
+        givenAPlacementRequest(
           placementRequestAllocatedTo = applicant,
           assessmentAllocatedTo = applicant,
           createdByUser = applicant,
@@ -212,7 +212,7 @@ class Cas1SpaceBookingTest {
           placementRequestRepository.saveAndFlush(placementRequest)
 
           val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedProbationRegion { `Given a Probation Region`() }
+            withYieldedProbationRegion { givenAProbationRegion() }
             withYieldedLocalAuthorityArea {
               localAuthorityEntityFactory.produceAndPersist()
             }
@@ -379,7 +379,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.get()
         .uri("/cas1/premises/${premisesWithNoBooking.id}/space-bookings")
@@ -391,7 +391,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Empty list returned if no results for given premises`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithNoBooking.id}/space-bookings")
@@ -406,7 +406,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Search with no filters excludes cancelled bookings`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -427,7 +427,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on residency historic`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=historic&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -444,7 +444,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on residency upcoming`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=upcoming&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -460,7 +460,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on residency current`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=current&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -478,7 +478,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on CRN`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CRN_CURRENT2&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -494,7 +494,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on Name`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=comING&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -510,7 +510,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on Key Worker Staff Code`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerStaffCode=${keyWorker.deliusStaffCode}&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -531,7 +531,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Name`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CUrt&sortBy=personName&sortDirection=desc")
@@ -549,7 +549,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Canonical Arrival Date`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=desc")
@@ -570,7 +570,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Canonical Departure Date`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalDepartureDate&sortDirection=asc")
@@ -591,7 +591,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Keyworker`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=current&sortBy=keyWorkerName&sortDirection=asc")
@@ -609,7 +609,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Tier`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=tier&sortDirection=desc")
@@ -655,7 +655,7 @@ class Cas1SpaceBookingTest {
       testCaseForSpaceBookingSummaryStatus: TestCaseForSpaceBookingSummaryStatus,
       expectedResultStatus: Cas1SpaceBookingSummaryStatus,
     ) {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val crnForStatusTest = UUID.randomUUID().toString()
 
@@ -706,7 +706,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      val region = `Given a Probation Region`()
+      val region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -718,9 +718,9 @@ class Cas1SpaceBookingTest {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -780,7 +780,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.get()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
@@ -792,7 +792,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 404 if premise doesn't exist`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       webTestClient.get()
         .uri("/cas1/premises/${UUID.randomUUID()}/space-bookings/${spaceBooking.id}")
@@ -804,7 +804,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 404 if space booking doesn't exist`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       webTestClient.get()
         .uri("/cas1/premises/${premises.id}/space-bookings/${UUID.randomUUID()}")
@@ -816,7 +816,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns premises information if have correct role`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
@@ -842,16 +842,16 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = `Given a Probation Region`()
+      region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -871,7 +871,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
@@ -888,11 +888,11 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid key worker )`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -934,11 +934,11 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording arrival returns OK and creates a domain event`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -983,7 +983,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = `Given a Probation Region`()
+      region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -995,9 +995,9 @@ class Cas1SpaceBookingTest {
         withLegacyDeliusReasonCode("legacyDeliusCode")
       }
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1017,7 +1017,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/non-arrival")
@@ -1035,10 +1035,10 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid offender CRN )`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1081,11 +1081,11 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording non-arrival returns OK and creates a domain event`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1135,7 +1135,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = `Given a Probation Region`()
+      region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withQCode("QCODE")
@@ -1143,10 +1143,10 @@ class Cas1SpaceBookingTest {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      keyWorker = `Given a User`().first
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      keyWorker = givenAUser().first
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1167,7 +1167,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
         .header("Authorization", "Bearer $jwt")
@@ -1183,10 +1183,10 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording key worker returns OK and emits domain event`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
@@ -1221,16 +1221,16 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = `Given a Probation Region`()
+      region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1250,7 +1250,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_ASSESSOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/departure")
@@ -1269,11 +1269,11 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid key worker )`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1318,11 +1318,11 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording departure returns OK and creates a domain event`() {
-      val (_, jwt) = `Given a User`(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val (user) = `Given a User`()
-      val (offender) = `Given an Offender`()
-      val (placementRequest) = `Given a Placement Request`(
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -1373,7 +1373,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      region = `Given a Probation Region`()
+      region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
@@ -1381,25 +1381,25 @@ class Cas1SpaceBookingTest {
         withEmailAddress("premises@test.com")
       }
 
-      applicant = `Given a User`(
+      applicant = givenAUser(
         staffDetail =
         StaffDetailFactory.staffDetail(email = "applicant@test.com"),
       ).first
 
-      placementApplicationCreator = `Given a User`(
+      placementApplicationCreator = givenAUser(
         staffDetail =
         StaffDetailFactory.staffDetail(email = "placementApplicant@test.com"),
       ).first
 
-      val (offender) = `Given an Offender`()
+      val (offender) = givenAnOffender()
 
       application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withCreatedByUser(applicant)
         withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-        withApArea(`Given an AP Area`())
+        withApArea(givenAnApArea())
         withSubmittedAt(OffsetDateTime.now())
-        withCruManagementArea(`Given a CAS1 CRU Management Area`())
+        withCruManagementArea(givenACas1CruManagementArea())
       }
 
       val placementApplication = placementApplicationFactory.produceAndPersist {
@@ -1408,7 +1408,7 @@ class Cas1SpaceBookingTest {
         withApplication(application)
       }
 
-      val (placementRequest) = `Given a Placement Request`(
+      val (placementRequest) = givenAPlacementRequest(
         application = application,
         placementRequestAllocatedTo = applicant,
         assessmentAllocatedTo = applicant,
@@ -1457,7 +1457,7 @@ class Cas1SpaceBookingTest {
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
-      `Given a User`(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -1476,7 +1476,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has role CRU_MEMBER`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -1510,8 +1510,8 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
   lateinit var keyWorker: UserEntity
 
   protected fun setupRegionAndKeyWorkerAndPremises() {
-    val region = `Given a Probation Region`()
-    keyWorker = `Given a User`().first
+    val region = givenAProbationRegion()
+    keyWorker = givenAUser().first
 
     nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
       withName("nonArrivalName")
@@ -1536,13 +1536,13 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
     tier: String,
     configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
   ): Cas1SpaceBookingEntity {
-    val (user) = `Given a User`()
-    val (offender) = `Given an Offender`(offenderDetailsConfigBlock = {
+    val (user) = givenAUser()
+    val (offender) = givenAnOffender(offenderDetailsConfigBlock = {
       withCrn(crn)
       withFirstName(firstName)
       withLastName(lastName)
-    },)
-    val (placementRequest) = `Given a Placement Request`(
+    })
+    val (placementRequest) = givenAPlacementRequest(
       placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,

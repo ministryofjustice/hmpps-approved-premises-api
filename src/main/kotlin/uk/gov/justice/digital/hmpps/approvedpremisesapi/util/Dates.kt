@@ -63,7 +63,7 @@ infix fun ClosedRange<LocalDate>.overlaps(other: ClosedRange<LocalDate>): Boolea
 
   true:        <--A-->        (B fully contains A)
           <-------B------->
-  */
+   */
 
   val thisFullyBefore = this.start < other.start && this.endInclusive < other.start
   val thisFullyAfter = this.endInclusive > other.endInclusive && this.start > other.endInclusive

@@ -6,8 +6,8 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.CancelBookingSeedCsvRow
@@ -40,10 +40,10 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
 
   @Test
   fun `Attempting to cancel a non-Approved Premises Booking logs an error`() {
-    `Given an Offender` { offenderDetails, _ ->
+    givenAnOffender { offenderDetails, _ ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -87,10 +87,10 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
 
   @Test
   fun `Cancelling an Approved Premises Booking succeeds`() {
-    `Given an Offender` { offenderDetails, _ ->
+    givenAnOffender { offenderDetails, _ ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { `Given a Probation Region`() }
+        withYieldedProbationRegion { givenAProbationRegion() }
       }
 
       val bed = bedEntityFactory.produceAndPersist {

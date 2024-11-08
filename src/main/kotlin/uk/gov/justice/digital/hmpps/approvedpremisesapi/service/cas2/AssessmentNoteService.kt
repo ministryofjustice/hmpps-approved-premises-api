@@ -44,8 +44,7 @@ class AssessmentNoteService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("ReturnCount")
-  fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote):
-    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
+  fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -157,8 +156,7 @@ class AssessmentNoteService(
     }
   }
 
-  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity):
-    Boolean {
+  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean {
     return if (user.id == application.createdByUser.id) {
       true
     } else {

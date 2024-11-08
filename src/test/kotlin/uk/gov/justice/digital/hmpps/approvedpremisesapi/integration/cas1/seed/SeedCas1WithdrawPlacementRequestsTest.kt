@@ -8,10 +8,10 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS1 CRU Management Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -34,8 +34,8 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   @Test
   fun `Errors if placement request not linked to placement application`() {
-    `Given a User` { applicant, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { applicant, _ ->
+      givenAnOffender { offenderDetails, _ ->
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
         val placementRequest = createPlacementRequest(application)
@@ -65,8 +65,8 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   @Test
   fun `Withdraws requested placement request, leaving others unmodified`() {
-    `Given a User` { applicant, _ ->
-      `Given an Offender` { offenderDetails, _ ->
+    givenAUser { applicant, _ ->
+      givenAnOffender { offenderDetails, _ ->
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
         val placementApplication = createPlacementApplication(application, listOf(LocalDate.now() to 2))
@@ -172,7 +172,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
-    val apArea = `Given an AP Area`()
+    val apArea = givenAnApArea()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -183,7 +183,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       withReleaseType("licence")
       withCaseManagerUserDetails(caseManager)
       withCaseManagerIsNotApplicant(caseManager != null)
-      withCruManagementArea(`Given a CAS1 CRU Management Area`())
+      withCruManagementArea(givenACas1CruManagementArea())
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

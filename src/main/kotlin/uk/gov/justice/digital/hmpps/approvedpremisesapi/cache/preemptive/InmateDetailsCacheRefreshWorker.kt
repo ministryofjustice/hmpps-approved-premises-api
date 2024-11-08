@@ -32,7 +32,9 @@ class InmateDetailsCacheRefreshWorker(
 
     log.info("${distinctNomsNumbers.count()} cache records to check")
 
-    if (loggingEnabled) { log.info("Got $distinctNomsNumbers to consider updating for Inmate Details") }
+    if (loggingEnabled) {
+      log.info("Got $distinctNomsNumbers to consider updating for Inmate Details")
+    }
 
     val started = LocalDateTime.now()
     val refreshStarted = LocalDateTime.now()
