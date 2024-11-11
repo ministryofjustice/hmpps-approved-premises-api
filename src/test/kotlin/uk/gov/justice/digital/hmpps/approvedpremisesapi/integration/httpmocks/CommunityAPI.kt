@@ -6,20 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Convicti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
-
-@Deprecated(message = "This should be replaced with a mock call to ap-and-delius integration", replaceWith = ReplaceWith("ApDeliusContext_addStaffDetailResponse"))
-fun IntegrationTestBase.communityAPIMockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) {
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/secure/staff/username/${staffUserDetails.username}",
-    responseBody = staffUserDetails,
-  )
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/secure/staff/staffCode/${staffUserDetails.staffCode}",
-    responseBody = staffUserDetails,
-  )
-}
 
 fun IntegrationTestBase.communityAPIMockSuccessfulOffenderDetailsCall(offenderDetails: OffenderDetailSummary) =
   mockSuccessfulGetCallWithJsonResponse(

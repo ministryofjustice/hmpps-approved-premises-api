@@ -2,10 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulStaffUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -14,9 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import java.util.UUID
 
@@ -66,26 +61,6 @@ fun IntegrationTestBase.givenAUser(
   val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffDetail.username!!)
 
   if (mockStaffUserDetailsCall) {
-    // this will be removed when the staff code call is added to the ap-delius-integration
-    val temp = StaffUserDetails(
-      username = staffDetail.username!!,
-      email = staffDetail.email,
-      telephoneNumber = staffDetail.telephoneNumber,
-      staffCode = staffDetail.code,
-      staffIdentifier = staffDetail.staffIdentifier,
-      staff = StaffNames(
-        forenames = staffDetail.name.forenames(),
-        surname = staffDetail.name.surname,
-      ),
-      teams = staffDetail.teams.map { team ->
-        StaffUserTeamMembershipFactory().withCode(team.code).withDescription(team.name).produce()
-      },
-      probationArea = StaffProbationArea(
-        staffDetail.probationArea.code,
-        staffDetail.probationArea.description,
-      ),
-    )
-    communityAPIMockSuccessfulStaffUserDetailsCall(temp)
     apDeliusContextAddStaffDetailResponse(staffDetail)
   } else {
     mockOAuth2ClientCredentialsCallIfRequired {}

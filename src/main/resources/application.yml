@@ -309,4 +309,3 @@ feature-flags:
   cas1-expired-applications-enabled: false
   include-assessment-updated-domain-events: false
   get-documents-from-ap-delius: false
-  staff-detail-by-staff-code-enabled: false
