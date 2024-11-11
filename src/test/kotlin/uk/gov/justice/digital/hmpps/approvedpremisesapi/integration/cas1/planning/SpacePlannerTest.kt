@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
 
@@ -26,6 +27,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
   fun `multi day planning is correct`() {
     val premises = approvedPremisesEntityFactory
       .produceAndPersist {
+        withId(UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"))
         withName("Premises 1")
         withProbationRegion(probationRegionEntityFactory.produceAndPersist())
         withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
@@ -135,6 +137,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       withCanonicalDepartureDate(LocalDate.of(2020, 5, 9))
       withCriteria(
         findCharacteristic("hasEnSuite"),
+        findCharacteristic("isArsonDesignated"),
       )
     }
 
@@ -150,7 +153,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       SpacePlanRenderer.render(criteria, plan),
     ).isEqualTo(
       """
-      Space Plan for Premises 1 from 2020-05-06 to 2020-05-10
+      Space Plan for Premises 1 (0f9384e2-2f94-41d9-a79c-4e35e67111ec) from 2020-05-06 to 2020-05-10
       
       There are 3 days with unplanned bookings:
       
@@ -166,7 +169,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       | **Room 3 - Bed 2**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
       | **Room 3 - Bed 3**   |                                                                        | OUT_OF_SERVICE                                                         | OUT_OF_SERVICE                                                         | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
       | **Room 3 - Bed 4**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | ENDED                                                                  | ENDED                                                                  | ENDED                                                                  |
-      | **unplanned**        | **CRN5**<br/>hasEnSuite                                                | **CRN5**<br/>hasEnSuite<br/><br/>**CRN2**                              | **CRN5**<br/>hasEnSuite<br/><br/>**CRN2**                              |                                                                        |                                                                        |
+      | **unplanned**        | **CRN5**<br/>hasEnSuite<br/>isArsonDesignated                          | **CRN5**<br/>hasEnSuite<br/>isArsonDesignated<br/><br/>**CRN2**        | **CRN5**<br/>hasEnSuite<br/>isArsonDesignated<br/><br/>**CRN2**        |                                                                        |                                                                        |
       """.trimIndent(),
     )
   }

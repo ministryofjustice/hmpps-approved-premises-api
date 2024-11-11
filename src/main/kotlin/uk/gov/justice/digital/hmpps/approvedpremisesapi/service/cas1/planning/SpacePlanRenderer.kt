@@ -22,8 +22,9 @@ object SpacePlanRenderer {
     plan: SpacePlan,
   ): String {
     val output = StringBuilder()
+    val premises = criteria.premises
 
-    output.appendLine("Space Plan for ${criteria.premises.name} from ${criteria.startDate} to ${criteria.endDate}")
+    output.appendLine("Space Plan for ${premises.name} (${premises.id}) from ${criteria.startDate} to ${criteria.endDate}")
     output.appendLine()
 
     val daysWithUnplannedBookings = plan.dayPlans.filter { it.planningResult.unplanned.isNotEmpty() }
@@ -117,17 +118,22 @@ object SpacePlanRenderer {
     }
   }
 
-  private fun bedDescription(bed: Bed) =
-    bed.label.bold()
+  private fun bedDescription(bed: Bed): String {
+    val result = StringBuilder()
+    result.append(bed.label.bold())
+    return result.toString()
+  }
 
   private fun unplannedBookingDescription(booking: SpaceBooking): String {
     val result = StringBuilder()
     result.append(booking.label.bold())
     if (booking.requiredRoomCharacteristics.isNotEmpty()) {
-      result.append(booking.requiredRoomCharacteristics.joinToString(prefix = "<br/>") { it.label })
+      result.append("<br/>")
+      result.append(booking.requiredRoomCharacteristics.map { it.label }.toHtmlString())
     }
     return result.toString()
   }
 
   private fun String.bold() = "**$this**"
+  private fun List<String>.toHtmlString() = this.joinToString("<br/>")
 }
