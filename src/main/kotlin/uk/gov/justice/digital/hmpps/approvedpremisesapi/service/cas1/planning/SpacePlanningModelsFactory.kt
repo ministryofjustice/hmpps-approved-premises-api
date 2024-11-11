@@ -45,19 +45,21 @@ class SpacePlanningModelsFactory(
         )
       }
 
-  private fun BedEntity.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<Cas1OutOfServiceBedEntity>) =
-    if (this.isOutOfService(day, outOfServiceBedRecords)) {
-      BedInactiveReason.OUT_OF_SERVICE
+  private fun BedEntity.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<Cas1OutOfServiceBedEntity>): BedInactiveReason? {
+    val outOfServiceRecord = this.findOutOfServiceRecord(day, outOfServiceBedRecords)
+    return if (outOfServiceRecord != null) {
+      BedOutOfService(outOfServiceRecord.reason.name)
     } else if (!this.isActive(day)) {
-      BedInactiveReason.ENDED
+      BedEnded(this.endDate!!)
     } else {
       null
     }
+  }
 
-  private fun BedEntity.isOutOfService(
+  private fun BedEntity.findOutOfServiceRecord(
     day: LocalDate,
     outOfServiceBedRecords: List<Cas1OutOfServiceBedEntity>,
-  ) = outOfServiceBedRecords.any { it.isApplicable(day, candidate = this) }
+  ) = outOfServiceBedRecords.firstOrNull { it.isApplicable(day, candidate = this) }
 
   private fun BedEntity.toBed() = Bed(
     id = this.id,

@@ -15,7 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_SINGLE_ROOM_CHARACTERISTIC_ID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedInactiveReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedEnded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedOutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
@@ -231,7 +232,7 @@ class SpacePlanningModelsFactoryTest {
       assertThat(activeBedDayState.bed.label).isEqualTo("the active bed name")
 
       val inactiveBedDayState = result[1]
-      assertThat(inactiveBedDayState.inactiveReason).isEqualTo(BedInactiveReason.ENDED)
+      assertThat(inactiveBedDayState.inactiveReason).isInstanceOf(BedEnded::class.java)
       assertThat(inactiveBedDayState.bed.id).isEqualTo(bed2EntityEndedYesterday.id)
       assertThat(inactiveBedDayState.bed.label).isEqualTo("the ended bed name")
     }
@@ -295,7 +296,7 @@ class SpacePlanningModelsFactoryTest {
       assertThat(activeBedDayState.bed.label).isEqualTo("the active bed name")
 
       val inactiveBedDayState = result[1]
-      assertThat(inactiveBedDayState.inactiveReason).isEqualTo(BedInactiveReason.OUT_OF_SERVICE)
+      assertThat(inactiveBedDayState.inactiveReason).isInstanceOf(BedOutOfService::class.java)
       assertThat(inactiveBedDayState.bed.id).isEqualTo(bed2EntityOutOfService.id)
       assertThat(inactiveBedDayState.bed.label).isEqualTo("the oosb bed name")
     }
