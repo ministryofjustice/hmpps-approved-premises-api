@@ -8,7 +8,7 @@ data class StaffDetail(
   val staffIdentifier: Long,
   val teams: List<Team> = emptyList(),
   val probationArea: ProbationArea,
-  val username: String,
+  val username: String?,
   val name: PersonName,
   val code: String,
   val active: Boolean,

@@ -61,6 +61,10 @@ class ApDeliusContextApiClient(
     path = "/staff/$username"
   }
 
+  fun getStaffDetailByStaffCode(staffCode: String) = getRequest<StaffDetail> {
+    path = "/staff?code=$staffCode"
+  }
+
   fun getDocuments(crn: String) = getRequest<List<APDeliusDocument>> {
     path = "/documents/$crn/all"
   }

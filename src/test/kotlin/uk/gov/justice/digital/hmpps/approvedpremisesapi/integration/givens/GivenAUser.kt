@@ -63,12 +63,12 @@ fun IntegrationTestBase.givenAUser(
     }
   }
 
-  val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffDetail.username)
+  val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffDetail.username!!)
 
   if (mockStaffUserDetailsCall) {
     // this will be removed when the staff code call is added to the ap-delius-integration
     val temp = StaffUserDetails(
-      username = staffDetail.username,
+      username = staffDetail.username!!,
       email = staffDetail.email,
       telephoneNumber = staffDetail.telephoneNumber,
       staffCode = staffDetail.code,

@@ -38,8 +38,14 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffMembersCall(staffMembe
       content = listOf(staffMember),
     ),
   )
+
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/staff/staffCode/${staffMember.code}",
+    responseBody = staffMember,
+  )
+
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/staff?staffCode=${staffMember.code}",
     responseBody = staffMember,
   )
 }
@@ -207,6 +213,11 @@ fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(casesSum
 fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: StaffDetail) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/staff/${staffDetail.username}",
+    responseBody = staffDetail,
+  )
+
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/staff?code=${staffDetail.code}",
     responseBody = staffDetail,
   )
 }

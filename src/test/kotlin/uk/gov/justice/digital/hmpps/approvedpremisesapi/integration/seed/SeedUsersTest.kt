@@ -327,7 +327,7 @@ class SeedUsersTest : SeedTestBase() {
       userRoleAssignmentSeedCsvRowsToCsv(
         seedInfos.map {
           UserRoleAssignmentsSeedCsvRowFactory()
-            .withDeliusUsername(it.staffUserDetails.username)
+            .withDeliusUsername(it.staffUserDetails.username!!)
             .withTypedRoles(it.expectedRoles)
             .withTypedQualifications(it.expectedQualifications)
             .produce()
@@ -340,7 +340,7 @@ class SeedUsersTest : SeedTestBase() {
       seedService.seedData(SeedFileType.user, "users-many-times-base-job.csv")
 
       seedInfos.forEach {
-        val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!!
+        val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username!!.uppercase())!!
 
         it.iterationValidations += IterationValidation(
           rolesCorrect = persistedUser.roles.map(UserRoleAssignmentEntity::role).containsAll(it.expectedRoles),
@@ -415,7 +415,7 @@ class SeedUsersTest : SeedTestBase() {
       userRoleAssignmentSeedCsvRowsToCsv(
         seedInfos.map {
           UserRoleAssignmentsSeedCsvRowFactory()
-            .withDeliusUsername(it.staffUserDetails.username)
+            .withDeliusUsername(it.staffUserDetails.username!!)
             .withTypedRoles(it.expectedRoles)
             .withTypedQualifications(it.expectedQualifications)
             .produce()
@@ -428,7 +428,7 @@ class SeedUsersTest : SeedTestBase() {
       seedService.seedData(SeedFileType.approvedPremisesUsers, "users-many-times-ap-job.csv")
 
       seedInfos.forEach {
-        val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username.uppercase())!!
+        val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username!!.uppercase())!!
 
         it.iterationValidations += IterationValidation(
           rolesCorrect = persistedUser.roles.map(UserRoleAssignmentEntity::role).containsAll(it.expectedRoles),
