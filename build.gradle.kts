@@ -119,8 +119,6 @@ tasks {
 
   compileJava { enabled = false }
   compileTestJava { enabled = false }
-  compileScala { enabled = false }
-  compileTestScala { enabled = false }
 }
 
 // this is deprecated in favour of bootRunDebug, which does not set an active profile
