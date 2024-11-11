@@ -56,6 +56,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   runtimeOnly("org.ehcache:ehcache")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   implementation(kotlin("reflect"))
 
