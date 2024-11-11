@@ -14,9 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_SINGLE_ROOM_CHARACTERISTIC_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedEnded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedOutOfService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
@@ -34,7 +34,7 @@ class SpacePlanningModelsFactoryTest {
     fun `all room and bed properties including active characteristics are correctly mapped`() {
       val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).withModelScope("room").produce()
       val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("room").produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).withModelScope("room").produce()
+      val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withIsActive(true).withModelScope("room").produce()
       val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).withModelScope("room").produce()
       val characteristicPremise = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("premises").produce()
 
@@ -128,7 +128,7 @@ class SpacePlanningModelsFactoryTest {
     fun `all room and bed properties including active characteristics are correctly mapped`() {
       val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).withModelScope("room").produce()
       val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("room").produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withIsActive(true).withModelScope("room").produce()
+      val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withIsActive(true).withModelScope("room").produce()
       val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).withModelScope("room").produce()
       val characteristicPremise = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("premises").produce()
 
@@ -328,7 +328,7 @@ class SpacePlanningModelsFactoryTest {
     fun `all booking properties including active room characteristics are correctly mapped`() {
       val characteristic1 = CharacteristicEntityFactory().withPropertyName("c1").withIsActive(true).withModelScope("room").produce()
       val characteristic2 = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("room").produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withId(CAS1_SINGLE_ROOM_CHARACTERISTIC_ID).withPropertyName("single").withModelScope("room").withIsActive(true).produce()
+      val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withModelScope("room").withIsActive(true).produce()
       val characteristicDisabled = CharacteristicEntityFactory().withPropertyName("disabled").withIsActive(false).withModelScope("room").produce()
       val characteristicPremise = CharacteristicEntityFactory().withPropertyName("c2").withIsActive(true).withModelScope("premises").produce()
 

@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_SINGLE_ROOM_CHARACTERISTIC_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory.Constants.DEFAULT_CHARACTERISTIC_WEIGHT
 import java.time.LocalDate
 
@@ -81,6 +81,6 @@ class SpacePlanningModelsFactory(
     id = characteristicEntity.id,
     label = characteristicEntity.propertyName ?: "",
     weighting = DEFAULT_CHARACTERISTIC_WEIGHT,
-    singleRoom = characteristicEntity.id == CAS1_SINGLE_ROOM_CHARACTERISTIC_ID,
+    singleRoom = characteristicEntity.propertyName == CAS1_PROPERTY_NAME_SINGLE_ROOM,
   )
 }
