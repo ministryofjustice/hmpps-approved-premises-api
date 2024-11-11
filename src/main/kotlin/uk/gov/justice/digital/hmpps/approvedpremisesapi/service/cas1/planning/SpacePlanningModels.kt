@@ -24,10 +24,9 @@ data class BedDayState(
   fun isActive() = inactiveReason == null
 }
 
-enum class BedInactiveReason {
-  ENDED,
-  OUT_OF_SERVICE,
-}
+sealed interface BedInactiveReason
+data class BedEnded(val ended: LocalDate) : BedInactiveReason
+data class BedOutOfService(val reason: String) : BedInactiveReason
 
 data class Room(
   val id: UUID,

@@ -86,7 +86,11 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
         withOutOfServiceBed(this@apply)
         withStartDate(LocalDate.of(2020, 5, 7))
         withEndDate(LocalDate.of(2020, 5, 8))
-        withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+        withReason(
+          cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+            withName("refurb")
+          },
+        )
       }
     }
 
@@ -167,8 +171,8 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       | **Room 2 - Bed 1**   | **CRN4**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               |
       | **Room 3 - Bed 1**   | **CRN2**                                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
       | **Room 3 - Bed 2**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
-      | **Room 3 - Bed 3**   |                                                                        | OUT_OF_SERVICE                                                         | OUT_OF_SERVICE                                                         | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
-      | **Room 3 - Bed 4**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | ENDED                                                                  | ENDED                                                                  | ENDED                                                                  |
+      | **Room 3 - Bed 3**   |                                                                        | OOSB refurb                                                            | OOSB refurb                                                            | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
+      | **Room 3 - Bed 4**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | Bed Ended 2020-05-08                                                   | Bed Ended 2020-05-08                                                   | Bed Ended 2020-05-08                                                   |
       | **unplanned**        | **CRN5**<br/>hasEnSuite<br/>isArsonDesignated                          | **CRN5**<br/>hasEnSuite<br/>isArsonDesignated<br/><br/>**CRN2**        | **CRN5**<br/>hasEnSuite<br/>isArsonDesignated<br/><br/>**CRN2**        |                                                                        |                                                                        |
       """.trimIndent(),
     )

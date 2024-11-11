@@ -96,7 +96,10 @@ object SpacePlanRenderer {
     booking: SpaceBooking?,
   ): String {
     return if (!bedState.isActive()) {
-      bedState.inactiveReason!!.name
+      when (val inactiveReason = bedState.inactiveReason!!) {
+        is BedEnded -> return "Bed Ended ${inactiveReason.ended}"
+        is BedOutOfService -> return "OOSB ${inactiveReason.reason}"
+      }
     } else if (booking != null) {
       val bookingDescription = StringBuilder()
 
