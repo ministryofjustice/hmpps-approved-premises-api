@@ -940,7 +940,7 @@ class BedSearchTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               BedSearchResults(
                 resultsRoomCount = 3,
-                resultsPremisesCount = 3,
+                resultsPremisesCount = 2,
                 resultsBedCount = 3,
                 results = listOf(
                   createTemporaryAccommodationBedSearchResult(
@@ -948,7 +948,7 @@ class BedSearchTest : IntegrationTestBase() {
                     expextedPremisesOneRoomOne,
                     expextedPremisesOneBedOne,
                     searchPdu.name,
-                    numberOfBeds = 1,
+                    numberOfBeds = 2,
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
@@ -957,6 +957,27 @@ class BedSearchTest : IntegrationTestBase() {
                       ),
                     ),
                     roomCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createTemporaryAccommodationBedSearchResult(
+                    expextedPremisesThreeRoomOne.premises,
+                    expextedPremisesThreeRoomOne,
+                    expextedPremisesThreeBedOne,
+                    searchPdu.name,
+                    numberOfBeds = 2,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Shared property",
+                      ),
+                    ),
+                    roomCharacteristics = listOf(
+                      CharacteristicPair(
+                        propertyName = null,
+                        name = "Wheelchair accessible",
+                      ),
+                    ),
                     overlaps = listOf(),
                   ),
                   createTemporaryAccommodationBedSearchResult(
@@ -977,31 +998,6 @@ class BedSearchTest : IntegrationTestBase() {
                       ),
                     ),
                     roomCharacteristics = listOf(),
-                    overlaps = listOf(),
-                  ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesThreeRoomOne.premises,
-                    expextedPremisesThreeRoomOne,
-                    expextedPremisesThreeBedOne,
-                    searchPdu.name,
-                    numberOfBeds = 1,
-                    numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Shared property",
-                      ),
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
-                    roomCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
                     overlaps = listOf(),
                   ),
                 ),
@@ -1055,7 +1051,7 @@ class BedSearchTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               BedSearchResults(
                 resultsRoomCount = 3,
-                resultsPremisesCount = 3,
+                resultsPremisesCount = 2,
                 resultsBedCount = 3,
                 results = listOf(
                   createTemporaryAccommodationBedSearchResult(
@@ -1063,7 +1059,7 @@ class BedSearchTest : IntegrationTestBase() {
                     expextedPremisesOneRoomOne,
                     expextedPremisesOneBedOne,
                     searchPdu.name,
-                    numberOfBeds = 1,
+                    numberOfBeds = 2,
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
@@ -1079,16 +1075,12 @@ class BedSearchTest : IntegrationTestBase() {
                     expextedPremisesThreeRoomOne,
                     expextedPremisesThreeBedOne,
                     searchPdu.name,
-                    numberOfBeds = 1,
+                    numberOfBeds = 2,
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
                         propertyName = null,
                         name = "Single occupancy",
-                      ),
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
                       ),
                     ),
                     roomCharacteristics = listOf(
@@ -1147,8 +1139,6 @@ class BedSearchTest : IntegrationTestBase() {
         val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
         val expextedPremisesTwoBedOne = beds.drop(1).first()
         val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
-        val expextedPremisesThreeBedOne = beds.drop(2).first()
-        val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
 
         webTestClient.post()
           .uri("/beds/search")
@@ -1169,25 +1159,21 @@ class BedSearchTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               BedSearchResults(
-                resultsRoomCount = 3,
-                resultsPremisesCount = 3,
-                resultsBedCount = 3,
+                resultsRoomCount = 2,
+                resultsPremisesCount = 2,
+                resultsBedCount = 2,
                 results = listOf(
                   createTemporaryAccommodationBedSearchResult(
                     expextedPremisesOneRoomOne.premises,
                     expextedPremisesOneRoomOne,
                     expextedPremisesOneBedOne,
                     searchPdu.name,
-                    numberOfBeds = 1,
+                    numberOfBeds = 2,
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
                         propertyName = null,
                         name = "Shared property",
-                      ),
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
                       ),
                     ),
                     roomCharacteristics = listOf(
@@ -1203,37 +1189,12 @@ class BedSearchTest : IntegrationTestBase() {
                     expextedPremisesTwoRoomOne,
                     expextedPremisesTwoBedOne,
                     searchPdu.name,
-                    numberOfBeds = 1,
+                    numberOfBeds = 2,
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
                         propertyName = null,
                         name = "Single occupancy",
-                      ),
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
-                    roomCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
-                    overlaps = listOf(),
-                  ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesThreeRoomOne.premises,
-                    expextedPremisesThreeRoomOne,
-                    expextedPremisesThreeBedOne,
-                    searchPdu.name,
-                    numberOfBeds = 1,
-                    numberOfBookedBeds = 0,
-                    listOf(
-                      CharacteristicPair(
-                        propertyName = null,
-                        name = "Wheelchair accessible",
                       ),
                     ),
                     roomCharacteristics = listOf(
@@ -1888,6 +1849,11 @@ class BedSearchTest : IntegrationTestBase() {
       )
 
       val (singleOccupancyRoomOne, singleOccupancyBedOne) = createBedspace(premisesSingleOccupancy, "Premises Single Occupancy Room One", listOf())
+      val (premisesSingleOccupancyWheelchairAccessibleRoomOne, premisesSingleOccupancyWheelchairAccessibleBedOne) = createBedspace(
+        premisesSingleOccupancy,
+        "Premises Single Occupancy with Wheelchair Accessible Room One",
+        listOf(wheelchairAccessibleCharacteristic!!),
+      )
 
       val premisesSharedProperty = createTemporaryAccommodationPremisesWithCharacteristics(
         "Premises Shared Property",
@@ -1898,18 +1864,9 @@ class BedSearchTest : IntegrationTestBase() {
       )
 
       val (sharedPropertyRoomOne, sharedPropertyBedOne) = createBedspace(premisesSharedProperty, "Premises Shared Property Room One", listOf())
-
-      val premisesWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
-        "Premises Wheelchair Accessible",
-        probationRegion,
-        localAuthorityArea,
-        pdu,
-        mutableListOf(wheelchairAccessibleCharacteristic!!),
-      )
-
-      val (wheelchairAccessibleRoomOne, wheelchairAccessibleBedOne) = createBedspace(
-        premisesWheelchairAccessible,
-        "Premises Wheelchair Accessible Room One",
+      val (premisesSharedPropertyWheelchairAccessibleRoomOne, premisesSharedPropertyWheelchairAccessibleBedOne) = createBedspace(
+        premisesSharedProperty,
+        "Premises Shared Property with Wheelchair Accessible Room One",
         listOf(wheelchairAccessibleCharacteristic),
       )
 
@@ -1971,38 +1928,10 @@ class BedSearchTest : IntegrationTestBase() {
         listOf(),
       )
 
-      val premisesSingleOccupancyWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
-        "Premises Single Occupancy with Wheelchair Accessible",
-        probationRegion,
-        localAuthorityArea,
-        pdu,
-        mutableListOf(premisesSingleOccupancyCharacteristic, wheelchairAccessibleCharacteristic),
-      )
-
-      val (premisesSingleOccupancyWheelchairAccessibleRoomOne, premisesSingleOccupancyWheelchairAccessibleBedOne) = createBedspace(
-        premisesSingleOccupancyWheelchairAccessible,
-        "Premises Single Occupancy with Wheelchair Accessible Room One",
-        listOf(wheelchairAccessibleCharacteristic),
-      )
-
-      val premisesSharedPropertyWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
-        "Premises Shared Property with Wheelchair Accessible",
-        probationRegion,
-        localAuthorityArea,
-        pdu,
-        mutableListOf(premisesSharedPropertyCharacteristic, wheelchairAccessibleCharacteristic),
-      )
-
-      val (premisesSharedPropertyWheelchairAccessibleRoomOne, premisesSharedPropertyWheelchairAccessibleBedOne) = createBedspace(
-        premisesSharedPropertyWheelchairAccessible,
-        "Premises Shared Property with Wheelchair Accessible Room One",
-        listOf(wheelchairAccessibleCharacteristic),
-      )
-
       when (bedSearchAttribute) {
         BedSearchAttributes.singleOccupancy -> beds = listOf(singleOccupancyBedOne, premisesSingleOccupancyWomenOnlyBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
         BedSearchAttributes.sharedProperty -> beds = listOf(sharedPropertyBedOne, premisesSharedPropertyMenOnlyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne)
-        BedSearchAttributes.wheelchairAccessible -> beds = listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne, wheelchairAccessibleBedOne)
+        BedSearchAttributes.wheelchairAccessible -> beds = listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
       }
       return beds
     }
