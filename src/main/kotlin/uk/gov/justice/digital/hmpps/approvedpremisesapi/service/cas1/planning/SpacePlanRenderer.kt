@@ -121,6 +121,16 @@ object SpacePlanRenderer {
   private fun bedDescription(bed: Bed): String {
     val result = StringBuilder()
     result.append(bed.label.bold())
+    if (bed.room.characteristics.isNotEmpty()) {
+      result.append("<br/>")
+      result.append(
+        bed.room.characteristics
+          .toList()
+          .sortedBy { it.label }
+          .map { it.label }
+          .toHtmlString(),
+      )
+    }
     return result.toString()
   }
 
