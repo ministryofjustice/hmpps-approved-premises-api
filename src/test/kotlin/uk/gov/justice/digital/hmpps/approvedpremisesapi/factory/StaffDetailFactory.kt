@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffNames
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
@@ -54,11 +52,3 @@ object StaffDetailFactory {
   fun probationArea() =
     ProbationArea(code = randomStringUpperCase(10), description = randomStringMultiCaseWithNumbers(50))
 }
-
-fun StaffDetail.toStaffMemberWithoutUsername() = StaffWithoutUsernameUserDetails(
-  staffCode = this.code,
-  staffIdentifier = this.staffIdentifier,
-  staff = StaffNames(this.name.forenames(), this.name.surname),
-  teams = emptyList(),
-  probationArea = null,
-)

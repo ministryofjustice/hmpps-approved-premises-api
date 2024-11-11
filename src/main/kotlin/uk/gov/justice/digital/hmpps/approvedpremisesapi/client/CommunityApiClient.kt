@@ -11,7 +11,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffWithoutUsernameUserDetails
 import java.io.OutputStream
 
 @Component
@@ -20,9 +19,6 @@ class CommunityApiClient(
   objectMapper: ObjectMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
-  fun getStaffUserDetailsForStaffCode(staffCode: String) = getRequest<StaffWithoutUsernameUserDetails> {
-    path = "/secure/staff/staffCode/$staffCode"
-  }
 
   fun getConvictions(crn: String) = getRequest<List<Conviction>> {
     path = "/secure/offenders/crn/$crn/convictions"

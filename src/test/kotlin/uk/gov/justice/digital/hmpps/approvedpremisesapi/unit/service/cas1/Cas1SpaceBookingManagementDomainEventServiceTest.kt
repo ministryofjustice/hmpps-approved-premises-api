@@ -11,9 +11,8 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
@@ -21,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -29,14 +27,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.toStaffMemberWithoutUsername
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventServiceConfig
@@ -64,16 +60,10 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
   lateinit var offenderService: OffenderService
 
   @MockK
-  lateinit var communityApiClient: CommunityApiClient
-
-  @MockK
   lateinit var applicationTimelineTransformer: ApplicationTimelineTransformer
 
   @MockK
   lateinit var cas1SpaceBookingManagementDomainEventServiceConfig: Cas1SpaceBookingManagementDomainEventServiceConfig
-
-  @MockK
-  lateinit var featureFlagService: FeatureFlagService
 
   @InjectMockKs
   lateinit var service: Cas1SpaceBookingManagementDomainEventService
@@ -129,21 +119,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { communityApiClient.getStaffUserDetailsForStaffCode(any()) } returns ClientResult.Success(
-        HttpStatus.OK,
-        keyWorker.toStaffMemberWithoutUsername(),
-      )
-
       every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         keyWorker,
       )
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record arrival and emits domain event`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record arrival and emits domain event`() {
       val spaceBooking = spaceBookingFactory.withApplication(application).produce()
 
       service.arrivalRecorded(spaceBooking)
@@ -185,10 +168,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.keyWorker!!.staffIdentifier).isEqualTo(keyWorker.staffIdentifier)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record arrival and emits domain event, with offline application`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record arrival and emits domain event, with offline application`() {
       val offlineApplication = OfflineApplicationEntityFactory().produce()
 
       val spaceBooking = spaceBookingFactory.withOfflineApplication(offlineApplication).produce()
@@ -214,12 +195,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record arrival and emits domain event with no keyWorker information if keyWorker is not present in original booking`(
-      flag: Boolean,
-    ) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record arrival and emits domain event with no keyWorker information if keyWorker is not present in original booking`() {
       val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
         .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
@@ -307,21 +284,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { communityApiClient.getStaffUserDetailsForStaffCode(any()) } returns ClientResult.Success(
-        HttpStatus.OK,
-        keyWorker.toStaffMemberWithoutUsername(),
-      )
-
       every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         keyWorker,
       )
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record departure and emits domain event`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record departure and emits domain event`() {
       val departedSpaceBooking = departedSpaceBookingFactory.withApplication(application).produce()
 
       service.departureRecorded(departedSpaceBooking, departureReason, moveOnCategory)
@@ -372,10 +342,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventMoveOnCategory.legacyMoveOnCategoryCode).isEqualTo(moveOnCategory.legacyDeliusCategoryCode)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record departure and emits domain event for offline application`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record departure and emits domain event for offline application`() {
       val offlineApplication = OfflineApplicationEntityFactory().produce()
 
       val departedSpaceBooking = departedSpaceBookingFactory.withOfflineApplication(offlineApplication).produce()
@@ -457,21 +425,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { communityApiClient.getStaffUserDetailsForStaffCode(any()) } returns ClientResult.Success(
-        HttpStatus.OK,
-        keyWorker.toStaffMemberWithoutUsername(),
-      )
-
       every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         keyWorker,
       )
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record keyWorker assigned and emits domain event with newly assigned key worker`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record keyWorker assigned and emits domain event with newly assigned key worker`() {
       val spaceBookingWithoutKeyWorker = spaceBookingWithoutKeyWorkerFactory.withApplication(application).produce()
 
       service.keyWorkerAssigned(
@@ -497,10 +458,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record keyWorker assigned and emits domain event with previous and newly assigned key worker`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record keyWorker assigned and emits domain event with previous and newly assigned key worker`() {
       val spaceBookingWithKeyWorker = spaceBookingWithKeyWorkerFactory.withApplication(application).produce()
 
       service.keyWorkerAssigned(
@@ -526,10 +485,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `record keyWorker assigned and emits domain event with offline application`(flag: Boolean) {
-      every { featureFlagService.getBooleanFlag("staff-detail-by-staff-code-enabled") } returns flag
+    @Test
+    fun `record keyWorker assigned and emits domain event with offline application`() {
       val offlineApplication = OfflineApplicationEntityFactory().produce()
 
       val spaceBookingWithKeyWorker = spaceBookingWithKeyWorkerFactory.withOfflineApplication(offlineApplication).produce()
