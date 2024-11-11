@@ -6,7 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_SINGLE_ROOM_CHARACTERISTIC_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_GROUND_FLOOR
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory.Constants.CHARACTERISTIC_ALLOW_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory.Constants.DEFAULT_CHARACTERISTIC_WEIGHT
 import java.time.LocalDate
 
@@ -16,6 +24,16 @@ class SpacePlanningModelsFactory(
 ) {
   object Constants {
     const val DEFAULT_CHARACTERISTIC_WEIGHT = 100
+    val CHARACTERISTIC_ALLOW_LIST = listOf(
+      CAS1_PROPERTY_NAME_ARSON_DESIGNATED,
+      CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+      CAS1_PROPERTY_NAME_ENSUITE,
+      CAS1_PROPERTY_NAME_GROUND_FLOOR,
+      CAS1_PROPERTY_NAME_SINGLE_ROOM,
+      CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+      CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS,
+      CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
+    )
   }
 
   fun allBeds(
@@ -72,8 +90,10 @@ class SpacePlanningModelsFactory(
   )
 
   private fun toRoomCharacteristics(characteristicEntities: List<CharacteristicEntity>) = characteristicEntities
+    .asSequence()
     .filter { it.isActive }
     .filter { it.isModelScopeRoom() }
+    .filter { CHARACTERISTIC_ALLOW_LIST.contains(it.propertyName) }
     .map { toCharacteristic(it) }
     .toSet()
 
@@ -81,6 +101,6 @@ class SpacePlanningModelsFactory(
     id = characteristicEntity.id,
     label = characteristicEntity.propertyName ?: "",
     weighting = DEFAULT_CHARACTERISTIC_WEIGHT,
-    singleRoom = characteristicEntity.id == CAS1_SINGLE_ROOM_CHARACTERISTIC_ID,
+    singleRoom = characteristicEntity.propertyName == CAS1_PROPERTY_NAME_SINGLE_ROOM,
   )
 }
