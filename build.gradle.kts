@@ -5,7 +5,7 @@ plugins {
   kotlin("plugin.spring") version "1.9.22"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
-  id("io.gatling.gradle") version "3.10.3.2"
+  id("io.gatling.gradle") version "3.12.0"
   id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
@@ -429,11 +429,7 @@ tasks {
 tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateDomainEvents")
 
 gatling {
-  gatlingVersion = "3.9.5"
-  // WARNING: options below only work when logback config file isn't provided
-  logLevel = "WARN" // logback root level
-  logHttp =
-    io.gatling.gradle.LogHttp.NONE // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
+  gatlingVersion = "3.12.0"
 }
 
 detekt {
