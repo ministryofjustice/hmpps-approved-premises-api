@@ -13,9 +13,12 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
@@ -32,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -69,8 +74,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
+import java.util.stream.Stream
 
 @ExtendWith(MockKExtension::class)
 class Cas1SpaceBookingServiceTest {
@@ -799,6 +806,7 @@ class Cas1SpaceBookingServiceTest {
     }
   }
 
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   @Nested
   inner class RecordDeparture {
 
@@ -994,24 +1002,117 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result.message).isEqualTo("The departure date is before the arrival date.")
     }
 
-    @Test
-    fun `Returns conflict error if the space booking already has an actual departure date`() {
-      val existingSpaceBookingWithDepartureDate = existingSpaceBooking.copy(
-        actualDepartureDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+    @ParameterizedTest
+    @MethodSource("conflictCasesForSpaceBookingRecordDeparture")
+    fun `Returns conflict error if the space booking has already recorded departure information that does not match the received departure information`(
+      testCaseForSpaceBookingRecordDeparture: TestCaseForSpaceBookingRecordDeparture,
+    ) {
+      val existingSpaceBookingWithDepartureInfo = existingSpaceBooking.copy(
+        actualDepartureDateTime = testCaseForSpaceBookingRecordDeparture.existingDepartureDate.atZone(ZoneId.of("Europe/London")).toInstant(),
+        departureReason = DepartureReasonEntityFactory()
+          .withId(testCaseForSpaceBookingRecordDeparture.existingReasonId)
+          .produce(),
+        departureMoveOnCategory = MoveOnCategoryEntityFactory()
+          .withId(testCaseForSpaceBookingRecordDeparture.existingMoveOnCategoryId)
+          .produce(),
       )
 
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithDepartureDate
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithDepartureInfo
 
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, UUID.randomUUID(), UUID.randomUUID()),
+        cas1NewDeparture = Cas1NewDeparture(
+          departureDateTime = testCaseForSpaceBookingRecordDeparture.newDepartureDate.atZone(ZoneId.of("Europe/London")).toInstant(),
+          reasonId = testCaseForSpaceBookingRecordDeparture.newReasonId,
+          moveOnCategoryId = testCaseForSpaceBookingRecordDeparture.newMoveOnCategoryId,
+        ),
       )
 
       assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
       result as CasResult.ConflictError
 
       assertThat(result.message).isEqualTo("A departure is already recorded for this Space Booking.")
+    }
+
+    @Suppress("UnusedPrivateMember")
+    private fun conflictCasesForSpaceBookingRecordDeparture(): Stream<Arguments> {
+      val reasonId = UUID.randomUUID()
+      val moveOnCategoryId = UUID.randomUUID()
+      val departureDateTime = LocalDateTime.now().minusDays(1)
+      return listOf(
+        Arguments.of(
+          TestCaseForSpaceBookingRecordDeparture(
+            newReasonId = reasonId,
+            newMoveOnCategoryId = moveOnCategoryId,
+            newDepartureDate = departureDateTime,
+            existingReasonId = UUID.randomUUID(),
+            existingMoveOnCategoryId = moveOnCategoryId,
+            existingDepartureDate = departureDateTime,
+          ),
+        ),
+        Arguments.of(
+          TestCaseForSpaceBookingRecordDeparture(
+            newReasonId = reasonId,
+            newMoveOnCategoryId = moveOnCategoryId,
+            newDepartureDate = departureDateTime,
+            existingReasonId = reasonId,
+            existingMoveOnCategoryId = UUID.randomUUID(),
+            existingDepartureDate = departureDateTime,
+          ),
+        ),
+        Arguments.of(
+          TestCaseForSpaceBookingRecordDeparture(
+            newReasonId = reasonId,
+            newMoveOnCategoryId = moveOnCategoryId,
+            newDepartureDate = departureDateTime,
+            existingReasonId = reasonId,
+            existingMoveOnCategoryId = moveOnCategoryId,
+            existingDepartureDate = LocalDateTime.now(),
+          ),
+        ),
+      ).stream()
+    }
+
+    @Test
+    fun `Returns success if the space booking has already recorded departure information that matches the received departure information`() {
+      val reasonId = UUID.randomUUID()
+      val moveOnCategoryId = UUID.randomUUID()
+      val existingSpaceBookingWithDepartureInfo = existingSpaceBooking.copy(
+        actualDepartureDateTime = actualDepartureDate,
+        departureReason = DepartureReasonEntityFactory()
+          .withId(reasonId)
+          .produce(),
+        departureMoveOnCategory = MoveOnCategoryEntityFactory()
+          .withId(moveOnCategoryId)
+          .produce(),
+      )
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithDepartureInfo
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, reasonId, moveOnCategoryId),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val extractedResult = (result as CasResult.Success).value
+
+      assertThat(existingSpaceBookingWithDepartureInfo.premises).isEqualTo(extractedResult.premises)
+      assertThat(existingSpaceBookingWithDepartureInfo.placementRequest).isEqualTo(extractedResult.placementRequest)
+      assertThat(existingSpaceBookingWithDepartureInfo.application).isEqualTo(extractedResult.application)
+      assertThat(existingSpaceBookingWithDepartureInfo.createdAt).isEqualTo(extractedResult.createdAt)
+      assertThat(existingSpaceBookingWithDepartureInfo.createdBy).isEqualTo(extractedResult.createdBy)
+      assertThat(existingSpaceBookingWithDepartureInfo.crn).isEqualTo(extractedResult.crn)
+      assertThat(existingSpaceBookingWithDepartureInfo.keyWorkerStaffCode).isEqualTo(extractedResult.keyWorkerStaffCode)
+      assertThat(existingSpaceBookingWithDepartureInfo.keyWorkerAssignedAt).isEqualTo(extractedResult.keyWorkerAssignedAt)
+      assertThat(existingSpaceBookingWithDepartureInfo.expectedArrivalDate).isEqualTo(extractedResult.expectedArrivalDate)
+      assertThat(existingSpaceBookingWithDepartureInfo.actualDepartureDateTime).isEqualTo(extractedResult.actualDepartureDateTime)
+      assertThat(existingSpaceBookingWithDepartureInfo.actualDepartureDateTime?.toLocalDate()).isEqualTo(extractedResult.canonicalDepartureDate)
+      assertThat(existingSpaceBookingWithDepartureInfo.departureReason).isEqualTo(extractedResult.departureReason)
+      assertThat(existingSpaceBookingWithDepartureInfo.departureMoveOnCategory).isEqualTo(extractedResult.departureMoveOnCategory)
     }
 
     @Test
@@ -1365,3 +1466,12 @@ class Cas1SpaceBookingServiceTest {
     }
   }
 }
+
+data class TestCaseForSpaceBookingRecordDeparture(
+  val newReasonId: UUID,
+  val newMoveOnCategoryId: UUID,
+  val newDepartureDate: LocalDateTime,
+  val existingReasonId: UUID,
+  val existingMoveOnCategoryId: UUID,
+  val existingDepartureDate: LocalDateTime,
+)

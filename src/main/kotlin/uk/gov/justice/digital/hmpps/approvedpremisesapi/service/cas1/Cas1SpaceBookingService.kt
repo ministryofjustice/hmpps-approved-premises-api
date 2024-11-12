@@ -331,7 +331,11 @@ class Cas1SpaceBookingService(
     }
 
     if (existingCas1SpaceBooking.actualDepartureDateTime != null) {
-      return existingCas1SpaceBooking.id hasConflictError "A departure is already recorded for this Space Booking."
+      return if (hasExactDepartureDataAlreadyBeenRecorded(existingCas1SpaceBooking, cas1NewDeparture)) {
+        success(existingCas1SpaceBooking)
+      } else {
+        existingCas1SpaceBooking.id hasConflictError "A departure is already recorded for this Space Booking."
+      }
     }
 
     existingCas1SpaceBooking.actualDepartureDateTime = cas1NewDeparture.departureDateTime
@@ -348,6 +352,15 @@ class Cas1SpaceBookingService(
     )
 
     success(result)
+  }
+
+  private fun hasExactDepartureDataAlreadyBeenRecorded(
+    existingCas1SpaceBooking: Cas1SpaceBookingEntity,
+    newDeparture: Cas1NewDeparture,
+  ): Boolean {
+    return newDeparture.departureDateTime == existingCas1SpaceBooking.actualDepartureDateTime &&
+      newDeparture.reasonId == existingCas1SpaceBooking.departureReason?.id &&
+      newDeparture.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
   }
 
   fun search(
