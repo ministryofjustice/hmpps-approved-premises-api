@@ -57,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -830,7 +829,7 @@ class BookingService(
       cas1BookingDomainEventService.bookingCancelled(booking, user!!, cancellationEntity, reason)
     }
 
-    updateApplicationStatusOnCancellation(
+    cas1ApplicationStatusService.lastBookingCancelled(
       booking = booking,
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking,
     )
@@ -857,25 +856,6 @@ class BookingService(
     WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
     WithdrawableEntityType.Booking -> userProvidedReason
     WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to Booking")
-  }
-
-  private fun updateApplicationStatusOnCancellation(
-    booking: BookingEntity,
-    isUserRequestedWithdrawal: Boolean,
-  ) {
-    if (!isUserRequestedWithdrawal || booking.application == null) {
-      return
-    }
-
-    val application = booking.application!!
-    val bookings = bookingRepository.findAllByApplication(application)
-    val anyActiveBookings = bookings.any { it.isActive() }
-    if (!anyActiveBookings) {
-      applicationService.updateApprovedPremisesApplicationStatus(
-        application.id,
-        ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-      )
-    }
   }
 
   private fun createPlacementRequestIfBookingAppealed(

@@ -1443,6 +1443,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
+      every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
 
       val result = service.withdraw(
         spaceBooking = spaceBooking,

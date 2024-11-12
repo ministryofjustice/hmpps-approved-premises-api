@@ -1505,7 +1505,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has role CRU_MEMBER`() {
+    fun `Create Cancellation on CAS1 Booking returns OK with correct body, updates status and sends emails when user has role CRU_MEMBER`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
@@ -1527,6 +1527,9 @@ class Cas1SpaceBookingTest {
       emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+
+      assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
+        .isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
     }
   }
 }

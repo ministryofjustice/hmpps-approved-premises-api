@@ -115,6 +115,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   """,
   )
   fun findAllBookingsOnGivenDayWithCriteria(premisesId: UUID, day: LocalDate): List<Cas1SpaceBookingEntity>
+
+  fun findAllByApplication(application: ApplicationEntity): List<Cas1SpaceBookingEntity>
 }
 
 interface Cas1SpaceBookingSearchResult {
