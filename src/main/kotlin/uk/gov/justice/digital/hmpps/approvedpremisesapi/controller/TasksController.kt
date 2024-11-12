@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
@@ -140,7 +141,7 @@ class TasksController(
 
     val taskInfo = when (toTaskType(taskType)) {
       TaskType.assessment -> {
-        val assessment = extractEntityFromAuthorisableActionResult(
+        val assessment = extractEntityFromCasResult(
           assessmentService.getAssessmentForUser(user, id),
         ) as ApprovedPremisesAssessmentEntity
         val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
