@@ -8,6 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -36,8 +40,8 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
     val room1 = roomEntityFactory.produceAndPersist {
       withYieldedPremises { premises }
       withCharacteristics(
-        findCharacteristic("isArsonSuitable"),
-        findCharacteristic("hasEnSuite"),
+        findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
+        findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
       )
     }.apply { premises.rooms.add(this) }
     room1.beds.add(
@@ -107,7 +111,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       withCanonicalArrivalDate(LocalDate.of(2020, 5, 4))
       withCanonicalDepartureDate(LocalDate.of(2020, 5, 11))
       withCriteria(
-        findCharacteristic("isArsonSuitable"),
+        findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
       )
     }
 
@@ -122,7 +126,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       withCanonicalArrivalDate(LocalDate.of(2020, 5, 7))
       withCanonicalDepartureDate(LocalDate.of(2020, 5, 20))
       withCriteria(
-        findCharacteristic("isSingle"),
+        findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
       )
     }
 
@@ -131,7 +135,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       withCanonicalArrivalDate(LocalDate.of(2020, 5, 1))
       withCanonicalDepartureDate(LocalDate.of(2020, 5, 29))
       withCriteria(
-        findCharacteristic("isSingle"),
+        findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
       )
     }
 
@@ -140,8 +144,8 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       withCanonicalArrivalDate(LocalDate.of(2020, 5, 1))
       withCanonicalDepartureDate(LocalDate.of(2020, 5, 9))
       withCriteria(
-        findCharacteristic("hasEnSuite"),
-        findCharacteristic("isArsonDesignated"),
+        findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+        findCharacteristic(CAS1_PROPERTY_NAME_ARSON_DESIGNATED),
       )
     }
 
