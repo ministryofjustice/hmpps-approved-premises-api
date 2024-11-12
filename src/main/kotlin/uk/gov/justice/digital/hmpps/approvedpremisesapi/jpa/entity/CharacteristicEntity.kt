@@ -11,10 +11,8 @@ import java.util.UUID
 interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
 
   companion object Constants {
-    const val CAS1_PROPERTY_NAME_ARSON_DESIGNATED = "isArsonDesignated"
     const val CAS1_PROPERTY_NAME_ARSON_SUITABLE = "isArsonSuitable"
     const val CAS1_PROPERTY_NAME_ENSUITE = "hasEnSuite"
-    const val CAS1_PROPERTY_NAME_GROUND_FLOOR = "isGroundFloor"
     const val CAS1_PROPERTY_NAME_SINGLE_ROOM = "isSingle"
     const val CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED = "isStepFreeDesignated"
     const val CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS = "isSuitedForSexOffenders"
