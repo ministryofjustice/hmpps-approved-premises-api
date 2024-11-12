@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -47,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -189,9 +191,17 @@ class AcceptAssessmentTest {
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
-
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThrows<ForbiddenProblem> {
+      assessmentService.acceptAssessment(
+        user,
+        assessmentId,
+        "{}",
+        placementRequirements,
+        null,
+        null,
+        null,
+      )
+    }
   }
 
   @Test
@@ -323,9 +333,17 @@ class AcceptAssessmentTest {
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 
-    val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
-
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThrows<ForbiddenProblem> {
+      assessmentService.acceptAssessment(
+        user,
+        assessmentId,
+        "{\"test\": \"data\"}",
+        placementRequirements,
+        null,
+        null,
+        null,
+      )
+    }
   }
 
   @Test
