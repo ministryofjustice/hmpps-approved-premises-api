@@ -92,7 +92,7 @@ dependencies {
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.3")
 
-  implementation("uk.gov.service.notify:notifications-java-client:5.0.0-RELEASE")
+  implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 
   gatlingImplementation("org.springframework.boot:spring-boot-starter-webflux")
 }
