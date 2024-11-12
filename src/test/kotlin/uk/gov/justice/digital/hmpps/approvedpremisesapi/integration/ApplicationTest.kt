@@ -59,12 +59,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -223,11 +222,11 @@ class ApplicationTest : IntegrationTestBase() {
                   withData("{}")
                 }
 
-              communityAPIMockOffenderUserAccessCall(
+              apDeliusContextAddResponseToUserAccessCall(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
                 userEntity.deliusUsername,
-                offenderDetails.otherIds.crn,
-                inclusion = false,
-                exclusion = false,
               )
 
               val responseBody = webTestClient.get()
@@ -296,11 +295,11 @@ class ApplicationTest : IntegrationTestBase() {
                   dateTime,
                 )
 
-              communityAPIMockOffenderUserAccessCall(
+              apDeliusContextAddResponseToUserAccessCall(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
                 assessorUser.deliusUsername,
-                offenderDetails.otherIds.crn,
-                inclusion = false,
-                exclusion = false,
               )
 
               val responseBody = webTestClient.get()
@@ -378,11 +377,11 @@ class ApplicationTest : IntegrationTestBase() {
               val anotherUsersApplication =
                 createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
-              communityAPIMockOffenderUserAccessCall(
+              apDeliusContextAddResponseToUserAccessCall(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
                 referrerUser.deliusUsername,
-                offenderDetails.otherIds.crn,
-                inclusion = false,
-                exclusion = false,
               )
 
               val responseBody = webTestClient.get()
@@ -419,9 +418,6 @@ class ApplicationTest : IntegrationTestBase() {
         val crn = "X1234"
 
         val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-        communityAPIMockNotFoundOffenderDetailsCall(crn)
-
-        communityAPIMockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
 
         apDeliusContextMockUserAccess(
           CaseAccessFactory()
@@ -482,11 +478,11 @@ class ApplicationTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-          communityAPIMockOffenderUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
             userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
           )
 
           val responseBody = webTestClient.get()
@@ -740,11 +736,11 @@ class ApplicationTest : IntegrationTestBase() {
 
             val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
 
-            communityAPIMockOffenderUserAccessCall(
+            apDeliusContextAddResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
               userEntity.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
             )
 
             webTestClient.get()
@@ -768,11 +764,11 @@ class ApplicationTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-          communityAPIMockOffenderUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
             userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
           )
 
           val rawResponseBody = webTestClient.get()
@@ -895,11 +891,11 @@ class ApplicationTest : IntegrationTestBase() {
             withData("{}")
           }
 
-          communityAPIMockOffenderUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
             userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
           )
 
           val rawResponseBody = webTestClient.get()
@@ -955,11 +951,11 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          communityAPIMockOffenderUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
             userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
           )
 
           val rawResponseBody = webTestClient.get()
@@ -1015,11 +1011,11 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityAPIMockOffenderUserAccessCall(
+            apDeliusContextAddResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
               userEntity.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
             )
 
             val rawResponseBody = webTestClient.get()
@@ -1079,11 +1075,11 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          communityAPIMockOffenderUserAccessCall(
+          apDeliusContextAddResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
             createdByUser.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
           )
 
           val rawResponseBody = webTestClient.get()
@@ -1220,11 +1216,11 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityAPIMockOffenderUserAccessCall(
+            apDeliusContextAddResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
               userEntity.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
             )
 
             webTestClient.get()
@@ -1266,11 +1262,11 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            communityAPIMockOffenderUserAccessCall(
+            apDeliusContextAddResponseToUserAccessCall(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
               userEntity.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
             )
 
             webTestClient.get()
@@ -1294,11 +1290,11 @@ class ApplicationTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        communityAPIMockOffenderUserAccessCall(
+        apDeliusContextAddResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
           userEntity.deliusUsername,
-          offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
         )
 
         val rawResponseBody = webTestClient.get()
@@ -1338,8 +1334,6 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Create new application returns 404 when a person cannot be found`() {
       givenAUser { _, jwt ->
         val crn = "X1234"
-
-        communityAPIMockNotFoundOffenderDetailsCall(crn)
 
         approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
