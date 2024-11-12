@@ -10,7 +10,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.kotlin.times
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -53,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 
@@ -308,6 +308,111 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
     assertThat(result.entity).isEqualTo(expectedRisks)
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns return false when crn is user excluded from viewing`() {
+    val crn = randomNumberChars(8)
+    val caseAccess = CaseAccessFactory()
+      .withCrn(crn)
+      .withUserExcluded(true)
+      .produce()
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+
+    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+    assertThat(result[crn]).isFalse()
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns return false when crn is user restricted from viewing`() {
+    val crn = randomNumberChars(8)
+    val caseAccess = CaseAccessFactory()
+      .withCrn(crn)
+      .withUserRestricted(true)
+      .produce()
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+
+    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+    assertThat(result[crn]).isFalse()
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns return false when crn not have access result`() {
+    val crn = randomNumberChars(8)
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+    assertThat(result[crn]).isFalse()
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns return true when crn is not user restricted or excluded from viewing`() {
+    val crn = randomNumberChars(8)
+    val caseAccess = CaseAccessFactory()
+      .withCrn(crn)
+      .withUserRestricted(false)
+      .withUserExcluded(false)
+      .produce()
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+
+    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+    assertThat(result[crn]).isTrue()
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns return expected results when multiple crns`() {
+    val crns = mutableListOf<String>()
+    repeat(5) { crns += randomStringMultiCaseWithNumbers(8) }
+
+    val caseAccess1 = CaseAccessFactory()
+      .withCrn(crns[0])
+      .withUserRestricted(false)
+      .withUserExcluded(false)
+      .produce()
+
+    val caseAccess2 = CaseAccessFactory()
+      .withCrn(crns[1])
+      .withUserRestricted(false)
+      .withUserExcluded(true)
+      .produce()
+
+    val caseAccess3 = CaseAccessFactory()
+      .withCrn(crns[2])
+      .withUserRestricted(true)
+      .withUserExcluded(false)
+      .produce()
+
+    val caseAccess4 = CaseAccessFactory()
+      .withCrn(crns[3])
+      .withUserRestricted(true)
+      .withUserExcluded(false)
+      .produce()
+
+    val userAccess = UserAccess(listOf(caseAccess1, caseAccess2, caseAccess3, caseAccess4))
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", crns) } returns ClientResult.Success(HttpStatus.OK, userAccess)
+
+    val result = offenderService.canAccessOffenders("distinguished.name", crns)
+
+    assertThat(result[crns[0]]).isTrue()
+    assertThat(result[crns[1]]).isFalse()
+    assertThat(result[crns[2]]).isFalse()
+    assertThat(result[crns[3]]).isFalse()
+    assertThat(result[crns[4]]).isFalse()
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
+  fun `getUserAccessForOffenderCrns throws exception when getUserAccessForCrns returns client result failure`(response: ClientResult.Failure<UserAccess>) {
+    val crn = randomNumberChars(8)
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
+
+    assertThrows<Throwable> { offenderService.canAccessOffenders("distinguished.name", listOf(crn)) }
   }
 
   @Test
@@ -669,22 +774,6 @@ class OffenderServiceTest {
     )
 
     assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
-  }
-
-  @Test
-  fun `returns false and parse getUserAccessForOffenderCrn response successfully by ignoring unexpected element in the 403 response`() {
-    val crn = "ABC123"
-    val deliusUsername = "USER"
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
-      status = HttpStatus.FORBIDDEN,
-      method = HttpMethod.GET,
-      path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-      body = "{\"userRestricted\":false,\"userExcluded\":true,\"exclusionMessage\":\"You are excluded\"}",
-    )
-
-    val result = offenderService.canAccessOffender(deliusUsername, crn)
-
-    assertThat(result).isFalse()
   }
 
   @Nested

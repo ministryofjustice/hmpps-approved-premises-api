@@ -216,9 +216,8 @@ class ApplicationServiceTest {
     every { mockApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(userId) } returns applicationSummaries
     every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-    applicationSummaries.forEach {
-      every { mockOffenderService.canAccessOffender(distinguishedName, it.getCrn()) } returns true
-    }
+    val crns = applicationSummaries.map { it.getCrn() }.distinct()
+    every { mockOffenderService.canAccessOffenders(distinguishedName, crns) } returns mapOf(crns.first() to true)
 
     assertThat(
       applicationService.getAllApplicationsForUsername(
@@ -2508,9 +2507,7 @@ class ApplicationServiceTest {
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
     every { mockOfflineApplicationRepository.findAllByService("approved-premises") } returns offlineApplicationEntities
 
-    offlineApplicationEntities.forEach {
-      every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
-    }
+    every { mockOffenderService.canAccessOffenders(distinguishedName, emptyList()) } returns emptyMap()
 
     assertThat(
       applicationService.getAllOfflineApplicationsForUsername(
@@ -2557,9 +2554,12 @@ class ApplicationServiceTest {
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
     every { mockOfflineApplicationRepository.findAllByService("approved-premises") } returns offlineApplicationEntities
 
-    offlineApplicationEntities.forEach {
-      every { mockOffenderService.canAccessOffender(distinguishedName, it.crn) } returns true
-    }
+    val crns = offlineApplicationEntities.map { it.crn }.distinct()
+    every { mockOffenderService.canAccessOffenders(distinguishedName, crns) } returns mapOf(
+      crns.first() to true,
+      crns.drop(1).first() to true,
+      crns.drop(2).first() to true,
+    )
 
     assertThat(
       applicationService.getAllOfflineApplicationsForUsername(

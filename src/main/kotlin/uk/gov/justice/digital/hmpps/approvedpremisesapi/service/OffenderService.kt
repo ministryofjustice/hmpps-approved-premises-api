@@ -185,6 +185,7 @@ class OffenderService(
 
   private fun CaseSummary.hasLimitedAccess() = this.currentExclusion == true || this.currentRestriction == true
   private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
+  private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
 
   @Deprecated(
     "This function uses the now deprecated [OffenderDetailsDataSource]",
@@ -357,29 +358,28 @@ class OffenderService(
     return offender.currentExclusion || offender.currentRestriction
   }
 
-  /*
-   * This should call apDeliusContextApiClient.getUserAccessForCrns directly
-   */
   fun canAccessOffender(username: String, crn: String): Boolean {
-    return when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(username, crn)) {
-      is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
-      is ClientResult.Failure.StatusCode -> {
-        // This is legacy behaviour to differentiate between the community api get access for
-        // a single CRN endpoint returning 403 (meaning the client can't access the endpoint),
-        // and the endpoint returning a response indicating the user can't access the offender
-        // This isn't required if directly calling apDeliusContextApiClient.getUserAccessForCrns
-        if (accessResponse.status.equals(HttpStatus.FORBIDDEN)) {
-          try {
-            accessResponse.deserializeTo<UserOffenderAccess>()
-            return false
-          } catch (exception: Exception) {
-            accessResponse.throwException()
-          }
-        }
+    return canAccessOffenders(username, listOf(crn)).get(crn) == true
+  }
 
-        accessResponse.throwException()
+  fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
+    return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {
+      is ClientResult.Success -> {
+        val crnToAccessResult = clientResult.body.access.associateBy(
+          keySelector = { it.crn },
+          valueTransform = { it },
+        )
+
+        crns.associateBy(
+          keySelector = { it },
+          valueTransform = { crn ->
+            val access = crnToAccessResult[crn]
+
+            access?.hasNotLimitedAccess() ?: false
+          },
+        )
       }
-      is ClientResult.Failure -> accessResponse.throwException()
+      is ClientResult.Failure -> clientResult.throwException()
     }
   }
 

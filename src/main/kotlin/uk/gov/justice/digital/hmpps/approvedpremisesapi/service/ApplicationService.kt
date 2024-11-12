@@ -123,10 +123,11 @@ class ApplicationService(
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
 
-    return applicationSummaries
-      .filter {
-        offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
-      }
+    val crns = applicationSummaries.map { it.getCrn() }.distinct()
+    val offendersAccess = offenderService.canAccessOffenders(userDistinguishedName, crns)
+    return applicationSummaries.filter {
+      offendersAccess.containsKey(it.getCrn()) && offendersAccess[it.getCrn()] == true
+    }
   }
 
   fun getAllApprovedPremisesApplications(
@@ -198,10 +199,11 @@ class ApplicationService(
         emptyList()
       }
 
-    return applications
-      .filter {
-        offenderService.canAccessOffender(deliusUsername, it.crn)
-      }
+    val crns = applications.map { it.crn }.distinct()
+    val offendersAccess = offenderService.canAccessOffenders(deliusUsername, crns)
+    return applications.filter {
+      offendersAccess.containsKey(it.crn) && offendersAccess[it.crn] == true
+    }
   }
 
   fun getApplicationForUsername(
