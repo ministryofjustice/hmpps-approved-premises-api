@@ -311,6 +311,12 @@ class OffenderServiceTest {
   }
 
   @Test
+  fun `getUserAccessForOffenderCrns return empty result when crns list is empty`() {
+    val result = offenderService.canAccessOffenders("distinguished.name", emptyList())
+    assertThat(result.isEmpty()).isTrue()
+  }
+
+  @Test
   fun `getUserAccessForOffenderCrns return false when crn is user excluded from viewing`() {
     val crn = randomNumberChars(8)
     val caseAccess = CaseAccessFactory()
