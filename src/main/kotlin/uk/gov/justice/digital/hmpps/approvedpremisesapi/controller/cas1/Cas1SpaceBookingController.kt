@@ -60,6 +60,8 @@ class Cas1SpaceBookingController(
     placementRequestId: UUID,
     body: NewCas1SpaceBooking,
   ): ResponseEntity<Cas1SpaceBooking> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_CREATE)
+
     val user = userService.getUserForRequest()
 
     val characteristics = characteristicService.getCharacteristicsByPropertyNames(
