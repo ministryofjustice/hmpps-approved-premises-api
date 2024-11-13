@@ -4609,7 +4609,7 @@ class BookingServiceTest {
       .produce()
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns Not Found if Placement Request can't be found`() {
+    fun `returns Not Found if Placement Request can't be found`() {
       val placementRequestId = UUID.fromString("43d5ba3c-3eb1-4966-bcd1-c6d16be9f178")
       val bedId = UUID.fromString("d69c0e07-f362-4727-86a6-45aaa73c14af")
 
@@ -4632,7 +4632,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns Unauthorised if Placement Request is not allocated to the User`() {
+    fun `returns Unauthorised if Placement Request is not allocated to the User`() {
       val placementRequest = PlacementRequestEntityFactory()
         .withPlacementRequirements(
           PlacementRequirementsEntityFactory()
@@ -4662,7 +4662,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralValidationError if Bed does not belong to an Approved Premises`() {
+    fun `returns GeneralValidationError if Bed does not belong to an Approved Premises`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -4714,7 +4714,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralValidationError if a premisesId is specified and the Premises is not an Approved Premises`() {
+    fun `returns GeneralValidationError if a premisesId is specified and the Premises is not an Approved Premises`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -4755,7 +4755,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralValidationError if a premisesId is specified and the Premises does not exist`() {
+    fun `returns GeneralValidationError if a premisesId is specified and the Premises does not exist`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -4794,7 +4794,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralValidationError if a bedId or premisesId is not specified`() {
+    fun `returns GeneralValidationError if a bedId or premisesId is not specified`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -4830,7 +4830,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if a Booking has already been made from the Placement Request`() {
+    fun `returns ConflictError if a Booking has already been made from the Placement Request`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -4888,7 +4888,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns GeneralError if the Placement Request has been withdrawn`() {
+    fun `returns GeneralError if the Placement Request has been withdrawn`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -4947,7 +4947,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if Bed has a conflicting Booking`() {
+    fun `returns ConflictError if Bed has a conflicting Booking`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -5008,7 +5008,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if Bed has a conflicting Lost Bed`() {
+    fun `returns ConflictError if Bed has a conflicting Lost Bed`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -5068,7 +5068,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest saves Booking, creates Domain Event and sends email`() {
+    fun `saves Booking, creates Domain Event and sends email`() {
       val arrivalDate = LocalDate.parse("2023-02-22")
       val departureDate = LocalDate.parse("2023-02-23")
 
@@ -5133,7 +5133,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest saves Booking, creates Domain Event and sends email when a premisesId is provided`() {
+    fun `saves Booking, creates Domain Event and sends email when a premisesId is provided`() {
       val arrivalDate = LocalDate.parse("2023-02-22")
       val departureDate = LocalDate.parse("2023-02-23")
 
@@ -5187,7 +5187,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest saves Booking, creates Domain Event and sends email when a cancelled booking exists`() {
+    fun `saves Booking, creates Domain Event and sends email when a cancelled booking exists`() {
       val arrivalDate = LocalDate.parse("2023-02-22")
       val departureDate = LocalDate.parse("2023-02-23")
 
@@ -5266,7 +5266,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesBookingFromPlacementRequest saves successfully when the user is not assigned to the placement request and is a Workflow Manager`() {
+    fun `saves successfully when the user is not assigned to the placement request and is a Workflow Manager`() {
       val arrivalDate = LocalDate.parse("2023-02-22")
       val departureDate = LocalDate.parse("2023-02-23")
 
