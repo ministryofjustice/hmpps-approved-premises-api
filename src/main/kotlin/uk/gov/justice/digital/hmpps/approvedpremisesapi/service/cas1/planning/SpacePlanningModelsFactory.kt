@@ -6,10 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_GROUND_FLOOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
@@ -25,10 +23,8 @@ class SpacePlanningModelsFactory(
   object Constants {
     const val DEFAULT_CHARACTERISTIC_WEIGHT = 100
     val CHARACTERISTIC_ALLOW_LIST = listOf(
-      CAS1_PROPERTY_NAME_ARSON_DESIGNATED,
       CAS1_PROPERTY_NAME_ARSON_SUITABLE,
       CAS1_PROPERTY_NAME_ENSUITE,
-      CAS1_PROPERTY_NAME_GROUND_FLOOR,
       CAS1_PROPERTY_NAME_SINGLE_ROOM,
       CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
       CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS,
