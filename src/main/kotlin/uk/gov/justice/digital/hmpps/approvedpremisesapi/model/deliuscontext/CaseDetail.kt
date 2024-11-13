@@ -62,10 +62,12 @@ data class Profile(
 )
 
 data class Offence(
+  val id: Long,
   val description: String,
   val date: LocalDate?,
   val main: Boolean,
   val eventNumber: String,
+  val eventId: Long,
 )
 
 data class Registration(

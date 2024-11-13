@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
@@ -625,6 +626,20 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(convictions)
+  }
+
+  fun getCaseDetail(crn: String): AuthorisableActionResult<CaseDetail> {
+    val caseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(crn)) {
+      is ClientResult.Success -> caseDetailResult.body
+      is ClientResult.Failure.StatusCode -> when (caseDetailResult.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        else -> caseDetailResult.throwException()
+      }
+
+      is ClientResult.Failure -> caseDetailResult.throwException()
+    }
+    return AuthorisableActionResult.Success(caseDetail)
   }
 
   fun getDocumentsFromCommunityApi(crn: String): AuthorisableActionResult<GroupedDocuments> {
