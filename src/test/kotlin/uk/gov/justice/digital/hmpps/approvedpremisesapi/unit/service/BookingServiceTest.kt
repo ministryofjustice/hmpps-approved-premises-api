@@ -5266,7 +5266,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `saves successfully when the user is not assigned to the placement request and is a Workflow Manager`() {
+    fun `saves successfully when the user is not assigned to the placement request and has create booking permission`() {
       val arrivalDate = LocalDate.parse("2023-02-22")
       val departureDate = LocalDate.parse("2023-02-23")
 
@@ -5276,7 +5276,7 @@ class BookingServiceTest {
           this.roles.add(
             UserRoleAssignmentEntityFactory()
               .withUser(this)
-              .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+              .withRole(UserRole.CAS1_CRU_MEMBER)
               .produce(),
           )
         }

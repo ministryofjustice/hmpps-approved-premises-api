@@ -1692,8 +1692,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create a Booking from a PR allocated to other user and current user is a Workflow Manager returns a 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+    fun `Create a Booking from a PR allocated to other user and current user is a CRU Member returns a 200`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
