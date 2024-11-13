@@ -99,7 +99,7 @@ class Cas1SpaceSearchServiceTest {
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
     } returnsMany listOf(
       genderCharacteristics,
       spaceCharacteristics,
@@ -152,10 +152,12 @@ class Cas1SpaceSearchServiceTest {
         listOf(
           // TBD: gender characteristics
         ),
+        ServiceName.approvedPremises,
       )
 
       characteristicService.getCharacteristicsByPropertyNames(
         Cas1SpaceCharacteristic.entries.map { it.value },
+        ServiceName.approvedPremises,
       )
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
@@ -231,7 +233,7 @@ class Cas1SpaceSearchServiceTest {
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
     } returnsMany listOf(
       genderCharacteristics,
       spaceCharacteristics,
@@ -283,7 +285,7 @@ class Cas1SpaceSearchServiceTest {
     }
 
     verify {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
 
       spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
         any(),
@@ -350,7 +352,7 @@ class Cas1SpaceSearchServiceTest {
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
     } returnsMany listOf(
       genderCharacteristics,
       spaceCharacteristics,
@@ -396,6 +398,7 @@ class Cas1SpaceSearchServiceTest {
         listOf(
           // TBD: gender characteristics
         ),
+        ServiceName.approvedPremises,
       )
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
@@ -408,7 +411,7 @@ class Cas1SpaceSearchServiceTest {
     }
 
     verify {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
 
       spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
         any(),
@@ -475,7 +478,7 @@ class Cas1SpaceSearchServiceTest {
     val spaceCharacteristicEntities = spaceCharacteristics.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
     } returnsMany listOf(
       genderCharacteristics,
       spaceCharacteristicEntities,
@@ -519,6 +522,7 @@ class Cas1SpaceSearchServiceTest {
     verify(exactly = 1) {
       characteristicService.getCharacteristicsByPropertyNames(
         spaceCharacteristics.map { it.value },
+        ServiceName.approvedPremises,
       )
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
@@ -531,7 +535,7 @@ class Cas1SpaceSearchServiceTest {
     }
 
     verify {
-      characteristicService.getCharacteristicsByPropertyNames(any())
+      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
 
       spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
         any(),

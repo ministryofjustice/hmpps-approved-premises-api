@@ -5,6 +5,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -100,7 +101,12 @@ class BedSearchServiceTest {
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf("isESAP", premisesCharacteristicPropertyName)) } returns listOf(roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf("isESAP", premisesCharacteristicPropertyName),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -148,7 +154,12 @@ class BedSearchServiceTest {
       .withServiceScope("approved-premises")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -192,7 +203,12 @@ class BedSearchServiceTest {
 
     val roomCharacteristicPropertyName = "isArsonSuitable"
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName)) } returns listOf(premisesCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristicPropertyName),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -240,7 +256,12 @@ class BedSearchServiceTest {
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -288,9 +309,14 @@ class BedSearchServiceTest {
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic, roomCharacteristic)
 
-    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!) } returns roomCharacteristic
+    every { mockCharacteristicService.getCharacteristicByPropertyName(roomCharacteristic.propertyName!!, ServiceName.approvedPremises) } returns roomCharacteristic
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -338,7 +364,12 @@ class BedSearchServiceTest {
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -386,7 +417,12 @@ class BedSearchServiceTest {
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val authorisableResult = bedSearchService.findApprovedPremisesBeds(
       user = user,
@@ -434,7 +470,12 @@ class BedSearchServiceTest {
       .withModelScope("room")
       .produce()
 
-    every { mockCharacteristicService.getCharacteristicsByPropertyNames(listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!)) } returns listOf(premisesCharacteristic, roomCharacteristic)
+    every {
+      mockCharacteristicService.getCharacteristicsByPropertyNames(
+        listOf(premisesCharacteristic.propertyName!!, roomCharacteristic.propertyName!!),
+        ServiceName.approvedPremises,
+      )
+    } returns listOf(premisesCharacteristic, roomCharacteristic)
 
     val repositorySearchResults = listOf(
       ApprovedPremisesBedSearchResult(

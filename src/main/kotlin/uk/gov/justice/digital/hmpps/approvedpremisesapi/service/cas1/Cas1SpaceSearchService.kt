@@ -66,7 +66,7 @@ class Cas1SpaceSearchService(
   }
 
   private fun getCharacteristicGroup(characteristicNames: List<String?>): CharacteristicGroup {
-    val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicNames.filterNotNull())
+    val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicNames.filterNotNull(), ServiceName.approvedPremises)
 
     return CharacteristicGroup(
       characteristics.filter { it.isPremisesCharacteristic() }.map { it.id },

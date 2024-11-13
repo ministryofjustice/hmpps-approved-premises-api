@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.planni
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
@@ -25,7 +26,7 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
   lateinit var spacePlanner: SpacePlanner
 
   private fun findCharacteristic(propertyName: String) =
-    characteristicRepository.findByPropertyName(propertyName)!!
+    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
   @Test
   fun `multi day planning is correct`() {
