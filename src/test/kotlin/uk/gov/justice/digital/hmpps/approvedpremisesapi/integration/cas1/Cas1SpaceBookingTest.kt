@@ -42,8 +42,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_AP_MANAGER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
@@ -85,7 +85,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_MANAGER_FIND_AND_BOOK_BETA)) { user, jwt ->
         val placementRequestId = UUID.randomUUID()
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -115,7 +115,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedProbationRegion { givenAProbationRegion() }
           withYieldedLocalAuthorityArea {
@@ -149,7 +149,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown premises returns 400 Bad Request`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -180,7 +180,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -218,7 +218,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space returns OK with the correct data, updates app status, emits domain event and emails`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { applicant, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { applicant, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = applicant,
           assessmentAllocatedTo = applicant,
@@ -421,7 +421,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Empty list returned if no results for given premises`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithNoBooking.id}/space-bookings")
@@ -436,7 +436,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Search with no filters excludes cancelled bookings`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -457,7 +457,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on residency historic`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=historic&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -474,7 +474,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on residency upcoming`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=upcoming&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -490,7 +490,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on residency current`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=current&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -508,7 +508,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on CRN`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CRN_CURRENT2&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -524,7 +524,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on Name`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=comING&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -540,7 +540,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on Key Worker Staff Code`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerStaffCode=${keyWorker.deliusStaffCode}&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -561,7 +561,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Name`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CUrt&sortBy=personName&sortDirection=desc")
@@ -579,7 +579,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Canonical Arrival Date`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=desc")
@@ -600,7 +600,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Canonical Departure Date`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalDepartureDate&sortDirection=asc")
@@ -621,7 +621,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Keyworker`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?residency=current&sortBy=keyWorkerName&sortDirection=asc")
@@ -639,7 +639,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Tier`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=tier&sortDirection=desc")
@@ -685,7 +685,7 @@ class Cas1SpaceBookingTest {
       testCaseForSpaceBookingSummaryStatus: TestCaseForSpaceBookingSummaryStatus,
       expectedResultStatus: Cas1SpaceBookingSummaryStatus,
     ) {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val crnForStatusTest = UUID.randomUUID().toString()
 
@@ -822,7 +822,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 404 if premise doesn't exist`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       webTestClient.get()
         .uri("/cas1/premises/${UUID.randomUUID()}/space-bookings/${spaceBooking.id}")
@@ -834,7 +834,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 404 if space booking doesn't exist`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       webTestClient.get()
         .uri("/cas1/premises/${premises.id}/space-bookings/${UUID.randomUUID()}")
@@ -846,7 +846,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns premises information if have correct role`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
@@ -918,7 +918,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid key worker )`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -964,7 +964,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording arrival returns OK and creates a domain event`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1065,7 +1065,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid offender CRN )`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val (user) = givenAUser()
       val (placementRequest) = givenAPlacementRequest(
@@ -1111,7 +1111,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording non-arrival returns OK and creates a domain event`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1213,7 +1213,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording key worker returns OK and emits domain event`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val keyWorker = ContextStaffMemberFactory().produce()
       apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -1299,7 +1299,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 500 Internal Server Error if unexpected failure occurs - invalid key worker )`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1348,7 +1348,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording departure returns OK and creates a domain event`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_AP_MANAGER_FIND_AND_BOOK_BETA))
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1483,7 +1483,7 @@ class Cas1SpaceBookingTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR"],
+      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
@@ -1506,7 +1506,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has role CRU_MEMBER`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
           .header("Authorization", "Bearer $jwt")

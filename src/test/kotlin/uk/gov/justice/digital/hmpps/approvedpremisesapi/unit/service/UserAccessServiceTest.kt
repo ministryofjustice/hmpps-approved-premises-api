@@ -428,7 +428,11 @@ class UserAccessServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `currentUserCanManageUsers returns false if user does not have CAS1_USER_MANAGEMENT permission`(userRole: UserRole) {
       user.addRoleForUnitTest(userRole)
 
@@ -1633,7 +1637,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawApplication returns true if submitted and has WORKFLOW_MANAGER, CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawApplication returns true if submitted and has WORKFLOW_MANAGER, CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA or JANITOR role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -1647,7 +1651,12 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelApplication = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelApplication = listOf(
+        CAS1_WORKFLOW_MANAGER,
+        CAS1_CRU_MEMBER,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        CAS1_JANITOR,
+      ).contains(role)
 
       assertThat(userAccessService.userMayWithdrawApplication(otherUser, application)).isEqualTo(canCancelApplication)
     }
@@ -1744,7 +1753,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementRequest returns true if user has WORKFLOW_MANAGER, CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawPlacementRequest returns true if user has WORKFLOW_MANAGER, CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA or JANITOR role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -1773,7 +1782,12 @@ class UserAccessServiceTest {
         )
         .produce()
 
-      val canWithdrawPlacementRequest = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canWithdrawPlacementRequest = listOf(
+        CAS1_WORKFLOW_MANAGER,
+        CAS1_CRU_MEMBER,
+        CAS1_JANITOR,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+      ).contains(role)
 
       assertThat(userAccessService.userMayWithdrawPlacementRequest(otherUser, placementRequest)).isEqualTo(canWithdrawPlacementRequest)
     }
@@ -1812,7 +1826,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementApplication returns true if submitted and has WORKFLOW_MANAGER, CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawPlacementApplication returns true if submitted and has WORKFLOW_MANAGER, CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA or JANITOR role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -1832,7 +1846,12 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelPlacementApp = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelPlacementApp = listOf(
+        CAS1_WORKFLOW_MANAGER,
+        CAS1_CRU_MEMBER,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        CAS1_JANITOR,
+      ).contains(role)
 
       assertThat(userAccessService.userMayWithdrawPlacementApplication(otherUser, placementApplication)).isEqualTo(canCancelPlacementApp)
     }
