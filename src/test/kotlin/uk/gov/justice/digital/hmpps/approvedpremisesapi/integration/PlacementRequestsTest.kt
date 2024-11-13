@@ -1577,8 +1577,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create a Booking from a PR allocated to another user returns a 403`() {
-      givenAUser { _, jwt ->
+    fun `Create a Booking from a PR allocated to another user without 'CAS1_BOOKING_CREATE' permission returns a 403`() {
+      givenAUser(
+        roles = UserRole.entries.filter {
+          it != UserRole.CAS1_CRU_MEMBER && it != UserRole.CAS1_WORKFLOW_MANAGER && it != UserRole.CAS1_JANITOR
+        },
+      ) { _, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
@@ -1691,9 +1695,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Create a Booking from a PR allocated to other user and current user is a Workflow Manager returns a 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      mode = EnumSource.Mode.INCLUDE,
+      names = ["CAS1_CRU_MEMBER", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR"],
+    )
+    fun `Create a Booking from a PR allocated to other user and current user has the 'CAS1_BOOKING_CREATE' permission returns a 200`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
