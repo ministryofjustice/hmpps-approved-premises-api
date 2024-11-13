@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -98,6 +99,8 @@ class Cas1SpaceBookingTransformerTest {
 
       val cancellationReason = CancellationReasonEntityFactory().produce()
 
+      val nonArrivalReason = NonArrivalReasonEntityFactory().produce()
+
       val criteria = listOf(
         CharacteristicEntityFactory().produce(),
         CharacteristicEntityFactory().produce(),
@@ -117,6 +120,9 @@ class Cas1SpaceBookingTransformerTest {
         .withCancellationReason(cancellationReason)
         .withCancellationReasonNotes("some extra info on cancellation")
         .withCriteria(criteria)
+        .withNonArrivalConfirmedAt(Instant.parse("2024-01-20T10:10:10.00Z"))
+        .withNonArrivalReason(nonArrivalReason)
+        .withNonArrivalNotes("some information on the non arrival")
         .withDeliusEventNumber("97")
         .produce()
 
@@ -173,13 +179,20 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.canonicalDepartureDate).isEqualTo(spaceBooking.expectedDepartureDate)
       assertThat(result.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
       assertThat(result.tier).isEqualTo("A")
+
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("Mr Key Worker")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("K123")
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2007-12-03"))
+
       assertThat(result.cancellation!!.occurredAt).isEqualTo(LocalDate.parse("2039-12-28"))
       assertThat(result.cancellation!!.recordedAt).isEqualTo(Instant.parse("2023-12-29T11:25:10.00Z"))
       assertThat(result.cancellation!!.reason).isEqualTo(expectedCancellationReason)
       assertThat(result.cancellation!!.reasonNotes).isEqualTo("some extra info on cancellation")
+
+      assertThat(result.nonArrival!!.confirmedAt).isEqualTo(Instant.parse("2024-01-20T10:10:10Z"))
+      assertThat(result.nonArrival!!.reason!!.id).isEqualTo(spaceBooking.nonArrivalReason!!.id)
+      assertThat(result.nonArrival!!.notes).isEqualTo("some information on the non arrival")
+
       assertThat(result.deliusEventNumber).isEqualTo("97")
 
       assertThat(result.otherBookingsInPremisesForCrn).hasSize(1)
