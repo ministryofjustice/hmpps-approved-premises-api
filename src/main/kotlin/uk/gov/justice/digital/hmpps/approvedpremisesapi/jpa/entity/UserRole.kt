@@ -14,6 +14,8 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
     ),
   ),
+
+  @Deprecated("This role will be removed in the future. Superseded by CRU_MEMBER")
   CAS1_MATCHER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.matcher,
@@ -40,6 +42,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_BOOKING_CHANGE_DATES,
     ),
   ),
+
   CAS1_FUTURE_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,
@@ -56,7 +59,13 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ),
   ),
 
-  @Deprecated("This role will be removed in the future")
+  CAS1_AP_MANAGER_FIND_AND_BOOK_BETA(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.apManagerFindAndBookBeta,
+    permissions = emptyList(),
+  ),
+
+  @Deprecated("This role will be removed in the future. Superseded by Assessor, CRU Member and Future Manager")
   CAS1_WORKFLOW_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.workflowManager,
@@ -103,6 +112,13 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
     ),
   ),
+
+  CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.cruMemberFindAndBookBeta,
+    permissions = emptyList(),
+  ),
+
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
 
   @Deprecated("This role will be removed in the future")
