@@ -9,12 +9,6 @@ private object PermissionGroups {
   val CAS1_COMMON_AP_MANAGER_PERMISSIONS = listOf(
     UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
     UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
-    UserPermission.CAS1_SPACE_BOOKING_LIST,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-    UserPermission.CAS1_SPACE_BOOKING_VIEW,
     UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
   )
   val CAS1_COMMON_CRU_MEMBER_PERMISSIONS = listOf(
@@ -83,6 +77,20 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,
     CAS1_COMMON_AP_MANAGER_PERMISSIONS,
+  ),
+
+  CAS1_AP_MANAGER_FIND_AND_BOOK_BETA(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.apManagerFindAndBookBeta,
+    CAS1_COMMON_AP_MANAGER_PERMISSIONS +
+      listOf(
+        UserPermission.CAS1_SPACE_BOOKING_LIST,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
+        UserPermission.CAS1_SPACE_BOOKING_VIEW,
+      ),
   ),
 
   @Deprecated("This role will be removed in the future. Superseded by Assessor, CRU Member and Future Manager")
