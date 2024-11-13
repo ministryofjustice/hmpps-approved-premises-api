@@ -68,7 +68,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space without JWT returns 401`() {
-      givenAUser { user, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, _ ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -84,8 +84,38 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
+        val placementRequestId = UUID.randomUUID()
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
+        }
+
+        webTestClient.post()
+          .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewCas1SpaceBooking(
+              arrivalDate = LocalDate.now().plusDays(1),
+              departureDate = LocalDate.now().plusDays(8),
+              premisesId = premises.id,
+              requirements = Cas1SpaceBookingRequirements(
+                essentialCharacteristics = listOf(),
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
-      givenAUser { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedProbationRegion { givenAProbationRegion() }
           withYieldedLocalAuthorityArea {
@@ -119,7 +149,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown premises returns 400 Bad Request`() {
-      givenAUser { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -150,7 +180,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
-      givenAUser { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -188,7 +218,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space returns OK with the correct data, updates app status, emits domain event and emails`() {
-      givenAUser { applicant, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { applicant, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = applicant,
           assessmentAllocatedTo = applicant,
