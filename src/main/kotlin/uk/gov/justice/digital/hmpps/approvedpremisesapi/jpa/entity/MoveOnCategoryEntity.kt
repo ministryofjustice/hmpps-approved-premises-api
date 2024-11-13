@@ -11,6 +11,10 @@ import java.util.UUID
 
 @Repository
 interface MoveOnCategoryRepository : JpaRepository<MoveOnCategoryEntity, UUID> {
+  companion object Constants {
+    val NOT_APPLICABLE_MOVE_ON_CATEGORY_ID: UUID = UUID.fromString("ea3d79b0-1ee5-47ff-a7ae-b0d964ca7626")
+  }
+
   @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope IN (:serviceName, '*')")
   fun findAllByServiceScope(serviceName: String): List<MoveOnCategoryEntity>
 

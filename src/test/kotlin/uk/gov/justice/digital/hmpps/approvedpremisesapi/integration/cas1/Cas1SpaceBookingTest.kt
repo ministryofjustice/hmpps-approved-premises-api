@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -1387,6 +1388,50 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+    }
+
+    @Test
+    fun `Recording departure returns OK and creates a domain event with 'Not Applicable' move on category if no category is supplied `() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.now().minusDays(30))
+        withActualArrivalDateTime(LocalDateTime.now().minusDays(30).toInstant(ZoneOffset.UTC))
+        withCanonicalDepartureDate(LocalDate.now())
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("50")
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/departure")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewDeparture(
+            departureDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+            reasonId = departureReasonId,
+            moveOnCategoryId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+      val domainEvent = domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      assertThat(domainEvent.data).contains("""moveOnCategory": {"id": "${NOT_APPLICABLE_MOVE_ON_CATEGORY_ID}""")
     }
   }
 
