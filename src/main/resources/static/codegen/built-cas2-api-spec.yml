@@ -3730,8 +3730,10 @@ components:
         - manager
         - legacy_manager
         - future_manager
+        - ap_manager_find_and_book_beta
         - workflow_manager
         - cru_member
+        - cru_member_find_and_book_beta
         - applicant
         - role_admin
         - report_viewer
