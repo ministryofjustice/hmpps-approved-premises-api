@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Offe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
@@ -25,6 +26,10 @@ class CaseDetailFactory : Factory<CaseDetail> {
 
   fun withCase(case: CaseSummary) = apply {
     this.case = { case }
+  }
+
+  fun withOffences(offences: List<Offence>) = apply {
+    this.offences = { offences }
   }
 
   fun withRegistrations(registrations: List<Registration>) = apply {
@@ -44,16 +49,40 @@ class CaseDetailFactory : Factory<CaseDetail> {
 }
 
 class CaseDetailOffenceFactory : Factory<Offence> {
+  var id: Yielded<Long> = { randomLong() }
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
   var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
+  var eventId: Yielded<Long> = { randomLong() }
+
+  fun withId(id: Long) = apply {
+    this.id = { id }
+  }
+
+  fun withDescription(description: String) = apply {
+    this.description = { description }
+  }
+
+  fun withDate(date: LocalDate) = apply {
+    this.date = { date }
+  }
+
+  fun withEventNumber(eventNumber: String) = apply {
+    this.eventNumber = { eventNumber }
+  }
+
+  fun withEventId(eventId: Long) = apply {
+    this.eventId = { eventId }
+  }
 
   override fun produce(): Offence = Offence(
+    id = this.id(),
     description = this.description(),
     date = this.date(),
     main = this.main(),
     eventNumber = this.eventNumber(),
+    eventId = this.eventId(),
   )
 }
 

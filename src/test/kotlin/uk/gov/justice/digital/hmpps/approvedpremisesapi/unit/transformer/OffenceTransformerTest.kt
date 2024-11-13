@@ -3,14 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailOffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class ConvictionTransformerTest {
-  private val convictionTransformer = ConvictionTransformer()
+class OffenceTransformerTest {
+  private val offenceTransformer = OffenceTransformer()
 
   @Test
   fun `transformToApi maps each Offence correctly`() {
@@ -35,7 +37,7 @@ class ConvictionTransformerTest {
       )
       .produce()
 
-    assertThat(convictionTransformer.transformToApi(conviction)).containsExactlyInAnyOrder(
+    assertThat(offenceTransformer.transformToApi(conviction)).containsExactlyInAnyOrder(
       ActiveOffence(
         deliusEventNumber = "5",
         offenceDescription = "Main Category 1 - Sub Category 1",
@@ -70,13 +72,54 @@ class ConvictionTransformerTest {
       )
       .produce()
 
-    assertThat(convictionTransformer.transformToApi(conviction)).containsExactlyInAnyOrder(
+    assertThat(offenceTransformer.transformToApi(conviction)).containsExactlyInAnyOrder(
       ActiveOffence(
         deliusEventNumber = "5",
         offenceDescription = "A Description",
         offenceId = "1",
         convictionId = 12345,
         offenceDate = LocalDate.parse("2022-12-06"),
+      ),
+    )
+  }
+
+  @Test
+  fun `transformToApi from case-detail maps each Offence correctly`() {
+    val caseDetail = CaseDetailFactory()
+      .withOffences(
+        listOf(
+          CaseDetailOffenceFactory()
+            .withId(10)
+            .withDescription("A first offence")
+            .withDate(LocalDate.parse("2024-11-01"))
+            .withEventNumber("20")
+            .withEventId(30)
+            .produce(),
+          CaseDetailOffenceFactory()
+            .withId(100)
+            .withDescription("A second offence")
+            .withDate(LocalDate.parse("2024-11-11"))
+            .withEventNumber("200")
+            .withEventId(300)
+            .produce(),
+        ),
+      )
+      .produce()
+
+    assertThat(offenceTransformer.transformToApi(caseDetail)).containsExactlyInAnyOrder(
+      ActiveOffence(
+        deliusEventNumber = "20",
+        offenceDescription = "A first offence",
+        offenceId = "10",
+        convictionId = 30,
+        offenceDate = LocalDate.parse("2024-11-01"),
+      ),
+      ActiveOffence(
+        deliusEventNumber = "200",
+        offenceDescription = "A second offence",
+        offenceId = "100",
+        convictionId = 300,
+        offenceDate = LocalDate.parse("2024-11-11"),
       ),
     )
   }
