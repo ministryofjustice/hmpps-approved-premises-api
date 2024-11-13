@@ -363,6 +363,8 @@ class OffenderService(
   }
 
   fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
+    if (crns.isEmpty()) return emptyMap()
+
     return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {
       is ClientResult.Success -> {
         val crnToAccessResult = clientResult.body.access.associateBy(
