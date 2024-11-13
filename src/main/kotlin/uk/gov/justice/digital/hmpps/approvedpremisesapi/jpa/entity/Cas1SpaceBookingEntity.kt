@@ -219,6 +219,7 @@ data class Cas1SpaceBookingEntity(
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
+  fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDateTime != null
   override fun toString() = "Cas1SpaceBookingEntity:$id"
 }

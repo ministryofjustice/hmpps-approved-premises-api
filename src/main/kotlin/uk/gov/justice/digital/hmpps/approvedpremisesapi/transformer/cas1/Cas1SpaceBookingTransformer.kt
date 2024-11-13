@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1KeyWorkerA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingNonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -67,6 +68,7 @@ class Cas1SpaceBookingTransformer(
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
       cancellation = jpa.extractCancellation(),
       requestForPlacementId = jpa.placementRequest?.placementApplication?.id ?: jpa.placementRequest?.id,
+      nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
     )
   }
@@ -106,6 +108,23 @@ class Cas1SpaceBookingTransformer(
         recordedAt = recordedAt,
         reason = cancellationReasonTransformer.transformJpaToApi(reason),
         reasonNotes = cancellationReasonNotes,
+      )
+    } else {
+      null
+    }
+  }
+
+  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? {
+    return if (hasNonArrival()) {
+      Cas1SpaceBookingNonArrival(
+        confirmedAt = nonArrivalConfirmedAt,
+        reason = nonArrivalReason!!.let {
+          NamedId(
+            id = it.id,
+            name = it.name,
+          )
+        },
+        notes = nonArrivalNotes,
       )
     } else {
       null

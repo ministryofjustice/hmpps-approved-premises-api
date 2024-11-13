@@ -321,6 +321,8 @@ components:
             $ref: '#/components/schemas/Cas1SpaceBookingDates'
         cancellation:
           $ref: '#/components/schemas/Cas1SpaceBookingCancellation'
+        nonArrival:
+          $ref: '#/components/schemas/Cas1SpaceBookingNonArrival'
         deliusEventNumber:
           type: string
       required:
@@ -437,6 +439,16 @@ components:
         - occurredAt
         - recordedAt
         - reason
+    Cas1SpaceBookingNonArrival:
+      type: object
+      properties:
+        confirmedAt:
+          type: string
+          format: date-time
+        reason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        notes:
+          type: string
     Cas1NewArrival:
       type: object
       properties:
