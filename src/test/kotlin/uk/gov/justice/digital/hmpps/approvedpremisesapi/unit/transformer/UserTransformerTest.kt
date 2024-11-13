@@ -211,6 +211,8 @@ class UserTransformerTest {
         "CAS1_LEGACY_MANAGER",
         "CAS1_REPORT_VIEWER",
         "CAS1_USER_MANAGER",
+        "CAS1_AP_MANAGER_FIND_AND_BOOK_BETA",
+        "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA",
       ],
       mode = EnumSource.Mode.EXCLUDE,
     )

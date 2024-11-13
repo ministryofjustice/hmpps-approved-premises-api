@@ -15,17 +15,10 @@ private object PermissionGroups {
     UserPermission.CAS1_ADHOC_BOOKING_CREATE,
     UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
     UserPermission.CAS1_BOOKING_CHANGE_DATES,
-    UserPermission.CAS1_BOOKING_CREATE,
     UserPermission.CAS1_BOOKING_WITHDRAW,
     UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
     UserPermission.CAS1_PREMISES_VIEW_SUMMARY,
     UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-    UserPermission.CAS1_SPACE_BOOKING_LIST,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
-    UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
-    UserPermission.CAS1_SPACE_BOOKING_VIEW,
-    UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
     UserPermission.CAS1_USER_LIST,
     UserPermission.CAS1_VIEW_CRU_DASHBOARD,
     UserPermission.CAS1_VIEW_MANAGE_TASKS,
@@ -116,11 +109,30 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
     ),
   ),
+
   CAS1_CRU_MEMBER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMember,
-    CAS1_COMMON_CRU_MEMBER_PERMISSIONS,
+    CAS1_COMMON_CRU_MEMBER_PERMISSIONS +
+      listOf(
+        UserPermission.CAS1_BOOKING_CREATE,
+      ),
   ),
+
+  CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.cruMemberFindAndBookBeta,
+    CAS1_COMMON_CRU_MEMBER_PERMISSIONS +
+      listOf(
+        UserPermission.CAS1_SPACE_BOOKING_LIST,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE,
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER,
+        UserPermission.CAS1_SPACE_BOOKING_VIEW,
+        UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
+      ),
+  ),
+
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
 
   @Deprecated("This role will be removed in the future")
