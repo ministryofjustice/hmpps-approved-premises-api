@@ -201,7 +201,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
-      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender]"
+      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, supportsSpaceBookings]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -240,6 +240,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withIsIAP("no")
       .withLongitude(-1.1169752)
       .withLatitude(53.9634721)
+      .withSupportsSpaceBookings("yes")
       .produce()
 
     withCsv(
@@ -268,6 +269,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
     assertThat(persistedApprovedPremises.characteristics.map { it.propertyName }).isEqualTo(listOf("isCatered"))
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
+    assertThat(persistedApprovedPremises.supportsSpaceBookings).isTrue()
   }
 
   @Test
@@ -294,6 +296,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withEmailAddress("updated@example.com")
       .withLatitude(12.5)
       .withLongitude(30.1)
+      .withSupportsSpaceBookings("no")
       .produce()
 
     withCsv(
@@ -324,6 +327,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
         .createPoint(Coordinate(csvRow.latitude!!, csvRow.longitude!!)),
     )
+    assertThat(persistedApprovedPremises.supportsSpaceBookings).isFalse()
   }
 
   private fun approvedPremisesSeedCsvRowsToCsv(rows: List<ApprovedPremisesSeedCsvRow>): String {
@@ -363,6 +367,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "apCode",
         "qCode",
         "gender",
+        "supportsSpaceBookings",
       )
       .newRow()
 
@@ -402,6 +407,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.apCode)
         .withQuotedField(it.qCode)
         .withQuotedField(it.gender)
+        .withQuotedField(it.supportsSpaceBookings)
         .newRow()
     }
 
@@ -444,6 +450,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
+  private var supportsSpaceBookings: Yielded<String> = { "no" }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -500,6 +507,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.qCode = { qCode }
   }
 
+  fun withSupportsSpaceBookings(supportsSpaceBookings: String) = apply {
+    this.supportsSpaceBookings = { supportsSpaceBookings }
+  }
+
   override fun produce() = ApprovedPremisesSeedCsvRow(
     name = this.name(),
     addressLine1 = this.addressLine1(),
@@ -535,5 +546,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     apCode = this.apCode(),
     qCode = this.qCode(),
     gender = this.gender(),
+    supportsSpaceBookings = this.supportsSpaceBookings(),
   )
 }

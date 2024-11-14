@@ -60,6 +60,7 @@ class ApprovedPremisesSeedJob(
     "latitude",
     "longitude",
     "gender",
+    "supportsSpaceBookings",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -100,6 +101,7 @@ class ApprovedPremisesSeedJob(
     latitude = columns["latitude"]!!.toDoubleOrNull(),
     longitude = columns["longitude"]!!.toDoubleOrNull(),
     gender = ApprovedPremisesGender.valueOf(columns["gender"]!!),
+    supportsSpaceBookings = parseBooleanStringOrThrow(columns["supportsSpaceBookings"]!!, "supportsSpaceBookings"),
   )
 
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
@@ -179,6 +181,7 @@ class ApprovedPremisesSeedJob(
         latitude = row.latitude,
         point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null,
         gender = row.gender,
+        supportsSpaceBookings = castBooleanString(row.supportsSpaceBookings),
       ),
     )
 
@@ -224,6 +227,7 @@ class ApprovedPremisesSeedJob(
       this.status = row.status
       this.point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null
       this.gender = row.gender
+      this.supportsSpaceBookings = castBooleanString(row.supportsSpaceBookings)
     }
 
     characteristics.forEach {
@@ -276,4 +280,5 @@ data class ApprovedPremisesSeedCsvRow(
   val latitude: Double?,
   val longitude: Double?,
   val gender: ApprovedPremisesGender,
+  val supportsSpaceBookings: String,
 )
