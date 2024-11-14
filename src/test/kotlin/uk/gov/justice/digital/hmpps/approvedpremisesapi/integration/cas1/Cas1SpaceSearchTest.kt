@@ -43,7 +43,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Search for Spaces returns OK with correct body`() {
+  fun `Search for Spaces returns OK with correct body, returning only premises supporting space bookings`() {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)
@@ -58,6 +58,18 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
+        withSupportsSpaceBookings(true)
+      }
+
+      // premise that doesn't support space bookings
+      approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { givenAProbationRegion() }
+        withYieldedLocalAuthorityArea {
+          localAuthorityEntityFactory.produceAndPersist()
+        }
+        withLatitude((-0.01) - 0.08)
+        withLongitude((0.01) + 51.49)
+        withSupportsSpaceBookings(false)
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
@@ -111,6 +123,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
+        withSupportsSpaceBookings(true)
         // withGender(gender)
       }
 
@@ -121,6 +134,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
+        withSupportsSpaceBookings(true)
         // withGender(Gender.entries.first { it != gender })
       }
 
@@ -175,6 +189,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withCharacteristicsList(listOfNotNull(apType.asCharacteristicEntity()))
+        withSupportsSpaceBookings(true)
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -185,6 +200,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withCharacteristicsList(listOfNotNull(ApType.entries.first { it != apType }.asCharacteristicEntity()))
+        withSupportsSpaceBookings(true)
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
@@ -243,6 +259,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withCharacteristicsList(listOfNotNull(ApType.entries[it - 1].asCharacteristicEntity()))
+        withSupportsSpaceBookings(true)
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -253,6 +270,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withCharacteristicsList(listOfNotNull(ApType.entries[5].asCharacteristicEntity()))
+        withSupportsSpaceBookings(true)
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
@@ -329,6 +347,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withCharacteristicsList(listOf(characteristic.asCharacteristicEntity()))
+        withSupportsSpaceBookings(true)
       }
 
       expectedPremises.forEach {
@@ -350,6 +369,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
             Cas1SpaceCharacteristic.entries.first { it != characteristic }.asCharacteristicEntity(),
           ),
         )
+        withSupportsSpaceBookings(true)
       }
 
       unexpectedPremises.forEach {
@@ -413,6 +433,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withCharacteristicsList(Cas1SpaceCharacteristic.entries.slice(1..3).map { it.asCharacteristicEntity() })
+        withSupportsSpaceBookings(true)
       }
 
       expectedPremises.forEach {
@@ -434,6 +455,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
             Cas1SpaceCharacteristic.entries[it].asCharacteristicEntity(),
           ),
         )
+        withSupportsSpaceBookings(true)
       }
 
       unexpectedPremises.forEach {

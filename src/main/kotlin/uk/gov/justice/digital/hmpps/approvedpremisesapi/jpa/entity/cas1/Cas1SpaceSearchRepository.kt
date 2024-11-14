@@ -116,6 +116,7 @@ FROM
   ON p.probation_region_id = pr.id
   JOIN ap_areas aa
   ON pr.ap_area_id = aa.id
+  WHERE ap.supports_space_bookings = true
 ) AS result
 WHERE
   1 = 1
