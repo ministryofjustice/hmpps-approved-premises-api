@@ -6687,7 +6687,6 @@ components:
       required:
         - departureDateTime
         - reasonId
-        - moveOnCategoryId
     Cas1AssignKeyWorker:
       type: object
       properties:

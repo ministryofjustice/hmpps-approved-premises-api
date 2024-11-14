@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -311,7 +312,7 @@ class Cas1SpaceBookingService(
       "$.cas1NewDeparture.reasonId" hasValidationError "doesNotExist"
     }
 
-    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(cas1NewDeparture.moveOnCategoryId)
+    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(cas1NewDeparture.moveOnCategoryId ?: NOT_APPLICABLE_MOVE_ON_CATEGORY_ID)
     if (moveOnCategory == null || !moveOnCategory.serviceScopeMatches("approved-premises")) {
       "$.cas1NewDeparture.moveOnCategoryId" hasValidationError "doesNotExist"
     }

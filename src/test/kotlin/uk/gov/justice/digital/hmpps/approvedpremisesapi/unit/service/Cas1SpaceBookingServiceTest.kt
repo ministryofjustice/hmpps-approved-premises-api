@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
@@ -832,6 +833,13 @@ class Cas1SpaceBookingServiceTest {
       serviceScope = "approved-premises",
       legacyDeliusCategoryCode = "legacyDeliusReasonCode",
     )
+    private val departureNotApplicableMoveOnCategory = MoveOnCategoryEntity(
+      id = NOT_APPLICABLE_MOVE_ON_CATEGORY_ID,
+      name = "notApplicableMoveOnCategory",
+      isActive = true,
+      serviceScope = "approved-premises",
+      legacyDeliusCategoryCode = "legacyDeliusReasonCode",
+    )
     private val departureMoveOnCategoryWithInvalidScope = MoveOnCategoryEntity(
       id = UUID.randomUUID(),
       name = "moveOnCategory",
@@ -841,6 +849,10 @@ class Cas1SpaceBookingServiceTest {
     )
 
     private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDateTime(LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC))
+      .produce()
+
+    private val existingSpaceBooking2 = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDateTime(LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC))
       .produce()
 
@@ -1150,6 +1162,33 @@ class Cas1SpaceBookingServiceTest {
       assertThat(actualDepartureDate.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
       assertThat(departureReason).isEqualTo(updatedSpaceBooking.departureReason)
       assertThat(departureMoveOnCategory).isEqualTo(updatedSpaceBooking.departureMoveOnCategory)
+    }
+
+    @Test
+    fun `Updates existing space booking with 'Not Applicable' move-on-category if no move-on-category is supplied`() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking2
+      every { moveOnCategoryRepository.findByIdOrNull(NOT_APPLICABLE_MOVE_ON_CATEGORY_ID) } returns departureNotApplicableMoveOnCategory
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any(), any(), any()) } returns Unit
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NewDeparture = Cas1NewDeparture(
+          departureDateTime = actualDepartureDate,
+          reasonId = UUID.randomUUID(),
+          moveOnCategoryId = null,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+
+      assertThat(departureNotApplicableMoveOnCategory).isEqualTo(updatedSpaceBooking.departureMoveOnCategory)
     }
   }
 
