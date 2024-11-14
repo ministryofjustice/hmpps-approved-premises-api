@@ -146,6 +146,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withGender(ApprovedPremisesGender.MAN)
         withYieldedProbationRegion { region1 }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withSupportsSpaceBookings(false)
       }
 
       premises2WomanInArea2 = approvedPremisesEntityFactory.produceAndPersist {
@@ -153,6 +154,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withGender(ApprovedPremisesGender.WOMAN)
         withYieldedProbationRegion { region2 }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withSupportsSpaceBookings(false)
       }
 
       premises3ManInArea2 = approvedPremisesEntityFactory.produceAndPersist {
@@ -160,9 +162,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withGender(ApprovedPremisesGender.MAN)
         withYieldedProbationRegion { region2 }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withSupportsSpaceBookings(true)
       }
     }
 
+    @SuppressWarnings("CyclomaticComplexMethod")
     @Test
     fun `Returns premises summaries with no filters applied`() {
       val (_, jwt) = givenAUser()
@@ -183,21 +187,24 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.name == "the premises name 1" &&
             it.apCode == premises1ManInArea1.apCode &&
             it.apArea.name == "the ap area name 1" &&
-            it.bedCount == 0
+            it.bedCount == 0 &&
+            it.supportsSpaceBookings == false
         }
         .anyMatch {
           it.id == premises2WomanInArea2.id &&
             it.name == "the premises name 2" &&
             it.apCode == premises2WomanInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
-            it.bedCount == 0
+            it.bedCount == 0 &&
+            it.supportsSpaceBookings == false
         }
         .anyMatch {
           it.id == premises3ManInArea2.id &&
             it.name == "the premises name 3" &&
             it.apCode == premises3ManInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
-            it.bedCount == 0
+            it.bedCount == 0 &&
+            it.supportsSpaceBookings == true
         }
     }
 

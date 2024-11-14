@@ -183,7 +183,8 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
               p.apCode,
               apArea.id,
               apArea.name,
-              CAST(COUNT(b) as int)
+              CAST(COUNT(b) as int),
+              p.supportsSpaceBookings
               )
         FROM 
           ApprovedPremisesEntity p
@@ -372,6 +373,7 @@ data class ApprovedPremisesBasicSummary(
   val apAreaId: UUID,
   val apAreaName: String,
   val bedCount: Int,
+  val supportsSpaceBookings: Boolean,
 )
 
 interface BookingSummary {

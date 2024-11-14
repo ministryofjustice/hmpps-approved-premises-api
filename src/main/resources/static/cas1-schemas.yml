@@ -17,11 +17,14 @@ components:
         bedCount:
           type: integer
           example: 22
+        supportsSpaceBookings:
+          type: boolean
       required:
         - id
         - name
         - apArea
         - bedCount
+        - supportsSpaceBookings
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
