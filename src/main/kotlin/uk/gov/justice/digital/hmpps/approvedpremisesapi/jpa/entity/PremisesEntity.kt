@@ -268,6 +268,7 @@ class ApprovedPremisesEntity(
   var point: Point?,
   @Enumerated(value = EnumType.STRING)
   var gender: ApprovedPremisesGender,
+  var supportsSpaceBookings: Boolean,
 ) : PremisesEntity(
   id,
   name,

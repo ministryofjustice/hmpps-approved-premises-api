@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises ADD COLUMN supports_space_bookings BOOLEAN NOT NULL DEFAULT false;

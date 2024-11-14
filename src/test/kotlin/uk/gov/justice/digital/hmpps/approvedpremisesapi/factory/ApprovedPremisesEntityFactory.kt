@@ -41,6 +41,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var point: Yielded<Point>? = null
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
   private var rooms: Yielded<MutableList<RoomEntity>> = { mutableListOf() }
+  private var supportsSpaceBookings: Yielded<Boolean> = { false }
 
   fun withDefaults() = apply {
     withDefaultProbationRegion()
@@ -167,6 +168,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.rooms = { rooms.toMutableList() }
   }
 
+  fun withSupportsSpaceBookings(supportsSpaceBookings: Boolean) = apply {
+    this.supportsSpaceBookings = { supportsSpaceBookings }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -190,5 +195,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
       .createPoint(Coordinate(this.latitude(), this.longitude())),
     gender = this.gender(),
+    supportsSpaceBookings = this.supportsSpaceBookings(),
   )
 }
