@@ -795,27 +795,23 @@ class AssessmentService(
 
   fun updateAssessmentClarificationNote(
     user: UserEntity,
-    assessmentId: UUID,
-    id: UUID,
+    assessment: AssessmentEntity,
+    noteId: UUID,
     response: String,
     responseReceivedOn: LocalDate,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
-    val assessment = extractEntityFromCasResult(getAssessmentForUser(user, assessmentId))
+  ): CasResult<AssessmentClarificationNoteEntity> {
+    val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, noteId)
 
-    val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
-
-    if (clarificationNoteEntity === null) {
-      return AuthorisableActionResult.NotFound()
+    if (clarificationNoteEntity == null) {
+      return CasResult.NotFound()
     }
 
-    if (clarificationNoteEntity.createdByUser.id !== user.id) {
-      return AuthorisableActionResult.Unauthorised()
+    if (clarificationNoteEntity.createdByUser.id != user.id) {
+      return CasResult.Unauthorised()
     }
 
-    if (clarificationNoteEntity.response !== null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A response has already been added to this note"),
-      )
+    if (clarificationNoteEntity.response != null) {
+      return CasResult.GeneralValidationError("A response has already been added to this note")
     }
 
     clarificationNoteEntity.response = response
@@ -829,26 +825,22 @@ class AssessmentService(
     preUpdateAssessment(assessmentToUpdate)
     assessmentRepository.save(assessmentToUpdate)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedNote),
-    )
+    return CasResult.Success(savedNote)
   }
 
   fun addAssessmentReferralHistoryUserNote(
     user: UserEntity,
     assessment: AssessmentEntity,
     text: String,
-  ): AssessmentReferralHistoryUserNoteEntity {
-    return assessmentReferralHistoryNoteRepository.save(
-      AssessmentReferralHistoryUserNoteEntity(
-        id = UUID.randomUUID(),
-        assessment = assessment,
-        createdAt = OffsetDateTime.now(),
-        message = text,
-        createdByUser = user,
-      ),
-    )
-  }
+  ): AssessmentReferralHistoryUserNoteEntity = assessmentReferralHistoryNoteRepository.save(
+    AssessmentReferralHistoryUserNoteEntity(
+      id = UUID.randomUUID(),
+      assessment = assessment,
+      createdAt = OffsetDateTime.now(),
+      message = text,
+      createdByUser = user,
+    ),
+  )
 
   fun updateCas1AssessmentWithdrawn(assessmentId: UUID, withdrawingUser: UserEntity) {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)

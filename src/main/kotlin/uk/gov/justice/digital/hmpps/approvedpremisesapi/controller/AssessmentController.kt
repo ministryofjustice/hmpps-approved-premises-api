@@ -22,13 +22,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -147,22 +147,22 @@ class AssessmentController(
     val assessmentResult = assessmentService.getAssessmentForUser(user, assessmentId)
     val assessment = extractEntityFromCasResult(assessmentResult)
 
-    when (xServiceName) {
+    val updatedAssessment = when (xServiceName) {
       ServiceName.temporaryAccommodation -> {
-        cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment)
+        extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessment as TemporaryAccommodationAssessmentEntity, updateAssessment))
       }
       else -> {
-        assessmentService.updateAssessment(user, assessment, objectMapper.writeValueAsString(updateAssessment.data))
+        extractEntityFromCasResult(assessmentService.updateAssessment(user, assessment, objectMapper.writeValueAsString(updateAssessment.data)))
       }
     }
 
     val ignoreLao =
-      (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+      (updatedAssessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLao)
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, personInfo),
+      assessmentTransformer.transformJpaToApi(updatedAssessment, personInfo),
     )
   }
 
@@ -274,28 +274,19 @@ class AssessmentController(
     updatedClarificationNote: UpdatedClarificationNote,
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
+    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentForUser(user, assessmentId))
+
     val clarificationNoteResult = assessmentService.updateAssessmentClarificationNote(
       user,
-      assessmentId,
+      assessment,
       noteId,
       updatedClarificationNote.response,
       updatedClarificationNote.responseReceivedOn,
     )
 
-    val clarificationNoteEntityResult = when (clarificationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+    val note = extractEntityFromCasResult(clarificationNoteResult)
 
-    val clarificationNoteForResponse = when (clarificationNoteEntityResult) {
-      is ValidatableActionResult.Success -> clarificationNoteEntityResult.entity
-      else -> throw InternalServerErrorProblem("You must provide a response")
-    }
-
-    return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse),
-    )
+    return ResponseEntity.ok(assessmentClarificationNoteTransformer.transformJpaToApi(note))
   }
 
   override fun assessmentsAssessmentIdReferralHistoryNotesPost(
