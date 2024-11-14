@@ -168,6 +168,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.rooms = { rooms.toMutableList() }
   }
 
+  fun withSupportsSpaceBookings(supportsSpaceBookings: Boolean) = apply {
+    this.supportsSpaceBookings = { supportsSpaceBookings }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),

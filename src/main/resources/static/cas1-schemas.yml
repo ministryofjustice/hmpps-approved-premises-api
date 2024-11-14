@@ -90,6 +90,8 @@ components:
           type: integer
           description: The total number of out of service beds
           example: 2
+        supportsSpaceBookings:
+          type: boolean
       required:
         - id
         - name
@@ -99,6 +101,7 @@ components:
         - bedCount
         - availableBeds
         - outOfServiceBeds
+        - supportsSpaceBookings
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
