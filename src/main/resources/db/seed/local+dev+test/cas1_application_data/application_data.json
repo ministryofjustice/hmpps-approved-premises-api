@@ -367,24 +367,31 @@
       "alternativeRadiusAccepted": "no"
     },
     "preferred-aps": {
-      "preferredAp1": "459eeaba-55ac-4a1f-bae2-bad810d4016b",
-      "preferredAp2": "",
+      "preferredAp1": "0571f6a9-f3ff-40f7-b3d0-076202ee46e1",
+      "preferredAp2": "c6df7f52-49a0-43cf-9ff5-35990561b00a",
       "preferredAp3": "",
       "preferredAp4": "",
       "preferredAp5": "",
       "selectedAps": [
         {
-          "apCode": "BCKNHAM",
-          "probationRegion": "London",
-          "apArea": "London",
-          "service": "CAS1",
-          "id": "459eeaba-55ac-4a1f-bae2-bad810d4016b",
-          "name": "Beckenham Road",
-          "addressLine1": "1 Somewhere",
-          "postcode": "GL56 0QQ",
-          "bedCount": 0,
-          "status": "active",
-          "addressLine2": null
+          "id": "0571f6a9-f3ff-40f7-b3d0-076202ee46e1",
+          "name": "LON Men Premise 1",
+          "apArea": {
+            "id": "c482836a-bd2a-4cce-be6f-c5d548f621f8",
+            "name": "London"
+          },
+          "bedCount": 22,
+          "apCode": "LONMEN1"
+        },
+        {
+          "id": "c6df7f52-49a0-43cf-9ff5-35990561b00a",
+          "name": "LON Men Premise 2",
+          "apArea": {
+            "id": "c482836a-bd2a-4cce-be6f-c5d548f621f8",
+            "name": "London"
+          },
+          "bedCount": 26,
+          "apCode": "LONMEN2"
         }
       ]
     }
