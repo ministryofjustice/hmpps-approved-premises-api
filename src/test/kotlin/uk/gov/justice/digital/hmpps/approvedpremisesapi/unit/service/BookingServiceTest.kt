@@ -24,6 +24,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -1219,6 +1220,7 @@ class BookingServiceTest {
         .withPremises(premises)
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -1259,6 +1261,7 @@ class BookingServiceTest {
         .withName("Other")
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(otherReason.id) } returns otherReason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -1304,6 +1307,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
 
       val cancellationSaveArgument = slot<CancellationEntity>()
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationRepository.save(capture(cancellationSaveArgument)) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -1372,6 +1376,7 @@ class BookingServiceTest {
         )
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
@@ -1413,8 +1418,8 @@ class BookingServiceTest {
         .withCrn(application.crn)
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-
       val cancellationSaveArgument = slot<CancellationEntity>()
       every { mockCancellationRepository.save(capture(cancellationSaveArgument)) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
@@ -1469,6 +1474,7 @@ class BookingServiceTest {
         .withCrn(application.crn)
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -1550,6 +1556,7 @@ class BookingServiceTest {
         .withPlacementRequest(originalPlacementRequest)
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every {
         mockCancellationReasonRepository.findByIdOrNull(bookingSuccessfullyAppealedReasonId)
       } returns bookingSuccessfullyAppealedReason
@@ -1630,6 +1637,7 @@ class BookingServiceTest {
         WithdrawableEntityType.SpaceBooking -> reasonId
       }
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, triggeringEntity == WithdrawableEntityType.Booking) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(expectedReasonId) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -1657,94 +1665,13 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createCancellation application status updated to 'AWAITING_PLACEMENT' if no other non-active bookings`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withApplication(application)
-        .produce()
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      every {
-        mockApplicationService.updateApprovedPremisesApplicationStatus(
-          application.id,
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-        )
-      } returns Unit
-
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, null, WithdrawalTriggeredByUser(user)) } returns Unit
-
-      val cancelledBooking1 = BookingEntityFactory()
-        .withPremises(premises)
-        .withCancellations(
-          mutableListOf(
-            CancellationEntityFactory()
-              .withBooking(
-                BookingEntityFactory()
-                  .withPremises(premises)
-                  .withApplication(application)
-                  .produce(),
-              )
-              .withDefaultReason().produce(),
-          ),
-        )
-        .produce()
-
-      val cancelledBooking2 = BookingEntityFactory()
-        .withPremises(premises)
-        .withCancellations(
-          mutableListOf(
-            CancellationEntityFactory()
-              .withBooking(
-                BookingEntityFactory()
-                  .withPremises(premises)
-                  .withApplication(application)
-                  .produce(),
-              )
-              .withDefaultReason().produce(),
-          ),
-        )
-        .produce()
-
-      every { mockBookingRepository.findAllByApplication(application) } returns listOf(
-        cancelledBooking1,
-        cancelledBooking2,
-      )
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-
-      verify {
-        mockApplicationService.updateApprovedPremisesApplicationStatus(
-          application.id,
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-        )
-      }
-    }
-
-    @Test
     fun `createCancellation application status not updated if there are other active bookings`() {
       val bookingEntity = BookingEntityFactory()
         .withPremises(premises)
         .withApplication(application)
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
@@ -1810,6 +1737,7 @@ class BookingServiceTest {
         .withApplication(application)
         .produce()
 
+      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, false) } returns Unit
       every { mockCancellationReasonRepository.findByIdOrNull(CancellationReasonRepository.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID) } returns reason
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs

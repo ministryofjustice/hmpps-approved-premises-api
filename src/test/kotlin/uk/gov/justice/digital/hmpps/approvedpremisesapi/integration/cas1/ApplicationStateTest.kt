@@ -9,9 +9,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -29,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -37,6 +45,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -50,6 +62,12 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
 
+  @Autowired
+  lateinit var realBookingRepository: BookingRepository
+
+  @Autowired
+  lateinit var realSpaceBookingRepository: Cas1SpaceBookingRepository
+
   lateinit var offenderDetails: OffenderDetailSummary
 
   lateinit var jwt: String
@@ -57,7 +75,11 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   lateinit var user1: UserEntity
   lateinit var user2: UserEntity
 
+  lateinit var premises: ApprovedPremisesEntity
   lateinit var applicationId: UUID
+  lateinit var booking: Booking
+  lateinit var spaceBooking: Cas1SpaceBooking
+  lateinit var cancellationReason: CancellationReasonEntity
 
   @BeforeEach
   fun setup() {
@@ -67,6 +89,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
         UserRole.CAS1_ASSESSOR,
         UserRole.CAS1_MATCHER,
         UserRole.CAS1_WORKFLOW_MANAGER,
+        UserRole.CAS1_CRU_MEMBER,
       ),
     )
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -78,6 +101,11 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withPermissiveSchema()
+    }
+
+    cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+      withId(UUID.randomUUID())
+      withServiceScope(ServiceName.approvedPremises.value)
     }
 
     apDeliusContextMockSuccessfulTeamsManagingCaseCall(
@@ -207,6 +235,56 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
   }
 
+  @Test
+  fun `a CAS1 application with one booking will transition correctly if the booking is cancelled `() {
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
+    submitApplication(false)
+    startAssessment()
+    approveAssessment()
+    createBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+    cancelBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+  }
+
+  @Test
+  fun `a CAS1 application with multiple bookings will not change status if 1 booking is cancelled `() {
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
+    submitApplication(false)
+    startAssessment()
+    approveAssessment()
+    createBooking()
+    createAnotherBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+    cancelBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+  }
+
+  @Test
+  fun `a CAS1 application with space booking will transition correctly if the space booking is cancelled `() {
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
+    submitApplication(false)
+    startAssessment()
+    approveAssessment()
+    createSpaceBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+    cancelSpaceBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+  }
+
+  @Test
+  fun `a CAS1 application with space bookings will not change status if 1 space booking is cancelled `() {
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
+    submitApplication(false)
+    startAssessment()
+    approveAssessment()
+    createSpaceBooking()
+    createAnotherSpaceBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+    cancelSpaceBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+  }
+
   private fun assertApplicationStatus(status: ApprovedPremisesApplicationStatus) {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     assertThat(application.status).isEqualTo(status)
@@ -262,11 +340,48 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .isOk
   }
 
+  private fun cancelBooking() {
+    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    val booking = realBookingRepository.findAllByApplication(application).first()
+
+    webTestClient.post()
+      .uri("/premises/${premises.id}/bookings/${booking.id}/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.parse("2023-03-29"),
+          reason = cancellationReason.id,
+          notes = "notes",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  private fun cancelSpaceBooking() {
+    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    val booking = realSpaceBookingRepository.findAllByApplication(application).first()
+
+    webTestClient.post()
+      .uri("cas1/premises/${premises.id}/space-bookings/${booking.id}/cancellations")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCas1SpaceBookingCancellation(
+          occurredAt = LocalDate.parse("2023-03-29"),
+          reasonId = cancellationReason.id,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
   private fun createBooking() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val placementRequest = application.getLatestPlacementRequest()!!
 
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { givenAProbationRegion() }
     }
@@ -292,6 +407,41 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+  }
+
+  private fun createAnotherBooking() {
+    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    givenABooking(application.crn, application, premises = premises)
+  }
+
+  private fun createSpaceBooking() {
+    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    val placementRequest = application.getLatestPlacementRequest()!!
+
+    premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { givenAProbationRegion() }
+    }
+
+    webTestClient.post()
+      .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewCas1SpaceBooking(
+          arrivalDate = LocalDate.parse("2023-03-29"),
+          departureDate = LocalDate.parse("2023-04-01"),
+          premisesId = premises.id,
+          requirements = Cas1SpaceBookingRequirements(emptyList()),
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  private fun createAnotherSpaceBooking() {
+    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    givenACas1SpaceBooking(application.crn, premises = premises, application = application)
   }
 
   private fun startAssessment() {

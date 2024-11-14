@@ -451,6 +451,10 @@ class Cas1SpaceBookingService(
       else -> throw InternalServerErrorProblem("Withdrawal triggered automatically is not supported")
     }
     cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason)
+    cas1ApplicationStatusService.spaceBookingCancelled(
+      spaceBooking,
+      isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.SpaceBooking,
+    )
 
     spaceBooking.application?.let {
       cas1BookingEmailService.spaceBookingWithdrawn(
