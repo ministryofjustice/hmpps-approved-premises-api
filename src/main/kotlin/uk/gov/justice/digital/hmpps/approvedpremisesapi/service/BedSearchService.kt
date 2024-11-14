@@ -139,22 +139,22 @@ class BedSearchService(
           return@validated fieldValidationError
         }
 
-        val premisesCharacteristicsNames = propertyBedAttributes?.map {
+        val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
           when (it) {
-            BedSearchAttributes.singleOccupancy -> "Single occupancy"
-            BedSearchAttributes.sharedProperty -> "Shared property"
+            BedSearchAttributes.singleOccupancy -> "isSingleOccupancy"
+            BedSearchAttributes.sharedProperty -> "isSharedProperty"
             BedSearchAttributes.wheelchairAccessible -> ""
           }
         }
 
-        val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsNames, "premises")
+        val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
-        val roomCharacteristicsNames = when {
-          propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("Wheelchair accessible")
+        val roomCharacteristicsPropertyNames = when {
+          propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("isWheelchairAccessible")
           else -> null
         }
 
-        val roomCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(roomCharacteristicsNames, "room")
+        val roomCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(roomCharacteristicsPropertyNames, "room")
 
         val endDate = startDate.plusDays(durationInDays.toLong() - 1)
 
@@ -219,9 +219,9 @@ class BedSearchService(
     )
   }
 
-  private fun getTemporaryAccommodationCharacteristicsIds(characteristicsNames: List<String>?, modelScope: String): List<UUID> {
-    return characteristicsNames?.let {
-      val characteristics = characteristicService.getCharacteristicsByNames(characteristicsNames)
+  private fun getTemporaryAccommodationCharacteristicsIds(characteristicsPropertyNames: List<String>?, modelScope: String): List<UUID> {
+    return characteristicsPropertyNames?.let {
+      val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicsPropertyNames, ServiceName.temporaryAccommodation)
       characteristics.filter {
         it.isActive && it.matches(ServiceName.temporaryAccommodation.value, modelScope)
       }.map { it.id }.toList()

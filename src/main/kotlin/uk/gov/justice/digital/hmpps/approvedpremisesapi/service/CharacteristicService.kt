@@ -30,9 +30,6 @@ class CharacteristicService(
   fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) =
     characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
 
-  fun getCharacteristicsByNames(requiredCharacteristics: List<String>) =
-    characteristicRepository.findAllWhereNameIn(requiredCharacteristics)
-
   fun serviceScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean {
     val targetService = getServiceForTarget(target) ?: return false
 
