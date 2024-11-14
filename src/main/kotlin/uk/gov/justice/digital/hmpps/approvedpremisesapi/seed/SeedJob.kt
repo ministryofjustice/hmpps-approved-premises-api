@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import java.util.UUID
+
 abstract class SeedJob<RowType>(
   val requiredHeaders: Set<String>? = null,
   val runInTransaction: Boolean = true,
@@ -22,6 +25,19 @@ abstract class SeedJob<RowType>(
   }
   abstract fun deserializeRow(columns: Map<String, String>): RowType
   abstract fun processRow(row: RowType)
+}
+
+abstract class ExcelSeedJob(
+  val fileName: String,
+  val sheetName: String,
+) {
+  init {
+    if (fileName.contains("/") || fileName.contains("\\")) {
+      throw RuntimeException("Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied")
+    }
+  }
+
+  abstract fun processDataFrame(dataFrame: DataFrame<*>)
 }
 
 class SeedException(message: String) : RuntimeException(message)

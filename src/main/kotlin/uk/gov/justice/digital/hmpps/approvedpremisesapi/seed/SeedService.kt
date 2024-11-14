@@ -2,12 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -37,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedFromXLSXJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
@@ -91,6 +96,34 @@ class SeedService(
   fun seedDataAsync(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename)
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
+
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String) = seedExcelData(excelSeedFileType, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
+
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
+    seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
+
+    try {
+      val job: ExcelSeedJob = when (excelSeedFileType) {
+        SeedFromExcelFileType.approvedPremisesRoomFromExcel -> ApprovedPremisesRoomsSeedFromXLSXJob(
+          filename,
+          "Sheet3",
+          getBean(PremisesRepository::class),
+          getBean(RoomRepository::class),
+          getBean(BedRepository::class),
+          getBean(CharacteristicRepository::class),
+        )
+      }
+
+      val seedStarted = LocalDateTime.now()
+
+      transactionTemplate.executeWithoutResult { processExcelJob(job, resolveXlsxPath) }
+
+      val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
+      seedLogger.info("Excel seed request complete. Took $timeTaken millis")
+    } catch (exception: Exception) {
+      seedLogger.error("Unable to complete Excel seed job", exception)
+    }
+  }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
@@ -275,6 +308,16 @@ class SeedService(
     job.postSeed()
 
     return rowsProcessed
+  }
+
+  private fun processExcelJob(job: ExcelSeedJob, resolveXlsxPath: ExcelSeedJob.() -> String) {
+    seedLogger.info("Processing XLSX file ${Path.of(job.resolveXlsxPath()).absolutePathString()}")
+    try {
+      val roomDataFrame = DataFrame.readExcel(job.resolveXlsxPath(), job.sheetName)
+      job.processDataFrame(roomDataFrame)
+    } catch (exception: Exception) {
+      throw RuntimeException("Unable to process XLSX file", exception)
+    }
   }
 
   private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {

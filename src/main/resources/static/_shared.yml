@@ -3803,6 +3803,16 @@ components:
       required:
         - seedType
         - fileName
+    SeedFromExcelRequest:
+      type: object
+      properties:
+        seedType:
+          $ref: '#/components/schemas/SeedFromExcelFileType'
+        fileName:
+          type: string
+      required:
+        - seedType
+        - fileName
     SeedFileType:
       type: string
       enum:
@@ -3833,6 +3843,10 @@ components:
         - approved_premises_cru_management_areas
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_booking_management_data
+    SeedFromExcelFileType:
+      type: string
+      enum:
+        - approved_premises_room_from_excel
     MigrationJobRequest:
       type: object
       properties:
