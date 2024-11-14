@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -66,6 +67,7 @@ class Cas1SpaceBookingController(
 
     val characteristics = characteristicService.getCharacteristicsByPropertyNames(
       body.requirements.essentialCharacteristics.map { it.value },
+      ServiceName.approvedPremises,
     )
 
     val booking = extractEntityFromCasResult(

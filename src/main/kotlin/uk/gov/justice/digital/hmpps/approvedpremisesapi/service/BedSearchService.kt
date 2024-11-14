@@ -59,7 +59,7 @@ class BedSearchService(
         val roomCharacteristicIds = mutableListOf<UUID>()
         val requiredPropertyNames = requiredCharacteristics.map { it.toString() }
 
-        val characteristics = characteristicService.getCharacteristicsByPropertyNames(requiredPropertyNames)
+        val characteristics = characteristicService.getCharacteristicsByPropertyNames(requiredPropertyNames, ServiceName.approvedPremises)
 
         requiredPropertyNames.forEach { propertyName ->
           val characteristic = characteristics.firstOrNull { it.propertyName == propertyName }

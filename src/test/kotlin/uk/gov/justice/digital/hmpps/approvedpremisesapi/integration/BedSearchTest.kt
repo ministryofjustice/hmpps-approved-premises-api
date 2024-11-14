@@ -952,7 +952,7 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSharedProperty",
                         name = "Shared property",
                       ),
                     ),
@@ -968,13 +968,13 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSharedProperty",
                         name = "Shared property",
                       ),
                     ),
                     roomCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isWheelchairAccessible",
                         name = "Wheelchair accessible",
                       ),
                     ),
@@ -989,11 +989,11 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isMenOnly",
                         name = "Men only",
                       ),
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSharedProperty",
                         name = "Shared property",
                       ),
                     ),
@@ -1063,7 +1063,7 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSingleOccupancy",
                         name = "Single occupancy",
                       ),
                     ),
@@ -1079,13 +1079,13 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSingleOccupancy",
                         name = "Single occupancy",
                       ),
                     ),
                     roomCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isWheelchairAccessible",
                         name = "Wheelchair accessible",
                       ),
                     ),
@@ -1100,11 +1100,11 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isWomenOnly",
                         name = "Women only",
                       ),
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSingleOccupancy",
                         name = "Single occupancy",
                       ),
                     ),
@@ -1172,13 +1172,13 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSharedProperty",
                         name = "Shared property",
                       ),
                     ),
                     roomCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isWheelchairAccessible",
                         name = "Wheelchair accessible",
                       ),
                     ),
@@ -1193,13 +1193,13 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isSingleOccupancy",
                         name = "Single occupancy",
                       ),
                     ),
                     roomCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = null,
+                        propertyName = "isWheelchairAccessible",
                         name = "Wheelchair accessible",
                       ),
                     ),

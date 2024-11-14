@@ -21,14 +21,14 @@ class CharacteristicService(
   fun getCharacteristic(characteristicName: String): CharacteristicEntity? =
     characteristicRepository.findByName(characteristicName)
 
-  fun getCharacteristicByPropertyName(propertyName: String): CharacteristicEntity? =
-    characteristicRepository.findByPropertyName(propertyName)
+  fun getCharacteristicByPropertyName(propertyName: String, serviceName: ServiceName): CharacteristicEntity? =
+    characteristicRepository.findByPropertyName(propertyName, serviceName.value)
 
   fun getCharacteristics(characteristicName: String): List<CharacteristicEntity> =
     characteristicRepository.findAllByName(characteristicName)
 
-  fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>) =
-    characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics)
+  fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) =
+    characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
 
   fun getCharacteristicsByNames(requiredCharacteristics: List<String>) =
     characteristicRepository.findAllWhereNameIn(requiredCharacteristics)

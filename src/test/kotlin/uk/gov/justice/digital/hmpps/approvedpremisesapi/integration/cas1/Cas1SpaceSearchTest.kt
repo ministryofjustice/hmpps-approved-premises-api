@@ -485,10 +485,10 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     ApType.rfap -> "isRecoveryFocussed"
     ApType.mhapStJosephs, ApType.mhapElliottHouse -> "isSemiSpecialistMentalHealth"
   }?.let {
-    characteristicRepository.findByPropertyName(it)
+    characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)
   }
 
-  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicRepository.findByPropertyName(this.value)
+  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicRepository.findByPropertyName(this.value, ServiceName.approvedPremises.value)
     ?: characteristicEntityFactory.produceAndPersist {
       withName(this@asCharacteristicEntity.value)
       withPropertyName(this@asCharacteristicEntity.value)
