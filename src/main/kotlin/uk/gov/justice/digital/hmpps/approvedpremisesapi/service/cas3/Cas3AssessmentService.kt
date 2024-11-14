@@ -6,11 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import java.time.LocalDate
-import java.util.UUID
 
 @Service
 class Cas3AssessmentService(
@@ -22,14 +20,9 @@ class Cas3AssessmentService(
   @Suppress("ReturnCount")
   fun updateAssessment(
     user: UserEntity,
-    assessmentId: UUID,
+    assessment: TemporaryAccommodationAssessmentEntity,
     updateAssessment: UpdateAssessment,
   ): CasResult<TemporaryAccommodationAssessmentEntity> {
-    val assessment: TemporaryAccommodationAssessmentEntity = (
-      assessmentRepository.findAssessmentById(assessmentId)
-        ?: return CasResult.NotFound(TemporaryAccommodationAssessmentEntity::class.simpleName, assessmentId.toString())
-      )
-
     if (!userAccessService.userCanViewAssessment(user, assessment)) {
       return CasResult.Unauthorised()
     }
@@ -85,13 +78,11 @@ class Cas3AssessmentService(
     return CasResult.Success(assessmentRepository.save(assessment))
   }
 
-  private fun notBeforeValidationResult(existingDate: LocalDate) =
-    CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
-      "Accommodation required from date cannot be before release date: $existingDate",
-    )
+  private fun notBeforeValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
+    "Accommodation required from date cannot be before release date: $existingDate",
+  )
 
-  private fun notAfterValidationResult(existingDate: LocalDate) =
-    CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
-      "Release date cannot be after accommodation required from date: $existingDate",
-    )
+  private fun notAfterValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
+    "Release date cannot be after accommodation required from date: $existingDate",
+  )
 }

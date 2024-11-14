@@ -326,7 +326,7 @@ class AssessmentService(
     placementDates: PlacementDates?,
     apType: ApType?,
     notes: String?,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
@@ -334,21 +334,15 @@ class AssessmentService(
     val assessment = extractEntityFromCasResult(assessmentResult)
 
     if (!assessment.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
-      )
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     if (assessment.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
-      )
+      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
 
     val validationErrors = ValidationErrors()
@@ -367,9 +361,7 @@ class AssessmentService(
     }
 
     if (validationErrors.any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors),
-      )
+      return CasResult.FieldValidationError(validationErrors)
     }
 
     assessment.document = document
@@ -392,9 +384,7 @@ class AssessmentService(
         placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
 
       if (placementRequirementsValidationResult !is ValidatableActionResult.Success) {
-        return AuthorisableActionResult.Success(
-          placementRequirementsValidationResult.translateError(),
-        )
+        return placementRequirementsValidationResult.translateErrorToCasResult()
       }
 
       if (createPlacementRequest) {
@@ -427,9 +417,7 @@ class AssessmentService(
       }
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun rejectAssessment(
