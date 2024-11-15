@@ -50,12 +50,13 @@ class Cas3AssessmentServiceTest {
   @Test
   fun `an invalid assessment id returns a validation error`() {
     val assessmentId = UUID.randomUUID()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory().withId(assessmentId).produce()
     val updateAssessment = updateAssessmentEntity(releaseDate = LocalDate.now(), accommodationRequiredFromDate = null)
     val user = UserEntityFactory().withDefaultProbationRegion().produce()
 
     every { assessmentRepository.findById(assessmentId) } returns (Optional.empty())
 
-    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.NotFound
+    val result = assessmentService.updateAssessment(user, assessment, updateAssessment) as CasResult.NotFound
     assertAll(
       {
         assertThat(result.id).isEqualTo(assessmentId.toString())
@@ -83,7 +84,7 @@ class Cas3AssessmentServiceTest {
     val result =
       assessmentService.updateAssessment(
         user,
-        assessmentId,
+        assessment,
         updateAssessment,
       )
 
@@ -106,7 +107,7 @@ class Cas3AssessmentServiceTest {
     every { assessmentRepository.findById(assessmentId) } returns Optional.of(assessment)
     every { userAccessService.userCanViewAssessment(any(), any()) } returns true
 
-    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
+    val result = assessmentService.updateAssessment(user, assessment, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
     assertThat(result.message).isEqualTo("Cannot update both dates")
     verify { domainEventService wasNot called }
   }
@@ -127,7 +128,7 @@ class Cas3AssessmentServiceTest {
     every { assessmentRepository.save(any()) } returnsArgument 0
     every { userAccessService.userCanViewAssessment(any(), any()) } returns true
 
-    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
+    val result = assessmentService.updateAssessment(user, assessment, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
     assertThat(result.message).isEqualTo("Accommodation required from date cannot be before release date: ${assessment.releaseDate}")
     verify { domainEventService wasNot called }
   }
@@ -146,7 +147,7 @@ class Cas3AssessmentServiceTest {
     every { assessmentRepository.findById(any()) } returns Optional.of(assessment)
     every { userAccessService.userCanViewAssessment(any(), any()) } returns true
 
-    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
+    val result = assessmentService.updateAssessment(user, assessment, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
     assertThat(result.message).isEqualTo("Release date cannot be after accommodation required from date: ${assessment.accommodationRequiredFromDate}")
     verify { domainEventService wasNot called }
   }
@@ -182,7 +183,7 @@ class Cas3AssessmentServiceTest {
     every { domainEventBuilder.buildAssessmentUpdatedDomainEvent(any(), any()) } answers { callOriginal() }
     every { domainEventService.saveAssessmentUpdatedEvent(any()) } just Runs
 
-    val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment)
+    val result = assessmentService.updateAssessment(user, assessment, updateAssessment)
     assertThat(result is CasResult.Success).isTrue
     val entity = (result as CasResult.Success).value
     assertThat(entity).isNotNull()
@@ -193,21 +194,19 @@ class Cas3AssessmentServiceTest {
   private fun updateAssessmentEntity(
     releaseDate: LocalDate?,
     accommodationRequiredFromDate: LocalDate?,
-  ): UpdateAssessment =
-    UpdateAssessment(
-      releaseDate = releaseDate,
-      accommodationRequiredFromDate = accommodationRequiredFromDate,
-      data = emptyMap(),
-    )
+  ): UpdateAssessment = UpdateAssessment(
+    releaseDate = releaseDate,
+    accommodationRequiredFromDate = accommodationRequiredFromDate,
+    data = emptyMap(),
+  )
 
-  private fun assessmentEntity(user: UserEntity): TemporaryAccommodationAssessmentEntity =
-    TemporaryAccommodationAssessmentEntityFactory()
-      .withApplication(
-        TemporaryAccommodationApplicationEntityFactory()
-          .withProbationRegion(user.probationRegion)
-          .withCreatedByUser(user)
-          .produce(),
-      ).withReleaseDate(LocalDate.now().plusDays(5))
-      .withAccommodationRequiredFromDate(LocalDate.now().plusDays(5))
-      .produce()
+  private fun assessmentEntity(user: UserEntity): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntityFactory()
+    .withApplication(
+      TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce(),
+    ).withReleaseDate(LocalDate.now().plusDays(5))
+    .withAccommodationRequiredFromDate(LocalDate.now().plusDays(5))
+    .produce()
 }
