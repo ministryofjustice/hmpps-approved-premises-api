@@ -312,7 +312,8 @@ class ApplicationTest : IntegrationTestBase() {
                 .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
 
               assertThat(responseBody).anyMatch {
-                application.id == it.id && application.crn == it.person.crn &&
+                application.id == it.id &&
+                  application.crn == it.person.crn &&
                   application.createdAt.toInstant() == it.createdAt &&
                   application.createdByUser.id == it.createdByUserId &&
                   application.submittedAt?.toInstant() == it.submittedAt
@@ -337,22 +338,18 @@ class ApplicationTest : IntegrationTestBase() {
       offenderDetails: OffenderDetailSummary,
       probationRegion: ProbationRegionEntity,
       submittedAt: OffsetDateTime?,
-    ): TemporaryAccommodationApplicationEntity {
-      return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
-        withCreatedByUser(user)
-        withSubmittedAt(submittedAt)
-        withCrn(offenderDetails.otherIds.crn)
-        withData("{}")
-        withProbationRegion(probationRegion)
-      }
+    ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(applicationSchema)
+      withCreatedByUser(user)
+      withSubmittedAt(submittedAt)
+      withCrn(offenderDetails.otherIds.crn)
+      withData("{}")
+      withProbationRegion(probationRegion)
     }
 
-    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity {
-      return temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
+    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
     }
 
     @Test
@@ -917,13 +914,15 @@ class ApplicationTest : IntegrationTestBase() {
               nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
               nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-              olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+              olderJsonSchema.id == it.schemaVersion &&
+              it.outdatedSchema
           }
         }
       }
     }
   }
 
+  @Nested
   inner class Cas3GetApplication {
 
     @Test
@@ -978,7 +977,8 @@ class ApplicationTest : IntegrationTestBase() {
               applicationEntity.createdByUser.id == it.createdByUserId &&
               applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-              newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+              newestJsonSchema.id == it.schemaVersion &&
+              !it.outdatedSchema
           }
         }
       }
@@ -1038,7 +1038,8 @@ class ApplicationTest : IntegrationTestBase() {
                 applicationEntity.createdByUser.id == it.createdByUserId &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema
             }
           }
         }
@@ -2683,8 +2684,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  private fun schemaText(): String {
-    return """
+  private fun schemaText(): String = """
               {
                 "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
                 "${"\$id"}": "https://example.com/product.schema.json",
@@ -2695,7 +2695,6 @@ class ApplicationTest : IntegrationTestBase() {
                 "required": []
               }
             """
-  }
 
   @Nested
   inner class GetAssessmentForApplication {
