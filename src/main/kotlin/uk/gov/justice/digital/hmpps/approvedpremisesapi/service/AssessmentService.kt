@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
@@ -151,6 +152,7 @@ class AssessmentService(
     }
   }
 
+  @Deprecated(message = "Removing as we should now use CasResult", ReplaceWith("getAssessmentForUser(user, assessment)"))
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
@@ -184,6 +186,41 @@ class AssessmentService(
     }
 
     return AuthorisableActionResult.Success(assessment)
+  }
+
+  fun getValidatedAssessment(user: UserEntity, assessmentId: UUID): CasResult<AssessmentEntity> {
+    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+      ?: return CasResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
+
+    val latestSchema = when (assessment) {
+      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
+        ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
+      )
+
+      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(
+        TemporaryAccommodationAssessmentJsonSchemaEntity::class.java,
+      )
+
+      else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
+    }
+
+    if (!userAccessService.userCanViewAssessment(user, assessment)) {
+      return CasResult.Unauthorised()
+    }
+
+    assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
+
+    val offenderResult = offenderService.getOffenderByCrn(
+      assessment.application.crn,
+      user.deliusUsername,
+      user.hasQualification(UserQualification.LAO),
+    )
+
+    if (offenderResult !is AuthorisableActionResult.Success) {
+      return CasResult.Unauthorised()
+    }
+
+    return CasResult.Success(assessment)
   }
 
   fun getAssessmentForUserAndApplication(

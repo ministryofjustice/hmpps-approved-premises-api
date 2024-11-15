@@ -76,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.Ass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -473,6 +474,127 @@ class AssessmentServiceTest {
 
     assertThat(result.id).isEqualTo(assessmentId.toString())
     assertThat(result.entityType).isEqualTo(AssessmentEntity::class.simpleName)
+  }
+
+  @Test
+  fun `getValidatedAssessment gets assessment when user is authorised to view assessment`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withAllocatedToUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion {
+                ProbationRegionEntityFactory()
+                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+                  .produce()
+              }
+              .produce(),
+          )
+          .produce(),
+      )
+      .produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns true
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+
+    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+
+    val result = assessmentService.getValidatedAssessment(user, assessment.id)
+
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    assertThat(result.value).isEqualTo(assessment)
+  }
+
+  @Test
+  fun `getValidatedAssessment does not get assessment when user is not authorised to view assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val assessment =
+      ApprovedPremisesAssessmentEntityFactory()
+        .withId(assessmentId)
+        .withAllocatedToUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce(),
+            )
+            .produce(),
+        )
+        .produce()
+
+    every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns false
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.getValidatedAssessment(user, assessmentId)
+
+    assertThat(result is CasResult.Unauthorised).isTrue
+  }
+
+  @Test
+  fun `getValidatedAssessment returns not found for non-existent Assessment`() {
+    val assessmentId = UUID.randomUUID()
+
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
+    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+
+    val result = assessmentService.getValidatedAssessment(user, assessmentId) as CasResult.NotFound
+
+    assertThat(result.id).isEqualTo(assessmentId.toString())
+    assertThat(result.entityType).isEqualTo("AssessmentEntity")
   }
 
   @Nested
