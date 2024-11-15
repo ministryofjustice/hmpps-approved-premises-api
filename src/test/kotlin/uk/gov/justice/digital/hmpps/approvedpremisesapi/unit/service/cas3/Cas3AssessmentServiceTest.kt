@@ -10,7 +10,6 @@ import io.mockk.just
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -47,23 +46,24 @@ class Cas3AssessmentServiceTest {
   @InjectMockKs
   lateinit var assessmentService: Cas3AssessmentService
 
-  @Test
-  fun `an invalid assessment id returns a validation error`() {
-    val assessmentId = UUID.randomUUID()
-    val assessment = TemporaryAccommodationAssessmentEntityFactory().withId(assessmentId).produce()
-    val updateAssessment = updateAssessmentEntity(releaseDate = LocalDate.now(), accommodationRequiredFromDate = null)
-    val user = UserEntityFactory().withDefaultProbationRegion().produce()
-
-    every { assessmentRepository.findById(assessmentId) } returns (Optional.empty())
-
-    val result = assessmentService.updateAssessment(user, assessment, updateAssessment) as CasResult.NotFound
-    assertAll(
-      {
-        assertThat(result.id).isEqualTo(assessmentId.toString())
-        assertThat(result.entityType).isEqualTo(TemporaryAccommodationAssessmentEntity::class.simpleName)
-      },
-    )
-  }
+// controlelr
+  //  @Test
+//  fun `an invalid assessment id returns a validation error`() {
+//    val assessmentId = UUID.randomUUID()
+//    val assessment = TemporaryAccommodationAssessmentEntityFactory().withId(assessmentId).produce()
+//    val updateAssessment = updateAssessmentEntity(releaseDate = LocalDate.now(), accommodationRequiredFromDate = null)
+//    val user = UserEntityFactory().withDefaultProbationRegion().produce()
+//
+//    every { assessmentRepository.findById(assessmentId) } returns (Optional.empty())
+//
+//    val result = assessmentService.updateAssessment(user, assessment, updateAssessment) as CasResult.NotFound
+//    assertAll(
+//      {
+//        assertThat(result.id).isEqualTo(assessmentId.toString())
+//        assertThat(result.entityType).isEqualTo(TemporaryAccommodationAssessmentEntity::class.simpleName)
+//      },
+//    )
+//  }
 
   @Test
   fun `user unable to access assessment returns unauthorised validation error`() {

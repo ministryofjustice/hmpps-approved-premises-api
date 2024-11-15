@@ -2707,6 +2707,7 @@ class BookingServiceTest {
 
     val assessment = TemporaryAccommodationAssessmentEntityFactory()
       .withApplication(application)
+      .withSchemaUpToDate(true)
       .produce()
 
     val bookingEntity = createTemporaryAccommodationBooking(application)
@@ -2800,10 +2801,12 @@ class BookingServiceTest {
 
     val assessment = TemporaryAccommodationAssessmentEntityFactory()
       .withApplication(application)
+      .withSchemaUpToDate(true)
       .produce()
 
     val bookingEntity = createTemporaryAccommodationBooking(application)
 
+    every { mockAssessmentService.getAssessmentForUser(user, assessment.id) } returns CasResult.Success(assessment)
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs

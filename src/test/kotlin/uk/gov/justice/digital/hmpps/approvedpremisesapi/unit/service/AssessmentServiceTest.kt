@@ -478,72 +478,73 @@ class AssessmentServiceTest {
 
   @Nested
   inner class AddAssessmentClarificationNote {
-    @Test
-    fun `addAssessmentClarificationNote returns not found for non-existent Assessment`() {
-      val assessmentId = UUID.randomUUID()
-      val assessment = ApprovedPremisesAssessmentEntityFactory().withId(assessmentId).produce()
+    // controller
+//    @Test
+//    fun `addAssessmentClarificationNote returns not found for non-existent Assessment`() {
+//      val assessmentId = UUID.randomUUID()
+//      val assessment = ApprovedPremisesAssessmentEntityFactory().withId(assessmentId).produce()
+//
+//      val user = UserEntityFactory()
+//        .withYieldedProbationRegion {
+//          ProbationRegionEntityFactory()
+//            .withYieldedApArea { ApAreaEntityFactory().produce() }
+//            .produce()
+//        }
+//        .produce()
+//
+//      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
+//      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+//
+//      val result = assessmentService.addAssessmentClarificationNote(user, assessment, "clarification note")
+//      assertThat(result is CasResult.NotFound).isTrue()
+//    }
 
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
-
-      val result = assessmentService.addAssessmentClarificationNote(user, assessment, "clarification note")
-      assertThat(result is CasResult.NotFound).isTrue()
-    }
-
-    @Test
-    fun `addAssessmentClarificationNote returns unauthorised when the user does not have permission to access the assessment`() {
-      val assessmentId = UUID.randomUUID()
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
-
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
-
-      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
-
-      val result = assessmentService.addAssessmentClarificationNote(user, assessment, "clarification note")
-      assertThat(result is CasResult.Unauthorised).isTrue()
-    }
+//    @Test
+//    fun `addAssessmentClarificationNote returns unauthorised when the user does not have permission to access the assessment`() {
+//      val assessmentId = UUID.randomUUID()
+//      val assessment = ApprovedPremisesAssessmentEntityFactory()
+//        .withId(assessmentId)
+//        .withApplication(
+//          ApprovedPremisesApplicationEntityFactory()
+//            .withCreatedByUser(
+//              UserEntityFactory()
+//                .withYieldedProbationRegion {
+//                  ProbationRegionEntityFactory()
+//                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+//                    .produce()
+//                }
+//                .produce(),
+//            )
+//            .produce(),
+//        )
+//        .withAllocatedToUser(
+//          UserEntityFactory()
+//            .withYieldedProbationRegion {
+//              ProbationRegionEntityFactory()
+//                .withYieldedApArea { ApAreaEntityFactory().produce() }
+//                .produce()
+//            }
+//            .produce(),
+//        )
+//        .produce()
+//
+//      val user = UserEntityFactory()
+//        .withYieldedProbationRegion {
+//          ProbationRegionEntityFactory()
+//            .withYieldedApArea { ApAreaEntityFactory().produce() }
+//            .produce()
+//        }
+//        .produce()
+//
+//      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+//
+//      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+//
+//      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+//
+//      val result = assessmentService.addAssessmentClarificationNote(user, assessment, "clarification note")
+//      assertThat(result is CasResult.Unauthorised).isTrue()
+//    }
 
     @Test
     fun `addAssessmentClarificationNote adds note to assessment allocated to different user for workflow managers`() {
@@ -953,52 +954,54 @@ class AssessmentServiceTest {
     assertThat(updatedAssessment.data).isEqualTo("{\"test\": \"data\"}")
   }
 
-  @Test
-  fun `rejectAssessment returns unauthorised when the user does not have permission to access the assessment`() {
-    val assessmentId = UUID.randomUUID()
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withId(assessmentId)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce(),
-      )
-      .produce()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
-
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
-
-    val result = assessmentService.rejectAssessment(user, assessment, "{}", "reasoning")
-    assertThat(result is CasResult.Unauthorised).isTrue()
-  }
+  // controllor
+//  @Test
+//  fun `rejectAssessment returns unauthorised when the user does not have permission to access the assessment`() {
+//    val assessmentId = UUID.randomUUID()
+//    val assessment = ApprovedPremisesAssessmentEntityFactory()
+//      .withSchemaUpToDate(true)
+//      .withId(assessmentId)
+//      .withApplication(
+//        ApprovedPremisesApplicationEntityFactory()
+//          .withCreatedByUser(
+//            UserEntityFactory()
+//              .withYieldedProbationRegion {
+//                ProbationRegionEntityFactory()
+//                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+//                  .produce()
+//              }
+//              .produce(),
+//          )
+//          .produce(),
+//      )
+//      .withAllocatedToUser(
+//        UserEntityFactory()
+//          .withYieldedProbationRegion {
+//            ProbationRegionEntityFactory()
+//              .withYieldedApArea { ApAreaEntityFactory().produce() }
+//              .produce()
+//          }
+//          .produce(),
+//      )
+//      .produce()
+//
+//    val user = UserEntityFactory()
+//      .withYieldedProbationRegion {
+//        ProbationRegionEntityFactory()
+//          .withYieldedApArea { ApAreaEntityFactory().produce() }
+//          .produce()
+//      }
+//      .produce()
+//
+//    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+//
+//    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+//
+//    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+//
+//    val result = assessmentService.rejectAssessment(user, assessment, "{}", "reasoning")
+//    assertThat(result is CasResult.Unauthorised).isTrue()
+//  }
 
   @Test
   fun `rejectAssessment returns general validation error for Assessment where schema is outdated`() {
@@ -1063,6 +1066,7 @@ class AssessmentServiceTest {
     )
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withSchemaUpToDate(true)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -1100,7 +1104,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `rejectAssessment returns general validation error for Assessment where assessment has been deallocated`() {
+  fun `rejectAssessment returns general validation error for Assessment where assessment has been reallocated`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1133,6 +1137,7 @@ class AssessmentServiceTest {
       .withDecision(null)
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
+      .withSchemaUpToDate(true)
       .withReallocatedAt(OffsetDateTime.now())
       .produce()
 
@@ -1148,7 +1153,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessment, "{}", "reasoning")
 
-    assertThat(result is CasResult.Success).isTrue
+    assertThat(result is CasResult.GeneralValidationError).isTrue
     val generalValidationError = result as CasResult.GeneralValidationError
     assertThat(generalValidationError.message).isEqualTo("The application has been reallocated, this assessment is read only")
   }
@@ -1170,6 +1175,7 @@ class AssessmentServiceTest {
     )
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withSchemaUpToDate(true)
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
           .withCreatedByUser(
@@ -1211,59 +1217,60 @@ class AssessmentServiceTest {
     )
   }
 
-  @Test
-  fun `rejectAssessment returns unauthorised when user not allowed to view Offender (LAO)`() {
-    val assessmentId = UUID.randomUUID()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-      id = UUID.randomUUID(),
-      addedAt = OffsetDateTime.now(),
-      schema = "{}",
-    )
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withId(assessmentId)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .withAllocatedToUser(user)
-      .withAssessmentSchema(schema)
-      .withData("{\"test\": \"data\"}")
-      .produce()
-
-    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
-
-    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
-
-    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
-
-    val result = assessmentService.rejectAssessment(user, assessment, "{\"test\": \"data\"}", "reasoning")
-    assertThat(result is CasResult.Unauthorised).isTrue
-  }
+  // controller
+//  @Test
+//  fun `rejectAssessment returns unauthorised when user not allowed to view Offender (LAO)`() {
+//    val assessmentId = UUID.randomUUID()
+//
+//    val user = UserEntityFactory()
+//      .withYieldedProbationRegion {
+//        ProbationRegionEntityFactory()
+//          .withYieldedApArea { ApAreaEntityFactory().produce() }
+//          .produce()
+//      }
+//      .produce()
+//
+//    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+//      id = UUID.randomUUID(),
+//      addedAt = OffsetDateTime.now(),
+//      schema = "{}",
+//    )
+//
+//    val assessment = ApprovedPremisesAssessmentEntityFactory()
+//      .withId(assessmentId)
+//      .withApplication(
+//        ApprovedPremisesApplicationEntityFactory()
+//          .withCreatedByUser(
+//            UserEntityFactory()
+//              .withYieldedProbationRegion {
+//                ProbationRegionEntityFactory()
+//                  .withYieldedApArea { ApAreaEntityFactory().produce() }
+//                  .produce()
+//              }
+//              .produce(),
+//          )
+//          .produce(),
+//      )
+//      .withAllocatedToUser(user)
+//      .withAssessmentSchema(schema)
+//      .withData("{\"test\": \"data\"}")
+//      .produce()
+//
+//    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+//
+//    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+//
+//    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+//
+//    every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+//
+//    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+//
+//    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
+//
+//    val result = assessmentService.rejectAssessment(user, assessment, "{\"test\": \"data\"}", "reasoning")
+//    assertThat(result is CasResult.Unauthorised).isTrue
+//  }
 
   @Test
   fun `rejectAssessment returns updated assessment, emits domain event, sends email`() {
@@ -1301,6 +1308,7 @@ class AssessmentServiceTest {
       .produce()
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withSchemaUpToDate(true)
       .withId(assessmentId)
       .withApplication(application)
       .withAllocatedToUser(user)
@@ -1408,6 +1416,7 @@ class AssessmentServiceTest {
     )
 
     val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withSchemaUpToDate(true)
       .withId(assessmentId)
       .withApplication(
         TemporaryAccommodationApplicationEntityFactory()
@@ -1478,46 +1487,47 @@ class AssessmentServiceTest {
     assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.REJECTED)
   }
 
-  @Test
-  fun `closeAssessment returns unauthorised when the user does not have permission to access the assessment`() {
-    val assessmentId = UUID.randomUUID()
-
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
-
-    val user = UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
-
-    val assessment = TemporaryAccommodationAssessmentEntityFactory()
-      .withId(assessmentId)
-      .withApplication(
-        TemporaryAccommodationApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withProbationRegion(probationRegion)
-              .produce(),
-          )
-          .withProbationRegion(probationRegion)
-          .produce(),
-      )
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withProbationRegion(probationRegion)
-          .produce(),
-      )
-      .produce()
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
-
-    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntityFactory().produce()
-
-    val result = assessmentService.closeAssessment(user, assessment)
-    assertThat(result is CasResult.Unauthorised).isTrue
-  }
+  // controller
+//  @Test
+//  fun `closeAssessment returns unauthorised when the user does not have permission to access the assessment`() {
+//    val assessmentId = UUID.randomUUID()
+//
+//    val probationRegion = ProbationRegionEntityFactory()
+//      .withYieldedApArea { ApAreaEntityFactory().produce() }
+//      .produce()
+//
+//    val user = UserEntityFactory()
+//      .withProbationRegion(probationRegion)
+//      .produce()
+//
+//    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+//      .withId(assessmentId)
+//      .withApplication(
+//        TemporaryAccommodationApplicationEntityFactory()
+//          .withCreatedByUser(
+//            UserEntityFactory()
+//              .withProbationRegion(probationRegion)
+//              .produce(),
+//          )
+//          .withProbationRegion(probationRegion)
+//          .produce(),
+//      )
+//      .withAllocatedToUser(
+//        UserEntityFactory()
+//          .withProbationRegion(probationRegion)
+//          .produce(),
+//      )
+//      .produce()
+//
+//    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+//
+//    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+//
+//    every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns TemporaryAccommodationAssessmentJsonSchemaEntityFactory().produce()
+//
+//    val result = assessmentService.closeAssessment(user, assessment)
+//    assertThat(result is CasResult.Unauthorised).isTrue
+//  }
 
   @Test
   fun `closeAssessment returns general validation error for Assessment where schema is outdated`() {
@@ -1579,6 +1589,7 @@ class AssessmentServiceTest {
     )
 
     val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withSchemaUpToDate(true)
       .withApplication(
         TemporaryAccommodationApplicationEntityFactory()
           .withCreatedByUser(
@@ -1645,6 +1656,7 @@ class AssessmentServiceTest {
       .withAllocatedToUser(user)
       .withAssessmentSchema(schema)
       .withData("{\"test\": \"data\"}")
+      .withSchemaUpToDate(true)
       .produce()
 
     every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
