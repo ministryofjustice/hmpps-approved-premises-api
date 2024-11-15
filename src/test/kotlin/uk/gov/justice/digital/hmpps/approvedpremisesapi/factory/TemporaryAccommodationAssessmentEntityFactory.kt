@@ -45,6 +45,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var referralRejectionReasonDetail: Yielded<String?> = { null }
   private var releaseDate: Yielded<LocalDate?> = { null }
   private var accommodationRequiredFromDate: Yielded<LocalDate?> = { null }
+  private var schemaUpToDate: Boolean = false
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -134,6 +135,9 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   fun withAccommodationRequiredFromDate(accommodationRequiredFromDate: LocalDate?) = apply {
     this.accommodationRequiredFromDate = { accommodationRequiredFromDate }
   }
+  fun withSchemaUpToDate(boolean: Boolean) = apply {
+    this.schemaUpToDate = boolean
+  }
 
   override fun produce(): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntity(
     id = this.id(),
@@ -143,7 +147,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     decision = this.decision(),
-    schemaUpToDate = false,
+    schemaUpToDate = schemaUpToDate,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser(),
     allocatedAt = this.allocatedAt(),

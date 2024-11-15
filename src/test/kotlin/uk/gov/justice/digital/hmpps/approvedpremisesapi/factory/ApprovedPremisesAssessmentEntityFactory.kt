@@ -47,6 +47,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var createdFromAppeal: Yielded<Boolean> = { false }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
+  private var schemaUpToDate: Boolean = false
 
   fun withDefaults() = apply {
     this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
@@ -124,6 +125,10 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.dueAt = { dueAt }
   }
 
+  fun withSchemaUpToDate(boolean: Boolean) = apply {
+    this.schemaUpToDate = boolean
+  }
+
   override fun produce(): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntity(
     id = this.id(),
     data = this.data(),
@@ -132,7 +137,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     decision = this.decision(),
-    schemaUpToDate = false,
+    schemaUpToDate = this.schemaUpToDate,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser,
     allocatedAt = this.allocatedAt(),
