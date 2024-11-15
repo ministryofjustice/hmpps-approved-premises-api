@@ -324,7 +324,7 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequestId)
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue()
+    assertThat(result is CasResult.NotFound).isTrue()
   }
 
   @Test
@@ -358,7 +358,7 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue()
+    assertThat(result is CasResult.Unauthorised).isTrue()
   }
 
   @Test
@@ -395,9 +395,9 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue()
+    assertThat(result is CasResult.Success).isTrue()
 
-    val (expectedPlacementRequest, expectedCancellations) = (result as AuthorisableActionResult.Success).entity
+    val (expectedPlacementRequest, expectedCancellations) = (result as CasResult.Success).value
 
     assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
     assertThat(expectedCancellations).isEqualTo(mockCancellations)
@@ -447,9 +447,9 @@ class PlacementRequestServiceTest {
 
     val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue()
+    assertThat(result is CasResult.Success).isTrue()
 
-    val (expectedPlacementRequest, expectedCancellations) = (result as AuthorisableActionResult.Success).entity
+    val (expectedPlacementRequest, expectedCancellations) = (result as CasResult.Success).value
 
     assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
     assertThat(expectedCancellations).isEqualTo(mockCancellations)

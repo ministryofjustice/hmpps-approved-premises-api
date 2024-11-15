@@ -119,15 +119,15 @@ class PlacementRequestService(
   fun getPlacementRequestForUser(
     user: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<PlacementRequestAndCancellations> {
+  ): CasResult<PlacementRequestAndCancellations> {
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("PlacementRequest", id.toString())
 
     if (placementRequest.allocatedToUser?.id != user.id && !user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
-    return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
+    return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun reallocatePlacementRequest(
