@@ -58,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
@@ -419,35 +418,26 @@ class AssessmentService(
 
   fun rejectAssessment(
     user: UserEntity,
-    assessmentId: UUID,
+    assessment: AssessmentEntity,
     document: String?,
     rejectionRationale: String,
     referralRejectionReasonId: UUID? = null,
     referralRejectionReasonDetail: String? = null,
     isWithdrawn: Boolean? = null,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now(clock)
 
-    val assessmentResult = getAssessmentForUser(user, assessmentId)
-    val assessment = extractEntityFromCasResult(assessmentResult)
-
     if (!assessment.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
-      )
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     if (assessment.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
-      )
+      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
 
     val validationErrors = ValidationErrors()
@@ -462,9 +452,7 @@ class AssessmentService(
     }
 
     if (validationErrors.any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors),
-      )
+      return CasResult.FieldValidationError(validationErrors)
     }
 
     assessment.document = document
@@ -546,30 +534,24 @@ class AssessmentService(
       cas1AssessmentEmailService.assessmentRejected(application)
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun closeAssessment(
     user: UserEntity,
-    assessmentId: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val assessment = extractEntityFromCasResult(getAssessmentForUser(user, assessmentId))
-
+    assessment: AssessmentEntity,
+  ): CasResult<AssessmentEntity> {
     if (assessment !is TemporaryAccommodationAssessmentEntity) {
       throw RuntimeException("Only CAS3 is currently supported")
     }
 
     if (!assessment.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment.completedAt != null) {
-      log.info("User: ${user.id} attempted to close assessment: $assessmentId. This assessment has already been closed.")
-      return AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+      log.info("User: ${user.id} attempted to close assessment: ${assessment.id}. This assessment has already been closed.")
+      return CasResult.Success(assessment)
     }
 
     assessment.completedAt = OffsetDateTime.now()
@@ -577,9 +559,7 @@ class AssessmentService(
     val savedAssessment = assessmentRepository.save(assessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.COMPLETED)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun reallocateAssessment(
@@ -755,12 +735,9 @@ class AssessmentService(
 
   fun addAssessmentClarificationNote(
     user: UserEntity,
-    assessmentId: UUID,
+    assessment: AssessmentEntity,
     text: String,
-  ): AuthorisableActionResult<AssessmentClarificationNoteEntity> {
-    val assessmentResult = getAssessmentForUser(user, assessmentId)
-    val assessment = extractEntityFromCasResult(assessmentResult)
-
+  ): CasResult<AssessmentClarificationNoteEntity> {
     val clarificationNoteToSave = AssessmentClarificationNoteEntity(
       id = UUID.randomUUID(),
       assessment = assessment,
@@ -775,7 +752,7 @@ class AssessmentService(
 
     cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
 
-    return AuthorisableActionResult.Success(clarificationNoteEntity)
+    return CasResult.Success(clarificationNoteEntity)
   }
 
   fun updateAssessmentClarificationNote(

@@ -75,7 +75,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -1226,13 +1225,10 @@ class BookingService(
     bookingId: UUID,
   ) {
     try {
-      val assessmentResult = assessmentService.getAssessmentForUser(user, assessmentEntity.id)
-      val assessment = extractEntityFromCasResult(assessmentResult)
-
       extractEntityFromCasResult(
         assessmentService.acceptAssessment(
           user,
-          assessment,
+          assessmentEntity,
           assessmentEntity.document,
           null,
           null,
@@ -1258,7 +1254,8 @@ class BookingService(
     booking: BookingEntity,
   ) {
     try {
-      extractEntityFromNestedAuthorisableValidatableActionResult(assessmentService.closeAssessment(user, assessmentId))
+      val assessment = extractEntityFromCasResult(assessmentService.getAssessmentForUser(user, assessmentId))
+      extractEntityFromCasResult(assessmentService.closeAssessment(user, assessment))
     } catch (exception: Exception) {
       log.error("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception)
       Sentry.captureException(RuntimeException("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception))

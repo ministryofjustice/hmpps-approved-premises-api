@@ -2716,7 +2716,7 @@ class BookingServiceTest {
 
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
     every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
-    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+    every { mockAssessmentService.closeAssessment(user, assessment) } returns CasResult.Success(assessment)
     mockkStatic(Sentry::class)
 
     val result = bookingService.createConfirmation(
@@ -2740,7 +2740,7 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
     verify(exactly = 1) {
-      mockAssessmentService.closeAssessment(user, assessment.id)
+      mockAssessmentService.closeAssessment(user, assessment)
     }
     verify(exactly = 1) {
       mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
@@ -2808,7 +2808,7 @@ class BookingServiceTest {
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
     every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
-    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Unauthorised()
+    every { mockAssessmentService.closeAssessment(user, assessment) } returns CasResult.Unauthorised()
     mockkStatic(Sentry::class)
     every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -2833,7 +2833,7 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
     verify(exactly = 1) {
-      mockAssessmentService.closeAssessment(user, assessment.id)
+      mockAssessmentService.closeAssessment(user, assessment)
     }
     verify(exactly = 1) {
       mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)

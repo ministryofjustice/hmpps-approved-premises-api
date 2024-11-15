@@ -27,11 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -194,12 +189,14 @@ class AssessmentController(
   override fun assessmentsAssessmentIdRejectionPost(assessmentId: UUID, assessmentRejection: AssessmentRejection): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
+    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentForUser(user, assessmentId))
+
     val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
 
-    val assessmentAuthResult =
+    val assessmentResult =
       assessmentService.rejectAssessment(
         user,
-        assessmentId,
+        assessment,
         serializedData,
         assessmentRejection.rejectionRationale,
         assessmentRejection.referralRejectionReasonId,
@@ -207,37 +204,16 @@ class AssessmentController(
         assessmentRejection.isWithdrawn,
       )
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
+    extractEntityFromCasResult(assessmentResult)
 
     return ResponseEntity(HttpStatus.OK)
   }
 
   override fun assessmentsAssessmentIdClosurePost(assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
+    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentForUser(user, assessmentId))
 
-    val assessmentValidationResult = when (val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
+    extractEntityFromCasResult(assessmentService.closeAssessment(user, assessment))
 
     return ResponseEntity(HttpStatus.OK)
   }
@@ -247,17 +223,13 @@ class AssessmentController(
     newClarificationNote: NewClarificationNote,
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
+    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentForUser(user, assessmentId))
 
-    val clarificationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
-    val clarificationNote = when (clarificationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+    val clarificationNoteResult =
+      assessmentService.addAssessmentClarificationNote(user, assessment, newClarificationNote.query)
+    val note = extractEntityFromCasResult(clarificationNoteResult)
 
-    return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNote),
-    )
+    return ResponseEntity.ok(assessmentClarificationNoteTransformer.transformJpaToApi(note))
   }
 
   override fun assessmentsAssessmentIdNotesNoteIdPut(
