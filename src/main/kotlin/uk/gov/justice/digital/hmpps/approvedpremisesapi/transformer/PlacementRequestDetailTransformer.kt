@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -38,10 +39,16 @@ class PlacementRequestDetailTransformer(
       assessor = placementRequest.assessor,
       notes = placementRequest.notes,
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },
-      booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
+      booking = getBookingSummary(jpa),
       isWithdrawn = jpa.isWithdrawn,
       isParole = jpa.isParole,
       application = applicationTransformer.transformJpaToApi(jpa.application, personInfo),
     )
+  }
+
+  private fun getBookingSummary(placementRequest: PlacementRequestEntity): BookingSummary? {
+    return placementRequest.booking?.let {
+      bookingSummaryTransformer.transformJpaToApi(placementRequest.booking!!)
+    }
   }
 }

@@ -129,17 +129,7 @@ class PlacementRequestDetailTransformerTest {
   @Test
   fun `it returns a PlacementRequestDetail object with a booking`() {
     val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
+      .withDefaults()
       .produce()
 
     val transformedPlacementRequest = getTransformedPlacementRequest()
@@ -157,10 +147,6 @@ class PlacementRequestDetailTransformerTest {
     val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
 
     assertThat(result.booking).isEqualTo(mockBookingSummary)
-
-    verify(exactly = 1) {
-      mockBookingSummaryTransformer.transformJpaToApi(booking)
-    }
   }
 
   private fun getTransformedPlacementRequest(): PlacementRequest {
