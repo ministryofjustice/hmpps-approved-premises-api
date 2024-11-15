@@ -27,17 +27,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringConfigFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BoxedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonalTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
@@ -55,11 +55,11 @@ class PeopleController(
   private val alertTransformer: AlertTransformer,
   private val needsDetailsTransformer: NeedsDetailsTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
-  private val convictionTransformer: ConvictionTransformer,
+  private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
-  private val featureFlagService: SpringConfigFeatureFlagService,
+  private val featureFlagService: FeatureFlagService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -248,12 +248,19 @@ class PeopleController(
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val convictionsResult = offenderService.getConvictions(crn)
-    val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
-
-    return ResponseEntity.ok(
-      activeConvictions.flatMap(convictionTransformer::transformToApi),
-    )
+    val isOffencesFromAPDelius = featureFlagService.getBooleanFlag("get-offences-from-ap-delius")
+    return if (isOffencesFromAPDelius) {
+      val caseDetail = offenderService.getCaseDetail(crn)
+      ResponseEntity.ok(
+        offenceTransformer.transformToApi(extractEntityFromCasResult(caseDetail)),
+      )
+    } else {
+      val convictionsResult = offenderService.getConvictions(crn)
+      val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
+      ResponseEntity.ok(
+        activeConvictions.flatMap(offenceTransformer::transformToApi),
+      )
+    }
   }
 
   override fun peopleCrnTimelineGet(crn: String): ResponseEntity<PersonalTimeline> {
