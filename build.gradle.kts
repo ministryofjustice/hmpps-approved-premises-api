@@ -1,8 +1,8 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
-  kotlin("plugin.spring") version "1.9.22"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.6"
+  kotlin("plugin.spring") version "2.0.20"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.12.0"
@@ -56,6 +56,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   runtimeOnly("org.ehcache:ehcache")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   implementation(kotlin("reflect"))
 

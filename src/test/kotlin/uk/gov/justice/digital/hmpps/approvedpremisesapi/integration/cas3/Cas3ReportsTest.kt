@@ -1891,7 +1891,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetBedUtilizationReport {
+  inner class GetBedUtilReport {
     @Test
     fun `Get bed utilisation report returns OK with correct body`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
