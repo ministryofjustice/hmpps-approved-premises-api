@@ -120,15 +120,9 @@ class PlacementRequestsController(
   override fun placementRequestsIdGet(id: UUID): ResponseEntity<PlacementRequestDetail> {
     val user = userService.getUserForRequest()
 
-    val authorisationResult = placementRequestService.getPlacementRequestForUser(user, id)
+    val placementRequest = extractEntityFromCasResult(placementRequestService.getPlacementRequestForUser(user, id))
 
-    val placementRequestAndCancellations = when (authorisationResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "PlacementRequest")
-      is AuthorisableActionResult.Success -> authorisationResult.entity
-    }
-
-    return ResponseEntity.ok(toPlacementRequestDetail(user, placementRequestAndCancellations))
+    return ResponseEntity.ok(toPlacementRequestDetail(user, placementRequest))
   }
 
   override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> {
