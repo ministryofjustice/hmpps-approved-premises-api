@@ -761,6 +761,7 @@ class BookingTransformerTest {
             isActive = true,
             serviceScope = "*",
             legacyDeliusReasonCode = "A",
+            parentReasonId = null,
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
@@ -939,6 +940,7 @@ class BookingTransformerTest {
             isActive = true,
             serviceScope = "*",
             legacyDeliusReasonCode = "A",
+            parentReasonId = null,
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
@@ -1154,6 +1156,7 @@ class BookingTransformerTest {
             isActive = true,
             serviceScope = "*",
             legacyDeliusReasonCode = "A",
+            parentReasonId = null,
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
@@ -1373,6 +1376,7 @@ class BookingTransformerTest {
             isActive = true,
             serviceScope = "*",
             legacyDeliusReasonCode = "A",
+            parentReasonId = null,
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
@@ -1583,6 +1587,7 @@ class BookingTransformerTest {
             isActive = true,
             serviceScope = "*",
             legacyDeliusReasonCode = "A",
+            parentReasonId = null,
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("bcfbb1b6-f89d-45eb-ae70-308cc6930633"),
@@ -1609,6 +1614,7 @@ class BookingTransformerTest {
             isActive = true,
             serviceScope = "*",
             legacyDeliusReasonCode = "A",
+            parentReasonId = null,
           ),
           moveOnCategory = MoveOnCategoryEntity(
             id = UUID.fromString("3fc011f3-81ae-46fa-a066-84de8423ab87"),

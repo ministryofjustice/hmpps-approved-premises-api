@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
@@ -12,6 +15,7 @@ import java.util.UUID
 
 @Repository
 interface DepartureReasonRepository : JpaRepository<DepartureReasonEntity, UUID> {
+
   @Query("SELECT d FROM DepartureReasonEntity d WHERE d.serviceScope = :serviceName OR d.serviceScope = '*'")
   fun findAllByServiceScope(serviceName: String): List<DepartureReasonEntity>
 
@@ -34,8 +38,17 @@ data class DepartureReasonEntity(
   val isActive: Boolean,
   val serviceScope: String,
   val legacyDeliusReasonCode: String?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "parent_reason_id")
+  val parentReasonId: DepartureReasonEntity?,
 ) {
   override fun toString() = "DepartureReasonEntity:$id"
+
+  fun generateParentChildName(): Pair<UUID, String> {
+    return parentReasonId?.let { parentReason ->
+      return Pair(id, "${parentReason.name} - $name")
+    } ?: return Pair(id, name)
+  }
 
   companion object {
     fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =

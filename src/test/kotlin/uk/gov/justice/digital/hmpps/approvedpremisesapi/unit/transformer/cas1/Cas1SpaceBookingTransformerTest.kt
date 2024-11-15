@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -106,6 +107,15 @@ class Cas1SpaceBookingTransformerTest {
         CharacteristicEntityFactory().produce(),
       )
 
+      val departureReason = DepartureReasonEntity(
+        id = UUID.randomUUID(),
+        name = "departure reason",
+        isActive = true,
+        serviceScope = "approved-premises",
+        legacyDeliusReasonCode = null,
+        parentReasonId = null,
+      )
+
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
         .withPlacementRequest(placementRequest)
@@ -123,6 +133,7 @@ class Cas1SpaceBookingTransformerTest {
         .withNonArrivalConfirmedAt(Instant.parse("2024-01-20T10:10:10.00Z"))
         .withNonArrivalReason(nonArrivalReason)
         .withNonArrivalNotes("some information on the non arrival")
+        .withDepartureReason(departureReason)
         .withDeliusEventNumber("97")
         .produce()
 
@@ -192,6 +203,9 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.nonArrival!!.confirmedAt).isEqualTo(Instant.parse("2024-01-20T10:10:10Z"))
       assertThat(result.nonArrival!!.reason!!.id).isEqualTo(spaceBooking.nonArrivalReason!!.id)
       assertThat(result.nonArrival!!.notes).isEqualTo("some information on the non arrival")
+
+      assertThat(result.departureReason!!.name).isEqualTo(departureReason.name)
+      assertThat(result.departureReason!!.id).isEqualTo(departureReason.id)
 
       assertThat(result.deliusEventNumber).isEqualTo("97")
 
@@ -280,6 +294,82 @@ class Cas1SpaceBookingTransformerTest {
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
 
       assertThat(result.requestForPlacementId).isEqualTo(placementApplication.id)
+    }
+
+    @Test
+    fun `Space booking is transformed correctly with departure reason when parent reason id is valid`() {
+      val personInfo = PersonInfoResult.Success.Full(
+        "SOMECRN",
+        CaseSummaryFactory().produce().asOffenderDetailSummary(),
+        null,
+      )
+
+      val expectedPerson = RestrictedPerson(
+        "SOMECRN",
+        PersonType.restrictedPerson,
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val parentDepartureReason = DepartureReasonEntity(
+        id = UUID.randomUUID(),
+        name = "Parent Departure Reason",
+        isActive = true,
+        serviceScope = "approved-premises",
+        legacyDeliusReasonCode = null,
+        parentReasonId = null,
+      )
+
+      val departureReason = DepartureReasonEntity(
+        id = UUID.randomUUID(),
+        name = "Child Departure Reason",
+        isActive = true,
+        serviceScope = "approved-premises",
+        legacyDeliusReasonCode = null,
+        parentReasonId = parentDepartureReason,
+      )
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withApplication(application)
+        .withPlacementRequest(placementRequest)
+        .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .withKeyworkerName("Mr Key Worker")
+        .withKeyworkerStaffCode("K123")
+        .withKeyworkerAssignedAt(LocalDateTime.parse("2007-12-03T10:15:30").toInstant(ZoneOffset.UTC))
+        .withActualArrivalDateTime(Instant.parse("2009-02-05T11:25:10.00Z"))
+        .withActualDepartureDateTime(Instant.parse("2012-12-25T00:00:00.00Z"))
+        .withDeliusEventNumber("97")
+        .withDepartureReason(departureReason)
+        .produce()
+
+      val expectedRequirements = Cas1SpaceBookingRequirements(
+        essentialCharacteristics = listOf(),
+      )
+
+      val expectedUser = ApprovedPremisesUserFactory().produce()
+
+      every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
+      every {
+        requirementsTransformer.transformJpaToApi(spaceBooking)
+      } returns expectedRequirements
+      every {
+        userTransformer.transformJpaToApi(
+          spaceBooking.createdBy!!,
+          ServiceName.approvedPremises,
+        )
+      } returns expectedUser
+
+      val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList())
+
+      assertThat(result.id).isEqualTo(spaceBooking.id)
+      assertThat(result.departureReason!!.id).isEqualTo(departureReason.id)
+      assertThat(result.departureReason!!.name).isEqualTo("Parent Departure Reason - Child Departure Reason")
     }
   }
 

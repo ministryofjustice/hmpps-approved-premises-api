@@ -11,5 +11,6 @@ class DepartureReasonTransformer() {
     name = jpa.name,
     isActive = jpa.isActive,
     serviceScope = jpa.serviceScope,
+    parentReasonId = jpa.parentReasonId?.id,
   )
 }

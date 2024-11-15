@@ -268,6 +268,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       isActive = true,
       serviceScope = "approved-premises",
       legacyDeliusReasonCode = "legacyDeliusReasonCode",
+      parentReasonId = null,
     )
     private val moveOnCategory = MoveOnCategoryEntity(
       id = UUID.randomUUID(),
