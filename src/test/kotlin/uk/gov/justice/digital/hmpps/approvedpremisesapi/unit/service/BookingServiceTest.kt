@@ -172,43 +172,41 @@ class BookingServiceTest {
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
-  fun createBookingService(): BookingService {
-    return BookingService(
-      premisesService = mockPremisesService,
-      staffMemberService = mockStaffMemberService,
-      offenderService = mockOffenderService,
-      domainEventService = mockDomainEventService,
-      cas3DomainEventService = mockCas3DomainEventService,
-      applicationService = mockApplicationService,
-      workingDayService = mockWorkingDayService,
-      placementRequestService = mockPlacementRequestService,
-      bookingRepository = mockBookingRepository,
-      arrivalRepository = mockArrivalRepository,
-      cancellationRepository = mockCancellationRepository,
-      confirmationRepository = mockConfirmationRepository,
-      extensionRepository = mockExtensionRepository,
-      dateChangeRepository = mockDateChangeRepository,
-      departureRepository = mockDepartureRepository,
-      departureReasonRepository = mockDepartureReasonRepository,
-      moveOnCategoryRepository = mockMoveOnCategoryRepository,
-      cancellationReasonRepository = mockCancellationReasonRepository,
-      bedRepository = mockBedRepository,
-      placementRequestRepository = mockPlacementRequestRepository,
-      lostBedsRepository = mockLostBedsRepository,
-      turnaroundRepository = mockTurnaroundRepository,
-      premisesRepository = mockPremisesRepository,
-      assessmentRepository = mockAssessmentRepository,
-      applicationUrlTemplate = "http://frontend/applications/#id",
-      userService = mockUserService,
-      userAccessService = mockUserAccessService,
-      assessmentService = mockAssessmentService,
-      cas1BookingEmailService = mockCas1BookingEmailService,
-      deliusService = mockDeliusService,
-      cas1BookingDomainEventService = mockCas1BookingDomainEventService,
-      cas1ApplicationStatusService = mockCas1ApplicationStatusService,
-      apDeliusContextApiClient = mockApDeliusContextApiClient,
-    )
-  }
+  fun createBookingService(): BookingService = BookingService(
+    premisesService = mockPremisesService,
+    staffMemberService = mockStaffMemberService,
+    offenderService = mockOffenderService,
+    domainEventService = mockDomainEventService,
+    cas3DomainEventService = mockCas3DomainEventService,
+    applicationService = mockApplicationService,
+    workingDayService = mockWorkingDayService,
+    placementRequestService = mockPlacementRequestService,
+    bookingRepository = mockBookingRepository,
+    arrivalRepository = mockArrivalRepository,
+    cancellationRepository = mockCancellationRepository,
+    confirmationRepository = mockConfirmationRepository,
+    extensionRepository = mockExtensionRepository,
+    dateChangeRepository = mockDateChangeRepository,
+    departureRepository = mockDepartureRepository,
+    departureReasonRepository = mockDepartureReasonRepository,
+    moveOnCategoryRepository = mockMoveOnCategoryRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    bedRepository = mockBedRepository,
+    placementRequestRepository = mockPlacementRequestRepository,
+    lostBedsRepository = mockLostBedsRepository,
+    turnaroundRepository = mockTurnaroundRepository,
+    premisesRepository = mockPremisesRepository,
+    assessmentRepository = mockAssessmentRepository,
+    applicationUrlTemplate = "http://frontend/applications/#id",
+    userService = mockUserService,
+    userAccessService = mockUserAccessService,
+    assessmentService = mockAssessmentService,
+    cas1BookingEmailService = mockCas1BookingEmailService,
+    deliusService = mockDeliusService,
+    cas1BookingDomainEventService = mockCas1BookingDomainEventService,
+    cas1ApplicationStatusService = mockCas1ApplicationStatusService,
+    apDeliusContextApiClient = mockApDeliusContextApiClient,
+  )
 
   private val bookingService = createBookingService()
 
@@ -1882,7 +1880,7 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessmentEntity!!))
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns CasResult.Success(assessmentEntity!!)
       mockkStatic(Sentry::class)
 
       val result = bookingService.createCas3Cancellation(
@@ -1914,7 +1912,7 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockAssessmentService.acceptAssessment(user, assessmentEntity, assessmentEntity.document, null, null, null, any())
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
@@ -1932,7 +1930,7 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Unauthorised()
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns CasResult.Unauthorised()
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -1965,7 +1963,7 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockAssessmentService.acceptAssessment(user, assessmentEntity, assessmentEntity.document, null, null, null, any())
       }
       verify(exactly = 1) {
         Sentry.captureException(any())
@@ -2015,7 +2013,7 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockAssessmentService.acceptAssessment(user, assessmentEntity, assessmentEntity.document, null, null, null, any())
       }
       verify(exactly = 1) {
         Sentry.captureException(any())
@@ -2060,7 +2058,7 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockAssessmentService.acceptAssessment(user, assessmentEntity, assessmentEntity.document, null, null, null, any())
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
@@ -2102,7 +2100,7 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 0) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockAssessmentService.acceptAssessment(user, assessmentEntity, assessmentEntity.document, null, null, null, any())
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
@@ -2120,7 +2118,7 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Error"))
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns CasResult.GeneralValidationError("Error")
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -2150,7 +2148,7 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockAssessmentService.acceptAssessment(user, assessmentEntity, assessmentEntity.document, null, null, null, any())
       }
       verify(exactly = 1) {
         Sentry.captureException(any())
@@ -2884,37 +2882,35 @@ class BookingServiceTest {
     }
   }
 
-  private fun createTemporaryAccommodationBooking(application: TemporaryAccommodationApplicationEntity?) =
-    BookingEntityFactory()
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withService(ServiceName.temporaryAccommodation.value)
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withApplication(application.let { application })
-      .produce()
+  private fun createTemporaryAccommodationBooking(application: TemporaryAccommodationApplicationEntity?) = BookingEntityFactory()
+    .withYieldedPremises {
+      TemporaryAccommodationPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withService(ServiceName.temporaryAccommodation.value)
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+    }
+    .withApplication(application.let { application })
+    .produce()
 
-  private fun createApprovedPremisesAccommodationBooking(application: ApprovedPremisesApplicationEntity?) =
-    BookingEntityFactory()
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withService(ServiceName.approvedPremises.value)
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withApplication(application.let { application })
-      .produce()
+  private fun createApprovedPremisesAccommodationBooking(application: ApprovedPremisesApplicationEntity?) = BookingEntityFactory()
+    .withYieldedPremises {
+      ApprovedPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withService(ServiceName.approvedPremises.value)
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+    }
+    .withApplication(application.let { application })
+    .produce()
 
   @Nested
   inner class CreateApprovedPremisesAdHocBooking {

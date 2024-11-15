@@ -917,8 +917,8 @@ class BookingService(
       else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking, user)
     }
 
-    booking.application?.getLatestAssessment()?.let { applicationEntity ->
-      moveTransitionalAccommodationAssessmentToReadyToPlace(user, applicationEntity, booking.id)
+    booking.application?.getLatestAssessment()?.let { assessmentEntity ->
+      moveTransitionalAccommodationAssessmentToReadyToPlace(user, assessmentEntity, booking.id)
     }
 
     return success(cancellationEntity)
@@ -1222,15 +1222,18 @@ class BookingService(
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun moveTransitionalAccommodationAssessmentToReadyToPlace(
     user: UserEntity,
-    applicationEntity: AssessmentEntity,
+    assessmentEntity: AssessmentEntity,
     bookingId: UUID,
   ) {
     try {
+      val assessmentResult = assessmentService.getAssessmentForUser(user, assessmentEntity.id)
+      val assessment = extractEntityFromCasResult(assessmentResult)
+
       extractEntityFromCasResult(
         assessmentService.acceptAssessment(
           user,
-          applicationEntity.id,
-          applicationEntity.document,
+          assessment,
+          assessmentEntity.document,
           null,
           null,
           null,
@@ -1238,10 +1241,10 @@ class BookingService(
         ),
       )
     } catch (exception: Exception) {
-      log.error("Unable to move CAS3 assessment ${applicationEntity.id} to ready-to-place queue for $bookingId ")
+      log.error("Unable to move CAS3 assessment ${assessmentEntity.id} to ready-to-place queue for $bookingId ")
       Sentry.captureException(
         RuntimeException(
-          "Unable to move CAS3 assessment ${applicationEntity.id} for ready-to-place queue for $bookingId ",
+          "Unable to move CAS3 assessment ${assessmentEntity.id} for ready-to-place queue for $bookingId ",
           exception,
         ),
       )

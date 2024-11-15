@@ -320,7 +320,7 @@ class AssessmentService(
 
   fun acceptAssessment(
     user: UserEntity,
-    assessmentId: UUID,
+    assessment: AssessmentEntity,
     document: String?,
     placementRequirements: PlacementRequirements?,
     placementDates: PlacementDates?,
@@ -329,9 +329,6 @@ class AssessmentService(
   ): CasResult<AssessmentEntity> {
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
-
-    val assessmentResult = getAssessmentForUser(user, assessmentId)
-    val assessment = extractEntityFromCasResult(assessmentResult)
 
     if (!assessment.schemaUpToDate) {
       return CasResult.GeneralValidationError("The schema version is outdated")
