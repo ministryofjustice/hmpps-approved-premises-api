@@ -477,7 +477,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `getValidatedAssessment gets assessment when user is authorised to view assessment`() {
+  fun `getAssessmentAndValidate gets assessment when user is authorised to view assessment`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -520,7 +520,7 @@ class AssessmentServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.getValidatedAssessment(user, assessment.id)
+    val result = assessmentService.getAssessmentAndValidate(user, assessment.id)
 
     assertThat(result is CasResult.Success).isTrue
     result as CasResult.Success
@@ -528,7 +528,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `getValidatedAssessment does not get assessment when user is not authorised to view assessment`() {
+  fun `getAssessmentAndValidate does not get assessment when user is not authorised to view assessment`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -571,13 +571,13 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getValidatedAssessment(user, assessmentId)
+    val result = assessmentService.getAssessmentAndValidate(user, assessmentId)
 
     assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `getValidatedAssessment returns not found for non-existent Assessment`() {
+  fun `getAssessmentAndValidate returns not found for non-existent Assessment`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -591,7 +591,7 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getValidatedAssessment(user, assessmentId) as CasResult.NotFound
+    val result = assessmentService.getAssessmentAndValidate(user, assessmentId) as CasResult.NotFound
 
     assertThat(result.id).isEqualTo(assessmentId.toString())
     assertThat(result.entityType).isEqualTo("AssessmentEntity")

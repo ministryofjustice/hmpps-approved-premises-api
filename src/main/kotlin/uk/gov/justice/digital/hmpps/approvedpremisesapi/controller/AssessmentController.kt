@@ -119,12 +119,7 @@ class AssessmentController(
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
 
-    val assessmentResult = assessmentService.getAssessmentForUser(user, assessmentId)
-    val assessment = when (assessmentResult) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentAndValidate(user, assessmentId))
 
     val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 

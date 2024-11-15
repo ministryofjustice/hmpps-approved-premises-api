@@ -188,7 +188,7 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
-  fun getValidatedAssessment(user: UserEntity, assessmentId: UUID): CasResult<AssessmentEntity> {
+  fun getAssessmentAndValidate(user: UserEntity, assessmentId: UUID): CasResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
 
