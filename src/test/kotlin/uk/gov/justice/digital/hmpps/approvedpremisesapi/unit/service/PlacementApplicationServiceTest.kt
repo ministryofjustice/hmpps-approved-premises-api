@@ -346,7 +346,7 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every {
         placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
-      } returns AuthorisableActionResult.Success(emptyList())
+      } returns CasResult.Success(emptyList())
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit

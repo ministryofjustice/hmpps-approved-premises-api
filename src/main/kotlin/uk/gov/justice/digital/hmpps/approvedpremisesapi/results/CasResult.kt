@@ -16,7 +16,13 @@ import java.util.UUID
  */
 sealed interface CasResult<SuccessType> {
   data class Success<SuccessType>(val value: SuccessType) : CasResult<SuccessType>
-  sealed interface Error<SuccessType> : CasResult<SuccessType>
+  sealed interface Error<SuccessType> : CasResult<SuccessType> {
+    // This is safe as the generic is irrelevant on Error types
+    @Suppress("UNCHECKED_CAST")
+    fun <R> reviseType(): CasResult<R> {
+      return this as Error<R>
+    }
+  }
   data class FieldValidationError<SuccessType>(val validationMessages: Map<String, String>) : Error<SuccessType>
   data class GeneralValidationError<SuccessType>(val message: String) : Error<SuccessType>
   data class ConflictError<SuccessType>(val conflictingEntityId: UUID, val message: String) : Error<SuccessType>
