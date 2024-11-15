@@ -167,6 +167,10 @@ data class PlacementRequestEntity(
 
   val notes: String?,
 
+  /**
+   * If a booking is cancelled it will remain linked to the placement
+   * request until a new booking is made against it
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity?,
