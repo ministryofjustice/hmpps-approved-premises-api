@@ -328,37 +328,28 @@ class AssessmentService(
     user: UserEntity,
     assessmentId: UUID,
     data: String?,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val assessmentResult = getAssessmentForUser(user, assessmentId)
+  ): CasResult<AssessmentEntity> {
+    val assessmentResult = getAssessmentAndValidate(user, assessmentId)
 
     val assessment = when (assessmentResult) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
     }
 
     if (assessment.isWithdrawn) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been withdrawn."),
-      )
+      return CasResult.GeneralValidationError("The application has been withdrawn.")
     }
 
     if (!assessment.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
-      )
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     if (assessment.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The assessment has been reallocated, this assessment is read only"),
-      )
+      return CasResult.GeneralValidationError("The assessment has been reallocated, this assessment is read only")
     }
 
     assessment.data = data
@@ -366,9 +357,7 @@ class AssessmentService(
     preUpdateAssessment(assessment)
     val savedAssessment = assessmentRepository.save(assessment)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun acceptAssessment(
