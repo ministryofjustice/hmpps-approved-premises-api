@@ -396,8 +396,8 @@ class PlacementApplicationService(
           placementApplicationDecisionEnvelope.decisionSummary,
         )
 
-      if (placementRequestResult is AuthorisableActionResult.NotFound) {
-        return CasResult.NotFound(placementRequestResult.entityType, placementRequestResult.id)
+      if (placementRequestResult is CasResult.Error) {
+        return placementRequestResult.reviseType()
       }
     }
 

@@ -191,10 +191,10 @@ class PlacementRequestService(
   fun createPlacementRequestsFromPlacementApplication(
     placementApplicationEntity: PlacementApplicationEntity,
     notes: String?,
-  ): AuthorisableActionResult<List<PlacementRequestEntity>> {
+  ): CasResult<List<PlacementRequestEntity>> {
     val placementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(
       placementApplicationEntity.application,
-    ) ?: return AuthorisableActionResult.NotFound(
+    ) ?: return CasResult.NotFound(
       "Placement Requirements",
       placementApplicationEntity.application.id.toString(),
     )
@@ -202,7 +202,7 @@ class PlacementRequestService(
     val placementDateEntities = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)
 
     if (placementDateEntities.isEmpty()) {
-      return AuthorisableActionResult.NotFound(
+      return CasResult.NotFound(
         "Placement Dates for Placement Application",
         placementApplicationEntity.id.toString(),
       )
@@ -233,7 +233,7 @@ class PlacementRequestService(
       placementRequest
     }
 
-    return AuthorisableActionResult.Success(placementRequests)
+    return CasResult.Success(placementRequests)
   }
 
   fun createPlacementRequest(
