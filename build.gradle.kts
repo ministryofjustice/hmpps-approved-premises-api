@@ -68,7 +68,7 @@ dependencies {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
   }
 
-  implementation("io.arrow-kt:arrow-core:1.2.1")
+  implementation("io.arrow-kt:arrow-core:1.2.4")
   implementation("io.github.s-sathish:redlock-java:1.0.4")
 
   implementation("com.opencsv:opencsv:5.9")
