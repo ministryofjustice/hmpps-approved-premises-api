@@ -16,7 +16,7 @@ configurations {
 configurations.matching { it.name == "detekt" }.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("1.9.21")
+      useVersion(io.gitlab.arturbosch.detekt.getSupportedKotlinVersion())
     }
   }
 }
