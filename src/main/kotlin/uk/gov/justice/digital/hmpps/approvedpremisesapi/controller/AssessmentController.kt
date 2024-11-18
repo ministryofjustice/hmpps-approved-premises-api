@@ -186,18 +186,7 @@ class AssessmentController(
       notes = assessmentAcceptance.notes,
     )
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> assessmentValidationResult.entity
-    }
+    extractEntityFromCasResult(assessmentAuthResult)
 
     return ResponseEntity(HttpStatus.OK)
   }

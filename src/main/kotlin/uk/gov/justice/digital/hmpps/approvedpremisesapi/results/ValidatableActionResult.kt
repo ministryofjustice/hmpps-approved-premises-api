@@ -5,12 +5,6 @@ import java.util.UUID
 
 @Deprecated("The ValidatableActionResult and AuthorisableActionResult have been replaced by CasResult, which effectively flattens these two classes into one")
 sealed interface ValidatableActionResult<EntityType> {
-  fun <T> translateError(): ValidatableActionResult<T> = when (this) {
-    is Success -> throw RuntimeException("Cannot translate Success")
-    is FieldValidationError -> FieldValidationError(this.validationMessages)
-    is GeneralValidationError -> GeneralValidationError(this.message)
-    is ConflictError -> ConflictError(this.conflictingEntityId, this.message)
-  }
 
   @Deprecated("Replaced by CasResult.Success", ReplaceWith("uk.gov.justice.digital.hmpps.approvedpremisesapi.CasResult.Success"))
   data class Success<EntityType>(val entity: EntityType) : ValidatableActionResult<EntityType>
