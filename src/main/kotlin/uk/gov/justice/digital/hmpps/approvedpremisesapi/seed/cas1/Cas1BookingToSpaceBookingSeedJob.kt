@@ -93,9 +93,9 @@ class Cas1BookingToSpaceBookingSeedJob(
     val bookingMadeDomainEvent = getBookingMadeDomainEvent(bookingId)
     val managementInfo = getManagementInfo(booking)
 
-    val spaceBooking = spaceBookingRepository.save(
+    spaceBookingRepository.save(
       Cas1SpaceBookingEntity(
-        id = UUID.randomUUID(),
+        id = booking.id,
         premises = premises,
         application = application,
         offlineApplication = offlineApplication,
@@ -128,7 +128,7 @@ class Cas1BookingToSpaceBookingSeedJob(
       ),
     )
 
-    log.info("Have migrated booking $bookingId to space booking ${spaceBooking.id}")
+    log.info("Have migrated booking $bookingId to space booking")
   }
 
   @SuppressWarnings("MagicNumber")
