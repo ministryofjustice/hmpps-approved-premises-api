@@ -298,7 +298,7 @@ class PlacementRequestTransformerTest {
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail))
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
-    assertThat(result.booking).isEqualTo(mockBookingSummary)
+    assertThat(result.booking).isNull()
   }
 
   @Test

@@ -23,8 +23,11 @@ class PlacementRequestTransformer(
   private val risksTransformer: RisksTransformer,
   private val assessmentTransformer: AssessmentTransformer,
   private val userTransformer: UserTransformer,
-  private val bookingSummaryTransformer: BookingSummaryTransformer,
+  bookingSummaryTransformer: BookingSummaryTransformer,
 ) {
+
+  val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummaryTransformer(bookingSummaryTransformer)
+
   fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest {
     return PlacementRequest(
       id = jpa.id,
@@ -48,7 +51,7 @@ class PlacementRequestTransformer(
       assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
       notes = jpa.notes,
       isParole = jpa.isParole,
-      booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
+      booking = placementRequestBookingSummaryTransformer.getBookingSummary(jpa),
       requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
