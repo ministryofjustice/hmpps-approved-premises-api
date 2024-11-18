@@ -26,11 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -208,18 +203,7 @@ class AssessmentController(
         assessmentRejection.isWithdrawn,
       )
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
+    extractEntityFromCasResult(assessmentAuthResult)
 
     return ResponseEntity(HttpStatus.OK)
   }

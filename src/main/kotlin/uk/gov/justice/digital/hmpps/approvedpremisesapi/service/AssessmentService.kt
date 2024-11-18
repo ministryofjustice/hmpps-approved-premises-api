@@ -473,33 +473,26 @@ class AssessmentService(
     referralRejectionReasonId: UUID? = null,
     referralRejectionReasonDetail: String? = null,
     isWithdrawn: Boolean? = null,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now(clock)
 
-    val assessmentResult = getAssessmentForUser(user, assessmentId)
+    val assessmentResult = getAssessmentAndValidate(user, assessmentId)
     val assessment = when (assessmentResult) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
     }
 
     if (!assessment.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
-      )
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     if (assessment.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The application has been reallocated, this assessment is read only"),
-      )
+      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
 
     val validationErrors = ValidationErrors()
@@ -514,9 +507,7 @@ class AssessmentService(
     }
 
     if (validationErrors.any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors),
-      )
+      return CasResult.FieldValidationError(validationErrors)
     }
 
     assessment.document = document
@@ -598,9 +589,7 @@ class AssessmentService(
       cas1AssessmentEmailService.assessmentRejected(application)
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun closeAssessment(
