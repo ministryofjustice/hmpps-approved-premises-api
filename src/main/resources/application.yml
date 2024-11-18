@@ -275,8 +275,8 @@ preemptive-cache-enabled: true
 preemptive-cache-key-prefix: ""
 preemptive-cache-logging-enabled: false
 preemptive-cache-delay-ms: 10000
-# 60 minutes
-preemptive-cache-lock-duration-ms: 3600000
+# 90 minutes
+preemptive-cache-lock-duration-ms: 5400000
 
 arrived-departed-domain-events-disabled: true
 
