@@ -2718,7 +2718,7 @@ class BookingServiceTest {
 
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
     every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
-    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Success(assessment)
     mockkStatic(Sentry::class)
 
     val result = bookingService.createConfirmation(
@@ -2810,7 +2810,7 @@ class BookingServiceTest {
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
     every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
-    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Unauthorised()
+    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Unauthorised()
     mockkStatic(Sentry::class)
     every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 

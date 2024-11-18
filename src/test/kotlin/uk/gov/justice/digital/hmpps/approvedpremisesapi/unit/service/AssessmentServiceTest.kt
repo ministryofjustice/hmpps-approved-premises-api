@@ -1751,7 +1751,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessmentId)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -1792,11 +1792,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessment.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+    assertThat(result.message).isEqualTo("The schema version is outdated")
   }
 
   @Test
@@ -1845,9 +1843,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessment.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat((validationResult as ValidatableActionResult.Success).entity.id).isEqualTo(assessment.id)
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    assertThat(result.value.id).isEqualTo(assessment.id)
   }
 
   @Test
@@ -1906,10 +1904,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessmentId)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.Success)
-    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    val updatedAssessment = result.value
     assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
     assertThat(updatedAssessment is TemporaryAccommodationAssessmentEntity)
     updatedAssessment as TemporaryAccommodationAssessmentEntity

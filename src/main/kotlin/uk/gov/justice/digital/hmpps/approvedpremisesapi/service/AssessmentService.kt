@@ -606,11 +606,10 @@ class AssessmentService(
   fun closeAssessment(
     user: UserEntity,
     assessmentId: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+  ): CasResult<AssessmentEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
     }
 
     if (assessment !is TemporaryAccommodationAssessmentEntity) {
@@ -618,14 +617,12 @@ class AssessmentService(
     }
 
     if (!assessment.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment.completedAt != null) {
       log.info("User: ${user.id} attempted to close assessment: $assessmentId. This assessment has already been closed.")
-      return AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+      return CasResult.Success(assessment)
     }
 
     assessment.completedAt = OffsetDateTime.now()
@@ -633,9 +630,7 @@ class AssessmentService(
     val savedAssessment = assessmentRepository.save(assessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.COMPLETED)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun reallocateAssessment(

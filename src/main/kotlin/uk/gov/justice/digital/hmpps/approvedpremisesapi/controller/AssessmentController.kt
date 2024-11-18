@@ -226,20 +226,8 @@ class AssessmentController(
 
   override fun assessmentsAssessmentIdClosurePost(assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-
-    val assessmentValidationResult = when (val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
-
+    val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)
+    extractEntityFromCasResult(assessmentAuthResult)
     return ResponseEntity(HttpStatus.OK)
   }
 
