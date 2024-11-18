@@ -70,6 +70,10 @@ class Cas1SpaceBookingTransformer(
       requestForPlacementId = jpa.placementRequest?.placementApplication?.id ?: jpa.placementRequest?.id,
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
+      departureReason = jpa.departureReason?.let {
+        val (id, name) = jpa.departureReason!!.generateParentChildName()
+        NamedId(id, name)
+      } ?: null,
     )
   }
 

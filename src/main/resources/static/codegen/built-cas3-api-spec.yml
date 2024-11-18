@@ -1359,6 +1359,9 @@ components:
           example: Admitted to Hospital
         serviceScope:
           type: string
+        parentReasonId:
+          type: string
+          format: uuid
         isActive:
           type: boolean
       required:

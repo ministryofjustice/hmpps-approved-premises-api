@@ -818,6 +818,7 @@ class Cas1SpaceBookingServiceTest {
       isActive = true,
       serviceScope = "approved-premises",
       legacyDeliusReasonCode = "legacyDeliusReasonCode",
+      parentReasonId = null,
     )
     private val departureReasonWithInvalidScope = DepartureReasonEntity(
       id = UUID.randomUUID(),
@@ -825,6 +826,7 @@ class Cas1SpaceBookingServiceTest {
       isActive = true,
       serviceScope = "temporary-accommodation",
       legacyDeliusReasonCode = "legacyDeliusReasonCode",
+      parentReasonId = null,
     )
     private val departureMoveOnCategory = MoveOnCategoryEntity(
       id = UUID.randomUUID(),

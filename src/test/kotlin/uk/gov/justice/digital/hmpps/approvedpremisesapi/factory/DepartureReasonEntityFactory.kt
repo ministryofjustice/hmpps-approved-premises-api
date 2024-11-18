@@ -13,6 +13,7 @@ class DepartureReasonEntityFactory : Factory<DepartureReasonEntity> {
   private var isActive: Yielded<Boolean> = { true }
   private var serviceScope: Yielded<String> = { randomStringUpperCase(4) }
   private var legacyDeliusCategoryCode: Yielded<String> = { randomStringUpperCase(1) }
+  private var parentReasonId: Yielded<DepartureReasonEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -34,11 +35,16 @@ class DepartureReasonEntityFactory : Factory<DepartureReasonEntity> {
     this.legacyDeliusCategoryCode = { legacyDeliusCategoryCode }
   }
 
+  fun withParentReasonId(parentDepartureReason: DepartureReasonEntity) = apply {
+    this.parentReasonId = { parentDepartureReason }
+  }
+
   override fun produce(): DepartureReasonEntity = DepartureReasonEntity(
     id = this.id(),
     name = this.name(),
     isActive = this.isActive(),
     serviceScope = this.serviceScope(),
     legacyDeliusReasonCode = this.legacyDeliusCategoryCode(),
+    parentReasonId = this.parentReasonId(),
   )
 }
