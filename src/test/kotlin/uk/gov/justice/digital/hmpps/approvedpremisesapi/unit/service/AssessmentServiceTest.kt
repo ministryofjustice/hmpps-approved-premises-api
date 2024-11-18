@@ -616,7 +616,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThat(result is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -663,7 +663,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -728,8 +728,8 @@ class AssessmentServiceTest {
       val text = "clarification note"
       val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
       every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       verify(exactly = 1) {
@@ -743,7 +743,7 @@ class AssessmentServiceTest {
       }
 
       verify(exactly = 1) {
-        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.value)
       }
     }
 
@@ -794,8 +794,8 @@ class AssessmentServiceTest {
       val text = "clarification note"
       val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
       every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       verify(exactly = 1) {
@@ -809,7 +809,7 @@ class AssessmentServiceTest {
       }
 
       verify(exactly = 1) {
-        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.value)
       }
     }
   }

@@ -261,14 +261,9 @@ class AssessmentController(
     val user = userService.getUserForRequest()
 
     val clarificationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
-    val clarificationNote = when (clarificationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNote),
+      assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),
     )
   }
 

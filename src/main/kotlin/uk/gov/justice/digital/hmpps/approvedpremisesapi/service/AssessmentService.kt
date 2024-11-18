@@ -826,12 +826,10 @@ class AssessmentService(
     user: UserEntity,
     assessmentId: UUID,
     text: String,
-  ): AuthorisableActionResult<AssessmentClarificationNoteEntity> {
-    val assessmentResult = getAssessmentForUser(user, assessmentId)
-    val assessment = when (assessmentResult) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+  ): CasResult<AssessmentClarificationNoteEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      is CasResult.Error -> return assessmentResult.reviseType()
     }
 
     val clarificationNoteToSave = AssessmentClarificationNoteEntity(
@@ -848,7 +846,7 @@ class AssessmentService(
 
     cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
 
-    return AuthorisableActionResult.Success(clarificationNoteEntity)
+    return CasResult.Success(clarificationNoteEntity)
   }
 
   fun updateAssessmentClarificationNote(
