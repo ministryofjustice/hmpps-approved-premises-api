@@ -141,8 +141,8 @@ class TasksController(
 
     val taskInfo = when (toTaskType(taskType)) {
       TaskType.assessment -> {
-        val assessment = extractEntityFromAuthorisableActionResult(
-          assessmentService.getAssessmentForUser(user, id),
+        val assessment = extractEntityFromCasResult(
+          assessmentService.getAssessmentAndValidate(user, id),
         ) as ApprovedPremisesAssessmentEntity
         val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
 
