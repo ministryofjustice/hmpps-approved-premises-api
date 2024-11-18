@@ -831,7 +831,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, "referral history note")
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue()
+    assertThat(result is CasResult.NotFound).isTrue()
   }
 
   @Test

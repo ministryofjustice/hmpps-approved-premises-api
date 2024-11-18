@@ -900,11 +900,10 @@ class AssessmentService(
     user: UserEntity,
     assessmentId: UUID,
     text: String,
-  ): AuthorisableActionResult<AssessmentReferralHistoryUserNoteEntity> {
-    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+  ): CasResult<AssessmentReferralHistoryUserNoteEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      is CasResult.Error -> return assessmentResult.reviseType()
     }
 
     val referralHistoryNoteEntity = assessmentReferralHistoryNoteRepository.save(
@@ -917,7 +916,7 @@ class AssessmentService(
       ),
     )
 
-    return AuthorisableActionResult.Success(referralHistoryNoteEntity)
+    return CasResult.Success(referralHistoryNoteEntity)
   }
 
   fun updateCas1AssessmentWithdrawn(assessmentId: UUID, withdrawingUser: UserEntity) {

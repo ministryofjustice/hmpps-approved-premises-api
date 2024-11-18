@@ -309,14 +309,15 @@ class AssessmentController(
   ): ResponseEntity<ReferralHistoryNote> {
     val user = userService.getUserForRequest()
 
-    val referralHistoryUserNote = when (val referralHistoryUserNoteResult = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)) {
-      is AuthorisableActionResult.Success -> referralHistoryUserNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+    val referralHistoryUserNoteResult =
+      assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)
 
     return ResponseEntity.ok(
-      assessmentReferralHistoryNoteTransformer.transformJpaToApi(referralHistoryUserNote),
+      assessmentReferralHistoryNoteTransformer.transformJpaToApi(
+        extractEntityFromCasResult(
+          referralHistoryUserNoteResult,
+        ),
+      ),
     )
   }
 }
