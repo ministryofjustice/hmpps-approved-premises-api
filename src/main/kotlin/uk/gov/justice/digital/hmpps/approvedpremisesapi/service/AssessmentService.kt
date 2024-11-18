@@ -338,7 +338,7 @@ class AssessmentService(
 
     val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
-      is CasResult.Error -> return assessmentResult.reviseType()
+      is CasResult.Error -> return assessmentResult
     }
 
     if (!assessment.schemaUpToDate) {
@@ -388,18 +388,19 @@ class AssessmentService(
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      val placementRequirementsValidationResult =
-        placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
-
-      when (placementRequirementsValidationResult) {
-        is CasResult.Error -> return placementRequirementsValidationResult.reviseType()
-        else -> placementRequirementsValidationResult as CasResult.Success
-      }
+      val placementRequirementsResult =
+        when (
+          val result =
+            placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
+        ) {
+          is CasResult.Success -> result.value
+          is CasResult.Error -> return result.reviseType()
+        }
 
       if (createPlacementRequest) {
         placementRequestService.createPlacementRequest(
           PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
-          placementRequirementsValidationResult.value,
+          placementRequirementsResult,
           placementDates!!,
           notes,
           false,
