@@ -157,6 +157,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(premiseSpaceBookings).hasSize(4)
 
     val migratedBooking1 = premiseSpaceBookings[0]
+    assertThat(migratedBooking1.id).isEqualTo(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking1.placementRequest!!.id).isEqualTo(placementRequest1.id)
     assertThat(migratedBooking1.createdBy!!.id).isEqualTo(booking1CreatedByUser.id)
@@ -184,6 +185,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking2 = premiseSpaceBookings[1]
+    assertThat(migratedBooking2.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
     assertThat(migratedBooking2.createdBy!!.id).isEqualTo(booking2CreatedByUser.id)
@@ -211,6 +213,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking3 = premiseSpaceBookings[2]
+    assertThat(migratedBooking3.id).isEqualTo(booking3OfflineApplication.id)
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking3.placementRequest).isNull()
     assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
@@ -238,6 +241,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.migratedManagementInfoFrom).isNull()
 
     val migratedBooking4 = premiseSpaceBookings[3]
+    assertThat(migratedBooking4.id).isEqualTo(booking4OfflineNoDomainEvent.id)
     assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking4.placementRequest).isNull()
     assertThat(migratedBooking4.createdBy).isNull()
