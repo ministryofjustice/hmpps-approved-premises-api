@@ -37,7 +37,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
-  implementation("com.google.guava:guava:33.0.0-jre")
+  implementation("com.google.guava:guava:33.3.1-jre")
   implementation("org.postgresql:postgresql:42.7.3")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0")
