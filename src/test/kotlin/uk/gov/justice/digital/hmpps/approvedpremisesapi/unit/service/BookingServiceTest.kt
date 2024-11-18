@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Called
 import io.mockk.Runs
-import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -1117,7 +1116,7 @@ class BookingServiceTest {
       result as CasResult.Success
 
       assertThat(result.value).isEqualTo(cancellationEntity)
-      verify { mockBookingRepository.save(any()) wasNot called }
+      verify(exactly = 0) { mockBookingRepository.save(any()) }
     }
 
     @Test

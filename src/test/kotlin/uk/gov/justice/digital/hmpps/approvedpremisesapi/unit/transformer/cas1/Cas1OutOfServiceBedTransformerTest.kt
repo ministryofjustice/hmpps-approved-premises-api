@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
-import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -119,7 +118,7 @@ class Cas1OutOfServiceBedTransformerTest {
     assertThat(result.notes).isEqualTo(outOfServiceBed.notes)
     assertThat(result.cancellation).isNull()
 
-    verify { cas1OutOfServiceBedCancellationTransformer.transformJpaToApi(any()) wasNot Called }
+    verify(exactly = 0) { cas1OutOfServiceBedCancellationTransformer.transformJpaToApi(any()) }
   }
 
   @Test
