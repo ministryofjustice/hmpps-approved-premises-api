@@ -857,27 +857,24 @@ class AssessmentService(
     id: UUID,
     response: String,
     responseReceivedOn: LocalDate,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
-    val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
+  ): CasResult<AssessmentClarificationNoteEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      is CasResult.Error -> return assessmentResult.reviseType()
     }
 
     val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
 
     if (clarificationNoteEntity === null) {
-      return AuthorisableActionResult.NotFound()
+      return CasResult.NotFound()
     }
 
     if (clarificationNoteEntity.createdByUser.id !== user.id) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (clarificationNoteEntity.response !== null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A response has already been added to this note"),
-      )
+      return CasResult.GeneralValidationError("A response has already been added to this note")
     }
 
     clarificationNoteEntity.response = response
@@ -891,9 +888,7 @@ class AssessmentService(
     preUpdateAssessment(assessmentToUpdate)
     assessmentRepository.save(assessmentToUpdate)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedNote),
-    )
+    return CasResult.Success(savedNote)
   }
 
   fun addAssessmentReferralHistoryUserNote(

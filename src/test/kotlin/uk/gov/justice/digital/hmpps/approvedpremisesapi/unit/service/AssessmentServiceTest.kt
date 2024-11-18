@@ -2585,13 +2585,9 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.Success)
-
-      val updatedAssessmentClarificationNote = (validationResult as ValidatableActionResult.Success).entity
-      assertThat(updatedAssessmentClarificationNote.response contentEquals "Some response")
+      assertThat(result is CasResult.Success).isTrue
+      val entity = (result as CasResult.Success).value
+      assertThat(entity.response contentEquals "Some response")
     }
 
     @Test
@@ -2617,7 +2613,7 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThat(result is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -2647,13 +2643,10 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.GeneralValidationError).isTrue
 
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-
-      val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-      assertThat(generalValidationError.message).isEqualTo("A response has already been added to this note")
+      val message = (result as CasResult.GeneralValidationError).message
+      assertThat(message).isEqualTo("A response has already been added to this note")
     }
 
     @Test
@@ -2690,7 +2683,7 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
   }
 

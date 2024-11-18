@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -287,19 +286,8 @@ class AssessmentController(
       updatedClarificationNote.responseReceivedOn,
     )
 
-    val clarificationNoteEntityResult = when (clarificationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    val clarificationNoteForResponse = when (clarificationNoteEntityResult) {
-      is ValidatableActionResult.Success -> clarificationNoteEntityResult.entity
-      else -> throw InternalServerErrorProblem("You must provide a response")
-    }
-
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse),
+      assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),
     )
   }
 
