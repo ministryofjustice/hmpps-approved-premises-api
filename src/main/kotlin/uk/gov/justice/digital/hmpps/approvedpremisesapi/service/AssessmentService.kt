@@ -152,42 +152,6 @@ class AssessmentService(
     }
   }
 
-  @Deprecated(message = "Removing as we should now use CasResult", ReplaceWith("getAssessmentForUser(user, assessment)"))
-  fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return AuthorisableActionResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
-
-    val latestSchema = when (assessment) {
-      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
-        ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
-      )
-
-      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(
-        TemporaryAccommodationAssessmentJsonSchemaEntity::class.java,
-      )
-
-      else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
-    }
-
-    if (!userAccessService.userCanViewAssessment(user, assessment)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
-
-    val offenderResult = offenderService.getOffenderByCrn(
-      assessment.application.crn,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
-
-    if (offenderResult !is AuthorisableActionResult.Success) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    return AuthorisableActionResult.Success(assessment)
-  }
-
   fun getAssessmentAndValidate(user: UserEntity, assessmentId: UUID): CasResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
