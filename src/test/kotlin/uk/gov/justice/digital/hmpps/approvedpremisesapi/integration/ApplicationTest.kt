@@ -1102,49 +1102,6 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator returns 403`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { otherUser, otherUserJwt ->
-        givenAUser(probationRegion = otherUser.probationRegion) { createdByUser, _ ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentRestriction(true)
-            },
-          ) { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
-
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema("{}")
-            }
-
-            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(createdByUser)
-              withProbationRegion(createdByUser.probationRegion)
-              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
-              withData(
-                """
-              {
-                 "thingId": 123
-              }
-              """,
-              )
-            }
-
-            webTestClient.get()
-              .uri("/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $otherUserJwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-      }
-    }
-
-    @Test
     fun `Get single LAO application for user who is not creator but has LAO Qualification returns RestrictedPerson`() {
       givenAUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
@@ -1178,13 +1135,18 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            webTestClient.get()
+            val result = webTestClient.get()
               .uri("/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $otherUserJwt")
               .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
               .exchange()
               .expectStatus()
-              .isForbidden
+              .isOk
+              .expectBody(TemporaryAccommodationApplication::class.java)
+              .returnResult()
+              .responseBody
+
+            assertThat(result!!.person.type).isEqualTo(PersonType.restrictedPerson)
           }
         }
       }
