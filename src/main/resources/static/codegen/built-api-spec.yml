@@ -386,40 +386,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /premises/{premisesId}/capacity:
-    get:
-      tags:
-        - Operations on premises
-      summary: Returns the Premises' capacity for each date from today to the end of the last existing booking
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises to get bookings for
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DateCapacity'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/bookings/{bookingId}:
     get:
       tags:

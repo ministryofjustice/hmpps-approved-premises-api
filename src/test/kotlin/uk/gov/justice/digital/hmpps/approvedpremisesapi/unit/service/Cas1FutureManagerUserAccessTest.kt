@@ -93,11 +93,6 @@ class Cas1FutureManagerUserAccessTest {
     }
 
     @Test
-    fun `may view premises capacity`() {
-      assertThat(userAccessService.userCanViewPremisesCapacity(futureManager, approvedPremises)).isTrue
-    }
-
-    @Test
     fun `may view premises staff`() {
       assertThat(userAccessService.userCanViewPremisesStaff(futureManager, approvedPremises)).isTrue
     }
