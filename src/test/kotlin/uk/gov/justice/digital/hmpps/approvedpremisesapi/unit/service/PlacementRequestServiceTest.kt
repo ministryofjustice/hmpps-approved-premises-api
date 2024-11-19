@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Called
 import io.mockk.Runs
-import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -933,7 +932,7 @@ class PlacementRequestServiceTest {
 
       assertThat(result is CasResult.Success).isTrue
 
-      verify { placementRequestRepository.save(any()) wasNot called }
+      verify(exactly = 0) { placementRequestRepository.save(any()) }
     }
 
     @Test

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.called
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -1399,7 +1398,7 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify { spaceBookingRepository.save(any()) wasNot called }
+      verify(exactly = 0) { spaceBookingRepository.save(any()) }
     }
 
     @Test

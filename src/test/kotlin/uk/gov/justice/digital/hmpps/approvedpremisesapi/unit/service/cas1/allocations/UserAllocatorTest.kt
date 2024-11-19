@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.alloc
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
-import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -85,7 +84,7 @@ class UserAllocatorTest {
       assertThat(result).isEqualTo(expectedUserEntity)
 
       if (expectedUserEntity == null) {
-        verify { mockUserRepository.findByDeliusUsername(any())!! wasNot Called }
+        verify(exactly = 0) { mockUserRepository.findByDeliusUsername(any()) }
       }
     }
 
@@ -155,7 +154,7 @@ class UserAllocatorTest {
       assertThat(result).isEqualTo(expectedUserEntity)
 
       if (expectedUserEntity == null) {
-        verify { mockUserRepository.findByDeliusUsername(any())!! wasNot Called }
+        verify(exactly = 0) { mockUserRepository.findByDeliusUsername(any()) }
       }
     }
 
@@ -225,7 +224,7 @@ class UserAllocatorTest {
       assertThat(result).isEqualTo(expectedUserEntity)
 
       if (expectedUserEntity == null) {
-        verify { mockUserRepository.findByDeliusUsername(any())!! wasNot Called }
+        verify(exactly = 0) { mockUserRepository.findByDeliusUsername(any()) }
       }
     }
 

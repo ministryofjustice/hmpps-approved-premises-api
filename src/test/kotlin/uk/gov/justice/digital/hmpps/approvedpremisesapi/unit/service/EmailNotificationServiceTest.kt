@@ -376,7 +376,7 @@ class EmailNotificationServiceTest {
           )
         }
 
-        verify { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) wasNot Called }
+        verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) }
       }
     }
   }
