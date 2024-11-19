@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import java.time.LocalDate
 
@@ -12,6 +13,7 @@ class SpacePlanner(
   private val spacePlanningModelsFactory: SpacePlanningModelsFactory,
   private val spaceBookingDayPlanner: SpaceBookingDayPlanner,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,
+  private val spaceBookingRepository: Cas1SpaceBookingRepository,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -25,6 +27,11 @@ class SpacePlanner(
   fun plan(criteria: PlanCriteria): SpacePlan {
     val premises = criteria.premises
     val allBeds = spacePlanningModelsFactory.allBeds(premises)
+    val spaceBookingsToConsider = spaceBookingRepository.findAllBookingsActiveWithinAGivenRangeWithCriteria(
+      premisesId = premises.id,
+      rangeStartInclusive = criteria.startDate,
+      rangeEndInclusive = criteria.endDate,
+    )
     val outOfServiceBedRecords = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premises.id)
 
     val daysToPlan = criteria.startDate.datesUntil(criteria.endDate.plusDays(1))
@@ -35,14 +42,17 @@ class SpacePlanner(
         spacePlanningModelsFactory.allBedsDayState(
           day = dayToPlan,
           premises = premises,
-          outOfServiceBedRecords = outOfServiceBedRecords,
+          outOfServiceBedRecordsToConsider = outOfServiceBedRecords,
         ),
       )
     }
 
     val dayPlans = bedDayStatesForEachDay.map { (day, bedDayStates) ->
       val availableBeds = bedDayStates.filter { it.isActive() }.map { it.bed }.toSet()
-      val bookings = spacePlanningModelsFactory.spaceBookingsForDay(day, premises).toSet()
+      val bookings = spacePlanningModelsFactory.spaceBookingsForDay(
+        day = day,
+        spaceBookingsToConsider = spaceBookingsToConsider,
+      ).toSet()
 
       SpaceDayPlan(
         day = day,

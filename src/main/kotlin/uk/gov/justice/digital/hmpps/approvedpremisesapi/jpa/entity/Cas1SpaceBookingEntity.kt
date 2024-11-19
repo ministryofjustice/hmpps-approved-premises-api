@@ -127,11 +127,15 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     LEFT JOIN FETCH b.criteria
     WHERE b.premises.id = :premisesId
     AND b.cancellationOccurredAt IS NULL 
-    AND b.canonicalArrivalDate <= :day 
-    AND b.canonicalDepartureDate > :day
+    AND b.canonicalArrivalDate <= :rangeEndInclusive
+    AND b.canonicalDepartureDate >= :rangeStartInclusive 
   """,
   )
-  fun findAllBookingsOnGivenDayWithCriteria(premisesId: UUID, day: LocalDate): List<Cas1SpaceBookingEntity>
+  fun findAllBookingsActiveWithinAGivenRangeWithCriteria(
+    premisesId: UUID,
+    rangeStartInclusive: LocalDate,
+    rangeEndInclusive: LocalDate,
+  ): List<Cas1SpaceBookingEntity>
 
   fun findAllByApplication(application: ApplicationEntity): List<Cas1SpaceBookingEntity>
 }
@@ -240,6 +244,7 @@ data class Cas1SpaceBookingEntity(
   fun isCancelled() = cancellationOccurredAt != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDateTime != null
+  fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day
   override fun toString() = "Cas1SpaceBookingEntity:$id"
 }
 
