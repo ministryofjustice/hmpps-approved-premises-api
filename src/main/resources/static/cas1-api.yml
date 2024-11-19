@@ -376,6 +376,61 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
 
+  /premises/{premisesId}/capacity:
+    get:
+      tags:
+        - premises
+      operationId: "getCapacity"
+      summary: Provides capacity information for a given date range
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: path
+          description: Start date, inclusive
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: path
+          description: End date, inclusive
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremiseCapacity'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+      x-codegen-request-body-name: body
+
   /premises/{premisesId}/space-bookings:
     get:
       tags:

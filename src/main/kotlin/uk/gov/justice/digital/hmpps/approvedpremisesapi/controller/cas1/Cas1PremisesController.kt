@@ -4,14 +4,19 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
@@ -50,6 +55,36 @@ class Cas1PremisesController(
         ).map {
           cas1PremisesTransformer.toPremiseBasicSummary(it)
         },
+      )
+  }
+
+  override fun getCapacity(
+    premisesId: UUID,
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): ResponseEntity<Cas1PremiseCapacity> {
+    return ResponseEntity
+      .ok()
+      .body(
+        Cas1PremiseCapacity(
+          premisesId = premisesId,
+          startDate = startDate,
+          endDate = endDate,
+          capacity = listOf(
+            Cas1PremiseCapacityForDay(
+              totalBedCount = 10,
+              availableBedCount = 5,
+              bookingCount = 5,
+              characteristicAvailability = listOf(
+                Cas1PremiseCharacteristicAvailability(
+                  characteristic = Cas1SpaceCharacteristic.isWheelchairAccessible,
+                  capacity = 2,
+                  available = 0,
+                ),
+              ),
+            ),
+          ),
+        ),
       )
   }
 }

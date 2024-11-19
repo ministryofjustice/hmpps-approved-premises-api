@@ -378,6 +378,61 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
 
+  /premises/{premisesId}/capacity:
+    get:
+      tags:
+        - premises
+      operationId: "getCapacity"
+      summary: Provides capacity information for a given date range
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: path
+          description: Start date, inclusive
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: path
+          description: End date, inclusive
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1PremiseCapacity'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+
   /premises/{premisesId}/space-bookings:
     get:
       tags:
@@ -6738,3 +6793,56 @@ components:
       required:
         - occurredAt
         - reasonId
+    Cas1PremiseCapacity:
+      type: object
+      properties:
+        premisesId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        capacity:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
+      required:
+        - premisesId
+        - startDate
+        - endDate
+    Cas1PremiseCapacityForDay:
+      type: object
+      properties:
+        totalBedCount:
+          type: integer
+        availableBedCount:
+          type: integer
+        bookingCount:
+          type: integer
+        characteristicAvailability:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1PremiseCharacteristicAvailability'
+      required:
+        - totalBedCount
+        - availableBedCount
+        - bookingCount
+    Cas1PremiseCharacteristicAvailability:
+      type: object
+      description:  "Will only ever be returned for the following characteristics: 'isArsonSuitable', 'hasEnSuite', 'isSingle', 'isStepFreeDesignated', 'isSuitedForSexOffenders' or 'isWheelchairDesignated'"
+      properties:
+        characteristic:
+          $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        capacity:
+          description: the number of available beds with this characteristic
+          type: integer
+        available:
+          description: capacity minus the number of bookings requiring this characteristic
+          type: integer
+      required:
+        - characteristic
+        - capacity
+        - available
