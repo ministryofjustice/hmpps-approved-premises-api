@@ -52,11 +52,25 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.cancellation_occurred_at IS NULL AND 
       (
         cast(:residency as text) IS NULL OR (
-          (:residency = 'upcoming' AND b.actual_arrival_date_time IS NULL AND b.non_arrival_confirmed_at IS NULL) OR
-          (:residency = 'current' AND b.actual_arrival_date_time IS NOT NULL AND 
-            b.actual_departure_date_time IS NULL AND b.non_arrival_confirmed_at IS NULL) OR
-          (:residency = 'historic' AND 
-            (b.actual_departure_date_time IS NOT NULL OR b.non_arrival_confirmed_at IS NOT NULL)
+          (
+            :residency = 'upcoming' AND (
+              b.actual_arrival_date_time IS NULL AND 
+              b.non_arrival_confirmed_at IS NULL
+            )
+          ) OR
+          (
+            :residency = 'current' AND ( 
+              b.actual_arrival_date_time IS NOT NULL AND
+              b.non_arrival_confirmed_at IS NULL AND
+              b.actual_departure_date_time IS NULL 
+            )
+          ) OR
+          (
+            :residency = 'historic' AND 
+            (
+                b.actual_departure_date_time IS NOT NULL OR 
+                b.non_arrival_confirmed_at IS NOT NULL
+            )
           )
         ) 
       ) AND
