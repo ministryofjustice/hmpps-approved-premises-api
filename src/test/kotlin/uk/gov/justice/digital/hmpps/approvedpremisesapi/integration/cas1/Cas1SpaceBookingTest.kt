@@ -307,6 +307,8 @@ class Cas1SpaceBookingTest {
     lateinit var upcomingCancelledSpaceBooking: Cas1SpaceBookingEntity
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
     lateinit var nonArrivedSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var legacySpaceBookingNoArrival: Cas1SpaceBookingEntity
+    lateinit var legacySpaceBookingNoDeparture: Cas1SpaceBookingEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -406,6 +408,32 @@ class Cas1SpaceBookingTest {
         withNonArrivalReason(nonArrivalReason)
         withNonArrivalConfirmedAt(Instant.now())
       }
+
+      legacySpaceBookingNoArrival = createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tier = "A") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2024-05-02"))
+        withExpectedDepartureDate(LocalDate.parse("2024-05-31"))
+        withActualArrivalDateTime(null)
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2024-05-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2024-05-31"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      legacySpaceBookingNoDeparture = createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tier = "Z") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
+        withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
+        withActualArrivalDateTime(Instant.parse("2024-05-02T12:45:00.00Z"))
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2024-05-01"))
+        withCanonicalDepartureDate(LocalDate.parse("2024-05-30"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
+      }
     }
 
     @Test
@@ -447,13 +475,15 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
-      assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[4].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response).hasSize(8)
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[6].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -468,9 +498,11 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(2)
-      assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[1].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response).hasSize(4)
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -590,13 +622,15 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
+      assertThat(response).hasSize(8)
       assertThat(response[0].person.crn).isEqualTo("CRN_NONARRIVAL")
       assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[5].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[6].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
     }
 
     @Test
@@ -611,13 +645,15 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
-      assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[4].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response).hasSize(8)
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[6].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -650,25 +686,31 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
+      assertThat(response).hasSize(8)
 
-      assertThat(response[0].tier).isEqualTo("U")
-      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[0].tier).isEqualTo("Z")
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
 
-      assertThat(response[1].tier).isEqualTo("D")
-      assertThat(response[1].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[1].tier).isEqualTo("U")
+      assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
 
-      assertThat(response[2].tier).isEqualTo("C")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].tier).isEqualTo("D")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
 
-      assertThat(response[3].tier).isEqualTo("B")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[3].tier).isEqualTo("C")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
 
-      assertThat(response[4].tier).isEqualTo("A")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].tier).isEqualTo("B")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT3")
 
       assertThat(response[5].tier).isEqualTo("A")
-      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
+
+      assertThat(response[6].tier).isEqualTo("A")
+      assertThat(response[6].person.crn).isEqualTo("CRN_NONARRIVAL")
+
+      assertThat(response[7].tier).isEqualTo("A")
+      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
     }
   }
 
