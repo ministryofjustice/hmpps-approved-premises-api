@@ -4,7 +4,6 @@ import arrow.core.Ior
 import jakarta.transaction.Transactional
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -125,7 +124,6 @@ class PremisesController(
   private val dateChangeTransformer: DateChangeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PremisesApiDelegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun premisesSummaryGet(
     xServiceName: ServiceName,

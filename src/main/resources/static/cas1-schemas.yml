@@ -533,3 +533,56 @@ components:
       required:
         - occurredAt
         - reasonId
+    Cas1PremiseCapacity:
+      type: object
+      properties:
+        premisesId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        capacity:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
+      required:
+        - premisesId
+        - startDate
+        - endDate
+    Cas1PremiseCapacityForDay:
+      type: object
+      properties:
+        totalBedCount:
+          type: integer
+        availableBedCount:
+          type: integer
+        bookingCount:
+          type: integer
+        characteristicAvailability:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1PremiseCharacteristicAvailability'
+      required:
+        - totalBedCount
+        - availableBedCount
+        - bookingCount
+    Cas1PremiseCharacteristicAvailability:
+      type: object
+      description:  "Will only ever be returned for the following characteristics: 'isArsonSuitable', 'hasEnSuite', 'isSingle', 'isStepFreeDesignated', 'isSuitedForSexOffenders' or 'isWheelchairDesignated'"
+      properties:
+        characteristic:
+          $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        capacity:
+          description: the number of available beds with this characteristic
+          type: integer
+        available:
+          description: capacity minus the number of bookings requiring this characteristic
+          type: integer
+      required:
+        - characteristic
+        - capacity
+        - available
