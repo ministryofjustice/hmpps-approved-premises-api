@@ -90,6 +90,7 @@ class Cas1PremisesTransformerTest {
         AP_AREA_ID,
         "the ap area name",
         12,
+        supportsSpaceBookings = false,
       )
 
       val result = transformer.toPremiseBasicSummary(premisesSummary)
@@ -100,6 +101,7 @@ class Cas1PremisesTransformerTest {
       assertThat(result.apArea.id).isEqualTo(AP_AREA_ID)
       assertThat(result.apArea.name).isEqualTo("the ap area name")
       assertThat(result.bedCount).isEqualTo(12)
+      assertThat(result.supportsSpaceBookings).isEqualTo(false)
     }
   }
 }

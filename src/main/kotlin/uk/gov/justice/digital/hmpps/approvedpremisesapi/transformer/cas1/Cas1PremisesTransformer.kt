@@ -34,6 +34,7 @@ class Cas1PremisesTransformer(
       apCode = entity.apCode,
       apArea = NamedId(entity.apAreaId, entity.apAreaName),
       bedCount = entity.bedCount,
+      supportsSpaceBookings = entity.supportsSpaceBookings,
     )
   }
 }
