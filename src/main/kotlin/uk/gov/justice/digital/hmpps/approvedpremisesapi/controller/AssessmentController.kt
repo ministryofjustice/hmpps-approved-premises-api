@@ -26,13 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.toCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -119,12 +112,7 @@ class AssessmentController(
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
 
-    val assessmentResult = assessmentService.getAssessmentForUser(user, assessmentId)
-    val assessment = when (assessmentResult) {
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentAndValidate(user, assessmentId))
 
     val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
@@ -162,7 +150,7 @@ class AssessmentController(
                 user,
                 assessmentId,
                 objectMapper.writeValueAsString(updateAssessment.data),
-              ).toCasResult(),
+              ),
           )
         }
       }
@@ -193,18 +181,7 @@ class AssessmentController(
       notes = assessmentAcceptance.notes,
     )
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> assessmentValidationResult.entity
-    }
+    extractEntityFromCasResult(assessmentAuthResult)
 
     return ResponseEntity(HttpStatus.OK)
   }
@@ -226,38 +203,15 @@ class AssessmentController(
         assessmentRejection.isWithdrawn,
       )
 
-    val assessmentValidationResult = when (assessmentAuthResult) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
+    extractEntityFromCasResult(assessmentAuthResult)
 
     return ResponseEntity(HttpStatus.OK)
   }
 
   override fun assessmentsAssessmentIdClosurePost(assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-
-    val assessmentValidationResult = when (val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)) {
-      is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    when (assessmentValidationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
-
+    val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)
+    extractEntityFromCasResult(assessmentAuthResult)
     return ResponseEntity(HttpStatus.OK)
   }
 
@@ -268,14 +222,9 @@ class AssessmentController(
     val user = userService.getUserForRequest()
 
     val clarificationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
-    val clarificationNote = when (clarificationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNote),
+      assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),
     )
   }
 
@@ -293,19 +242,8 @@ class AssessmentController(
       updatedClarificationNote.responseReceivedOn,
     )
 
-    val clarificationNoteEntityResult = when (clarificationNoteResult) {
-      is AuthorisableActionResult.Success -> clarificationNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    val clarificationNoteForResponse = when (clarificationNoteEntityResult) {
-      is ValidatableActionResult.Success -> clarificationNoteEntityResult.entity
-      else -> throw InternalServerErrorProblem("You must provide a response")
-    }
-
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(clarificationNoteForResponse),
+      assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),
     )
   }
 
@@ -315,14 +253,15 @@ class AssessmentController(
   ): ResponseEntity<ReferralHistoryNote> {
     val user = userService.getUserForRequest()
 
-    val referralHistoryUserNote = when (val referralHistoryUserNoteResult = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)) {
-      is AuthorisableActionResult.Success -> referralHistoryUserNoteResult.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
+    val referralHistoryUserNoteResult =
+      assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)
 
     return ResponseEntity.ok(
-      assessmentReferralHistoryNoteTransformer.transformJpaToApi(referralHistoryUserNote),
+      assessmentReferralHistoryNoteTransformer.transformJpaToApi(
+        extractEntityFromCasResult(
+          referralHistoryUserNoteResult,
+        ),
+      ),
     )
   }
 }

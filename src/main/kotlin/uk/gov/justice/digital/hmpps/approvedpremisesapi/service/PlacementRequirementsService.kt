@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -22,9 +22,12 @@ class PlacementRequirementsService(
   private val characteristicRepository: CharacteristicRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
 ) {
-  fun createPlacementRequirements(assessment: AssessmentEntity, requirements: PlacementRequirements): ValidatableActionResult<PlacementRequirementsEntity> = validated {
+  fun createPlacementRequirements(
+    assessment: AssessmentEntity,
+    requirements: PlacementRequirements,
+  ): CasResult<PlacementRequirementsEntity> = validatedCasResult {
     val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
-      ?: return@validated ValidatableActionResult.FieldValidationError(
+      ?: return CasResult.FieldValidationError(
         ValidationErrors().apply {
           this["$.postcodeDistrict"] = "doesNotExist"
         },

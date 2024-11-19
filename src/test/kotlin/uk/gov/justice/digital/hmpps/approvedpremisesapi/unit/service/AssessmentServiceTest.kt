@@ -76,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.Ass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -355,7 +356,7 @@ class AssessmentServiceTest {
   }
 
   @Test
-  fun `getAssessmentForUser gets assessment when user is authorised to view assessment`() {
+  fun `getAssessmentAndValidate gets assessment when user is authorised to view assessment`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -398,15 +399,15 @@ class AssessmentServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
 
-    val result = assessmentService.getAssessmentForUser(user, assessment.id)
+    val result = assessmentService.getAssessmentAndValidate(user, assessment.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity).isEqualTo(assessment)
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    assertThat(result.value).isEqualTo(assessment)
   }
 
   @Test
-  fun `getAssessmentForUser does not get assessment when user is not authorised to view assessment`() {
+  fun `getAssessmentAndValidate does not get assessment when user is not authorised to view assessment`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -449,13 +450,13 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getAssessmentForUser(user, assessmentId)
+    val result = assessmentService.getAssessmentAndValidate(user, assessmentId)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `getAssessmentForUser returns not found for non-existent Assessment`() {
+  fun `getAssessmentAndValidate returns not found for non-existent Assessment`() {
     val assessmentId = UUID.randomUUID()
 
     val user = UserEntityFactory()
@@ -469,10 +470,10 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.getAssessmentForUser(user, assessmentId) as AuthorisableActionResult.NotFound
+    val result = assessmentService.getAssessmentAndValidate(user, assessmentId) as CasResult.NotFound
 
     assertThat(result.id).isEqualTo(assessmentId.toString())
-    assertThat(result.entityType).isEqualTo(AssessmentEntity::class.simpleName)
+    assertThat(result.entityType).isEqualTo("AssessmentEntity")
   }
 
   @Nested
@@ -494,7 +495,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThat(result is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -541,7 +542,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -606,8 +607,8 @@ class AssessmentServiceTest {
       val text = "clarification note"
       val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
       every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       verify(exactly = 1) {
@@ -621,7 +622,7 @@ class AssessmentServiceTest {
       }
 
       verify(exactly = 1) {
-        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.value)
       }
     }
 
@@ -672,8 +673,8 @@ class AssessmentServiceTest {
       val text = "clarification note"
       val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
       every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
       verify(exactly = 1) {
@@ -687,7 +688,7 @@ class AssessmentServiceTest {
       }
 
       verify(exactly = 1) {
-        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.value)
       }
     }
   }
@@ -709,7 +710,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, "referral history note")
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue()
+    assertThat(result is CasResult.NotFound).isTrue()
   }
 
   @Test
@@ -756,7 +757,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessmentId, "{}")
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -800,11 +801,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    val message = (result as CasResult.GeneralValidationError).message
+    assertThat(message).isEqualTo("The schema version is outdated")
   }
 
   @Test
@@ -850,11 +849,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The application has been withdrawn.")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    val message = (result as CasResult.GeneralValidationError).message
+    assertThat(message).isEqualTo("The application has been withdrawn.")
   }
 
   @Test
@@ -905,11 +902,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("A decision has already been taken on this assessment")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    val message = (result as CasResult.GeneralValidationError).message
+    assertThat(message).isEqualTo("A decision has already been taken on this assessment")
   }
 
   @Test
@@ -961,11 +956,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The assessment has been reallocated, this assessment is read only")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    val message = (result as CasResult.GeneralValidationError).message
+    assertThat(message).isEqualTo("The assessment has been reallocated, this assessment is read only")
   }
 
   @Test
@@ -1014,7 +1007,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -1066,10 +1059,8 @@ class AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.Success)
-    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(result is CasResult.Success).isTrue
+    val updatedAssessment = (result as CasResult.Success).value
     assertThat(updatedAssessment.data).isEqualTo("{\"test\": \"data\"}")
   }
 
@@ -1117,7 +1108,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -1161,11 +1152,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+    assertThat(result.message).isEqualTo("The schema version is outdated")
   }
 
   @Test
@@ -1216,11 +1205,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("A decision has already been taken on this assessment")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+    assertThat(result.message).isEqualTo("A decision has already been taken on this assessment")
   }
 
   @Test
@@ -1272,11 +1259,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The application has been reallocated, this assessment is read only")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+    assertThat(result.message).isEqualTo("The application has been reallocated, this assessment is read only")
   }
 
   @Test
@@ -1330,11 +1315,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessment.id, "{\"test\": \"data\"}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.FieldValidationError)
-    val fieldValidationError = (validationResult as ValidatableActionResult.FieldValidationError)
-    assertThat(fieldValidationError.validationMessages).contains(
+    assertThat(result is CasResult.FieldValidationError).isTrue
+    result as CasResult.FieldValidationError
+    assertThat(result.validationMessages).contains(
       entry("$.data", "invalid"),
     )
   }
@@ -1391,7 +1374,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -1468,10 +1451,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.Success)
-    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    val updatedAssessment = result.value
     assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
     assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
     assertThat(updatedAssessment.submittedAt).isNotNull()
@@ -1588,10 +1570,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning", referralRejectionReasonId, "referral rejection reason detail", false)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.Success)
-    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity as TemporaryAccommodationAssessmentEntity
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    val updatedAssessment = result.value as TemporaryAccommodationAssessmentEntity
     assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
     assertThat(updatedAssessment.rejectionRationale).isEqualTo("reasoning")
     assertThat(updatedAssessment.submittedAt).isNotNull()
@@ -1639,7 +1620,7 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessmentId)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -1680,11 +1661,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessment.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-    val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(generalValidationError.message).isEqualTo("The schema version is outdated")
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+    assertThat(result.message).isEqualTo("The schema version is outdated")
   }
 
   @Test
@@ -1733,9 +1712,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessment.id)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat((validationResult as ValidatableActionResult.Success).entity.id).isEqualTo(assessment.id)
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    assertThat(result.value.id).isEqualTo(assessment.id)
   }
 
   @Test
@@ -1794,10 +1773,9 @@ class AssessmentServiceTest {
 
     val result = assessmentService.closeAssessment(user, assessmentId)
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-    assertThat(validationResult is ValidatableActionResult.Success)
-    val updatedAssessment = (validationResult as ValidatableActionResult.Success).entity
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
+    val updatedAssessment = result.value
     assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
     assertThat(updatedAssessment is TemporaryAccommodationAssessmentEntity)
     updatedAssessment as TemporaryAccommodationAssessmentEntity
@@ -2473,13 +2451,9 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.Success)
-
-      val updatedAssessmentClarificationNote = (validationResult as ValidatableActionResult.Success).entity
-      assertThat(updatedAssessmentClarificationNote.response contentEquals "Some response")
+      assertThat(result is CasResult.Success).isTrue
+      val entity = (result as CasResult.Success).value
+      assertThat(entity.response contentEquals "Some response")
     }
 
     @Test
@@ -2505,7 +2479,7 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThat(result is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -2535,13 +2509,10 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.GeneralValidationError).isTrue
 
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.GeneralValidationError)
-
-      val generalValidationError = validationResult as ValidatableActionResult.GeneralValidationError
-      assertThat(generalValidationError.message).isEqualTo("A response has already been added to this note")
+      val message = (result as CasResult.GeneralValidationError).message
+      assertThat(message).isEqualTo("A response has already been added to this note")
     }
 
     @Test
@@ -2578,7 +2549,7 @@ class AssessmentServiceTest {
         LocalDate.parse("2022-03-03"),
       )
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
   }
 

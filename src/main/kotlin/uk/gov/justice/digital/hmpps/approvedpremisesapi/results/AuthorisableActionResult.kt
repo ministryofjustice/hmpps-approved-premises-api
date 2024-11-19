@@ -30,29 +30,3 @@ sealed interface AuthorisableActionResult<EntityType> {
 
 fun <T, U> AuthorisableActionResult.NotFound<T>.into(): AuthorisableActionResult.NotFound<U> =
   AuthorisableActionResult.NotFound(this.entityType, this.id)
-
-@Deprecated(
-  message = "A helper method to avoid having to handle multiple result types. Refactor to CasResult where possible rather than using this method.",
-)
-fun <T> AuthorisableActionResult<ValidatableActionResult<T>>.toCasResult() =
-  when (this) {
-    is AuthorisableActionResult.Success -> {
-      when (this.entity) {
-        is ValidatableActionResult.Success -> {
-          CasResult.Success(this.entity.entity)
-        }
-
-        is ValidatableActionResult.ConflictError ->
-          CasResult.ConflictError(
-            conflictingEntityId = this.entity.conflictingEntityId,
-            message = this.entity.message,
-          )
-
-        is ValidatableActionResult.FieldValidationError -> CasResult.FieldValidationError(this.entity.validationMessages)
-        is ValidatableActionResult.GeneralValidationError -> CasResult.GeneralValidationError(this.entity.message)
-      }
-    }
-
-    is AuthorisableActionResult.NotFound -> CasResult.NotFound(entityType = this.entityType, id = this.id)
-    is AuthorisableActionResult.Unauthorised -> CasResult.Unauthorised()
-  }
