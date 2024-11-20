@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.planning
 
-import io.mockk.every
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -13,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
@@ -28,8 +25,7 @@ import java.time.LocalDate
 
 class SpacePlanningModelsFactoryTest {
 
-  val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
-  val factory = SpacePlanningModelsFactory(spaceBookingRepository)
+  val factory = SpacePlanningModelsFactory()
 
   @Nested
   inner class AllBeds {
@@ -109,7 +105,7 @@ class SpacePlanningModelsFactoryTest {
           .withDefaults()
           .withRooms(mutableListOf())
           .produce(),
-        outOfServiceBedRecords = emptyList(),
+        outOfServiceBedRecordsToConsider = emptyList(),
       )
 
       assertThat(result).isEmpty()
@@ -123,7 +119,7 @@ class SpacePlanningModelsFactoryTest {
           .withDefaults()
           .withRooms(RoomEntityFactory().withDefaults().produce())
           .produce(),
-        outOfServiceBedRecords = emptyList(),
+        outOfServiceBedRecordsToConsider = emptyList(),
       )
 
       assertThat(result).isEmpty()
@@ -156,7 +152,7 @@ class SpacePlanningModelsFactoryTest {
           .withDefaults()
           .withRooms(roomEntity)
           .produce(),
-        outOfServiceBedRecords = emptyList(),
+        outOfServiceBedRecordsToConsider = emptyList(),
       )
 
       assertThat(result).hasSize(1)
@@ -227,7 +223,7 @@ class SpacePlanningModelsFactoryTest {
           .withDefaults()
           .withRooms(roomEntity)
           .produce(),
-        outOfServiceBedRecords = emptyList(),
+        outOfServiceBedRecordsToConsider = emptyList(),
       )
 
       assertThat(result).hasSize(2)
@@ -270,7 +266,7 @@ class SpacePlanningModelsFactoryTest {
           .withDefaults()
           .withRooms(roomEntity)
           .produce(),
-        outOfServiceBedRecords = listOf(
+        outOfServiceBedRecordsToConsider = listOf(
           Cas1OutOfServiceBedEntityFactory()
             .withBed(bed1EntityActive)
             .produce().apply {
@@ -313,18 +309,9 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `no space bookings defined, return empty list`() {
-      val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
-
-      every {
-        spaceBookingRepository.findAllBookingsOnGivenDayWithCriteria(
-          premisesId = premises.id,
-          day = LocalDate.of(2020, 4, 4),
-        )
-      } returns emptyList()
-
       val result = factory.spaceBookingsForDay(
         day = LocalDate.of(2020, 4, 4),
-        premises = premises,
+        spaceBookingsToConsider = emptyList(),
       )
 
       assertThat(result).isEmpty()
@@ -341,26 +328,21 @@ class SpacePlanningModelsFactoryTest {
 
       val booking1 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking1")
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
         .withCriteria(listOf(characteristic1, characteristic2, characteristicPremise))
         .produce()
 
       val booking2 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking2")
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
         .withCriteria(listOf(characteristicSingleRoom, characteristicDisabled, characteristicPremise, characteristicNotAllowed))
         .produce()
 
-      val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
-
-      every {
-        spaceBookingRepository.findAllBookingsOnGivenDayWithCriteria(
-          premisesId = premises.id,
-          day = LocalDate.of(2020, 4, 4),
-        )
-      } returns listOf(booking1, booking2)
-
       val result = factory.spaceBookingsForDay(
         day = LocalDate.of(2020, 4, 4),
-        premises = premises,
+        spaceBookingsToConsider = listOf(booking1, booking2),
       )
 
       assertThat(result).hasSize(2)

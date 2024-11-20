@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
@@ -17,9 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 import java.time.LocalDate
 
 @Service
-class SpacePlanningModelsFactory(
-  val spaceBookingRepository: Cas1SpaceBookingRepository,
-) {
+class SpacePlanningModelsFactory {
   object Constants {
     const val DEFAULT_CHARACTERISTIC_WEIGHT = 100
     val CHARACTERISTIC_ALLOW_LIST = listOf(
@@ -39,18 +37,22 @@ class SpacePlanningModelsFactory(
   fun allBedsDayState(
     day: LocalDate,
     premises: ApprovedPremisesEntity,
-    outOfServiceBedRecords: List<Cas1OutOfServiceBedEntity>,
+    outOfServiceBedRecordsToConsider: List<Cas1OutOfServiceBedEntity>,
   ) = premises.rooms.flatMap { it.beds }
     .map { bedEntity ->
       BedDayState(
         bed = bedEntity.toBed(),
         day = day,
-        inactiveReason = bedEntity.getInactiveReason(day, outOfServiceBedRecords),
+        inactiveReason = bedEntity.getInactiveReason(day, outOfServiceBedRecordsToConsider),
       )
     }
 
-  fun spaceBookingsForDay(day: LocalDate, premises: ApprovedPremisesEntity): List<SpaceBooking> =
-    spaceBookingRepository.findAllBookingsOnGivenDayWithCriteria(premises.id, day)
+  fun spaceBookingsForDay(
+    day: LocalDate,
+    spaceBookingsToConsider: List<Cas1SpaceBookingEntity>,
+  ): List<SpaceBooking> =
+    spaceBookingsToConsider
+      .filter { it.isResident(day) }
       .map { booking ->
         SpaceBooking(
           id = booking.id,
