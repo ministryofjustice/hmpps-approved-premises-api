@@ -56,7 +56,7 @@ user-allocations:
 
 feature-flags:
   get-documents-from-ap-delius: true
-  get-offences-from-ap-delius: true
+  get-offences-from-ap-delius: false
 
 # allows us to see the request URL and method for upstream requests
 logging.level.reactor.netty.http.client.HttpClientConnect: DEBUG
