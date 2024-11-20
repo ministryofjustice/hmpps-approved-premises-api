@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.planning
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -26,11 +28,13 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var spacePlanner: SpacePlanningService
 
+  lateinit var premiseId: UUID
+
   private fun findCharacteristic(propertyName: String) =
     characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
-  @Test
-  fun `multi day planning is correct`() {
+  @BeforeAll
+  fun setupTestData() {
     val premises = approvedPremisesEntityFactory
       .produceAndPersist {
         withId(UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"))
@@ -38,9 +42,10 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
         withProbationRegion(probationRegionEntityFactory.produceAndPersist())
         withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
       }
+    premiseId = premises.id
 
     val room1 = roomEntityFactory.produceAndPersist {
-      withYieldedPremises { premises }
+      withPremises(premises)
       withCharacteristics(
         findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
         findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
@@ -53,7 +58,7 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
       },
     )
 
-    val room2 = roomEntityFactory.produceAndPersist { withYieldedPremises { premises } }.apply { premises.rooms.add(this) }
+    val room2 = roomEntityFactory.produceAndPersist { withPremises(premises) }.apply { premises.rooms.add(this) }
     room2.beds.add(
       bedEntityFactory.produceAndPersist {
         withName("Room 2 - Bed 1")
@@ -61,7 +66,7 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
       },
     )
 
-    val room3 = roomEntityFactory.produceAndPersist { withYieldedPremises { premises } }.apply { premises.rooms.add(this) }
+    val room3 = roomEntityFactory.produceAndPersist { withPremises(premises) }.apply { premises.rooms.add(this) }
     room3.beds.add(
       bedEntityFactory.produceAndPersist {
         withName("Room 3 - Bed 1")
@@ -150,9 +155,12 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
         findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
       )
     }
+  }
 
+  @Test
+  fun `multi day planning is correct`() {
     val criteria = SpacePlanningService.PlanCriteria(
-      premises = premises,
+      premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
       range = DateRange(
         fromInclusive = LocalDate.of(2020, 5, 6),
         toInclusive = LocalDate.of(2020, 5, 10),
