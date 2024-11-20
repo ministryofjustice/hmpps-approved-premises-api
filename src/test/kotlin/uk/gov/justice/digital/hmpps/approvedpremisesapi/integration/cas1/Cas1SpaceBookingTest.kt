@@ -307,6 +307,8 @@ class Cas1SpaceBookingTest {
     lateinit var upcomingCancelledSpaceBooking: Cas1SpaceBookingEntity
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
     lateinit var nonArrivedSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var legacySpaceBookingNoArrival: Cas1SpaceBookingEntity
+    lateinit var legacySpaceBookingNoDeparture: Cas1SpaceBookingEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -314,12 +316,12 @@ class Cas1SpaceBookingTest {
 
       currentSpaceBooking1 = createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tier = "A") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2022-01-02"))
-        withExpectedDepartureDate(LocalDate.parse("2022-02-02"))
-        withActualArrivalDateTime(Instant.parse("2022-01-02T12:45:00.00Z"))
+        withExpectedArrivalDate(LocalDate.parse("2026-01-02"))
+        withExpectedDepartureDate(LocalDate.parse("2026-02-02"))
+        withActualArrivalDateTime(Instant.parse("2026-01-02T12:45:00.00Z"))
         withActualDepartureDateTime(null)
-        withCanonicalArrivalDate(LocalDate.parse("2022-01-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2022-02-02"))
+        withCanonicalArrivalDate(LocalDate.parse("2026-01-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2026-02-02"))
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(Instant.now())
@@ -327,12 +329,12 @@ class Cas1SpaceBookingTest {
 
       currentSpaceBooking2 = createSpaceBooking(crn = "CRN_CURRENT2", firstName = "curt", lastName = "rent 2", tier = "C") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2022-02-02"))
-        withExpectedDepartureDate(LocalDate.parse("2022-09-02"))
-        withActualArrivalDateTime(Instant.parse("2022-01-02T12:45:00.00Z"))
+        withExpectedArrivalDate(LocalDate.parse("2026-02-02"))
+        withExpectedDepartureDate(LocalDate.parse("2026-09-02"))
+        withActualArrivalDateTime(Instant.parse("2026-01-02T12:45:00.00Z"))
         withActualDepartureDateTime(null)
-        withCanonicalArrivalDate(LocalDate.parse("2022-02-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2022-03-02"))
+        withCanonicalArrivalDate(LocalDate.parse("2026-02-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2026-03-02"))
         withKeyworkerName("Kathy Keyworker")
         withKeyworkerStaffCode("kathyk")
         withKeyworkerAssignedAt(Instant.now())
@@ -340,12 +342,12 @@ class Cas1SpaceBookingTest {
 
       currentSpaceBooking3 = createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tier = "B") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2022-03-02"))
-        withExpectedDepartureDate(LocalDate.parse("2022-04-02"))
-        withActualArrivalDateTime(Instant.parse("2022-01-02T12:45:00.00Z"))
+        withExpectedArrivalDate(LocalDate.parse("2026-03-02"))
+        withExpectedDepartureDate(LocalDate.parse("2026-04-02"))
+        withActualArrivalDateTime(Instant.parse("2026-01-02T12:45:00.00Z"))
         withActualDepartureDateTime(null)
-        withCanonicalArrivalDate(LocalDate.parse("2022-04-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2022-05-02"))
+        withCanonicalArrivalDate(LocalDate.parse("2026-04-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2026-05-02"))
         withKeyworkerName("Clive Keyworker")
         withKeyworkerStaffCode("clivek")
         withKeyworkerAssignedAt(Instant.now())
@@ -353,12 +355,12 @@ class Cas1SpaceBookingTest {
 
       departedSpaceBooking = createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tier = "D") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2021-01-03"))
-        withExpectedDepartureDate(LocalDate.parse("2021-02-03"))
-        withActualArrivalDateTime(Instant.parse("2021-01-03T12:45:00.00Z"))
-        withActualDepartureDateTime(Instant.parse("2021-02-03T12:45:00.00Z"))
-        withCanonicalArrivalDate(LocalDate.parse("2021-01-03"))
-        withCanonicalDepartureDate(LocalDate.parse("2021-02-03"))
+        withExpectedArrivalDate(LocalDate.parse("2025-01-03"))
+        withExpectedDepartureDate(LocalDate.parse("2025-02-03"))
+        withActualArrivalDateTime(Instant.parse("2025-01-03T12:45:00.00Z"))
+        withActualDepartureDateTime(Instant.parse("2025-02-03T12:45:00.00Z"))
+        withCanonicalArrivalDate(LocalDate.parse("2025-01-03"))
+        withCanonicalDepartureDate(LocalDate.parse("2025-02-03"))
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(null)
@@ -366,12 +368,12 @@ class Cas1SpaceBookingTest {
 
       upcomingSpaceBookingWithKeyWorker = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming", tier = "U") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2023-01-01"))
-        withExpectedDepartureDate(LocalDate.parse("2023-02-01"))
+        withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
+        withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
         withActualArrivalDateTime(null)
         withActualDepartureDateTime(null)
-        withCanonicalArrivalDate(LocalDate.parse("2023-01-01"))
-        withCanonicalDepartureDate(LocalDate.parse("2023-02-01"))
+        withCanonicalArrivalDate(LocalDate.parse("2027-01-01"))
+        withCanonicalDepartureDate(LocalDate.parse("2027-02-01"))
         withKeyworkerName(keyWorker.name)
         withKeyworkerStaffCode(keyWorker.deliusStaffCode)
         withKeyworkerAssignedAt(Instant.now())
@@ -379,12 +381,12 @@ class Cas1SpaceBookingTest {
 
       upcomingCancelledSpaceBooking = createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tier = "U") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2023-01-01"))
-        withExpectedDepartureDate(LocalDate.parse("2023-02-01"))
+        withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
+        withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
         withActualArrivalDateTime(null)
         withActualDepartureDateTime(null)
-        withCanonicalArrivalDate(LocalDate.parse("2023-01-01"))
-        withCanonicalDepartureDate(LocalDate.parse("2023-02-01"))
+        withCanonicalArrivalDate(LocalDate.parse("2027-01-01"))
+        withCanonicalDepartureDate(LocalDate.parse("2027-02-01"))
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(null)
@@ -393,18 +395,44 @@ class Cas1SpaceBookingTest {
 
       nonArrivedSpaceBooking = createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tier = "A") {
         withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2024-01-02"))
-        withExpectedDepartureDate(LocalDate.parse("2024-02-02"))
+        withExpectedArrivalDate(LocalDate.parse("2028-01-02"))
+        withExpectedDepartureDate(LocalDate.parse("2028-02-02"))
         withActualArrivalDateTime(null)
         withActualDepartureDateTime(null)
-        withCanonicalArrivalDate(LocalDate.parse("2024-01-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2024-02-02"))
+        withCanonicalArrivalDate(LocalDate.parse("2028-01-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2028-02-02"))
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(Instant.now())
         withNonArrivalNotes("Non Arrival Notes")
         withNonArrivalReason(nonArrivalReason)
         withNonArrivalConfirmedAt(Instant.now())
+      }
+
+      legacySpaceBookingNoArrival = createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tier = "A") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2024-05-02"))
+        withExpectedDepartureDate(LocalDate.parse("2024-05-31"))
+        withActualArrivalDateTime(null)
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2024-05-02"))
+        withCanonicalDepartureDate(LocalDate.parse("2024-05-31"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      legacySpaceBookingNoDeparture = createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tier = "Z") {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
+        withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
+        withActualArrivalDateTime(Instant.parse("2024-05-02T12:45:00.00Z"))
+        withActualDepartureDateTime(null)
+        withCanonicalArrivalDate(LocalDate.parse("2024-05-01"))
+        withCanonicalDepartureDate(LocalDate.parse("2024-05-30"))
+        withKeyworkerName(null)
+        withKeyworkerStaffCode(null)
+        withKeyworkerAssignedAt(Instant.now())
       }
     }
 
@@ -447,13 +475,15 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
-      assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[4].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response).hasSize(8)
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[6].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -468,9 +498,11 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(2)
-      assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[1].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response).hasSize(4)
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -590,13 +622,15 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
+      assertThat(response).hasSize(8)
       assertThat(response[0].person.crn).isEqualTo("CRN_NONARRIVAL")
       assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[5].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[6].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
     }
 
     @Test
@@ -611,13 +645,15 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
-      assertThat(response[0].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[4].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response).hasSize(8)
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[6].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -650,25 +686,31 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(6)
+      assertThat(response).hasSize(8)
 
-      assertThat(response[0].tier).isEqualTo("U")
-      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[0].tier).isEqualTo("Z")
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
 
-      assertThat(response[1].tier).isEqualTo("D")
-      assertThat(response[1].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[1].tier).isEqualTo("U")
+      assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
 
-      assertThat(response[2].tier).isEqualTo("C")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].tier).isEqualTo("D")
+      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
 
-      assertThat(response[3].tier).isEqualTo("B")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[3].tier).isEqualTo("C")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
 
-      assertThat(response[4].tier).isEqualTo("A")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].tier).isEqualTo("B")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT3")
 
       assertThat(response[5].tier).isEqualTo("A")
-      assertThat(response[5].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
+
+      assertThat(response[6].tier).isEqualTo("A")
+      assertThat(response[6].person.crn).isEqualTo("CRN_NONARRIVAL")
+
+      assertThat(response[7].tier).isEqualTo("A")
+      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
     }
   }
 
