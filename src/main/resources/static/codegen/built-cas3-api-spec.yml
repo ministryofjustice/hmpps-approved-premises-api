@@ -50,6 +50,28 @@ paths:
               schema:
                 type: string
                 format: binary
+  /timeline/{assessmentId}:
+    get:
+      operationId: getTimelineEntries
+      tags:
+        - CAS3
+      summary: Returns the timeline entries for a given Assessment.
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successfully retrieved the timeline events
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReferralHistoryNote'
 components:
   responses:
     401Response:

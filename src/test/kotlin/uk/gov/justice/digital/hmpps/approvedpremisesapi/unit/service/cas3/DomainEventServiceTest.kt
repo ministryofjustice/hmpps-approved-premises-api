@@ -2236,6 +2236,16 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `getAssessmentUpdatedEvents returns CAS3_ASSESSMENT_UPDATED events`() {
+    val uuid = UUID.randomUUID()
+    every { domainEventRepositoryMock.findByAssessmentIdAndType(any(), any()) } returns emptyList()
+    domainEventService.getAssessmentUpdatedEvents(uuid)
+    verify(exactly = 1) {
+      domainEventRepositoryMock.findByAssessmentIdAndType(uuid, DomainEventType.CAS3_ASSESSMENT_UPDATED)
+    }
+  }
+
+  @Test
   fun `savePersonArrivedUpdatedEvent persists updated arrival event, but does not emit event to SNS when event is disabled`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
