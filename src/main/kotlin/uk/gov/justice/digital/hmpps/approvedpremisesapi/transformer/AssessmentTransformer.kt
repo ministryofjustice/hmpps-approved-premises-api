@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
@@ -76,10 +75,6 @@ class AssessmentTransformer(
     )
 
     is TemporaryAccommodationAssessmentEntity -> {
-      val lastReferralRejectedHistoryNote =
-        jpa.referralHistoryNotes.filter { it is AssessmentReferralHistorySystemNoteEntity && it.type == ReferralHistorySystemNoteType.REJECTED }
-          .maxByOrNull { it.createdAt }
-
       val application = applicationsTransformer.transformJpaToApi(
         jpa.application,
         personInfo,
@@ -94,7 +89,7 @@ class AssessmentTransformer(
         allocatedAt = jpa.allocatedAt?.toInstant(),
         data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
         clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-        referralHistoryNotes = getSortedReferralHistoryNotes(jpa, lastReferralRejectedHistoryNote, cas3Events),
+        referralHistoryNotes = getSortedReferralHistoryNotes(jpa, cas3Events),
         allocatedToStaffMember = jpa.allocatedToUser?.let {
           userTransformer.transformJpaToApi(
             it,
@@ -115,11 +110,14 @@ class AssessmentTransformer(
     else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
   }
 
-  private fun getSortedReferralHistoryNotes(
+  fun getSortedReferralHistoryNotes(
     jpa: TemporaryAccommodationAssessmentEntity,
-    lastReferralRejectedHistoryNote: AssessmentReferralHistoryNoteEntity?,
     cas3Events: List<DomainEventEntity>,
   ): List<ReferralHistoryNote> {
+    val lastReferralRejectedHistoryNote =
+      jpa.referralHistoryNotes.filter { it is AssessmentReferralHistorySystemNoteEntity && it.type == ReferralHistorySystemNoteType.REJECTED }
+        .maxByOrNull { it.createdAt }
+
     val notes = jpa.referralHistoryNotes.map {
       if (it.id == lastReferralRejectedHistoryNote?.id) {
         assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, jpa)
