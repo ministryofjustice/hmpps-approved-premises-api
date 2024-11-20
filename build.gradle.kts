@@ -30,7 +30,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
   implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
-  implementation("org.locationtech.jts:jts-core:1.19.0")
+  implementation("org.locationtech.jts:jts-core:1.20.0")
   implementation("org.hibernate:hibernate-spatial:6.4.4.Final")
   implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.flywaydb:flyway-core")
