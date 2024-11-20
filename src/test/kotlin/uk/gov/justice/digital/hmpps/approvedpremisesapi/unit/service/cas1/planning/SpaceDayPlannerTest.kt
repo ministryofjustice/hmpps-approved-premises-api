@@ -13,12 +13,12 @@ import java.util.UUID
 class SpaceDayPlannerTest {
 
   companion object Constants {
-    val CHARACTERISTIC_1 = Characteristic(UUID.randomUUID(), "c1", weighting = 100, singleRoom = false)
-    val CHARACTERISTIC_2 = Characteristic(UUID.randomUUID(), "c2", weighting = 100, singleRoom = false)
-    val CHARACTERISTIC_3 = Characteristic(UUID.randomUUID(), "c3", weighting = 100, singleRoom = false)
-    val CHARACTERISTIC_4 = Characteristic(UUID.randomUUID(), "c4", weighting = 100, singleRoom = false)
-    val CHARACTERISTIC_5_WEIGHTING_1000 = Characteristic(UUID.randomUUID(), "c5", weighting = 1000, singleRoom = false)
-    val CHARACTERISTIC_SINGLE_ROOM = Characteristic(UUID.randomUUID(), "single", weighting = 100, singleRoom = true)
+    val CHARACTERISTIC_1 = Characteristic("c1", "c1", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_2 = Characteristic("c2", "c2", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_3 = Characteristic("c3", "c3", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_4 = Characteristic("c4", "c4", weighting = 100, singleRoom = false)
+    val CHARACTERISTIC_5_WEIGHTING_1000 = Characteristic("c5", "c5", weighting = 1000, singleRoom = false)
+    val CHARACTERISTIC_SINGLE_ROOM = Characteristic("single", "single", weighting = 100, singleRoom = true)
   }
 
   val service = SpaceBookingDayPlanner()

@@ -4,8 +4,8 @@ import java.time.LocalDate
 import java.util.UUID
 
 data class Characteristic(
-  val id: UUID,
   val label: String,
+  val propertyName: String,
   val weighting: Int,
   val singleRoom: Boolean,
 )
