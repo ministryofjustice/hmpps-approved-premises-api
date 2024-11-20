@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -36,18 +37,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class PlacementRequestDetailTransformerTest {
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
   private val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
+  private val mockCas1SpaceBookingSummaryTransformer = mockk<Cas1SpaceBookingSummaryTransformer>()
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
 
   private val placementRequestDetailTransformer = PlacementRequestDetailTransformer(
     mockPlacementRequestTransformer,
     mockCancellationTransformer,
     mockBookingSummaryTransformer,
+    mockCas1SpaceBookingSummaryTransformer,
     mockApplicationsTransformer,
   )
 
@@ -76,6 +81,7 @@ class PlacementRequestDetailTransformerTest {
     val transformedPlacementRequest = getTransformedPlacementRequest()
 
     every { mockPlacementRequestEntity.booking } returns null
+    every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
     every { mockPlacementRequestEntity.isParole } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
     every { mockPlacementRequestEntity.isWithdrawn } returns true
@@ -147,6 +153,29 @@ class PlacementRequestDetailTransformerTest {
   }
 
   @Test
+  fun `Booking is set if linked space booking is active`() {
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .produce()
+
+    val transformedPlacementRequest = getTransformedPlacementRequest()
+
+    every { mockPlacementRequestEntity.booking } returns null
+    every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf(spaceBooking)
+    every { mockPlacementRequestEntity.isParole } returns false
+    every { mockPlacementRequestEntity.isWithdrawn } returns false
+    every { mockPlacementRequestEntity.application } returns mockApplicationEntity
+
+    every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
+    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
+    every { mockCas1SpaceBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns mockBookingSummary
+    every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockPersonInfoResult) } returns mockApplication
+
+    val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
+
+    assertThat(result.booking).isEqualTo(mockBookingSummary)
+  }
+
+  @Test
   fun `booking is null if linked booking is cancelled`() {
     val booking = BookingEntityFactory()
       .withDefaults()
@@ -157,6 +186,7 @@ class PlacementRequestDetailTransformerTest {
     val transformedPlacementRequest = getTransformedPlacementRequest()
 
     every { mockPlacementRequestEntity.booking } returns booking
+    every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
     every { mockPlacementRequestEntity.isParole } returns false
     every { mockPlacementRequestEntity.isWithdrawn } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
@@ -164,6 +194,30 @@ class PlacementRequestDetailTransformerTest {
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
     every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
+    every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockPersonInfoResult) } returns mockApplication
+
+    val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
+
+    assertThat(result.booking).isNull()
+  }
+
+  @Test
+  fun `booking is null if linked space booking is cancelled`() {
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withCancellationOccurredAt(LocalDate.now())
+      .produce()
+
+    val transformedPlacementRequest = getTransformedPlacementRequest()
+
+    every { mockPlacementRequestEntity.booking } returns null
+    every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf(spaceBooking)
+    every { mockPlacementRequestEntity.isParole } returns false
+    every { mockPlacementRequestEntity.isWithdrawn } returns false
+    every { mockPlacementRequestEntity.application } returns mockApplicationEntity
+
+    every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
+    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
+    every { mockCas1SpaceBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns mockBookingSummary
     every { mockApplicationsTransformer.transformJpaToApi(mockApplicationEntity, mockPersonInfoResult) } returns mockApplication
 
     val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
@@ -224,6 +278,7 @@ class PlacementRequestDetailTransformerTest {
       mockAssessmentTransformer,
       mockUserTransformer,
       mockBookingSummaryTransformer,
+      mockCas1SpaceBookingSummaryTransformer,
     )
 
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecision.accepted

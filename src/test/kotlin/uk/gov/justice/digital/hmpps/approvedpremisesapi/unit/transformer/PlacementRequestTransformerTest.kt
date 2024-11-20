@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -56,6 +57,7 @@ class PlacementRequestTransformerTest {
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
+  private val mockCas1SpaceBookingSummaryTransformer = mockk<Cas1SpaceBookingSummaryTransformer>()
 
   private val placementRequestTransformer = PlacementRequestTransformer(
     mockPersonTransformer,
@@ -63,6 +65,7 @@ class PlacementRequestTransformerTest {
     mockAssessmentTransformer,
     mockUserTransformer,
     mockBookingSummaryTransformer,
+    mockCas1SpaceBookingSummaryTransformer,
   )
 
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()

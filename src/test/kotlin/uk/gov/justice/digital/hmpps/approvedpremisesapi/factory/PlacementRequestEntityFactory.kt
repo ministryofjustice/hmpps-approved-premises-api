@@ -63,6 +63,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.booking = { BookingEntityFactory().apply(configuration).produce() }
   }
 
+  fun withSpaceBookings(bookings: MutableList<Cas1SpaceBookingEntity>) = apply {
+    this.spaceBookings = { bookings }
+  }
+
   fun withApplication(application: ApprovedPremisesApplicationEntity) = apply {
     this.application = { application }
   }

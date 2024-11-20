@@ -90,6 +90,15 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
             WHERE
               bnm.placement_request_id = pq.id
           ) THEN 'unableToMatch'
+          WHEN EXISTS (
+            SELECT 
+                1 
+            FROM 
+                cas1_space_bookings sb 
+            WHERE
+                sb.placement_request_id = pq.id AND
+                sb.cancellation_occurred_at IS NULL
+          ) THEN 'matched'    
           ELSE 'notMatched'
         END
       ) = :status)
