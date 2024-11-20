@@ -16,7 +16,7 @@ class SpaceBookingDayPlanner {
    * Or is the goal to minimise shared rooms? What's more important, minimising characteristic surplus, or
    * minimising single bookings into room with the least other beds?
    *
-   * Planning goals:
+   * Planning goals, in order:
    *
    * <ol>
    *   <li>Priority is given to bookings with constraints, those with the most constraints being planned first</li>
@@ -25,6 +25,8 @@ class SpaceBookingDayPlanner {
    *   <li>If there are multiple competing rooms (after above goals are satisfied), single occupancy bookings will
    *   be placed into rooms with the least beds (ensuring minimum 'wastage' in these scenarios)</li>
    * </ol>
+   *
+   * Note that the 2nd and 4th goals may cause some unexpected outcomes based upon the order they run
    *
    * @param availableBeds All beds available on the day being planned (i.e. won't include out of service beds or beds inactive according to start/end date)
    * @param bookings All required bookings on the day being planned. The code assumes that the premise level characteristics have already been met
@@ -43,13 +45,10 @@ class SpaceBookingDayPlanner {
       .toMutableList()
 
     sortedBookings.forEach { booking ->
-      val requiresSingleRoom = booking.requiredRoomCharacteristics.any { it.singleRoom }
-      val characteristicsExcludingSingleRoom = booking.requiredRoomCharacteristics.filter { !it.singleRoom }.toSet()
-
       when (
         val findResult = bedLedger.findBed(
-          characteristics = characteristicsExcludingSingleRoom,
-          requiresSingleRoom = requiresSingleRoom,
+          characteristics = booking.requiredRoomCharacteristicsExcludingSingle().toSet(),
+          requiresSingleRoom = booking.requiresSingleRoom(),
         )
       ) {
         is FindBedResult.BedsFound -> {
@@ -108,7 +107,7 @@ private class BedLedger(initialState: Set<Bed>) {
     requiresSingleRoom: Boolean,
   ): List<Bed> {
     val bedsWithMatchingCharacteristics = availableBeds
-      .filter { availableBed -> availableBed.room.characteristics.containsAll(characteristics) }
+      .filter { availableBed -> availableBed.room.characteristicsExcludingSingle().containsAll(characteristics) }
 
     return if (requiresSingleRoom) {
       bedsWithMatchingCharacteristics
@@ -121,7 +120,12 @@ private class BedLedger(initialState: Set<Bed>) {
 
   private fun findBedWithLeastSurplusCharacteristics(beds: List<Bed>, characteristics: Set<Characteristic>) =
     beds
-      .map { bed -> Pair(bed, bed.room.characteristics.minus(characteristics).size) }
+      .map { bed ->
+        Pair(
+          bed,
+          bed.room.characteristicsExcludingSingle().minus(characteristics).size,
+        )
+      }
       .minByOrNull { it.second }?.first
 
   fun reserve(bed: Bed) {

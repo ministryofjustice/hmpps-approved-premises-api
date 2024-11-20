@@ -32,10 +32,15 @@ data class Room(
   val id: UUID,
   val label: String,
   val characteristics: Set<Characteristic>,
-)
+) {
+  fun characteristicsExcludingSingle() = characteristics.filter { !it.singleRoom }
+}
 
 data class SpaceBooking(
   val id: UUID,
   val label: String,
   val requiredRoomCharacteristics: Set<Characteristic>,
-)
+) {
+  fun requiresSingleRoom() = requiredRoomCharacteristics.any { it.singleRoom }
+  fun requiredRoomCharacteristicsExcludingSingle() = requiredRoomCharacteristics.filter { !it.singleRoom }
+}
