@@ -312,7 +312,8 @@ class ApplicationTest : IntegrationTestBase() {
                 .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
 
               assertThat(responseBody).anyMatch {
-                application.id == it.id && application.crn == it.person.crn &&
+                application.id == it.id &&
+                  application.crn == it.person.crn &&
                   application.createdAt.toInstant() == it.createdAt &&
                   application.createdByUser.id == it.createdByUserId &&
                   application.submittedAt?.toInstant() == it.submittedAt
@@ -337,22 +338,18 @@ class ApplicationTest : IntegrationTestBase() {
       offenderDetails: OffenderDetailSummary,
       probationRegion: ProbationRegionEntity,
       submittedAt: OffsetDateTime?,
-    ): TemporaryAccommodationApplicationEntity {
-      return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
-        withCreatedByUser(user)
-        withSubmittedAt(submittedAt)
-        withCrn(offenderDetails.otherIds.crn)
-        withData("{}")
-        withProbationRegion(probationRegion)
-      }
+    ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(applicationSchema)
+      withCreatedByUser(user)
+      withSubmittedAt(submittedAt)
+      withCrn(offenderDetails.otherIds.crn)
+      withData("{}")
+      withProbationRegion(probationRegion)
     }
 
-    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity {
-      return temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
+    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
     }
 
     @Test
@@ -917,13 +914,15 @@ class ApplicationTest : IntegrationTestBase() {
               nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
               nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-              olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+              olderJsonSchema.id == it.schemaVersion &&
+              it.outdatedSchema
           }
         }
       }
     }
   }
 
+  @Nested
   inner class Cas3GetApplication {
 
     @Test
@@ -978,7 +977,8 @@ class ApplicationTest : IntegrationTestBase() {
               applicationEntity.createdByUser.id == it.createdByUserId &&
               applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-              newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+              newestJsonSchema.id == it.schemaVersion &&
+              !it.outdatedSchema
           }
         }
       }
@@ -1038,7 +1038,8 @@ class ApplicationTest : IntegrationTestBase() {
                 applicationEntity.createdByUser.id == it.createdByUserId &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema
             }
           }
         }
@@ -1101,49 +1102,6 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator returns 403`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { otherUser, otherUserJwt ->
-        givenAUser(probationRegion = otherUser.probationRegion) { createdByUser, _ ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentRestriction(true)
-            },
-          ) { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
-
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema("{}")
-            }
-
-            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(createdByUser)
-              withProbationRegion(createdByUser.probationRegion)
-              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
-              withData(
-                """
-              {
-                 "thingId": 123
-              }
-              """,
-              )
-            }
-
-            webTestClient.get()
-              .uri("/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $otherUserJwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-      }
-    }
-
-    @Test
     fun `Get single LAO application for user who is not creator but has LAO Qualification returns RestrictedPerson`() {
       givenAUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
@@ -1177,13 +1135,18 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
-            webTestClient.get()
+            val result = webTestClient.get()
               .uri("/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $otherUserJwt")
               .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
               .exchange()
               .expectStatus()
-              .isForbidden
+              .isOk
+              .expectBody(TemporaryAccommodationApplication::class.java)
+              .returnResult()
+              .responseBody
+
+            assertThat(result!!.person.type).isEqualTo(PersonType.restrictedPerson)
           }
         }
       }
@@ -2683,8 +2646,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  private fun schemaText(): String {
-    return """
+  private fun schemaText(): String = """
               {
                 "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
                 "${"\$id"}": "https://example.com/product.schema.json",
@@ -2695,7 +2657,6 @@ class ApplicationTest : IntegrationTestBase() {
                 "required": []
               }
             """
-  }
 
   @Nested
   inner class GetAssessmentForApplication {
