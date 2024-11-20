@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.TimelineCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService
@@ -20,10 +21,14 @@ class Cas3TimelineController(
 ) : TimelineCas3Delegate {
   override fun getTimelineEntries(assessmentId: java.util.UUID): ResponseEntity<List<ReferralHistoryNote>> {
     val user = userService.getUserForRequest()
-    val assessmentResult = assessmentService.getAssessmentAndValidate(user, assessmentId)
+    val assessmentResult = assessmentService.getAssessmentAndValidate(user, assessmentId, forTimeline = true)
     val assessment = extractEntityFromCasResult(assessmentResult) as TemporaryAccommodationAssessmentEntity
     val domainEventNotes = domainEventService.getAssessmentUpdatedEvents(assessmentId = assessment.id)
-    val timelineEntries = assessmentTransformer.getSortedReferralHistoryNotes(assessment, domainEventNotes)
+    val timelineEntries = assessmentTransformer.getSortedReferralHistoryNotes(
+      assessment,
+      domainEventNotes,
+      includeUserNotes = user.hasAnyRole(UserRole.CAS3_ASSESSOR),
+    )
 
     return ResponseEntity.ok(timelineEntries)
   }

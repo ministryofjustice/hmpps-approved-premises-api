@@ -46,7 +46,7 @@ class Cas3TimelineTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `all Timeline entries returned with CAS3_ASSESSOR ROLE`() {
+  fun `getTimelineEvents call with CAS3_ASSESSOR ROLE returns all Timeline entries`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
 
@@ -67,13 +67,13 @@ class Cas3TimelineTest : IntegrationTestBase() {
           .responseBody!!
 
         assertThat(response.size).isEqualTo(9)
+        assertThat(response.map { it.type }).containsOnly("system", "domainEvent", "user")
       }
     }
   }
 
   @Test
-  fun `forbidden returned with CAS3_REFERRER ROLE`() {
-    // this test will change with a following ticket
+  fun `getTimelineEvents returns no user notes with CAS3_REFERRER ROLE`() {
     givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
 
@@ -85,12 +85,17 @@ class Cas3TimelineTest : IntegrationTestBase() {
 
         assessment.schemaUpToDate = true
 
-        webTestClient.get()
+        val result = webTestClient.get()
           .uri("/cas3/timeline/${assessment.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
-          .expectStatus()
-          .isForbidden
+          .expectBodyList(ReferralHistoryNote::class.java)
+          .returnResult()
+          .responseBody!!
+
+        assertThat(result.size).isEqualTo(7)
+        assertThat(result.map { it.type }).doesNotContain("user")
+        assertThat(result.map { it.type }).containsOnly("system", "domainEvent")
       }
     }
   }
