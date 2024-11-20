@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -23,7 +24,11 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
+/**
+ * Because the [SpacePlanningService] is mostly 'glue' code between the database and the [SpacePlanningModelsFactory],
+ * it is exclusively tested using integration tests
+ */
+class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
 
   @Autowired
   lateinit var spacePlanner: SpacePlanningService
@@ -49,6 +54,7 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
       withCharacteristics(
         findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
         findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+        findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
       )
     }.apply { premises.rooms.add(this) }
     room1.beds.add(
@@ -58,7 +64,12 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
       },
     )
 
-    val room2 = roomEntityFactory.produceAndPersist { withPremises(premises) }.apply { premises.rooms.add(this) }
+    val room2 = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCharacteristics(
+        findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
+      )
+    }.apply { premises.rooms.add(this) }
     room2.beds.add(
       bedEntityFactory.produceAndPersist {
         withName("Room 2 - Bed 1")
@@ -95,8 +106,8 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
         withCreatedBy(givenAUser().first)
         withOutOfServiceBed(this@apply)
-        withStartDate(LocalDate.of(2020, 5, 7))
-        withEndDate(LocalDate.of(2020, 5, 8))
+        withStartDate(date(2020, 5, 7))
+        withEndDate(date(2020, 5, 8))
         withReason(
           cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
             withName("refurb")
@@ -108,15 +119,15 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
     room3.beds.add(
       bedEntityFactory.produceAndPersist {
         withName("Room 3 - Bed 4")
-        withEndDate(LocalDate.of(2020, 5, 8))
+        withEndDate(date(2020, 5, 8))
         withYieldedRoom { room3 }
       },
     )
 
     createSpaceBooking(crn = "CRN1") {
       withPremises(premises)
-      withCanonicalArrivalDate(LocalDate.of(2020, 5, 4))
-      withCanonicalDepartureDate(LocalDate.of(2020, 5, 11))
+      withCanonicalArrivalDate(date(2020, 5, 4))
+      withCanonicalDepartureDate(date(2020, 5, 11))
       withCriteria(
         findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
       )
@@ -124,14 +135,14 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
 
     createSpaceBooking(crn = "CRN2") {
       withPremises(premises)
-      withCanonicalArrivalDate(LocalDate.of(2020, 5, 6))
-      withCanonicalDepartureDate(LocalDate.of(2020, 5, 9))
+      withCanonicalArrivalDate(date(2020, 5, 6))
+      withCanonicalDepartureDate(date(2020, 5, 9))
     }
 
     createSpaceBooking(crn = "CRN3") {
       withPremises(premises)
-      withCanonicalArrivalDate(LocalDate.of(2020, 5, 7))
-      withCanonicalDepartureDate(LocalDate.of(2020, 5, 20))
+      withCanonicalArrivalDate(date(2020, 5, 7))
+      withCanonicalDepartureDate(date(2020, 5, 20))
       withCriteria(
         findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
       )
@@ -139,8 +150,8 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
 
     createSpaceBooking(crn = "CRN4") {
       withPremises(premises)
-      withCanonicalArrivalDate(LocalDate.of(2020, 5, 1))
-      withCanonicalDepartureDate(LocalDate.of(2020, 5, 29))
+      withCanonicalArrivalDate(date(2020, 5, 1))
+      withCanonicalDepartureDate(date(2020, 5, 29))
       withCriteria(
         findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
       )
@@ -148,8 +159,8 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
 
     createSpaceBooking(crn = "CRN5") {
       withPremises(premises)
-      withCanonicalArrivalDate(LocalDate.of(2020, 5, 1))
-      withCanonicalDepartureDate(LocalDate.of(2020, 5, 9))
+      withCanonicalArrivalDate(date(2020, 5, 1))
+      withCanonicalDepartureDate(date(2020, 5, 9))
       withCriteria(
         findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
         findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
@@ -158,12 +169,12 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `multi day planning is correct`() {
+  fun plan() {
     val criteria = SpacePlanningService.PlanCriteria(
       premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
       range = DateRange(
-        fromInclusive = LocalDate.of(2020, 5, 6),
-        toInclusive = LocalDate.of(2020, 5, 10),
+        fromInclusive = date(2020, 5, 6),
+        toInclusive = date(2020, 5, 10),
       ),
     )
 
@@ -183,8 +194,8 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
       
       | Room (6)             | **2020-05-06**<br/>capacity: 6<br/>planned: 3<br/>unplanned: 1         | **2020-05-07**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 2         | **2020-05-08**<br/>capacity: 4<br/>planned: 3<br/>unplanned: 2         | **2020-05-09**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 0         | **2020-05-10**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 0         |
       | -------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-      | **Room 1 - Bed 1**<br/>hasEnSuite<br/>isArsonSuitable | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)                     |
-      | **Room 2 - Bed 1**   | **CRN4**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               | **CRN3**<br/>isSingle(b)                                               |
+      | **Room 1 - Bed 1**<br/>hasEnSuite<br/>isArsonSuitable<br/>isSingle | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     |
+      | **Room 2 - Bed 1**<br/>isSingle | **CRN4**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              |
       | **Room 3 - Bed 1**   | **CRN2**                                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
       | **Room 3 - Bed 2**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
       | **Room 3 - Bed 3**   |                                                                        | OOSB refurb                                                            | OOSB refurb                                                            | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
@@ -193,6 +204,8 @@ class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
       """.trimIndent(),
     )
   }
+
+  private fun date(year: Int, month: Int, day: Int) = LocalDate.of(year, month, day)
 
   private fun createSpaceBooking(
     crn: String,
