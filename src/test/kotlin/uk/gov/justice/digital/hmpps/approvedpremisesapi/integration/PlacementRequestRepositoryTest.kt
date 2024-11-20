@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import java.time.LocalDate
@@ -62,8 +63,10 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
   @Nested
   inner class AllForDashboard {
     private lateinit var placementRequestsWithBooking: List<PlacementRequestEntity>
+    private lateinit var placementRequestsWithSpaceBooking: List<PlacementRequestEntity>
     private lateinit var placementRequestsWithNoBooking: List<PlacementRequestEntity>
     private lateinit var placementRequestsWithACancelledBooking: List<PlacementRequestEntity>
+    private lateinit var placementRequestsWithACancelledSpaceBooking: List<PlacementRequestEntity>
     private lateinit var placementRequestsWithABookingNotMade: List<PlacementRequestEntity>
 
     private lateinit var expectedNotMatchedPlacementRequests: List<PlacementRequestEntity>
@@ -85,6 +88,8 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
         withRoom(room)
       }
 
+      val (user) = givenAUser()
+
       placementRequestsWithNoBooking = createPlacementRequests(4, isWithdrawn = false, isReallocated = false, isParole = true)
 
       placementRequestsWithBooking = createPlacementRequests(4, isWithdrawn = false, isReallocated = false, isParole = false)
@@ -95,6 +100,18 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
         }
 
         realPlacementRequestRepository.save(it)
+      }
+
+      placementRequestsWithSpaceBooking = createPlacementRequests(4, isWithdrawn = false, isReallocated = false, isParole = false)
+      placementRequestsWithSpaceBooking.forEach {
+        it.spaceBookings.add(
+          cas1SpaceBookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withPlacementRequest(it)
+            withApplication(it.application)
+            withCreatedBy(user)
+          },
+        )
       }
 
       placementRequestsWithACancelledBooking = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = false)
@@ -113,6 +130,19 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
         }
       }
 
+      placementRequestsWithACancelledSpaceBooking = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = false)
+      placementRequestsWithACancelledSpaceBooking.forEach {
+        it.spaceBookings.add(
+          cas1SpaceBookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withPlacementRequest(it)
+            withApplication(it.application)
+            withCreatedBy(user)
+            withCancellationOccurredAt(LocalDate.now())
+          },
+        )
+      }
+
       placementRequestsWithABookingNotMade = createPlacementRequests(3, isWithdrawn = false, isReallocated = false, isParole = true)
       placementRequestsWithABookingNotMade.forEach {
         bookingNotMadeFactory.produceAndPersist {
@@ -120,7 +150,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
         }
       }
 
-      expectedNotMatchedPlacementRequests = listOf(placementRequestsWithNoBooking, placementRequestsWithACancelledBooking).flatten()
+      expectedNotMatchedPlacementRequests = listOf(placementRequestsWithNoBooking, placementRequestsWithACancelledBooking, placementRequestsWithACancelledSpaceBooking).flatten()
     }
 
     @Test
@@ -129,7 +159,9 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched.name)
       val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch.name)
 
-      assertThat(matchedPlacementRequests.content.map { it.id }).isEqualTo(placementRequestsWithBooking.map { it.id })
+      assertThat(matchedPlacementRequests.content.map { it.id }).isEqualTo(
+        (placementRequestsWithBooking + placementRequestsWithSpaceBooking).map { it.id },
+      )
       assertThat(notMatchedPlacementRequests.content.map { it.id }).isEqualTo(expectedNotMatchedPlacementRequests.map { it.id })
       assertThat(unableToMatchPlacementRequests.content.map { it.id }).isEqualTo(placementRequestsWithABookingNotMade.map { it.id })
     }
@@ -151,7 +183,14 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val pageable = PageRequest.of(0, 20, Sort.by("created_at"))
       val allPlacementRequests = realPlacementRequestRepository.allForDashboard(pageable = pageable)
 
-      val allPlacementRequestsToExpect = (placementRequestsWithBooking + placementRequestsWithNoBooking + placementRequestsWithACancelledBooking + placementRequestsWithABookingNotMade)
+      val allPlacementRequestsToExpect = (
+        placementRequestsWithBooking +
+          placementRequestsWithSpaceBooking +
+          placementRequestsWithNoBooking +
+          placementRequestsWithACancelledBooking +
+          placementRequestsWithACancelledSpaceBooking +
+          placementRequestsWithABookingNotMade
+        )
         .sortedBy { it.createdAt }
 
       assertThat(allPlacementRequests.content.map { it.id }).isEqualTo(allPlacementRequestsToExpect.map { it.id })
@@ -206,7 +245,14 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val pageable = PageRequest.of(0, 20, Sort.by("application_date"))
       val allPlacementRequests = realPlacementRequestRepository.allForDashboard(pageable = pageable)
 
-      val allPlacementRequestsToExpect = (placementRequestsWithNoBooking + placementRequestsWithABookingNotMade + placementRequestsWithBooking + placementRequestsWithACancelledBooking)
+      val allPlacementRequestsToExpect = (
+        placementRequestsWithNoBooking +
+          placementRequestsWithABookingNotMade +
+          placementRequestsWithBooking +
+          placementRequestsWithSpaceBooking +
+          placementRequestsWithACancelledBooking +
+          placementRequestsWithACancelledSpaceBooking
+        )
         .sortedBy { it.application.createdAt }
 
       assertThat(allPlacementRequests.content.map { it.id }).isEqualTo(allPlacementRequestsToExpect.map { it.id })

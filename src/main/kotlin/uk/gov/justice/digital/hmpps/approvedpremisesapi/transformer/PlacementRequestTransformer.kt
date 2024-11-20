@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 
 @Component
 class PlacementRequestTransformer(
@@ -24,9 +25,13 @@ class PlacementRequestTransformer(
   private val assessmentTransformer: AssessmentTransformer,
   private val userTransformer: UserTransformer,
   bookingSummaryTransformer: BookingSummaryTransformer,
+  cas1SpaceBookingSummaryTransformer: Cas1SpaceBookingSummaryTransformer,
 ) {
 
-  val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummaryTransformer(bookingSummaryTransformer)
+  val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummaryTransformer(
+    bookingSummaryTransformer,
+    cas1SpaceBookingSummaryTransformer,
+  )
 
   fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest {
     return PlacementRequest(
