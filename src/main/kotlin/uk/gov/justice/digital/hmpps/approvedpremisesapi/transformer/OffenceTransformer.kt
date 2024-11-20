@@ -22,7 +22,7 @@ class OffenceTransformer {
     ActiveOffence(
       deliusEventNumber = it.eventNumber,
       offenceDescription = it.description,
-      offenceId = it.id.toString(),
+      offenceId = it.id,
       convictionId = it.eventId,
       offenceDate = it.date,
     )

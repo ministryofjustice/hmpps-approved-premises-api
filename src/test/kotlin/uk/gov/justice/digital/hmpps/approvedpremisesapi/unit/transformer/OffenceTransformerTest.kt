@@ -63,7 +63,7 @@ class OffenceTransformerTest {
       .withOffences(
         listOf(
           OffenceFactory()
-            .withOffenceId("1")
+            .withOffenceId("M1")
             .withMainCategoryDescription("A Description")
             .withSubCategoryDescription("A Description")
             .withOffenceDate(LocalDateTime.parse("2022-12-06T00:00:00"))
@@ -76,7 +76,7 @@ class OffenceTransformerTest {
       ActiveOffence(
         deliusEventNumber = "5",
         offenceDescription = "A Description",
-        offenceId = "1",
+        offenceId = "M1",
         convictionId = 12345,
         offenceDate = LocalDate.parse("2022-12-06"),
       ),
@@ -89,14 +89,14 @@ class OffenceTransformerTest {
       .withOffences(
         listOf(
           CaseDetailOffenceFactory()
-            .withId(10)
+            .withId("M10")
             .withDescription("A first offence")
             .withDate(LocalDate.parse("2024-11-01"))
             .withEventNumber("20")
             .withEventId(30)
             .produce(),
           CaseDetailOffenceFactory()
-            .withId(100)
+            .withId("A100")
             .withDescription("A second offence")
             .withDate(LocalDate.parse("2024-11-11"))
             .withEventNumber("200")
@@ -110,14 +110,14 @@ class OffenceTransformerTest {
       ActiveOffence(
         deliusEventNumber = "20",
         offenceDescription = "A first offence",
-        offenceId = "10",
+        offenceId = "M10",
         convictionId = 30,
         offenceDate = LocalDate.parse("2024-11-01"),
       ),
       ActiveOffence(
         deliusEventNumber = "200",
         offenceDescription = "A second offence",
-        offenceId = "100",
+        offenceId = "A100",
         convictionId = 300,
         offenceDate = LocalDate.parse("2024-11-11"),
       ),

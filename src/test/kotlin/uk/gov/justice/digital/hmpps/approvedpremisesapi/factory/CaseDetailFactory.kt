@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Regi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -49,14 +50,14 @@ class CaseDetailFactory : Factory<CaseDetail> {
 }
 
 class CaseDetailOffenceFactory : Factory<Offence> {
-  var id: Yielded<Long> = { randomLong() }
+  var id: Yielded<String> = { randomStringMultiCaseWithNumbers(9) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
   var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
   var eventId: Yielded<Long> = { randomLong() }
 
-  fun withId(id: Long) = apply {
+  fun withId(id: String) = apply {
     this.id = { id }
   }
 
