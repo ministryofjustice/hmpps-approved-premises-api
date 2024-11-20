@@ -148,7 +148,7 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
           .withOffences(
             listOf(
               CaseDetailOffenceFactory()
-                .withId(1)
+                .withId("M1")
                 .withDescription("Test Offence 1")
                 .withDate(LocalDate.now().minusMonths(1))
                 .withEventNumber("123")

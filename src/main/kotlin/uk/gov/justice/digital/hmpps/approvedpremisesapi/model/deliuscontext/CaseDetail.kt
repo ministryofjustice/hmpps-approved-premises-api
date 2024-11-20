@@ -62,7 +62,7 @@ data class Profile(
 )
 
 data class Offence(
-  val id: Long,
+  val id: String,
   val description: String,
   val date: LocalDate?,
   val main: Boolean,
