@@ -64,7 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.nio.file.Path
@@ -248,7 +248,7 @@ class SeedService(
 
         SeedFileType.approvedPremisesSpacePlanningDryRun -> Cas1PlanSpacePlanningDryRunSeedJob(
           filename,
-          getBean(SpacePlanner::class),
+          getBean(SpacePlanningService::class),
           getBean(Cas1PremisesService::class),
         )
       }

@@ -14,16 +14,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
+class SpacePlanningTest : InitialiseDatabasePerClassTestBase() {
 
   @Autowired
-  lateinit var spacePlanner: SpacePlanner
+  lateinit var spacePlanner: SpacePlanningService
 
   private fun findCharacteristic(propertyName: String) =
     characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
@@ -150,10 +151,12 @@ class SpacePlannerTest : InitialiseDatabasePerClassTestBase() {
       )
     }
 
-    val criteria = SpacePlanner.PlanCriteria(
+    val criteria = SpacePlanningService.PlanCriteria(
       premises = premises,
-      startDate = LocalDate.of(2020, 5, 6),
-      endDate = LocalDate.of(2020, 5, 10),
+      range = DateRange(
+        fromInclusive = LocalDate.of(2020, 5, 6),
+        toInclusive = LocalDate.of(2020, 5, 10),
+      ),
     )
 
     val plan = spacePlanner.plan(criteria)

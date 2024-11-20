@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer.CONSTANTS.DAY_COL_WIDTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer.CONSTANTS.ROOM_COL_WIDTH
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner.SpaceDayPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner.SpacePlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.SpaceDayPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.SpacePlan
 
 /**
  * We render results in markdown because it's user readable and also easy to format into a neat table using IDE tools,
@@ -18,13 +18,13 @@ object SpacePlanRenderer {
 
   @SuppressWarnings("MagicNumber")
   fun render(
-    criteria: SpacePlanner.PlanCriteria,
+    criteria: SpacePlanningService.PlanCriteria,
     plan: SpacePlan,
   ): String {
     val output = StringBuilder()
     val premises = criteria.premises
 
-    output.appendLine("Space Plan for ${premises.name} (${premises.id}) from ${criteria.startDate} to ${criteria.endDate}")
+    output.appendLine("Space Plan for ${premises.name} (${premises.id}) from ${criteria.range.fromInclusive} to ${criteria.range.toInclusive}")
     output.appendLine()
 
     val daysWithUnplannedBookings = plan.dayPlans.filter { it.planningResult.unplanned.isNotEmpty() }
