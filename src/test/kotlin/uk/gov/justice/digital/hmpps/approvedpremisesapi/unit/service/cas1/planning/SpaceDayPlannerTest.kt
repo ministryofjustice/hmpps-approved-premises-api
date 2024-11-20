@@ -408,6 +408,36 @@ class SpaceDayPlannerTest {
     )
   }
 
+  @Test
+  fun `Booking requiring a single room is put into a room with single room characteristic vs room with no characteristics`() {
+    val booking2 = booking("booking1", requiredCharacteristics = setOf(CHARACTERISTIC_SINGLE_ROOM))
+
+    val room1 = Room(UUID.randomUUID(), "room1", characteristics = setOf())
+    val room1Bed1 = bed("room1 bed1", room = room1)
+    val room1Bed2 = bed("room1 bed2", room = room1)
+    val room1Bed3 = bed("room1 bed3", room = room1)
+
+    val room2 = Room(UUID.randomUUID(), "room2", characteristics = setOf(CHARACTERISTIC_SINGLE_ROOM))
+    val room2Bed1 = bed("room2 bed1", room = room2)
+
+    assertPlanningOutcome(
+      beds = setOf(room1Bed1, room1Bed2, room1Bed3, room2Bed1),
+      bookings = setOf(booking2),
+      expected = """
+      Planned: 1
+    
+      | Bed             | Booking         | Characteristics                |
+      | --------------- | --------------- | ------------------------------ |
+      | room1 bed1      |                 |                                |
+      | room1 bed2      |                 |                                |
+      | room1 bed3      |                 |                                |
+      | room2 bed1      | booking1        | single(rb)                     |
+      
+      Unplanned: 0
+      """,
+    )
+  }
+
   private fun assertPlanningOutcome(
     beds: Set<Bed>,
     bookings: Set<SpaceBooking>,
