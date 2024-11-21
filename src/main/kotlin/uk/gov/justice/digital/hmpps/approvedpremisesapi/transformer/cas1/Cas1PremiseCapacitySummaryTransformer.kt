@@ -30,7 +30,7 @@ class Cas1PremiseCapacitySummaryTransformer {
   private fun SpacePlanningService.PremiseCharacteristicAvailability.toApiType() =
     Cas1PremiseCharacteristicAvailability(
       characteristic = Cas1SpaceCharacteristic.entries.first { it.value == this.characteristicPropertyName },
-      capacity = capacity,
-      available = available,
+      availableBedsCount = availableBedsCount,
+      bookingsCount = bookingsCount,
     )
 }

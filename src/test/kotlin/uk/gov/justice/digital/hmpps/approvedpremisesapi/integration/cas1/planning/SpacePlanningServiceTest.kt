@@ -226,12 +226,12 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
     assertThat(day1Capacity.availableBedCount).isEqualTo(6)
 
     assertThat(day1Capacity.characteristicAvailability).containsExactly(
-      PremiseCharacteristicAvailability("isArsonSuitable", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("hasEnSuite", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("isSingle", capacity = 2, available = 1),
-      PremiseCharacteristicAvailability("isStepFreeDesignated", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isSuitedForSexOffenders", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isWheelchairDesignated", capacity = 0, available = -1),
+      PremiseCharacteristicAvailability("isArsonSuitable", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("hasEnSuite", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("isSingle", availableBedsCount = 2, bookingsCount = 1),
+      PremiseCharacteristicAvailability("isStepFreeDesignated", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isSuitedForSexOffenders", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isWheelchairDesignated", availableBedsCount = 0, bookingsCount = 1),
     )
 
     val day2Capacity = capacity.byDay[1]
@@ -241,12 +241,12 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
     assertThat(day2Capacity.availableBedCount).isEqualTo(5)
 
     assertThat(day2Capacity.characteristicAvailability).containsExactly(
-      PremiseCharacteristicAvailability("isArsonSuitable", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("hasEnSuite", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("isSingle", capacity = 2, available = 0),
-      PremiseCharacteristicAvailability("isStepFreeDesignated", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isSuitedForSexOffenders", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isWheelchairDesignated", capacity = 0, available = -1),
+      PremiseCharacteristicAvailability("isArsonSuitable", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("hasEnSuite", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("isSingle", availableBedsCount = 2, bookingsCount = 2),
+      PremiseCharacteristicAvailability("isStepFreeDesignated", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isSuitedForSexOffenders", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isWheelchairDesignated", availableBedsCount = 0, bookingsCount = 1),
     )
 
     val day3Capacity = capacity.byDay[2]
@@ -256,12 +256,12 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
     assertThat(day3Capacity.availableBedCount).isEqualTo(4)
 
     assertThat(day3Capacity.characteristicAvailability).containsExactly(
-      PremiseCharacteristicAvailability("isArsonSuitable", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("hasEnSuite", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("isSingle", capacity = 2, available = 0),
-      PremiseCharacteristicAvailability("isStepFreeDesignated", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isSuitedForSexOffenders", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isWheelchairDesignated", capacity = 0, available = -1),
+      PremiseCharacteristicAvailability("isArsonSuitable", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("hasEnSuite", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("isSingle", availableBedsCount = 2, bookingsCount = 2),
+      PremiseCharacteristicAvailability("isStepFreeDesignated", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isSuitedForSexOffenders", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isWheelchairDesignated", availableBedsCount = 0, bookingsCount = 1),
     )
 
     val day4Capacity = capacity.byDay[3]
@@ -271,12 +271,12 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
     assertThat(day4Capacity.availableBedCount).isEqualTo(5)
 
     assertThat(day4Capacity.characteristicAvailability).containsExactly(
-      PremiseCharacteristicAvailability("isArsonSuitable", capacity = 1, available = 0),
-      PremiseCharacteristicAvailability("hasEnSuite", capacity = 1, available = 1),
-      PremiseCharacteristicAvailability("isSingle", capacity = 2, available = 0),
-      PremiseCharacteristicAvailability("isStepFreeDesignated", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isSuitedForSexOffenders", capacity = 0, available = 0),
-      PremiseCharacteristicAvailability("isWheelchairDesignated", capacity = 0, available = 0),
+      PremiseCharacteristicAvailability("isArsonSuitable", availableBedsCount = 1, bookingsCount = 1),
+      PremiseCharacteristicAvailability("hasEnSuite", availableBedsCount = 1, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isSingle", availableBedsCount = 2, bookingsCount = 2),
+      PremiseCharacteristicAvailability("isStepFreeDesignated", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isSuitedForSexOffenders", availableBedsCount = 0, bookingsCount = 0),
+      PremiseCharacteristicAvailability("isWheelchairDesignated", availableBedsCount = 0, bookingsCount = 0),
     )
 
     val day5Capacity = capacity.byDay[4]

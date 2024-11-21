@@ -32,13 +32,13 @@ class Cas1PremiseCapacitySummaryTransformerTest {
           characteristicAvailability = listOf(
             PremiseCharacteristicAvailability(
               characteristicPropertyName = "isSingle",
-              capacity = 10,
-              available = 4,
+              availableBedsCount = 10,
+              bookingsCount = 4,
             ),
             PremiseCharacteristicAvailability(
               characteristicPropertyName = "isWheelchairAccessible",
-              capacity = 20,
-              available = 8,
+              availableBedsCount = 20,
+              bookingsCount = 8,
             ),
           ),
         ),
@@ -63,12 +63,12 @@ class Cas1PremiseCapacitySummaryTransformerTest {
 
     val characteristicAvailability1 = capacityForDay.characteristicAvailability[0]
     assertThat(characteristicAvailability1.characteristic).isEqualTo(Cas1SpaceCharacteristic.isSingle)
-    assertThat(characteristicAvailability1.capacity).isEqualTo(10)
-    assertThat(characteristicAvailability1.available).isEqualTo(4)
+    assertThat(characteristicAvailability1.availableBedsCount).isEqualTo(10)
+    assertThat(characteristicAvailability1.bookingsCount).isEqualTo(4)
 
     val characteristicAvailability2 = capacityForDay.characteristicAvailability[1]
     assertThat(characteristicAvailability2.characteristic).isEqualTo(Cas1SpaceCharacteristic.isWheelchairAccessible)
-    assertThat(characteristicAvailability2.capacity).isEqualTo(20)
-    assertThat(characteristicAvailability2.available).isEqualTo(8)
+    assertThat(characteristicAvailability2.availableBedsCount).isEqualTo(20)
+    assertThat(characteristicAvailability2.bookingsCount).isEqualTo(8)
   }
 }

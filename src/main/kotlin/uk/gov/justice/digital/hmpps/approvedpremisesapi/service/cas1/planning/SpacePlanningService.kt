@@ -95,12 +95,10 @@ class SpacePlanningService(
     availableBeds: List<BedDayState>,
     bookings: List<SpaceBooking>,
   ): PremiseCharacteristicAvailability {
-    val capacity = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) }
-    val inUse = bookings.count { it.hasCharacteristic(characteristicPropertyName) }
     return PremiseCharacteristicAvailability(
       characteristicPropertyName = characteristicPropertyName,
-      capacity = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
-      available = capacity - inUse,
+      availableBedsCount = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
+      bookingsCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
     )
   }
 
@@ -174,7 +172,7 @@ class SpacePlanningService(
 
   data class PremiseCharacteristicAvailability(
     val characteristicPropertyName: String,
-    val capacity: Int,
-    val available: Int,
+    val availableBedsCount: Int,
+    val bookingsCount: Int,
   )
 }
