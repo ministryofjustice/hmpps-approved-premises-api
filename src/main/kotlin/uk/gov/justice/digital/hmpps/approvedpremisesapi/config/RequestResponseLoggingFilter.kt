@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct
 import jakarta.servlet.AsyncEvent
 import jakarta.servlet.AsyncListener
 import jakarta.servlet.FilterChain
-import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.Logger
@@ -16,7 +15,6 @@ import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.ContentCachingResponseWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
-import java.io.IOException
 
 @Component
 @ConditionalOnProperty(name = ["log-request-response"])
@@ -29,14 +27,13 @@ class RequestResponseLoggingFilter(
 
   @PostConstruct
   fun logStartup() {
-    if(environmentService.isNotATestEnvironment()) {
+    if (environmentService.isNotATestEnvironment()) {
       error("Request/Response logging is enabled. This should only be enabled in local environments")
     }
-    
+
     sentryService.captureErrorMessage("Request/Response logging is enabled. This should only be enabled in local environments")
   }
 
-  @Throws(ServletException::class, IOException::class)
   override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
     if (request.requestURI.contains("health")) {
       return filterChain.doFilter(request, response)
@@ -46,22 +43,15 @@ class RequestResponseLoggingFilter(
     val responseWrapper = ContentCachingResponseWrapper(response)
 
     filterChain.doFilter(requestWrapper, responseWrapper)
-    logResponse(requestWrapper, responseWrapper)
+    logRequestResponse(requestWrapper, responseWrapper)
   }
 
-  @Throws(IOException::class)
-  private fun logResponse(
+  private fun logRequestResponse(
     requestWrapper: ContentCachingRequestWrapper,
     responseWrapper: ContentCachingResponseWrapper,
   ) {
-    log.info("Request {}", String(requestWrapper.contentAsByteArray))
-    val contentType = responseWrapper.contentType
-    if (contentType == "application/json") {
-      log.info("Response Body {}", String(responseWrapper.contentAsByteArray))
-    } else {
-      log.info("Response Body not logged as content type is $contentType")
-    }
-    log.info("Response Headers {}", responseWrapper.headerNames.map { "$it:  ${responseWrapper.getHeaders(it)}" })
+    logRequest(requestWrapper)
+    logResponse(responseWrapper)
 
     if (requestWrapper.isAsyncStarted) {
       requestWrapper.asyncContext.addListener(
@@ -86,5 +76,23 @@ class RequestResponseLoggingFilter(
     } else {
       responseWrapper.copyBodyToResponse()
     }
+  }
+
+  private fun logRequest(
+    requestWrapper: ContentCachingRequestWrapper,
+  ) {
+    log.info("Request {}", String(requestWrapper.contentAsByteArray))
+  }
+
+  private fun logResponse(
+    responseWrapper: ContentCachingResponseWrapper,
+  ) {
+    val contentType = responseWrapper.contentType
+    if (contentType == "application/json") {
+      log.info("Response Body {}", String(responseWrapper.contentAsByteArray))
+    } else {
+      log.info("Response Body not logged as content type is $contentType")
+    }
+    log.info("Response Headers {}", responseWrapper.headerNames.map { "$it:  ${responseWrapper.getHeaders(it)}" })
   }
 }
