@@ -14,17 +14,25 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.ContentCachingResponseWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.IOException
 
 @Component
 @ConditionalOnProperty(name = ["log-request-response"])
-class RequestResponseLoggingFilter(val sentryService: SentryService) : OncePerRequestFilter() {
+class RequestResponseLoggingFilter(
+  val sentryService: SentryService,
+  val environmentService: EnvironmentService,
+) : OncePerRequestFilter() {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   @PostConstruct
   fun logStartup() {
+    if(environmentService.isNotATestEnvironment()) {
+      error("Request/Response logging is enabled. This should only be enabled in local environments")
+    }
+    
     sentryService.captureErrorMessage("Request/Response logging is enabled. This should only be enabled in local environments")
   }
 
