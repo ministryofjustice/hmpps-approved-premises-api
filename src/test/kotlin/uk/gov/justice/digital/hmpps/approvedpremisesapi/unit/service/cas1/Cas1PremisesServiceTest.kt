@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -15,6 +16,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
+import java.time.LocalDate
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -27,7 +32,10 @@ class Cas1PremisesServiceTest {
   lateinit var premisesService: PremisesService
 
   @MockK
-  lateinit var cas1OutOfServiceBedService: Cas1OutOfServiceBedService
+  lateinit var outOfServiceBedService: Cas1OutOfServiceBedService
+
+  @MockK
+  lateinit var spacePlanningService: SpacePlanningService
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService
@@ -49,7 +57,7 @@ class Cas1PremisesServiceTest {
     }
 
     @Test
-    fun `success`() {
+    fun success() {
       val premises = ApprovedPremisesEntityFactory()
         .withDefaults()
         .withId(PREMISES_ID)
@@ -61,7 +69,7 @@ class Cas1PremisesServiceTest {
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
       every { premisesService.getBedCount(premises) } returns 56
-      every { cas1OutOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
+      every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
 
       val result = service.getPremisesSummary(PREMISES_ID)
 
@@ -73,6 +81,68 @@ class Cas1PremisesServiceTest {
       assertThat(premisesSummaryInfo.bedCount).isEqualTo(56)
       assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
       assertThat(premisesSummaryInfo.availableBeds).isEqualTo(52)
+    }
+  }
+
+  @Nested
+  inner class GetPremiseCapacity {
+
+    @Test
+    fun `premises not found return error`() {
+      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns null
+
+      val result = service.getPremiseCapacity(
+        premisesId = PREMISES_ID,
+        startDate = LocalDate.of(2020, 1, 2),
+        endDate = LocalDate.of(2020, 1, 3),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+    }
+
+    @Test
+    fun `start before end date return error`() {
+      every {
+        approvedPremisesRepository.findByIdOrNull(PREMISES_ID)
+      } returns ApprovedPremisesEntityFactory().withDefaults().produce()
+
+      val result = service.getPremiseCapacity(
+        premisesId = PREMISES_ID,
+        startDate = LocalDate.of(2020, 1, 4),
+        endDate = LocalDate.of(2020, 1, 3),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java)
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Start Date 2020-01-04 should be before End Date 2020-01-03")
+    }
+
+    @Test
+    fun `success`() {
+      val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
+
+      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premise
+
+      val capacityResponse = mockk<PremiseCapacitySummary>()
+
+      every {
+        spacePlanningService.capacity(
+          premises = premise,
+          range = DateRange(
+            LocalDate.of(2020, 1, 2),
+            LocalDate.of(2020, 1, 3),
+          ),
+        )
+      } returns capacityResponse
+
+      val result = service.getPremiseCapacity(
+        premisesId = PREMISES_ID,
+        startDate = LocalDate.of(2020, 1, 2),
+        endDate = LocalDate.of(2020, 1, 3),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value).isEqualTo(capacityResponse)
     }
   }
 }

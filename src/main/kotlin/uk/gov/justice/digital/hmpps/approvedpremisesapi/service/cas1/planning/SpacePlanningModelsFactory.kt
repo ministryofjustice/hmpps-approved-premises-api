@@ -30,6 +30,8 @@ class SpacePlanningModelsFactory {
     )
   }
 
+  fun characteristicsPropertyNamesOfInterest() = CHARACTERISTIC_ALLOW_LIST
+
   fun allBeds(
     premises: ApprovedPremisesEntity,
   ) = premises.rooms.flatMap { it.beds }.map { it.toBed() }
@@ -96,8 +98,8 @@ class SpacePlanningModelsFactory {
     .toSet()
 
   private fun toCharacteristic(characteristicEntity: CharacteristicEntity) = Characteristic(
-    id = characteristicEntity.id,
-    label = characteristicEntity.propertyName ?: "",
+    label = characteristicEntity.propertyName!!,
+    propertyName = characteristicEntity.propertyName!!,
     weighting = DEFAULT_CHARACTERISTIC_WEIGHT,
     singleRoom = characteristicEntity.propertyName == CAS1_PROPERTY_NAME_SINGLE_ROOM,
   )

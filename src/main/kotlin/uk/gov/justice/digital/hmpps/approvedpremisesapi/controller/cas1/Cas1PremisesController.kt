@@ -5,15 +5,13 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
@@ -24,6 +22,7 @@ class Cas1PremisesController(
   val userAccessService: UserAccessService,
   val cas1PremisesService: Cas1PremisesService,
   val cas1PremisesTransformer: Cas1PremisesTransformer,
+  val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
 ) : PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
@@ -63,28 +62,14 @@ class Cas1PremisesController(
     startDate: LocalDate,
     endDate: LocalDate,
   ): ResponseEntity<Cas1PremiseCapacity> {
-    return ResponseEntity
-      .ok()
-      .body(
-        Cas1PremiseCapacity(
-          premisesId = premisesId,
-          startDate = startDate,
-          endDate = endDate,
-          capacity = listOf(
-            Cas1PremiseCapacityForDay(
-              totalBedCount = 10,
-              availableBedCount = 5,
-              bookingCount = 5,
-              characteristicAvailability = listOf(
-                Cas1PremiseCharacteristicAvailability(
-                  characteristic = Cas1SpaceCharacteristic.isWheelchairAccessible,
-                  capacity = 2,
-                  available = 0,
-                ),
-              ),
-            ),
-          ),
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW_CAPACITY)
+
+    return ResponseEntity.ok().body(
+      cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
+        extractEntityFromCasResult(
+          cas1PremisesService.getPremiseCapacity(premisesId, startDate, endDate),
         ),
-      )
+      ),
+    )
   }
 }

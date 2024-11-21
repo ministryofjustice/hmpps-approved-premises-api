@@ -3,14 +3,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanner.PlanCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PlanCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
 import java.util.UUID
 
 class Cas1PlanSpacePlanningDryRunSeedJob(
   fileName: String,
-  private val spacePlanner: SpacePlanner,
+  private val spacePlanner: SpacePlanningService,
   private val cas1PremisesService: Cas1PremisesService,
 ) : SeedJob<Cas1SpacePlanningDryRunCsvRow>(
   id = UUID.randomUUID(),
@@ -38,7 +39,7 @@ class Cas1PlanSpacePlanningDryRunSeedJob(
 
     val premise = cas1PremisesService.findPremiseById(premiseId) ?: error("Could not find premise with id $premiseId")
 
-    val planCriteria = PlanCriteria(premise, startDate, endDate)
+    val planCriteria = PlanCriteria(premise, DateRange(startDate, endDate))
     spacePlanner.plan(planCriteria)
   }
 }

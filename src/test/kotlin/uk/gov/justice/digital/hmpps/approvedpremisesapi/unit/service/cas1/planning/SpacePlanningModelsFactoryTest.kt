@@ -73,20 +73,20 @@ class SpacePlanningModelsFactoryTest {
 
       assertThat(characteristics).containsOnly(
         Characteristic(
-          id = characteristic1.id,
           label = characteristic1.propertyName!!,
+          propertyName = characteristic1.propertyName!!,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          id = characteristic2.id,
           label = characteristic2.propertyName!!,
+          propertyName = characteristic2.propertyName!!,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          id = characteristicSingleRoom.id,
           label = characteristicSingleRoom.propertyName!!,
+          propertyName = characteristicSingleRoom.propertyName!!,
           weighting = 100,
           singleRoom = true,
         ),
@@ -174,20 +174,20 @@ class SpacePlanningModelsFactoryTest {
 
       assertThat(characteristics).containsOnly(
         Characteristic(
-          id = characteristic1.id,
           label = characteristic1.propertyName!!,
+          propertyName = characteristic1.propertyName!!,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          id = characteristic2.id,
           label = characteristic2.propertyName!!,
+          propertyName = characteristic2.propertyName!!,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          id = characteristicSingleRoom.id,
           label = characteristicSingleRoom.propertyName!!,
+          propertyName = characteristicSingleRoom.propertyName!!,
           weighting = 100,
           singleRoom = true,
         ),
@@ -352,14 +352,14 @@ class SpacePlanningModelsFactoryTest {
           label = "booking1",
           requiredRoomCharacteristics = setOf(
             Characteristic(
-              id = characteristic1.id,
               label = characteristic1.propertyName!!,
+              propertyName = characteristic1.propertyName!!,
               weighting = 100,
               singleRoom = false,
             ),
             Characteristic(
-              id = characteristic2.id,
               label = characteristic2.propertyName!!,
+              propertyName = characteristic2.propertyName!!,
               weighting = 100,
               singleRoom = false,
             ),
@@ -370,8 +370,8 @@ class SpacePlanningModelsFactoryTest {
           label = "booking2",
           requiredRoomCharacteristics = setOf(
             Characteristic(
-              id = characteristicSingleRoom.id,
               label = characteristicSingleRoom.propertyName!!,
+              propertyName = characteristicSingleRoom.propertyName!!,
               weighting = 100,
               singleRoom = true,
             ),

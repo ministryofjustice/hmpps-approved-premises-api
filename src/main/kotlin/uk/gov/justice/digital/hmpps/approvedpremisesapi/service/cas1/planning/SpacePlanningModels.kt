@@ -4,8 +4,8 @@ import java.time.LocalDate
 import java.util.UUID
 
 data class Characteristic(
-  val id: UUID,
   val label: String,
+  val propertyName: String,
   val weighting: Int,
   val singleRoom: Boolean,
 )
@@ -14,7 +14,11 @@ data class Bed(
   val id: UUID,
   val label: String,
   val room: Room,
-)
+) {
+  fun hasCharacteristic(propertyName: String) = room.characteristics.any {
+    it.propertyName == propertyName
+  }
+}
 
 data class BedDayState(
   val bed: Bed,
@@ -22,11 +26,19 @@ data class BedDayState(
   val inactiveReason: BedInactiveReason?,
 ) {
   fun isActive() = inactiveReason == null
+  fun isTemporarilyInactive() = inactiveReason?.isTemporary() ?: false
 }
 
-sealed interface BedInactiveReason
-data class BedEnded(val ended: LocalDate) : BedInactiveReason
-data class BedOutOfService(val reason: String) : BedInactiveReason
+sealed interface BedInactiveReason {
+  fun isTemporary(): Boolean
+}
+data class BedEnded(val ended: LocalDate) : BedInactiveReason {
+  override fun isTemporary() = false
+}
+
+data class BedOutOfService(val reason: String) : BedInactiveReason {
+  override fun isTemporary() = true
+}
 
 data class Room(
   val id: UUID,
@@ -43,4 +55,5 @@ data class SpaceBooking(
 ) {
   fun requiresSingleRoom() = requiredRoomCharacteristics.any { it.singleRoom }
   fun requiredRoomCharacteristicsExcludingSingle() = requiredRoomCharacteristics.filter { !it.singleRoom }
+  fun hasCharacteristic(propertyName: String) = requiredRoomCharacteristics.any { it.propertyName == propertyName }
 }
