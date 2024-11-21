@@ -316,6 +316,8 @@ components:
           $ref: '_shared.yml#/components/schemas/NamedId'
         departureMoveOnCategory:
           $ref: '_shared.yml#/components/schemas/NamedId'
+        departureNotes:
+          type: string
         createdAt:
           type: string
           format: date-time

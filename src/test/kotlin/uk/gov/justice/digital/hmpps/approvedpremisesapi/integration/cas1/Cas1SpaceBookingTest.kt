@@ -1424,6 +1424,7 @@ class Cas1SpaceBookingTest {
             departureDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
             reasonId = departureReasonId,
             moveOnCategoryId = departureMoveOnCategoryId,
+            notes = "these are departure notes",
           ),
         )
         .exchange()
@@ -1467,6 +1468,7 @@ class Cas1SpaceBookingTest {
             departureDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
             reasonId = departureReasonId,
             moveOnCategoryId = null,
+            notes = null,
           ),
         )
         .exchange()

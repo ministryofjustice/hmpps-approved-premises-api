@@ -211,6 +211,7 @@ data class Cas1SpaceBookingEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "departure_move_on_category_id")
   var departureMoveOnCategory: MoveOnCategoryEntity?,
+  var departureNotes: String?,
   /**
    * Users are asked to specify when a cancelled occurred which may not necessarily
    * be the same as when it was recorded in the system

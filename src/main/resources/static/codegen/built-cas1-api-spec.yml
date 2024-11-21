@@ -6577,6 +6577,8 @@ components:
           $ref: '#/components/schemas/NamedId'
         departureMoveOnCategory:
           $ref: '#/components/schemas/NamedId'
+        departureNotes:
+          type: string
         createdAt:
           type: string
           format: date-time

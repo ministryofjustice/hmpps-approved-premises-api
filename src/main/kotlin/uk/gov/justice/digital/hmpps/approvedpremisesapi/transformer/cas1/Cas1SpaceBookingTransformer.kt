@@ -74,6 +74,7 @@ class Cas1SpaceBookingTransformer(
         val (id, name) = jpa.departureReason!!.generateParentChildName()
         NamedId(id, name)
       } ?: null,
+      departureNotes = jpa.departureNotes,
     )
   }
 

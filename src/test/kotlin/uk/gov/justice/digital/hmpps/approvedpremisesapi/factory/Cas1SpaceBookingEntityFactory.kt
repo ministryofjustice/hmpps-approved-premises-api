@@ -52,6 +52,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var migratedFromBooking: Yielded<BookingEntity?> = { null }
   private var migratedManagementInfoFrom: Yielded<ManagementInfoSource?> = { null }
   private var deliusEventNumber: Yielded<String?> = { null }
+  private var departureNotes: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -199,6 +200,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.criteria = { criteria.toList() }
   }
 
+  fun withDepartureNotes(departureNotes: String?) = apply {
+    this.departureNotes = { departureNotes }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
@@ -223,6 +228,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     cancellationReasonNotes = cancellationReasonNotes(),
     departureReason = this.departureReason(),
     departureMoveOnCategory = this.departureMoveOnCategory(),
+    departureNotes = this.departureNotes(),
     criteria = this.criteria(),
     nonArrivalConfirmedAt = this.nonArrivalConfirmedAt(),
     nonArrivalNotes = this.nonArrivalNotes(),

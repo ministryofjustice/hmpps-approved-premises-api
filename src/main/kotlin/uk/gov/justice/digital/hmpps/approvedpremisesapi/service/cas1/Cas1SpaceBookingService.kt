@@ -127,6 +127,7 @@ class Cas1SpaceBookingService(
         cancellationReasonNotes = null,
         departureMoveOnCategory = null,
         departureReason = null,
+        departureNotes = null,
         criteria = characteristics,
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
@@ -343,6 +344,7 @@ class Cas1SpaceBookingService(
     existingCas1SpaceBooking.canonicalDepartureDate = LocalDate.ofInstant(cas1NewDeparture.departureDateTime, ZoneId.systemDefault())
     existingCas1SpaceBooking.departureReason = departureReason
     existingCas1SpaceBooking.departureMoveOnCategory = moveOnCategory
+    existingCas1SpaceBooking.departureNotes = cas1NewDeparture.notes
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
