@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -116,6 +117,16 @@ class Cas1SpaceBookingTransformerTest {
         parentReasonId = null,
       )
 
+      val departureNotes = "These are departure notes"
+
+      val moveOnCategory = MoveOnCategoryEntity(
+        id = UUID.randomUUID(),
+        name = "moveon category",
+        isActive = true,
+        serviceScope = "approved-premises",
+        legacyDeliusCategoryCode = "delius",
+      )
+
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
         .withPlacementRequest(placementRequest)
@@ -134,6 +145,8 @@ class Cas1SpaceBookingTransformerTest {
         .withNonArrivalReason(nonArrivalReason)
         .withNonArrivalNotes("some information on the non arrival")
         .withDepartureReason(departureReason)
+        .withDepartureNotes(departureNotes)
+        .withMoveOnCategory(moveOnCategory)
         .withDeliusEventNumber("97")
         .produce()
 
@@ -204,8 +217,12 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.nonArrival!!.reason!!.id).isEqualTo(spaceBooking.nonArrivalReason!!.id)
       assertThat(result.nonArrival!!.notes).isEqualTo("some information on the non arrival")
 
-      assertThat(result.departureReason!!.name).isEqualTo(departureReason.name)
-      assertThat(result.departureReason!!.id).isEqualTo(departureReason.id)
+      assertThat(result.departure!!.reason!!.id).isEqualTo(departureReason.id)
+      assertThat(result.departure!!.reason!!.name).isEqualTo(departureReason.name)
+      assertThat(result.departure!!.moveOnCategory!!.id).isEqualTo(moveOnCategory.id)
+      assertThat(result.departure!!.moveOnCategory!!.name).isEqualTo(moveOnCategory.name)
+      assertThat(result.departure!!.notes).isEqualTo(departureNotes)
+      assertThat(result.departure!!.parentReason).isNull()
 
       assertThat(result.deliusEventNumber).isEqualTo("97")
 
@@ -259,7 +276,6 @@ class Cas1SpaceBookingTransformerTest {
         .withKeyworkerStaffCode("K123")
         .withKeyworkerAssignedAt(LocalDateTime.parse("2007-12-03T10:15:30").toInstant(ZoneOffset.UTC))
         .withActualArrivalDateTime(Instant.parse("2009-02-05T11:25:10.00Z"))
-        .withActualDepartureDateTime(Instant.parse("2012-12-25T00:00:00.00Z"))
         .withCancellationOccurredAt(LocalDate.parse("2039-12-28"))
         .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
         .withCancellationReasonNotes("some extra info on cancellation")
@@ -368,8 +384,13 @@ class Cas1SpaceBookingTransformerTest {
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList())
 
       assertThat(result.id).isEqualTo(spaceBooking.id)
-      assertThat(result.departureReason!!.id).isEqualTo(departureReason.id)
-      assertThat(result.departureReason!!.name).isEqualTo("Parent Departure Reason - Child Departure Reason")
+      val departure = result.departure!!
+      assertThat(departure.reason.id).isEqualTo(departureReason.id)
+      assertThat(departure.reason.name).isEqualTo(departureReason.name)
+      assertThat(departure.parentReason!!.id).isEqualTo(parentDepartureReason.id)
+      assertThat(departure.parentReason!!.name).isEqualTo(parentDepartureReason.name)
+      assertThat(departure.notes).isNull()
+      assertThat(departure.moveOnCategory).isNull()
     }
   }
 

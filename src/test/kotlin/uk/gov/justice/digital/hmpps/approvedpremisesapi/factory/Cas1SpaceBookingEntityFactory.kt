@@ -45,6 +45,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var cancellationReasonNotes: Yielded<String?> = { null }
   private var departureReason: Yielded<DepartureReasonEntity?> = { null }
   private var departureMoveOnCategory: Yielded<MoveOnCategoryEntity?> = { null }
+  private var departureNotes: Yielded<String?> = { null }
   private var criteria: Yielded<List<CharacteristicEntity>> = { emptyList() }
   private var nonArrivalConfirmedAt: Yielded<Instant?> = { null }
   private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
@@ -52,7 +53,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var migratedFromBooking: Yielded<BookingEntity?> = { null }
   private var migratedManagementInfoFrom: Yielded<ManagementInfoSource?> = { null }
   private var deliusEventNumber: Yielded<String?> = { null }
-  private var departureNotes: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
