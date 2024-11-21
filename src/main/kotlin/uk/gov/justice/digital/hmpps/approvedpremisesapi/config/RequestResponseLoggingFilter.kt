@@ -81,18 +81,23 @@ class RequestResponseLoggingFilter(
   private fun logRequest(
     requestWrapper: ContentCachingRequestWrapper,
   ) {
+    val request = requestWrapper.request
     log.info("Request {}", String(requestWrapper.contentAsByteArray))
+
+    if (request is HttpServletRequest) {
+      log.trace("Authorization: {}", request.getHeader("authorization"))
+    }
   }
 
   private fun logResponse(
     responseWrapper: ContentCachingResponseWrapper,
   ) {
+    log.info("Response Headers {}", responseWrapper.headerNames.map { "$it:  ${responseWrapper.getHeaders(it)}" })
     val contentType = responseWrapper.contentType
     if (contentType == "application/json") {
       log.info("Response Body {}", String(responseWrapper.contentAsByteArray))
     } else {
       log.info("Response Body not logged as content type is $contentType")
     }
-    log.info("Response Headers {}", responseWrapper.headerNames.map { "$it:  ${responseWrapper.getHeaders(it)}" })
   }
 }
