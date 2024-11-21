@@ -382,7 +382,9 @@ workflows:
       - hmpps/deploy_env:
           name: deploy_demo
           env: "demo"
-          context: hmpps-common-vars
+          context: 
+            - hmpps-common-vars
+            - hmpps-approved-premises-api-demo
           jira_update: true
           pipeline_id: <<pipeline.id>>
           pipeline_number: <<pipeline.number>>
