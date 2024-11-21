@@ -232,15 +232,20 @@ class TasksController(
 
     val userId = when {
       xServiceName == ServiceName.temporaryAccommodation -> user.id
-      body?.userId == null -> throw BadRequestProblem(
-        invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")),
-      )
-
-      else -> body.userId
+      else -> {
+        body?.userId ?: throw BadRequestProblem(invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")))
+      }
     }
 
-    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, type, userId, id)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
+    val validationResult = when (
+      val authorisationResult = taskService.reallocateTask(
+        requestUser = user,
+        taskType = type,
+        userToAllocateToId = userId,
+        taskId = id,
+      )
+    ) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType)
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }

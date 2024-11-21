@@ -180,8 +180,9 @@ class PremisesController(
       is AuthorisableActionResult.Success -> updatePremisesResult.entity
     }
 
-    if (body.name != null && premises is TemporaryAccommodationPremisesEntity) {
-      validationResult = when (val renamePremisesResult = premisesService.renamePremises(premisesId, body.name)) {
+    val bodyName = body.name
+    if (bodyName != null && premises is TemporaryAccommodationPremisesEntity) {
+      validationResult = when (val renamePremisesResult = premisesService.renamePremises(premisesId, bodyName)) {
         is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
         is AuthorisableActionResult.Success -> renamePremisesResult.entity
         is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -847,16 +848,18 @@ class PremisesController(
     }
 
     if (premises is TemporaryAccommodationPremisesEntity) {
-      if (updateRoom.name != null) {
+      val updateRoomName = updateRoom.name
+      if (updateRoomName != null) {
         validationResult =
-          extractEntityFromAuthorisableActionResult(roomService.renameRoom(premises, roomId, updateRoom.name))
+          extractEntityFromAuthorisableActionResult(roomService.renameRoom(premises, roomId, updateRoomName))
       }
-      if (updateRoom.bedEndDate != null) {
+      val updateRoomEndDate = updateRoom.bedEndDate
+      if (updateRoomEndDate != null) {
         validationResult = extractEntityFromAuthorisableActionResult(
           roomService.updateBedEndDate(
             premises,
             roomId,
-            updateRoom.bedEndDate,
+            updateRoomEndDate,
           ),
         )
       }
