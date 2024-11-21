@@ -232,11 +232,9 @@ class TasksController(
 
     val userId = when {
       xServiceName == ServiceName.temporaryAccommodation -> user.id
-      body?.userId == null -> throw BadRequestProblem(
-        invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")),
-      )
-
-      else -> body.userId
+      else -> {
+        body?.userId ?: throw BadRequestProblem(invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")))
+      }
     }
 
     val validationResult = when (
