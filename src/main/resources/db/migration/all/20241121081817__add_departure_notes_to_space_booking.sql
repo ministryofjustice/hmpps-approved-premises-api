@@ -1,0 +1,1 @@
+ALTER TABLE cas1_space_bookings ADD departure_notes TEXT NULL;

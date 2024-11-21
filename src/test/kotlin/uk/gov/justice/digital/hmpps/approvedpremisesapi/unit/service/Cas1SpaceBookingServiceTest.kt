@@ -849,6 +849,8 @@ class Cas1SpaceBookingServiceTest {
       legacyDeliusCategoryCode = "legacyDeliusReasonCode",
     )
 
+    private val departureNotes = "these are departure notes"
+
     private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDateTime(LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC))
       .produce()
@@ -1091,6 +1093,7 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns success if the space booking has already recorded departure information that matches the received departure information`() {
       val reasonId = UUID.randomUUID()
       val moveOnCategoryId = UUID.randomUUID()
+      val departureNotes = "these are departure notes"
       val existingSpaceBookingWithDepartureInfo = existingSpaceBooking.copy(
         actualDepartureDateTime = actualDepartureDate,
         departureReason = DepartureReasonEntityFactory()
@@ -1106,7 +1109,7 @@ class Cas1SpaceBookingServiceTest {
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, reasonId, moveOnCategoryId),
+        cas1NewDeparture = Cas1NewDeparture(actualDepartureDate, reasonId, moveOnCategoryId, departureNotes),
       )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
@@ -1126,6 +1129,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(existingSpaceBookingWithDepartureInfo.actualDepartureDateTime?.toLocalDate()).isEqualTo(extractedResult.canonicalDepartureDate)
       assertThat(existingSpaceBookingWithDepartureInfo.departureReason).isEqualTo(extractedResult.departureReason)
       assertThat(existingSpaceBookingWithDepartureInfo.departureMoveOnCategory).isEqualTo(extractedResult.departureMoveOnCategory)
+      assertThat(existingSpaceBookingWithDepartureInfo.departureNotes).isEqualTo(extractedResult.departureNotes)
     }
 
     @Test
@@ -1142,6 +1146,7 @@ class Cas1SpaceBookingServiceTest {
           departureDateTime = actualDepartureDate,
           reasonId = UUID.randomUUID(),
           moveOnCategoryId = UUID.randomUUID(),
+          notes = "these are departure notes",
         ),
       )
 
@@ -1163,6 +1168,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(actualDepartureDate.toLocalDate()).isEqualTo(updatedSpaceBooking.canonicalDepartureDate)
       assertThat(departureReason).isEqualTo(updatedSpaceBooking.departureReason)
       assertThat(departureMoveOnCategory).isEqualTo(updatedSpaceBooking.departureMoveOnCategory)
+      assertThat(departureNotes).isEqualTo(updatedSpaceBooking.departureNotes)
     }
 
     @Test

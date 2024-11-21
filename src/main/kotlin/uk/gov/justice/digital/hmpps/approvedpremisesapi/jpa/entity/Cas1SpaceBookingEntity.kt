@@ -211,6 +211,7 @@ data class Cas1SpaceBookingEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "departure_move_on_category_id")
   var departureMoveOnCategory: MoveOnCategoryEntity?,
+  var departureNotes: String?,
   /**
    * Users are asked to specify when a cancelled occurred which may not necessarily
    * be the same as when it was recorded in the system
@@ -242,6 +243,7 @@ data class Cas1SpaceBookingEntity(
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
+  fun hasDeparted() = actualDepartureDateTime != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDateTime != null
   fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day

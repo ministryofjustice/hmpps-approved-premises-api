@@ -45,6 +45,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var cancellationReasonNotes: Yielded<String?> = { null }
   private var departureReason: Yielded<DepartureReasonEntity?> = { null }
   private var departureMoveOnCategory: Yielded<MoveOnCategoryEntity?> = { null }
+  private var departureNotes: Yielded<String?> = { null }
   private var criteria: Yielded<List<CharacteristicEntity>> = { emptyList() }
   private var nonArrivalConfirmedAt: Yielded<Instant?> = { null }
   private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
@@ -199,6 +200,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.criteria = { criteria.toList() }
   }
 
+  fun withDepartureNotes(departureNotes: String?) = apply {
+    this.departureNotes = { departureNotes }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
@@ -223,6 +228,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     cancellationReasonNotes = cancellationReasonNotes(),
     departureReason = this.departureReason(),
     departureMoveOnCategory = this.departureMoveOnCategory(),
+    departureNotes = this.departureNotes(),
     criteria = this.criteria(),
     nonArrivalConfirmedAt = this.nonArrivalConfirmedAt(),
     nonArrivalNotes = this.nonArrivalNotes(),

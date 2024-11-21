@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1KeyWorkerA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingNonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -70,10 +71,7 @@ class Cas1SpaceBookingTransformer(
       requestForPlacementId = jpa.placementRequest?.placementApplication?.id ?: jpa.placementRequest?.id,
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
-      departureReason = jpa.departureReason?.let {
-        val (id, name) = jpa.departureReason!!.generateParentChildName()
-        NamedId(id, name)
-      } ?: null,
+      departure = jpa.extractDeparture(),
     )
   }
 
@@ -129,6 +127,19 @@ class Cas1SpaceBookingTransformer(
           )
         },
         notes = nonArrivalNotes,
+      )
+    } else {
+      null
+    }
+  }
+
+  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? {
+    return if (hasDeparted()) {
+      Cas1SpaceBookingDeparture(
+        reason = NamedId(departureReason!!.id, departureReason!!.name),
+        parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
+        moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
+        notes = departureNotes,
       )
     } else {
       null

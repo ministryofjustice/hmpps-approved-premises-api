@@ -6573,10 +6573,8 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
-        departureReason:
-          $ref: '#/components/schemas/NamedId'
-        departureMoveOnCategory:
-          $ref: '#/components/schemas/NamedId'
+        departure:
+          $ref: '#/components/schemas/Cas1SpaceBookingDeparture'
         createdAt:
           type: string
           format: date-time
@@ -6689,6 +6687,19 @@ components:
       required:
         - keyWorker
         - allocatedAt
+    Cas1SpaceBookingDeparture:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/NamedId'
+        parentReason:
+          $ref: '#/components/schemas/NamedId'
+        moveOnCategory:
+          $ref: '#/components/schemas/NamedId'
+        notes:
+          type: string
+      required:
+        - reason
     Cas1SpaceBookingCancellation:
       type: object
       properties:

@@ -312,10 +312,8 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
-        departureReason:
-          $ref: '_shared.yml#/components/schemas/NamedId'
-        departureMoveOnCategory:
-          $ref: '_shared.yml#/components/schemas/NamedId'
+        departure:
+          $ref: '#/components/schemas/Cas1SpaceBookingDeparture'
         createdAt:
           type: string
           format: date-time
@@ -428,6 +426,19 @@ components:
       required:
         - keyWorker
         - allocatedAt
+    Cas1SpaceBookingDeparture:
+      type: object
+      properties:
+        reason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        parentReason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        moveOnCategory:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        notes:
+          type: string
+      required:
+        - reason
     Cas1SpaceBookingCancellation:
       type: object
       properties:

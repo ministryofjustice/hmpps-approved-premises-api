@@ -118,6 +118,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         cancellationReasonNotes = booking.cancellation?.otherReason,
         departureMoveOnCategory = null,
         departureReason = null,
+        departureNotes = null,
         criteria = booking.getEssentialRoomCriteria(),
         nonArrivalReason = null,
         nonArrivalConfirmedAt = null,
