@@ -256,7 +256,8 @@ class PeopleController(
       )
     } else {
       val convictionsResult = offenderService.getConvictions(crn)
-      val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
+      val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult)
+        .filter { it.active }
       ResponseEntity.ok(
         activeConvictions.flatMap(offenceTransformer::transformToApi),
       )
