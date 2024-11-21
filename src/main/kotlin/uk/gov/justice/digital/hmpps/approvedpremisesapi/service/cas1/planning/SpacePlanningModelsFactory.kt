@@ -30,6 +30,8 @@ class SpacePlanningModelsFactory {
     )
   }
 
+  fun characteristicsPropertyNamesOfInterest() = CHARACTERISTIC_ALLOW_LIST
+
   fun allBeds(
     premises: ApprovedPremisesEntity,
   ) = premises.rooms.flatMap { it.beds }.map { it.toBed() }

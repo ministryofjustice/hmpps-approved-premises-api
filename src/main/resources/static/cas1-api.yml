@@ -391,14 +391,14 @@ paths:
             type: string
             format: uuid
         - name: startDate
-          in: path
+          in: query
           description: Start date, inclusive
           required: true
           schema:
             type: string
             format: date
         - name: endDate
-          in: path
+          in: query
           description: End date, inclusive
           required: true
           schema:

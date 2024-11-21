@@ -393,14 +393,14 @@ paths:
             type: string
             format: uuid
         - name: startDate
-          in: path
+          in: query
           description: Start date, inclusive
           required: true
           schema:
             type: string
             format: date
         - name: endDate
-          in: path
+          in: query
           description: End date, inclusive
           required: true
           schema:
@@ -4265,6 +4265,7 @@ components:
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_space_booking_withdraw
+        - cas1_premises_view_capacity
         - cas1_premises_view_summary
         - cas1_reports_view
     TemporaryAccommodationUserRole:
@@ -6813,12 +6814,15 @@ components:
         - premisesId
         - startDate
         - endDate
+        - capacity
     Cas1PremiseCapacityForDay:
       type: object
       properties:
         totalBedCount:
+          description: total bed count including temporarily unavailable beds (e.g. out of service beds)
           type: integer
         availableBedCount:
+          description: total bed count excluding temporarily unavailable beds (e.g. out of service beds)
           type: integer
         bookingCount:
           type: integer
@@ -6830,6 +6834,7 @@ components:
         - totalBedCount
         - availableBedCount
         - bookingCount
+        - characteristicAvailability
     Cas1PremiseCharacteristicAvailability:
       type: object
       description:  "Will only ever be returned for the following characteristics: 'isArsonSuitable', 'hasEnSuite', 'isSingle', 'isStepFreeDesignated', 'isSuitedForSexOffenders' or 'isWheelchairDesignated'"

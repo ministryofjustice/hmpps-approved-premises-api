@@ -553,12 +553,15 @@ components:
         - premisesId
         - startDate
         - endDate
+        - capacity
     Cas1PremiseCapacityForDay:
       type: object
       properties:
         totalBedCount:
+          description: total bed count including temporarily unavailable beds (e.g. out of service beds)
           type: integer
         availableBedCount:
+          description: total bed count excluding temporarily unavailable beds (e.g. out of service beds)
           type: integer
         bookingCount:
           type: integer
@@ -570,6 +573,7 @@ components:
         - totalBedCount
         - availableBedCount
         - bookingCount
+        - characteristicAvailability
     Cas1PremiseCharacteristicAvailability:
       type: object
       description:  "Will only ever be returned for the following characteristics: 'isArsonSuitable', 'hasEnSuite', 'isSingle', 'isStepFreeDesignated', 'isSuitedForSexOffenders' or 'isWheelchairDesignated'"

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
@@ -56,7 +57,54 @@ class SpacePlanningService(
     return plan
   }
 
-  fun bedStatesForEachDay(
+  fun capacity(
+    premises: ApprovedPremisesEntity,
+    range: DateRange,
+  ): PremiseCapacitySummary {
+    val bedStatesForEachDay = bedStatesForEachDay(premises, range)
+    val bookingsForEachDay = spaceBookingsForEachDay(premises, range)
+
+    val capacityForEachDay = range.orderedDatesInRange().map { day ->
+      val bedStates = bedStatesForEachDay[day]!!
+      val availableBeds = bedStates.filter { it.isActive() }
+      val bookings = bookingsForEachDay[day]!!
+      PremiseCapacityForDay(
+        day = day,
+        totalBedCount = bedStates.count { it.isActive() || it.isTemporarilyInactive() },
+        availableBedCount = availableBeds.size,
+        bookingCount = bookings.size,
+        characteristicAvailability = spacePlanningModelsFactory.characteristicsPropertyNamesOfInterest().map {
+          determineCharacteristicAvailability(
+            characteristicPropertyName = it,
+            availableBeds = availableBeds,
+            bookings = bookings,
+          )
+        },
+      )
+    }.toList()
+
+    return PremiseCapacitySummary(
+      premise = premises,
+      range = range,
+      byDay = capacityForEachDay,
+    )
+  }
+
+  private fun determineCharacteristicAvailability(
+    characteristicPropertyName: String,
+    availableBeds: List<BedDayState>,
+    bookings: List<SpaceBooking>,
+  ): PremiseCharacteristicAvailability {
+    val capacity = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) }
+    val inUse = bookings.count { it.hasCharacteristic(characteristicPropertyName) }
+    return PremiseCharacteristicAvailability(
+      characteristicPropertyName = characteristicPropertyName,
+      capacity = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
+      available = capacity - inUse,
+    )
+  }
+
+  private fun bedStatesForEachDay(
     premises: ApprovedPremisesEntity,
     range: DateRange,
   ): Map<LocalDate, List<BedDayState>> {
@@ -76,7 +124,7 @@ class SpacePlanningService(
       )
   }
 
-  fun spaceBookingsForEachDay(
+  private fun spaceBookingsForEachDay(
     premises: ApprovedPremisesEntity,
     range: DateRange,
   ): Map<LocalDate, List<SpaceBooking>> {
@@ -108,5 +156,25 @@ class SpacePlanningService(
     val day: LocalDate,
     val bedStates: List<BedDayState>,
     val planningResult: DayPlannerResult,
+  )
+
+  data class PremiseCapacitySummary(
+    val premise: PremisesEntity,
+    val range: DateRange,
+    val byDay: List<PremiseCapacityForDay>,
+  )
+
+  data class PremiseCapacityForDay(
+    val day: LocalDate,
+    val totalBedCount: Int,
+    val availableBedCount: Int,
+    val bookingCount: Int,
+    val characteristicAvailability: List<PremiseCharacteristicAvailability>,
+  )
+
+  data class PremiseCharacteristicAvailability(
+    val characteristicPropertyName: String,
+    val capacity: Int,
+    val available: Int,
   )
 }

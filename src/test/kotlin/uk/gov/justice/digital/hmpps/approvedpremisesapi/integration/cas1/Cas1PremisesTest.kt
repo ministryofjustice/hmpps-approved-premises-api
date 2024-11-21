@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -376,6 +377,54 @@ class Cas1PremisesTest : IntegrationTestBase() {
           it.id == premises3ManInArea2.id &&
             it.bedCount == 0
         }
+    }
+  }
+
+  @Nested
+  inner class GetCapacity : InitialiseDatabasePerClassTestBase() {
+    lateinit var premises: ApprovedPremisesEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      val region = givenAProbationRegion(
+        apArea = givenAnApArea(name = "The ap area name"),
+      )
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withName("the premises name")
+        withApCode("the ap code")
+        withPostcode("the postcode")
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/capacity?startDate=2020-01-01&endDate=2020-01-02")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun success() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val result = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/capacity?startDate=2020-01-01&endDate=2020-01-02")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1PremiseCapacity::class.java).responseBody.blockFirst()!!
+
+      assertThat(result.premisesId).isEqualTo(premises.id)
+      assertThat(result.capacity).hasSize(2)
     }
   }
 }
