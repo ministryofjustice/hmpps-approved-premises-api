@@ -239,8 +239,15 @@ class TasksController(
       else -> body.userId
     }
 
-    val validationResult = when (val authorisationResult = taskService.reallocateTask(user, type, userId, id)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
+    val validationResult = when (
+      val authorisationResult = taskService.reallocateTask(
+        requestUser = user,
+        taskType = type,
+        userToAllocateToId = userId,
+        taskId = id,
+      )
+    ) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType)
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }

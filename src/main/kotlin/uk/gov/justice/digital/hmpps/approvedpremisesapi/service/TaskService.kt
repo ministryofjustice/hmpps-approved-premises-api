@@ -150,7 +150,7 @@ class TaskService(
 
   @SuppressWarnings("ReturnCount", "CyclomaticComplexMethod")
   @Transactional
-  fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
+  fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, taskId: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!userAccessService.userCanReallocateTask(requestUser)) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -168,13 +168,13 @@ class TaskService(
 
     val result = when (taskType) {
       TaskType.assessment -> {
-        assessmentService.reallocateAssessment(assigneeUser, id)
+        assessmentService.reallocateAssessment(assigneeUser, taskId)
       }
       TaskType.placementRequest -> {
-        placementRequestService.reallocatePlacementRequest(assigneeUser, id)
+        placementRequestService.reallocatePlacementRequest(assigneeUser, taskId)
       }
       TaskType.placementApplication -> {
-        placementApplicationService.reallocateApplication(assigneeUser, id)
+        placementApplicationService.reallocateApplication(assigneeUser, taskId)
       }
       else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
