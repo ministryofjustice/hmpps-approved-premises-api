@@ -384,7 +384,7 @@ workflows:
           env: "demo"
           context: 
             - hmpps-common-vars
-            - hmpps-approved-premises-api-demo
+            - hmpps-approved-premises-api-stage
           jira_update: true
           pipeline_id: <<pipeline.id>>
           pipeline_number: <<pipeline.number>>
