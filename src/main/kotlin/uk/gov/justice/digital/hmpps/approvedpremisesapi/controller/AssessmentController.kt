@@ -118,12 +118,7 @@ class AssessmentController(
 
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
-    val assessmentUpdatedDomainEvents =
-      if (featureFlagService.getBooleanFlag("include-assessment-updated-domain-events")) {
-        domainEventService.getAssessmentUpdatedEvents(assessmentId = assessment.id)
-      } else {
-        emptyList()
-      }
+    val assessmentUpdatedDomainEvents = domainEventService.getAssessmentUpdatedEvents(assessmentId = assessment.id)
 
     val transformedResponse = assessmentTransformer.transformJpaToApi(assessment, personInfo, assessmentUpdatedDomainEvents)
 
