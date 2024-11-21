@@ -52,6 +52,8 @@ class CaseDetailFactory : Factory<CaseDetail> {
 class CaseDetailOffenceFactory : Factory<Offence> {
   var id: Yielded<String> = { randomStringMultiCaseWithNumbers(9) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
+  var mainCategoryDescription: Yielded<String> = { randomStringLowerCase(10) }
+  var subCategoryDescription: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
   var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
@@ -63,6 +65,14 @@ class CaseDetailOffenceFactory : Factory<Offence> {
 
   fun withDescription(description: String) = apply {
     this.description = { description }
+  }
+
+  fun withMainCategoryDescription(mainCategoryDescription: String) = apply {
+    this.mainCategoryDescription = { mainCategoryDescription }
+  }
+
+  fun withSubCategoryDescription(subCategoryDescription: String) = apply {
+    this.subCategoryDescription = { subCategoryDescription }
   }
 
   fun withDate(date: LocalDate) = apply {
@@ -80,6 +90,8 @@ class CaseDetailOffenceFactory : Factory<Offence> {
   override fun produce(): Offence = Offence(
     id = this.id(),
     description = this.description(),
+    mainCategoryDescription = this.mainCategoryDescription(),
+    subCategoryDescription = this.subCategoryDescription(),
     date = this.date(),
     main = this.main(),
     eventNumber = this.eventNumber(),

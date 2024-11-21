@@ -91,6 +91,8 @@ class OffenceTransformerTest {
           CaseDetailOffenceFactory()
             .withId("M10")
             .withDescription("A first offence")
+            .withMainCategoryDescription("Main Category 1")
+            .withSubCategoryDescription("Sub Category 1")
             .withDate(LocalDate.parse("2024-11-01"))
             .withEventNumber("20")
             .withEventId(30)
@@ -98,6 +100,8 @@ class OffenceTransformerTest {
           CaseDetailOffenceFactory()
             .withId("A100")
             .withDescription("A second offence")
+            .withMainCategoryDescription("Main Category 2")
+            .withSubCategoryDescription("Sub Category 2")
             .withDate(LocalDate.parse("2024-11-11"))
             .withEventNumber("200")
             .withEventId(300)
@@ -109,17 +113,46 @@ class OffenceTransformerTest {
     assertThat(offenceTransformer.transformToApi(caseDetail)).containsExactlyInAnyOrder(
       ActiveOffence(
         deliusEventNumber = "20",
-        offenceDescription = "A first offence",
+        offenceDescription = "Main Category 1 - Sub Category 1",
         offenceId = "M10",
         convictionId = 30,
         offenceDate = LocalDate.parse("2024-11-01"),
       ),
       ActiveOffence(
         deliusEventNumber = "200",
-        offenceDescription = "A second offence",
+        offenceDescription = "Main Category 2 - Sub Category 2",
         offenceId = "A100",
         convictionId = 300,
         offenceDate = LocalDate.parse("2024-11-11"),
+      ),
+    )
+  }
+
+  @Test
+  fun `transformToApi from case-detail omits sub category description where it is the same as main category description`() {
+    val caseDetail = CaseDetailFactory()
+      .withOffences(
+        listOf(
+          CaseDetailOffenceFactory()
+            .withId("M10")
+            .withDescription("A first offence")
+            .withMainCategoryDescription("A Description")
+            .withSubCategoryDescription("A Description")
+            .withDate(LocalDate.parse("2024-11-01"))
+            .withEventNumber("20")
+            .withEventId(30)
+            .produce(),
+        ),
+      )
+      .produce()
+
+    assertThat(offenceTransformer.transformToApi(caseDetail)).containsExactlyInAnyOrder(
+      ActiveOffence(
+        deliusEventNumber = "20",
+        offenceDescription = "A Description",
+        offenceId = "M10",
+        convictionId = 30,
+        offenceDate = LocalDate.parse("2024-11-01"),
       ),
     )
   }
