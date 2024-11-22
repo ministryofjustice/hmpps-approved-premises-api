@@ -56,6 +56,7 @@ class BookingSummaryTransformerTest {
         arrivalDate = booking.arrivalDate,
         departureDate = booking.departureDate,
         createdAt = booking.createdAt.toInstant(),
+        type = BookingSummary.Type.legacy,
       ),
     )
   }

@@ -410,6 +410,7 @@ class PlacementRequestService(
 
   data class PlacementRequestAndCancellations(
     val placementRequest: PlacementRequestEntity,
+    @Deprecated("This is not currently used by the UI and does not cater for SpaceBooking cancellations")
     val cancellations: List<CancellationEntity>,
   )
 }

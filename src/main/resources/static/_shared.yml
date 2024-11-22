@@ -736,6 +736,11 @@ components:
         createdAt:
           type: string
           format: date-time
+        type:
+          type: string
+          enum:
+            - space
+            - legacy
       required:
         - id
         - premisesId
@@ -743,6 +748,7 @@ components:
         - arrivalDate
         - departureDate
         - createdAt
+        - type
     Person:
       type: object
       properties:
@@ -4150,6 +4156,8 @@ components:
         - type: object
           properties:
             cancellations:
+              deprecated: true
+              description: Not used by UI. Space Booking cancellations to be provided if cancellations are required in future.
               type: array
               items:
                 $ref: '#/components/schemas/Cancellation'

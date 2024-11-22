@@ -91,6 +91,7 @@ class PlacementRequestBookingSummaryTransformerTest {
       booking.arrivalDate,
       booking.departureDate,
       booking.createdAt.toInstant(),
+      BookingSummary.Type.legacy,
     )
 
     every { bookingSummaryTransformer.transformJpaToApi(booking) } returns bookingSummary
@@ -103,6 +104,7 @@ class PlacementRequestBookingSummaryTransformerTest {
     assertThat(result!!.arrivalDate).isEqualTo(booking.arrivalDate)
     assertThat(result!!.departureDate).isEqualTo(booking.departureDate)
     assertThat(result!!.createdAt).isEqualTo(booking.createdAt.toInstant())
+    assertThat(result!!.type).isEqualTo(BookingSummary.Type.legacy)
   }
 
   @Test
@@ -114,6 +116,7 @@ class PlacementRequestBookingSummaryTransformerTest {
       spaceBooking.canonicalArrivalDate,
       spaceBooking.canonicalDepartureDate,
       spaceBooking.createdAt.toInstant(),
+      BookingSummary.Type.space,
     )
 
     var placementWithSpaceBooking = placementRequest.copy(
@@ -131,6 +134,7 @@ class PlacementRequestBookingSummaryTransformerTest {
     assertThat(result!!.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
     assertThat(result!!.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
     assertThat(result!!.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
+    assertThat(result!!.type).isEqualTo(BookingSummary.Type.space)
   }
 
   @Test
