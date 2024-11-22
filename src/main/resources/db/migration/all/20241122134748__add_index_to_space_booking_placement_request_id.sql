@@ -1,0 +1,1 @@
+CREATE INDEX cas1_space_bookings_placement_request_id_idx ON cas1_space_bookings (placement_request_id);
