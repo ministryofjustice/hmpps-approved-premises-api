@@ -769,13 +769,8 @@ class Cas1SpaceBookingTest {
   @Nested
   inner class GetASpaceBooking : InitialiseDatabasePerClassTestBase() {
     lateinit var premises: ApprovedPremisesEntity
-    lateinit var otherPremises: ApprovedPremisesEntity
-
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingAtPremisesCancelled: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingAtPremisesDifferentCrn: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingNotAtPremises: Cas1SpaceBookingEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -786,7 +781,7 @@ class Cas1SpaceBookingTest {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+      val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -819,7 +814,8 @@ class Cas1SpaceBookingTest {
         withCanonicalDepartureDate(LocalDate.parse("2030-06-29"))
       }
 
-      otherSpaceBookingAtPremisesDifferentCrn = cas1SpaceBookingEntityFactory.produceAndPersist {
+      // otherSpaceBookingAtPremisesDifferentCrn
+      cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn("othercrn")
         withPremises(premises)
         withPlacementRequest(placementRequest)
@@ -829,7 +825,8 @@ class Cas1SpaceBookingTest {
         withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
       }
 
-      otherSpaceBookingAtPremisesCancelled = cas1SpaceBookingEntityFactory.produceAndPersist {
+      // otherSpaceBookingAtPremisesCancelled
+      cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(premises)
         withPlacementRequest(placementRequest)
@@ -840,7 +837,8 @@ class Cas1SpaceBookingTest {
         withCancellationOccurredAt(LocalDate.parse("2020-01-01"))
       }
 
-      otherSpaceBookingNotAtPremises = cas1SpaceBookingEntityFactory.produceAndPersist {
+      // otherSpaceBookingNotAtPremises
+      cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(otherPremises)
         withPlacementRequest(placementRequest)
@@ -888,7 +886,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Returns premises information if have correct role`() {
+    fun `Success`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
