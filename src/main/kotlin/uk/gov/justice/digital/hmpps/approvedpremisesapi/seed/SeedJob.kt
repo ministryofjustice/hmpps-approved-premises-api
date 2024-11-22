@@ -4,16 +4,9 @@ import java.util.UUID
 
 abstract class SeedJob<RowType>(
   val id: UUID = UUID.randomUUID(),
-  val fileName: String,
   val requiredHeaders: Set<String>? = null,
   val runInTransaction: Boolean = true,
 ) {
-  init {
-    if (fileName.contains("/") || fileName.contains("\\")) {
-      throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
-    }
-  }
-
   open fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
     if (requiredHeaders == null) return
 

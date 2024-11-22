@@ -14,12 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.util.UUID
 
 class Cas1WithdrawPlacementRequestSeedJob(
-  fileName: String,
   private val placementRequestService: PlacementRequestService,
   private val applicationService: ApplicationService,
 ) : SeedJob<Cas1WithdrawPlacementRequestSeedSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "placement_request_id",
     "withdrawal_reason",

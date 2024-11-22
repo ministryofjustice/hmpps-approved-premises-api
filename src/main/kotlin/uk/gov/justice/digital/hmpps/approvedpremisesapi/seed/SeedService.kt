@@ -83,48 +83,45 @@ class SeedService(
   @Async
   fun seedDataAsync(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename)
 
-  fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
+  fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  @SuppressWarnings("CyclomaticComplexMethod")
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
     seedLogger.info("Starting seed request: $seedFileType - $filename")
 
     try {
+      if (filename.contains("/") || filename.contains("\\")) {
+        throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
+      }
+
       val job: SeedJob<*> = when (seedFileType) {
         SeedFileType.approvedPremises -> ApprovedPremisesSeedJob(
-          filename,
           getBean(PremisesRepository::class),
           getBean(ProbationRegionRepository::class),
           getBean(LocalAuthorityAreaRepository::class),
           getBean(CharacteristicRepository::class),
         )
         SeedFileType.approvedPremisesRooms -> ApprovedPremisesRoomsSeedJob(
-          filename,
           getBean(PremisesRepository::class),
           getBean(RoomRepository::class),
           getBean(BedRepository::class),
           getBean(CharacteristicRepository::class),
         )
         SeedFileType.user -> UsersSeedJob(
-          filename,
           ServiceName.entries,
           getBean(UserService::class),
         )
         SeedFileType.approvedPremisesApStaffUsers -> ApStaffUsersSeedJob(
-          filename,
           getBean(UserService::class),
           seedLogger,
         )
         SeedFileType.nomisUsers -> NomisUsersSeedJob(
-          filename,
           getBean(NomisUserRepository::class),
         )
         SeedFileType.externalUsers -> ExternalUsersSeedJob(
-          filename,
           getBean(ExternalUserRepository::class),
         )
         SeedFileType.cas2Applications -> Cas2ApplicationsSeedJob(
-          filename,
           getBean(Cas2ApplicationRepository::class),
           getBean(NomisUserRepository::class),
           getBean(ExternalUserRepository::class),
@@ -134,27 +131,22 @@ class SeedService(
           getBean(Cas2PersistedApplicationStatusFinder::class),
         )
         SeedFileType.approvedPremisesUsers -> UsersSeedJob(
-          filename,
           listOf(ServiceName.approvedPremises),
           getBean(UserService::class),
         )
         SeedFileType.temporaryAccommodationUsers -> UsersSeedJob(
-          filename,
           listOf(ServiceName.temporaryAccommodation),
           getBean(UserService::class),
         )
         SeedFileType.characteristics -> CharacteristicsSeedJob(
-          filename,
           getBean(CharacteristicRepository::class),
         )
         SeedFileType.updateNomsNumber -> Cas1UpdateNomsNumberSeedJob(
-          filename,
           getBean(ApplicationRepository::class),
           getBean(ApplicationTimelineNoteService::class),
           getBean(BookingRepository::class),
         )
         SeedFileType.temporaryAccommodationPremises -> TemporaryAccommodationPremisesSeedJob(
-          filename,
           getBean(PremisesRepository::class),
           getBean(ProbationRegionRepository::class),
           getBean(LocalAuthorityAreaRepository::class),
@@ -162,49 +154,41 @@ class SeedService(
           getBean(CharacteristicService::class),
         )
         SeedFileType.temporaryAccommodationBedspace -> TemporaryAccommodationBedspaceSeedJob(
-          filename,
           getBean(PremisesRepository::class),
           getBean(CharacteristicService::class),
           getBean(RoomService::class),
         )
 
         SeedFileType.approvedPremisesCancelBookings -> ApprovedPremisesBookingCancelSeedJob(
-          filename,
           getBean(BookingService::class),
           getBean(BookingRepository::class),
         )
 
         SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> Cas1FurtherInfoBugFixSeedJob(
-          filename,
           getBean(AssessmentRepository::class),
         )
 
         SeedFileType.approvedPremisesRedactAssessmentDetails -> Cas1RemoveAssessmentDetailsSeedJob(
-          filename,
           getBean(AssessmentRepository::class),
           getBean(ObjectMapper::class),
           getBean(ApplicationService::class),
         )
 
         SeedFileType.approvedPremisesWithdrawPlacementRequest -> Cas1WithdrawPlacementRequestSeedJob(
-          filename,
           getBean(PlacementRequestService::class),
           getBean(ApplicationService::class),
         )
 
         SeedFileType.approvedPremisesReplayDomainEvents -> Cas1DomainEventReplaySeedJob(
-          filename,
           getBean(DomainEventService::class),
         )
 
         SeedFileType.approvedPremisesDuplicateApplication -> Cas1DuplicateApplicationSeedJob(
-          filename,
           getBean(ApplicationService::class),
           getBean(OffenderService::class),
         )
 
         SeedFileType.approvedPremisesUpdateEventNumber -> Cas1UpdateEventNumberSeedJob(
-          filename,
           getBean(ApplicationService::class),
           getBean(ApplicationRepository::class),
           getBean(DomainEventRepository::class),
@@ -212,30 +196,25 @@ class SeedService(
         )
 
         SeedFileType.approvedPremisesLinkBookingToPlacementRequest -> Cas1LinkedBookingToPlacementRequestSeedJob(
-          filename,
           getBean(PlacementRequestRepository::class),
           getBean(BookingRepository::class),
           getBean(ApplicationTimelineNoteService::class),
         )
 
         SeedFileType.approvedPremisesOutOfServiceBeds -> Cas1OutOfServiceBedSeedJob(
-          filename,
           getBean(Cas1OutOfServiceBedService::class),
           getBean(PremisesService::class),
         )
 
         SeedFileType.updateUsersFromApi -> UpdateUsersFromApiSeedJob(
-          filename,
           getBean(UserService::class),
         )
 
         SeedFileType.approvedPremisesCruManagementAreas -> Cas1CruManagementAreaSeedJob(
-          filename,
           getBean(Cas1CruManagementAreaRepository::class),
         )
 
         SeedFileType.approvedPremisesBookingToSpaceBooking -> Cas1BookingToSpaceBookingSeedJob(
-          filename,
           getBean(ApprovedPremisesRepository::class),
           getBean(Cas1SpaceBookingRepository::class),
           getBean(BookingRepository::class),
@@ -247,7 +226,6 @@ class SeedService(
         )
 
         SeedFileType.approvedPremisesSpacePlanningDryRun -> Cas1PlanSpacePlanningDryRunSeedJob(
-          filename,
           getBean(SpacePlanningService::class),
           getBean(Cas1PremisesService::class),
         )

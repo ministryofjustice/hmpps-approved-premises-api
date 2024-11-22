@@ -18,13 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 class ApprovedPremisesSeedJob(
-  fileName: String,
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
-  fileName = fileName,
   requiredHeaders = setOf(
     "name",
     "addressLine1",

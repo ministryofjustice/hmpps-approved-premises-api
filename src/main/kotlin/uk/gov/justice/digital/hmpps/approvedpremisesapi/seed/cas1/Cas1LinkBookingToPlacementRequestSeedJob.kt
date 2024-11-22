@@ -10,13 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.util.UUID
 
 class Cas1LinkedBookingToPlacementRequestSeedJob(
-  fileName: String,
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingRepository: BookingRepository,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
 ) : SeedJob<Cas1LinkBookingToPlacementRequestSeedJobCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "booking_id",
     "placement_request_id",

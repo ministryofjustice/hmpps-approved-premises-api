@@ -10,13 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import java.util.UUID
 
 class Cas1RemoveAssessmentDetailsSeedJob(
-  fileName: String,
   private val assessmentRepository: AssessmentRepository,
   private val objectMapper: ObjectMapper,
   private val applicationService: ApplicationService,
 ) : SeedJob<Cas1RemoveAssessmentDetailsSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "assessment_id",
   ),

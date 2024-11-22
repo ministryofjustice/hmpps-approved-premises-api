@@ -7,11 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 class Cas1CruManagementAreaSeedJob(
-  fileName: String,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) : SeedJob<CruManagementAreaSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "id",
     "current_name",

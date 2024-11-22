@@ -6,11 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import java.util.UUID
 
 class Cas1DomainEventReplaySeedJob(
-  fileName: String,
   private val domainEventService: DomainEventService,
 ) : SeedJob<Cas1DomainEventReplaySeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "domain_event_id",
   ),

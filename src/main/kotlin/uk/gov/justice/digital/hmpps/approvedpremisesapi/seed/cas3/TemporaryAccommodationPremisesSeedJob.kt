@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import java.util.UUID
 
 class TemporaryAccommodationPremisesSeedJob(
-  fileName: String,
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
@@ -29,7 +28,6 @@ class TemporaryAccommodationPremisesSeedJob(
   private val characteristicService: CharacteristicService,
 ) : SeedJob<TemporaryAccommodationPremisesSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

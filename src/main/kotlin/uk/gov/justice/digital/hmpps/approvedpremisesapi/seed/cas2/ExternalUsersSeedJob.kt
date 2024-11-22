@@ -7,11 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 class ExternalUsersSeedJob(
-  fileName: String,
   private val repository: ExternalUserRepository,
 ) : SeedJob<ExternalUserSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf("username", "name", "email"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

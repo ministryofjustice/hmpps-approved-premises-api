@@ -6,11 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.util.UUID
 
 class UpdateUsersFromApiSeedJob(
-  fileName: String,
   val userService: UserService,
 ) : SeedJob<UpdateUserFromApiCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "delius_username",
     "service_name",

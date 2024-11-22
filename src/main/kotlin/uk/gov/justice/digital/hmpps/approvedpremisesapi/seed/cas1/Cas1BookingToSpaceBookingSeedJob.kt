@@ -28,7 +28,6 @@ import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
 class Cas1BookingToSpaceBookingSeedJob(
-  fileName: String,
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
   private val bookingRepository: BookingRepository,
@@ -39,7 +38,6 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val transactionTemplate: TransactionTemplate,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "premises_id",
   ),

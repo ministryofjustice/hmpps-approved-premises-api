@@ -12,12 +12,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class Cas1OutOfServiceBedSeedJob(
-  filename: String,
   private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
   private val premisesService: PremisesService,
 ) : SeedJob<Cas1OutOfServiceBedSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = filename,
   requiredHeaders = setOf(
     "premisesId",
     "bedId",

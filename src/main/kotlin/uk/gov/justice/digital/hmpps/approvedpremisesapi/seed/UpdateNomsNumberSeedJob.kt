@@ -7,13 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimel
 import java.util.UUID
 
 class Cas1UpdateNomsNumberSeedJob(
-  fileName: String,
   private val applicationRepository: ApplicationRepository,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val bookingRepository: BookingRepository,
 ) : SeedJob<UpdateNomsNumberSeedRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "crn",
     "oldNomsNumber",

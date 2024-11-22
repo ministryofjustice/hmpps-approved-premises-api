@@ -166,7 +166,6 @@ class SeedOnStartupServiceTest {
 
     val approvedPremisesFilename = approvedPremisesLambda.captured.invoke(
       ApprovedPremisesSeedJob(
-        "approved_premises",
         mockApplicationContext.getBean(PremisesRepository::class.java),
         mockApplicationContext.getBean(ProbationRegionRepository::class.java),
         mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java),
@@ -176,7 +175,6 @@ class SeedOnStartupServiceTest {
 
     val approvedPremisesRoomsFilename = approvedPremisesRoomLambda.captured.invoke(
       ApprovedPremisesRoomsSeedJob(
-        "approved_premises_rooms",
         mockApplicationContext.getBean(PremisesRepository::class.java),
         mockApplicationContext.getBean(RoomRepository::class.java),
         mockApplicationContext.getBean(BedRepository::class.java),

@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFa
 class Cas1RedactAssessmentDetailsSeedJobTest {
 
   val service = Cas1RemoveAssessmentDetailsSeedJob(
-    fileName = "theFileName",
     assessmentRepository = mockk<AssessmentRepository>(),
     objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     applicationService = mockk<ApplicationService>(),

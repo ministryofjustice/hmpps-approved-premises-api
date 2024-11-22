@@ -26,7 +26,6 @@ import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
-  fileName: String,
   private val repository: Cas2ApplicationRepository,
   private val userRepository: NomisUserRepository,
   private val externalUserRepository: ExternalUserRepository,
@@ -36,7 +35,6 @@ class Cas2ApplicationsSeedJob(
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

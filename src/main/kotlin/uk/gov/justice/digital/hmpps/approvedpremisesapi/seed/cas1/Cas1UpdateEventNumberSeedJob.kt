@@ -32,14 +32,12 @@ import java.util.UUID
  * the Domain Event JSON Schema is very stable)
  */
 class Cas1UpdateEventNumberSeedJob(
-  fileName: String,
   private val applicationService: ApplicationService,
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
   private val objectMapper: ObjectMapper,
 ) : SeedJob<Cas1UpdateEventNumberSeedJobCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "application_id",
     "event_number",

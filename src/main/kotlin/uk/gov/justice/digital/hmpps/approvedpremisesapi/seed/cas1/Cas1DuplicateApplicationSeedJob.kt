@@ -30,12 +30,10 @@ import java.util.UUID
  * of the application can be traversed, and the application can be submitted.
  */
 class Cas1DuplicateApplicationSeedJob(
-  fileName: String,
   private val applicationService: ApplicationService,
   private val offenderService: OffenderService,
 ) : SeedJob<Cas1DuplicateApplicationSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "application_id",
   ),
