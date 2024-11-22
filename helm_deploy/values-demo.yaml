@@ -6,7 +6,7 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: approved-premises-api-dev.hmpps.service.justice.gov.uk
+    host: approved-premises-api-demo.hmpps.service.justice.gov.uk
     tlsSecretName: hmpps-approved-premises-api-demo-cert
 
   resources:
