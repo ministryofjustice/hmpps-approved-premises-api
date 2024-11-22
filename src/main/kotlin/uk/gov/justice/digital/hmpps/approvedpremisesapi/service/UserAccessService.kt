@@ -146,9 +146,6 @@ class UserAccessService(
       else -> false
     }
 
-  fun getTemporaryAccommodationApplicationAccessLevelForCurrentUser(): TemporaryAccommodationApplicationAccessLevel =
-    getTemporaryAccommodationApplicationAccessLevelForUser(userService.getUserForRequest())
-
   fun getTemporaryAccommodationApplicationAccessLevelForUser(user: UserEntity): TemporaryAccommodationApplicationAccessLevel = when {
     user.hasRole(UserRole.CAS3_ASSESSOR) -> TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION
     user.hasRole(UserRole.CAS3_REFERRER) -> TemporaryAccommodationApplicationAccessLevel.SELF
@@ -181,23 +178,16 @@ class UserAccessService(
       application.submittedAt != null
   }
 
-  fun currentUserCanReallocateTask() = userCanReallocateTask(userService.getUserForRequest())
-
   fun userCanReallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
     ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
     ServiceName.approvedPremises -> user.hasPermission(UserPermission.CAS1_VIEW_MANAGE_TASKS)
     else -> false
   }
 
-  fun currentUserCanDeallocateTask() = userCanDeallocateTask(userService.getUserForRequest())
-
   fun userCanDeallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
     ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
-
-  fun currentUserCanViewAssessment(assessment: AssessmentEntity): Boolean =
-    userCanViewAssessment(userService.getUserForRequest(), assessment)
 
   fun userCanViewAssessment(user: UserEntity, assessment: AssessmentEntity): Boolean = when (assessment) {
     is ApprovedPremisesAssessmentEntity ->

@@ -962,25 +962,6 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns SUBMITTED_IN_REGION if the user has the CAS3_ASSESSOR role`() {
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION)
-  }
-
-  @Test
-  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns SELF if the user has the CAS3_REFERRER role`() {
-    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
-
-    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SELF)
-  }
-
-  @Test
-  fun `getTemporaryAccommodationApplicationAccessLevelForCurrentUser returns NONE if the user has no suitable role`() {
-    assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForCurrentUser()).isEqualTo(TemporaryAccommodationApplicationAccessLevel.NONE)
-  }
-
-  @Test
   fun `userCanViewApplication returns true if the user created the application for Approved Premises`() {
     val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
@@ -1234,45 +1215,6 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `currentUserCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.currentUserCanReallocateTask()).isTrue
-  }
-
-  @Test
-  fun `currentUserCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
-  }
-
-  @Test
-  fun `currentUserCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has a role with the CAS1_VIEW_MANAGE_TASKS permission`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
-
-    assertThat(userAccessService.currentUserCanReallocateTask()).isTrue
-  }
-
-  @Test
-  fun `currentUserCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'approved-premises'`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
-  }
-
-  @Test
-  fun `currentUserCanReallocateTask returns false by default`() {
-    currentRequestIsForArbitraryService()
-
-    assertThat(userAccessService.currentUserCanReallocateTask()).isFalse
-  }
-
-  @Test
   fun `userCanDeallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
@@ -1293,29 +1235,6 @@ class UserAccessServiceTest {
     currentRequestIsForArbitraryService()
 
     assertThat(userAccessService.userCanDeallocateTask(user)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanDeallocateTask returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and the user has the CAS3_ASSESSOR role`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.currentUserCanDeallocateTask()).isTrue
-  }
-
-  @Test
-  fun `currentUserCanDeallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.currentUserCanDeallocateTask()).isFalse
-  }
-
-  @Test
-  fun `currentUserCanDeallocateTask returns false by default`() {
-    currentRequestIsForArbitraryService()
-
-    assertThat(userAccessService.currentUserCanDeallocateTask()).isFalse
   }
 
   @Test
@@ -1404,92 +1323,6 @@ class UserAccessServiceTest {
       .produce()
 
     assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
-  }
-
-  @Test
-  fun `currentUserCanViewAssessment returns true for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role and the assessment is in the same region`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .withProbationRegion(probationRegion)
-      .produce()
-
-    val assessment = TemporaryAccommodationAssessmentEntityFactory()
-      .withApplication(application)
-      .produce()
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
-  }
-
-  @Test
-  fun `currentUserCanViewAssessment returns false for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role but the assessment is not in the same region`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(anotherUserNotInRegion)
-      .withProbationRegion(anotherProbationRegion)
-      .produce()
-
-    val assessment = TemporaryAccommodationAssessmentEntityFactory()
-      .withApplication(application)
-      .produce()
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanViewAssessment returns false for a Temporary Accommodation assessment if the user does not have the CAS3_ASSESSOR role`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .withProbationRegion(probationRegion)
-      .produce()
-
-    val assessment = TemporaryAccommodationAssessmentEntityFactory()
-      .withApplication(application)
-      .produce()
-
-    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanViewAssessment returns true for an Approved Premises assessment if the user has the CAS1_WORKFLOW_MANAGER role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserNotInRegion)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(anotherUserNotInRegion)
-      .produce()
-
-    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
-
-    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
-  }
-
-  @Test
-  fun `currentUserCanViewAssessment returns true for an Approved Premises assessment if the assessment is assigned to the user`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(user)
-      .produce()
-
-    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
   }
 
   @Test
