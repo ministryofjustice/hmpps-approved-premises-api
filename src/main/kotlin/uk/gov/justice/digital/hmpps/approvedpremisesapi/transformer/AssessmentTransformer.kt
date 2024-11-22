@@ -111,20 +111,23 @@ class AssessmentTransformer(
   }
 
   fun getSortedReferralHistoryNotes(
-    jpa: TemporaryAccommodationAssessmentEntity,
+    assessment: TemporaryAccommodationAssessmentEntity,
     cas3Events: List<DomainEventEntity>,
+    includeUserNotes: Boolean = true,
   ): List<ReferralHistoryNote> {
     val lastReferralRejectedHistoryNote =
-      jpa.referralHistoryNotes.filter { it is AssessmentReferralHistorySystemNoteEntity && it.type == ReferralHistorySystemNoteType.REJECTED }
+      assessment.referralHistoryNotes.filter { it is AssessmentReferralHistorySystemNoteEntity && it.type == ReferralHistorySystemNoteType.REJECTED }
         .maxByOrNull { it.createdAt }
 
-    val notes = jpa.referralHistoryNotes.map {
+    val notes = assessment.referralHistoryNotes.map {
       if (it.id == lastReferralRejectedHistoryNote?.id) {
-        assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, jpa)
+        assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, assessment)
       } else {
         assessmentReferralHistoryNoteTransformer.transformJpaToApi(it)
       }
-    }.toMutableList()
+    }
+      .filter { includeUserNotes || it.type != "user" }
+      .toMutableList()
 
     notes.addAll(
       cas3Events.map {

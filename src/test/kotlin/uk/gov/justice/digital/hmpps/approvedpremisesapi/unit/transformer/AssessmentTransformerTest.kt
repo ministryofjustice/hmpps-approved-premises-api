@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
@@ -31,8 +33,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistorySystemNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistoryUserNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -68,8 +73,8 @@ class AssessmentTransformerTest {
   @MockK
   lateinit var mockAssessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer
 
-  @MockK
-  lateinit var mockAssessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer
+  @InjectMockKs
+  lateinit var assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer
 
   @MockK
   lateinit var mockUserTransformer: UserTransformer
@@ -145,7 +150,6 @@ class AssessmentTransformerTest {
       }
     }
     every { mockAssessmentClarificationNoteTransformer.transformJpaToApi(any()) } returns mockk()
-    every { mockAssessmentReferralHistoryNoteTransformer.transformJpaToApi(any()) } returns mockk()
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.approvedPremises) } returns approvedPremisesUser
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.temporaryAccommodation) } returns temporaryAccommodationUser
   }
@@ -456,6 +460,36 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
       assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
       assertThat(apiSummary.person).isNotNull
+    }
+  }
+
+  @Nested
+  inner class Cas3NotesFiltering {
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `getSortedReferralHistoryNotes correctly filters user notes`(includeUserNotes: Boolean) {
+      val application = TemporaryAccommodationApplicationEntityFactory().withDefaults().produce()
+      val assessment = TemporaryAccommodationAssessmentEntityFactory().withApplication(application)
+        .produce()
+      assessment.referralHistoryNotes = mutableListOf(
+        AssessmentReferralHistoryUserNoteEntityFactory().withAssessment(assessment).produce(),
+        AssessmentReferralHistorySystemNoteEntityFactory().withAssessment(assessment).produce(),
+      )
+
+      val result =
+        assessmentTransformer.getSortedReferralHistoryNotes(
+          assessment,
+          cas3Events = emptyList(),
+          includeUserNotes = includeUserNotes,
+        )
+
+      assertThat(assessment.referralHistoryNotes.size).isEqualTo(2)
+      if (includeUserNotes) {
+        assertThat(result.size).isEqualTo(2)
+      } else {
+        assertThat(result.size).isEqualTo(1)
+      }
     }
   }
 

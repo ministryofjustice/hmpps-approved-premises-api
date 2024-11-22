@@ -152,7 +152,11 @@ class AssessmentService(
     }
   }
 
-  fun getAssessmentAndValidate(user: UserEntity, assessmentId: UUID): CasResult<AssessmentEntity> {
+  fun getAssessmentAndValidate(
+    user: UserEntity,
+    assessmentId: UUID,
+    forTimeline: Boolean = false,
+  ): CasResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
 
@@ -168,7 +172,9 @@ class AssessmentService(
       else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
     }
 
-    if (!userAccessService.userCanViewAssessment(user, assessment)) {
+    val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
+
+    if (!isAuthorised) {
       return CasResult.Unauthorised()
     }
 

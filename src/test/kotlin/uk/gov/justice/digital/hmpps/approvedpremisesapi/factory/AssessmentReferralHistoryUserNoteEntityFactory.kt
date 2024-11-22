@@ -42,6 +42,7 @@ class AssessmentReferralHistoryUserNoteEntityFactory : Factory<AssessmentReferra
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an assessment"),
     createdAt = this.createdAt(),
     message = this.message(),
-    createdByUser = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy"),
+    createdByUser = this.createdBy?.invoke() ?: this.assessment?.invoke()?.application?.createdByUser
+      ?: throw RuntimeException("Must provide a createdBy"),
   )
 }
