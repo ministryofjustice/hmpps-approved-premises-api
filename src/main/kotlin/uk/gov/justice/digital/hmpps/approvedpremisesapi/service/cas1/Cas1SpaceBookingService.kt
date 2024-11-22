@@ -400,6 +400,10 @@ class Cas1SpaceBookingService(
   fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
     if (cas1PremisesService.findPremiseById(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
 
+    return getBooking(bookingId)
+  }
+
+  fun getBooking(bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
     val booking = cas1SpaceBookingRepository.findByIdOrNull(bookingId) ?: return CasResult.NotFound("booking", bookingId.toString())
 
     return CasResult.Success(booking)

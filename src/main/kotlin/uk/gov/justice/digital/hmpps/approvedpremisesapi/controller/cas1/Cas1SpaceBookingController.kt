@@ -131,7 +131,17 @@ class Cas1SpaceBookingController(
       .body(summaries)
   }
 
-  override fun getSpaceBookingById(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
+  override fun getSpaceBookingById(bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
+    userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_VIEW)
+
+    val booking = extractEntityFromCasResult(spaceBookingService.getBooking(bookingId))
+
+    return ResponseEntity
+      .ok()
+      .body(toCas1SpaceBooking(booking))
+  }
+
+  override fun getSpaceBookingByPremiseAndId(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
     userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_VIEW)
 
     val booking = extractEntityFromCasResult(spaceBookingService.getBooking(premisesId, bookingId))
