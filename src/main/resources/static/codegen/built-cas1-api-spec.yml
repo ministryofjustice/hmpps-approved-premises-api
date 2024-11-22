@@ -517,7 +517,7 @@ paths:
     get:
       tags:
         - space bookings
-      operationId: "getSpaceBookingById"
+      operationId: "getSpaceBookingByPremiseAndId"
       summary: Returns space booking information for a given id
       parameters:
         - name: premisesId
@@ -923,6 +923,36 @@ paths:
               schema:
                 type: string
                 format: binary
+
+
+  /space-bookings/{bookingId}:
+    get:
+      tags:
+        - space bookings
+      operationId: "getSpaceBookingById"
+      summary: Returns space booking information for a given id
+      parameters:
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1SpaceBooking'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /out-of-service-beds:
     get:
       tags:

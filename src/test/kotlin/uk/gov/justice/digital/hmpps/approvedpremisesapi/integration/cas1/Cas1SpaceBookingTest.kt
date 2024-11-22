@@ -769,13 +769,8 @@ class Cas1SpaceBookingTest {
   @Nested
   inner class GetASpaceBooking : InitialiseDatabasePerClassTestBase() {
     lateinit var premises: ApprovedPremisesEntity
-    lateinit var otherPremises: ApprovedPremisesEntity
-
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingAtPremisesCancelled: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingAtPremisesDifferentCrn: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingNotAtPremises: Cas1SpaceBookingEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -786,7 +781,7 @@ class Cas1SpaceBookingTest {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
-      otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+      val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -819,7 +814,8 @@ class Cas1SpaceBookingTest {
         withCanonicalDepartureDate(LocalDate.parse("2030-06-29"))
       }
 
-      otherSpaceBookingAtPremisesDifferentCrn = cas1SpaceBookingEntityFactory.produceAndPersist {
+      // otherSpaceBookingAtPremisesDifferentCrn
+      cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn("othercrn")
         withPremises(premises)
         withPlacementRequest(placementRequest)
@@ -829,7 +825,8 @@ class Cas1SpaceBookingTest {
         withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
       }
 
-      otherSpaceBookingAtPremisesCancelled = cas1SpaceBookingEntityFactory.produceAndPersist {
+      // otherSpaceBookingAtPremisesCancelled
+      cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(premises)
         withPlacementRequest(placementRequest)
@@ -840,7 +837,134 @@ class Cas1SpaceBookingTest {
         withCancellationOccurredAt(LocalDate.parse("2020-01-01"))
       }
 
-      otherSpaceBookingNotAtPremises = cas1SpaceBookingEntityFactory.produceAndPersist {
+      // otherSpaceBookingNotAtPremises
+      cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(otherPremises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2032-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2032-06-29"))
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.get()
+        .uri("/cas1/space-bookings/${spaceBooking.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Returns 404 if space booking doesn't exist`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      webTestClient.get()
+        .uri("/cas1/space-bookings/${UUID.randomUUID()}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Success`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/space-bookings/${spaceBooking.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1SpaceBooking::class.java).responseBody.blockFirst()!!
+
+      assertThat(response.id).isEqualTo(spaceBooking.id)
+      assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
+      assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
+      assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
+    }
+  }
+
+  @Nested
+  inner class GetASpaceBookingByPremise : InitialiseDatabasePerClassTestBase() {
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremises: Cas1SpaceBookingEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      val region = givenAProbationRegion()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+      }
+
+      otherSpaceBookingAtPremises = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2030-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2030-06-29"))
+      }
+
+      // otherSpaceBookingAtPremisesDifferentCrn
+      cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn("othercrn")
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2031-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
+      }
+
+      // otherSpaceBookingAtPremisesCancelled
+      cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2031-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
+        withCancellationOccurredAt(LocalDate.parse("2020-01-01"))
+      }
+
+      // otherSpaceBookingNotAtPremises
+      cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(otherPremises)
         withPlacementRequest(placementRequest)
@@ -888,7 +1012,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Returns premises information if have correct role`() {
+    fun `Success`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
