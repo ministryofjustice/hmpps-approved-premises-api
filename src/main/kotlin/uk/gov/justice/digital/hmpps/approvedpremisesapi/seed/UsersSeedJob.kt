@@ -16,12 +16,10 @@ import java.util.UUID
  *  using ApStaffUsersSeedJob.
  */
 class UsersSeedJob(
-  fileName: String,
   private val useRolesForServices: List<ServiceName>,
   private val userService: UserService,
 ) : SeedJob<UsersSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "deliusUsername",
     "roles",

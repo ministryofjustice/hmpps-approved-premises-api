@@ -14,13 +14,11 @@ import java.lang.RuntimeException
 import java.util.UUID
 
 class TemporaryAccommodationBedspaceSeedJob(
-  fileName: String,
   private val premisesRepository: PremisesRepository,
   private val characteristicService: CharacteristicService,
   private val roomService: RoomService,
 ) : SeedJob<TemporaryAccommodationBedspaceSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

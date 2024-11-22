@@ -14,12 +14,10 @@ import java.util.UUID
  *  the seeding then look at UsersSeedJob.
  */
 class ApStaffUsersSeedJob(
-  fileName: String,
   private val userService: UserService,
   private val seedLogger: SeedLogger,
 ) : SeedJob<ApStaffUserSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "deliusUsername",
   ),

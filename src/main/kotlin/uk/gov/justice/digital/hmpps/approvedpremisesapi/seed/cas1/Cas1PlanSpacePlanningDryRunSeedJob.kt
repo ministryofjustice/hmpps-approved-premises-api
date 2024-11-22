@@ -10,12 +10,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class Cas1PlanSpacePlanningDryRunSeedJob(
-  fileName: String,
   private val spacePlanner: SpacePlanningService,
   private val cas1PremisesService: Cas1PremisesService,
 ) : SeedJob<Cas1SpacePlanningDryRunCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "premises_id",
     "start_date",

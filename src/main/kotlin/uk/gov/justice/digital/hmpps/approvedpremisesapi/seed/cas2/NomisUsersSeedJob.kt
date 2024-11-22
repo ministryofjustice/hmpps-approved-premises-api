@@ -8,11 +8,9 @@ import java.util.UUID
 import kotlin.random.Random
 
 class NomisUsersSeedJob(
-  fileName: String,
   private val repository: NomisUserRepository,
 ) : SeedJob<NomisUserSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf("nomisUsername", "name", "email"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

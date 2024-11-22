@@ -43,7 +43,6 @@ class Cas1LinkedBookingToPlacementRequestSeedJobTest {
   }
 
   val service = Cas1LinkedBookingToPlacementRequestSeedJob(
-    fileName = "theFileName",
     placementRequestRepository = placementRequestRepository,
     bookingRepository = bookingRepository,
     applicationTimelineNoteService = applicationTimelineNoteService,

@@ -14,13 +14,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApprovedPremisesRoomsSeedJob(
-  fileName: String,
   private val premisesRepository: PremisesRepository,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesRoomsSeedCsvRow>(
-  fileName = fileName,
   requiredHeaders = setOf(
     "apCode",
     "bedCode",

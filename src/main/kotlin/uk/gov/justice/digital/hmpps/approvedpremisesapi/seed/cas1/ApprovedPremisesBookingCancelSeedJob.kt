@@ -14,11 +14,9 @@ import java.time.LocalDate
 import java.util.UUID
 
 class ApprovedPremisesBookingCancelSeedJob(
-  fileName: String,
   private val bookingService: BookingService,
   private val bookingRepository: BookingRepository,
 ) : SeedJob<CancelBookingSeedCsvRow>(
-  fileName = fileName,
   requiredHeaders = setOf(
     "id",
   ),

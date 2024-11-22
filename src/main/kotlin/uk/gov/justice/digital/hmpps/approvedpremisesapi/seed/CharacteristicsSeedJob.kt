@@ -7,11 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import java.util.UUID
 
 class CharacteristicsSeedJob(
-  fileName: String,
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<CharacteristicsSeedCsvRow>(
   id = UUID.randomUUID(),
-  fileName = fileName,
   requiredHeaders = setOf(
     "characteristic_name",
     "characteristic_property_name",
