@@ -25,7 +25,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var localAuthorityArea: Yielded<LocalAuthorityAreaEntity>? = null
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var apCode: Yielded<String> = { randomStringUpperCase(5) }
+  private var apCode: Yielded<String> = { randomStringUpperCase(10) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var latitude: Yielded<Double> = { randomDouble(53.50, 54.99) }
   private var longitude: Yielded<Double> = { randomDouble(-1.56, 1.10) }

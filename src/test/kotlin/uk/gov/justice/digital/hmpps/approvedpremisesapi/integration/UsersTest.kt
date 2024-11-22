@@ -193,7 +193,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
     val borough = Borough(
-      code = randomStringMultiCaseWithNumbers(7),
+      code = randomStringMultiCaseWithNumbers(10),
       description = randomStringMultiCaseWithNumbers(10),
     )
 
