@@ -165,7 +165,7 @@ class ReferenceDataController(
   }
 
   override fun referenceDataNonArrivalReasonsGet(): ResponseEntity<List<NonArrivalReason>> {
-    val reasons = nonArrivalReasonRepository.findAll()
+    val reasons = nonArrivalReasonRepository.findAll().filter { it.isActive }
 
     return ResponseEntity.ok(reasons.map(nonArrivalReasonTransformer::transformJpaToApi))
   }

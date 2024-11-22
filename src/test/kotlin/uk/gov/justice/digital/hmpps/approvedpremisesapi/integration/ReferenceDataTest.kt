@@ -831,6 +831,30 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get NonArrival Reasons returns only reasons which are active`() {
+    nonArrivalReasonRepository.deleteAll()
+
+    val activeNonArrivalReasons = nonArrivalReasonEntityFactory.produceAndPersistMultiple(10)
+    nonArrivalReasonEntityFactory.produceAndPersistMultiple(10) {
+      withIsActive(false)
+    }
+    val expectedJson = objectMapper.writeValueAsString(
+      activeNonArrivalReasons.map(nonArrivalReasonTransformer::transformJpaToApi),
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/non-arrival-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
   fun `Get Probation Delivery Units returns 200 with correct body`() {
     probationDeliveryUnitRepository.deleteAll()
 
