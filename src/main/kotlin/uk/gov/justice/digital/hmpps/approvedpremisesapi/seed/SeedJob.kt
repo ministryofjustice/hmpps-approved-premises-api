@@ -17,6 +17,12 @@ abstract class SeedJob<RowType>(
     }
   }
 
+  open fun preSeed() {
+    // by default do nothing
+  }
+  open fun postSeed() {
+    // by default do nothing
+  }
   abstract fun deserializeRow(columns: Map<String, String>): RowType
   abstract fun processRow(row: RowType)
 }
