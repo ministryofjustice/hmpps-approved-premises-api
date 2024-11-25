@@ -134,6 +134,7 @@ class Cas1SpaceBookingServiceTest {
 
     private val premises = ApprovedPremisesEntityFactory()
       .withDefaults()
+      .withSupportsSpaceBookings(true)
       .produce()
 
     private val placementRequest = PlacementRequestEntityFactory()
@@ -163,6 +164,33 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result.validationMessages).anySatisfy { key, value ->
         key == "$.premisesId" && value == "doesNotExist"
+      }
+    }
+
+    @Test
+    fun `Returns validation error if premises supplied does not support space bookings`() {
+      val premisesDoesntSupportSpaceBookings = ApprovedPremisesEntityFactory()
+        .withSupportsSpaceBookings(false)
+        .withDefaults()
+        .produce()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premisesDoesntSupportSpaceBookings
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+
+      val result = service.createNewBooking(
+        premisesId = premisesDoesntSupportSpaceBookings.id,
+        placementRequestId = placementRequest.id,
+        arrivalDate = LocalDate.now(),
+        departureDate = LocalDate.now().plusDays(1),
+        createdBy = user,
+        characteristics = emptyList(),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      result as CasResult.FieldValidationError
+
+      assertThat(result.validationMessages).anySatisfy { key, value ->
+        key == "$.premisesId" && value == "doesNotSupportSpaceBookings"
       }
     }
 
@@ -268,7 +296,10 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Creates new booking if all data is valid, updates application status, raises domain event and sends email`() {
-      val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withSupportsSpaceBookings(true)
+        .produce()
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
         .withEventNumber("42")

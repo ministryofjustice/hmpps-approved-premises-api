@@ -419,6 +419,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val placementRequest = application.getLatestPlacementRequest()!!
 
     premises = approvedPremisesEntityFactory.produceAndPersist {
+      withSupportsSpaceBookings(true)
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { givenAProbationRegion() }
     }
