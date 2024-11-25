@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS cas1_space_bookings_premises_id_placement_request_id_idx;
