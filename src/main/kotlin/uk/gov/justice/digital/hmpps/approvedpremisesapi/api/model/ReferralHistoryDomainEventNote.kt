@@ -25,5 +25,4 @@ class ReferralHistoryDomainEventNote(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("messageDetails") override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
-) : ReferralHistoryNote {
-}
+) : ReferralHistoryNote

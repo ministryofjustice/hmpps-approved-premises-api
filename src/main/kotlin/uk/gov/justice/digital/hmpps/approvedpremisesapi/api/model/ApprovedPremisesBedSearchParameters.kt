@@ -28,5 +28,4 @@ data class ApprovedPremisesBedSearchParameters(
 
   @Schema(example = "null", required = true, description = "The number of days the Bed will need to be free from the start_date until")
   @get:JsonProperty("durationDays", required = true) override val durationDays: kotlin.Int,
-) : BedSearchParameters {
-}
+) : BedSearchParameters

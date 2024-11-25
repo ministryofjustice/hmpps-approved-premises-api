@@ -42,5 +42,4 @@ data class ApprovedPremisesAssessmentSummary(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("risks") override val risks: PersonRisks? = null,
-) : AssessmentSummary {
-}
+) : AssessmentSummary

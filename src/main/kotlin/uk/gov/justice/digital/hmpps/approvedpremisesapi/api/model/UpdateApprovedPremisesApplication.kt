@@ -56,5 +56,4 @@ data class UpdateApprovedPremisesApplication(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("noticeType") val noticeType: Cas1ApplicationTimelinessCategory? = null,
-) : UpdateApplication {
-}
+) : UpdateApplication

@@ -66,5 +66,4 @@ data class ApprovedPremisesUser(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("probationDeliveryUnit") override val probationDeliveryUnit: ProbationDeliveryUnit? = null,
-) : User {
-}
+) : User

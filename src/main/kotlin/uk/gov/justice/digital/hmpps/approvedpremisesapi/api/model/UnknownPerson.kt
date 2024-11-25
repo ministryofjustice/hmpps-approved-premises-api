@@ -13,5 +13,4 @@ class UnknownPerson(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("type", required = true) override val type: PersonType,
-) : Person {
-}
+) : Person

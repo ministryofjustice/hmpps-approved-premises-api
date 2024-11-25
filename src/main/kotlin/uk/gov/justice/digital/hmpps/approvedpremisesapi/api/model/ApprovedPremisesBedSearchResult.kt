@@ -23,5 +23,4 @@ data class ApprovedPremisesBedSearchResult(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("bed", required = true) override val bed: BedSearchResultBedSummary,
-) : BedSearchResult {
-}
+) : BedSearchResult

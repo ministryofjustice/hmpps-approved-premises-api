@@ -20,5 +20,4 @@ data class CAS3AssessmentUpdatedEvent(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventType", required = true) override val eventType: EventType,
-) : CAS3Event {
-}
+) : CAS3Event

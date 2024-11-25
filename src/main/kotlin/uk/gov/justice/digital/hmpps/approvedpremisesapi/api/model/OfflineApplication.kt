@@ -19,5 +19,4 @@ class OfflineApplication(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
-) : Application {
-}
+) : Application

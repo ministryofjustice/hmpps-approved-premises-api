@@ -17,5 +17,4 @@ data class FullPersonSummary(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personType", required = true) override val personType: PersonSummaryDiscriminator,
-) : PersonSummary {
-}
+) : PersonSummary

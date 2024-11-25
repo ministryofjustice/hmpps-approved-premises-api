@@ -117,5 +117,4 @@ data class ApprovedPremisesApplication(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("genderForAp") val genderForAp: GenderForAp? = null,
-) : Application {
-}
+) : Application

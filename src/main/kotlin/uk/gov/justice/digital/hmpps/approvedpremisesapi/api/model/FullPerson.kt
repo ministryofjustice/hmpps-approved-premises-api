@@ -61,5 +61,4 @@ data class FullPerson(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("isRestricted") val isRestricted: kotlin.Boolean? = null,
-) : Person {
-}
+) : Person

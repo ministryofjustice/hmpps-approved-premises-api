@@ -23,5 +23,4 @@ data class NewCas2Arrival(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("keyWorkerStaffCode") override val keyWorkerStaffCode: kotlin.String? = null,
-) : NewArrival {
-}
+) : NewArrival

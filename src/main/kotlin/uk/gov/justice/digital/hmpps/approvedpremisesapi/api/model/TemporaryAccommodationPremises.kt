@@ -64,5 +64,4 @@ data class TemporaryAccommodationPremises(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("characteristics") override val characteristics: kotlin.collections.List<Characteristic>? = null,
-) : Premises {
-}
+) : Premises

@@ -39,5 +39,4 @@ data class TemporaryAccommodationPremisesSummary(
 
   @Schema(example = "Blackmore End", description = "")
   @get:JsonProperty("addressLine2") override val addressLine2: kotlin.String? = null,
-) : PremisesSummary {
-}
+) : PremisesSummary

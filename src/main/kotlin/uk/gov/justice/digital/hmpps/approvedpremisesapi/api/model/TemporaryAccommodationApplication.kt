@@ -59,5 +59,4 @@ data class TemporaryAccommodationApplication(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
-) : Application {
-}
+) : Application

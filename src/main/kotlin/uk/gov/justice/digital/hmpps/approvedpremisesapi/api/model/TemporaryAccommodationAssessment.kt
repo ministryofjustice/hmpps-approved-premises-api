@@ -67,5 +67,4 @@ data class TemporaryAccommodationAssessment(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("referralHistoryNotes") override val referralHistoryNotes: kotlin.collections.List<ReferralHistoryNote>? = null,
-) : Assessment {
-}
+) : Assessment

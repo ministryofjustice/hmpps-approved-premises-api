@@ -66,5 +66,4 @@ data class PlacementApplicationTask(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("outcomeRecordedAt") override val outcomeRecordedAt: java.time.Instant? = null,
-) : Task {
-}
+) : Task

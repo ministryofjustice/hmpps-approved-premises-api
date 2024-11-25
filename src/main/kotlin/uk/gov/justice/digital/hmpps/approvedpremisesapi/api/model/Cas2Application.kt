@@ -59,5 +59,4 @@ data class Cas2Application(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("timelineEvents") val timelineEvents: kotlin.collections.List<Cas2TimelineEvent>? = null,
-) : Application {
-}
+) : Application

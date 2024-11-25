@@ -19,5 +19,4 @@ class BedOccupancyOpenEntry(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("endDate", required = true) override val endDate: java.time.LocalDate,
-) : BedOccupancyEntry {
-}
+) : BedOccupancyEntry

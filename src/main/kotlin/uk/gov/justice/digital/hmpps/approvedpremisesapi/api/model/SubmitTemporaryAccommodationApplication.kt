@@ -85,5 +85,4 @@ data class SubmitTemporaryAccommodationApplication(
 
   @Schema(example = "null", description = "Any object that conforms to the current JSON schema for an application")
   @get:JsonProperty("translatedDocument") override val translatedDocument: kotlin.Any? = null,
-) : SubmitApplication {
-}
+) : SubmitApplication

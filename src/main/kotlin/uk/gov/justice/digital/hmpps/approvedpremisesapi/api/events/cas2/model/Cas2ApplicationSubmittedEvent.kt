@@ -20,5 +20,4 @@ data class Cas2ApplicationSubmittedEvent(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventType", required = true) override val eventType: EventType,
-) : Cas2Event {
-}
+) : Cas2Event

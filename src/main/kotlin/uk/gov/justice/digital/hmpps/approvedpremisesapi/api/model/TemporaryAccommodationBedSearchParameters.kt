@@ -24,5 +24,4 @@ data class TemporaryAccommodationBedSearchParameters(
 
   @Schema(example = "null", description = "Bedspace and property attributes to filter on")
   @get:JsonProperty("attributes") val attributes: kotlin.collections.List<BedSearchAttributes>? = null,
-) : BedSearchParameters {
-}
+) : BedSearchParameters

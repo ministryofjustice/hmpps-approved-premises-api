@@ -22,5 +22,4 @@ class OfflineApplicationSummary(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("submittedAt") override val submittedAt: java.time.Instant? = null,
-) : ApplicationSummary {
-}
+) : ApplicationSummary

@@ -38,5 +38,4 @@ data class TemporaryAccommodationUser(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("probationDeliveryUnit") override val probationDeliveryUnit: ProbationDeliveryUnit? = null,
-) : User {
-}
+) : User

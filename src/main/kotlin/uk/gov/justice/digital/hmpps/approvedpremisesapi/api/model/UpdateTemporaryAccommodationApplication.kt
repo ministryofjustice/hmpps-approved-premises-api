@@ -13,5 +13,4 @@ class UpdateTemporaryAccommodationApplication(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("data", required = true) override val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>,
-) : UpdateApplication {
-}
+) : UpdateApplication
