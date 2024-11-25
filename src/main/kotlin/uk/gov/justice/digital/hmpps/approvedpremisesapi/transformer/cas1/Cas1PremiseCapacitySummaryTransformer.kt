@@ -5,16 +5,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 
 @Component
-class Cas1PremiseCapacitySummaryTransformer {
+class Cas1PremiseCapacitySummaryTransformer(
+  val cas1PremisesTransformer: Cas1PremisesTransformer,
+) {
 
   fun toCas1PremiseCapacitySummary(
+    premiseSummaryInfo: Cas1PremisesService.Cas1PremisesSummaryInfo,
     premiseCapacity: PremiseCapacitySummary,
   ) = Cas1PremiseCapacity(
-    premisesId = premiseCapacity.premise.id,
+    premise = cas1PremisesTransformer.toPremiseSummary(premiseSummaryInfo),
     startDate = premiseCapacity.range.fromInclusive,
     endDate = premiseCapacity.range.toInclusive,
     capacity = premiseCapacity.byDay.map { it.toApiType() },

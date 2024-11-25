@@ -423,7 +423,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .isOk
         .returnResult(Cas1PremiseCapacity::class.java).responseBody.blockFirst()!!
 
-      assertThat(result.premisesId).isEqualTo(premises.id)
+      assertThat(result.premise.name).isEqualTo("the premises name")
       assertThat(result.capacity).hasSize(2)
     }
   }

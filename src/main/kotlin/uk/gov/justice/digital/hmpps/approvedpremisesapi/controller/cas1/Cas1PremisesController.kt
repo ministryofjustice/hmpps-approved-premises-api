@@ -64,11 +64,13 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW_CAPACITY)
 
+    val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
+    val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, startDate, endDate)
+
     return ResponseEntity.ok().body(
       cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-        extractEntityFromCasResult(
-          cas1PremisesService.getPremiseCapacity(premisesId, startDate, endDate),
-        ),
+        premiseSummaryInfo = extractEntityFromCasResult(premiseSummaryInfo),
+        premiseCapacity = extractEntityFromCasResult(premiseCapacity),
       ),
     )
   }
