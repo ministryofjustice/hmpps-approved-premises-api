@@ -28,7 +28,7 @@ data class Cas1DeliusBookingImportEntity(
   val moveOnCategoryDescription: String?,
   val expectedArrivalDate: LocalDate,
   val arrivalDate: LocalDate?,
-  val expectedDepartureDate: LocalDate,
+  val expectedDepartureDate: LocalDate?,
   val departureDate: LocalDate?,
   val nonArrivalDate: LocalDate?,
   val nonArrivalContactDatetime: LocalDateTime?,

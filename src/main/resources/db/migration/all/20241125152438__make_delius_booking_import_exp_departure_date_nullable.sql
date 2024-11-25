@@ -1,0 +1,1 @@
+ALTER TABLE cas1_delius_booking_import ALTER COLUMN expected_departure_date DROP NOT NULL;
