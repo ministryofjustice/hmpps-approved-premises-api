@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
@@ -40,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CruManagem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DomainEventReplaySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DuplicateApplicationSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1FurtherInfoBugFixSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1ImportDeliusBookingDataSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkedBookingToPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServiceBedSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1PlanSpacePlanningDryRunSeedJob
@@ -229,18 +232,23 @@ class SeedService(
           getBean(SpacePlanningService::class),
           getBean(Cas1PremisesService::class),
         )
+
+        SeedFileType.approvedPremisesImportDeliusBookingManagementData -> Cas1ImportDeliusBookingDataSeedJob(
+          getBean(NamedParameterJdbcTemplate::class),
+          getBean(Cas1DeliusBookingImportRepository::class),
+        )
       }
 
       val seedStarted = LocalDateTime.now()
 
-      if (job.runInTransaction) {
-        transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
+      val rowsProcessed = if (job.runInTransaction) {
+        transactionTemplate.execute { processJob(job, resolveCsvPath) }
       } else {
         processJob(job, resolveCsvPath)
       }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
-      seedLogger.info("Seed request complete. Took $timeTaken millis")
+      seedLogger.info("Seed request complete. Took $timeTaken millis and processed $rowsProcessed rows")
     } catch (exception: Exception) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
@@ -248,17 +256,22 @@ class SeedService(
 
   private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
 
-  private fun <T> processJob(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
+  private fun <T> processJob(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.
     // It is preferable to fail fast rather than processing half of a file before stopping,
     // so we first do a full pass but only deserializing each row
     seedLogger.info("Processing CSV file ${Path.of(job.resolveCsvPath()).absolutePathString()}")
     enforcePresenceOfRequiredHeaders(job, resolveCsvPath)
     ensureCsvCanBeDeserialized(job, resolveCsvPath)
-    processCsv(job, resolveCsvPath)
+
+    job.preSeed()
+    val rowsProcessed = processCsv(job, resolveCsvPath)
+    job.postSeed()
+
+    return rowsProcessed
   }
 
-  private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
+  private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
     var rowNumber = 1
     val errors = mutableListOf<String>()
 
@@ -283,6 +296,8 @@ class SeedService(
     if (errors.isNotEmpty()) {
       seedLogger.error("The following row-level errors were raised: ${errors.joinToString("\n")}")
     }
+
+    return rowNumber - 1
   }
 
   private fun <T> enforcePresenceOfRequiredHeaders(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
