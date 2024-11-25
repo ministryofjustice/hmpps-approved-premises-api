@@ -64,6 +64,8 @@ data class Profile(
 data class Offence(
   val id: String,
   val description: String,
+  val mainCategoryDescription: String,
+  val subCategoryDescription: String,
   val date: LocalDate?,
   val main: Boolean,
   val eventNumber: String,

@@ -150,6 +150,8 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
               CaseDetailOffenceFactory()
                 .withId("M1")
                 .withDescription("Test Offence 1")
+                .withMainCategoryDescription("Main cat desc 1")
+                .withSubCategoryDescription("Sub cat desc 1")
                 .withDate(LocalDate.now().minusMonths(1))
                 .withEventNumber("123")
                 .withEventId(10)
