@@ -24,7 +24,7 @@ import java.util.UUID
 
 @Repository
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
-  fun findByPremisesIdAndPlacementRequestId(premisesId: UUID, placementRequestId: UUID): Cas1SpaceBookingEntity?
+  fun findByPlacementRequestId(placementRequestId: UUID): List<Cas1SpaceBookingEntity>
 
   fun deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId: UUID): Long
 
