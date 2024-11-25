@@ -15,7 +15,8 @@ import java.util.UUID
  *  roles/qualifications of pre-existing users, then consider
  *  using ApStaffUsersSeedJob.
  */
-class UsersSeedJob(
+@SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
+abstract class AbstractUsersSeedJob(
   private val useRolesForServices: List<ServiceName>,
   private val userService: UserService,
 ) : SeedJob<UsersSeedCsvRow>(

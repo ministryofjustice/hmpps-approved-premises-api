@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -48,10 +47,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1PlanSpacePlanningDryRunSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -110,13 +111,12 @@ class SeedService(
           getBean(BedRepository::class),
           getBean(CharacteristicRepository::class),
         )
-        SeedFileType.user -> UsersSeedJob(
-          ServiceName.entries,
+        SeedFileType.user -> AllCasUsersSeedJob(
           getBean(UserService::class),
         )
         SeedFileType.approvedPremisesApStaffUsers -> ApStaffUsersSeedJob(
           getBean(UserService::class),
-          seedLogger,
+          getBean(SeedLogger::class),
         )
         SeedFileType.nomisUsers -> NomisUsersSeedJob(
           getBean(NomisUserRepository::class),
@@ -133,12 +133,10 @@ class SeedService(
           getBean(JsonSchemaService::class),
           getBean(Cas2PersistedApplicationStatusFinder::class),
         )
-        SeedFileType.approvedPremisesUsers -> UsersSeedJob(
-          listOf(ServiceName.approvedPremises),
+        SeedFileType.approvedPremisesUsers -> Cas1UsersSeedJob(
           getBean(UserService::class),
         )
-        SeedFileType.temporaryAccommodationUsers -> UsersSeedJob(
-          listOf(ServiceName.temporaryAccommodation),
+        SeedFileType.temporaryAccommodationUsers -> Cas3UsersSeedJob(
           getBean(UserService::class),
         )
         SeedFileType.characteristics -> CharacteristicsSeedJob(
