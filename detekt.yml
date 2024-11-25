@@ -5,7 +5,7 @@
 # https://github.com/koral--/detekt/blob/master/detekt-cli/src/main/resources/default-detekt-config.yml
 config:
   validation: true
-  excludes: '**/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**'
+  excludes: '/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**'
   warningsAsErrors: true
 
 performance:
