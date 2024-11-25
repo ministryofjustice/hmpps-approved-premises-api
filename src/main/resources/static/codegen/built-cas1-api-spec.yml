@@ -6383,15 +6383,15 @@ components:
           $ref: '#/components/schemas/ApArea'
         bedCount:
           type: integer
-          description: The total number of spaces in this premises
+          description: The total number of beds in this premises
           example: 22
         availableBeds:
           type: integer
-          description: The total number of spaces available right now
+          description: The total number of beds available at this moment in time
           example: 20
         outOfServiceBeds:
           type: integer
-          description: The total number of out of service beds
+          description: The total number of out of service beds at this moment in time
           example: 2
         supportsSpaceBookings:
           type: boolean
@@ -6847,9 +6847,8 @@ components:
     Cas1PremiseCapacity:
       type: object
       properties:
-        premisesId:
-          type: string
-          format: uuid
+        premise:
+          $ref: '#/components/schemas/Cas1PremisesSummary'
         startDate:
           type: string
           format: date
@@ -6861,7 +6860,7 @@ components:
           items:
             $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
       required:
-        - premisesId
+        - premise
         - startDate
         - endDate
         - capacity
