@@ -71,6 +71,8 @@ class Cas1SpaceBookingService(
     val premises = cas1PremisesService.findPremiseById(premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
+    } else if (!premises.supportsSpaceBookings) {
+      "$.premisesId" hasValidationError "doesNotSupportSpaceBookings"
     }
 
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)

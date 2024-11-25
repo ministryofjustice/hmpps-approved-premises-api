@@ -118,6 +118,7 @@ class Cas1SpaceBookingTest {
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withSupportsSpaceBookings(true)
           withYieldedProbationRegion { givenAProbationRegion() }
           withYieldedLocalAuthorityArea {
             localAuthorityEntityFactory.produceAndPersist()
@@ -188,6 +189,7 @@ class Cas1SpaceBookingTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withSupportsSpaceBookings(true)
             withYieldedProbationRegion { givenAProbationRegion() }
             withYieldedLocalAuthorityArea {
               localAuthorityEntityFactory.produceAndPersist()
@@ -243,6 +245,7 @@ class Cas1SpaceBookingTest {
           placementRequestRepository.saveAndFlush(placementRequest)
 
           val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withSupportsSpaceBookings(true)
             withYieldedProbationRegion { givenAProbationRegion() }
             withYieldedLocalAuthorityArea {
               localAuthorityEntityFactory.produceAndPersist()
@@ -777,11 +780,13 @@ class Cas1SpaceBookingTest {
       val region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
 
       val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -903,6 +908,7 @@ class Cas1SpaceBookingTest {
       val region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -1042,6 +1048,7 @@ class Cas1SpaceBookingTest {
       region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -1183,6 +1190,7 @@ class Cas1SpaceBookingTest {
       region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -1335,6 +1343,7 @@ class Cas1SpaceBookingTest {
       region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withQCode("QCODE")
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1421,6 +1430,7 @@ class Cas1SpaceBookingTest {
       region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       }
@@ -1619,7 +1629,8 @@ class Cas1SpaceBookingTest {
       region = givenAProbationRegion()
 
       premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { region }
+        withProbationRegion(region)
+        withSupportsSpaceBookings(true)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withEmailAddress("premises@test.com")
       }
@@ -1765,11 +1776,13 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
     }
 
     premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
+      withSupportsSpaceBookings(true)
       withYieldedProbationRegion { region }
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
     }
 
     premisesWithBookings = approvedPremisesEntityFactory.produceAndPersist {
+      withSupportsSpaceBookings(true)
       withYieldedProbationRegion { region }
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
     }
