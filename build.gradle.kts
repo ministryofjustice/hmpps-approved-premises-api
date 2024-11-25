@@ -433,3 +433,7 @@ detekt {
   ignoreFailures = false
   baseline = file("./detekt-baseline.xml")
 }
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+  // include("**/special/package/**") // only analyze a sub package inside src/main/kotlin
+  exclude("**/api/**") // but exclude our legacy internal package
+}

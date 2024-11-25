@@ -5,9 +5,16 @@ import org.springframework.boot.runApplication
 import org.springframework.context.annotation.ComponentScan
 
 @SpringBootApplication
-@ComponentScan(basePackages = ["uk.gov.justice.digital.hmpps.approvedpremisesapi", "uk.gov.justice.digital.hmpps.approvedpremisesapi.api", "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model"])
+@ComponentScan(
+  basePackages = [
+    "uk.gov.justice.digital.hmpps.approvedpremisesapi",
+    "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
+    "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  ],
+)
 class Application
 
+@SuppressWarnings("SpreadOperator")
 fun main(args: Array<String>) {
   runApplication<Application>(*args)
 }
