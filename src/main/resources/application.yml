@@ -106,22 +106,6 @@ spring:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
 
-springdoc:
-  swagger-ui:
-    urls:
-      - name: API
-        url: "api.yml"
-      - name: CAS1 API
-        url: "cas1-api.yml"
-      - name: CAS2 API
-        url: "cas2-api.yml"
-      - name: Domain events
-        url: "domain-events-api.yml"
-      - name: CAS2 Domain events
-        url: "cas2-domain-events-api.yml"
-      - name: CAS3 API
-        url: "cas3-api.yml"
-
 server:
   port: 8080
   servlet:
