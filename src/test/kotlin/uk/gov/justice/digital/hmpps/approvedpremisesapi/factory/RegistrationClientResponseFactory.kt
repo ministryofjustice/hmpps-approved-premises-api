@@ -45,13 +45,13 @@ class RegistrationClientResponseFactory : Factory<Registration> {
   }
   private var registeringProbationArea: Yielded<RegistrationKeyValue> = {
     RegistrationKeyValue(
-      code = randomStringUpperCase(5),
+      code = randomStringUpperCase(10),
       description = randomStringUpperCase(20),
     )
   }
   private var registerLevel: Yielded<RegistrationKeyValue?> = {
     RegistrationKeyValue(
-      code = randomStringUpperCase(5),
+      code = randomStringUpperCase(10),
       description = randomStringUpperCase(20),
     )
   }
@@ -66,14 +66,14 @@ class RegistrationClientResponseFactory : Factory<Registration> {
   private var endDate: Yielded<LocalDate?> = { null }
   private var deregisteringOfficer: Yielded<RegistrationStaffHuman?> = {
     RegistrationStaffHuman(
-      code = randomStringUpperCase(5),
-      forenames = randomStringUpperCase(5),
-      surname = randomStringUpperCase(5),
+      code = randomStringUpperCase(10),
+      forenames = randomStringUpperCase(10),
+      surname = randomStringUpperCase(10),
     )
   }
   private var deregisteringProbationArea: Yielded<RegistrationKeyValue?> = {
     RegistrationKeyValue(
-      code = randomStringUpperCase(5),
+      code = randomStringUpperCase(10),
       description = randomStringUpperCase(20),
     )
   }

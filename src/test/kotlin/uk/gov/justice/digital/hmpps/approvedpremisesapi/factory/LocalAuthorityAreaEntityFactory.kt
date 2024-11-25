@@ -8,8 +8,8 @@ import java.util.UUID
 
 class LocalAuthorityAreaEntityFactory : Factory<LocalAuthorityAreaEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var identifier: Yielded<String> = { randomStringUpperCase(5) }
-  private var name: Yielded<String> = { randomStringUpperCase(5) }
+  private var identifier: Yielded<String> = { randomStringUpperCase(10) }
+  private var name: Yielded<String> = { randomStringUpperCase(10) }
 
   fun withName(name: String) = apply {
     this.name = { name }
