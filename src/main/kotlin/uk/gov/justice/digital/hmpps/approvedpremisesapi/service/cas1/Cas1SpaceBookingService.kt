@@ -89,12 +89,16 @@ class Cas1SpaceBookingService(
     premises!!
     placementRequest!!
 
-    when (
-      val existingBooking =
-        cas1SpaceBookingRepository.findByPremisesIdAndPlacementRequestId(premisesId, placementRequestId)
-    ) {
-      null -> {}
-      else -> return existingBooking.id hasConflictError "A Space Booking already exists for this premises and placement request"
+    placementRequest.booking?.let {
+      if (it.isActive()) {
+        return it.id hasConflictError "A legacy Booking already exists for this premises and placement request"
+      }
+    }
+
+    cas1SpaceBookingRepository.findByPremisesIdAndPlacementRequestId(premisesId, placementRequestId)?.let {
+      if (it.isActive()) {
+        return it.id hasConflictError "A Space Booking already exists for this premises and placement request"
+      }
     }
 
     val durationInDays = arrivalDate.until(departureDate).toKotlinDatePeriod().days

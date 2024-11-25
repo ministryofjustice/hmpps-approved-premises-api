@@ -30,6 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
@@ -129,16 +131,21 @@ class Cas1SpaceBookingServiceTest {
 
   @Nested
   inner class CreateNewBooking {
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val placementRequest = PlacementRequestEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val user = UserEntityFactory()
+      .withDefaults()
+      .produce()
+
     @Test
     fun `Returns validation error if no premises with the given ID exists`() {
-      val placementRequest = PlacementRequestEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val user = UserEntityFactory()
-        .withDefaults()
-        .produce()
-
       every { cas1PremisesService.findPremiseById(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
@@ -161,14 +168,6 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no placement request with the given ID exists`() {
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val user = UserEntityFactory()
-        .withDefaults()
-        .produce()
-
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
 
@@ -191,18 +190,6 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if the departure date is before the arrival date`() {
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val user = UserEntityFactory()
-        .withDefaults()
-        .produce()
-
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
@@ -224,19 +211,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Returns conflict error if a booking already exists for the same premises and placement request`() {
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val user = UserEntityFactory()
-        .withDefaults()
-        .produce()
-
+    fun `Returns conflict error if a space booking already exists for the same premises and placement request`() {
       val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
         .withPremises(premises)
         .withPlacementRequest(placementRequest)
@@ -263,6 +238,35 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
+    fun `Returns conflict error if a legacy booking already exists for the same premises and placement request`() {
+      val legacyBooking = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val placementRequestwithLegacyBooking = placementRequest.copy(
+        booking = legacyBooking,
+      )
+
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestwithLegacyBooking
+
+      val result = service.createNewBooking(
+        premisesId = premises.id,
+        placementRequestId = placementRequest.id,
+        arrivalDate = LocalDate.now(),
+        departureDate = LocalDate.now().plusDays(1),
+        createdBy = user,
+        characteristics = emptyList(),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.conflictingEntityId).isEqualTo(legacyBooking.id)
+      assertThat(result.message).contains("A legacy Booking already exists")
+    }
+
+    @Test
     fun `Creates new booking if all data is valid, updates application status, raises domain event and sends email`() {
       val premises = ApprovedPremisesEntityFactory().withDefaults().produce()
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -276,10 +280,6 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .withApplication(application)
         .withPlacementApplication(placementApplication)
-        .produce()
-
-      val user = UserEntityFactory()
-        .withDefaults()
         .produce()
 
       val arrivalDate = LocalDate.now()
@@ -350,6 +350,91 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.nonArrivalReason).isNull()
       assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
 
+      verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
+    }
+
+    @Test
+    fun `Creates a new booking if data is valid and legacy and space bookings are cancelled`() {
+      val legacyBookingWithCancellation = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val cancellationEntity = CancellationEntityFactory()
+        .withBooking(legacyBookingWithCancellation)
+        .withReason(CancellationReasonEntityFactory().produce())
+        .produce()
+
+      legacyBookingWithCancellation.cancellations = mutableListOf(cancellationEntity)
+
+      val spaceBookingWithCancellation = Cas1SpaceBookingEntityFactory()
+        .withPremises(premises)
+        .withPlacementRequest(placementRequest)
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withEventNumber("42")
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withBooking(legacyBookingWithCancellation)
+        .withSpaceBookings(mutableListOf(spaceBookingWithCancellation))
+        .withApplication(application)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
+      val arrivalDate = LocalDate.now()
+      val durationInDays = 1
+      val departureDate = arrivalDate.plusDays(durationInDays.toLong())
+
+      val spaceAvailability = SpaceAvailability(
+        premisesId = premises.id,
+      )
+
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns null
+
+      every {
+        spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
+      } returns listOf(spaceAvailability)
+
+      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
+
+      every {
+        cas1BookingDomainEventService.spaceBookingMade(
+          application,
+          any(),
+          user,
+          placementRequest,
+        )
+      } returns Unit
+
+      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+
+      val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
+
+      val result = service.createNewBooking(
+        premisesId = premises.id,
+        placementRequestId = placementRequest.id,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+        createdBy = user,
+        characteristics = listOf(
+          CharacteristicEntityFactory().withName("c1").produce(),
+          CharacteristicEntityFactory().withName("c2").produce(),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+
+      val persistedBooking = persistedBookingCaptor.captured
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
     }
   }
