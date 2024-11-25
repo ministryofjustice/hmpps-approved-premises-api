@@ -21,26 +21,37 @@ class SpringDocConfiguration {
   }
 
   @Bean
-  fun cas1(): GroupedOpenApi {
+  fun public(): GroupedOpenApi {
     return GroupedOpenApi.builder()
       .group("public")
-      .pathsToMatch("/cas1/**")
+      .pathsToMatch("/**")
+      .build()
+  }
+
+  @Bean
+  fun cas1(): GroupedOpenApi {
+    return GroupedOpenApi.builder()
+      .group("CAS1")
+      .pathsToMatch("**/cas1/**", "/**")
+      .pathsToExclude("**/cas2/**", "**/cas3/**")
       .build()
   }
 
   @Bean
   fun cas2(): GroupedOpenApi {
     return GroupedOpenApi.builder()
-      .group("public")
-      .pathsToMatch("/cas2/**")
+      .group("CAS2")
+      .pathsToMatch("**/cas2/**", "/**")
+      .pathsToExclude("**/cas1/**", "**/cas3/**")
       .build()
   }
 
   @Bean
   fun cas3(): GroupedOpenApi {
     return GroupedOpenApi.builder()
-      .group("public")
-      .pathsToMatch("/cas3/**")
+      .group("CAS3")
+      .pathsToMatch("**/cas3/**", "/**")
+      .pathsToExclude("**/cas1/**", "**/cas2/**")
       .build()
   }
 }
