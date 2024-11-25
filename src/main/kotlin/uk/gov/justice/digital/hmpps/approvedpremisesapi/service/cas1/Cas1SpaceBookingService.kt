@@ -97,10 +97,8 @@ class Cas1SpaceBookingService(
       }
     }
 
-    cas1SpaceBookingRepository.findByPremisesIdAndPlacementRequestId(premisesId, placementRequestId)?.let {
-      if (it.isActive()) {
-        return it.id hasConflictError "A Space Booking already exists for this premises and placement request"
-      }
+    if (cas1SpaceBookingRepository.findByPlacementRequestId(placementRequestId).any { it.isActive() }) {
+      return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
     }
 
     val durationInDays = arrivalDate.until(departureDate).toKotlinDatePeriod().days

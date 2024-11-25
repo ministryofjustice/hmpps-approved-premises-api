@@ -247,7 +247,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns existingSpaceBooking
+      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -261,7 +261,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
       result as CasResult.ConflictError
 
-      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
+      assertThat(result.conflictingEntityId).isEqualTo(placementRequest.id)
       assertThat(result.message).contains("A Space Booking already exists")
     }
 
@@ -323,7 +323,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns null
+      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
 
       every {
         spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
@@ -428,7 +428,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { spaceBookingRepository.findByPremisesIdAndPlacementRequestId(premises.id, placementRequest.id) } returns null
+      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
 
       every {
         spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
