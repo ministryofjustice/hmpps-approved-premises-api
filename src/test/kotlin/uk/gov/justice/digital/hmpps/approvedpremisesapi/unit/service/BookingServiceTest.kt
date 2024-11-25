@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -90,7 +89,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -114,8 +112,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -144,7 +140,6 @@ class BookingServiceTest {
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
-  private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
@@ -180,7 +175,6 @@ class BookingServiceTest {
       cas3DomainEventService = mockCas3DomainEventService,
       applicationService = mockApplicationService,
       workingDayService = mockWorkingDayService,
-      placementRequestService = mockPlacementRequestService,
       bookingRepository = mockBookingRepository,
       arrivalRepository = mockArrivalRepository,
       cancellationRepository = mockCancellationRepository,
@@ -1515,106 +1509,6 @@ class BookingServiceTest {
 
       verify(exactly = 0) {
         mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any())
-      }
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-    }
-
-    @Test
-    fun `createCancellation returns Success and creates new Placement Request when cancellation reason is 'Booking successfully appealed' and cancelled Booking was linked to Placement Request`() {
-      val bookingSuccessfullyAppealedReasonId = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
-      val bookingSuccessfullyAppealedReason = CancellationReasonEntityFactory()
-        .withId(bookingSuccessfullyAppealedReasonId)
-        .withServiceScope("*")
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val originalPlacementRequirements = PlacementRequirementsEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-
-      val originalPlacementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(originalPlacementRequirements)
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withPlacementRequest(originalPlacementRequest)
-        .produce()
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every {
-        mockCancellationReasonRepository.findByIdOrNull(bookingSuccessfullyAppealedReasonId)
-      } returns bookingSuccessfullyAppealedReason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every {
-        mockPlacementRequestService.createPlacementRequest(
-          source = PlacementRequestSource.APPEAL,
-          placementRequirements = originalPlacementRequirements,
-          placementDates = PlacementDates(
-            expectedArrival = originalPlacementRequest.expectedArrival,
-            duration = originalPlacementRequest.duration,
-          ),
-          notes = originalPlacementRequest.notes,
-          isParole = false,
-          null,
-        )
-      } answers {
-        val placementRequirementsArgument = it.invocation.args[1] as PlacementRequirementsEntity
-        PlacementRequestEntityFactory()
-          .withPlacementRequirements(placementRequirementsArgument)
-          .withApplication(application)
-          .withAssessment(assessment)
-          .withAllocatedToUser(user)
-          .produce()
-      }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = bookingSuccessfullyAppealedReasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.value.reason).isEqualTo(bookingSuccessfullyAppealedReason)
-      assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 1) {
-        mockPlacementRequestService.createPlacementRequest(
-          source = PlacementRequestSource.APPEAL,
-          placementRequirements = originalPlacementRequirements,
-          placementDates = PlacementDates(
-            expectedArrival = originalPlacementRequest.expectedArrival,
-            duration = originalPlacementRequest.duration,
-          ),
-          notes = originalPlacementRequest.notes,
-          isParole = false,
-          null,
-        )
       }
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)

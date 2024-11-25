@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -29,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
@@ -90,7 +88,6 @@ class BookingService(
   private val cas3DomainEventService: Cas3DomainEventService,
   private val applicationService: ApplicationService,
   private val workingDayService: WorkingDayService,
-  private val placementRequestService: PlacementRequestService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -117,9 +114,6 @@ class BookingService(
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
 ) {
-  val approvedPremisesBookingAppealedCancellationReasonId: UUID =
-    UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
-
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
@@ -819,8 +813,6 @@ class BookingService(
     updateBooking(booking)
     booking.cancellations += cancellationEntity
 
-    createPlacementRequestIfBookingAppealed(reason, booking)
-
     val user = when (withdrawalContext.withdrawalTriggeredBy) {
       is WithdrawalTriggeredBySeedJob -> null
       is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
@@ -856,26 +848,6 @@ class BookingService(
     WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
     WithdrawableEntityType.Booking -> userProvidedReason
     WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to Booking")
-  }
-
-  private fun createPlacementRequestIfBookingAppealed(
-    reason: CancellationReasonEntity,
-    booking: BookingEntity,
-  ) {
-    if (reason.id == approvedPremisesBookingAppealedCancellationReasonId && booking.placementRequest != null) {
-      val placementRequest = booking.placementRequest!!
-      placementRequestService.createPlacementRequest(
-        source = PlacementRequestSource.APPEAL,
-        placementRequirements = placementRequest.placementRequirements,
-        placementDates = PlacementDates(
-          expectedArrival = placementRequest.expectedArrival,
-          duration = placementRequest.duration,
-        ),
-        notes = placementRequest.notes,
-        isParole = false,
-        null,
-      )
-    }
   }
 
   @Transactional
