@@ -30,7 +30,6 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
           crn = "CRN1",
           eventNumber = "1",
           expectedArrivalDate = "2024-06-15 00:00:00",
-          expectedDepartureDate = "2025-09-12 00:00:00",
         ),
       ).toCsv(),
     )
@@ -51,7 +50,7 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
     assertThat(bookingImport.moveOnCategoryDescription).isNull()
     assertThat(bookingImport.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 6, 15))
     assertThat(bookingImport.arrivalDate).isNull()
-    assertThat(bookingImport.expectedDepartureDate).isEqualTo(LocalDate.of(2025, 9, 12))
+    assertThat(bookingImport.expectedDepartureDate).isNull()
     assertThat(bookingImport.departureDate).isNull()
     assertThat(bookingImport.nonArrivalDate).isNull()
     assertThat(bookingImport.nonArrivalContactDatetime).isNull()

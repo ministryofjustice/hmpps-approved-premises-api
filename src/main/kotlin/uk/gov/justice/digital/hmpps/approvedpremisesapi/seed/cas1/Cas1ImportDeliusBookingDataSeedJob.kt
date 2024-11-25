@@ -62,7 +62,7 @@ class Cas1ImportDeliusBookingDataSeedJob(
     moveOnCategoryDescription = columns.stringOrNull("MOVE_ON_CATEGORY_DESCRIPTION"),
     expectedArrivalDate = columns.dateFromUtcDateTime("EXPECTED_ARRIVAL_DATE")!!,
     arrivalDate = columns.dateFromUtcDateTime("ARRIVAL_DATE"),
-    expectedDepartureDate = columns.dateFromUtcDateTime("EXPECTED_DEPARTURE_DATE")!!,
+    expectedDepartureDate = columns.dateFromUtcDateTime("EXPECTED_DEPARTURE_DATE"),
     departureDate = columns.dateFromUtcDateTime("DEPARTURE_DATE"),
     nonArrivalDate = columns.dateFromUtcDateTime("NON_ARRIVAL_DATE"),
     nonArrivalContactDateTime = columns.dateTimeFromList("NON_ARRIVAL_CONTACT_DATETIME_LIST"),
@@ -120,8 +120,10 @@ class Cas1ImportDeliusBookingDataSeedJob(
 
   override fun postSeed() {
     log.info(
-      "Seeding complete. Note that the reported row count may be lower than the number of lines in the CSV file. This is because" +
-        "some CSV rows have line breaks in 'notes' values",
+      """
+        Seeding complete. Note that the reported row count may be lower than the number of lines in the CSV file. 
+        This is because some CSV rows have line breaks in 'notes' values
+      """.trimIndent(),
     )
   }
 }
@@ -139,7 +141,7 @@ data class Cas1DeliusBookingManagementDataRow(
   val moveOnCategoryDescription: String?,
   val expectedArrivalDate: LocalDate,
   val arrivalDate: LocalDate?,
-  val expectedDepartureDate: LocalDate,
+  val expectedDepartureDate: LocalDate?,
   val departureDate: LocalDate?,
   val nonArrivalDate: LocalDate?,
   val nonArrivalContactDateTime: LocalDateTime?,
