@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
@@ -4648,6 +4649,70 @@ class BookingServiceTest {
       val error = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(error.message).isEqualTo("You must identify the AP Area and Premises name")
+    }
+
+    @Test
+    fun `createApprovedPremisesBookingFromPlacementRequest returns ConflictError if a Space Booking has been made from the Placement Request`() {
+      val arrivalDate = LocalDate.parse("2023-03-28")
+      val departureDate = LocalDate.parse("2023-03-30")
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .withSpaceBookings(
+          mutableListOf(spaceBooking),
+        )
+        .produce()
+
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+
+      val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+        user = user,
+        placementRequestId = placementRequest.id,
+        bedId = bed.id,
+        premisesId = null,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
+      val validationError = result.entity as ValidatableActionResult.ConflictError
+
+      assertThat(validationError.message).isEqualTo("A Space Booking has already been made for this Placement Request")
     }
 
     @Test

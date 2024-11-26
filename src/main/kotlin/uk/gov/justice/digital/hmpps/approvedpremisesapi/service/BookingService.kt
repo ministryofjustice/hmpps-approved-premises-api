@@ -192,6 +192,10 @@ class BookingService(
         return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
       }
 
+      if (placementRequest.spaceBookings.any { it.isActive() }) {
+        return@validated placementRequest.id hasConflictError "A Space Booking has already been made for this Placement Request"
+      }
+
       if (departureDate.isBefore(arrivalDate)) {
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
