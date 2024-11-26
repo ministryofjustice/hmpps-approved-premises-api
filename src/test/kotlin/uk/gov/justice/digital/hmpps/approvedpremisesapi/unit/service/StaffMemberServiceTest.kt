@@ -18,22 +18,20 @@ class StaffMemberServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val staffMemberService = StaffMemberService(mockApDeliusContextApiClient)
 
-  private val qCode = "Qcode"
-
   @Nested
-  inner class GetStaffMemberByCode {
+  inner class GetStaffMemberByCodeForPremise {
     @Test
     fun `it returns a staff member`() {
       val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
 
-      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
+      every { mockApDeliusContextApiClient.getStaffMembers("qCode") } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = StaffMembersPage(
           content = staffMembers,
         ),
       )
 
-      val result = staffMemberService.getStaffMemberByCodeForPremise(staffMembers[2].code, qCode)
+      val result = staffMemberService.getStaffMemberByCodeForPremise(staffMembers[2].code, "qCode")
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
@@ -43,34 +41,34 @@ class StaffMemberServiceTest {
   }
 
   @Test
-  fun `it returns Unauthorised when Delius returns Unauthorised`() {
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+  fun `it returns Unauthorised when the Upstream API returns Unauthorised`() {
+    every { mockApDeliusContextApiClient.getStaffMembers("qCode") } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
       "/staff-members/code",
       HttpStatus.UNAUTHORIZED,
       body = null,
     )
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+    val result = staffMemberService.getStaffMemberByCodeForPremise("code", "qCode")
 
     assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
-  fun `it returns NotFound when Delius returns NotFound`() {
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+  fun `it returns NotFound when the Upstream API returns NotFound`() {
+    every { mockApDeliusContextApiClient.getStaffMembers("qCode") } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
       "/staff-members/code",
       HttpStatus.NOT_FOUND,
       body = null,
     )
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+    val result = staffMemberService.getStaffMemberByCodeForPremise("code", "qCode")
 
     assertThat(result is CasResult.NotFound).isTrue
     result as CasResult.NotFound
 
-    assertThat(result.id).isEqualTo(qCode)
+    assertThat(result.id).isEqualTo("qCode")
     assertThat(result.entityType).isEqualTo("Team")
   }
 
@@ -78,14 +76,14 @@ class StaffMemberServiceTest {
   fun `it returns a NotFound when a staff member for the QCode cannot me found`() {
     val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
 
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
+    every { mockApDeliusContextApiClient.getStaffMembers("qCode") } returns ClientResult.Success(
       status = HttpStatus.OK,
       body = StaffMembersPage(
         content = staffMembers,
       ),
     )
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+    val result = staffMemberService.getStaffMemberByCodeForPremise("code", "qCode")
 
     assertThat(result is CasResult.NotFound).isTrue
     result as CasResult.NotFound
