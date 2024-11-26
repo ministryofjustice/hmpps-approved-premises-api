@@ -10,6 +10,12 @@ import org.springframework.context.annotation.Primary
 @Configuration
 class SwaggerConfiguration {
 
+  companion object {
+    init {
+      io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true
+    }
+  }
+
   @Bean
   @Primary
   fun customOpenAPI(): OpenAPI {
@@ -37,25 +43,72 @@ class SwaggerConfiguration {
       .group("shared")
       .displayName("Shared")
       .pathsToMatch("/**")
-      .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas3/**")
+      .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas3/**", "/**/events/**")
+      .packagesToExclude(
+        "**.uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.**",
+      )
       .build()
   }
 
   @Bean
-  fun events(): GroupedOpenApi {
+  fun domainEvents(): GroupedOpenApi {
     return GroupedOpenApi.builder()
       .group("domainEvents")
       .displayName("Domain Events")
-      .pathsToMatch("/events/**")
+      .pathsToMatch("/**/events/**")
       .build()
   }
 
   @Bean
-  fun cas2Events(): GroupedOpenApi {
+  fun cas2DomainEvents(): GroupedOpenApi {
     return GroupedOpenApi.builder()
       .group("CAS2DomainEvents")
       .displayName("CAS2 Domain Events")
-      .pathsToMatch("/events/cas2/**")
+      .pathsToMatch("/**/events/cas2/**")
+      .build()
+  }
+
+  @Bean
+  fun cas1Only(): GroupedOpenApi {
+    return GroupedOpenApi.builder()
+      .group("CAS1")
+      .displayName("CAS1")
+      .pathsToMatch("/**/cas1/**")
+      .pathsToExclude("/**/events/**", "**/cas2/**", "**/cas3/**")
+      .packagesToExclude(
+        "**.uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.**",
+        "**.cas2.**",
+        "**.cas3.**",
+      )
+      .build()
+  }
+
+  @Bean
+  fun cas2Only(): GroupedOpenApi {
+    return GroupedOpenApi.builder()
+      .group("CAS2")
+      .displayName("CAS2")
+      .pathsToMatch("/**/cas2/**")
+      .pathsToExclude("/**/events/**", "**/cas1/**", "**/cas3/**")
+      .packagesToExclude(
+        "**.uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.**",
+        "**.cas1.**",
+        "**.cas3.**",
+      ).build()
+  }
+
+  @Bean
+  fun cas3Only(): GroupedOpenApi {
+    return GroupedOpenApi.builder()
+      .group("CAS3")
+      .displayName("CAS3")
+      .pathsToMatch("/**/cas3/**")
+      .pathsToExclude("/**/events/**", "/**/cas1/**", "/**/cas2/**")
+      .packagesToExclude(
+        "**.uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.**",
+        "**.cas1.**",
+        "**.cas2.**",
+      )
       .build()
   }
 
@@ -86,33 +139,6 @@ class SwaggerConfiguration {
       .displayName("CAS3 & Shared")
       .pathsToMatch("/**", "/**/cas3/**")
       .pathsToExclude("/**/cas1/**", "/**/cas2/**")
-      .build()
-  }
-
-  @Bean
-  fun cas1Only(): GroupedOpenApi {
-    return GroupedOpenApi.builder()
-      .group("CAS1")
-      .displayName("CAS1")
-      .pathsToMatch("/**/cas1/**")
-      .build()
-  }
-
-  @Bean
-  fun cas2Only(): GroupedOpenApi {
-    return GroupedOpenApi.builder()
-      .group("CAS2")
-      .displayName("CAS2")
-      .pathsToMatch("/**/cas2/**")
-      .build()
-  }
-
-  @Bean
-  fun cas3(): GroupedOpenApi {
-    return GroupedOpenApi.builder()
-      .group("CAS3")
-      .displayName("CAS3")
-      .pathsToMatch("/**/cas3/**")
       .build()
   }
 }

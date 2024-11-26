@@ -21,8 +21,6 @@ configurations.matching { it.name == "detekt" }.all {
   }
 }
 
-val springDocVersion = "1.7.0"
-
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.2-beta-4")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -39,12 +37,7 @@ dependencies {
   implementation("com.google.guava:guava:33.3.1-jre")
   implementation("org.postgresql:postgresql:42.7.4")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-  implementation("org.springdoc:springdoc-openapi-starter-common:2.5.0")
-  implementation("org.springdoc:springdoc-openapi-ui:1.8.0")
-  implementation("org.springdoc:springdoc-openapi-kotlin:1.8.0")
-  implementation("org.springdoc:springdoc-openapi-data-rest:1.8.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
