@@ -5,10 +5,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember as ApiStaffMember
 
 @Component
-class StaffMemberTransformer() {
+class StaffMemberTransformer {
   fun transformDomainToApi(domain: StaffMember) = ApiStaffMember(
     code = domain.code,
     keyWorker = domain.keyWorker,
-    name = "${domain.name.forename} ${domain.name.surname}",
+    name = domain.name.deliusName(),
   )
 }

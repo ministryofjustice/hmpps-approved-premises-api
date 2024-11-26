@@ -53,8 +53,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
@@ -163,7 +163,7 @@ class BookingTransformerTest {
   private val staffMember = StaffMember(
     code = "STAFF",
     keyWorker = true,
-    name = StaffMemberName(
+    name = PersonName(
       forename = "first",
       middleName = null,
       surname = "last",
