@@ -74,6 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -119,6 +120,7 @@ class BookingService(
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
+  @SuppressWarnings("ThrowsCount")
   fun getBooking(id: UUID): AuthorisableActionResult<BookingAndPersons> {
     val booking = bookingRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound("Booking", id.toString())
@@ -138,8 +140,8 @@ class BookingService(
       check(premises is ApprovedPremisesEntity) { "Booking has a Key Worker specified but Premises is not an ApprovedPremises" }
 
       when (val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)) {
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-        is AuthorisableActionResult.NotFound -> {
+        is CasResult.Unauthorised -> throw ForbiddenProblem()
+        is CasResult.NotFound -> {
           if (staffMemberResult.entityType == "Staff Code") {
             val error = "Unable to get Key Worker via Staff Code: $keyWorkerStaffCode"
             log.error(error)
@@ -149,7 +151,8 @@ class BookingService(
             throw InternalServerErrorProblem("Unable to get staff for QCode ${premises.qCode}")
           }
         }
-        is AuthorisableActionResult.Success -> staffMemberResult.entity
+        is CasResult.Error -> throw InternalServerErrorProblem("Unable to get staff for QCode ${premises.qCode}. ${extractMessageFromCasResult(staffMemberResult)}")
+        is CasResult.Success -> staffMemberResult.value
       }
     }
 

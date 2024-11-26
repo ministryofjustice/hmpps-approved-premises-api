@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
@@ -322,11 +323,11 @@ class PremisesController(
           val staffMemberResult =
             async { staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode) }.await()
 
-          if (staffMemberResult !is AuthorisableActionResult.Success) {
+          if (staffMemberResult !is CasResult.Success) {
             throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
           }
 
-          staffMemberResult.entity
+          staffMemberResult.value
         }
 
         val crn = it.crn
@@ -782,11 +783,7 @@ class PremisesController(
 
     val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
 
-    val staffMembers = when (staffMembersResult) {
-      is AuthorisableActionResult.Success -> staffMembersResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw InternalServerErrorProblem("No team found for QCode: ${premises.qCode}")
-    }
+    val staffMembers = extractEntityFromCasResult(staffMembersResult)
 
     return ResponseEntity.ok(staffMembers.content.map(staffMemberTransformer::transformDomainToApi))
   }
