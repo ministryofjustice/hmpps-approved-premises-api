@@ -11,12 +11,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -24,7 +28,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.lang.Thread.sleep
 import java.time.Duration
-import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -103,12 +109,12 @@ class Cas1BookingToSpaceBookingSeedJob(
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
-        actualArrivalDate = managementInfo?.arrivedAt?.toLocalDate(),
-        actualArrivalTime = managementInfo?.arrivedAt?.toLocalDateTime()?.toLocalTime(),
-        actualDepartureDate = managementInfo?.departedAt?.toLocalDate(),
-        actualDepartureTime = managementInfo?.departedAt?.toLocalDateTime()?.toLocalTime(),
-        canonicalArrivalDate = managementInfo?.arrivedAt?.toLocalDate() ?: booking.arrivalDate,
-        canonicalDepartureDate = managementInfo?.departedAt?.toLocalDate() ?: booking.departureDate,
+        actualArrivalDate = managementInfo.arrivedAtDate,
+        actualArrivalTime = managementInfo.arrivedAtTime,
+        actualDepartureDate = managementInfo.departedAtDate,
+        actualDepartureTime = managementInfo.departedAtTime,
+        canonicalArrivalDate = managementInfo.arrivedAtDate ?: booking.arrivalDate,
+        canonicalDepartureDate = managementInfo.departedAtDate ?: booking.departureDate,
         crn = booking.crn,
         keyWorkerStaffCode = null,
         keyWorkerName = null,
@@ -117,16 +123,16 @@ class Cas1BookingToSpaceBookingSeedJob(
         cancellationRecordedAt = booking.cancellation?.createdAt?.toInstant(),
         cancellationReason = booking.cancellation?.reason,
         cancellationReasonNotes = booking.cancellation?.otherReason,
-        departureMoveOnCategory = null,
-        departureReason = null,
-        departureNotes = null,
+        departureMoveOnCategory = managementInfo.departureMoveOnCategory,
+        departureReason = managementInfo.departureReason,
+        departureNotes = managementInfo.departureNotes,
         criteria = booking.getEssentialRoomCriteria(),
-        nonArrivalReason = null,
-        nonArrivalConfirmedAt = null,
-        nonArrivalNotes = null,
+        nonArrivalReason = managementInfo.nonArrivalReason,
+        nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
+        nonArrivalNotes = managementInfo.nonArrivalNotes,
         migratedFromBooking = booking,
         deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
-        migratedManagementInfoFrom = managementInfo?.source?.entityEquivalent,
+        migratedManagementInfoFrom = managementInfo.source.entityEquivalent,
       ),
     )
 
@@ -134,7 +140,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   }
 
   @SuppressWarnings("MagicNumber")
-  private fun getManagementInfo(booking: BookingEntity): ManagementInfo? {
+  private fun getManagementInfo(booking: BookingEntity): ManagementInfo {
     val shouldExistInDelius = !booking.isCancelled
     val referralDetails = if (shouldExistInDelius) {
       sleep(Duration.ofMillis(20))
@@ -147,29 +153,55 @@ class Cas1BookingToSpaceBookingSeedJob(
       log.warn("Could not retrieve referral details from delius for booking ${booking.id}")
     }
 
-    if (referralDetails != null) {
-      return ManagementInfo(
-        source = SeedManagementInfoSource.Delius,
-        arrivedAt = referralDetails.arrivedAt?.toInstant(),
-        departedAt = referralDetails.departedAt?.toInstant(),
-      )
-    }
-
-    if (booking.hasArrivals()) {
-      return ManagementInfo(
-        source = SeedManagementInfoSource.LegacyCas1,
-        arrivedAt = booking.arrival?.arrivalDateTime,
-        departedAt = booking.departure?.dateTime?.toInstant(),
-      )
-    }
-
-    return null
+    return referralDetails?.toManagementInfo() ?: booking.toManagementInfo()
   }
+
+  private fun ReferralDetail.toManagementInfo() = ManagementInfo(
+    source = SeedManagementInfoSource.Delius,
+    arrivedAtDate = arrivedAt?.toLocalDate(),
+    arrivedAtTime = arrivedAt?.toLocalTime(),
+    departedAtDate = departedAt?.toLocalDate(),
+    departedAtTime = departedAt?.toLocalTime(),
+    keyWorkerStaffCode = null,
+    keyWorkerName = null,
+    departureReason = null,
+    departureMoveOnCategory = null,
+    departureNotes = null,
+    nonArrivalConfirmedAt = null,
+    nonArrivalReason = null,
+    nonArrivalNotes = null,
+  )
+
+  private fun BookingEntity.toManagementInfo() = ManagementInfo(
+    source = SeedManagementInfoSource.LegacyCas1,
+    arrivedAtDate = arrival?.arrivalDateTime?.toLocalDate(),
+    arrivedAtTime = arrival?.arrivalDateTime?.toLocalDateTime()?.toLocalTime(),
+    departedAtDate = departure?.dateTime?.toLocalDate(),
+    departedAtTime = departure?.dateTime?.toLocalDateTime()?.toLocalTime(),
+    keyWorkerStaffCode = null,
+    keyWorkerName = null,
+    departureReason = departure?.reason,
+    departureMoveOnCategory = departure?.moveOnCategory,
+    departureNotes = departure?.notes,
+    nonArrivalConfirmedAt = nonArrival?.createdAt,
+    nonArrivalReason = nonArrival?.reason,
+    nonArrivalNotes = nonArrival?.notes,
+  )
 
   private data class ManagementInfo(
     val source: SeedManagementInfoSource,
-    val arrivedAt: Instant?,
-    val departedAt: Instant?,
+    val arrivedAtDate: LocalDate?,
+    val arrivedAtTime: LocalTime?,
+    val departedAtDate: LocalDate?,
+    val departedAtTime: LocalTime?,
+    val keyWorkerStaffCode: String?,
+    val keyWorkerName: String?,
+    val departureReason: DepartureReasonEntity?,
+    val departureMoveOnCategory: MoveOnCategoryEntity?,
+    val departureNotes: String?,
+    val nonArrivalConfirmedAt: OffsetDateTime?,
+    val nonArrivalReason: NonArrivalReasonEntity?,
+    val nonArrivalNotes: String?,
   )
 
   private enum class SeedManagementInfoSource(

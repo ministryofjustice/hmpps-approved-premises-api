@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -83,6 +84,12 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       application = application2,
       arrivalDate = LocalDate.of(2024, 6, 1),
       departureDate = LocalDate.of(2024, 6, 5),
+      departureReason = departureReasonEntityFactory.produceAndPersist(),
+      departureNotes = "the legacy departure notes",
+      departureMoveOnCategory = moveOnCategoryEntityFactory.produceAndPersist(),
+      nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist(),
+      nonArrivalConfirmedAt = OffsetDateTime.of(LocalDateTime.of(2024, 5, 1, 2, 3, 4), ZoneOffset.UTC),
+      nonArrivalNotes = "the legacy non arrival notes",
       actualArrivalDate = LocalDateTime.of(2024, 6, 3, 20, 0, 5),
       actualDepartureDate = LocalDateTime.of(2024, 6, 6, 9, 48, 0),
     )
@@ -182,6 +189,9 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.departureReason).isNull()
     assertThat(migratedBooking1.departureMoveOnCategory).isNull()
     assertThat(migratedBooking1.criteria).containsOnly(roomCriteria1, roomCriteria2)
+    assertThat(migratedBooking1.nonArrivalReason).isNull()
+    assertThat(migratedBooking1.nonArrivalConfirmedAt).isNull()
+    assertThat(migratedBooking1.nonArrivalNotes).isNull()
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
     assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
@@ -209,9 +219,13 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.cancellationOccurredAt).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(migratedBooking2.cancellationRecordedAt).isEqualTo(LocalDateTime.of(2025, 1, 2, 3, 4, 5).toInstant(ZoneOffset.UTC))
     assertThat(migratedBooking2.cancellationReasonNotes).isEqualTo("cancellation other reason")
-    assertThat(migratedBooking2.departureReason).isNull()
-    assertThat(migratedBooking2.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking2.departureReason).isEqualTo(booking2LegacyCas1ManagementInfo.departure!!.reason)
+    assertThat(migratedBooking2.departureMoveOnCategory).isEqualTo(booking2LegacyCas1ManagementInfo.departure!!.moveOnCategory)
+    assertThat(migratedBooking2.departureNotes).isEqualTo("the legacy departure notes")
     assertThat(migratedBooking2.criteria).isEmpty()
+    assertThat(migratedBooking2.nonArrivalReason).isEqualTo(booking2LegacyCas1ManagementInfo.nonArrival!!.reason)
+    assertThat(migratedBooking2.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-05-01T02:03:04Z"))
+    assertThat(migratedBooking2.nonArrivalNotes).isEqualTo("the legacy non arrival notes")
     assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
     assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
@@ -241,10 +255,13 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.cancellationReasonNotes).isNull()
     assertThat(migratedBooking3.departureReason).isNull()
     assertThat(migratedBooking3.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking3.nonArrivalReason).isNull()
+    assertThat(migratedBooking3.nonArrivalConfirmedAt).isNull()
+    assertThat(migratedBooking3.nonArrivalNotes).isNull()
     assertThat(migratedBooking3.criteria).isEmpty()
     assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
     assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
-    assertThat(migratedBooking3.migratedManagementInfoFrom).isNull()
+    assertThat(migratedBooking3.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking4 = premiseSpaceBookings[3]
     assertThat(migratedBooking4.id).isEqualTo(booking4OfflineNoDomainEvent.id)
@@ -271,10 +288,13 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking4.cancellationReasonNotes).isNull()
     assertThat(migratedBooking4.departureReason).isNull()
     assertThat(migratedBooking4.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking4.nonArrivalReason).isNull()
+    assertThat(migratedBooking4.nonArrivalConfirmedAt).isNull()
+    assertThat(migratedBooking4.nonArrivalNotes).isNull()
     assertThat(migratedBooking4.criteria).isEmpty()
     assertThat(migratedBooking4.deliusEventNumber).isNull()
     assertThat(migratedBooking4.migratedFromBooking!!.id).isEqualTo(booking4OfflineNoDomainEvent.id)
-    assertThat(migratedBooking4.migratedManagementInfoFrom).isNull()
+    assertThat(migratedBooking4.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
   }
 
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {

@@ -292,7 +292,7 @@ class Cas1SpaceBookingService(
 
     existingCas1SpaceBooking!!
 
-    val previousKeyWorkerName = existingCas1SpaceBooking.keyWorkerName ?: null
+    val previousKeyWorkerName = existingCas1SpaceBooking.keyWorkerName
 
     existingCas1SpaceBooking.keyWorkerStaffCode = assignedKeyWorker.code
     existingCas1SpaceBooking.keyWorkerName = assignedKeyWorkerName
