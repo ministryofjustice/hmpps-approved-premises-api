@@ -1331,7 +1331,7 @@ class Cas1SpaceBookingServiceTest {
     fun setup() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.Success(keyWorker)
+      every { staffMemberService.getStaffMemberByCodeForPremise(keyWorker.code, premises.qCode) } returns CasResult.Success(keyWorker)
     }
 
     @Test
@@ -1372,7 +1372,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no staff record exists with the given staff code`() {
-      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.NotFound()
+      every { staffMemberService.getStaffMemberByCodeForPremise(keyWorker.code, premises.qCode) } returns CasResult.NotFound()
 
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
