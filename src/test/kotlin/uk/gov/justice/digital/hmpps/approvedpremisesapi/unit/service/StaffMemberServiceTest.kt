@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
@@ -17,6 +18,58 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 class StaffMemberServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val staffMemberService = StaffMemberService(mockApDeliusContextApiClient)
+
+  @Nested
+  inner class GetStaffDetailByCode {
+    @Test
+    fun `it returns a staff member`() {
+      val staffDetail = StaffDetailFactory.staffDetail()
+
+      every { mockApDeliusContextApiClient.getStaffDetailByStaffCode("staffCode") } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = staffDetail,
+      )
+
+      val result = staffMemberService.getStaffDetailByCode("staffCode")
+
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
+
+      assertThat(result.value).isEqualTo(staffDetail)
+    }
+
+    @Test
+    fun `it returns Unauthorised when the Upstream API returns Unauthorised`() {
+      every { mockApDeliusContextApiClient.getStaffDetailByStaffCode("staffCode") } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.UNAUTHORIZED,
+        body = null,
+      )
+
+      val result = staffMemberService.getStaffDetailByCode("staffCode")
+
+      assertThat(result is CasResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `it returns NotFound when the Upstream API returns NotFound`() {
+      every { mockApDeliusContextApiClient.getStaffDetailByStaffCode("staffCode") } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      val result = staffMemberService.getStaffDetailByCode("staffCode")
+
+      assertThat(result is CasResult.NotFound).isTrue
+      result as CasResult.NotFound
+
+      assertThat(result.id).isEqualTo("staffCode")
+      assertThat(result.entityType).isEqualTo("Staff")
+    }
+  }
 
   @Nested
   inner class GetStaffMemberByCodeForPremise {
