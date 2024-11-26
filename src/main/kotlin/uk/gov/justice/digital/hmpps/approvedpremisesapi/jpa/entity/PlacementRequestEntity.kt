@@ -6,15 +6,18 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.Immutable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -267,6 +270,26 @@ data class PlacementRequestEntity(
     return Pair(null, null)
   }
 }
+
+@Repository
+interface LockablePlacementRequestRepository : JpaRepository<LockablePlacementRequestEntity, UUID> {
+  @Query("SELECT a FROM LockablePlacementRequestEntity a WHERE a.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): LockablePlacementRequestEntity?
+}
+
+/**
+ * Provides a version of the PlacementRequestEntity with no relationships, allowing
+ * us to lock the PlacementRequests table only without JPA/Hibernate attempting to
+ * lock all eagerly loaded relationships
+ */
+@Entity
+@Table(name = "placement_requests")
+@Immutable
+class LockablePlacementRequestEntity(
+  @Id
+  val id: UUID,
+)
 
 enum class PlacementRequestWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
   DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
@@ -57,6 +58,7 @@ class Cas1SpaceBookingService(
   private val staffMemberService: StaffMemberService,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
+  private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
 ) {
   @Transactional
   fun createNewBooking(
@@ -74,6 +76,7 @@ class Cas1SpaceBookingService(
       "$.premisesId" hasValidationError "doesNotSupportSpaceBookings"
     }
 
+    lockablePlacementRequestRepository.acquirePessimisticLock(placementRequestId)
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
     if (placementRequest == null) {
       "$.placementRequestId" hasValidationError "doesNotExist"
