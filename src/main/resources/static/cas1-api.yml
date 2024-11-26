@@ -894,7 +894,7 @@ paths:
           description: Name of the report to download
           required: true
           schema:
-            $ref: '_shared.yml#/components/schemas/Cas1ReportName'
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1ReportName'
         - name: year
           in: query
           required: true
