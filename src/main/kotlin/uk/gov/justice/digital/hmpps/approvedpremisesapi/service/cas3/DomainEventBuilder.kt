@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Cas3DomainEventPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -320,7 +320,7 @@ class DomainEventBuilder(
     deliusEventNumber = application?.eventNumber ?: "",
     bookingId = booking.id,
     bookingUrl = booking.toUrl(),
-    premises = Premises(
+    premises = Cas3DomainEventPremises(
       addressLine1 = booking.premises.addressLine1,
       addressLine2 = booking.premises.addressLine2,
       postcode = booking.premises.postcode,
@@ -371,7 +371,7 @@ class DomainEventBuilder(
       noms = booking.nomsNumber,
     ),
     deliusEventNumber = application?.eventNumber ?: "",
-    premises = Premises(
+    premises = Cas3DomainEventPremises(
       addressLine1 = booking.premises.addressLine1,
       addressLine2 = booking.premises.addressLine2,
       postcode = booking.premises.postcode,

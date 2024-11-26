@@ -449,7 +449,7 @@ components:
           type: string
           format: uri
         premises:
-          $ref: '#/components/schemas/Premises'
+          $ref: '#/components/schemas/Cas3DomainEventPremises'
         arrivedAt:
           type: string
           format: date-time
@@ -507,7 +507,7 @@ components:
           type: string
           format: uri
         premises:
-          $ref: '#/components/schemas/Premises'
+          $ref: '#/components/schemas/Cas3DomainEventPremises'
         departedAt:
           type: string
           format: date-time
@@ -587,7 +587,7 @@ components:
       required:
         - crn
 
-    Premises:
+    Cas3DomainEventPremises:
       type: object
       properties:
         addressLine1:
