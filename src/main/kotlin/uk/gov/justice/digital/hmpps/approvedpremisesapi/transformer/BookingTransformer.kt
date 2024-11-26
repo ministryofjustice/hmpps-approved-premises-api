@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
@@ -23,7 +22,6 @@ import java.time.LocalDate
 @Component
 class BookingTransformer(
   private val personTransformer: PersonTransformer,
-  private val staffMemberTransformer: StaffMemberTransformer,
   private val arrivalTransformer: ArrivalTransformer,
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
@@ -53,7 +51,7 @@ class BookingTransformer(
     )
   }
 
-  fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult, staffMember: StaffMember?): Booking {
+  fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult): Booking {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
 
     return Booking(
@@ -62,7 +60,8 @@ class BookingTransformer(
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
       serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
-      keyWorker = staffMember?.let(staffMemberTransformer::transformDomainToApi),
+      // key worker is a legacy CAS1 only field that is no longer populated. This will be removed once migration to space bookings is complete
+      keyWorker = null,
       status = determineStatus(jpa),
       arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
       departure = departureTransformer.transformJpaToApi(jpa.departure),

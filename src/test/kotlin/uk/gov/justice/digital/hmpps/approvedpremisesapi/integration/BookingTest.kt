@@ -93,12 +93,8 @@ class BookingTest : IntegrationTestBase() {
             withYieldedProbationRegion { probationRegion }
           }
 
-          val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
-            withStaffKeyWorkerCode(keyWorker.code)
             withCrn(offenderDetails.otherIds.crn)
             withServiceName(ServiceName.approvedPremises)
           }
@@ -115,7 +111,6 @@ class BookingTest : IntegrationTestBase() {
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  keyWorker,
                 ),
               ),
             )
@@ -182,12 +177,8 @@ class BookingTest : IntegrationTestBase() {
             withYieldedProbationRegion { probationRegion }
           }
 
-          val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
-            withStaffKeyWorkerCode(keyWorker.code)
             withCrn(offenderDetails.otherIds.crn)
             withServiceName(ServiceName.approvedPremises)
           }
@@ -204,7 +195,6 @@ class BookingTest : IntegrationTestBase() {
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  keyWorker,
                 ),
               ),
             )
@@ -220,12 +210,8 @@ class BookingTest : IntegrationTestBase() {
           withYieldedProbationRegion { probationRegion }
         }
 
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withStaffKeyWorkerCode(keyWorker.code)
           withCrn("SOME-CRN")
           withServiceName(ServiceName.approvedPremises)
         }
@@ -242,7 +228,6 @@ class BookingTest : IntegrationTestBase() {
               bookingTransformer.transformJpaToApi(
                 booking,
                 PersonInfoResult.NotFound("SOME-CRN"),
-                keyWorker,
               ),
             ),
           )
@@ -262,12 +247,8 @@ class BookingTest : IntegrationTestBase() {
             withYieldedProbationRegion { probationRegion }
           }
 
-          val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
-            withStaffKeyWorkerCode(keyWorker.code)
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(null)
             withServiceName(ServiceName.approvedPremises)
@@ -285,7 +266,6 @@ class BookingTest : IntegrationTestBase() {
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
-                  keyWorker,
                 ),
               ),
             )
@@ -295,7 +275,7 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -331,7 +311,6 @@ class BookingTest : IntegrationTestBase() {
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  null,
                 ),
               ),
             )
@@ -341,8 +320,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for a Temporary Accommodation Premises not in the user's region returns 403 Forbidden`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      givenAUser { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion { probationRegion }
@@ -403,7 +382,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles MANAGER, MATCHER`(
     role: UserRole,
   ) {
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { probationRegion }
@@ -423,7 +402,7 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Get all Bookings returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
+    givenAUser(roles = listOf(role)) { _, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -432,12 +411,8 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
-          withStaffKeyWorkerCode(keyWorker.code)
           withCrn(offenderDetails.otherIds.crn)
         }
 
@@ -472,7 +447,6 @@ class BookingTest : IntegrationTestBase() {
             bookingTransformer.transformJpaToApi(
               it,
               PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              keyWorker,
             )
           },
         )
@@ -491,7 +465,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings returns OK with correct body when person details for a booking could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -499,12 +473,8 @@ class BookingTest : IntegrationTestBase() {
         }
       }
 
-      val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
-        withStaffKeyWorkerCode(keyWorker.code)
         withCrn("SOME-CRN")
         withServiceName(ServiceName.approvedPremises)
       }
@@ -514,7 +484,6 @@ class BookingTest : IntegrationTestBase() {
           bookingTransformer.transformJpaToApi(
             booking,
             PersonInfoResult.NotFound("SOME-CRN"),
-            keyWorker,
           ),
         ),
       )
@@ -532,8 +501,8 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings returns OK with correct body when inmate details for a booking could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
-      givenAnOffender(mockServerErrorForPrisonApi = true) { offenderDetails, inmateDetails ->
+    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
+      givenAnOffender(mockServerErrorForPrisonApi = true) { offenderDetails, _ ->
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -542,12 +511,8 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withStaffKeyWorkerCode(keyWorker.code)
           withCrn(offenderDetails.otherIds.crn)
           withServiceName(ServiceName.approvedPremises)
         }
@@ -561,7 +526,6 @@ class BookingTest : IntegrationTestBase() {
                 offenderDetailSummary = offenderDetails,
                 inmateDetail = null,
               ),
-              keyWorker,
             ),
           ),
         )

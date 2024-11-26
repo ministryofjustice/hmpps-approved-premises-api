@@ -59,7 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -74,7 +73,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -84,7 +82,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEvent
 @Service
 class BookingService(
   private val premisesService: PremisesService,
-  private val staffMemberService: StaffMemberService,
   private val offenderService: OffenderService,
   private val domainEventService: DomainEventService,
   private val cas3DomainEventService: Cas3DomainEventService,
@@ -133,36 +130,12 @@ class BookingService(
 
     val personInfo = offenderService.getPersonInfoResult(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-    val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
-      val premises = booking.premises
-
-      // Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
-      check(premises is ApprovedPremisesEntity) { "Booking has a Key Worker specified but Premises is not an ApprovedPremises" }
-
-      when (val staffMemberResult = staffMemberService.getStaffMemberByCodeForPremise(keyWorkerStaffCode, premises.qCode)) {
-        is CasResult.Unauthorised -> throw ForbiddenProblem()
-        is CasResult.NotFound -> {
-          if (staffMemberResult.entityType == "Staff Code") {
-            val error = "Unable to get Key Worker via Staff Code: $keyWorkerStaffCode"
-            log.error(error)
-            Sentry.captureException(InternalServerErrorProblem(error))
-            null
-          } else {
-            throw InternalServerErrorProblem("Unable to get staff for QCode ${premises.qCode}")
-          }
-        }
-        is CasResult.Error -> throw InternalServerErrorProblem("Unable to get staff for QCode ${premises.qCode}. ${extractMessageFromCasResult(staffMemberResult)}")
-        is CasResult.Success -> staffMemberResult.value
-      }
-    }
-
-    return AuthorisableActionResult.Success(BookingAndPersons(booking, personInfo, staffMember))
+    return AuthorisableActionResult.Success(BookingAndPersons(booking, personInfo))
   }
 
   data class BookingAndPersons(
     val booking: BookingEntity,
     val personInfo: PersonInfoResult,
-    val staffMember: uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember?,
   )
 
   @Transactional

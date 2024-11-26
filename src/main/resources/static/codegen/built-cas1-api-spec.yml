@@ -1606,7 +1606,10 @@ components:
           type: string
           format: date-time
         keyWorker:
-          $ref: '#/components/schemas/StaffMember'
+          deprecated: true
+          description: KeyWorker is a legacy field only used by CAS1. It is not longer being captured or populated
+          allOf:
+            - $ref: '#/components/schemas/StaffMember'
         serviceName:
           $ref: '#/components/schemas/ServiceName'
         bed:

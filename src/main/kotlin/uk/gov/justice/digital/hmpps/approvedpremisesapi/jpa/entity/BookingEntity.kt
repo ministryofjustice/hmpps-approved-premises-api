@@ -331,6 +331,7 @@ data class BookingEntity(
   var crn: String,
   var arrivalDate: LocalDate,
   var departureDate: LocalDate,
+  @Deprecated(message = "This is a legacy CAS1-only field that is no longer captured and will be removed once bookings have been fully migrated to space bookings")
   var keyWorkerStaffCode: String?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var arrivals: MutableList<ArrivalEntity>,
