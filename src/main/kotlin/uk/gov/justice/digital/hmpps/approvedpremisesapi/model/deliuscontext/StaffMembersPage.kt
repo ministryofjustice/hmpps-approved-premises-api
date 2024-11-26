@@ -7,11 +7,5 @@ data class StaffMembersPage(
 data class StaffMember(
   val code: String,
   val keyWorker: Boolean,
-  val name: StaffMemberName,
-)
-
-data class StaffMemberName(
-  val forename: String,
-  val middleName: String?,
-  val surname: String,
+  val name: PersonName,
 )

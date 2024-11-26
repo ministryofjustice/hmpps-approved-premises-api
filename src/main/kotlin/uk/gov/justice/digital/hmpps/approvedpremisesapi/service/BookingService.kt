@@ -139,7 +139,7 @@ class BookingService(
       // Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
       check(premises is ApprovedPremisesEntity) { "Booking has a Key Worker specified but Premises is not an ApprovedPremises" }
 
-      when (val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)) {
+      when (val staffMemberResult = staffMemberService.getStaffMemberByCodeForPremise(keyWorkerStaffCode, premises.qCode)) {
         is CasResult.Unauthorised -> throw ForbiddenProblem()
         is CasResult.NotFound -> {
           if (staffMemberResult.entityType == "Staff Code") {

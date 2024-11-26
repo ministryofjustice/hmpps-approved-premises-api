@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 class ContextStaffMemberFactory : Factory<StaffMember> {
@@ -26,7 +26,7 @@ class ContextStaffMemberFactory : Factory<StaffMember> {
   override fun produce(): StaffMember = StaffMember(
     code = this.staffCode(),
     keyWorker = false,
-    name = StaffMemberName(
+    name = PersonName(
       forename = this.forenames(),
       middleName = null,
       surname = this.surname(),

@@ -269,7 +269,7 @@ class Cas1SpaceBookingService(
       return fieldValidationError
     }
 
-    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorker.staffCode, premises!!.qCode)
+    val staffMemberResponse = staffMemberService.getStaffMemberByCodeForPremise(keyWorker.staffCode, premises!!.qCode)
     if (staffMemberResponse !is CasResult.Success) {
       return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
     }
