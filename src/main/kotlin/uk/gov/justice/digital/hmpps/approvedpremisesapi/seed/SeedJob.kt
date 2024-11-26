@@ -29,6 +29,7 @@ abstract class SeedJob<RowType>(
 
 abstract class ExcelSeedJob(
   val fileName: String,
+  val premisesId: UUID,
   val sheetName: String,
 ) {
   init {

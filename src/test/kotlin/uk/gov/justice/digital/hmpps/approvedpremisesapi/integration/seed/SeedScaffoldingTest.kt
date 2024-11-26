@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedRequest
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedScaffoldingTest : SeedTestBase() {
@@ -33,6 +34,7 @@ class SeedScaffoldingTest : SeedTestBase() {
       .bodyValue(
         SeedFromExcelRequest(
           seedType = SeedFromExcelFileType.approvedPremisesRoomFromExcel,
+          premisesId = UUID.randomUUID(),
           fileName = "file.xlsx",
         ),
       )
@@ -57,7 +59,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process an xlsx file containing forward slashes logs an error`() {
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, "/afile")
+    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, UUID.randomUUID(), "/afile")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -85,7 +87,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process an xlsx file containing backward slashes logs an error`() {
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, "\\afile")
+    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, UUID.randomUUID(), "\\afile")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -113,7 +115,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a non-existent xlsx file logs an error`() {
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, "non-existent")
+    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, UUID.randomUUID(), "non-existent")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -154,7 +156,7 @@ RogerSmith,CAS1_MANAGER,
       emptyDataFrame<Any>(),
     )
 
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, "wrongSheetName.xlsx")
+    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoomFromExcel, UUID.randomUUID(), "wrongSheetName.xlsx")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&

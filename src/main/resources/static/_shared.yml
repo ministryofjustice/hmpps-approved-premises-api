@@ -3808,10 +3808,14 @@ components:
       properties:
         seedType:
           $ref: '#/components/schemas/SeedFromExcelFileType'
+        premisesId:
+          type: string
+          format: uuid
         fileName:
           type: string
       required:
         - seedType
+        - premisesId
         - fileName
     SeedFileType:
       type: string

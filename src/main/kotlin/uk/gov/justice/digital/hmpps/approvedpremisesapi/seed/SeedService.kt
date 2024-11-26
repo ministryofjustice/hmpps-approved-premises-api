@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAsse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurvey
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
@@ -82,6 +83,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
 
@@ -97,20 +99,22 @@ class SeedService(
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String) = seedExcelData(excelSeedFileType, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) = seedExcelData(excelSeedFileType, premisesId, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
 
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
     seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
 
     try {
       val job: ExcelSeedJob = when (excelSeedFileType) {
         SeedFromExcelFileType.approvedPremisesRoomFromExcel -> ApprovedPremisesRoomsSeedFromXLSXJob(
           filename,
+          premisesId,
           "Sheet3",
           getBean(PremisesRepository::class),
           getBean(RoomRepository::class),
           getBean(BedRepository::class),
           getBean(CharacteristicRepository::class),
+          getBean(SiteSurvey::class),
         )
       }
 
@@ -313,8 +317,8 @@ class SeedService(
   private fun processExcelJob(job: ExcelSeedJob, resolveXlsxPath: ExcelSeedJob.() -> String) {
     seedLogger.info("Processing XLSX file ${Path.of(job.resolveXlsxPath()).absolutePathString()}")
     try {
-      val roomDataFrame = DataFrame.readExcel(job.resolveXlsxPath(), job.sheetName)
-      job.processDataFrame(roomDataFrame)
+      val dataFrame = DataFrame.readExcel(job.resolveXlsxPath(), job.sheetName)
+      job.processDataFrame(dataFrame)
     } catch (exception: Exception) {
       throw RuntimeException("Unable to process XLSX file", exception)
     }
