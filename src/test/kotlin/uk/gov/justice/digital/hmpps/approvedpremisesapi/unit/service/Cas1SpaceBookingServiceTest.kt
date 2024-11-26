@@ -49,6 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
@@ -121,6 +123,9 @@ class Cas1SpaceBookingServiceTest {
   @MockK
   private lateinit var nonArrivalReasonRepository: NonArrivalReasonRepository
 
+  @MockK
+  private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
+
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
 
@@ -148,6 +153,8 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns validation error if no premises with the given ID exists`() {
       every { cas1PremisesService.findPremiseById(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.createNewBooking(
         premisesId = UUID.randomUUID(),
@@ -175,6 +182,8 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1PremisesService.findPremiseById(any()) } returns premisesDoesntSupportSpaceBookings
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.createNewBooking(
         premisesId = premisesDoesntSupportSpaceBookings.id,
@@ -197,6 +206,8 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns validation error if no placement request with the given ID exists`() {
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(any()) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -219,6 +230,8 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns validation error if the departure date is before the arrival date`() {
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -247,6 +260,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -276,6 +291,8 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestwithLegacyBooking
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -323,6 +340,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       every {
         spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
@@ -428,6 +447,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
 
       every {
         spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
