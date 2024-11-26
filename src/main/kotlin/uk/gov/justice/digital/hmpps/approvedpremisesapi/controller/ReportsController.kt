@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportS
 import java.time.LocalDate
 import java.util.UUID
 
-@Deprecated("Use [Cas1ReportsController]")
 @Service
 class ReportsController(
   private val cas3ReportService: Cas3ReportService,

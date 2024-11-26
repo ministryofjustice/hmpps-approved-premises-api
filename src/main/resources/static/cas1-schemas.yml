@@ -600,3 +600,15 @@ components:
         - characteristic
         - availableBedsCount
         - bookingsCount
+    Cas1ReportName:
+      type: string
+      enum:
+        - applications
+        - applicationsV2
+        - dailyMetrics
+        - lostBeds
+        - outOfServiceBeds
+        - placementApplications
+        - placementMatchingOutcomes
+        - placementMatchingOutcomesV2
+        - requestsForPlacement

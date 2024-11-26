@@ -107,6 +107,7 @@ class Cas1PlacementMatchingOutcomesReportRepository(
           a.service = 'approved-premises'
     """
 
+    @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
     private const val QUERY = """ 
       $INITIAL_REQUEST_FOR_PLACEMENT_QUERY
       UNION ALL
@@ -115,6 +116,7 @@ class Cas1PlacementMatchingOutcomesReportRepository(
     """
   }
 
+  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
   fun generateReportRowsForExpectedArrivalMonth(
     month: Int,
     year: Int,
