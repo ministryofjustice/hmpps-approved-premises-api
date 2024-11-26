@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 
 class StaffMemberServiceTest {
@@ -35,10 +35,10 @@ class StaffMemberServiceTest {
 
       val result = staffMemberService.getStaffMemberByCode(staffMembers[2].code, qCode)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
-      assertThat(result.entity).isEqualTo(staffMembers[2])
+      assertThat(result.value).isEqualTo(staffMembers[2])
     }
   }
 
@@ -53,7 +53,7 @@ class StaffMemberServiceTest {
 
     val result = staffMemberService.getStaffMemberByCode("code", qCode)
 
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(result is CasResult.Unauthorised).isTrue
   }
 
   @Test
@@ -67,11 +67,11 @@ class StaffMemberServiceTest {
 
     val result = staffMemberService.getStaffMemberByCode("code", qCode)
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-    result as AuthorisableActionResult.NotFound
+    assertThat(result is CasResult.NotFound).isTrue
+    result as CasResult.NotFound
 
     assertThat(result.id).isEqualTo(qCode)
-    assertThat(result.entityType).isEqualTo("QCode")
+    assertThat(result.entityType).isEqualTo("Team")
   }
 
   @Test
@@ -87,8 +87,8 @@ class StaffMemberServiceTest {
 
     val result = staffMemberService.getStaffMemberByCode("code", qCode)
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-    result as AuthorisableActionResult.NotFound
+    assertThat(result is CasResult.NotFound).isTrue
+    result as CasResult.NotFound
 
     assertThat(result.id).isEqualTo("code")
     assertThat(result.entityType).isEqualTo("Staff Code")

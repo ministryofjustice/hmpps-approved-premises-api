@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
@@ -1332,7 +1331,7 @@ class Cas1SpaceBookingServiceTest {
     fun setup() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Success(keyWorker)
+      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.Success(keyWorker)
     }
 
     @Test
@@ -1373,7 +1372,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no staff record exists with the given staff code`() {
-      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound()
+      every { staffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.NotFound()
 
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),

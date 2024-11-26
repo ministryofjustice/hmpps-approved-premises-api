@@ -331,7 +331,7 @@ class BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
       every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
-      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Success(keyWorker)
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.Success(keyWorker)
 
       val result = bookingService.getBooking(bookingEntity.id)
 
@@ -371,7 +371,7 @@ class BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
       every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
-      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound("Staff Code", keyWorker.code)
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.NotFound("Staff Code", keyWorker.code)
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -391,7 +391,7 @@ class BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
       every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
-      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.NotFound("QCode", premises.qCode)
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.NotFound("QCode", premises.qCode)
 
       assertThatExceptionOfType(InternalServerErrorProblem::class.java)
         .isThrownBy { bookingService.getBooking(bookingEntity.id) }
@@ -404,7 +404,7 @@ class BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
       every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
-      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns AuthorisableActionResult.Unauthorised()
+      every { mockStaffMemberService.getStaffMemberByCode(keyWorker.code, premises.qCode) } returns CasResult.Unauthorised()
 
       assertThatExceptionOfType(ForbiddenProblem::class.java)
         .isThrownBy { bookingService.getBooking(bookingEntity.id) }
