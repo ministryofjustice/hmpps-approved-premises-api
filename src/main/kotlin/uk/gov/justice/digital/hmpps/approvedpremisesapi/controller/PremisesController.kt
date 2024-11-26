@@ -321,7 +321,7 @@ class PremisesController(
         val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
           if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
           val staffMemberResult =
-            async { staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode) }.await()
+            async { staffMemberService.getStaffMemberByCodeForPremise(keyWorkerStaffCode, premises.qCode) }.await()
 
           if (staffMemberResult !is CasResult.Success) {
             throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")

@@ -33,7 +33,7 @@ class StaffMemberServiceTest {
         ),
       )
 
-      val result = staffMemberService.getStaffMemberByCode(staffMembers[2].code, qCode)
+      val result = staffMemberService.getStaffMemberByCodeForPremise(staffMembers[2].code, qCode)
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
@@ -51,7 +51,7 @@ class StaffMemberServiceTest {
       body = null,
     )
 
-    val result = staffMemberService.getStaffMemberByCode("code", qCode)
+    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
     assertThat(result is CasResult.Unauthorised).isTrue
   }
@@ -65,7 +65,7 @@ class StaffMemberServiceTest {
       body = null,
     )
 
-    val result = staffMemberService.getStaffMemberByCode("code", qCode)
+    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
     assertThat(result is CasResult.NotFound).isTrue
     result as CasResult.NotFound
@@ -85,7 +85,7 @@ class StaffMemberServiceTest {
       ),
     )
 
-    val result = staffMemberService.getStaffMemberByCode("code", qCode)
+    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
     assertThat(result is CasResult.NotFound).isTrue
     result as CasResult.NotFound

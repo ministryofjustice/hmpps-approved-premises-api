@@ -13,7 +13,7 @@ class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextAp
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getStaffMemberByCode(code: String, qCode: String): CasResult<StaffMember> {
+  fun getStaffMemberByCodeForPremise(code: String, qCode: String): CasResult<StaffMember> {
     val premisesStaffMembers =
       when (val premisesStaffMembersResult = getStaffMembersForQCode(qCode)) {
         is CasResult.Error -> return premisesStaffMembersResult.reviseType()
