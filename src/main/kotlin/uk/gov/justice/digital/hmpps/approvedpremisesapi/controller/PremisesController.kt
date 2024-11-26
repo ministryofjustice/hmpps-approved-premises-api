@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
@@ -318,21 +317,9 @@ class PremisesController(
 
     return@runBlocking ResponseEntity.ok(
       premises.bookings.map {
-        val staffMember = it.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
-          if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking ${it.id} has a Key Worker specified but Premises ${premises.id} is not an ApprovedPremises")
-          val staffMemberResult =
-            async { staffMemberService.getStaffMemberByCodeForPremise(keyWorkerStaffCode, premises.qCode) }.await()
-
-          if (staffMemberResult !is CasResult.Success) {
-            throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
-          }
-
-          staffMemberResult.value
-        }
-
         val crn = it.crn
         val personInfo = personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn)
-        bookingTransformer.transformJpaToApi(it, personInfo, staffMember)
+        bookingTransformer.transformJpaToApi(it, personInfo)
       },
     )
   }
@@ -349,7 +336,6 @@ class PremisesController(
     val apiBooking = bookingTransformer.transformJpaToApi(
       bookingAndPersons.booking,
       bookingAndPersons.personInfo,
-      bookingAndPersons.staffMember,
     )
 
     if (apiBooking.premises.id != premisesId) {
@@ -429,7 +415,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, personInfo, null))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, personInfo))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(

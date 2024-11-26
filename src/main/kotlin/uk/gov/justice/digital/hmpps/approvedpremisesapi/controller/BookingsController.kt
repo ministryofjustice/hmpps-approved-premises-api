@@ -35,7 +35,6 @@ class BookingsController(
     val apiBooking = bookingTransformer.transformJpaToApi(
       bookingAndPersons.booking,
       bookingAndPersons.personInfo,
-      bookingAndPersons.staffMember,
     )
 
     return ResponseEntity.ok(apiBooking)

@@ -53,8 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
@@ -65,7 +63,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import java.time.Instant
 import java.time.LocalDate
@@ -74,7 +71,6 @@ import java.util.UUID
 
 class BookingTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockStaffMemberTransformer = mockk<StaffMemberTransformer>()
   private val mockArrivalTransformer = mockk<ArrivalTransformer>()
   private val mockNonArrivalTransformer = mockk<NonArrivalTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
@@ -88,7 +84,6 @@ class BookingTransformerTest {
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
-    mockStaffMemberTransformer,
     mockArrivalTransformer,
     mockDepartureTransformer,
     mockNonArrivalTransformer,
@@ -160,16 +155,6 @@ class BookingTransformerTest {
     status = null,
   )
 
-  private val staffMember = StaffMember(
-    code = "STAFF",
-    keyWorker = true,
-    name = PersonName(
-      forename = "first",
-      middleName = null,
-      surname = "last",
-    ),
-  )
-
   private val offenderDetails = OffenderDetailsSummaryFactory()
     .withCrn("crn")
     .withFirstName("first")
@@ -187,12 +172,6 @@ class BookingTransformerTest {
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
     every { mockConfirmationTransformer.transformJpaToApi(null) } returns null
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
-
-    every { mockStaffMemberTransformer.transformDomainToApi(staffMember) } returns uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-      code = "789",
-      keyWorker = true,
-      name = "first last",
-    )
 
     every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
       type = PersonType.fullPerson,
@@ -221,7 +200,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -300,7 +278,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -348,7 +325,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -409,7 +385,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       nonArrivalBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -480,7 +455,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       arrivalBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      staffMember,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -501,11 +475,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          code = "789",
-          keyWorker = true,
-          name = "first last",
-        ),
+        keyWorker = null,
         status = BookingStatus.arrived,
         arrival = Arrival(
           bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
@@ -557,7 +527,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       cancellationBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -676,7 +645,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       cancellationBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -819,7 +787,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      staffMember,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -840,11 +807,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          code = "789",
-          keyWorker = true,
-          name = "first last",
-        ),
+        keyWorker = null,
         status = BookingStatus.departed,
         arrival = Arrival(
           bookingId = bookingId,
@@ -1012,7 +975,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      staffMember,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1033,11 +995,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          code = "789",
-          keyWorker = true,
-          name = "first last",
-        ),
+        keyWorker = null,
         status = BookingStatus.closed,
         arrival = Arrival(
           bookingId = bookingId,
@@ -1231,7 +1189,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      staffMember,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1252,11 +1209,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
-        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          code = "789",
-          keyWorker = true,
-          name = "first last",
-        ),
+        keyWorker = null,
         status = BookingStatus.departed,
         arrival = Arrival(
           bookingId = bookingId,
@@ -1451,7 +1404,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      staffMember,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1472,11 +1424,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
-        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          code = "789",
-          keyWorker = true,
-          name = "first last",
-        ),
+        keyWorker = null,
         status = BookingStatus.closed,
         arrival = Arrival(
           bookingId = bookingId,
@@ -1704,7 +1652,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      staffMember,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1725,11 +1672,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        keyWorker = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember(
-          code = "789",
-          keyWorker = true,
-          name = "first last",
-        ),
+        keyWorker = null,
         status = BookingStatus.closed,
         arrival = Arrival(
           bookingId = bookingId,
@@ -1852,7 +1795,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       confirmationBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1953,7 +1895,6 @@ class BookingTransformerTest {
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
-      null,
     )
 
     assertThat(transformedBooking).isEqualTo(
