@@ -1729,9 +1729,9 @@ class PremisesTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { userEntity, jwt ->
-        val qCode = "NOTFOUND"
+    fun `Get premises staff where delius team cannot be found returns 404`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        val qCode = "NON_EXISTENT_TEAM_QCODE"
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1740,7 +1740,7 @@ class PremisesTest {
         }
 
         wiremockServer.stubFor(
-          WireMock.get(WireMock.urlEqualTo("/secure/teams/$qCode/staff"))
+          WireMock.get(urlEqualTo("/secure/teams/$qCode/staff"))
             .willReturn(
               WireMock.aResponse()
                 .withHeader("Content-Type", "application/json")
@@ -1753,9 +1753,9 @@ class PremisesTest {
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is5xxServerError
+          .is4xxClientError
           .expectBody()
-          .jsonPath("$.detail").isEqualTo("No team found for QCode: ${premises.qCode}")
+          .jsonPath("$.detail").isEqualTo("No Team with an ID of NON_EXISTENT_TEAM_QCODE could be found")
       }
     }
 
