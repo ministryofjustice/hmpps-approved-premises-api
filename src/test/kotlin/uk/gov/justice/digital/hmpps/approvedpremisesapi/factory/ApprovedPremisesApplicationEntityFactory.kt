@@ -39,6 +39,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
+  private var deletedAt: Yielded<OffsetDateTime?> = { null }
   private var isWomensApplication: Yielded<Boolean?> = { null }
   private var isEmergencyApplication: Yielded<Boolean?> = { null }
   private var apType: Yielded<ApprovedPremisesType> = { ApprovedPremisesType.NORMAL }
@@ -238,6 +239,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
+    deletedAt = this.deletedAt(),
     isWomensApplication = this.isWomensApplication(),
     isEmergencyApplication = this.isEmergencyApplication(),
     apType = this.apType(),

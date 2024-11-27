@@ -246,6 +246,12 @@ class UserAccessService(
   fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity) =
     placementApplication.createdByUser == user ||
       (placementApplication.isSubmitted() && user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS))
+
+  fun userCanAccessTemporaryAccommodationApplication(user: UserEntity, application: ApplicationEntity): Boolean {
+    return (user == application.createdByUser) &&
+      userCanAccessRegion(user, (application as TemporaryAccommodationApplicationEntity).probationRegion.id) &&
+      user.hasRole(UserRole.CAS3_REFERRER)
+  }
 }
 
 enum class TemporaryAccommodationApplicationAccessLevel {

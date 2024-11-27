@@ -951,7 +951,7 @@ class UserAccessServiceTest {
 
   @Test
   fun `getTemporaryAccommodationApplicationAccessLevelForUser returns SELF if the user has the CAS3_REFERRER role`() {
-    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
+    user.addRoleForUnitTest(CAS3_REFERRER)
 
     assertThat(userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)).isEqualTo(TemporaryAccommodationApplicationAccessLevel.SELF)
   }
@@ -1608,6 +1608,70 @@ class UserAccessServiceTest {
         .produce()
 
       assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isFalse
+    }
+  }
+
+  @Nested
+  inner class UserCanAccessTemporaryAccommodationApplication {
+
+    @Test
+    fun `userCanAccessTemporaryAccommodationApplication returns true if the user has the CAS3_REFERRER role and the application is in their region for Temporary Accommodation`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(CAS3_REFERRER)
+
+      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+        .withSchema("{}")
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplicationSchema(newestJsonSchema)
+        .withProbationRegion(probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      assertThat(userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)).isTrue
+    }
+
+    @Test
+    fun `userCanAccessTemporaryAccommodationApplication returns false if the user has the CAS3_REFERRER role but the application is not in their region for Temporary Accommodation`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(CAS3_REFERRER)
+
+      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+        .withSchema("{}")
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(anotherUserNotInRegion)
+        .withApplicationSchema(newestJsonSchema)
+        .withProbationRegion(anotherProbationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      assertThat(userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)).isFalse
+    }
+
+    @Test
+    fun `userCanAccessTemporaryAccommodationApplication returns false if the user not has the CAS3_REFERRER role and the application is in their region for Temporary Accommodation`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+        .withSchema("{}")
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplicationSchema(newestJsonSchema)
+        .withProbationRegion(probationRegion)
+        .withSubmittedAt(null)
+        .produce()
+
+      assertThat(userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)).isFalse
     }
   }
 }

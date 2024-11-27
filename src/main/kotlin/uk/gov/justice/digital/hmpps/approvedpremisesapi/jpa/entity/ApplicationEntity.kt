@@ -316,6 +316,7 @@ interface LockableApplicationRepository : JpaRepository<LockableApplicationEntit
   fun acquirePessimisticLock(id: UUID): LockableApplicationEntity?
 }
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @Table(name = "applications")
 @DiscriminatorColumn(name = "service")
@@ -341,6 +342,7 @@ abstract class ApplicationEntity(
   var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
+  var deletedAt: OffsetDateTime?,
 
   @Transient
   var schemaUpToDate: Boolean,
@@ -372,6 +374,7 @@ class ApprovedPremisesApplicationEntity(
   schemaVersion: JsonSchemaEntity,
   createdAt: OffsetDateTime,
   submittedAt: OffsetDateTime?,
+  deletedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
@@ -433,6 +436,7 @@ class ApprovedPremisesApplicationEntity(
   schemaVersion,
   createdAt,
   submittedAt,
+  deletedAt,
   schemaUpToDate,
   assessments,
   nomsNumber,
@@ -505,6 +509,7 @@ class TemporaryAccommodationApplicationEntity(
   schemaVersion: JsonSchemaEntity,
   createdAt: OffsetDateTime,
   submittedAt: OffsetDateTime?,
+  deletedAt: OffsetDateTime?,
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
   nomsNumber: String?,
@@ -547,6 +552,7 @@ class TemporaryAccommodationApplicationEntity(
   schemaVersion,
   createdAt,
   submittedAt,
+  deletedAt,
   schemaUpToDate,
   assessments,
   nomsNumber,
