@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
@@ -12,6 +13,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextApiClient) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getStaffDetailByCode(code: String): CasResult<StaffDetail> = when (val response = apDeliusContextApiClient.getStaffDetailByStaffCode(code)) {
+    is ClientResult.Success -> CasResult.Success(response.body)
+    is ClientResult.Failure.StatusCode -> when (response.status) {
+      HttpStatus.NOT_FOUND -> CasResult.NotFound("Staff", code)
+      HttpStatus.UNAUTHORIZED -> CasResult.Unauthorised()
+      else -> response.throwException()
+    }
+    is ClientResult.Failure -> response.throwException()
+  }
 
   fun getStaffMemberByCodeForPremise(code: String, qCode: String): CasResult<StaffMember> {
     val premisesStaffMembers =

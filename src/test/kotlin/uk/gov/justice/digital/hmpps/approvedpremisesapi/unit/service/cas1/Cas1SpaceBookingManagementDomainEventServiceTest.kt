@@ -13,13 +13,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -32,8 +29,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventServiceConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
@@ -51,7 +50,7 @@ import java.util.UUID
 class Cas1SpaceBookingManagementDomainEventServiceTest {
 
   @MockK
-  lateinit var apDeliusContextApiClient: ApDeliusContextApiClient
+  lateinit var staffMemberService: StaffMemberService
 
   @MockK
   lateinit var domainEventService: DomainEventService
@@ -119,8 +118,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
-        HttpStatus.OK,
+      every { staffMemberService.getStaffDetailByCode(any()) } returns CasResult.Success(
         keyWorker,
       )
     }
@@ -285,8 +283,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
-        HttpStatus.OK,
+      every { staffMemberService.getStaffDetailByCode(any()) } returns CasResult.Success(
         keyWorker,
       )
     }
@@ -426,8 +423,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
-        HttpStatus.OK,
+      every { staffMemberService.getStaffDetailByCode(any()) } returns CasResult.Success(
         keyWorker,
       )
     }
