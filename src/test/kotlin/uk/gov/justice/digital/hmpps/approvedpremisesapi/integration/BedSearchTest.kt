@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResul
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultRoomSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CharacteristicPair
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
@@ -22,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -371,15 +374,19 @@ class BedSearchTest : IntegrationTestBase() {
       givenAUser(
         probationRegion = probationRegion,
       ) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
+        givenSomeOffenders { offenderSequence ->
+          val offenders = offenderSequence.take(4).toList()
+
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-          val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
+          val applications = mutableListOf<TemporaryAccommodationApplicationEntity>()
+          val assessments = mutableListOf<AssessmentEntity>()
 
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
+          offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
+            val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
+            applications += application
+            assessments += assessment
+          }
 
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withProbationRegion(probationRegion)
@@ -397,6 +404,14 @@ class BedSearchTest : IntegrationTestBase() {
             withPremises(premises)
           }
 
+          val roomThree = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val roomFour = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
           val bedOne = bedEntityFactory.produceAndPersist {
             withName("matching bed")
             withRoom(roomOne)
@@ -404,40 +419,94 @@ class BedSearchTest : IntegrationTestBase() {
 
           val bedTwo = bedEntityFactory.produceAndPersist {
             withName("matching bed, but with an overlapping booking")
-            withRoom(roomOne)
+            withRoom(roomTwo)
           }
 
           val bedThree = bedEntityFactory.produceAndPersist {
             withName("bed in a different room, with an overlapping booking")
-            withRoom(roomTwo)
+            withRoom(roomThree)
           }
+
+          val bedFour = bedEntityFactory.produceAndPersist {
+            withName("bed in a different room, with an overlapping booking")
+            withRoom(roomFour)
+          }
+
+          val fullPersonOffenderDetails = offenders.first().first
+          val fullPersonApplication = applications.first()
+          val fullPersonAssessment = assessments.first()
+          val fullPersonCaseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(fullPersonOffenderDetails)
+            .withPnc(fullPersonOffenderDetails.otherIds.pncNumber)
+            .produce()
 
           val overlappingBookingSameRoom = bookingEntityFactory.produceAndPersist {
             withServiceName(ServiceName.temporaryAccommodation)
-            withApplication(application)
+            withApplication(fullPersonApplication)
             withPremises(premises)
             withBed(bedTwo)
             withArrivalDate(LocalDate.parse("2023-07-15"))
             withDepartureDate(LocalDate.parse("2023-08-15"))
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(fullPersonCaseSummary.crn)
             withId(UUID.randomUUID())
           }
 
-          val overlappingBookingDifferentRoom = bookingEntityFactory.produceAndPersist {
+          val currentRestrictionOffenderDetails = offenders.drop(1).first().first
+          val currentRestrictionApplication = applications.drop(1).first()
+          val currentRestrictionAssessment = assessments.drop(1).first()
+          val currentRestrictionCaseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(currentRestrictionOffenderDetails)
+            .withPnc(currentRestrictionOffenderDetails.otherIds.pncNumber)
+            .withCurrentRestriction(true)
+            .produce()
+
+          val currentRestrictionOverlappingBooking = bookingEntityFactory.produceAndPersist {
             withServiceName(ServiceName.temporaryAccommodation)
-            withApplication(application)
+            withApplication(currentRestrictionApplication)
             withPremises(premises)
             withBed(bedThree)
-            withArrivalDate(LocalDate.parse("2023-08-25"))
-            withDepartureDate(LocalDate.parse("2023-09-25"))
-            withCrn(offenderDetails.otherIds.crn)
+            withArrivalDate(LocalDate.parse("2023-08-27"))
+            withDepartureDate(LocalDate.parse("2023-09-13"))
+            withCrn(currentRestrictionCaseSummary.crn)
             withId(UUID.randomUUID())
           }
 
+          val userExcludedOffenderDetails = offenders.drop(2).first().first
+          val userExcludedApplication = applications.drop(2).first()
+          val userExcludedAssessment = assessments.drop(2).first()
+          val userExcludedCaseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(userExcludedOffenderDetails)
+            .withPnc(userExcludedOffenderDetails.otherIds.pncNumber)
+            .withCurrentExclusion(true)
+            .produce()
+
+          val userExcludedOverlappingBooking = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withApplication(userExcludedApplication)
+            withPremises(premises)
+            withBed(bedFour)
+            withArrivalDate(LocalDate.parse("2023-08-25"))
+            withDepartureDate(LocalDate.parse("2023-09-25"))
+            withCrn(userExcludedCaseSummary.crn)
+            withId(UUID.randomUUID())
+          }
+
+          apDeliusContextAddListCaseSummaryToBulkResponse(listOf(fullPersonCaseSummary, userExcludedCaseSummary, currentRestrictionCaseSummary))
+
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(fullPersonCaseSummary.crn)
+                .produce(),
+              CaseAccessFactory()
+                .withCrn(userExcludedCaseSummary.crn)
+                .withUserExcluded(true)
+                .produce(),
+              CaseAccessFactory()
+                .withCrn(currentRestrictionCaseSummary.crn)
+                .withUserRestricted(true)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -468,28 +537,38 @@ class BedSearchTest : IntegrationTestBase() {
                       roomOne,
                       bedOne,
                       searchPdu.name,
-                      numberOfBeds = 3,
-                      numberOfBookedBeds = 2,
+                      numberOfBeds = 4,
+                      numberOfBookedBeds = 3,
                       premisesCharacteristics = listOf(),
                       roomCharacteristics = listOf(),
                       listOf(
                         TemporaryAccommodationBedSearchResultOverlap(
-                          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
-                          crn = overlappingBookingSameRoom.crn,
-                          sex = caseSummary.gender!!,
+                          name = "${fullPersonCaseSummary.name.forename} ${fullPersonCaseSummary.name.surname}",
+                          crn = fullPersonCaseSummary.crn,
+                          personType = PersonType.fullPerson,
+                          sex = fullPersonCaseSummary.gender!!,
                           days = 15,
                           bookingId = overlappingBookingSameRoom.id,
-                          roomId = roomOne.id,
-                          assessmentId = assessment.id,
+                          roomId = roomTwo.id,
+                          assessmentId = fullPersonAssessment.id,
                         ),
                         TemporaryAccommodationBedSearchResultOverlap(
-                          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
-                          crn = overlappingBookingDifferentRoom.crn,
-                          sex = caseSummary.gender!!,
+                          name = "Limited Access Offender",
+                          crn = currentRestrictionCaseSummary.crn,
+                          personType = PersonType.restrictedPerson,
+                          days = 5,
+                          bookingId = currentRestrictionOverlappingBooking.id,
+                          roomId = roomThree.id,
+                          assessmentId = currentRestrictionAssessment.id,
+                        ),
+                        TemporaryAccommodationBedSearchResultOverlap(
+                          name = "Limited Access Offender",
+                          crn = userExcludedCaseSummary.crn,
+                          personType = PersonType.restrictedPerson,
                           days = 7,
-                          bookingId = overlappingBookingDifferentRoom.id,
-                          roomId = roomTwo.id,
-                          assessmentId = assessment.id,
+                          bookingId = userExcludedOverlappingBooking.id,
+                          roomId = roomFour.id,
+                          assessmentId = userExcludedAssessment.id,
                         ),
                       ),
                     ),
@@ -605,9 +684,11 @@ class BedSearchTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -646,6 +727,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
                           crn = overlappingBookingForBedInPremisesOne.crn,
+                          personType = PersonType.fullPerson,
                           sex = caseSummary.gender!!,
                           days = 15,
                           bookingId = overlappingBookingForBedInPremisesOne.id,
@@ -667,6 +749,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
                           crn = overlappingBookingForBedInPremisesTwo.crn,
+                          personType = PersonType.fullPerson,
                           sex = caseSummary.gender!!,
                           days = 7,
                           bookingId = overlappingBookingForBedInPremisesTwo.id,
@@ -836,9 +919,11 @@ class BedSearchTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 

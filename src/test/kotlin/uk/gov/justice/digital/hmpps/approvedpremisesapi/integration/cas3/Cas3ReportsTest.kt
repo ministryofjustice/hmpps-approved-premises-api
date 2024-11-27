@@ -398,9 +398,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -470,9 +472,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -545,9 +549,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -619,9 +625,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -683,9 +691,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
           )
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -797,9 +807,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -896,9 +908,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -996,9 +1010,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
           assessment.schemaUpToDate = true
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -1078,9 +1094,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -1160,9 +1178,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1264,9 +1284,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1348,9 +1370,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1436,9 +1460,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1557,9 +1583,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1661,9 +1689,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1726,9 +1756,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .produce()
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -3416,9 +3448,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 
@@ -3697,9 +3731,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
 

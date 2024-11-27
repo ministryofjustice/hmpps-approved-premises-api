@@ -2047,9 +2047,11 @@ class PremisesTest {
               .produce(),
           )
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(it.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(it.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
         }
@@ -2107,9 +2109,11 @@ class PremisesTest {
               .produce(),
           )
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(it.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(it.crn)
+                .produce(),
+            ),
             user.deliusUsername,
           )
         }

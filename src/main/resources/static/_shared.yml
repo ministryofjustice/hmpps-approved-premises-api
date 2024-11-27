@@ -4346,6 +4346,8 @@ components:
           type: string
         sex:
           type: string
+        personType:
+          $ref: '#/components/schemas/PersonType'
         days:
           type: integer
         bookingId:
@@ -4360,6 +4362,7 @@ components:
       required:
         - name
         - crn
+        - personType
         - days
         - bookingId
         - roomId

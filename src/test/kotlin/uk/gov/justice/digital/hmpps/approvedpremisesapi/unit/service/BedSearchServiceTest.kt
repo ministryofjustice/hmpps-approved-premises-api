@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
@@ -692,6 +693,7 @@ class BedSearchServiceTest {
           TemporaryAccommodationBedSearchResultOverlap(
             name = caseSummary.name.forename,
             sex = caseSummary.gender,
+            personType = PersonType.fullPerson,
             crn = overlapBookingsSearchResult.crn,
             days = 7,
             premisesId = overlapBookingsSearchResult.premisesId,

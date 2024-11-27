@@ -1292,9 +1292,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
               )
 
               apDeliusContextAddResponseToUserAccessCall(
-                CaseAccessFactory()
-                  .withCrn(offenderDetails.otherIds.crn)
-                  .produce(),
+                listOf(
+                  CaseAccessFactory()
+                    .withCrn(offenderDetails.otherIds.crn)
+                    .produce(),
+                ),
                 user.deliusUsername,
               )
 
