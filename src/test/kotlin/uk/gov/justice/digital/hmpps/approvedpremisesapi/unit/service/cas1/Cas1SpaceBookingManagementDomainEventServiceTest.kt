@@ -40,9 +40,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -80,7 +81,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
   @Nested
   inner class ArrivalRecorded {
 
-    private val arrivalDate = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    private val arrivalDate = LocalDate.of(2023, 3, 12)
+    private val arrivalTime = LocalTime.of(11, 30, 0, 0)
     private val departureDate = LocalDate.now().plusMonths(3)
 
     private val application = ApprovedPremisesApplicationEntityFactory()
@@ -105,8 +107,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withApplication(null)
       .withOfflineApplication(null)
       .withPremises(premises)
-      .withActualArrivalDateTime(arrivalDate)
-      .withCanonicalArrivalDate(arrivalDate.toLocalDate())
+      .withCanonicalArrivalDate(arrivalDate)
       .withExpectedDepartureDate(departureDate)
       .withCanonicalDepartureDate(departureDate)
       .withKeyworkerStaffCode(keyWorker.code)
@@ -133,6 +134,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
           spaceBooking,
           arrivalDate,
+          arrivalTime,
         ),
       )
 
@@ -154,13 +156,13 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEvent.occurredAt).isEqualTo(spaceBooking.actualArrivalDateTime)
+      assertThat(domainEvent.occurredAt).isEqualTo(Instant.parse("2023-03-12T11:30:00Z"))
       val data = domainEvent.data.eventDetails
       assertThat(data.previousExpectedDepartureOn).isNull()
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationSubmittedOn).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
-      assertThat(data.arrivedAt).isEqualTo(arrivalDate)
+      assertThat(data.arrivedAt).isEqualTo(Instant.parse("2023-03-12T11:30:00Z"))
       assertThat(data.deliusEventNumber).isEqualTo(DELIUS_EVENT_NUMBER)
       assertThat(data.premises.id).isEqualTo(premises.id)
       assertThat(data.premises.name).isEqualTo(premises.name)
@@ -183,6 +185,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
           spaceBooking,
           arrivalDate,
+          arrivalTime,
         ),
       )
 
@@ -211,8 +214,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         .withApplication(application)
         .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
         .withPremises(premises)
-        .withActualArrivalDateTime(arrivalDate)
-        .withCanonicalArrivalDate(arrivalDate.toLocalDate())
+        .withCanonicalArrivalDate(arrivalDate)
         .withExpectedDepartureDate(departureDate)
         .withCanonicalDepartureDate(departureDate)
         .withKeyworkerStaffCode(null)
@@ -222,6 +224,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
           existingSpaceBooking,
           arrivalDate,
+          arrivalTime,
         ),
       )
 
@@ -245,8 +248,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
   inner class DepartureRecorded {
 
     private val arrivedDate = LocalDateTime.now().toInstant(ZoneOffset.UTC)
-    private val departedDate = LocalDate.now().plusMonths(3)
-    private val departedDateTime = departedDate.toLocalDateTime(ZoneOffset.UTC).toInstant()
+    private val departedDate = LocalDate.of(2023, 11, 6)
+    private val departureTime = LocalTime.of(1, 30, 30)
 
     private val application = ApprovedPremisesApplicationEntityFactory()
       .withSubmittedAt(OffsetDateTime.parse("2024-10-01T12:00:00Z"))
@@ -271,11 +274,9 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withOfflineApplication(null)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
-      .withActualArrivalDateTime(arrivedDate)
       .withCanonicalArrivalDate(arrivedDate.toLocalDate())
       .withExpectedDepartureDate(departedDate)
       .withCanonicalDepartureDate(departedDate)
-      .withActualDepartureDateTime(departedDateTime)
       .withKeyworkerStaffCode(keyWorker.code)
 
     private val departureReason = DepartureReasonEntity(
@@ -316,7 +317,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
           departedSpaceBooking,
           departureReason,
           moveOnCategory,
-          departedDateTime,
+          departedDate,
+          departureTime,
         ),
       )
 
@@ -338,7 +340,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(departedSpaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(departedSpaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEvent.occurredAt).isEqualTo(departedSpaceBooking.actualDepartureDateTime)
+      assertThat(domainEvent.occurredAt).isEqualTo(Instant.parse("2023-11-06T01:30:30Z"))
       val domainEventEventDetails = domainEvent.data.eventDetails
       assertThat(domainEventEventDetails.applicationId).isEqualTo(application.id)
       assertThat(domainEventEventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
@@ -346,7 +348,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventEventDetails.personReference.crn).isEqualTo(departedSpaceBooking.crn)
       assertThat(domainEventEventDetails.personReference.noms).isEqualTo(caseSummary.nomsId)
       assertThat(domainEventEventDetails.deliusEventNumber).isEqualTo(DELIUS_EVENT_NUMBER)
-      assertThat(domainEventEventDetails.departedAt).isEqualTo(departedDate.toLocalDateTime(ZoneOffset.UTC).toInstant())
+      assertThat(domainEventEventDetails.departedAt).isEqualTo(Instant.parse("2023-11-06T01:30:30Z"))
       assertThat(domainEventEventDetails.reason).isEqualTo(departureReason.name)
       assertThat(domainEventEventDetails.legacyReasonCode).isEqualTo(departureReason.legacyDeliusReasonCode)
       val domainEventPremises = domainEventEventDetails.premises
@@ -355,7 +357,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventPremises.apCode).isEqualTo(premises.apCode)
       assertThat(domainEventPremises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(domainEventPremises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
-      val domainEventKeyWorker = domainEventEventDetails.keyWorker!!
+      val domainEventKeyWorker = domainEventEventDetails.keyWorker
       assertThat(domainEventKeyWorker.staffCode).isEqualTo(keyWorker.code)
       assertThat(domainEventKeyWorker.surname).isEqualTo(keyWorker.name.surname)
       assertThat(domainEventKeyWorker.forenames).isEqualTo(keyWorker.name.forenames())
@@ -377,7 +379,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
           departedSpaceBooking,
           departureReason,
           moveOnCategory,
-          departedDateTime,
+          departedDate,
+          departureTime,
         ),
       )
 

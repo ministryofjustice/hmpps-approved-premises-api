@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
@@ -37,6 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1Spa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.util.UUID
 
 @Service
@@ -162,7 +165,8 @@ class Cas1SpaceBookingController(
       cas1SpaceBookingService.recordArrivalForBooking(
         premisesId,
         bookingId,
-        cas1NewArrival,
+        arrivalDate = cas1NewArrival.arrivalDateTime.toLocalDate(),
+        arrivalTime = cas1NewArrival.arrivalDateTime.toLocalDateTime().toLocalTime(),
       ),
     )
     return ResponseEntity(HttpStatus.OK)
@@ -179,7 +183,13 @@ class Cas1SpaceBookingController(
       cas1SpaceBookingService.recordDepartureForBooking(
         premisesId,
         bookingId,
-        cas1NewDeparture,
+        DepartureInfo(
+          departureDate = cas1NewDeparture.departureDateTime.toLocalDate(),
+          departureTime = cas1NewDeparture.departureDateTime.toLocalDateTime().toLocalTime(),
+          reasonId = cas1NewDeparture.reasonId,
+          moveOnCategoryId = cas1NewDeparture.moveOnCategoryId,
+          notes = cas1NewDeparture.notes,
+        ),
       ),
     )
     return ResponseEntity(HttpStatus.OK)

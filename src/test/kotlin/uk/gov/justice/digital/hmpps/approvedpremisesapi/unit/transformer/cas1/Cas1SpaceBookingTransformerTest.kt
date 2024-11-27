@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisT
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -418,8 +419,10 @@ class Cas1SpaceBookingTransformerTest {
           canonicalDepartureDate = LocalDate.parse("2023-01-02"),
           expectedArrivalDate = LocalDate.parse("2023-12-13"),
           expectedDepartureDate = LocalDate.parse("2023-01-02"),
-          actualArrivalDateTime = null,
-          actualDepartureDateTime = null,
+          actualArrivalDate = null,
+          actualArrivalTime = null,
+          actualDepartureDate = null,
+          actualDepartureTime = null,
           nonArrivalConfirmedAtDateTime = null,
           tier = "A",
           keyWorkerStaffCode = "the staff code",
@@ -461,8 +464,10 @@ class Cas1SpaceBookingTransformerTest {
           canonicalDepartureDate = LocalDate.parse("2023-01-02"),
           expectedArrivalDate = LocalDate.parse("2023-12-13"),
           expectedDepartureDate = LocalDate.parse("2023-01-02"),
-          actualArrivalDateTime = null,
-          actualDepartureDateTime = null,
+          actualArrivalDate = null,
+          actualArrivalTime = null,
+          actualDepartureDate = null,
+          actualDepartureTime = null,
           nonArrivalConfirmedAtDateTime = null,
           tier = "A",
           keyWorkerStaffCode = null,
@@ -485,8 +490,10 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val canonicalDepartureDate: LocalDate,
   override val expectedArrivalDate: LocalDate,
   override val expectedDepartureDate: LocalDate,
-  override val actualArrivalDateTime: LocalDateTime?,
-  override val actualDepartureDateTime: LocalDateTime?,
+  override val actualArrivalDate: LocalDate?,
+  override val actualArrivalTime: LocalTime?,
+  override val actualDepartureDate: LocalDate?,
+  override val actualDepartureTime: LocalTime?,
   override val nonArrivalConfirmedAtDateTime: LocalDateTime?,
   override val tier: String?,
   override val keyWorkerStaffCode: String?,
