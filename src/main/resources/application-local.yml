@@ -14,6 +14,9 @@ spring:
       host: localhost
       port: 6379
       password: ""
+  output:
+    ansi:
+      enabled: ALWAYS
 
 hmpps.sqs:
   provider: localstack
@@ -58,8 +61,10 @@ feature-flags:
   get-documents-from-ap-delius: true
   get-offences-from-ap-delius: true
 
-# allows us to see the JWT token to simplify local API invocation
-logging.level.uk.gov.justice.digital.hmpps.approvedpremisesapi.config.RequestResponseLoggingFilter: TRACE
 
-# allows us to see the request URL and method for upstream requests
-logging.level.reactor.netty.http.client.HttpClientConnect: DEBUG
+logging:
+  level:
+    # allows us to see the JWT token to simplify local API invocation
+    uk.gov.justice.digital.hmpps.approvedpremisesapi.config.RequestResponseLoggingFilter: TRACE
+    # allows us to see the request URL and method for upstream requests
+    reactor.netty.http.client.HttpClientConnect: DEBUG
