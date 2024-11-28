@@ -95,7 +95,8 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-                
+
+
 components:
   responses:
     401Response:

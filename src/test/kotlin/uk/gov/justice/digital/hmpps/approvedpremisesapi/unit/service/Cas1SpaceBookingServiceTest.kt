@@ -1210,7 +1210,7 @@ class Cas1SpaceBookingServiceTest {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any(), any(), any()) } returns Unit
+      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any()) } returns Unit
 
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),
@@ -1242,7 +1242,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking2
       every { moveOnCategoryRepository.findByIdOrNull(NOT_APPLICABLE_MOVE_ON_CATEGORY_ID) } returns departureNotApplicableMoveOnCategory
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any(), any(), any()) } returns Unit
+      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any()) } returns Unit
 
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -235,6 +236,11 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "non_arrival_reason_id")
   var nonArrivalReason: NonArrivalReasonEntity?,
   var nonArrivalNotes: String?,
+  /**
+   * All new bookings will have delius event number set, some legacy bookings do not
+   * have a value for this (because we didn't initially capture event number for
+   * offline applications)
+   */
   val deliusEventNumber: String?,
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "migrated_from_booking_id")
@@ -251,6 +257,8 @@ data class Cas1SpaceBookingEntity(
   fun hasArrival() = actualArrivalDateTime != null
   fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day
   override fun toString() = "Cas1SpaceBookingEntity:$id"
+  val applicationFacade: Cas1ApplicationFacade
+    get() = Cas1ApplicationFacade(application, offlineApplication)
 }
 
 enum class ManagementInfoSource {
