@@ -9,7 +9,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -154,6 +154,6 @@ class Cas1AppealDomainEventServiceTest {
       withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
       this.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
       this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
-      this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision.accepted &&
+      this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
       this.eventDetails.decisionDetail == "Some information about the decision made"
 }
