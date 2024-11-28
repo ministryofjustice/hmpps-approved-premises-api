@@ -21,8 +21,8 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption

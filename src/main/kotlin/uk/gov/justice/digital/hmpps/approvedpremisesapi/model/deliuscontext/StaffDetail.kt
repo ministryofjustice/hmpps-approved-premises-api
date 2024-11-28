@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 
 data class StaffDetail(
   val email: String?,

@@ -10,11 +10,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Region
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -197,7 +197,7 @@ class Cas1ApplicationDomainEventServiceTest {
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
               data.age == Period.between(LocalDate.of(1982, 3, 11), LocalDate.now()).years &&
-              data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted.Gender.male &&
+              data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
                 staffMember = staffUserDetails.toStaffMember(),
                 probationArea = domainEventProbationArea,

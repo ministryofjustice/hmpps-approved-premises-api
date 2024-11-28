@@ -268,7 +268,7 @@ registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateDomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model",
 )
 
 registerAdditionalOpenApiGenerateTask(
