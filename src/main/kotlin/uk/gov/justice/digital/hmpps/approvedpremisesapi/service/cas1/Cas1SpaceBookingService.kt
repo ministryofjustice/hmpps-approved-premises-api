@@ -193,7 +193,10 @@ class Cas1SpaceBookingService(
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
-      existingCas1SpaceBooking,
+      Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
+        existingCas1SpaceBooking,
+        cas1NewArrival.arrivalDateTime,
+      ),
     )
 
     success(result)
@@ -355,9 +358,12 @@ class Cas1SpaceBookingService(
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.departureRecorded(
-      existingCas1SpaceBooking,
-      departureReason!!,
-      moveOnCategory!!,
+      Cas1SpaceBookingManagementDomainEventService.DepartureInfo(
+        existingCas1SpaceBooking,
+        departureReason!!,
+        moveOnCategory!!,
+        cas1NewDeparture.departureDateTime,
+      ),
     )
 
     success(result)

@@ -235,6 +235,11 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "non_arrival_reason_id")
   var nonArrivalReason: NonArrivalReasonEntity?,
   var nonArrivalNotes: String?,
+  /**
+   * All new bookings will have delius event number set, some legacy bookings do not
+   * have a value for this (because we didn't initially capture event number for
+   * offline applications)
+   */
   val deliusEventNumber: String?,
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "migrated_from_booking_id")

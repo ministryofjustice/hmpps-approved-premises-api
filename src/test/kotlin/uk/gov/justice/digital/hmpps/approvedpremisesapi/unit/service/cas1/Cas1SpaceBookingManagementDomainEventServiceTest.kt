@@ -129,7 +129,12 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     fun `record arrival and emits domain event`() {
       val spaceBooking = spaceBookingFactory.withApplication(application).produce()
 
-      service.arrivalRecorded(spaceBooking)
+      service.arrivalRecorded(
+        Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
+          spaceBooking,
+          arrivalDate,
+        ),
+      )
 
       val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
 
@@ -174,7 +179,12 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       val spaceBooking = spaceBookingFactory.withOfflineApplication(offlineApplication).produce()
 
-      service.arrivalRecorded(spaceBooking)
+      service.arrivalRecorded(
+        Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
+          spaceBooking,
+          arrivalDate,
+        ),
+      )
 
       val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
 
@@ -208,7 +218,12 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         .withKeyworkerStaffCode(null)
         .produce()
 
-      service.arrivalRecorded(existingSpaceBooking)
+      service.arrivalRecorded(
+        Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
+          existingSpaceBooking,
+          arrivalDate,
+        ),
+      )
 
       val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
 
@@ -231,6 +246,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     private val arrivedDate = LocalDateTime.now().toInstant(ZoneOffset.UTC)
     private val departedDate = LocalDate.now().plusMonths(3)
+    private val departedDateTime = departedDate.toLocalDateTime(ZoneOffset.UTC).toInstant()
 
     private val application = ApprovedPremisesApplicationEntityFactory()
       .withSubmittedAt(OffsetDateTime.parse("2024-10-01T12:00:00Z"))
@@ -259,7 +275,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withCanonicalArrivalDate(arrivedDate.toLocalDate())
       .withExpectedDepartureDate(departedDate)
       .withCanonicalDepartureDate(departedDate)
-      .withActualDepartureDateTime(departedDate.toLocalDateTime(ZoneOffset.UTC).toInstant())
+      .withActualDepartureDateTime(departedDateTime)
       .withKeyworkerStaffCode(keyWorker.code)
 
     private val departureReason = DepartureReasonEntity(
@@ -295,7 +311,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
     fun `record departure and emits domain event`() {
       val departedSpaceBooking = departedSpaceBookingFactory.withApplication(application).produce()
 
-      service.departureRecorded(departedSpaceBooking, departureReason, moveOnCategory)
+      service.departureRecorded(
+        Cas1SpaceBookingManagementDomainEventService.DepartureInfo(
+          departedSpaceBooking,
+          departureReason,
+          moveOnCategory,
+          departedDateTime,
+        ),
+      )
 
       val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
 
@@ -349,7 +372,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       val departedSpaceBooking = departedSpaceBookingFactory.withOfflineApplication(offlineApplication).produce()
 
-      service.departureRecorded(departedSpaceBooking, departureReason, moveOnCategory)
+      service.departureRecorded(
+        Cas1SpaceBookingManagementDomainEventService.DepartureInfo(
+          departedSpaceBooking,
+          departureReason,
+          moveOnCategory,
+          departedDateTime,
+        ),
+      )
 
       val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
 

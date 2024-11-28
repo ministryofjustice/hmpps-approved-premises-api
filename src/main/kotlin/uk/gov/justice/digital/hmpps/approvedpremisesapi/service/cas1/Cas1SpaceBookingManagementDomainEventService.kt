@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -50,9 +51,15 @@ class Cas1SpaceBookingManagementDomainEventService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
 
-  fun arrivalRecorded(
-    updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
-  ) {
+  data class ArrivalInfo(
+    val updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    val actualArrivalDateTime: Instant,
+  )
+
+  fun arrivalRecorded(arrivalInfo: ArrivalInfo) {
+    val updatedCas1SpaceBooking = arrivalInfo.updatedCas1SpaceBooking
+    val actualArrivalDateTime = arrivalInfo.actualArrivalDateTime
+
     val domainEventId = UUID.randomUUID()
 
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
@@ -62,8 +69,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val applicationId = updatedCas1SpaceBooking.applicationIdForDomainEvent()
     val applicationSubmittedAt = updatedCas1SpaceBooking.applicationSubmittedOnForDomainEvent()
 
-    val actualArrivalDate = updatedCas1SpaceBooking.actualArrivalDateTime!!
-
     domainEventService.savePersonArrivedEvent(
       emit = false,
       domainEvent = DomainEvent(
@@ -71,7 +76,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
-        occurredAt = actualArrivalDate,
+        occurredAt = actualArrivalDateTime,
         cas1SpaceBookingId = updatedCas1SpaceBooking.id,
         bookingId = null,
         data = PersonArrivedEnvelope(
@@ -90,7 +95,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             premises = premises,
             applicationSubmittedOn = applicationSubmittedAt.toLocalDate(),
             keyWorker = keyWorker,
-            arrivedAt = actualArrivalDate,
+            arrivedAt = actualArrivalDateTime,
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
             notes = null,
           ),
@@ -148,11 +153,19 @@ class Cas1SpaceBookingManagementDomainEventService(
     )
   }
 
-  fun departureRecorded(
-    departedCas1SpaceBooking: Cas1SpaceBookingEntity,
-    departureReason: DepartureReasonEntity,
-    moveOnCategory: MoveOnCategoryEntity,
-  ) {
+  data class DepartureInfo(
+    val departedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    val departureReason: DepartureReasonEntity,
+    val moveOnCategory: MoveOnCategoryEntity,
+    val actualDepartureDate: Instant,
+  )
+
+  fun departureRecorded(departureInfo: DepartureInfo) {
+    val departedCas1SpaceBooking = departureInfo.departedCas1SpaceBooking
+    val departureReason = departureInfo.departureReason
+    val moveOnCategory = departureInfo.moveOnCategory
+    val actualDepartureDate = departureInfo.actualDepartureDate
+
     val domainEventId = UUID.randomUUID()
 
     val applicationId = departedCas1SpaceBooking.applicationIdForDomainEvent()
@@ -160,8 +173,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
-
-    val actualDepartureDate = departedCas1SpaceBooking.actualDepartureDateTime!!
 
     domainEventService.savePersonDepartedEvent(
       emit = false,
