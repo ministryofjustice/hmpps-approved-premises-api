@@ -225,12 +225,14 @@ class Cas1SpaceBookingManagementDomainEventService(
 
   fun keyWorkerAssigned(
     updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    assignedKeyWorkerCode: String,
     assignedKeyWorkerName: String,
     previousKeyWorkerName: String?,
   ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now().toInstant()
 
+    val keyWorker = getStaffMemberDetails(assignedKeyWorkerCode)!!
     val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
@@ -254,6 +256,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             applicationId = applicationId,
             applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
+            keyWorker = keyWorker,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",

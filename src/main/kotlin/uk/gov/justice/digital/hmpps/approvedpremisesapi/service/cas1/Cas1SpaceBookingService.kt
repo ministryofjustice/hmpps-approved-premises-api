@@ -294,6 +294,7 @@ class Cas1SpaceBookingService(
 
     cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(
       existingCas1SpaceBooking,
+      assignedKeyWorker.code,
       assignedKeyWorkerName,
       previousKeyWorkerName,
     )
