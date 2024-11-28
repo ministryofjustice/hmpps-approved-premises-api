@@ -6403,11 +6403,29 @@ components:
           type: string
           format: date
         actualArrivalDate:
+          description: Use actualArrivalDateOnly and actualArrivalTime
+          deprecated: true
           type: string
           format: date-time
+        actualArrivalDateOnly:
+          type: string
+          format: date
+        actualArrivalTime:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
         actualDepartureDate:
+          description: Use actualDepartureDateOnly and actualDepartureTime
+          deprecated: true
           type: string
           format: date-time
+        actualDepartureDateOnly:
+          type: string
+          format: date
+        actualDepartureTime:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
         canonicalArrivalDate:
           description: actual arrival date or, if not known, the expected arrival date
           type: string
