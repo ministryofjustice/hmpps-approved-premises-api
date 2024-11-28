@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.lang.Thread.sleep
 import java.time.Duration
 import java.time.Instant
@@ -102,8 +103,10 @@ class Cas1BookingToSpaceBookingSeedJob(
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
-        actualArrivalDateTime = managementInfo?.arrivedAt,
-        actualDepartureDateTime = managementInfo?.departedAt,
+        actualArrivalDate = managementInfo?.arrivedAt?.toLocalDate(),
+        actualArrivalTime = managementInfo?.arrivedAt?.toLocalDateTime()?.toLocalTime(),
+        actualDepartureDate = managementInfo?.departedAt?.toLocalDate(),
+        actualDepartureTime = managementInfo?.departedAt?.toLocalDateTime()?.toLocalTime(),
         canonicalArrivalDate = managementInfo?.arrivedAt?.toLocalDate() ?: booking.arrivalDate,
         canonicalDepartureDate = managementInfo?.departedAt?.toLocalDate() ?: booking.departureDate,
         crn = booking.crn,

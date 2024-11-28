@@ -32,8 +32,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -53,12 +55,12 @@ class Cas1SpaceBookingManagementDomainEventService(
 
   data class ArrivalInfo(
     val updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
-    val actualArrivalDateTime: Instant,
+    val actualArrivalDate: LocalDate,
+    val actualArrivalTime: LocalTime,
   )
 
   fun arrivalRecorded(arrivalInfo: ArrivalInfo) {
     val updatedCas1SpaceBooking = arrivalInfo.updatedCas1SpaceBooking
-    val actualArrivalDateTime = arrivalInfo.actualArrivalDateTime
 
     val domainEventId = UUID.randomUUID()
 
@@ -68,6 +70,8 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
     val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val applicationSubmittedAt = updatedCas1SpaceBooking.applicationFacade.submittedAt
+
+    val actualArrivalDateTime = arrivalInfo.actualArrivalDate.atTime(arrivalInfo.actualArrivalTime).toInstant()
 
     domainEventService.savePersonArrivedEvent(
       emit = false,
@@ -158,14 +162,14 @@ class Cas1SpaceBookingManagementDomainEventService(
     val departedCas1SpaceBooking: Cas1SpaceBookingEntity,
     val departureReason: DepartureReasonEntity,
     val moveOnCategory: MoveOnCategoryEntity,
-    val actualDepartureDate: Instant,
+    val actualDepartureDate: LocalDate,
+    val actualDepartureTime: LocalTime,
   )
 
   fun departureRecorded(departureInfo: DepartureInfo) {
     val departedCas1SpaceBooking = departureInfo.departedCas1SpaceBooking
     val departureReason = departureInfo.departureReason
     val moveOnCategory = departureInfo.moveOnCategory
-    val actualDepartureDate = departureInfo.actualDepartureDate
 
     val domainEventId = UUID.randomUUID()
 
@@ -175,6 +179,8 @@ class Cas1SpaceBookingManagementDomainEventService(
     val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
 
+    val actualDepartureDateTime = departureInfo.actualDepartureDate.atTime(departureInfo.actualDepartureTime).toInstant()
+
     domainEventService.savePersonDepartedEvent(
       emit = false,
       domainEvent = DomainEvent(
@@ -182,7 +188,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         applicationId = applicationId,
         crn = departedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
-        occurredAt = actualDepartureDate,
+        occurredAt = actualDepartureDateTime,
         cas1SpaceBookingId = departedCas1SpaceBooking.id,
         bookingId = null,
         data = PersonDepartedEnvelope(
@@ -200,7 +206,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             deliusEventNumber = eventNumber,
             premises = premises,
             keyWorker = keyWorker!!,
-            departedAt = actualDepartureDate,
+            departedAt = actualDepartureDateTime,
             reason = departureReason.name,
             legacyReasonCode = departureReason.legacyDeliusReasonCode!!,
             destination = PersonDepartedDestination(

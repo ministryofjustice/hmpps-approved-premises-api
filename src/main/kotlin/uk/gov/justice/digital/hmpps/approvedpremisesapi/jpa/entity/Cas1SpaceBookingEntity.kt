@@ -18,9 +18,11 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -39,8 +41,10 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.canonical_departure_date as canonicalDepartureDate,
       b.expected_arrival_date as expectedArrivalDate,
       b.expected_departure_date as expectedDepartureDate,
-      b.actual_arrival_date_time as actualArrivalDateTime,
-      b.actual_departure_date_time as actualDepartureDateTime,
+      b.actual_arrival_date as actualArrivalDate,
+      b.actual_arrival_time as actualArrivalTime,
+      b.actual_departure_date as actualDepartureDate,
+      b.actual_departure_time as actualDepartureTime,
       b.non_arrival_confirmed_at as nonArrivalConfirmedAtDateTime,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       b.key_worker_staff_code as keyWorkerStaffCode,
@@ -56,23 +60,23 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         cast(:residency as text) IS NULL OR (
           (
             :residency = 'upcoming' AND (
-              b.actual_arrival_date_time IS NULL AND 
+              b.actual_arrival_date IS NULL AND 
               b.non_arrival_confirmed_at IS NULL AND
               b.expected_departure_date >= '2024-06-01'
             )
           ) OR
           (
             :residency = 'current' AND ( 
-              b.actual_arrival_date_time IS NOT NULL AND
+              b.actual_arrival_date IS NOT NULL AND
               b.non_arrival_confirmed_at IS NULL AND
-              b.actual_departure_date_time IS NULL  AND
+              b.actual_departure_date IS NULL  AND
               b.expected_departure_date >= '2024-06-01'
             )
           ) OR
           (
             :residency = 'historic' AND 
             (
-                b.actual_departure_date_time IS NOT NULL OR 
+                b.actual_departure_date IS NOT NULL OR 
                 b.non_arrival_confirmed_at IS NOT NULL OR 
                 b.expected_departure_date < '2024-06-01'
             )
@@ -149,8 +153,10 @@ interface Cas1SpaceBookingSearchResult {
   val canonicalDepartureDate: LocalDate
   val expectedArrivalDate: LocalDate
   val expectedDepartureDate: LocalDate
-  val actualArrivalDateTime: LocalDateTime?
-  val actualDepartureDateTime: LocalDateTime?
+  val actualArrivalDate: LocalDate?
+  val actualArrivalTime: LocalTime?
+  val actualDepartureDate: LocalDate?
+  val actualDepartureTime: LocalTime?
   val nonArrivalConfirmedAtDateTime: LocalDateTime?
   val tier: String?
   val keyWorkerStaffCode: String?
@@ -199,8 +205,16 @@ data class Cas1SpaceBookingEntity(
   val createdAt: OffsetDateTime,
   val expectedArrivalDate: LocalDate,
   var expectedDepartureDate: LocalDate,
-  var actualArrivalDateTime: Instant?,
-  var actualDepartureDateTime: Instant?,
+  var actualArrivalDate: LocalDate?,
+  /**
+   * For data imported from delius this can be null even if an actual arrival date has been recorded
+   */
+  var actualArrivalTime: LocalTime?,
+  var actualDepartureDate: LocalDate?,
+  /**
+   * For data imported from delius this can be null even if an actual departure date has been recorded
+   */
+  var actualDepartureTime: LocalTime?,
   var canonicalArrivalDate: LocalDate,
   var canonicalDepartureDate: LocalDate,
   val crn: String,
@@ -252,10 +266,21 @@ data class Cas1SpaceBookingEntity(
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
-  fun hasDeparted() = actualDepartureDateTime != null
+  fun hasDeparted() = actualDepartureDate != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
-  fun hasArrival() = actualArrivalDateTime != null
+  fun hasArrival() = actualArrivalDate != null
   fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day
+
+  @Deprecated("Any usage of this should instead be updated to use individual date and time fields")
+  fun actualArrivalAsDateTime(): Instant? {
+    return actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
+  }
+
+  @Deprecated("Any usage of this should be updated to use individual date and time fields")
+  fun actualDepartureAsDateTime(): Instant? {
+    return actualDepartureDate?.atTime(actualDepartureTime ?: LocalTime.NOON)?.toInstant()
+  }
+
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade
     get() = Cas1ApplicationFacade(application, offlineApplication)

@@ -21,9 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -163,8 +163,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.createdBy!!.id).isEqualTo(booking1CreatedByUser.id)
     assertThat(migratedBooking1.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 5, 1))
     assertThat(migratedBooking1.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 5, 5))
-    assertThat(migratedBooking1.actualArrivalDateTime).isEqualTo(Instant.parse("2024-05-02T10:15:30Z"))
-    assertThat(migratedBooking1.actualDepartureDateTime).isEqualTo(Instant.parse("2024-05-04T18:45:20Z"))
+    assertThat(migratedBooking1.actualArrivalDate).isEqualTo(LocalDate.parse("2024-05-02"))
+    assertThat(migratedBooking1.actualArrivalTime).isEqualTo(LocalTime.parse("10:15:30"))
+    assertThat(migratedBooking1.actualDepartureDate).isEqualTo(LocalDate.parse("2024-05-04"))
+    assertThat(migratedBooking1.actualDepartureTime).isEqualTo(LocalTime.parse("18:45:20"))
     assertThat(migratedBooking1.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 5, 2))
     assertThat(migratedBooking1.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 5, 4))
     assertThat(migratedBooking1.crn).isEqualTo("CRN1")
@@ -191,8 +193,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking2.createdBy!!.id).isEqualTo(booking2CreatedByUser.id)
     assertThat(migratedBooking2.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
     assertThat(migratedBooking2.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 6, 5))
-    assertThat(migratedBooking2.actualArrivalDateTime).isEqualTo(Instant.parse("2024-06-03T20:00:05Z"))
-    assertThat(migratedBooking2.actualDepartureDateTime).isEqualTo(Instant.parse("2024-06-06T09:48:00Z"))
+    assertThat(migratedBooking2.actualArrivalDate).isEqualTo(LocalDate.parse("2024-06-03"))
+    assertThat(migratedBooking2.actualArrivalTime).isEqualTo(LocalTime.parse("20:00:05"))
+    assertThat(migratedBooking2.actualDepartureDate).isEqualTo(LocalDate.parse("2024-06-06"))
+    assertThat(migratedBooking2.actualDepartureTime).isEqualTo(LocalTime.parse("09:48:00"))
     assertThat(migratedBooking2.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 3))
     assertThat(migratedBooking2.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 6, 6))
     assertThat(migratedBooking2.crn).isEqualTo("CRN2")
@@ -219,8 +223,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
     assertThat(migratedBooking3.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
     assertThat(migratedBooking3.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
-    assertThat(migratedBooking3.actualArrivalDateTime).isNull()
-    assertThat(migratedBooking3.actualDepartureDateTime).isNull()
+    assertThat(migratedBooking3.actualArrivalDate).isNull()
+    assertThat(migratedBooking3.actualArrivalTime).isNull()
+    assertThat(migratedBooking3.actualDepartureDate).isNull()
+    assertThat(migratedBooking3.actualDepartureTime).isNull()
     assertThat(migratedBooking3.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
     assertThat(migratedBooking3.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
     assertThat(migratedBooking3.crn).isEqualTo("CRN3")
@@ -247,8 +253,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking4.createdBy).isNull()
     assertThat(migratedBooking4.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
     assertThat(migratedBooking4.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
-    assertThat(migratedBooking4.actualArrivalDateTime).isNull()
-    assertThat(migratedBooking4.actualDepartureDateTime).isNull()
+    assertThat(migratedBooking4.actualArrivalDate).isNull()
+    assertThat(migratedBooking4.actualArrivalTime).isNull()
+    assertThat(migratedBooking4.actualDepartureDate).isNull()
+    assertThat(migratedBooking4.actualDepartureTime).isNull()
     assertThat(migratedBooking4.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
     assertThat(migratedBooking4.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
     assertThat(migratedBooking4.crn).isEqualTo("CRN4")
