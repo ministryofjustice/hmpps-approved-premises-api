@@ -612,3 +612,193 @@ components:
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
         - requestsForPlacement
+    Cas1OutOfServiceBed:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        bed:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        room:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        premises:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        apArea:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        daysLostCount:
+          type: integer
+        temporality:
+          $ref: '_shared.yml#/components/schemas/Temporality'
+        status:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedStatus'
+        cancellation:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Cas1OutOfServiceBedCancellation'
+        revisionHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OutOfServiceBedRevision'
+      required:
+        - id
+        - createdAt
+        - startDate
+        - endDate
+        - bed
+        - room
+        - premises
+        - apArea
+        - reason
+        - daysLostCount
+        - temporality
+        - status
+        - revisionHistory
+    NewCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        bedId:
+          type: string
+          format: uuid
+      required:
+        - startDate
+        - endDate
+        - reason
+        - bedId
+    UpdateCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+      required:
+        - startDate
+        - endDate
+        - reason
+    Cas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - id
+        - createdAt
+    NewCas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        notes:
+          type: string
+    Cas1OutOfServiceBedStatus:
+      type: string
+      enum:
+        - active
+        - cancelled
+    Cas1OutOfServiceBedReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive
+    Cas1OutOfServiceBedSortField:
+      type: string
+      enum:
+        - premisesName
+        - roomName
+        - bedName
+        - startDate
+        - endDate
+        - reason
+        - daysLost
+    Cas1OutOfServiceBedRevision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: '_shared.yml#/components/schemas/User'
+        revisionType:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OutOfServiceBedRevisionType'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+      required:
+        - id
+        - updatedAt
+        - revisionType
+    Cas1OutOfServiceBedRevisionType:
+      type: string
+      enum:
+        - created
+        - updatedStartDate
+        - updatedEndDate
+        - updatedReferenceNumber
+        - updatedReason
+        - updatedNotes
