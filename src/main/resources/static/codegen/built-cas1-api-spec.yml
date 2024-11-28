@@ -6574,10 +6574,17 @@ components:
       type: object
       properties:
         arrivalDateTime:
+          description: This is deprecated. Instead use arrivalDate and arrivalTime
+          deprecated: true
           type: string
           format: date-time
-      required:
-        - arrivalDateTime
+        arrivalDate:
+          type: string
+          format: date
+        arrivalTime:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
     Cas1NonArrival:
       type: object
       properties:
@@ -6594,6 +6601,13 @@ components:
         departureDateTime:
           type: string
           format: date-time
+        departureDate:
+          type: string
+          format: date
+        departureTime:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
         reasonId:
           type: string
           format: uuid
@@ -6603,7 +6617,6 @@ components:
         notes:
           type: string
       required:
-        - departureDateTime
         - reasonId
     Cas1AssignKeyWorker:
       type: object

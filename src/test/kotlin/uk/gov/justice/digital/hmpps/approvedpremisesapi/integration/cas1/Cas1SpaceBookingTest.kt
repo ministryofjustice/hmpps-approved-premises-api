@@ -1167,6 +1167,47 @@ class Cas1SpaceBookingTest {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1NewArrival(
+            arrivalDate = LocalDate.now(),
+            arrivalTime = "12:00:00",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+    }
+
+    @Test
+    fun `Recording arrival with deprecated date time returns OK and creates a domain event`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("25")
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
             arrivalDateTime = LocalDateTime.now().toInstant(ZoneOffset.UTC),
           ),
         )
@@ -1525,6 +1566,51 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Recording departure returns OK and creates a domain event`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.now().minusDays(30))
+        withActualArrivalDateTime(LocalDateTime.now().minusDays(30).toInstant(ZoneOffset.UTC))
+        withCanonicalDepartureDate(LocalDate.now())
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("50")
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/departure")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewDeparture(
+            departureDate = LocalDate.now(),
+            departureTime = "23:59:59",
+            reasonId = departureReasonId,
+            moveOnCategoryId = departureMoveOnCategoryId,
+            notes = "these are departure notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+    }
+
+    @Test
+    fun `Recording departure using deprecated date time returns OK and creates a domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val (user) = givenAUser()

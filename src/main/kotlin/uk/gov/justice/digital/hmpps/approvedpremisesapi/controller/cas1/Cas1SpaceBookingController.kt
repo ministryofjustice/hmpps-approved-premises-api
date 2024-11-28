@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.LocalTime
 import java.util.UUID
 
 @Service
@@ -161,12 +163,28 @@ class Cas1SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL)
 
+    val arrivalDateAndTime = if (cas1NewArrival.arrivalDateTime != null) {
+      Pair(
+        cas1NewArrival.arrivalDateTime!!.toLocalDate(),
+        cas1NewArrival.arrivalDateTime!!.toLocalDateTime().toLocalTime(),
+      )
+    } else {
+      val arrivalDate = cas1NewArrival.arrivalDate
+        ?: throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to "is required"))
+      val arrivalTime = cas1NewArrival.arrivalTime
+        ?: throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to "is required"))
+      Pair(
+        arrivalDate,
+        LocalTime.parse(arrivalTime),
+      )
+    }
+
     ensureEntityFromCasResultIsSuccess(
       cas1SpaceBookingService.recordArrivalForBooking(
         premisesId,
         bookingId,
-        arrivalDate = cas1NewArrival.arrivalDateTime.toLocalDate(),
-        arrivalTime = cas1NewArrival.arrivalDateTime.toLocalDateTime().toLocalTime(),
+        arrivalDate = arrivalDateAndTime.first,
+        arrivalTime = arrivalDateAndTime.second,
       ),
     )
     return ResponseEntity(HttpStatus.OK)
@@ -179,13 +197,29 @@ class Cas1SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE)
 
+    val departureDateAndTime = if (cas1NewDeparture.departureDateTime != null) {
+      Pair(
+        cas1NewDeparture.departureDateTime!!.toLocalDate(),
+        cas1NewDeparture.departureDateTime!!.toLocalDateTime().toLocalTime(),
+      )
+    } else {
+      val departureDate = cas1NewDeparture.departureDate
+        ?: throw BadRequestProblem(invalidParams = mapOf("departureDate" to "is required"))
+      val departureTime = cas1NewDeparture.departureTime
+        ?: throw BadRequestProblem(invalidParams = mapOf("departureTime" to "is required"))
+      Pair(
+        departureDate,
+        LocalTime.parse(departureTime),
+      )
+    }
+
     ensureEntityFromCasResultIsSuccess(
       cas1SpaceBookingService.recordDepartureForBooking(
         premisesId,
         bookingId,
         DepartureInfo(
-          departureDate = cas1NewDeparture.departureDateTime.toLocalDate(),
-          departureTime = cas1NewDeparture.departureDateTime.toLocalDateTime().toLocalTime(),
+          departureDate = departureDateAndTime.first,
+          departureTime = departureDateAndTime.second,
           reasonId = cas1NewDeparture.reasonId,
           moveOnCategoryId = cas1NewDeparture.moveOnCategoryId,
           notes = cas1NewDeparture.notes,
