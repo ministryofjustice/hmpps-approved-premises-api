@@ -39,9 +39,9 @@ dependencies {
   implementation("com.google.guava:guava:33.3.1-jre")
   implementation("org.postgresql:postgresql:42.7.4")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-  implementation("org.springdoc:springdoc-openapi-starter-common:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.7.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+  implementation("org.springdoc:springdoc-openapi-starter-common:2.7.0")
   implementation("org.springdoc:springdoc-openapi-ui:1.8.0")
   implementation("org.springdoc:springdoc-openapi-kotlin:1.8.0")
   implementation("org.springdoc:springdoc-openapi-data-rest:1.8.0")
