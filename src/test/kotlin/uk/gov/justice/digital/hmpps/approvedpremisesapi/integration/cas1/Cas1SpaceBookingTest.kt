@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinu
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -1538,7 +1539,8 @@ class Cas1SpaceBookingTest {
         withApplication(placementRequest.application)
         withCreatedBy(user)
         withCanonicalArrivalDate(LocalDate.now().minusDays(30))
-        withActualArrivalDateTime(LocalDateTime.now().minusDays(30).toInstant(ZoneOffset.UTC))
+        withActualArrivalDate(LocalDate.now().minusDays(30))
+        withActualArrivalTime(LocalTime.now())
         withCanonicalDepartureDate(LocalDate.now())
         withKeyworkerName(unknownKeyWorker.name)
         withKeyworkerStaffCode(unknownKeyWorker.deliusStaffCode)
@@ -1583,7 +1585,8 @@ class Cas1SpaceBookingTest {
         withApplication(placementRequest.application)
         withCreatedBy(user)
         withCanonicalArrivalDate(LocalDate.now().minusDays(30))
-        withActualArrivalDateTime(LocalDateTime.now().minusDays(30).toInstant(ZoneOffset.UTC))
+        withActualArrivalDate(LocalDate.now().minusDays(30))
+        withActualArrivalTime(LocalTime.now())
         withCanonicalDepartureDate(LocalDate.now())
         withKeyworkerName(user.name)
         withKeyworkerStaffCode(user.deliusStaffCode)
@@ -1628,7 +1631,8 @@ class Cas1SpaceBookingTest {
         withApplication(placementRequest.application)
         withCreatedBy(user)
         withCanonicalArrivalDate(LocalDate.now().minusDays(30))
-        withActualArrivalDateTime(LocalDateTime.now().minusDays(30).toInstant(ZoneOffset.UTC))
+        withActualArrivalDate(LocalDate.now().minusDays(30))
+        withActualArrivalTime(LocalTime.now())
         withCanonicalDepartureDate(LocalDate.now())
         withKeyworkerName(user.name)
         withKeyworkerStaffCode(user.deliusStaffCode)
@@ -1672,7 +1676,8 @@ class Cas1SpaceBookingTest {
         withApplication(placementRequest.application)
         withCreatedBy(user)
         withCanonicalArrivalDate(LocalDate.now().minusDays(30))
-        withActualArrivalDateTime(LocalDateTime.now().minusDays(30).toInstant(ZoneOffset.UTC))
+        withActualArrivalDate(LocalDate.now().minusDays(30))
+        withActualArrivalTime(LocalTime.now())
         withCanonicalDepartureDate(LocalDate.now())
         withKeyworkerName(user.name)
         withKeyworkerStaffCode(user.deliusStaffCode)

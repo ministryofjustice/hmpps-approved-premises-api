@@ -16,8 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -36,7 +34,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var expectedDepartureDate: Yielded<LocalDate> = { LocalDate.now() }
   private var actualArrivalDate: Yielded<LocalDate?> = { null }
   private var actualArrivalTime: Yielded<LocalTime?> = { null }
-  private var actualDepartureDateTime: Yielded<Instant?> = { null }
   private var actualDepartureDate: Yielded<LocalDate?> = { null }
   private var actualDepartureTime: Yielded<LocalTime?> = { null }
   private var canonicalArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
@@ -112,34 +109,12 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.canonicalDepartureDate = { canonicalDepartureDate }
   }
 
-  @Deprecated(message = "Use more specific expected arrival date", replaceWith = ReplaceWith("withExpectedArrivalDate(expectedArrivalDate)"))
-  fun withArrivalDate(expectedArrivalDate: LocalDate) = apply {
-    this.expectedArrivalDate = { expectedArrivalDate }
-  }
-
-  @Deprecated(message = "Use more specific expected departure date", replaceWith = ReplaceWith("withExpectedDepartureDate(expectedDepartureDate)"))
-  fun withDepartureDate(expectedDepartureDate: LocalDate) = apply {
-    this.expectedDepartureDate = { expectedDepartureDate }
-  }
-
-  @Deprecated("Arrival date and arrival time should be set directly")
-  fun withActualArrivalDateTime(actualArrivalDateTime: Instant?) = apply {
-    this.actualArrivalDate = { actualArrivalDateTime?.toLocalDate() }
-    this.actualArrivalTime = { actualArrivalDateTime?.toLocalDateTime()?.toLocalTime() }
-  }
-
   fun withActualArrivalDate(actualArrivalDate: LocalDate?) = apply {
     this.actualArrivalDate = { actualArrivalDate }
   }
 
   fun withActualArrivalTime(actualArrivalTime: LocalTime?) = apply {
     this.actualArrivalTime = { actualArrivalTime }
-  }
-
-  @Deprecated("Arrival date and arrival time should be set directly")
-  fun withActualDepartureDateTime(actualDepartureDateTime: Instant?) = apply {
-    this.actualDepartureDate = { actualDepartureDateTime?.toLocalDate() }
-    this.actualDepartureTime = { actualDepartureDateTime?.toLocalDateTime()?.toLocalTime() }
   }
 
   fun withActualDepartureDate(actualDepartureDate: LocalDate?) = apply {
