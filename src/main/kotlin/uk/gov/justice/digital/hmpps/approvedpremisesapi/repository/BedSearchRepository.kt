@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import java.sql.ResultSet
 import java.time.LocalDate
 import java.util.UUID
@@ -449,6 +450,7 @@ data class CharacteristicNames(
 data class TemporaryAccommodationBedSearchResultOverlap(
   val name: String,
   val crn: String,
+  val personType: PersonType,
   val sex: String?,
   val days: Int,
   val premisesId: UUID,

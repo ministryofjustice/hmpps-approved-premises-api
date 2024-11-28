@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -210,6 +211,7 @@ class BedSearchService(
     return TemporaryAccommodationBedSearchResultOverlap(
       name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
       crn = overlappedBooking.crn,
+      personType = getPersonType(personSummaryInfo),
       sex = personSummaryInfo.tryGetDetails { it.gender },
       days = bookingDuration countOverlappingDays queryDuration,
       premisesId = overlappedBooking.premisesId,
@@ -226,5 +228,13 @@ class BedSearchService(
         it.isActive && it.matches(ServiceName.temporaryAccommodation.value, modelScope)
       }.map { it.id }.toList()
     } ?: emptyList()
+  }
+
+  private fun getPersonType(
+    personSummaryInfo: PersonSummaryInfoResult,
+  ): PersonType = when (personSummaryInfo) {
+    is PersonSummaryInfoResult.Success.Full -> PersonType.fullPerson
+    is PersonSummaryInfoResult.Success.Restricted -> PersonType.restrictedPerson
+    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.unknownPerson
   }
 }

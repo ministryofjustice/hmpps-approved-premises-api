@@ -223,9 +223,11 @@ class ApplicationTest : IntegrationTestBase() {
                 }
 
               apDeliusContextAddResponseToUserAccessCall(
-                CaseAccessFactory()
-                  .withCrn(offenderDetails.otherIds.crn)
-                  .produce(),
+                listOf(
+                  CaseAccessFactory()
+                    .withCrn(offenderDetails.otherIds.crn)
+                    .produce(),
+                ),
                 userEntity.deliusUsername,
               )
 
@@ -296,9 +298,11 @@ class ApplicationTest : IntegrationTestBase() {
                 )
 
               apDeliusContextAddResponseToUserAccessCall(
-                CaseAccessFactory()
-                  .withCrn(offenderDetails.otherIds.crn)
-                  .produce(),
+                listOf(
+                  CaseAccessFactory()
+                    .withCrn(offenderDetails.otherIds.crn)
+                    .produce(),
+                ),
                 assessorUser.deliusUsername,
               )
 
@@ -375,9 +379,11 @@ class ApplicationTest : IntegrationTestBase() {
                 createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
               apDeliusContextAddResponseToUserAccessCall(
-                CaseAccessFactory()
-                  .withCrn(offenderDetails.otherIds.crn)
-                  .produce(),
+                listOf(
+                  CaseAccessFactory()
+                    .withCrn(offenderDetails.otherIds.crn)
+                    .produce(),
+                ),
                 referrerUser.deliusUsername,
               )
 
@@ -476,9 +482,11 @@ class ApplicationTest : IntegrationTestBase() {
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -734,9 +742,11 @@ class ApplicationTest : IntegrationTestBase() {
             val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
 
             apDeliusContextAddResponseToUserAccessCall(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
               userEntity.deliusUsername,
             )
 
@@ -762,9 +772,11 @@ class ApplicationTest : IntegrationTestBase() {
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -889,9 +901,11 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -951,9 +965,11 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             userEntity.deliusUsername,
           )
 
@@ -1012,9 +1028,11 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             apDeliusContextAddResponseToUserAccessCall(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
               userEntity.deliusUsername,
             )
 
@@ -1077,9 +1095,11 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           apDeliusContextAddResponseToUserAccessCall(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
             createdByUser.deliusUsername,
           )
 
@@ -1180,9 +1200,11 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             apDeliusContextAddResponseToUserAccessCall(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
               userEntity.deliusUsername,
             )
 
@@ -1226,9 +1248,11 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             apDeliusContextAddResponseToUserAccessCall(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
               userEntity.deliusUsername,
             )
 
@@ -1254,9 +1278,11 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         apDeliusContextAddResponseToUserAccessCall(
-          CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
-            .produce(),
+          listOf(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+          ),
           userEntity.deliusUsername,
         )
 

@@ -70,11 +70,11 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn: 
   )
 
 fun IntegrationTestBase.apDeliusContextMockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
-  apDeliusContextAddResponseToUserAccessCall(caseAccess, username)
+  apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), username)
   apDeliusContextAddSingleResponseToUserAccessCall(caseAccess, username)
 }
 
-fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
+fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: List<CaseAccess>, username: String = ".*") {
   val url = "/users/access"
   val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
 
@@ -83,8 +83,8 @@ fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(caseAccess: C
     val responseBody = objectMapper.readValue(existingMock.response.body, UserAccess::class.java)
     val requestBody = objectMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
 
-    requestBody += caseAccess.crn
-    responseBody.access += caseAccess
+    requestBody += casesAccess.map { it.crn }
+    responseBody.access += casesAccess
 
     editGetStubWithBodyAndJsonResponse(
       url = url,
@@ -96,7 +96,7 @@ fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(caseAccess: C
       withMetadata(mapOf("bulk" to Unit))
     }
   } else {
-    val requestBody = listOf(caseAccess.crn)
+    val requestBody = casesAccess.map { it.crn }
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = url,
       requestBody = WireMock.equalToJson(
@@ -107,7 +107,7 @@ fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(caseAccess: C
         true,
       ),
       responseBody = UserAccess(
-        access = listOf(caseAccess),
+        access = casesAccess,
       ),
     ) {
       withQueryParam("username", WireMock.matching(username))

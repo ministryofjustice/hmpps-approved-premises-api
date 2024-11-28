@@ -95,6 +95,7 @@ class BedSearchResultTransformer {
         ApiTemporaryAccommodationBedSearchResultOverlap(
           name = it.name,
           crn = it.crn,
+          personType = it.personType,
           days = it.days,
           bookingId = it.bookingId,
           roomId = it.roomId,
