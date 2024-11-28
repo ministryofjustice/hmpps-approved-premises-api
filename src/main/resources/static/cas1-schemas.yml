@@ -307,6 +307,7 @@ components:
           type: string
           format: date
         actualArrivalTime:
+          description: This value may not be defined even if an arrival date is
           type: string
           pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
           example: '23:15'
@@ -319,6 +320,7 @@ components:
           type: string
           format: date
         actualDepartureTime:
+          description: This value may not be defined even if a departure date is
           type: string
           pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
           example: '23:15'
