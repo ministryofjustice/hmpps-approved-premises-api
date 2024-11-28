@@ -4,6 +4,7 @@ import kotlinx.datetime.toKotlinDatePeriod
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
@@ -287,7 +288,12 @@ class Cas1SpaceBookingService(
       return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
     }
     val assignedKeyWorker = extractEntityFromCasResult(staffMemberResponse)
-    val assignedKeyWorkerName = "${assignedKeyWorker.name.forename} ${assignedKeyWorker.name.surname}"
+    val assignedKeyWorkerAsStaffMember = StaffMember(
+      staffCode = assignedKeyWorker.code,
+      forenames = assignedKeyWorker.name.forenames(),
+      surname = assignedKeyWorker.name.surname,
+    )
+    val assignedKeyWorkerName = "${assignedKeyWorker.name.forenames()} ${assignedKeyWorker.name.surname}"
 
     existingCas1SpaceBooking!!
 
@@ -301,6 +307,7 @@ class Cas1SpaceBookingService(
 
     cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(
       existingCas1SpaceBooking,
+      assignedKeyWorkerAsStaffMember,
       assignedKeyWorkerName,
       previousKeyWorkerName,
     )
