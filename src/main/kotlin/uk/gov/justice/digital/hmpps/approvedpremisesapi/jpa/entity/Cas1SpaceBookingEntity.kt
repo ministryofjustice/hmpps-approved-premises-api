@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -240,6 +241,8 @@ data class Cas1SpaceBookingEntity(
   val migratedFromBooking: BookingEntity?,
   @Enumerated(EnumType.STRING)
   val migratedManagementInfoFrom: ManagementInfoSource?,
+  @Version
+  var version: Long = 1,
 ) {
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
