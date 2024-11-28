@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -110,7 +112,9 @@ class Cas1ImportDeliusBookingDataSeedJob(
         row.expectedDepartureDate,
         row.departureDate,
         row.nonArrivalDate,
-        row.nonArrivalContactDateTime,
+        row.nonArrivalContactDateTime?.let {
+          ZonedDateTime.of(it, ZoneId.of("Europe/London")).toOffsetDateTime()
+        },
         row.nonArrivalReasonCode,
         row.nonArrivalReasonDescription,
         row.nonArrivalNotes,

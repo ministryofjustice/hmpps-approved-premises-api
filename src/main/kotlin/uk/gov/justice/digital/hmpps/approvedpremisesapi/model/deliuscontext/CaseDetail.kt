@@ -92,6 +92,12 @@ data class CaseSummaries(
 )
 
 data class ReferralDetail(
+  /*
+  Note that the time element is typically 00:00
+   */
   val arrivedAt: ZonedDateTime?,
+  /*
+  Note that the time element is typically 00:00
+   */
   val departedAt: ZonedDateTime?,
 )

@@ -12,22 +12,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.lang.Thread.sleep
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -41,8 +42,11 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val domainEventRepository: DomainEventRepository,
   private val domainEventService: DomainEventService,
   private val userRepository: UserRepository,
-  private val deliusService: DeliusService,
   private val transactionTemplate: TransactionTemplate,
+  private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
+  private val departureReasonRepository: DepartureReasonRepository,
+  private val moveOnCategoryRepository: MoveOnCategoryRepository,
+  private val nonArrivalReasonReasonEntity: NonArrivalReasonRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
   requiredHeaders = setOf(
@@ -75,13 +79,19 @@ class Cas1BookingToSpaceBookingSeedJob(
     log.info("Have found $bookingsToMigrateSize bookings for premise ${premises.name}")
 
     var migratedCount = 0
+    var failedCount = 0
     bookingIds.forEach { bookingId ->
       try {
         migrateBooking(premises, bookingId)
         migratedCount++
       } catch (e: Throwable) {
         log.error("Error migrating booking $bookingId", e)
+        failedCount++
       }
+    }
+
+    if (failedCount > 0) {
+      error("Could not migrate $failedCount of $bookingsToMigrateSize bookings for premise ${premises.name}. Transaction will be rolled back")
     }
 
     log.info("Have successfully migrated $migratedCount of $bookingsToMigrateSize bookings for premise ${premises.name}")
@@ -116,8 +126,8 @@ class Cas1BookingToSpaceBookingSeedJob(
         canonicalArrivalDate = managementInfo.arrivedAtDate ?: booking.arrivalDate,
         canonicalDepartureDate = managementInfo.departedAtDate ?: booking.departureDate,
         crn = booking.crn,
-        keyWorkerStaffCode = null,
-        keyWorkerName = null,
+        keyWorkerStaffCode = managementInfo.keyWorkerStaffCode,
+        keyWorkerName = managementInfo.keyWorkerName,
         keyWorkerAssignedAt = null,
         cancellationOccurredAt = booking.cancellation?.date,
         cancellationRecordedAt = booking.cancellation?.createdAt?.toInstant(),
@@ -142,34 +152,39 @@ class Cas1BookingToSpaceBookingSeedJob(
   @SuppressWarnings("MagicNumber")
   private fun getManagementInfo(booking: BookingEntity): ManagementInfo {
     val shouldExistInDelius = !booking.isCancelled
-    val referralDetails = if (shouldExistInDelius) {
-      sleep(Duration.ofMillis(20))
-      deliusService.getReferralDetails(booking)
+    val deliusImport = if (shouldExistInDelius) {
+      cas1DeliusBookingImportRepository.findByBookingId(booking.id)
     } else {
       null
     }
 
-    if (shouldExistInDelius && referralDetails == null) {
-      log.warn("Could not retrieve referral details from delius for booking ${booking.id}")
+    if (shouldExistInDelius && deliusImport == null) {
+      log.warn("Could not retrieve referral details from delius import for booking ${booking.id}")
     }
 
-    return referralDetails?.toManagementInfo() ?: booking.toManagementInfo()
+    return deliusImport?.toManagementInfo() ?: booking.toManagementInfo()
   }
 
-  private fun ReferralDetail.toManagementInfo() = ManagementInfo(
+  private fun Cas1DeliusBookingImportEntity.toManagementInfo() = ManagementInfo(
     source = SeedManagementInfoSource.Delius,
-    arrivedAtDate = arrivedAt?.toLocalDate(),
-    arrivedAtTime = arrivedAt?.toLocalTime(),
-    departedAtDate = departedAt?.toLocalDate(),
-    departedAtTime = departedAt?.toLocalTime(),
-    keyWorkerStaffCode = null,
-    keyWorkerName = null,
-    departureReason = null,
-    departureMoveOnCategory = null,
+    arrivedAtDate = arrivalDate,
+    arrivedAtTime = null,
+    departedAtDate = departureDate,
+    departedAtTime = null,
+    keyWorkerStaffCode = keyWorkerStaffCode,
+    keyWorkerName = "$keyWorkerForename $keyWorkerSurname",
+    departureReason = departureReasonCode?.let {
+      departureReasonRepository.findByLegacyDeliusReasonCode(it) ?: error("Could not resolve DepartureReason for code $it")
+    },
+    departureMoveOnCategory = moveOnCategoryCode?.let {
+      moveOnCategoryRepository.findByLegacyDeliusCategoryCode(it) ?: error("Could not resolve MoveOnCategory for code $it")
+    },
     departureNotes = null,
-    nonArrivalConfirmedAt = null,
-    nonArrivalReason = null,
-    nonArrivalNotes = null,
+    nonArrivalConfirmedAt = nonArrivalContactDatetime,
+    nonArrivalReason = nonArrivalReasonCode?.let {
+      nonArrivalReasonReasonEntity.findByLegacyDeliusReasonCode(it) ?: error("Could not resolve NonArrivalReason for code $it")
+    },
+    nonArrivalNotes = nonArrivalNotes,
   )
 
   private fun BookingEntity.toManagementInfo() = ManagementInfo(

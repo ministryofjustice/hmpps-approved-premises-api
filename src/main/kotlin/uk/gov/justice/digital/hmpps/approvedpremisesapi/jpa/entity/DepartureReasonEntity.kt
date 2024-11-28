@@ -25,7 +25,7 @@ interface DepartureReasonRepository : JpaRepository<DepartureReasonEntity, UUID>
   @Query("SELECT d FROM DepartureReasonEntity d WHERE d.isActive = true")
   fun findActive(): List<DepartureReasonEntity>
 
-  fun findByNameAndServiceScope(name: String, serviceScope: String): DepartureReasonEntity?
+  fun findByLegacyDeliusReasonCode(code: String): DepartureReasonEntity?
 }
 
 @Entity
