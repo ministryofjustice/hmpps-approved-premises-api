@@ -13,6 +13,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
@@ -20,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -100,7 +100,7 @@ class Cas1SpaceBookingTest {
           .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1SpaceBooking(
+            Cas1NewSpaceBooking(
               arrivalDate = LocalDate.now().plusDays(1),
               departureDate = LocalDate.now().plusDays(8),
               premisesId = premises.id,
@@ -132,7 +132,7 @@ class Cas1SpaceBookingTest {
           .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1SpaceBooking(
+            Cas1NewSpaceBooking(
               arrivalDate = LocalDate.now().plusDays(1),
               departureDate = LocalDate.now().plusDays(8),
               premisesId = premises.id,
@@ -162,7 +162,7 @@ class Cas1SpaceBookingTest {
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              NewCas1SpaceBooking(
+              Cas1NewSpaceBooking(
                 arrivalDate = LocalDate.now().plusDays(1),
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = UUID.randomUUID(),
@@ -201,7 +201,7 @@ class Cas1SpaceBookingTest {
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              NewCas1SpaceBooking(
+              Cas1NewSpaceBooking(
                 arrivalDate = LocalDate.now().plusDays(1),
                 departureDate = LocalDate.now(),
                 premisesId = premises.id,
@@ -257,7 +257,7 @@ class Cas1SpaceBookingTest {
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              NewCas1SpaceBooking(
+              Cas1NewSpaceBooking(
                 arrivalDate = LocalDate.now().plusDays(1),
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = premises.id,

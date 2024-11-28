@@ -145,7 +145,7 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
-    NewCas1SpaceBooking:
+    Cas1NewSpaceBooking:
       type: object
       properties:
         arrivalDate:
