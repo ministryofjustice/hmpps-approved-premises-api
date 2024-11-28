@@ -7,7 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 
 @Component("Cas2BailAssessmentsTransformer")
-class Cas2BailAssessmentsTransformer (private val statusUpdateTransformer: StatusUpdateTransformer) {
+class Cas2BailAssessmentsTransformer (
+  private val statusUpdateTransformer: Cas2BailStatusUpdateTransformer
+) {
   fun transformJpaToApiRepresentation(
     jpaAssessment: Cas2BailAssessmentEntity,
   ): Cas2Assessment {

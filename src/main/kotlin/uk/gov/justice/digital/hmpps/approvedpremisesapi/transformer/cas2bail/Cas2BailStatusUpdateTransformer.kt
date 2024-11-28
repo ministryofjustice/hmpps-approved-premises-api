@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExternalUserTransformer
 import java.util.*
 
@@ -17,7 +19,7 @@ class Cas2BailStatusUpdateTransformer(
 ) {
 
   fun transformJpaToApi(
-    jpa: Cas2StatusUpdateEntity,
+    jpa: Cas2BailStatusUpdateEntity,
   ): Cas2StatusUpdate {
     return Cas2StatusUpdate(
       id = jpa.id,
@@ -30,7 +32,7 @@ class Cas2BailStatusUpdateTransformer(
     )
   }
 
-  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity): Cas2StatusUpdateDetail {
+  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2BailStatusUpdateDetailEntity): Cas2StatusUpdateDetail {
     return Cas2StatusUpdateDetail(
       id = jpa.id,
       name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,

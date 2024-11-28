@@ -1,12 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail
 
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
-import jakarta.persistence.Table
-import jakarta.persistence.OrderBy
+import jakarta.persistence.*
+import org.springframework.context.annotation.Lazy
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -26,8 +21,8 @@ data class Cas2BailAssessmentEntity(
   @Id
   val id: UUID,
 
-  @ManyToOne
-  @JoinColumn(name = "application_id")
+  @OneToOne
+  @Lazy
   val application: Cas2BailApplicationEntity,
 
   val createdAt: OffsetDateTime,
@@ -38,7 +33,7 @@ data class Cas2BailAssessmentEntity(
 
   @OneToMany(mappedBy = "assessment")
   @OrderBy("createdAt DESC")
-  var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
+  var statusUpdates: MutableList<Cas2BailStatusUpdateEntity>? = null,
 ) {
-  override fun toString() = "Cas2AssessmentEntity: $id"
+  override fun toString() = "Cas2BailAssessmentEntity: $id"
 }

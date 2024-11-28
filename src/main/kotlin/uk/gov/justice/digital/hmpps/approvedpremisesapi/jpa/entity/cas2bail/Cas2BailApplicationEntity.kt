@@ -4,16 +4,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
 
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.LockModeType
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
-import jakarta.persistence.OneToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -23,6 +15,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.jvm.Transient
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -38,7 +31,7 @@ interface Cas2BailApplicationRepository : JpaRepository<Cas2BailApplicationEntit
 
   @Query(
     "SELECT a FROM Cas2BailApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
-      "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
+      "AND a NOT IN (SELECT application FROM Cas2BailAssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2BailApplicationEntity>
 }
@@ -47,7 +40,7 @@ interface Cas2BailApplicationRepository : JpaRepository<Cas2BailApplicationEntit
 interface Cas2BailLockableApplicationRepository : JpaRepository<Cas2BailLockableApplicationEntity, UUID> {
   @Query("SELECT a FROM Cas2BailLockableApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
-  fun acquirePessimisticLock(id: UUID): Cas2LockableApplicationEntity?
+  fun acquirePessimisticLock(id: UUID): Cas2BailLockableApplicationEntity?
 }
 
 @Entity
@@ -76,14 +69,14 @@ data class Cas2BailApplicationEntity(
   var abandonedAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "application")
-  @OrderBy(clause = "createdAt DESC")
-  var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
+  @OrderBy("createdAt DESC")
+  var statusUpdates: MutableList<Cas2BailStatusUpdateEntity>? = null,
 
   @OneToMany(mappedBy = "application")
-  @OrderBy(clause = "createdAt DESC")
-  var notes: MutableList<Cas2ApplicationNoteEntity>? = null,
+  @OrderBy("createdAt DESC")
+  var notes: MutableList<Cas2BailApplicationNoteEntity>? = null,
 
-  @OneToOne(mappedBy = "application")
+  @OneToOne(fetch = FetchType.LAZY)
   var assessment: Cas2BailAssessmentEntity? = null,
 
   @Transient
