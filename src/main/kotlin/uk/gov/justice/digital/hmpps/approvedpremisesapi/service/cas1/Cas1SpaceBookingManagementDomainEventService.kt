@@ -66,8 +66,8 @@ class Cas1SpaceBookingManagementDomainEventService(
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(updatedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
-    val applicationId = updatedCas1SpaceBooking.applicationIdForDomainEvent()
-    val applicationSubmittedAt = updatedCas1SpaceBooking.applicationSubmittedOnForDomainEvent()
+    val applicationId = updatedCas1SpaceBooking.applicationFacade.id
+    val applicationSubmittedAt = updatedCas1SpaceBooking.applicationFacade.submittedAt
 
     domainEventService.savePersonArrivedEvent(
       emit = false,
@@ -113,16 +113,17 @@ class Cas1SpaceBookingManagementDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now().toInstant()
 
-    val application = updatedCas1SpaceBooking.application
+    val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val staffUser = getStaffMemberDetails(user.deliusStaffCode)
+    val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.savePersonNotArrivedEvent(
       emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
-        applicationId = application!!.id,
+        applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = eventOccurredAt,
@@ -133,14 +134,14 @@ class Cas1SpaceBookingManagementDomainEventService(
           timestamp = eventOccurredAt,
           eventType = EventType.personNotArrived,
           eventDetails = PersonNotArrived(
-            applicationId = application!!.id,
-            applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",
             ),
-            deliusEventNumber = application!!.eventNumber,
+            deliusEventNumber = eventNumber,
             premises = premises,
             expectedArrivalOn = updatedCas1SpaceBooking.canonicalArrivalDate,
             recordedBy = staffUser!!,
@@ -168,7 +169,7 @@ class Cas1SpaceBookingManagementDomainEventService(
 
     val domainEventId = UUID.randomUUID()
 
-    val applicationId = departedCas1SpaceBooking.applicationIdForDomainEvent()
+    val applicationId = departedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(departedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
     val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
@@ -230,7 +231,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now().toInstant()
 
-    val applicationId = updatedCas1SpaceBooking.applicationIdForDomainEvent()
+    val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
@@ -302,7 +303,4 @@ class Cas1SpaceBookingManagementDomainEventService(
       legacyApCode = aPEntity.qCode,
       localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
     )
-
-  fun Cas1SpaceBookingEntity.applicationIdForDomainEvent() = application?.id ?: offlineApplication!!.id
-  fun Cas1SpaceBookingEntity.applicationSubmittedOnForDomainEvent() = application?.submittedAt ?: offlineApplication!!.createdAt
 }

@@ -37,7 +37,7 @@ class Cas1SpaceBookingTransformer(
   ): Cas1SpaceBooking {
     val placementRequest = jpa.placementRequest
     val application = jpa.application
-    val applicationId = application?.id ?: jpa.offlineApplication!!.id
+    val applicationId = jpa.applicationFacade.id
     return Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,

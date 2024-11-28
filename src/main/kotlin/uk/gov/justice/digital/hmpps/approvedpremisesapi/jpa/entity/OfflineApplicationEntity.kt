@@ -22,7 +22,7 @@ interface OfflineApplicationRepository : JpaRepository<OfflineApplicationEntity,
  * 1. When bulk loading bookings already created in Delius into the approved premises, as part of go-live migrations
  * 2. When a manual (adhoc) booking was required for a CRN that didn't have an existing application in [ApprovedPremisesApplicationEntity]
  *
- * As creation of manual bookings is no longer supported, Offline Applications should no longer be created
+ * As creation of manual bookings is no longer supported, Offline Applications are no longer being created
  */
 @Entity
 @Table(name = "offline_applications")
