@@ -18,6 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import java.util.UUID
 
+class InvalidQuestionException(message: String) : Exception(message)
+
+@Suppress("LongParameterList")
 class ApprovedPremisesRoomsSeedFromXLSXJob(
   fileName: String,
   premisesId: UUID,
@@ -37,7 +40,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     findExistingPremisesOrThrow(premisesId)
 
     val questions = dataFrame.getColumn(0).values().toList()
-    if (questions.drop(2) != siteSurvey.questionToCharacterEntityMapping.keys.toList()) throw RuntimeException("Site survey file $fileName contains wrong questions on sheet $sheetName")
+    if (questions.drop(2) != siteSurvey.questionToCharacterEntityMapping.keys.toList()) throw InvalidQuestionException("Site survey file $fileName contains wrong questions on sheet $sheetName")
 
     for (i in 1..<dataFrame.columnsCount()) {
       val roomCharacteristics = dataFrame.getColumn(i)
@@ -107,6 +110,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     return bed
   }
 
+  @Suppress("TooGenericExceptionThrown")
   private fun findExistingPremisesOrThrow(premisesId: UUID): PremisesEntity {
     return premisesRepository.findByIdOrNull(premisesId) ?: throw RuntimeException(
       "Error: no premises with id '$premisesId' found. ",
@@ -142,7 +146,8 @@ class SiteSurvey constructor(characteristicRepository: CharacteristicRepository)
 //    "Does this room have Crib7 rated bedding?" to "hasCrib7Bedding",
 //    "Is there a smoke/heat detector in the room?" to "hasSmokeDetector",
 //    "Is this room on the top floor with at least one external wall and not located directly next to a fire exit or a protected stairway?" to "isTopFloorVulnerable",
-//    "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?" to "isGroundFloorNrOffice",
+//    "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?"
+//    to "isGroundFloorNrOffice",
 //    "is there a water mist extinguisher in close proximity to this room?" to "hasNearbySprinkler",
 //    "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)" to "isArsonSuitable",
 //    "Is this room currently a designated arson room?" to "isArsonDesignated",

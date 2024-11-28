@@ -27,6 +27,7 @@ abstract class SeedJob<RowType>(
   abstract fun processRow(row: RowType)
 }
 
+@Suppress("TooGenericExceptionThrown")
 abstract class ExcelSeedJob(
   val fileName: String,
   val premisesId: UUID,

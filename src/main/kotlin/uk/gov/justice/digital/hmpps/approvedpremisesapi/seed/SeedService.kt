@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -99,7 +98,8 @@ class SeedService(
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) = seedExcelData(excelSeedFileType, premisesId, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) =
+    seedExcelData(excelSeedFileType, premisesId, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
 
   fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
     seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
@@ -314,6 +314,7 @@ class SeedService(
     return rowsProcessed
   }
 
+  @Suppress("TooGenericExceptionThrown")
   private fun processExcelJob(job: ExcelSeedJob, resolveXlsxPath: ExcelSeedJob.() -> String) {
     seedLogger.info("Processing XLSX file ${Path.of(job.resolveXlsxPath()).absolutePathString()}")
     try {
