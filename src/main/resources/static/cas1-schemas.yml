@@ -563,7 +563,7 @@ components:
       required:
         - roles
         - qualifications
-    NewCas1SpaceBookingCancellation:
+    Cas1NewSpaceBookingCancellation:
       type: object
       properties:
         occurredAt:

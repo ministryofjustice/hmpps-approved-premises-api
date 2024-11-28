@@ -13,6 +13,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
@@ -20,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -1784,7 +1784,7 @@ class Cas1SpaceBookingTest {
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
         .bodyValue(
-          NewCas1SpaceBookingCancellation(
+          Cas1NewSpaceBookingCancellation(
             occurredAt = LocalDate.parse("2022-08-17"),
             reasonId = cancellationReason.id,
             reasonNotes = null,
@@ -1807,7 +1807,7 @@ class Cas1SpaceBookingTest {
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1SpaceBookingCancellation(
+            Cas1NewSpaceBookingCancellation(
               occurredAt = LocalDate.parse("2022-08-17"),
               reasonId = cancellationReason.id,
               reasonNotes = null,
@@ -1826,7 +1826,7 @@ class Cas1SpaceBookingTest {
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1SpaceBookingCancellation(
+            Cas1NewSpaceBookingCancellation(
               occurredAt = LocalDate.parse("2022-08-17"),
               reasonId = cancellationReason.id,
               reasonNotes = null,

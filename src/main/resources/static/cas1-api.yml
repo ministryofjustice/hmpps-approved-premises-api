@@ -757,7 +757,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1SpaceBookingCancellation'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewSpaceBookingCancellation'
         required: true
       responses:
         200:
