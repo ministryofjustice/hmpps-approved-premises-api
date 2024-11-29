@@ -19,8 +19,9 @@ class Cas2BailAssessmentService (
   private val assessmentRepository: Cas2BailAssessmentRepository,
 ) {
 
+
   @Transactional
-  fun createCas2Assessment(cas2BailApplicationEntity: Cas2BailApplicationEntity): Cas2BailAssessmentEntity =
+  fun createCas2BailAssessment(cas2BailApplicationEntity: Cas2BailApplicationEntity): Cas2BailAssessmentEntity =
     assessmentRepository.save(
       Cas2BailAssessmentEntity(
         id = UUID.randomUUID(),

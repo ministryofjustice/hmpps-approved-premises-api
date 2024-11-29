@@ -133,7 +133,7 @@ class Cas2BailApplicationService(
           createdByUser = user,
           data = null,
           document = null,
-          schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
+          schemaVersion = jsonSchemaService.getNewestSchema(Cas2BailApplicationJsonSchemaEntity::class.java),
           createdAt = OffsetDateTime.now(),
           submittedAt = null,
           schemaUpToDate = true,
@@ -343,7 +343,7 @@ class Cas2BailApplicationService(
   }
 
   fun createAssessment(application: Cas2BailApplicationEntity) {
-    assessmentService.createCas2Assessment(application)
+    assessmentService.createCas2BailAssessment(application)
   }
 
   @SuppressWarnings("ThrowsCount")
