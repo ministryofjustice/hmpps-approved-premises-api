@@ -24,6 +24,7 @@ class Cas1PremisesTransformer(
       outOfServiceBeds = premisesSummaryInfo.outOfServiceBeds,
       apArea = apAreaTransformer.transformJpaToApi(entity.probationRegion.apArea!!),
       supportsSpaceBookings = entity.supportsSpaceBookings,
+      managerDetails = entity.managerDetails,
     )
   }
 

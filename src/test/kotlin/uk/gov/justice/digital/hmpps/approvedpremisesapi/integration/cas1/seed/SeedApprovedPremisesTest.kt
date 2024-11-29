@@ -201,7 +201,8 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       "isRecoveryFocussed, isSuitableForVulnerable, acceptsSexOffenders, acceptsChildSexOffenders, " +
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
-      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, supportsSpaceBookings]"
+      "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, " +
+      "supportsSpaceBookings, managerDetails]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -241,6 +242,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withLongitude(-1.1169752)
       .withLatitude(53.9634721)
       .withSupportsSpaceBookings("yes")
+      .withManagerDetails("manager details")
       .produce()
 
     withCsv(
@@ -270,6 +272,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.characteristics.map { it.propertyName }).isEqualTo(listOf("isCatered"))
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
     assertThat(persistedApprovedPremises.supportsSpaceBookings).isTrue()
+    assertThat(persistedApprovedPremises.managerDetails).isEqualTo("manager details")
   }
 
   @Test
@@ -368,6 +371,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "qCode",
         "gender",
         "supportsSpaceBookings",
+        "managerDetails",
       )
       .newRow()
 
@@ -408,6 +412,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         .withQuotedField(it.qCode)
         .withQuotedField(it.gender)
         .withQuotedField(it.supportsSpaceBookings)
+        .withQuotedField(it.managerDetails)
         .newRow()
     }
 
@@ -451,6 +456,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
   private var supportsSpaceBookings: Yielded<String> = { "no" }
+  private var managerDetails: Yielded<String> = { "no" }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -511,6 +517,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.supportsSpaceBookings = { supportsSpaceBookings }
   }
 
+  fun withManagerDetails(managerDetails: String) = apply {
+    this.managerDetails = { managerDetails }
+  }
+
   override fun produce() = ApprovedPremisesSeedCsvRow(
     name = this.name(),
     addressLine1 = this.addressLine1(),
@@ -547,5 +557,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     qCode = this.qCode(),
     gender = this.gender(),
     supportsSpaceBookings = this.supportsSpaceBookings(),
+    managerDetails = this.managerDetails(),
   )
 }

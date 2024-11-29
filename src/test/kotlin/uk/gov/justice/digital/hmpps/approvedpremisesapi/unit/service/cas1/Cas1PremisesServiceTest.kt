@@ -64,6 +64,7 @@ class Cas1PremisesServiceTest {
         .withName("the name")
         .withApCode("the ap code")
         .withPostcode("LE11 1PO")
+        .withManagerDetails("manager details")
         .produce()
 
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises

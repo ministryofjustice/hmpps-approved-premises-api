@@ -270,6 +270,7 @@ class ApprovedPremisesEntity(
   @Enumerated(value = EnumType.STRING)
   var gender: ApprovedPremisesGender,
   var supportsSpaceBookings: Boolean,
+  var managerDetails: String?,
 ) : PremisesEntity(
   id,
   name,
