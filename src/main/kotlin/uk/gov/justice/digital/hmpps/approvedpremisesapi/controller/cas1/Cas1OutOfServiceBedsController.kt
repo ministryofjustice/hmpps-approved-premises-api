@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OutOfServiceBedsCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
@@ -80,7 +80,7 @@ class Cas1OutOfServiceBedsController(
   override fun premisesPremisesIdOutOfServiceBedsOutOfServiceBedIdCancellationsPost(
     premisesId: UUID,
     outOfServiceBedId: UUID,
-    body: NewCas1OutOfServiceBedCancellation,
+    body: Cas1NewOutOfServiceBedCancellation,
   ): ResponseEntity<Cas1OutOfServiceBedCancellation> {
     val premises = tryGetApprovedPremises(premisesId)
 
@@ -153,7 +153,7 @@ class Cas1OutOfServiceBedsController(
 
   override fun premisesPremisesIdOutOfServiceBedsPost(
     premisesId: UUID,
-    body: NewCas1OutOfServiceBed,
+    body: Cas1NewOutOfServiceBed,
   ): ResponseEntity<Cas1OutOfServiceBed> {
     val premises = tryGetApprovedPremises(premisesId)
 

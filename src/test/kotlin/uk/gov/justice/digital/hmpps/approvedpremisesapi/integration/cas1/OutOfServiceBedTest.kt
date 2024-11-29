@@ -11,11 +11,11 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
@@ -914,7 +914,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/out-of-service-beds")
         .bodyValue(
-          NewCas1OutOfServiceBed(
+          Cas1NewOutOfServiceBed(
             startDate = LocalDate.parse("2022-08-15"),
             endDate = LocalDate.parse("2022-08-18"),
             bedId = bed.id,
@@ -942,7 +942,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .uri("/cas1/premises/${premises.id}/out-of-service-beds")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1OutOfServiceBed(
+            Cas1NewOutOfServiceBed(
               startDate = LocalDate.parse("2022-08-17"),
               endDate = LocalDate.parse("2022-08-18"),
               reason = reason.id,
@@ -987,7 +987,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .uri("/cas1/premises/${premises.id}/out-of-service-beds")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1OutOfServiceBed(
+            Cas1NewOutOfServiceBed(
               startDate = LocalDate.parse("2022-08-17"),
               endDate = LocalDate.parse("2022-08-18"),
               bedId = bed.id,
@@ -1071,7 +1071,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .uri("/cas1/premises/${premises.id}/out-of-service-beds")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1OutOfServiceBed(
+            Cas1NewOutOfServiceBed(
               startDate = LocalDate.parse("2022-08-17"),
               endDate = LocalDate.parse("2022-08-18"),
               bedId = bed.id,
@@ -1208,7 +1208,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .uri("/cas1/premises/${premises.id}/out-of-service-beds")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              NewCas1OutOfServiceBed(
+              Cas1NewOutOfServiceBed(
                 startDate = LocalDate.parse("2022-08-01"),
                 endDate = LocalDate.parse("2022-08-30"),
                 reason = reason.id,
@@ -1297,7 +1297,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .uri("/cas1/premises/${premises.id}/out-of-service-beds")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              NewCas1OutOfServiceBed(
+              Cas1NewOutOfServiceBed(
                 startDate = LocalDate.parse("2022-08-01"),
                 endDate = LocalDate.parse("2022-08-30"),
                 reason = reason.id,
@@ -2010,7 +2010,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}/cancellations")
           .bodyValue(
-            NewCas1OutOfServiceBedCancellation(
+            Cas1NewOutOfServiceBedCancellation(
               notes = "Unauthorized",
             ),
           )
@@ -2028,7 +2028,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          NewCas1OutOfServiceBedCancellation(
+          Cas1NewOutOfServiceBedCancellation(
             notes = "Non-existent premises",
           ),
         )
@@ -2050,7 +2050,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          NewCas1OutOfServiceBedCancellation(
+          Cas1NewOutOfServiceBedCancellation(
             notes = "Non-existent out-of-service bed",
           ),
         )
@@ -2099,7 +2099,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}/cancellations")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas1OutOfServiceBedCancellation(
+            Cas1NewOutOfServiceBedCancellation(
               notes = "Some cancellation notes",
             ),
           )

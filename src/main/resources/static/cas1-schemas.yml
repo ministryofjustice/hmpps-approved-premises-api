@@ -702,7 +702,7 @@ components:
         - temporality
         - status
         - revisionHistory
-    NewCas1OutOfServiceBed:
+    Cas1NewOutOfServiceBed:
       type: object
       properties:
         startDate:
@@ -760,7 +760,7 @@ components:
       required:
         - id
         - createdAt
-    NewCas1OutOfServiceBedCancellation:
+    Cas1NewOutOfServiceBedCancellation:
       type: object
       properties:
         notes:
