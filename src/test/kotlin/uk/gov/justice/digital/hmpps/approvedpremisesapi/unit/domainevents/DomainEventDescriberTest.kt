@@ -428,7 +428,7 @@ class DomainEventDescriberTest {
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withId(spaceBookingId)
       .withPremises(premises)
-      .withActualArrivalDateTime(null)
+      .withActualArrivalDate(null)
       .withCancellationOccurredAt(null)
       .withCancellationReason(CancellationReasonEntityFactory().produce())
       .produce()
@@ -500,7 +500,7 @@ class DomainEventDescriberTest {
       Cas1SpaceBookingEntityFactory()
         .withId(spaceBookingId)
         .withPremises(premises)
-        .withActualArrivalDateTime(null)
+        .withActualArrivalDate(null)
         .withCancellationOccurredAt(null)
         .produce()
 

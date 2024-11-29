@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import java.time.format.DateTimeFormatter
 
 @Component
 class Cas1SpaceBookingTransformer(
@@ -63,7 +64,11 @@ class Cas1SpaceBookingTransformer(
       tier = application?.riskRatings?.tier?.value?.level,
       keyWorkerAllocation = jpa.extractKeyWorkerAllocation(),
       actualArrivalDate = jpa.actualArrivalAsDateTime(),
+      actualArrivalDateOnly = jpa.actualArrivalDate,
+      actualArrivalTime = jpa.actualArrivalTime?.format(DateTimeFormatter.ISO_TIME),
       actualDepartureDate = jpa.actualDepartureAsDateTime(),
+      actualDepartureDateOnly = jpa.actualDepartureDate,
+      actualDepartureTime = jpa.actualDepartureTime?.format(DateTimeFormatter.ISO_TIME),
       canonicalArrivalDate = jpa.canonicalArrivalDate,
       canonicalDepartureDate = jpa.canonicalDepartureDate,
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },

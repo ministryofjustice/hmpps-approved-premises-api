@@ -299,11 +299,31 @@ components:
           type: string
           format: date
         actualArrivalDate:
+          description: Use actualArrivalDateOnly and actualArrivalTime
+          deprecated: true
           type: string
           format: date-time
+        actualArrivalDateOnly:
+          type: string
+          format: date
+        actualArrivalTime:
+          description: This value may not be defined even if an arrival date is
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
         actualDepartureDate:
+          description: Use actualDepartureDateOnly and actualDepartureTime
+          deprecated: true
           type: string
           format: date-time
+        actualDepartureDateOnly:
+          type: string
+          format: date
+        actualDepartureTime:
+          description: This value may not be defined even if a departure date is
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
         canonicalArrivalDate:
           description: actual arrival date or, if not known, the expected arrival date
           type: string
@@ -470,10 +490,17 @@ components:
       type: object
       properties:
         arrivalDateTime:
+          description: This is deprecated. Instead use arrivalDate and arrivalTime
+          deprecated: true
           type: string
           format: date-time
-      required:
-        - arrivalDateTime
+        arrivalDate:
+          type: string
+          format: date
+        arrivalTime:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
     Cas1NonArrival:
       type: object
       properties:
@@ -490,6 +517,13 @@ components:
         departureDateTime:
           type: string
           format: date-time
+        departureDate:
+          type: string
+          format: date
+        departureTime:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
+          example: '23:15'
         reasonId:
           type: string
           format: uuid
@@ -499,7 +533,6 @@ components:
         notes:
           type: string
       required:
-        - departureDateTime
         - reasonId
     Cas1AssignKeyWorker:
       type: object

@@ -406,7 +406,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
   @Nested
   inner class KeyWorkerAssigned {
 
-    private val arrivalDate = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    private val arrivalDate = LocalDate.now()
     private val departureDate = LocalDate.now().plusMonths(3)
 
     private val application = ApprovedPremisesApplicationEntityFactory()
@@ -435,8 +435,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withOfflineApplication(null)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
-      .withActualArrivalDateTime(arrivalDate)
-      .withCanonicalArrivalDate(arrivalDate.toLocalDate())
+      .withActualArrivalDate(arrivalDate)
+      .withCanonicalArrivalDate(arrivalDate)
       .withExpectedDepartureDate(departureDate)
       .withCanonicalDepartureDate(departureDate)
 
@@ -445,8 +445,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withOfflineApplication(null)
       .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
       .withPremises(premises)
-      .withActualArrivalDateTime(arrivalDate)
-      .withCanonicalArrivalDate(arrivalDate.toLocalDate())
+      .withActualArrivalDate(arrivalDate)
+      .withCanonicalArrivalDate(arrivalDate)
       .withExpectedDepartureDate(departureDate)
       .withCanonicalDepartureDate(departureDate)
       .withKeyworkerStaffCode(keyWorker.code)

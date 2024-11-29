@@ -71,7 +71,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -1377,7 +1376,8 @@ class Cas1SpaceBookingServiceTest {
   inner class RecordKeyWorker {
 
     private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withActualArrivalDateTime(LocalDateTime.now().minusDays(1).toInstant(ZoneOffset.UTC))
+      .withActualArrivalDate(LocalDate.now().minusDays(1))
+      .withActualArrivalTime(LocalTime.now())
       .produce()
 
     private val premises = ApprovedPremisesEntityFactory()
@@ -1484,7 +1484,7 @@ class Cas1SpaceBookingServiceTest {
     fun `is withdrawable if no arrival and not cancelled`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory()
-          .withActualArrivalDateTime(null)
+          .withActualArrivalDate(null)
           .withCancellationOccurredAt(null)
           .produce(),
         UserEntityFactory().withDefaults().produce(),
@@ -1499,7 +1499,7 @@ class Cas1SpaceBookingServiceTest {
     fun `is not withdrawable if has arrival`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory()
-          .withActualArrivalDateTime(Instant.now())
+          .withActualArrivalDate(LocalDate.now())
           .withCancellationOccurredAt(null)
           .produce(),
         UserEntityFactory().withDefaults().produce(),
@@ -1514,7 +1514,7 @@ class Cas1SpaceBookingServiceTest {
     fun `is not withdrawable if already cancelled`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory()
-          .withActualArrivalDateTime(null)
+          .withActualArrivalDate(null)
           .withCancellationOccurredAt(LocalDate.now())
           .produce(),
         UserEntityFactory().withDefaults().produce(),
