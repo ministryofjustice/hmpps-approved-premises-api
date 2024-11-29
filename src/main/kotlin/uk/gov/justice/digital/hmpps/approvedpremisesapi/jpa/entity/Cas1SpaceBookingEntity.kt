@@ -220,6 +220,9 @@ data class Cas1SpaceBookingEntity(
   val crn: String,
   var keyWorkerStaffCode: String?,
   var keyWorkerName: String?,
+  /**
+   * For data imported from delius this can be null even if a key worker staff code is set
+   */
   var keyWorkerAssignedAt: Instant?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "departure_reason_id")
