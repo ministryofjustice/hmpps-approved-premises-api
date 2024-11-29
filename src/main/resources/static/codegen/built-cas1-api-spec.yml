@@ -6551,7 +6551,6 @@ components:
           format: date
       required:
         - keyWorker
-        - allocatedAt
     Cas1SpaceBookingDeparture:
       type: object
       properties:

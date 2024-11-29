@@ -91,14 +91,14 @@ class Cas1SpaceBookingTransformer(
     val staffCode = keyWorkerStaffCode
     val name = keyWorkerName
     val assignedAt = keyWorkerAssignedAt
-    return if (staffCode != null && name != null && assignedAt != null) {
+    return if (staffCode != null && name != null) {
       Cas1KeyWorkerAllocation(
         keyWorker = StaffMember(
           code = staffCode,
           keyWorker = true,
           name = name,
         ),
-        allocatedAt = assignedAt.toLocalDate(),
+        allocatedAt = assignedAt?.toLocalDate(),
       )
     } else {
       null
@@ -162,7 +162,7 @@ class Cas1SpaceBookingTransformer(
     tier = searchResult.tier,
     keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { staffCode ->
       Cas1KeyWorkerAllocation(
-        allocatedAt = searchResult.keyWorkerAssignedAt!!.toLocalDate(),
+        allocatedAt = searchResult.keyWorkerAssignedAt?.toLocalDate(),
         keyWorker = StaffMember(
           code = staffCode,
           keyWorker = true,
