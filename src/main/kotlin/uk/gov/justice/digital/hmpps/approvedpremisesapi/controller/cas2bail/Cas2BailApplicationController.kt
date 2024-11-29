@@ -31,8 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 )
 class Cas2BailApplicationController(
   private val httpAuthService: HttpAuthService,
-  private val applicationService: Cas2BailApplicationService,
-  private val applicationsTransformer: Cas2BailApplicationsTransformer,
+  private val cas2BailApplicationService: Cas2BailApplicationService,
+  private val cas2BailApplicationsTransformer: Cas2BailApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val userService: NomisUserService,
@@ -49,7 +49,7 @@ class Cas2BailApplicationController(
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
-    val (applications, metadata) = applicationService.getCas2BailApplications(prisonCode, isSubmitted, user, pageCriteria)
+    val (applications, metadata) = cas2BailApplicationService.getCas2BailApplications(prisonCode, isSubmitted, user, pageCriteria)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
@@ -60,7 +60,7 @@ class Cas2BailApplicationController(
     val user = userService.getUserForRequest()
 
     val application = when (
-      val applicationResult = applicationService
+      val applicationResult = cas2BailApplicationService
         .getCas2BailApplicationForUser(
           applicationId,
           user
@@ -85,7 +85,7 @@ class Cas2BailApplicationController(
 
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
 
-    val applicationResult = applicationService.createCas2BailApplication(
+    val applicationResult = cas2BailApplicationService.createCas2BailApplication(
       body.crn,
       user,
       nomisPrincipal.token.tokenValue,
@@ -100,7 +100,7 @@ class Cas2BailApplicationController(
 
     return ResponseEntity
       .created(URI.create("/cas2/applications/${application.id}"))
-      .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+      .body(cas2BailApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
   @Transactional
@@ -112,7 +112,7 @@ class Cas2BailApplicationController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateCas2BailApplication(
+    val applicationResult = cas2BailApplicationService.updateCas2BailApplication(
       applicationId =
         applicationId,
       data = serializedData,
@@ -139,7 +139,7 @@ class Cas2BailApplicationController(
   override fun applicationsApplicationIdAbandonPut(applicationId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val validationResult = when (val applicationResult = applicationService.abandonCas2BailApplication(applicationId, user)) {
+    val validationResult = when (val applicationResult = cas2BailApplicationService.abandonCas2BailApplication(applicationId, user)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
@@ -161,7 +161,7 @@ class Cas2BailApplicationController(
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      applicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
+      cas2BailApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
     }
   }
 
@@ -170,6 +170,6 @@ class Cas2BailApplicationController(
   ): Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return applicationsTransformer.transformJpaToApi(application, personInfo)
+    return cas2BailApplicationsTransformer.transformJpaToApi(application, personInfo)
   }
 }
