@@ -18,9 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail.Cas2BailApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2BailApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -39,29 +37,29 @@ import java.time.OffsetDateTime
 import java.util.*
 
 class Cas2BailApplicationServiceTest {
-  private val mockApplicationRepository = mockk<Cas2BailApplicationRepository>()
-  private val mockLockableApplicationRepository = mockk<Cas2BailLockableApplicationRepository>()
-  private val mockApplicationSummaryRepository = mockk<Cas2BailApplicationSummaryRepository>()
+  private val mockCas2BailApplicationRepository = mockk<Cas2BailApplicationRepository>()
+  private val mockCas2BailLockableApplicationRepository = mockk<Cas2BailLockableApplicationRepository>()
+  private val mockCas2BailApplicationSummaryRepository = mockk<Cas2BailApplicationSummaryRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockUserAccessService = mockk<Cas2BailUserAccessService>()
+  private val mockCas2BailUserAccessService = mockk<Cas2BailUserAccessService>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockAssessmentService = mockk<Cas2BailAssessmentService>()
+  private val mockCas2BailAssessmentService = mockk<Cas2BailAssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
 
-  private val applicationService = Cas2BailApplicationService(
-    mockApplicationRepository,
-    mockLockableApplicationRepository,
-    mockApplicationSummaryRepository,
+  private val cas2BailApplicationService = Cas2BailApplicationService(
+    mockCas2BailApplicationRepository,
+    mockCas2BailLockableApplicationRepository,
+    mockCas2BailApplicationSummaryRepository,
     mockJsonSchemaService,
     mockOffenderService,
-    mockUserAccessService,
+    mockCas2BailUserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
-    mockAssessmentService,
+    mockCas2BailAssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
     "http://frontend/applications/#id",
@@ -69,10 +67,10 @@ class Cas2BailApplicationServiceTest {
   )
 
   @Nested
-  inner class GetAllSubmittedApplicationsForAssessor {
+  inner class GetAllSubmittedCas2BailApplicationsForAssessor {
     @Test
     fun `returns Success result with entity from db`() {
-      val applicationSummary = Cas2BailApplicationSummaryEntity(
+      val cas2BailApplicationSummary = Cas2BailApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = randomStringMultiCaseWithNumbers(6),
         nomsNumber = randomStringMultiCaseWithNumbers(6),
@@ -94,12 +92,12 @@ class Cas2BailApplicationServiceTest {
       mockkStatic(PageRequest::class)
 
       every { PageRequest.of(2, 10, Sort.by("submitted_at").ascending()) } returns pageRequest
-      every { page.content } returns listOf(applicationSummary)
+      every { page.content } returns listOf(cas2BailApplicationSummary)
       every { page.totalPages } returns 10
       every { page.totalElements } returns 100
 
       every {
-        mockApplicationSummaryRepository.findBySubmittedAtIsNotNull(
+        mockCas2BailApplicationSummaryRepository.findBySubmittedAtIsNotNull(
           PageRequest.of(
             2,
             10,
@@ -108,9 +106,9 @@ class Cas2BailApplicationServiceTest {
         )
       } returns page
 
-      val (applicationSummaries, metadata) = applicationService.getAllSubmittedCas2BailApplicationsForAssessor(pageCriteria)
+      val (applicationSummaries, metadata) = cas2BailApplicationService.getAllSubmittedCas2BailApplicationsForAssessor(pageCriteria)
 
-      assertThat(applicationSummaries).isEqualTo(listOf(applicationSummary))
+      assertThat(applicationSummaries).isEqualTo(listOf(cas2BailApplicationSummary))
       assertThat(metadata?.currentPage).isEqualTo(3)
       assertThat(metadata?.pageSize).isEqualTo(10)
       assertThat(metadata?.totalPages).isEqualTo(10)
@@ -119,8 +117,8 @@ class Cas2BailApplicationServiceTest {
   }
 
   @Nested
-  inner class GetApplicationsWithPrisonCode {
-    val applicationSummary = Cas2BailApplicationSummaryEntity(
+  inner class GetCas2BailApplicationsWithPrisonCode {
+    val cas2BailApplicationSummary = Cas2BailApplicationSummaryEntity(
       id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
       crn = randomStringMultiCaseWithNumbers(6),
       nomsNumber = randomStringMultiCaseWithNumbers(6),
@@ -138,14 +136,14 @@ class Cas2BailApplicationServiceTest {
     val user = NomisUserEntityFactory().produce()
     val prisonCode = "BRI"
 
-    fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
-      every { page.content } returns listOf(applicationSummary)
+    private fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
+      every { page.content } returns listOf(cas2BailApplicationSummary)
       every { page.totalPages } returns 10
       every { page.totalElements } returns 100
 
-      val (applicationSummaries, _) = applicationService.getCas2BailApplications(prisonCode, isSubmitted, user, pageCriteria)
+      val (applicationSummaries, _) = cas2BailApplicationService.getCas2BailApplications(prisonCode, isSubmitted, user, pageCriteria)
 
-      assertThat(applicationSummaries).isEqualTo(listOf(applicationSummary))
+      assertThat(applicationSummaries).isEqualTo(listOf(cas2BailApplicationSummary))
     }
 
     @Test
@@ -153,7 +151,7 @@ class Cas2BailApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockApplicationSummaryRepository.findByPrisonCode(
+        mockCas2BailApplicationSummaryRepository.findByPrisonCode(
           prisonCode,
           getPageableOrAllPages(pageCriteria),
         )
@@ -167,7 +165,7 @@ class Cas2BailApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(
+        mockCas2BailApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(
           prisonCode,
           getPageableOrAllPages(pageCriteria),
         )
@@ -181,7 +179,7 @@ class Cas2BailApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(
+        mockCas2BailApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(
           prisonCode,
           getPageableOrAllPages(pageCriteria),
         )
@@ -192,23 +190,23 @@ class Cas2BailApplicationServiceTest {
   }
 
   @Nested
-  inner class GetApplicationForUser {
+  inner class GetCas2BailApplicationForUser {
     @Test
-    fun `where application does not exist returns NotFound result`() {
+    fun `where cas2bail application does not exist returns NotFound result`() {
       val user = NomisUserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(applicationService.getCas2BailApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2BailApplicationService.getCas2BailApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
-    fun `where application is abandoned returns NotFound result`() {
+    fun `where cas2bail application is abandoned returns NotFound result`() {
       val user = NomisUserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockApplicationRepository.findByIdOrNull(any()) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(any()) } returns
         Cas2BailApplicationEntityFactory()
           .withCreatedByUser(
             NomisUserEntityFactory()
@@ -217,16 +215,16 @@ class Cas2BailApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(applicationService.getCas2BailApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2BailApplicationService.getCas2BailApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
-    fun `where user cannot access the application returns Unauthorised result`() {
+    fun `where user cannot access the cas2bail application returns Unauthorised result`() {
       val user = NomisUserEntityFactory()
         .produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockApplicationRepository.findByIdOrNull(any()) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(any()) } returns
         Cas2BailApplicationEntityFactory()
           .withCreatedByUser(
             NomisUserEntityFactory()
@@ -234,14 +232,14 @@ class Cas2BailApplicationServiceTest {
           )
           .produce()
 
-      every { mockUserAccessService.userCanViewCas2BailApplication(any(), any()) } returns false
+      every { mockCas2BailUserAccessService.userCanViewCas2BailApplication(any(), any()) } returns false
 
 
-      assertThat(applicationService.getCas2BailApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(cas2BailApplicationService.getCas2BailApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test
-    fun `where user can access the application returns Success result with entity from db`() {
+    fun `where user can access the cas2bail application returns Success result with entity from db`() {
       val distinguishedName = "SOMEPERSON"
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
@@ -255,7 +253,7 @@ class Cas2BailApplicationServiceTest {
         .withNomisUsername(distinguishedName)
         .produce()
 
-      val applicationEntity = Cas2BailApplicationEntityFactory()
+      val cas2BailApplicationEntity = Cas2BailApplicationEntityFactory()
         .withCreatedByUser(userEntity)
         .withApplicationSchema(newestJsonSchema)
         .produce()
@@ -264,15 +262,15 @@ class Cas2BailApplicationServiceTest {
         it.invocation
           .args[0] as Cas2BailApplicationEntity
       }
-      every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
-      every { mockUserAccessService.userCanViewCas2BailApplication(any(), any()) } returns true
+      every { mockCas2BailApplicationRepository.findByIdOrNull(any()) } returns cas2BailApplicationEntity
+      every { mockCas2BailUserAccessService.userCanViewCas2BailApplication(any(), any()) } returns true
 
-      val result = applicationService.getCas2BailApplicationForUser(applicationId, userEntity)
+      val result = cas2BailApplicationService.getCas2BailApplicationForUser(applicationId, userEntity)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
 
-      assertThat(result.entity).isEqualTo(applicationEntity)
+      assertThat(result.entity).isEqualTo(cas2BailApplicationEntity)
     }
   }
 
@@ -287,7 +285,7 @@ class Cas2BailApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = applicationService.createCas2BailApplication(crn, user, "jwt")
+      val result = cas2BailApplicationService.createCas2BailApplication(crn, user, "jwt")
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -303,7 +301,7 @@ class Cas2BailApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = applicationService.createCas2BailApplication(crn, user, "jwt")
+      val result = cas2BailApplicationService.createCas2BailApplication(crn, user, "jwt")
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -315,7 +313,7 @@ class Cas2BailApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      val schema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
+      val cas2BailApplicationSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
       val user = userWithUsername(username)
 
@@ -323,13 +321,13 @@ class Cas2BailApplicationServiceTest {
         OffenderDetailsSummaryFactory().produce(),
       )
 
-      every { mockJsonSchemaService.getNewestSchema(Cas2BailApplicationJsonSchemaEntity::class.java) } returns schema
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockJsonSchemaService.getNewestSchema(Cas2BailApplicationJsonSchemaEntity::class.java) } returns cas2BailApplicationSchema
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0] as
           Cas2BailApplicationEntity
       }
 
-      val result = applicationService.createCas2BailApplication(crn, user, "jwt")
+      val result = cas2BailApplicationService.createCas2BailApplication(crn, user, "jwt")
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
@@ -343,13 +341,13 @@ class Cas2BailApplicationServiceTest {
     val user = NomisUserEntityFactory().produce()
 
     @Test
-    fun `returns NotFound when application doesn't exist`() {
+    fun `returns NotFound when cas2bail application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
-        applicationService.updateCas2BailApplication(
+        cas2BailApplicationService.updateCas2BailApplication(
           applicationId = applicationId,
           data = "{}",
           user = user,
@@ -361,7 +359,7 @@ class Cas2BailApplicationServiceTest {
     fun `returns Unauthorised when application doesn't belong to request user`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
           NomisUserEntityFactory()
@@ -369,13 +367,13 @@ class Cas2BailApplicationServiceTest {
         }
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns
-        application
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
+        cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns
+        cas2BailApplication
 
       assertThat(
-        applicationService.updateCas2BailApplication(
+        cas2BailApplicationService.updateCas2BailApplication(
           applicationId = applicationId,
           data = "{}",
           user = user,
@@ -384,12 +382,12 @@ class Cas2BailApplicationServiceTest {
     }
 
     @Test
-    fun `returns GeneralValidationError when application has already been submitted`() {
+    fun `returns GeneralValidationError when cas2bail application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -399,12 +397,12 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns
-        application
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
+        cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns
+        cas2BailApplication
 
-      val result = applicationService.updateCas2BailApplication(
+      val result = cas2BailApplicationService.updateCas2BailApplication(
         applicationId = applicationId,
         data = "{}",
         user = user,
@@ -425,7 +423,7 @@ class Cas2BailApplicationServiceTest {
 
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -435,10 +433,10 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns application
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns cas2BailApplication
 
-      val result = applicationService.updateCas2BailApplication(
+      val result = cas2BailApplicationService.updateCas2BailApplication(
         applicationId = applicationId,
         data = "{}",
         user = user,
@@ -457,7 +455,7 @@ class Cas2BailApplicationServiceTest {
     fun `returns GeneralValidationError when application schema is outdated`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
@@ -466,10 +464,10 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = false
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns application
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns cas2BailApplication
 
-      val result = applicationService.updateCas2BailApplication(
+      val result = cas2BailApplicationService.updateCas2BailApplication(
         applicationId = applicationId,
         data = "{}",
         user = user,
@@ -505,7 +503,7 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns
         application
@@ -516,12 +514,12 @@ class Cas2BailApplicationServiceTest {
         )
       } returns newestSchema
       every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2BailApplicationEntity
       }
 
-      val result = applicationService.updateCas2BailApplication(
+      val result = cas2BailApplicationService.updateCas2BailApplication(
         applicationId = applicationId,
         data = updatedData,
         user = user,
@@ -564,7 +562,7 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns
         application
@@ -575,12 +573,12 @@ class Cas2BailApplicationServiceTest {
         )
       } returns newestSchema
       every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2BailApplicationEntity
       }
 
-      val result = applicationService.updateCas2BailApplication(
+      val result = cas2BailApplicationService.updateCas2BailApplication(
         applicationId = applicationId,
         data = updatedData,
         user = user,
@@ -606,10 +604,10 @@ class Cas2BailApplicationServiceTest {
     fun `returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
-        applicationService.abandonCas2BailApplication(
+        cas2BailApplicationService.abandonCas2BailApplication(
           applicationId = applicationId,
           user = user,
         ) is AuthorisableActionResult.NotFound,
@@ -628,11 +626,11 @@ class Cas2BailApplicationServiceTest {
         }
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
         application
 
       assertThat(
-        applicationService.abandonCas2BailApplication(
+        cas2BailApplicationService.abandonCas2BailApplication(
           applicationId = applicationId,
           user = user,
         ) is AuthorisableActionResult.Unauthorised,
@@ -655,10 +653,10 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
         application
 
-      val result = applicationService.abandonCas2BailApplication(
+      val result = cas2BailApplicationService.abandonCas2BailApplication(
         applicationId = applicationId,
         user = user,
       )
@@ -688,10 +686,10 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
         application
 
-      val result = applicationService.abandonCas2BailApplication(
+      val result = cas2BailApplicationService.abandonCas2BailApplication(
         applicationId = applicationId,
         user = user,
       )
@@ -723,14 +721,14 @@ class Cas2BailApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns
         application
 
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0] as Cas2BailApplicationEntity
       }
 
-      val result = applicationService.abandonCas2BailApplication(
+      val result = cas2BailApplicationService.abandonCas2BailApplication(
         applicationId = applicationId,
         user = user,
       )
@@ -768,7 +766,7 @@ class Cas2BailApplicationServiceTest {
 
     @BeforeEach
     fun setup() {
-      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2BailLockableApplicationEntity(UUID.randomUUID())
+      every { mockCas2BailLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2BailLockableApplicationEntity(UUID.randomUUID())
       every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
     }
@@ -777,9 +775,9 @@ class Cas2BailApplicationServiceTest {
     fun `returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(applicationService.submitCas2BailApplication(submitCas2Application, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user) is AuthorisableActionResult.NotFound).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -789,23 +787,23 @@ class Cas2BailApplicationServiceTest {
       val differentUser = NomisUserEntityFactory()
         .produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(differentUser)
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns
-        application
+      every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns
+        cas2BailApplication
 
-      assertThat(applicationService.submitCas2BailApplication(submitCas2Application, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user) is AuthorisableActionResult.Unauthorised).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
 
     @Test
     fun `returns GeneralValidationError when application schema is outdated`() {
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
@@ -815,11 +813,11 @@ class Cas2BailApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns application
+        mockCas2BailApplicationRepository.findByIdOrNull(applicationId)
+      } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns cas2BailApplication
 
-      val result = applicationService.submitCas2BailApplication(submitCas2Application, user)
+      val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -836,7 +834,7 @@ class Cas2BailApplicationServiceTest {
     fun `returns GeneralValidationError when application has already been submitted`() {
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -847,11 +845,11 @@ class Cas2BailApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns application
+        mockCas2BailApplicationRepository.findByIdOrNull(applicationId)
+      } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns cas2BailApplication
 
-      val result = applicationService.submitCas2BailApplication(submitCas2Application, user)
+      val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -868,7 +866,7 @@ class Cas2BailApplicationServiceTest {
     fun `returns GeneralValidationError when application has already been abandoned`() {
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -876,11 +874,11 @@ class Cas2BailApplicationServiceTest {
         .produce()
 
       every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns application
+        mockCas2BailApplicationRepository.findByIdOrNull(applicationId)
+      } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns cas2BailApplication
 
-      val result = applicationService.submitCas2BailApplication(submitCas2Application, user)
+      val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -897,7 +895,7 @@ class Cas2BailApplicationServiceTest {
     fun `throws a validation error if InmateDetails (for prison code) are not available`() {
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -908,19 +906,19 @@ class Cas2BailApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNull(any())
-      } returns application
+        mockCas2BailApplicationRepository.findByIdOrNull(any())
+      } returns cas2BailApplication
       every { mockJsonSchemaService.checkCas2BailSchemaOutdated(any()) } returns
-        application
+        cas2BailApplication
       every { mockJsonSchemaService.validate(any(), any()) } returns true
 
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2BailApplicationEntity
       }
 
       val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(application.crn)
+        .withCrn(cas2BailApplication.crn)
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
@@ -945,7 +943,7 @@ class Cas2BailApplicationServiceTest {
     fun `throws an UpstreamApiException if prison code is null`() {
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -956,19 +954,19 @@ class Cas2BailApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNull(any())
-      } returns application
+        mockCas2BailApplicationRepository.findByIdOrNull(any())
+      } returns cas2BailApplication
       every { mockJsonSchemaService.checkCas2BailSchemaOutdated(any()) } returns
-        application
+        cas2BailApplication
       every { mockJsonSchemaService.validate(any(), any()) } returns true
 
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2BailApplicationEntity
       }
 
       val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(application.crn)
+        .withCrn(cas2BailApplication.crn)
         .produce()
 
       every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
@@ -990,7 +988,7 @@ class Cas2BailApplicationServiceTest {
     }
 
     private fun assertGeneralValidationError(message: String) {
-      val result = applicationService.submitCas2BailApplication(submitCas2Application, user)
+      val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
 
@@ -1002,14 +1000,14 @@ class Cas2BailApplicationServiceTest {
 
     private fun assertEmailAndAssessmentsWereNotCreated() {
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockAssessmentService.createCas2BailAssessment(any()) }
+      verify(exactly = 0) { mockCas2BailAssessmentService.createCas2BailAssessment(any()) }
     }
 
     @Test
     fun `returns Success and stores event`() {
       val newestSchema = Cas2BailApplicationJsonSchemaEntityFactory().produce()
 
-      val application = Cas2BailApplicationEntityFactory()
+      val cas2BailApplication = Cas2BailApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -1020,11 +1018,11 @@ class Cas2BailApplicationServiceTest {
         }
 
       every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(application) } returns
-        application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+        mockCas2BailApplicationRepository.findByIdOrNull(applicationId)
+      } returns cas2BailApplication
+      every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns
+        cas2BailApplication
+      every { mockJsonSchemaService.validate(newestSchema, cas2BailApplication.data!!) } returns true
 
       val inmateDetail = InmateDetailFactory()
         .withAssignedLivingUnit(
@@ -1039,8 +1037,8 @@ class Cas2BailApplicationServiceTest {
 
       every {
         mockOffenderService.getInmateDetailByNomsNumber(
-          application.crn,
-          application.nomsNumber.toString(),
+          cas2BailApplication.crn,
+          cas2BailApplication.nomsNumber.toString(),
         )
       } returns AuthorisableActionResult.Success(inmateDetail)
 
@@ -1049,23 +1047,23 @@ class Cas2BailApplicationServiceTest {
       every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
       every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
 
-      every { mockApplicationRepository.save(any()) } answers {
+      every { mockCas2BailApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2BailApplicationEntity
       }
 
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withGender("male")
-        .withCrn(application.crn)
+        .withCrn(cas2BailApplication.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(application.crn) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrn(cas2BailApplication.crn) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 
-      every { mockAssessmentService.createCas2BailAssessment(any()) } returns any()
+      every { mockCas2BailAssessmentService.createCas2BailAssessment(any()) } returns any()
 
-      val result = applicationService.submitCas2BailApplication(submitCas2Application, user)
+      val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -1074,22 +1072,22 @@ class Cas2BailApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.Success
       val persistedApplication = validatableActionResult.entity
 
-      assertThat(persistedApplication.crn).isEqualTo(application.crn)
+      assertThat(persistedApplication.crn).isEqualTo(cas2BailApplication.crn)
       assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")
       assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
       assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
 
-      verify { mockApplicationRepository.save(any()) }
+      verify { mockCas2BailApplicationRepository.save(any()) }
 
       verify(exactly = 1) {
         mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
           match {
             val data = it.data.eventDetails
 
-            it.applicationId == application.id &&
-              data.personReference.noms == application.nomsNumber &&
-              data.personReference.crn == application.crn &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            it.applicationId == cas2BailApplication.id &&
+              data.personReference.noms == cas2BailApplication.nomsNumber &&
+              data.personReference.crn == cas2BailApplication.crn &&
+              data.applicationUrl == "http://frontend/applications/${cas2BailApplication.id}" &&
               data.submittedBy.staffMember.username == username &&
               data.referringPrisonCode == "BRI" &&
               data.preferredAreas == "Leeds | Bradford" &&
@@ -1106,15 +1104,15 @@ class Cas2BailApplicationServiceTest {
           match {
             it["name"] == user.name &&
               it["email"] == user.email &&
-              it["prisonNumber"] == application.nomsNumber &&
-              it["telephoneNumber"] == application.telephoneNumber &&
+              it["prisonNumber"] == cas2BailApplication.nomsNumber &&
+              it["telephoneNumber"] == cas2BailApplication.telephoneNumber &&
               it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
           },
           "def456",
         )
       }
 
-      verify(exactly = 1) { mockAssessmentService.createCas2BailAssessment(persistedApplication) }
+      verify(exactly = 1) { mockCas2BailAssessmentService.createCas2BailAssessment(persistedApplication) }
     }
   }
 
