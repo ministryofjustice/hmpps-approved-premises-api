@@ -55,7 +55,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1SpaceBooking'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewSpaceBooking'
         required: true
       responses:
         200:
@@ -143,7 +143,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1OutOfServiceBed'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewOutOfServiceBed'
         required: true
       responses:
         200:
@@ -314,7 +314,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1OutOfServiceBedCancellation'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewOutOfServiceBedCancellation'
         required: true
       responses:
         200:
@@ -757,7 +757,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/NewCas1SpaceBookingCancellation'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewSpaceBookingCancellation'
         required: true
       responses:
         200:

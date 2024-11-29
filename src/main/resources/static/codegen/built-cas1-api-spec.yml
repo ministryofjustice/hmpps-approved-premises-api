@@ -57,7 +57,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/NewCas1SpaceBooking'
+              $ref: '#/components/schemas/Cas1NewSpaceBooking'
         required: true
       responses:
         200:
@@ -145,7 +145,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/NewCas1OutOfServiceBed'
+              $ref: '#/components/schemas/Cas1NewOutOfServiceBed'
         required: true
       responses:
         200:
@@ -316,7 +316,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/NewCas1OutOfServiceBedCancellation'
+              $ref: '#/components/schemas/Cas1NewOutOfServiceBedCancellation'
         required: true
       responses:
         200:
@@ -759,7 +759,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/NewCas1SpaceBookingCancellation'
+              $ref: '#/components/schemas/Cas1NewSpaceBookingCancellation'
         required: true
       responses:
         200:
@@ -6249,7 +6249,7 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
-    NewCas1SpaceBooking:
+    Cas1NewSpaceBooking:
       type: object
       properties:
         arrivalDate:
@@ -6665,7 +6665,7 @@ components:
       required:
         - roles
         - qualifications
-    NewCas1SpaceBookingCancellation:
+    Cas1NewSpaceBookingCancellation:
       type: object
       properties:
         occurredAt:
@@ -6804,7 +6804,7 @@ components:
         - temporality
         - status
         - revisionHistory
-    NewCas1OutOfServiceBed:
+    Cas1NewOutOfServiceBed:
       type: object
       properties:
         startDate:
@@ -6862,7 +6862,7 @@ components:
       required:
         - id
         - createdAt
-    NewCas1OutOfServiceBedCancellation:
+    Cas1NewOutOfServiceBedCancellation:
       type: object
       properties:
         notes:
