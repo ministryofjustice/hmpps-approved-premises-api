@@ -52,6 +52,7 @@ class Cas1PremisesTransformerTest {
         .withPostcode("LE11 1PO")
         .withProbationRegion(probationRegion)
         .withSupportsSpaceBookings(true)
+        .withManagerDetails("manager details")
         .produce()
 
       val expectedApArea = ApArea(UUID.randomUUID(), "id", "name")
@@ -75,6 +76,7 @@ class Cas1PremisesTransformerTest {
       assertThat(result.outOfServiceBeds).isEqualTo(2)
       assertThat(result.apArea).isEqualTo(expectedApArea)
       assertThat(result.supportsSpaceBookings).isTrue()
+      assertThat(result.managerDetails).isEqualTo("manager details")
     }
   }
 

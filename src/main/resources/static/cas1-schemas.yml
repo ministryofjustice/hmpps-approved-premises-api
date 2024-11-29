@@ -95,6 +95,8 @@ components:
           example: 2
         supportsSpaceBookings:
           type: boolean
+        managerDetails:
+          type: string
       required:
         - id
         - name
