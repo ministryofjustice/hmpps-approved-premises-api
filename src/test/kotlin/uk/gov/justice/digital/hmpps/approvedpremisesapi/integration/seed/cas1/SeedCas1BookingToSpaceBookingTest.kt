@@ -31,7 +31,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
+class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
 
   @Autowired
   lateinit var cas1SpaceBookingTestRepository: Cas1SpaceBookingTestRepository
@@ -45,7 +45,10 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
   @SuppressWarnings("LongMethod")
   @Test
   fun `Migrate bookings, removing existing`() {
-    val premises = givenAnApprovedPremises("Premises 1")
+    val premises = givenAnApprovedPremises(
+      name = "Premises 1",
+      supportsSpaceBookings = true,
+    )
     val otherUser = givenAUser().first
     val roomCriteria1 = characteristicEntityFactory.produceAndPersist { withModelScope("*") }
     val roomCriteria2 = characteristicEntityFactory.produceAndPersist { withModelScope("room") }

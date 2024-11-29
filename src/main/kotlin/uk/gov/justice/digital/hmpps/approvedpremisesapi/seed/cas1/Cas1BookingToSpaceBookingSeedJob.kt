@@ -79,6 +79,10 @@ class Cas1BookingToSpaceBookingSeedJob(
   private fun migratePremise(premisesId: UUID) {
     val premises = approvedPremisesRepository.findByIdOrNull(premisesId) ?: error("Premises with id $premisesId not found")
 
+    if (!premises.supportsSpaceBookings) {
+      error("premise ${premises.name} doesn't support space bookings, can't migrate bookings")
+    }
+
     log.info("Deleting all existing migrated space bookings for premises ${premises.name}")
     val deletedCount = spaceBookingRepository.deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId)
     log.info("Have deleted $deletedCount existing migrated space bookings")
