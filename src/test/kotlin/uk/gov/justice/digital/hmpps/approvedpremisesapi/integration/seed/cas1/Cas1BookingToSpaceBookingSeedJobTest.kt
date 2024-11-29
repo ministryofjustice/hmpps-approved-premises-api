@@ -6,6 +6,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABookingForAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -74,12 +75,18 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
       placementRequest1,
     )
 
-    val departureReason1 = departureReasonEntityFactory.produceAndPersist {
+    departureReasonEntityFactory.produceAndPersist {
+      withLegacyDeliusCategoryCode("dr1inactive")
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    val departureReason1Active = departureReasonEntityFactory.produceAndPersist {
       withLegacyDeliusCategoryCode("dr1")
+      withServiceScope(ServiceName.approvedPremises.value)
     }
 
     val moveOnCategory1 = moveOnCategoryEntityFactory.produceAndPersist {
       withLegacyDeliusCategoryCode("moc1")
+      withServiceScope(ServiceName.approvedPremises.value)
     }
 
     val nonArrivalReasonCode1 = nonArrivalReasonEntityFactory.produceAndPersist {
@@ -219,7 +226,7 @@ class Cas1BookingToSpaceBookingSeedJobTest : SeedTestBase() {
     assertThat(migratedBooking1.cancellationOccurredAt).isNull()
     assertThat(migratedBooking1.cancellationRecordedAt).isNull()
     assertThat(migratedBooking1.cancellationReasonNotes).isNull()
-    assertThat(migratedBooking1.departureReason).isEqualTo(departureReason1)
+    assertThat(migratedBooking1.departureReason).isEqualTo(departureReason1Active)
     assertThat(migratedBooking1.departureMoveOnCategory).isEqualTo(moveOnCategory1)
     assertThat(migratedBooking1.criteria).containsOnly(roomCriteria1, roomCriteria2)
     assertThat(migratedBooking1.nonArrivalReason).isEqualTo(nonArrivalReasonCode1)

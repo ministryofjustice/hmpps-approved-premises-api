@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -173,11 +174,17 @@ class Cas1BookingToSpaceBookingSeedJob(
     departedAtTime = null,
     keyWorkerStaffCode = keyWorkerStaffCode,
     keyWorkerName = "$keyWorkerForename $keyWorkerSurname",
-    departureReason = departureReasonCode?.let {
-      departureReasonRepository.findByLegacyDeliusReasonCode(it) ?: error("Could not resolve DepartureReason for code $it")
+    departureReason = departureReasonCode?.let { reasonCode ->
+      departureReasonRepository
+        .findAllByServiceScope(ServiceName.approvedPremises.value)
+        .filter { it.legacyDeliusReasonCode == reasonCode }
+        .maxByOrNull { it.isActive }
+        ?: error("Could not resolve DepartureReason for code $reasonCode")
     },
-    departureMoveOnCategory = moveOnCategoryCode?.let {
-      moveOnCategoryRepository.findByLegacyDeliusCategoryCode(it) ?: error("Could not resolve MoveOnCategory for code $it")
+    departureMoveOnCategory = moveOnCategoryCode?.let { reasonCode ->
+      moveOnCategoryRepository
+        .findAllByServiceScope(ServiceName.approvedPremises.value)
+        .firstOrNull { it.legacyDeliusCategoryCode == reasonCode } ?: error("Could not resolve MoveOnCategory for code $reasonCode")
     },
     departureNotes = null,
     nonArrivalConfirmedAt = nonArrivalContactDatetime,
