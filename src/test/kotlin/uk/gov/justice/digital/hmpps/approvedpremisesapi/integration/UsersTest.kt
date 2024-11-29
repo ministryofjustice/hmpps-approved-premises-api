@@ -334,8 +334,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
-    fun `GET to users with an unapproved role is forbidden`(role: UserRole) {
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
+    fun `GET users with an unapproved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users")
@@ -348,7 +352,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
+    fun `GET users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
       givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/users")
@@ -698,7 +702,11 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `GET user summary with an unapproved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -996,7 +1004,11 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `GET to user search with an unapproved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -1070,8 +1082,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
-    fun `GET to user search delius username with an unapproved role is forbidden`(role: UserRole) {
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
+    fun `GET user search delius username with an unapproved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=some")

@@ -2550,7 +2550,7 @@ class BookingTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR"],
+      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Create Cancellation with invalid role returns 401`(role: UserRole) {

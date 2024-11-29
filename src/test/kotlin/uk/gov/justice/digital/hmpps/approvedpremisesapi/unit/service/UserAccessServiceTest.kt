@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
@@ -428,7 +429,11 @@ class UserAccessServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `currentUserCanManageUsers returns false if user does not have CAS1_USER_MANAGEMENT permission`(userRole: UserRole) {
       user.addRoleForUnitTest(userRole)
 
@@ -536,7 +541,12 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(role)
 
-      val canCancelBooking = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelBooking = listOf(
+        CAS1_WORKFLOW_MANAGER,
+        CAS1_CRU_MEMBER,
+        CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        CAS1_JANITOR,
+      ).contains(role)
 
       assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
     }
@@ -1394,7 +1404,7 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelApplication = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelApplication = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
 
       assertThat(userAccessService.userMayWithdrawApplication(otherUser, application)).isEqualTo(canCancelApplication)
     }
@@ -1520,7 +1530,7 @@ class UserAccessServiceTest {
         )
         .produce()
 
-      val canWithdrawPlacementRequest = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canWithdrawPlacementRequest = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
 
       assertThat(userAccessService.userMayWithdrawPlacementRequest(otherUser, placementRequest)).isEqualTo(canWithdrawPlacementRequest)
     }
@@ -1579,7 +1589,7 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelPlacementApp = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelPlacementApp = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
 
       assertThat(userAccessService.userMayWithdrawPlacementApplication(otherUser, placementApplication)).isEqualTo(canCancelPlacementApp)
     }
