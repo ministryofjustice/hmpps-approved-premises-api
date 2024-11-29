@@ -205,6 +205,7 @@ class UserTransformerTest {
         "CAS1_ASSESSOR",
         "CAS1_MATCHER",
         "CAS1_CRU_MEMBER",
+        "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA",
         "CAS1_FUTURE_MANAGER",
         "CAS1_WORKFLOW_MANAGER",
         "CAS1_MANAGER",

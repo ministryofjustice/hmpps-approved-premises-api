@@ -127,6 +127,7 @@ class Cas1AutoScript(
         username = "JIMSNOWLDAP",
         roles = listOf(
           UserRole.CAS1_CRU_MEMBER,
+          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -142,6 +143,7 @@ class Cas1AutoScript(
         username = "LAOFULLACCESS",
         roles = listOf(
           UserRole.CAS1_CRU_MEMBER,
+          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -158,6 +160,7 @@ class Cas1AutoScript(
         username = "LAORESTRICTED",
         roles = listOf(
           UserRole.CAS1_CRU_MEMBER,
+          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -173,6 +176,7 @@ class Cas1AutoScript(
         username = "CRUWOMENSESTATE",
         roles = listOf(
           UserRole.CAS1_CRU_MEMBER,
+          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
           UserRole.CAS1_ASSESSOR,
           UserRole.CAS1_MATCHER,
           UserRole.CAS1_WORKFLOW_MANAGER,
@@ -195,6 +199,7 @@ class Cas1AutoScript(
           username = it,
           roles = listOf(
             UserRole.CAS1_CRU_MEMBER,
+            UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
             UserRole.CAS1_ASSESSOR,
             UserRole.CAS1_MATCHER,
             UserRole.CAS1_WORKFLOW_MANAGER,
