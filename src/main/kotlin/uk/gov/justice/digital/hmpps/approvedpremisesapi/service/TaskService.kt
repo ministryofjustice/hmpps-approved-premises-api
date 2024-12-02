@@ -109,13 +109,13 @@ class TaskService(
   ): Page<Task> {
     val pageable = pageCriteria.toPageable(
       when (pageCriteria.sortBy) {
-        TaskSortField.createdAt -> "created_at"
-        TaskSortField.dueAt -> "due_at"
-        TaskSortField.allocatedTo -> "allocated_to"
-        TaskSortField.person -> "person"
-        TaskSortField.completedAt -> "completed_at"
-        TaskSortField.taskType -> "type"
-        TaskSortField.decision -> "decision"
+        TaskSortField.CREATED_AT -> "created_at"
+        TaskSortField.DUE_AT -> "due_at"
+        TaskSortField.ALLOCATED_TO -> "allocated_to"
+        TaskSortField.PERSON -> "person"
+        TaskSortField.COMPLETED_AT -> "completed_at"
+        TaskSortField.TASK_TYPE -> "type"
+        TaskSortField.DECISION -> "decision"
       },
     )
 
