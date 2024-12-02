@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import java.util.UUID
 
-class InvalidQuestionException(message: String) : Exception(message)
+class SiteSurveyImportException(message: String) : Exception(message)
 
 @Suppress("LongParameterList")
 class ApprovedPremisesRoomsSeedFromXLSXJob(
@@ -28,7 +28,6 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   private val premisesRepository: PremisesRepository,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
-  private val characteristicRepository: CharacteristicRepository,
   private val siteSurvey: SiteSurvey,
 ) : ExcelSeedJob(
   fileName = fileName,
@@ -39,87 +38,131 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   override fun processDataFrame(dataFrame: DataFrame<*>) {
     findExistingPremisesOrThrow(premisesId)
 
-    val questions = dataFrame.getColumn(0).values().toList()
-    if (questions.drop(2) != siteSurvey.questionToCharacterEntityMapping.keys.toList()) throw InvalidQuestionException("Site survey file $fileName contains wrong questions on sheet $sheetName")
+    // build valid lists for rooms, characteristics and beds
+    var rooms = buildRooms(dataFrame)
+    val characteristics = buildCharacteristics(dataFrame)
+
+    // add the characteristics to the rooms
+    rooms.forEach { it.characteristics.addAll(characteristics[it.code!!]!!.toList()) }
+
+    // update the rooms
+    rooms = createOrUpdateRooms(rooms)
+
+    val beds = buildBeds(dataFrame, rooms)
+    createBedsIfNotExist(beds)
+  }
+
+  private fun buildRooms(dataFrame: DataFrame<*>): MutableList<RoomEntity> {
+    val rooms = mutableListOf<RoomEntity>()
 
     for (i in 1..<dataFrame.columnsCount()) {
-      val roomCharacteristics = dataFrame.getColumn(i)
-      val roomCode = roomCharacteristics.name
-      val roomName = roomCharacteristics[0].toString()
+      val roomAnswers = dataFrame.getColumn(i)
+      val room = createRoom(roomAnswers.name, roomAnswers[0].toString())
 
-      val room = roomRepository.findByCode(roomCode) ?: createRoom(
-        roomCode,
-        roomName,
-      )
+      rooms.add(room)
+    }
+    return rooms
+  }
 
-      val bedCode = roomCharacteristics[1].toString()
-      val bedName = "$roomName - $bedCode"
+  private fun buildCharacteristics(dataFrame: DataFrame<*>): MutableMap<String, MutableList<CharacteristicEntity>> {
+    var premisesCharacteristics = mutableMapOf<String, MutableList<CharacteristicEntity>>()
 
-      val bed = room?.beds?.find { it.code == bedCode } ?: createBed(
-        bedName,
-        bedCode,
-        room!!,
-      )
+    siteSurvey.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
+      val rowId = dataFrame.getColumn(0).values().indexOf(question)
 
-      val characteristics = mutableListOf<CharacteristicEntity>()
+      if (rowId == -1) throw SiteSurveyImportException("Characteristic question $question not found in sheet $sheetName.")
 
-      questions.drop(2).forEachIndexed { i, question ->
-        val characteristic = siteSurvey.questionToCharacterEntityMapping.getValue(question.toString())!!
-        if (roomCharacteristics[i + 2].toString().equals("yes", true)) {
-          characteristics.add(characteristic)
-          log.info("Added characteristic ${characteristic.propertyName} to room code $roomCode.")
-        } else {
-          if (characteristics.remove(characteristic)) {
-            log.info("Removed characteristic ${characteristic.propertyName} from room code $roomCode.")
-          }
+      for (colId in 1..<dataFrame.columnsCount()) {
+        val roomCode = dataFrame.getColumn(colId).name
+        val answer = dataFrame[rowId][colId].toString()
+
+        if (answer.equals("yes", true)) {
+          premisesCharacteristics.computeIfAbsent(roomCode) { mutableListOf() }.add(characteristic!!)
+        } else if (!answer.equals("no", true)) {
+          throw SiteSurveyImportException("Answer $answer for question $question is not yes or no in sheet $sheetName.")
         }
       }
-      room!!.characteristics.addAll(characteristics)
-      roomRepository.save(room)
+    }
+    return premisesCharacteristics
+  }
+
+  private fun buildBeds(dataFrame: DataFrame<*>, rooms: MutableList<RoomEntity>): List<BedEntity> {
+    val beds = mutableListOf<BedEntity>()
+    for (i in 1..<dataFrame.columnsCount()) {
+      val roomAnswers = dataFrame.getColumn(i)
+      val bedCode = roomAnswers[1].toString()
+      beds.add(
+        createBed(
+          "${roomAnswers.name} - $bedCode",
+          bedCode,
+          rooms.firstOrNull { it.code == roomAnswers.name }
+            ?: throw IllegalArgumentException("Room not found with id ${roomAnswers.name} for bed $bedCode."),
+        ),
+      )
+    }
+    return beds
+  }
+
+  private fun createOrUpdateRooms(rooms: MutableList<RoomEntity>): MutableList<RoomEntity> {
+    rooms.forEachIndexed { index, it ->
+      var room = roomRepository.findByCode(it.code!!)
+
+      if (room == null) {
+        roomRepository.save(it)
+        log.info("Created new room ${it.id} with code ${it.code} and name ${it.name} in premise ${it.premises.name}.")
+        log.info("Added characteristic(s) ${it.characteristics.joinToString()} to room code ${it.code}.")
+      } else {
+        rooms[index] = room
+        room.characteristics.clear()
+        room.characteristics.addAll(it.characteristics)
+        roomRepository.save(room)
+        log.info("Added characteristic(s) ${room.characteristics.joinToString()} to room code ${room.code}.")
+      }
+    }
+    return rooms
+  }
+
+  private fun createBedsIfNotExist(beds: List<BedEntity>) {
+    beds.forEach {
+      val existingBed = bedRepository.findByCode(it.code!!)
+      if (existingBed != null) {
+        log.info("Bed ${it.id} with code ${it.code} already exists in room code ${it.room.code}.")
+        return
+      } else {
+        bedRepository.save(it)
+        log.info("Created new bed ${it.id} with code ${it.code} and name ${it.name} in room code ${it.room.code}.")
+      }
     }
   }
 
-  private fun createRoom(roomCode: String, roomName: String): RoomEntity? {
-    val room = roomRepository.save(
-      RoomEntity(
-        id = UUID.randomUUID(),
-        name = roomName,
-        code = roomCode,
-        notes = null,
-        premises = premisesRepository.findByIdOrNull(premisesId)!!,
-        beds = mutableListOf(),
-        characteristics = mutableListOf(),
-      ),
-    )
-    log.info("Created new room ${room.name} with code ${room.code} and name ${room.name}.")
-    return room
-  }
+  private fun createRoom(roomCode: String, roomName: String): RoomEntity = RoomEntity(
+    id = UUID.randomUUID(),
+    name = roomName,
+    code = roomCode,
+    notes = null,
+    premises = premisesRepository.findByIdOrNull(premisesId)!!,
+    beds = mutableListOf(),
+    characteristics = mutableListOf(),
+  )
 
-  fun createBed(bedName: String, bedCode: String, room: RoomEntity): BedEntity {
-    val bed = bedRepository.save(
-      BedEntity(
-        id = UUID.randomUUID(),
-        name = bedName,
-        code = bedCode,
-        room = room,
-        endDate = null,
-        createdAt = null,
-      ),
-    )
-    log.info("Created new bed ${bed.id} with code ${bed.code} and name ${bed.name}.")
-    return bed
-  }
+  fun createBed(bedName: String, bedCode: String, room: RoomEntity): BedEntity = BedEntity(
+    id = UUID.randomUUID(),
+    name = bedName,
+    code = bedCode,
+    room = room,
+    endDate = null,
+    createdAt = null,
+  )
 
-  @Suppress("TooGenericExceptionThrown")
   private fun findExistingPremisesOrThrow(premisesId: UUID): PremisesEntity {
-    return premisesRepository.findByIdOrNull(premisesId) ?: throw RuntimeException(
+    return premisesRepository.findByIdOrNull(premisesId) ?: throw SiteSurveyImportException(
       "Error: no premises with id '$premisesId' found. ",
     )
   }
 }
 
 @Component
-class SiteSurvey constructor(characteristicRepository: CharacteristicRepository) {
+class SiteSurvey(characteristicRepository: CharacteristicRepository) {
   private val questionToPropertyNameMapping = mapOf(
 //    "Is this bed in a single room?" to "isSingle",
 //    "Is this an IAP?" to "isIAP",

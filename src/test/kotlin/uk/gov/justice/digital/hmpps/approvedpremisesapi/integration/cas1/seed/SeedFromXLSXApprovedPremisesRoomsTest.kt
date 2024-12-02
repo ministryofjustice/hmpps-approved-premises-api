@@ -139,4 +139,8 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
 //  @Test
 //  fun `Adding a characteristic that exists succeeds`() {
 //  }
+//  @Test
+//  fun `room exists but bed doesn't - creates bed`() {
+//
+//  }
 }
