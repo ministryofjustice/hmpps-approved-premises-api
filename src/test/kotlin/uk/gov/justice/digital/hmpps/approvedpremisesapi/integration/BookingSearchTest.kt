@@ -246,7 +246,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withPremises(bed.room.premises)
                 withCrn(offenderDetails.otherIds.crn)
                 withBed(bed)
-                withStatus(BookingStatus.closed)
+                withStatus(BookingStatus.CLOSED)
                 withServiceName(ServiceName.temporaryAccommodation)
               }
               val departure = departureEntityFactory.produceAndPersist {

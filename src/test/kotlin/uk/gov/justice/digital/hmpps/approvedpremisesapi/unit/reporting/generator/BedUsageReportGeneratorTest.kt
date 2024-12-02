@@ -462,7 +462,7 @@ class BedUsageReportGeneratorTest {
     every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationBooking)
     every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns emptyList()
 
-    every { mockBookingTransformer.determineStatus(temporaryAccommodationBooking) } returns BookingStatus.closed
+    every { mockBookingTransformer.determineStatus(temporaryAccommodationBooking) } returns BookingStatus.CLOSED
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
@@ -479,7 +479,7 @@ class BedUsageReportGeneratorTest {
     assertThat(result[0][BedUsageReportRow::startDate]).isEqualTo(temporaryAccommodationBooking.arrivalDate)
     assertThat(result[0][BedUsageReportRow::endDate]).isEqualTo(temporaryAccommodationBooking.departureDate)
     assertThat(result[0][BedUsageReportRow::durationOfBookingDays]).isEqualTo(2)
-    assertThat(result[0][BedUsageReportRow::bookingStatus]).isEqualTo(BookingStatus.closed)
+    assertThat(result[0][BedUsageReportRow::bookingStatus]).isEqualTo(BookingStatus.CLOSED)
     assertThat(result[0][BedUsageReportRow::voidCategory]).isEqualTo(null)
     assertThat(result[0][BedUsageReportRow::voidNotes]).isEqualTo(null)
     assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
@@ -533,7 +533,7 @@ class BedUsageReportGeneratorTest {
     every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationBooking)
     every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns emptyList()
 
-    every { mockBookingTransformer.determineStatus(temporaryAccommodationBooking) } returns BookingStatus.closed
+    every { mockBookingTransformer.determineStatus(temporaryAccommodationBooking) } returns BookingStatus.CLOSED
 
     every { mockWorkingDayService.addWorkingDays(LocalDate.parse("2023-04-07"), 2) } returns LocalDate.parse("2023-04-09")
 
