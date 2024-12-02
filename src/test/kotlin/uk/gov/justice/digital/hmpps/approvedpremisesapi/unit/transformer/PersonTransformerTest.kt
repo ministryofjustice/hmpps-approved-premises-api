@@ -51,7 +51,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.FULL_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(FullPersonSummary::class.java)
       assertThat((result as FullPersonSummary).name).isEqualTo("max power")
     }
@@ -66,7 +66,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.restrictedPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(RestrictedPersonSummary::class.java)
     }
 
@@ -79,7 +79,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
     }
 
@@ -92,7 +92,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
     }
   }

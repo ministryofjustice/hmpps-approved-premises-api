@@ -30,20 +30,20 @@ class PersonTransformer {
       is PersonSummaryInfoResult.Success.Full -> {
         return FullPersonSummary(
           crn = personSummaryInfo.crn,
-          personType = PersonSummaryDiscriminator.fullPersonSummary,
+          personType = PersonSummaryDiscriminator.FULL_PERSON_SUMMARY,
           name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
         )
       }
       is PersonSummaryInfoResult.Success.Restricted -> {
         return RestrictedPersonSummary(
           crn = personSummaryInfo.crn,
-          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+          personType = PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY,
         )
       }
       is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
         return UnknownPersonSummary(
           crn = personSummaryInfo.crn,
-          personType = PersonSummaryDiscriminator.unknownPersonSummary,
+          personType = PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY,
         )
       }
     }

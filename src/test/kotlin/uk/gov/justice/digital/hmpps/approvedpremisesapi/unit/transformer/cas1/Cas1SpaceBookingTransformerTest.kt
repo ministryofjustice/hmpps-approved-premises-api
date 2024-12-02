@@ -416,7 +416,7 @@ class Cas1SpaceBookingTransformerTest {
       val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
-        PersonSummaryDiscriminator.restrictedPersonSummary,
+        PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY,
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
@@ -461,7 +461,7 @@ class Cas1SpaceBookingTransformerTest {
       val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
-        PersonSummaryDiscriminator.restrictedPersonSummary,
+        PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY,
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
