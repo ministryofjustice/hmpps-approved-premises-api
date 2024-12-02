@@ -606,7 +606,7 @@ class ApplicationService(
     val updatedApplication = application.apply {
       this.isWithdrawn = true
       this.withdrawalReason = withdrawalReason
-      this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
+      this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.OTHER.value) {
         otherReason
       } else {
         null

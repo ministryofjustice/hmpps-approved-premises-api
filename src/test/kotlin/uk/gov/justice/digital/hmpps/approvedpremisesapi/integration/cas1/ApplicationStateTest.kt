@@ -544,7 +544,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewWithdrawal(
-          reason = WithdrawalReason.duplicateApplication,
+          reason = WithdrawalReason.DUPLICATE_APPLICATION,
         ),
       )
       .exchange()

@@ -303,7 +303,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       withdrawApplication(
         applicationId = application.id,
         withdrawalDate = LocalDateTime.of(2021, 12, 25, 2, 0, 0),
-        reason = WithdrawalReason.duplicateApplication,
+        reason = WithdrawalReason.DUPLICATE_APPLICATION,
       )
     }
 
@@ -645,7 +645,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       withdrawApplication(
         applicationId = application.id,
         withdrawalDate = LocalDateTime.of(2020, 2, 12, 11, 25, 0),
-        WithdrawalReason.death,
+        WithdrawalReason.DEATH,
       )
     }
 

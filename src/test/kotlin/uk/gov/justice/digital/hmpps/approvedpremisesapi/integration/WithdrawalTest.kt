@@ -1015,7 +1015,7 @@ class WithdrawalTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewWithdrawal(
-                reason = WithdrawalReason.duplicateApplication,
+                reason = WithdrawalReason.DUPLICATE_APPLICATION,
               ),
             )
             .exchange()
@@ -1058,7 +1058,7 @@ class WithdrawalTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewWithdrawal(
-                reason = WithdrawalReason.duplicateApplication,
+                reason = WithdrawalReason.DUPLICATE_APPLICATION,
               ),
             )
             .exchange()
@@ -1514,7 +1514,7 @@ class WithdrawalTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewWithdrawal(
-          reason = WithdrawalReason.duplicateApplication,
+          reason = WithdrawalReason.DUPLICATE_APPLICATION,
         ),
       )
       .exchange()
