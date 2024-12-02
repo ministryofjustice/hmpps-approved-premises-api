@@ -30,8 +30,6 @@ import java.util.UUID
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
   fun findByPlacementRequestId(placementRequestId: UUID): List<Cas1SpaceBookingEntity>
 
-  fun deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId: UUID): Long
-
   @Query(
     value = """
       SELECT 
@@ -259,9 +257,9 @@ data class Cas1SpaceBookingEntity(
    * offline applications)
    */
   val deliusEventNumber: String?,
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "migrated_from_booking_id")
-  val migratedFromBooking: BookingEntity?,
+  /**
+   * If a value is set, this space booking was migrated from a booking
+   */
   @Enumerated(EnumType.STRING)
   val migratedManagementInfoFrom: ManagementInfoSource?,
   @Version

@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -53,7 +52,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var nonArrivalConfirmedAt: Yielded<Instant?> = { null }
   private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
   private var nonArrivalNotes: Yielded<String?> = { null }
-  private var migratedFromBooking: Yielded<BookingEntity?> = { null }
   private var migratedManagementInfoFrom: Yielded<ManagementInfoSource?> = { null }
   private var deliusEventNumber: Yielded<String?> = { null }
 
@@ -189,10 +187,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.nonArrivalReason = { reason }
   }
 
-  fun withMigratedFromBooking(booking: BookingEntity?) = apply {
-    this.migratedFromBooking = { booking }
-  }
-
   fun withDeliusEventNumber(deliusEventNumber: String?) = apply {
     this.deliusEventNumber = { deliusEventNumber }
   }
@@ -237,7 +231,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     nonArrivalNotes = this.nonArrivalNotes(),
     nonArrivalReason = this.nonArrivalReason(),
     deliusEventNumber = this.deliusEventNumber(),
-    migratedFromBooking = this.migratedFromBooking(),
     migratedManagementInfoFrom = this.migratedManagementInfoFrom(),
   )
 }

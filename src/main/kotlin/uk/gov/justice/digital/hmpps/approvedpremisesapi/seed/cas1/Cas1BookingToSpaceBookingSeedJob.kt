@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
@@ -50,6 +51,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val nonArrivalReasonReasonEntity: NonArrivalReasonRepository,
   private val environmentService: EnvironmentService,
+  private val placementRequestRepository: PlacementRequestRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
   requiredHeaders = setOf(
@@ -82,10 +84,6 @@ class Cas1BookingToSpaceBookingSeedJob(
     if (!premises.supportsSpaceBookings) {
       error("premise ${premises.name} doesn't support space bookings, can't migrate bookings")
     }
-
-    log.info("Deleting all existing migrated space bookings for premises ${premises.name}")
-    val deletedCount = spaceBookingRepository.deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId)
-    log.info("Have deleted $deletedCount existing migrated space bookings")
 
     val bookingIds = bookingRepository.findAllIdsByPremisesId(premisesId)
     val bookingsToMigrateSize = bookingIds.size
@@ -153,13 +151,18 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalReason = managementInfo.nonArrivalReason,
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,
-        migratedFromBooking = booking,
         deliusEventNumber = bookingMadeDomainEvent?.data?.eventDetails?.deliusEventNumber,
         migratedManagementInfoFrom = managementInfo.source,
       ),
     )
 
     domainEventRepository.replaceBookingIdWithSpaceBookingId(bookingId)
+
+    booking.placementRequest?.let {
+      it.booking = null
+      placementRequestRepository.save(it)
+    }
+    bookingRepository.delete(booking)
 
     log.info("Have migrated booking $bookingId to space booking")
   }

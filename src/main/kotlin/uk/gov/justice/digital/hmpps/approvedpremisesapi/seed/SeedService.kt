@@ -231,6 +231,7 @@ class SeedService(
           getBean(MoveOnCategoryRepository::class),
           getBean(NonArrivalReasonRepository::class),
           getBean(EnvironmentService::class),
+          getBean(PlacementRequestRepository::class),
         )
 
         SeedFileType.approvedPremisesSpacePlanningDryRun -> Cas1PlanSpacePlanningDryRunSeedJob(
