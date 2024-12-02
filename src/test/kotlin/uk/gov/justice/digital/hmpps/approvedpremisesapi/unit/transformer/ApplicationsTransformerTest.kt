@@ -179,12 +179,12 @@ class ApplicationsTransformerTest {
 
   @ParameterizedTest
   @CsvSource(
-    "NORMAL,normal",
-    "PIPE,pipe",
-    "ESAP,esap",
-    "RFAP,rfap",
-    "MHAP_ST_JOSEPHS,mhapStJosephs",
-    "MHAP_ELLIOTT_HOUSE,mhapElliottHouse",
+    "NORMAL,NORMAL",
+    "PIPE,PIPE",
+    "ESAP,ESAP",
+    "RFAP,RFAP",
+    "MHAP_ST_JOSEPHS,MHAP_ST_JOSEPHS",
+    "MHAP_ELLIOTT_HOUSE,MHAP_ELLIOTT_HOUSE",
   )
   fun `transformJpaToApi transforms ap type correctly`(jpaTypeString: String, apiTypeString: String) {
     val jpaType = ApprovedPremisesType.valueOf(jpaTypeString)

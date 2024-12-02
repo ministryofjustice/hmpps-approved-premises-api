@@ -64,7 +64,7 @@ class ApprovedPremisesApplicationEntityTest {
   @Nested
   inner class GetRequiredQualifications {
     @ParameterizedTest
-    @CsvSource("emergency,EMERGENCY", "shortNotice,EMERGENCY", "standard,")
+    @CsvSource("EMERGENCY,EMERGENCY", "SHORT_NOTICE,EMERGENCY", "STANDARD,")
     fun `returns correctly for timeliness categories`(noticeType: Cas1ApplicationTimelinessCategory, qualification: UserQualification?) {
       val user = UserEntityFactory()
         .withDefaultProbationRegion()

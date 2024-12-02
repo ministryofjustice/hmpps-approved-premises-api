@@ -512,11 +512,11 @@ class Cas1SpaceBookingServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "personName,personName",
-      "canonicalArrivalDate,canonicalArrivalDate",
-      "canonicalDepartureDate,canonicalDepartureDate",
-      "keyWorkerName,keyWorkerName",
-      "tier,tier",
+      "PERSON_NAME,personName",
+      "CANONICAL_ARRIVAL_DATE,canonicalArrivalDate",
+      "CANONICAL_DEPARTURE_DATE,canonicalDepartureDate",
+      "KEY_WORKER_NAME,keyWorkerName",
+      "TIER,tier",
     )
     fun `delegate to repository, defining correct sort column`(
       inputSortField: Cas1SpaceBookingSummarySortField,
