@@ -117,10 +117,10 @@ class PlacementApplicationsController(
       WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
       WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementApplicationWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
       WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION -> PlacementApplicationWithdrawalReason.CHANGE_IN_RELEASE_DECISION
-      WithdrawPlacementRequestReason.noCapacityDueToLostBed -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
-      WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
-      WithdrawPlacementRequestReason.noCapacity -> PlacementApplicationWithdrawalReason.NO_CAPACITY
-      WithdrawPlacementRequestReason.errorInPlacementRequest -> PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
+      WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
+      WithdrawPlacementRequestReason.NO_CAPACITY -> PlacementApplicationWithdrawalReason.NO_CAPACITY
+      WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST -> PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
       WithdrawPlacementRequestReason.withdrawnByPP -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
       WithdrawPlacementRequestReason.relatedApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
       WithdrawPlacementRequestReason.relatedPlacementRequestWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
