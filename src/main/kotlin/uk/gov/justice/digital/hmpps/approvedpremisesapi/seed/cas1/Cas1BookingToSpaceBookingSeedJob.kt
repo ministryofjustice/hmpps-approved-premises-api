@@ -128,7 +128,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         application = application,
         offlineApplication = offlineApplication,
         placementRequest = booking.placementRequest,
-        createdBy = bookingMadeDomainEvent?.let { getCreatedByUser(it) },
+        createdBy = bookingMadeDomainEvent?.getCreatedByUser(),
         createdAt = booking.createdAt,
         expectedArrivalDate = booking.arrivalDate,
         expectedDepartureDate = booking.departureDate,
@@ -154,10 +154,12 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,
         migratedFromBooking = booking,
-        deliusEventNumber = bookingMadeDomainEvent?.let { getDomainEventNumber(bookingMadeDomainEvent) },
-        migratedManagementInfoFrom = managementInfo.source.entityEquivalent,
+        deliusEventNumber = bookingMadeDomainEvent?.data?.eventDetails?.deliusEventNumber,
+        migratedManagementInfoFrom = managementInfo.source,
       ),
     )
+
+    domainEventRepository.replaceBookingIdWithSpaceBookingId(bookingId)
 
     log.info("Have migrated booking $bookingId to space booking")
   }
@@ -179,7 +181,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   }
 
   private fun Cas1DeliusBookingImportEntity.toManagementInfo() = ManagementInfo(
-    source = SeedManagementInfoSource.Delius,
+    source = ManagementInfoSource.DELIUS,
     arrivedAtDate = arrivalDate,
     arrivedAtTime = null,
     departedAtDate = departureDate,
@@ -207,7 +209,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   )
 
   private fun BookingEntity.toManagementInfo() = ManagementInfo(
-    source = SeedManagementInfoSource.LegacyCas1,
+    source = ManagementInfoSource.LEGACY_CAS_1,
     arrivedAtDate = arrival?.arrivalDateTime?.toLocalDate(),
     arrivedAtTime = arrival?.arrivalDateTime?.toLocalDateTime()?.toLocalTime(),
     departedAtDate = departure?.dateTime?.toLocalDate(),
@@ -223,7 +225,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   )
 
   private data class ManagementInfo(
-    val source: SeedManagementInfoSource,
+    val source: ManagementInfoSource,
     val arrivedAtDate: LocalDate?,
     val arrivedAtTime: LocalTime?,
     val departedAtDate: LocalDate?,
@@ -238,36 +240,23 @@ class Cas1BookingToSpaceBookingSeedJob(
     val nonArrivalNotes: String?,
   )
 
-  private enum class SeedManagementInfoSource(
-    val entityEquivalent: ManagementInfoSource,
-  ) {
-    Delius(ManagementInfoSource.DELIUS),
-    LegacyCas1(ManagementInfoSource.LEGACY_CAS_1),
-  }
-
   private fun BookingEntity.getEssentialRoomCriteria() =
     placementRequest?.placementRequirements?.essentialCriteria?.filter { it.isModelScopeRoom() }?.toList()
       ?: emptyList()
 
-  private fun getCreatedByUser(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): UserEntity {
+  private fun DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
     val createdByUsernameUpper =
-      bookingMadeDomainEvent.data.eventDetails.bookedBy.staffMember!!.username?.uppercase()
-        ?: error("Can't find created by username for booking ${bookingMadeDomainEvent.bookingId}")
+      data.eventDetails.bookedBy.staffMember!!.username?.uppercase()
+        ?: error("Can't find created by username for booking $bookingId")
     return userRepository.findByDeliusUsername(createdByUsernameUpper) ?: error("Can't find user with username $createdByUsernameUpper")
   }
 
-  private fun getDomainEventNumber(bookingMadeDomainEvent: DomainEvent<BookingMadeEnvelope>): String {
-    return bookingMadeDomainEvent.data.eventDetails.deliusEventNumber
-  }
-
-  private fun getBookingMadeDomainEvent(bookingId: UUID): DomainEvent<BookingMadeEnvelope>? {
-    val createdDomainEvents = domainEventRepository.findIdsByTypeAndBookingId(DomainEventType.APPROVED_PREMISES_BOOKING_MADE, bookingId)
-    if (createdDomainEvents.isEmpty()) {
-      return null
+  private fun getBookingMadeDomainEvent(bookingId: UUID) = domainEventRepository
+    .findIdsByTypeAndBookingId(DomainEventType.APPROVED_PREMISES_BOOKING_MADE, bookingId)
+    .firstOrNull()
+    ?.let {
+      domainEventService.getBookingMadeEvent(it)
     }
-
-    return domainEventService.getBookingMadeEvent(createdDomainEvents.first())
-  }
 }
 
 data class Cas1BookingToSpaceBookingSeedCsvRow(
