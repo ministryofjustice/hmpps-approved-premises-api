@@ -17,12 +17,12 @@ class CacheService(
 
   fun clearCache(cacheName: CacheType) {
     when (cacheName) {
-      CacheType.inmateDetails -> clearPreemptiveCache("inmateDetails")
-      CacheType.qCodeStaffMembers -> clearRegularCache("qCodeStaffMembersCache")
-      CacheType.userAccess -> clearRegularCache("userAccessCache")
-      CacheType.staffDetails -> clearRegularCache("staffDetailsCache")
-      CacheType.teamsManagingCase -> clearRegularCache("teamsManagingCaseCache")
-      CacheType.ukBankHolidays -> clearRegularCache("ukBankHolidaysCache")
+      CacheType.INMATE_DETAILS -> clearPreemptiveCache("inmateDetails")
+      CacheType.Q_CODE_STAFF_MEMBERS -> clearRegularCache("qCodeStaffMembersCache")
+      CacheType.USER_ACCESS -> clearRegularCache("userAccessCache")
+      CacheType.STAFF_DETAILS -> clearRegularCache("staffDetailsCache")
+      CacheType.TEAMS_MANAGING_CASE -> clearRegularCache("teamsManagingCaseCache")
+      CacheType.UK_BANK_HOLIDAYS -> clearRegularCache("ukBankHolidaysCache")
     }
   }
 

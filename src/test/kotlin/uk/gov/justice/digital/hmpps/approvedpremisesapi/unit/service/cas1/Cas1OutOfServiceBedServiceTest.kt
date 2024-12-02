@@ -67,42 +67,42 @@ class Cas1OutOfServiceBedServiceTest {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.current,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.future,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
-            Temporality.current,
+            Temporality.PAST,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
-            Temporality.future,
+            Temporality.PAST,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.current,
-            Temporality.future,
+            Temporality.CURRENT,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
-            Temporality.current,
-            Temporality.future,
+            Temporality.PAST,
+            Temporality.CURRENT,
+            Temporality.FUTURE,
           ),
         ),
       )
@@ -549,22 +549,22 @@ class Cas1OutOfServiceBedServiceTest {
   inner class GetOutOfServiceBeds {
     @CsvSource(
       // Ascending
-      "'premisesName','asc','p.name'",
-      "'roomName','asc','r.name'",
-      "'bedName','asc','b.name'",
-      "'startDate','asc','d.start_date'",
-      "'endDate','asc','d.end_date'",
-      "'reason','asc','oosr.name'",
-      "'daysLost','asc','(d.end_date - d.start_date)'",
+      "'PREMISES_NAME','ASC','p.name'",
+      "'ROOM_NAME','ASC','r.name'",
+      "'BED_NAME','ASC','b.name'",
+      "'START_DATE','ASC','d.start_date'",
+      "'END_DATE','ASC','d.end_date'",
+      "'REASON','ASC','oosr.name'",
+      "'DAYS_LOST','ASC','(d.end_date - d.start_date)'",
 
       // Descending
-      "'premisesName','desc','p.name'",
-      "'roomName','desc','r.name'",
-      "'bedName','desc','b.name'",
-      "'startDate','desc','d.start_date'",
-      "'endDate','desc','d.end_date'",
-      "'reason','desc','oosr.name'",
-      "'daysLost','desc','(d.end_date - d.start_date)'",
+      "'PREMISES_NAME','DESC','p.name'",
+      "'ROOM_NAME','DESC','r.name'",
+      "'BED_NAME','DESC','b.name'",
+      "'START_DATE','DESC','d.start_date'",
+      "'END_DATE','DESC','d.end_date'",
+      "'REASON','DESC','oosr.name'",
+      "'DAYS_LOST','DESC','(d.end_date - d.start_date)'",
     )
     @ParameterizedTest
     fun `Sorts correctly according to the sort field and direction`(
@@ -626,16 +626,16 @@ class Cas1OutOfServiceBedServiceTest {
         temporality.toSet(),
         premisesId = null,
         apAreaId = null,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.START_DATE, SortDirection.ASC, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
         outOfServiceBedRepository.findOutOfServiceBedIds(
           premisesId = null,
           apAreaId = null,
-          excludePast = !temporality.contains(Temporality.past),
-          excludeCurrent = !temporality.contains(Temporality.current),
-          excludeFuture = !temporality.contains(Temporality.future),
+          excludePast = !temporality.contains(Temporality.PAST),
+          excludeCurrent = !temporality.contains(Temporality.CURRENT),
+          excludeFuture = !temporality.contains(Temporality.FUTURE),
           pageable = any(),
         )
       }
@@ -662,7 +662,7 @@ class Cas1OutOfServiceBedServiceTest {
         Temporality.entries.toSet(),
         premisesId = expectedId,
         apAreaId = null,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.START_DATE, SortDirection.ASC, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
@@ -698,7 +698,7 @@ class Cas1OutOfServiceBedServiceTest {
         Temporality.entries.toSet(),
         premisesId = null,
         apAreaId = expectedId,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.START_DATE, SortDirection.ASC, page = null, perPage = null),
       )
 
       verify(exactly = 1) {

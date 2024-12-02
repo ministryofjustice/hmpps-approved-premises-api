@@ -35,8 +35,8 @@ class Cas1OutOfServiceBedTransformer(
   )
 
   private fun Cas1OutOfServiceBedEntity.deriveStatus() = when (this.cancellation) {
-    null -> Cas1OutOfServiceBedStatus.active
-    else -> Cas1OutOfServiceBedStatus.cancelled
+    null -> Cas1OutOfServiceBedStatus.ACTIVE
+    else -> Cas1OutOfServiceBedStatus.CANCELLED
   }
 
   private fun Cas1OutOfServiceBedEntity.deriveDaysLost() = Duration
@@ -48,9 +48,9 @@ class Cas1OutOfServiceBedTransformer(
     val now = LocalDate.now()
 
     return when {
-      now > this.endDate -> Temporality.past
-      now < this.startDate -> Temporality.future
-      else -> Temporality.current
+      now > this.endDate -> Temporality.PAST
+      now < this.startDate -> Temporality.FUTURE
+      else -> Temporality.CURRENT
     }
   }
 }

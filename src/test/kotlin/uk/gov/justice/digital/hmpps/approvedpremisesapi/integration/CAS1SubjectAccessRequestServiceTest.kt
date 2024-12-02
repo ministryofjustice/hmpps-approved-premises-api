@@ -733,7 +733,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
            "inmate_in_out_status_on_submission": null,
            "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
-           "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
+           "notice_type":  "${Cas1ApplicationTimelinessCategory.EMERGENCY}",
            "ap_type": "${ApprovedPremisesType.NORMAL}",
            "case_manager_name": "${application.caseManagerUserDetails?.name}",
            "case_manager_is_not_applicant" : true
@@ -879,7 +879,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withApplication(application)
     withAssessment(assessment)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    withApType(ApType.normal)
+    withApType(ApType.NORMAL)
     withDesirableCriteria(listOf(characteristicEntity()))
     withEssentialCriteria(listOf(characteristicEntity()))
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
@@ -888,8 +888,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun characteristicEntity() =
     characteristicEntityFactory.produceAndPersist {
       withName(randomStringMultiCaseWithNumbers(10))
-      withServiceScope(Characteristic.ServiceScope.star.value)
-      withModelScope(Characteristic.ModelScope.room.value)
+      withServiceScope(Characteristic.ServiceScope.STAR.value)
+      withModelScope(Characteristic.ModelScope.ROOM.value)
       withPropertyName(randomStringMultiCaseWithNumbers(6))
     }
 
@@ -922,7 +922,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withCreatedBy(application.createdByUser)
     withAppealDate(LocalDate.parse(APPEAL_DATE_ONLY))
     withAppealDetail("I want to appeal this decision")
-    withDecision(AppealDecision.rejected)
+    withDecision(AppealDecision.REJECTED)
     withDecisionDetail("rejected as no good")
   }
 
@@ -995,7 +995,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
       withInmateInOutStatusOnSubmission(null)
       withSentenceType(SENTENCE_TYPE_CUSTODIAL)
-      withNoticeType(Cas1ApplicationTimelinessCategory.emergency)
+      withNoticeType(Cas1ApplicationTimelinessCategory.EMERGENCY)
       withApType(ApprovedPremisesType.NORMAL)
       withApplicantUserDetails(applicantUserDetails)
       withCaseManagerUserDetails(caseManagerUserDetails)

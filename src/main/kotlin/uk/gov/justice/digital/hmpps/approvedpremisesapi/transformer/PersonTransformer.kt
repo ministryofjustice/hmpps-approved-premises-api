@@ -30,20 +30,20 @@ class PersonTransformer {
       is PersonSummaryInfoResult.Success.Full -> {
         return FullPersonSummary(
           crn = personSummaryInfo.crn,
-          personType = PersonSummaryDiscriminator.fullPersonSummary,
+          personType = PersonSummaryDiscriminator.FULL_PERSON_SUMMARY,
           name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
         )
       }
       is PersonSummaryInfoResult.Success.Restricted -> {
         return RestrictedPersonSummary(
           crn = personSummaryInfo.crn,
-          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+          personType = PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY,
         )
       }
       is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
         return UnknownPersonSummary(
           crn = personSummaryInfo.crn,
-          personType = PersonSummaryDiscriminator.unknownPersonSummary,
+          personType = PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY,
         )
       }
     }
@@ -55,7 +55,7 @@ class PersonTransformer {
         val offenderDetailSummary = personInfoResult.offenderDetailSummary
         val inmateDetail = personInfoResult.inmateDetail
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = offenderDetailSummary.otherIds.crn,
           pncNumber = offenderDetailSummary.otherIds.pncNumber,
           name = "${offenderDetailSummary.firstName} ${offenderDetailSummary.surname}",
@@ -70,7 +70,7 @@ class PersonTransformer {
             "Prefer to self-describe" -> offenderDetailSummary.offenderProfile.selfDescribedGender
             else -> offenderDetailSummary.offenderProfile.genderIdentity
           },
-          prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }
+          prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.IN_CUSTODY }
             ?.let {
               inmateDetail?.assignedLivingUnit?.agencyName
                 ?: inmateDetail?.assignedLivingUnit?.agencyId
@@ -80,12 +80,12 @@ class PersonTransformer {
       }
 
       is PersonInfoResult.Success.Restricted -> RestrictedPerson(
-        type = PersonType.restrictedPerson,
+        type = PersonType.RESTRICTED_PERSON,
         crn = personInfoResult.crn,
       )
 
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
-        type = PersonType.unknownPerson,
+        type = PersonType.UNKNOWN_PERSON,
         crn = personInfoResult.crn,
       )
     }
@@ -96,12 +96,12 @@ class PersonTransformer {
       is PersonSummaryInfoResult.Success.Full -> {
         val caseSummary = personInfoResult.summary
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = personInfoResult.crn,
           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
           dateOfBirth = caseSummary.dateOfBirth,
           sex = caseSummary.gender ?: "Not Found",
-          status = PersonStatus.unknown,
+          status = PersonStatus.UNKNOWN,
           nomsNumber = caseSummary.nomsId,
           ethnicity = caseSummary.profile?.ethnicity,
           nationality = caseSummary.profile?.nationality,
@@ -113,12 +113,12 @@ class PersonTransformer {
       }
 
       is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
-        type = PersonType.restrictedPerson,
+        type = PersonType.RESTRICTED_PERSON,
         crn = personInfoResult.crn,
       )
 
       is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> UnknownPerson(
-        type = PersonType.unknownPerson,
+        type = PersonType.UNKNOWN_PERSON,
         crn = personInfoResult.crn,
       )
     }
@@ -136,7 +136,7 @@ class PersonTransformer {
     val probationOffenderDetail = probationOffenderResult.probationOffenderDetail
     val inmateDetail = probationOffenderResult.inmateDetail
     return FullPerson(
-      type = PersonType.fullPerson,
+      type = PersonType.FULL_PERSON,
       crn = probationOffenderDetail.otherIds.crn,
       name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
       dateOfBirth = probationOffenderDetail.dateOfBirth!!,
@@ -145,7 +145,7 @@ class PersonTransformer {
       nomsNumber = probationOffenderDetail.otherIds.nomsNumber,
       pncNumber = probationOffenderDetail.otherIds.pncNumber ?: "Not found",
       nationality = probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
-      prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }
+      prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.IN_CUSTODY }
         ?.let {
           inmateDetail?.assignedLivingUnit?.agencyName
             ?: inmateDetail?.assignedLivingUnit?.agencyId
@@ -155,9 +155,9 @@ class PersonTransformer {
   }
 
   fun inmateStatusToPersonInfoApiStatus(status: InmateStatus?) = when (status) {
-    InmateStatus.IN -> PersonStatus.inCustody
-    InmateStatus.OUT -> PersonStatus.inCommunity
-    InmateStatus.TRN -> PersonStatus.inCustody
-    null -> PersonStatus.unknown
+    InmateStatus.IN -> PersonStatus.IN_CUSTODY
+    InmateStatus.OUT -> PersonStatus.IN_COMMUNITY
+    InmateStatus.TRN -> PersonStatus.IN_CUSTODY
+    null -> PersonStatus.UNKNOWN
   }
 }

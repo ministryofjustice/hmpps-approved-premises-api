@@ -13,16 +13,16 @@ class Cas1SpaceBookingStatusTransformer {
   ): Cas1SpaceBookingSummaryStatus? {
     val nowDate = LocalDate.now()
     return when {
-      spaceBookingDates.isNotArrived() -> Cas1SpaceBookingSummaryStatus.notArrived
-      spaceBookingDates.hasDeparted() -> Cas1SpaceBookingSummaryStatus.departed
-      spaceBookingDates.isOverdueDeparture(nowDate) -> Cas1SpaceBookingSummaryStatus.overdueDeparture
-      spaceBookingDates.isDepartingToday(nowDate) -> Cas1SpaceBookingSummaryStatus.departingToday
-      spaceBookingDates.isDepartingWithin2Weeks(nowDate) -> Cas1SpaceBookingSummaryStatus.departingWithin2Weeks
-      spaceBookingDates.hasArrivedAndNotDeparted() -> Cas1SpaceBookingSummaryStatus.arrived
-      spaceBookingDates.isArrivalToday(nowDate) -> Cas1SpaceBookingSummaryStatus.arrivingToday
-      spaceBookingDates.isArrivalWithin2Weeks(nowDate) -> Cas1SpaceBookingSummaryStatus.arrivingWithin2Weeks
-      spaceBookingDates.isArrivalWithin6Weeks(nowDate) -> Cas1SpaceBookingSummaryStatus.arrivingWithin6Weeks
-      spaceBookingDates.isOverdueArrival(nowDate) -> Cas1SpaceBookingSummaryStatus.overdueArrival
+      spaceBookingDates.isNotArrived() -> Cas1SpaceBookingSummaryStatus.NOT_ARRIVED
+      spaceBookingDates.hasDeparted() -> Cas1SpaceBookingSummaryStatus.DEPARTED
+      spaceBookingDates.isOverdueDeparture(nowDate) -> Cas1SpaceBookingSummaryStatus.OVERDUE_DEPARTURE
+      spaceBookingDates.isDepartingToday(nowDate) -> Cas1SpaceBookingSummaryStatus.DEPARTING_TODAY
+      spaceBookingDates.isDepartingWithin2Weeks(nowDate) -> Cas1SpaceBookingSummaryStatus.DEPARTING_WITHIN2_WEEKS
+      spaceBookingDates.hasArrivedAndNotDeparted() -> Cas1SpaceBookingSummaryStatus.ARRIVED
+      spaceBookingDates.isArrivalToday(nowDate) -> Cas1SpaceBookingSummaryStatus.ARRIVING_TODAY
+      spaceBookingDates.isArrivalWithin2Weeks(nowDate) -> Cas1SpaceBookingSummaryStatus.ARRIVING_WITHIN2_WEEKS
+      spaceBookingDates.isArrivalWithin6Weeks(nowDate) -> Cas1SpaceBookingSummaryStatus.ARRIVING_WITHIN6_WEEKS
+      spaceBookingDates.isOverdueArrival(nowDate) -> Cas1SpaceBookingSummaryStatus.OVERDUE_ARRIVAL
       else -> null
     }
   }

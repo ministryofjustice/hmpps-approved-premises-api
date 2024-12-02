@@ -176,7 +176,7 @@ class AssessmentServiceTest {
     assessmentService.getVisibleAssessmentSummariesForUserCAS1(
       user,
       statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
-      PageCriteria(sortBy = AssessmentSortField.assessmentStatus, sortDirection = SortDirection.asc, page = 5, perPage = 7),
+      PageCriteria(sortBy = AssessmentSortField.assessmentStatus, sortDirection = SortDirection.ASC, page = 5, perPage = 7),
     )
 
     verify(exactly = 1) {
@@ -192,7 +192,7 @@ class AssessmentServiceTest {
   fun `getVisibleAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments within the user's probation region`() {
     val pageCriteria = PageCriteria(
       sortBy = AssessmentSortField.assessmentStatus,
-      sortDirection = SortDirection.asc,
+      sortDirection = SortDirection.ASC,
       page = 5,
       perPage = 7,
     )
@@ -238,7 +238,7 @@ class AssessmentServiceTest {
   fun `getAssessmentSummariesByCrnForUser is not supported for Approved Premises`() {
     val pageCriteria = PageCriteria(
       sortBy = AssessmentSortField.assessmentStatus,
-      sortDirection = SortDirection.asc,
+      sortDirection = SortDirection.ASC,
       page = 5,
       perPage = 7,
     )
@@ -267,7 +267,7 @@ class AssessmentServiceTest {
   fun `getAssessmentSummariesByCrnForUser only fetches Temporary Accommodation assessments for the given CRN and within the user's probation region`() {
     val pageCriteria = PageCriteria(
       sortBy = AssessmentSortField.assessmentStatus,
-      sortDirection = SortDirection.asc,
+      sortDirection = SortDirection.ASC,
       page = 5,
       perPage = 7,
     )
@@ -313,7 +313,7 @@ class AssessmentServiceTest {
   fun `getAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments sorted by default arrivalDate when requested sort field is personName`() {
     val pageCriteria = PageCriteria(
       sortBy = AssessmentSortField.personName,
-      sortDirection = SortDirection.asc,
+      sortDirection = SortDirection.ASC,
       page = 5,
       perPage = 7,
     )
@@ -2609,7 +2609,7 @@ class AssessmentServiceTest {
             .withQualification(UserQualification.PIPE)
             .produce()
 
-          if (timelinessCategory != Cas1ApplicationTimelinessCategory.standard) {
+          if (timelinessCategory != Cas1ApplicationTimelinessCategory.STANDARD) {
             qualifications += UserQualificationAssignmentEntityFactory()
               .withUser(this)
               .withQualification(UserQualification.EMERGENCY)
@@ -2669,7 +2669,7 @@ class AssessmentServiceTest {
             any<UUID>(),
             application,
             dueAt,
-            timelinessCategory == Cas1ApplicationTimelinessCategory.emergency,
+            timelinessCategory == Cas1ApplicationTimelinessCategory.EMERGENCY,
           )
         }
       }
@@ -2696,7 +2696,7 @@ class AssessmentServiceTest {
             .produce(),
         )
         .withApType(ApprovedPremisesType.PIPE)
-        .withNoticeType(Cas1ApplicationTimelinessCategory.shortNotice)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.SHORT_NOTICE)
         .produce()
 
       val dueAt = OffsetDateTime.now()

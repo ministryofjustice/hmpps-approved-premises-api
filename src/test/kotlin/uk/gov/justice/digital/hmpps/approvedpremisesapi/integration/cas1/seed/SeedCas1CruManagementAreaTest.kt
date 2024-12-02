@@ -44,7 +44,7 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "invalid-id.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_CRU_MANAGEMENT_AREAS, "invalid-id.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -70,7 +70,7 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "invalid-name.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_CRU_MANAGEMENT_AREAS, "invalid-name.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -96,7 +96,7 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_CRU_MANAGEMENT_AREAS, "valid-csv.csv")
 
     val updatedArea = cas1CruManagementAreaRepository.findByIdOrNull(areaId)!!
 
@@ -118,7 +118,7 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_CRU_MANAGEMENT_AREAS, "valid-csv.csv")
 
     val updatedArea = cas1CruManagementAreaRepository.findByIdOrNull(areaId)!!
 

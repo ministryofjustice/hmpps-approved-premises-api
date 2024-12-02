@@ -355,7 +355,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
@@ -395,7 +395,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH - 1, 31),
@@ -423,7 +423,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH + 1, 2),
@@ -524,13 +524,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         isWomensApplication = false,
         isEmergencyApplication = false,
         targetLocation = "targetLocation",
-        releaseType = ReleaseTypeOption.notApplicable,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         type = "CAS1",
-        sentenceType = SentenceTypeOption.bailPlacement,
+        sentenceType = SentenceTypeOption.BAIL_PLACEMENT,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
-        apType = ApType.pipe,
-        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        apType = ApType.PIPE,
+        noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
       ),
     )
 
@@ -567,12 +567,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
-    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+    val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
+    val desirableCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
-      type = ApType.normal,
+      gender = Gender.MALE,
+      type = ApType.NORMAL,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,
@@ -592,7 +592,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             duration = duration,
           )
         },
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
       ),
     )
   }
@@ -643,7 +643,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       placementApplicationId = getPlacementApplication(application).id,
       assessorJwt = assessorJwt,
       body = PlacementApplicationDecisionEnvelope(
-        decision = PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecision.ACCEPTED,
         summaryOfChanges = "summary",
         decisionSummary = "decisionSummary",
       ),
@@ -659,7 +659,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       this,
       placementRequestId,
       WithdrawPlacementRequest(
-        WithdrawPlacementRequestReason.duplicatePlacementRequest,
+        WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
       ),
     )
   }

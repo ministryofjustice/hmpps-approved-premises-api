@@ -166,7 +166,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         emptyList(),
       )
 
@@ -192,7 +192,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         listOf(
           PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
         ),
@@ -222,7 +222,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         listOf(
           PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
         ),
@@ -262,7 +262,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         listOf(
           PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
           PlacementDates(expectedArrival = LocalDate.of(2024, 5, 2), duration = 10),
@@ -338,7 +338,7 @@ class PlacementApplicationServiceTest {
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
-        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted,
+        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.ACCEPTED,
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary accepted",
       )
@@ -377,7 +377,7 @@ class PlacementApplicationServiceTest {
     @ParameterizedTest
     @EnumSource(
       value = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision::class,
-      names = ["accepted"],
+      names = ["ACCEPTED"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Submitting rejected decisions sends a notification and returns successfully`(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) {
@@ -412,10 +412,10 @@ class PlacementApplicationServiceTest {
       val updatedApplication = (result as CasResult.Success).value
 
       val expectedDecision = when (decision) {
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted -> PlacementApplicationDecision.ACCEPTED
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.rejected -> PlacementApplicationDecision.REJECTED
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdraw -> PlacementApplicationDecision.WITHDRAW
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.ACCEPTED -> PlacementApplicationDecision.ACCEPTED
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.REJECTED -> PlacementApplicationDecision.REJECTED
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.WITHDRAW -> PlacementApplicationDecision.WITHDRAW
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.WITHDRAWN_BY_PP -> PlacementApplicationDecision.WITHDRAWN_BY_PP
       }
 
       assertThat(updatedApplication.decision).isEqualTo(expectedDecision)

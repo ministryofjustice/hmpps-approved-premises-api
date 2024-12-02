@@ -100,7 +100,7 @@ class ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
       val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
       val pageRequest = mockk<PageRequest>()
-      val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
+      val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.ASC, page = 3)
 
       mockkStatic(PageRequest::class)
 
@@ -145,7 +145,7 @@ class ApplicationServiceTest {
       prisonCode = "BRI",
     )
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
-    val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
+    val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.ASC, page = 3)
     val user = NomisUserEntityFactory().produce()
     val prisonCode = "BRI"
 
@@ -218,7 +218,7 @@ class ApplicationServiceTest {
       prisonCode = "BRI",
     )
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
-    val pageCriteria = PageCriteria(sortBy = "createdAt", sortDirection = SortDirection.asc, page = 3)
+    val pageCriteria = PageCriteria(sortBy = "createdAt", sortDirection = SortDirection.ASC, page = 3)
     val user = NomisUserEntityFactory().withId(UUID.fromString(applicationSummary.userId)).produce()
 
     fun testNullPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {

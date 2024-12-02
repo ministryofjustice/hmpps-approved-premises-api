@@ -39,47 +39,47 @@ class AssessmentStateTest : IntegrationTestBase() {
         }
 
         val assessment = application.submitAndGetAssessment(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.unallocated, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.UNALLOCATED, jwt)
 
         // Happy path: unallocated -> in_review -> ready_to_place -> closed
         assessment.allocateToCurrentUser(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.inReview, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.IN_REVIEW, jwt)
 
         assessment.markReadyToPlace(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.readyToPlace, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.READY_TO_PLACE, jwt)
 
         assessment.markClosed(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.closed, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.CLOSED, jwt)
 
         // Backwards transitions: closed -> ready_to_place -> in_review -> unallocated
         assessment.markReadyToPlace(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.readyToPlace, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.READY_TO_PLACE, jwt)
 
         assessment.allocateToCurrentUser(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.inReview, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.IN_REVIEW, jwt)
 
         assessment.deallocateUser(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.unallocated, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.UNALLOCATED, jwt)
 
         // Unhappy path: unallocated -> in_review -> ready_to_place -> rejected
         assessment.allocateToCurrentUser(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.inReview, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.IN_REVIEW, jwt)
 
         assessment.markReadyToPlace(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.readyToPlace, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.READY_TO_PLACE, jwt)
 
         assessment.reject(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.rejected, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.REJECTED, jwt)
 
         // Backwards transitions: rejected -> ready_to_place -> in_review -> unallocated
         assessment.markReadyToPlace(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.readyToPlace, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.READY_TO_PLACE, jwt)
 
         assessment.allocateToCurrentUser(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.inReview, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.IN_REVIEW, jwt)
 
         assessment.deallocateUser(jwt)
-        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.unallocated, jwt)
+        assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.UNALLOCATED, jwt)
       }
     }
   }

@@ -46,8 +46,8 @@ class Cas1PremisesController(
       .body(
         cas1PremisesService.getPremises(
           gender = when (gender) {
-            Cas1ApprovedPremisesGender.man -> ApprovedPremisesGender.MAN
-            Cas1ApprovedPremisesGender.woman -> ApprovedPremisesGender.WOMAN
+            Cas1ApprovedPremisesGender.MAN -> ApprovedPremisesGender.MAN
+            Cas1ApprovedPremisesGender.WOMAN -> ApprovedPremisesGender.WOMAN
             null -> null
           },
           apAreaId,

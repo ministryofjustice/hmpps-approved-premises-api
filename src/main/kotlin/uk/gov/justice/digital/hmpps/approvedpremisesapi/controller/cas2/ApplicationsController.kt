@@ -49,7 +49,7 @@ class ApplicationsController(
 
     prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
 
-    val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
+    val pageCriteria = PageCriteria("createdAt", SortDirection.DESC, page)
 
     val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
 

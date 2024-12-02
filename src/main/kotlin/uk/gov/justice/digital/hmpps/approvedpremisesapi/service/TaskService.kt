@@ -109,19 +109,19 @@ class TaskService(
   ): Page<Task> {
     val pageable = pageCriteria.toPageable(
       when (pageCriteria.sortBy) {
-        TaskSortField.createdAt -> "created_at"
-        TaskSortField.dueAt -> "due_at"
-        TaskSortField.allocatedTo -> "allocated_to"
-        TaskSortField.person -> "person"
-        TaskSortField.completedAt -> "completed_at"
-        TaskSortField.taskType -> "type"
-        TaskSortField.decision -> "decision"
+        TaskSortField.CREATED_AT -> "created_at"
+        TaskSortField.DUE_AT -> "due_at"
+        TaskSortField.ALLOCATED_TO -> "allocated_to"
+        TaskSortField.PERSON -> "person"
+        TaskSortField.COMPLETED_AT -> "completed_at"
+        TaskSortField.TASK_TYPE -> "type"
+        TaskSortField.DECISION -> "decision"
       },
     )
 
     val allocatedFilter = filterCriteria.allocatedFilter
 
-    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.allocated }
+    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.ALLOCATED }
 
     val repoFunction = if (taskTypes.size == 1) {
       when (taskTypes[0]) {
@@ -167,13 +167,13 @@ class TaskService(
       }
 
     val result = when (taskType) {
-      TaskType.assessment -> {
+      TaskType.ASSESSMENT -> {
         assessmentService.reallocateAssessment(assigneeUser, taskId)
       }
-      TaskType.placementRequest -> {
+      TaskType.PLACEMENT_REQUEST -> {
         placementRequestService.reallocatePlacementRequest(assigneeUser, taskId)
       }
-      TaskType.placementApplication -> {
+      TaskType.PLACEMENT_APPLICATION -> {
         placementApplicationService.reallocateApplication(assigneeUser, taskId)
       }
       else -> {
@@ -209,7 +209,7 @@ class TaskService(
     }
 
     val result = when (taskType) {
-      TaskType.assessment -> assessmentService.deallocateAssessment(id)
+      TaskType.ASSESSMENT -> assessmentService.deallocateAssessment(id)
       else -> throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
     }
 

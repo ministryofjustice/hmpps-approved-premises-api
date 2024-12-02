@@ -52,7 +52,7 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
         .build(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesLinkBookingToPlacementRequest, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_LINK_BOOKING_TO_PLACEMENT_REQUEST, "valid-csv.csv")
 
     val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
     assertThat(updatedPlacementRequest.booking!!.id).isEqualTo(booking.id)

@@ -20,7 +20,7 @@ class ApplicationTimelineNoteTransformer(
   )
 
   fun transformToTimelineEvents(jpa: ApplicationTimelineNoteEntity) = TimelineEvent(
-    type = TimelineEventType.applicationTimelineNote,
+    type = TimelineEventType.APPLICATION_TIMELINE_NOTE,
     id = jpa.id.toString(),
     occurredAt = jpa.createdAt.toInstant(),
     content = jpa.body,

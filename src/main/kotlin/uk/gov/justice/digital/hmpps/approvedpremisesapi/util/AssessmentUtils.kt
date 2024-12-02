@@ -10,8 +10,8 @@ fun List<AssessmentSummary>.sortByName(sortDirection: SortDirection): List<Asses
     val ascendingCompare = compareValues((a.person as? FullPerson)?.name, (b.person as? FullPerson)?.name)
 
     when (sortDirection) {
-      SortDirection.asc, null -> ascendingCompare
-      SortDirection.desc -> -ascendingCompare
+      SortDirection.ASC, null -> ascendingCompare
+      SortDirection.DESC -> -ascendingCompare
     }
   }
 

@@ -396,11 +396,11 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
-    return createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
+    return createAndSubmitApplication(ApType.NORMAL, crn, withArrivalDate, shortNotice)
   }
 
   private fun createApplicationWithCompletedAssessment(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
-    val application = createAndSubmitApplication(ApType.normal, crn, withArrivalDate)
+    val application = createAndSubmitApplication(ApType.NORMAL, crn, withArrivalDate)
     acceptAssessmentForApplication(application)
     return application
   }
@@ -506,14 +506,14 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .bodyValue(
         SubmitApprovedPremisesApplication(
           translatedDocument = {},
-          isPipeApplication = apType == ApType.pipe,
+          isPipeApplication = apType == ApType.PIPE,
           isWomensApplication = false,
           isEmergencyApplication = false,
-          isEsapApplication = apType == ApType.esap,
+          isEsapApplication = apType == ApType.ESAP,
           targetLocation = "SW1A 1AA",
-          releaseType = ReleaseTypeOption.licence,
+          releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
-          sentenceType = SentenceTypeOption.nonStatutory,
+          sentenceType = SentenceTypeOption.NON_STATUTORY,
           arrivalDate = arrivalDate,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
@@ -548,8 +548,8 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     assessment.allocatedToUser = assessorEntity
     realAssessmentRepository.save(assessment)
 
-    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+    val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
+    val desirableCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
     val placementDates = if (application.arrivalDate != null) {
       PlacementDates(
@@ -561,8 +561,8 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
-      type = ApType.normal,
+      gender = Gender.MALE,
+      type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,
@@ -710,7 +710,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .bodyValue(
         SubmitPlacementApplication(
           translatedDocument = mapOf("thingId" to 123),
-          placementType = PlacementType.additionalPlacement,
+          placementType = PlacementType.ADDITIONAL_PLACEMENT,
           placementDates = placementDates,
         ),
       )
@@ -736,7 +736,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .header("Authorization", "Bearer $matcherJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(
-          decision = PlacementApplicationDecision.accepted,
+          decision = PlacementApplicationDecision.ACCEPTED,
           summaryOfChanges = "ChangeSummary",
           decisionSummary = "DecisionSummary",
         ),
@@ -756,7 +756,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
         NewAppeal(
           appealDate = LocalDate.now(),
           appealDetail = "Some details about the appeal",
-          decision = AppealDecision.accepted,
+          decision = AppealDecision.ACCEPTED,
           decisionDetail = "Some details about why the appeal was accepted",
         ),
       )
@@ -777,7 +777,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
         NewAppeal(
           appealDate = LocalDate.now(),
           appealDetail = "Some details about the appeal",
-          decision = AppealDecision.rejected,
+          decision = AppealDecision.REJECTED,
           decisionDetail = "Some details about why the appeal was rejected",
         ),
       )

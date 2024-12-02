@@ -88,7 +88,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
@@ -114,7 +114,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             probationDeliveryUnitId = probationDeliveryUnit.id,
             turnaroundWorkingDayCount = 5,
           ),
@@ -156,7 +156,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             pdu = probationDeliveryUnit.name,
           ),
         )
@@ -196,7 +196,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -224,7 +224,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
@@ -272,7 +272,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             probationDeliveryUnitId = probationDeliveryUnit.id,
             turnaroundWorkingDayCount = turnaroundWorkingDayCount,
           ),
@@ -309,7 +309,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -336,7 +336,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
             probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
@@ -364,7 +364,7 @@ class PremisesTest {
             probationRegionId = user.probationRegion.id,
             notes = "some notes",
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -392,7 +392,7 @@ class PremisesTest {
             probationRegionId = user.probationRegion.id,
             notes = "some notes",
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -419,7 +419,7 @@ class PremisesTest {
             probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
             notes = "some notes",
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -448,7 +448,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -474,7 +474,7 @@ class PremisesTest {
             localAuthorityAreaId = null,
             probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -503,7 +503,7 @@ class PremisesTest {
             // not in db
             probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"),
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
+            status = PropertyStatus.ACTIVE,
           ),
         )
         .exchange()
@@ -528,7 +528,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             pdu = null,
             probationDeliveryUnitId = null,
           ),
@@ -559,7 +559,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             pdu = null,
             probationDeliveryUnitId = UUID.randomUUID(),
           ),
@@ -590,7 +590,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.PENDING,
             pdu = "Non-existent PDU",
             probationDeliveryUnitId = null,
           ),
@@ -646,7 +646,7 @@ class PremisesTest {
               // North West
               probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
             ),
           )
           .exchange()
@@ -717,7 +717,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               probationDeliveryUnitId = probationDeliveryUnit.id,
               turnaroundWorkingDayCount = 5,
             ),
@@ -793,7 +793,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
+              status = PropertyStatus.ACTIVE,
               probationDeliveryUnitId = probationDeliveryUnit.id,
               turnaroundWorkingDayCount = 5,
             ),
@@ -860,7 +860,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               pdu = probationDeliveryUnit.name,
               turnaroundWorkingDayCount = 5,
             ),
@@ -923,7 +923,7 @@ class PremisesTest {
               // North West
               probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               probationDeliveryUnitId = probationDeliveryUnit.id,
             ),
           )
@@ -957,7 +957,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
               probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
+              status = PropertyStatus.ACTIVE,
             ),
           )
           .exchange()
@@ -990,7 +990,7 @@ class PremisesTest {
               localAuthorityAreaId = null,
               probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
+              status = PropertyStatus.ACTIVE,
             ),
           )
           .exchange()
@@ -1026,7 +1026,7 @@ class PremisesTest {
               // not in db
               probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
+              status = PropertyStatus.ACTIVE,
             ),
           )
           .exchange()
@@ -1063,7 +1063,7 @@ class PremisesTest {
               // North West
               probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               pdu = null,
               probationDeliveryUnitId = null,
             ),
@@ -1103,7 +1103,7 @@ class PremisesTest {
               // North West
               probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               pdu = "Non-existent PDU",
               probationDeliveryUnitId = null,
             ),
@@ -1154,7 +1154,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               probationDeliveryUnitId = probationDeliveryUnit.id,
               turnaroundWorkingDayCount = turnaroundWorkingDayCount,
             ),
@@ -1195,7 +1195,7 @@ class PremisesTest {
               // North West
               probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               pdu = null,
               probationDeliveryUnitId = UUID.randomUUID(),
             ),
@@ -1234,7 +1234,7 @@ class PremisesTest {
               // North West
               probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               name = "new-premises-name",
             ),
           )
@@ -1291,7 +1291,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               probationDeliveryUnitId = probationDeliveryUnit.id,
               turnaroundWorkingDayCount = 5,
               name = null,
@@ -1353,7 +1353,7 @@ class PremisesTest {
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
+              status = PropertyStatus.ARCHIVED,
               probationDeliveryUnitId = probationDeliveryUnit.id,
               turnaroundWorkingDayCount = 5,
               name = "new-premises-name",
@@ -2075,25 +2075,25 @@ class PremisesTest {
           .jsonPath("$.bookings[0].departureDate").isEqualTo(bookings[0].departureDate.toString())
           .jsonPath("$.bookings[0].person.crn").isEqualTo(bookings[0].crn)
           .jsonPath("$.bookings[0].bed").isEmpty()
-          .jsonPath("$.bookings[0].status").isEqualTo(BookingStatus.awaitingMinusArrival.value)
+          .jsonPath("$.bookings[0].status").isEqualTo(BookingStatus.AWAITING_MINUS_ARRIVAL.value)
           .jsonPath("$.bookings[1].id").isEqualTo(bookings[1].id.toString())
           .jsonPath("$.bookings[1].arrivalDate").isEqualTo(bookings[1].arrivalDate.toString())
           .jsonPath("$.bookings[1].departureDate").isEqualTo(bookings[1].departureDate.toString())
           .jsonPath("$.bookings[1].person.crn").isEqualTo(bookings[1].crn)
           .jsonPath("$.bookings[1].bed.id").isEqualTo(bookings[1].bed!!.id.toString())
-          .jsonPath("$.bookings[1].status").isEqualTo(BookingStatus.arrived.value)
+          .jsonPath("$.bookings[1].status").isEqualTo(BookingStatus.ARRIVED.value)
           .jsonPath("$.bookings[2].id").isEqualTo(bookings[2].id.toString())
           .jsonPath("$.bookings[2].arrivalDate").isEqualTo(bookings[2].arrivalDate.toString())
           .jsonPath("$.bookings[2].departureDate").isEqualTo(bookings[2].departureDate.toString())
           .jsonPath("$.bookings[2].person.crn").isEqualTo(bookings[2].crn)
           .jsonPath("$.bookings[2].bed.id").isEqualTo(bookings[2].bed!!.id.toString())
-          .jsonPath("$.bookings[2].status").isEqualTo(BookingStatus.notMinusArrived.value)
+          .jsonPath("$.bookings[2].status").isEqualTo(BookingStatus.NOT_MINUS_ARRIVED.value)
           .jsonPath("$.bookings[3].id").isEqualTo(bookings[3].id.toString())
           .jsonPath("$.bookings[3].arrivalDate").isEqualTo(bookings[3].arrivalDate.toString())
           .jsonPath("$.bookings[3].departureDate").isEqualTo(bookings[3].departureDate.toString())
           .jsonPath("$.bookings[3].person.crn").isEqualTo(bookings[3].crn)
           .jsonPath("$.bookings[3].bed.id").isEqualTo(bookings[3].bed!!.id.toString())
-          .jsonPath("$.bookings[3].status").isEqualTo(BookingStatus.cancelled.value)
+          .jsonPath("$.bookings[3].status").isEqualTo(BookingStatus.CANCELLED.value)
           .jsonPath("$.dateCapacities").isArray
           .jsonPath("$.dateCapacities[0]").isNotEmpty
       }

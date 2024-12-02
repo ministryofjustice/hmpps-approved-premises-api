@@ -57,7 +57,7 @@ class PlacementRequestTransformer(
       notes = jpa.notes,
       isParole = jpa.isParole,
       booking = placementRequestBookingSummaryTransformer.getBookingSummary(jpa),
-      requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
+      requestType = if (jpa.isParole) PlacementRequestRequestType.PAROLE else PlacementRequestRequestType.STANDARD_RELEASE,
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
     )
@@ -65,19 +65,19 @@ class PlacementRequestTransformer(
 
   fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
     if (placementRequest.hasActiveBooking()) {
-      return PlacementRequestStatus.matched
+      return PlacementRequestStatus.MATCHED
     }
 
     if (placementRequest.bookingNotMades.any()) {
-      return PlacementRequestStatus.unableToMatch
+      return PlacementRequestStatus.UNABLE_TO_MATCH
     }
 
-    return PlacementRequestStatus.notMatched
+    return PlacementRequestStatus.NOT_MATCHED
   }
 
   fun transformToWithdrawable(jpa: PlacementRequestEntity) = Withdrawable(
     jpa.id,
-    WithdrawableType.placementRequest,
+    WithdrawableType.PLACEMENT_REQUEST,
     listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture())),
   )
 
@@ -90,30 +90,30 @@ class PlacementRequestTransformer(
   }
 
   fun getReleaseType(releaseType: String?): ReleaseTypeOption = when (releaseType) {
-    "licence" -> ReleaseTypeOption.licence
-    "rotl" -> ReleaseTypeOption.rotl
-    "hdc" -> ReleaseTypeOption.hdc
-    "pss" -> ReleaseTypeOption.pss
-    "inCommunity" -> ReleaseTypeOption.inCommunity
-    "notApplicable" -> ReleaseTypeOption.notApplicable
-    "extendedDeterminateLicence" -> ReleaseTypeOption.extendedDeterminateLicence
-    "paroleDirectedLicence" -> ReleaseTypeOption.paroleDirectedLicence
-    "reReleasedPostRecall" -> ReleaseTypeOption.reReleasedPostRecall
+    "licence" -> ReleaseTypeOption.LICENCE
+    "rotl" -> ReleaseTypeOption.ROTL
+    "hdc" -> ReleaseTypeOption.HDC
+    "pss" -> ReleaseTypeOption.PSS
+    "inCommunity" -> ReleaseTypeOption.IN_COMMUNITY
+    "notApplicable" -> ReleaseTypeOption.NOT_APPLICABLE
+    "extendedDeterminateLicence" -> ReleaseTypeOption.EXTENDED_DETERMINATE_LICENCE
+    "paroleDirectedLicence" -> ReleaseTypeOption.PAROLE_DIRECTED_LICENCE
+    "reReleasedPostRecall" -> ReleaseTypeOption.RE_RELEASED_POST_RECALL
     else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 
   fun getWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {
-    PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.duplicatePlacementRequest
-    PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED -> WithdrawPlacementRequestReason.alternativeProvisionIdentified
-    PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP -> WithdrawPlacementRequestReason.withdrawnByPP
-    PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES -> WithdrawPlacementRequestReason.changeInCircumstances
-    PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION -> WithdrawPlacementRequestReason.changeInReleaseDecision
-    PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED -> WithdrawPlacementRequestReason.noCapacityDueToLostBed
-    PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation
-    PlacementRequestWithdrawalReason.NO_CAPACITY -> WithdrawPlacementRequestReason.noCapacity
-    PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.errorInPlacementRequest
-    PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.relatedApplicationWithdrawn
-    PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.relatedPlacementRequestWithdrawn
+    PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST
+    PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED -> WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED
+    PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP -> WithdrawPlacementRequestReason.WITHDRAWN_BY_PP
+    PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES -> WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES
+    PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION -> WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION
+    PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED -> WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED
+    PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
+    PlacementRequestWithdrawalReason.NO_CAPACITY -> WithdrawPlacementRequestReason.NO_CAPACITY
+    PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST
+    PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.RELATED_APPLICATION_WITHDRAWN
+    PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.RELATED_PLACEMENT_REQUEST_WITHDRAWN
     null -> null
   }
 }

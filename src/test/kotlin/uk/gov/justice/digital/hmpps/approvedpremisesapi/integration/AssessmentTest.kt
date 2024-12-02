@@ -2113,25 +2113,25 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(notes).hasSize(8)
             assertThat(notes).allMatch { it.createdByUserName == userEntity.name }
             assertThat(notes).anyMatch { it is ReferralHistoryUserNote && it.message == "Some user note" }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.submitted }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.unallocated }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.inReview }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.readyToPlace }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.SUBMITTED }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.UNALLOCATED }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.IN_REVIEW }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.READY_TO_PLACE }
             assertThat(notes).anyMatch {
               it is ReferralHistorySystemNote &&
-                it.category == ReferralHistorySystemNote.Category.rejected &&
+                it.category == ReferralHistorySystemNote.Category.REJECTED &&
                 it.id == rejectedSystemNoteId1 &&
                 it.messageDetails == null
             }
             assertThat(notes).anyMatch {
               it is ReferralHistorySystemNote &&
-                it.category == ReferralHistorySystemNote.Category.rejected &&
+                it.category == ReferralHistorySystemNote.Category.REJECTED &&
                 it.id == rejectedSystemNoteId2 &&
                 it.messageDetails?.rejectionReason == referralRejectionReason.name &&
                 it.messageDetails?.rejectionReasonDetails == referralRejectionReasonDetail &&
                 it.messageDetails?.isWithdrawn == true
             }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.COMPLETED }
           }
       }
     }
@@ -2183,12 +2183,12 @@ class AssessmentTest : IntegrationTestBase() {
       )
 
       val placementRequirements = PlacementRequirements(
-        gender = Gender.male,
-        type = ApType.normal,
+        gender = Gender.MALE,
+        type = ApType.NORMAL,
         location = "B74",
         radius = 50,
-        essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
-        desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
+        essentialCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.HAS_EN_SUITE),
+        desirableCriteria = listOf(PlacementCriteria.IS_CATERED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS),
       )
 
       webTestClient.post()
@@ -2246,9 +2246,9 @@ class AssessmentTest : IntegrationTestBase() {
 
               assessment.schemaUpToDate = true
 
-              val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
+              val essentialCriteria = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_RECOVERY_FOCUSSED)
               val desirableCriteria =
-                listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
+                listOf(PlacementCriteria.ACCEPTS_NON_SEXUAL_CHILD_OFFENDERS, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
               val placementDates = PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -2256,8 +2256,8 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
-                type = ApType.normal,
+                gender = Gender.MALE,
+                type = ApType.NORMAL,
                 location = postcodeDistrict.outcode,
                 radius = 50,
                 essentialCriteria = essentialCriteria,
@@ -2372,13 +2372,13 @@ class AssessmentTest : IntegrationTestBase() {
 
               val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
-              val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
+              val essentialCriteria = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_RECOVERY_FOCUSSED)
               val desirableCriteria =
-                listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
+                listOf(PlacementCriteria.ACCEPTS_NON_SEXUAL_CHILD_OFFENDERS, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
-                type = ApType.normal,
+                gender = Gender.MALE,
+                type = ApType.NORMAL,
                 location = postcodeDistrict.outcode,
                 radius = 50,
                 essentialCriteria = essentialCriteria,
@@ -2483,9 +2483,9 @@ class AssessmentTest : IntegrationTestBase() {
 
               assessment.schemaUpToDate = true
 
-              val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
+              val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
               val desirableCriteria =
-                listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+                listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
               val placementDates = PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -2493,8 +2493,8 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
-                type = ApType.normal,
+                gender = Gender.MALE,
+                type = ApType.NORMAL,
                 location = "SW1",
                 radius = 50,
                 essentialCriteria = essentialCriteria,
@@ -2578,12 +2578,12 @@ class AssessmentTest : IntegrationTestBase() {
           val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
           val essentialCriteria = listOf(
-            PlacementCriteria.hasEnSuite,
-            PlacementCriteria.isRecoveryFocussed,
+            PlacementCriteria.HAS_EN_SUITE,
+            PlacementCriteria.IS_RECOVERY_FOCUSSED,
           )
           val desirableCriteria = listOf(
-            PlacementCriteria.acceptsNonSexualChildOffenders,
-            PlacementCriteria.acceptsSexOffenders,
+            PlacementCriteria.ACCEPTS_NON_SEXUAL_CHILD_OFFENDERS,
+            PlacementCriteria.ACCEPTS_SEX_OFFENDERS,
           )
 
           val placementDates = PlacementDates(
@@ -2592,8 +2592,8 @@ class AssessmentTest : IntegrationTestBase() {
           )
 
           val placementRequirements = PlacementRequirements(
-            gender = Gender.male,
-            type = ApType.normal,
+            gender = Gender.MALE,
+            type = ApType.NORMAL,
             location = postcodeDistrict.outcode,
             radius = 50,
             essentialCriteria = essentialCriteria,

@@ -13,6 +13,6 @@ class Cas1SpaceBookingSummaryTransformer {
     arrivalDate = jpa.canonicalArrivalDate,
     departureDate = jpa.canonicalDepartureDate,
     createdAt = jpa.createdAt.toInstant(),
-    type = BookingSummary.Type.space,
+    type = BookingSummary.Type.SPACE,
   )
 }

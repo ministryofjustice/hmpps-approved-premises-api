@@ -5,13 +5,13 @@ import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ReportsCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedUsage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bookingGap
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.futureBookings
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.futureBookingsCsv
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.referral
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.BED_OCCUPANCY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.BED_USAGE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.BOOKING
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.BOOKING_GAP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.FUTURE_BOOKINGS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.FUTURE_BOOKINGS_CSV
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.REFERRAL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
@@ -52,7 +52,7 @@ class ReportsController(
     validateRequestParameters(probationRegionId, startDate, endDate)
 
     return when (reportName) {
-      referral ->
+      REFERRAL ->
         generateXlsxStreamingResponse { outputStream ->
           cas3ReportService.createCas3ApplicationReferralsReport(
             TransitionalAccommodationReferralReportProperties(
@@ -64,7 +64,7 @@ class ReportsController(
           )
         }
 
-      booking ->
+      BOOKING ->
         generateXlsxStreamingResponse { outputStream ->
           cas3ReportService.createBookingsReport(
             BookingsReportProperties(
@@ -77,7 +77,7 @@ class ReportsController(
           )
         }
 
-      bedUsage ->
+      BED_USAGE ->
         generateXlsxStreamingResponse { outputStream ->
           cas3ReportService.createBedUsageReport(
             BedUsageReportProperties(
@@ -90,7 +90,7 @@ class ReportsController(
           )
         }
 
-      bedOccupancy -> generateXlsxStreamingResponse { outputStream ->
+      BED_OCCUPANCY -> generateXlsxStreamingResponse { outputStream ->
         cas3ReportService.createBedUtilisationReport(
           BedUtilisationReportProperties(
             ServiceName.temporaryAccommodation,
@@ -102,7 +102,7 @@ class ReportsController(
         )
       }
 
-      futureBookings -> generateXlsxStreamingResponse { outputStream ->
+      FUTURE_BOOKINGS -> generateXlsxStreamingResponse { outputStream ->
         cas3ReportService.createFutureBookingReport(
           FutureBookingsReportProperties(
             startDate = startDate,
@@ -113,7 +113,7 @@ class ReportsController(
         )
       }
 
-      futureBookingsCsv -> generateStreamingResponse(
+      FUTURE_BOOKINGS_CSV -> generateStreamingResponse(
         contentType = ContentType.CSV,
       ) { outputStream ->
         cas3ReportService.createFutureBookingCsvReport(
@@ -126,7 +126,7 @@ class ReportsController(
         )
       }
 
-      bookingGap -> generateStreamingResponse(
+      BOOKING_GAP -> generateStreamingResponse(
         contentType = ContentType.CSV,
       ) { outputStream ->
         cas3ReportService.createBookingGapReport(

@@ -130,8 +130,8 @@ class ProfileTest : IntegrationTestBase() {
                   email = email,
                   name = expectedName,
                   telephoneNumber = telephoneNumber,
-                  roles = listOf(ApprovedPremisesUserRole.assessor),
-                  qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
+                  roles = listOf(ApprovedPremisesUserRole.ASSESSOR),
+                  qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.PIPE),
                   service = "CAS1",
                   isActive = true,
                   apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
@@ -145,10 +145,10 @@ class ProfileTest : IntegrationTestBase() {
                   ),
                   cruManagementAreaOverride = null,
                   permissions = listOf(
-                    ApprovedPremisesUserPermission.assessApplication,
-                    ApprovedPremisesUserPermission.assessAppealedApplication,
-                    ApprovedPremisesUserPermission.assessPlacementApplication,
-                    ApprovedPremisesUserPermission.viewAssignedAssessments,
+                    ApprovedPremisesUserPermission.ASSESS_APPLICATION,
+                    ApprovedPremisesUserPermission.ASSESS_APPEALED_APPLICATION,
+                    ApprovedPremisesUserPermission.ASSESS_PLACEMENT_APPLICATION,
+                    ApprovedPremisesUserPermission.VIEW_ASSIGNED_ASSESSMENTS,
                   ),
                   version = 1950528466,
                 ),
@@ -235,7 +235,7 @@ class ProfileTest : IntegrationTestBase() {
                 email = email,
                 name = expectedName,
                 telephoneNumber = telephoneNumber,
-                roles = listOf(TemporaryAccommodationUserRole.assessor),
+                roles = listOf(TemporaryAccommodationUserRole.ASSESSOR),
                 service = "CAS3",
                 isActive = true,
               ),
@@ -293,7 +293,7 @@ class ProfileTest : IntegrationTestBase() {
         .responseBody!!
 
       assertThat(response.deliusUsername).isEqualTo(deliusUsername)
-      assertThat(response.loadError).isEqualTo(ProfileResponse.LoadError.staffRecordNotFound)
+      assertThat(response.loadError).isEqualTo(ProfileResponse.LoadError.STAFF_RECORD_NOT_FOUND)
     }
 
     @Test
@@ -479,7 +479,7 @@ class ProfileTest : IntegrationTestBase() {
                 email = email,
                 name = expectedName,
                 telephoneNumber = telephoneNumber,
-                roles = listOf(TemporaryAccommodationUserRole.reporter),
+                roles = listOf(TemporaryAccommodationUserRole.REPORTER),
                 service = "CAS3",
                 isActive = true,
               ),
@@ -548,7 +548,7 @@ class ProfileTest : IntegrationTestBase() {
           objectMapper.writeValueAsString(
             ProfileResponse(
               deliusUsername = "nonStaffUser",
-              loadError = ProfileResponse.LoadError.staffRecordNotFound,
+              loadError = ProfileResponse.LoadError.STAFF_RECORD_NOT_FOUND,
               null,
             ),
           ),

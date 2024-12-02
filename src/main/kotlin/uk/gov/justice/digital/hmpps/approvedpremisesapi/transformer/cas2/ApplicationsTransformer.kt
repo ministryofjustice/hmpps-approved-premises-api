@@ -63,16 +63,16 @@ class ApplicationsTransformer(
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {
-      return ApplicationStatus.submitted
+      return ApplicationStatus.SUBMITTED
     }
 
-    return ApplicationStatus.inProgress
+    return ApplicationStatus.IN_PROGRESS
   }
 
   private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus {
     return when {
-      summary.submittedAt != null -> ApplicationStatus.submitted
-      else -> ApplicationStatus.inProgress
+      summary.submittedAt != null -> ApplicationStatus.SUBMITTED
+      else -> ApplicationStatus.IN_PROGRESS
     }
   }
 }

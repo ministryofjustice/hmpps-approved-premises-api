@@ -14,7 +14,7 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var placementApplicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var assessedBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
-  private var decision: Yielded<RequestForPlacementAssessed.Decision> = { RequestForPlacementAssessed.Decision.accepted }
+  private var decision: Yielded<RequestForPlacementAssessed.Decision> = { RequestForPlacementAssessed.Decision.ACCEPTED }
   private var decisionSummary: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
   private var duration: Yielded<Int> = { randomInt(0, 1000) }

@@ -597,7 +597,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .bodyValue(
           SubmitPlacementApplication(
             translatedDocument = mapOf("thingId" to 123),
-            placementType = PlacementType.additionalPlacement,
+            placementType = PlacementType.ADDITIONAL_PLACEMENT,
             placementDates = listOf(
               PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -627,7 +627,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -663,7 +663,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -699,7 +699,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -735,7 +735,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -780,7 +780,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .bodyValue(
                   SubmitPlacementApplication(
                     translatedDocument = mapOf("thingId" to 123),
-                    placementType = PlacementType.additionalPlacement,
+                    placementType = PlacementType.ADDITIONAL_PLACEMENT,
                     placementDates = placementDates,
                   ),
                 )
@@ -883,7 +883,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .bodyValue(
                   SubmitPlacementApplication(
                     translatedDocument = mapOf("thingId" to 123),
-                    placementType = PlacementType.additionalPlacement,
+                    placementType = PlacementType.ADDITIONAL_PLACEMENT,
                     placementDates = placementDates,
                   ),
                 )
@@ -947,7 +947,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .uri("/placement-applications/${UUID.randomUUID()}/decision")
         .bodyValue(
           PlacementApplicationDecisionEnvelope(
-            decision = PlacementApplicationDecision.accepted,
+            decision = PlacementApplicationDecision.ACCEPTED,
             summaryOfChanges = "ChangeSummary",
             decisionSummary = "DecisionSummary",
           ),
@@ -965,7 +965,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             PlacementApplicationDecisionEnvelope(
-              decision = PlacementApplicationDecision.accepted,
+              decision = PlacementApplicationDecision.ACCEPTED,
               summaryOfChanges = "ChangeSummary",
               decisionSummary = "DecisionSummary",
             ),
@@ -990,7 +990,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 PlacementApplicationDecisionEnvelope(
-                  decision = PlacementApplicationDecision.accepted,
+                  decision = PlacementApplicationDecision.ACCEPTED,
                   summaryOfChanges = "ChangeSummary",
                   decisionSummary = "DecisionSummary",
                 ),
@@ -1018,7 +1018,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   PlacementApplicationDecisionEnvelope(
-                    decision = PlacementApplicationDecision.accepted,
+                    decision = PlacementApplicationDecision.ACCEPTED,
                     summaryOfChanges = "ChangeSummary",
                     decisionSummary = "DecisionSummary",
                   ),
@@ -1042,7 +1042,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 PlacementApplicationDecisionEnvelope(
-                  decision = PlacementApplicationDecision.accepted,
+                  decision = PlacementApplicationDecision.ACCEPTED,
                   summaryOfChanges = "ChangeSummary",
                   decisionSummary = "DecisionSummary",
                 ),
@@ -1071,7 +1071,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   PlacementApplicationDecisionEnvelope(
-                    decision = PlacementApplicationDecision.accepted,
+                    decision = PlacementApplicationDecision.ACCEPTED,
                     summaryOfChanges = "ChangeSummary",
                     decisionSummary = "DecisionSummary",
                   ),
@@ -1107,7 +1107,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                         .header("Authorization", "Bearer $jwt")
                         .bodyValue(
                           PlacementApplicationDecisionEnvelope(
-                            decision = PlacementApplicationDecision.accepted,
+                            decision = PlacementApplicationDecision.ACCEPTED,
                             summaryOfChanges = "ChangeSummary",
                             decisionSummary = "DecisionSummary",
                           ),
@@ -1166,7 +1166,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                         .header("Authorization", "Bearer $jwt")
                         .bodyValue(
                           PlacementApplicationDecisionEnvelope(
-                            decision = PlacementApplicationDecision.rejected,
+                            decision = PlacementApplicationDecision.REJECTED,
                             summaryOfChanges = "ChangeSummary",
                             decisionSummary = "DecisionSummary",
                           ),
@@ -1277,7 +1277,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+            WithdrawPlacementApplication(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
           )
           .exchange()
           .expectStatus()
@@ -1302,7 +1302,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+              WithdrawPlacementApplication(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
             )
             .exchange()
             .expectStatus()
@@ -1331,7 +1331,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+              WithdrawPlacementApplication(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
             )
             .exchange()
             .expectStatus()
@@ -1386,7 +1386,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
               )
               .exchange()
               .expectStatus()
@@ -1453,7 +1453,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+                  WithdrawPlacementApplication(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
                 )
                 .exchange()
                 .expectStatus()

@@ -1015,7 +1015,7 @@ class WithdrawalTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewWithdrawal(
-                reason = WithdrawalReason.duplicateApplication,
+                reason = WithdrawalReason.DUPLICATE_APPLICATION,
               ),
             )
             .exchange()
@@ -1058,7 +1058,7 @@ class WithdrawalTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewWithdrawal(
-                reason = WithdrawalReason.duplicateApplication,
+                reason = WithdrawalReason.DUPLICATE_APPLICATION,
               ),
             )
             .exchange()
@@ -1126,7 +1126,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             withdrawPlacementApplication(
               placementApplication1,
-              WithdrawPlacementRequestReason.duplicatePlacementRequest,
+              WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
               jwt,
             )
 
@@ -1233,7 +1233,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementApplication(
             placementApplication1,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1304,7 +1304,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementRequest(
             placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1362,7 +1362,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementRequest(
             placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1423,7 +1423,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementRequest(
             placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1514,7 +1514,7 @@ class WithdrawalTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewWithdrawal(
-          reason = WithdrawalReason.duplicateApplication,
+          reason = WithdrawalReason.DUPLICATE_APPLICATION,
         ),
       )
       .exchange()
@@ -1869,34 +1869,34 @@ class WithdrawalTest : IntegrationTestBase() {
 
   fun toWithdrawable(application: ApplicationEntity) = Withdrawable(
     application.id,
-    WithdrawableType.application,
+    WithdrawableType.APPLICATION,
     emptyList(),
   )
 
   fun toWithdrawable(placementRequest: PlacementRequestEntity) = Withdrawable(
     placementRequest.id,
-    WithdrawableType.placementRequest,
+    WithdrawableType.PLACEMENT_REQUEST,
     listOf(toDatePeriod(placementRequest.expectedArrival, placementRequest.duration)),
   )
 
   fun toWithdrawable(placementApplication: PlacementApplicationEntity) =
     Withdrawable(
       placementApplication.id,
-      WithdrawableType.placementApplication,
+      WithdrawableType.PLACEMENT_APPLICATION,
       placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
     )
 
   fun toWithdrawable(booking: BookingEntity) =
     Withdrawable(
       booking.id,
-      WithdrawableType.booking,
+      WithdrawableType.BOOKING,
       listOf(DatePeriod(booking.arrivalDate, booking.departureDate)),
     )
 
   fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) =
     Withdrawable(
       spaceBooking.id,
-      WithdrawableType.spaceBooking,
+      WithdrawableType.SPACE_BOOKING,
       listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
     )
 }

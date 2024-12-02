@@ -89,7 +89,7 @@ class Cas1AppealDomainEventServiceTest {
           .withApplication(application)
           .withAssessment(assessment)
           .withAppealDate(now)
-          .withDecision(AppealDecision.accepted)
+          .withDecision(AppealDecision.ACCEPTED)
           .withCreatedBy(createdByUser)
           .withAppealDetail("Some information about why the appeal is being made")
           .withDecisionDetail("Some information about the decision made")
@@ -118,7 +118,7 @@ class Cas1AppealDomainEventServiceTest {
           .withApplication(application)
           .withAssessment(assessment)
           .withAppealDate(now)
-          .withDecision(AppealDecision.accepted)
+          .withDecision(AppealDecision.ACCEPTED)
           .withCreatedBy(createdByUser)
           .withAppealDetail("Some information about why the appeal is being made")
           .withDecisionDetail("Some information about the decision made")
@@ -154,6 +154,6 @@ class Cas1AppealDomainEventServiceTest {
       withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
       this.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
       this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
-      this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
+      this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.ACCEPTED &&
       this.eventDetails.decisionDetail == "Some information about the decision made"
 }

@@ -538,7 +538,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
               mapOf(
                 "sentence-type"
                   to mapOf(
-                    "sentenceType" to SentenceTypeOption.nonStatutory.value,
+                    "sentenceType" to SentenceTypeOption.NON_STATUTORY.value,
                   ),
               ),
           ),
@@ -567,21 +567,21 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       )
     }
 
-    val apType = ApType.normal
+    val apType = ApType.NORMAL
     webTestClient.post()
       .uri("/applications/${application.id}/submission")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         SubmitApprovedPremisesApplication(
           translatedDocument = {},
-          isPipeApplication = apType == ApType.pipe,
+          isPipeApplication = apType == ApType.PIPE,
           isWomensApplication = false,
           isEmergencyApplication = false,
-          isEsapApplication = apType == ApType.esap,
+          isEsapApplication = apType == ApType.ESAP,
           targetLocation = "SW1A 1AA",
-          releaseType = ReleaseTypeOption.licence,
+          releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
-          sentenceType = SentenceTypeOption.nonStatutory,
+          sentenceType = SentenceTypeOption.NON_STATUTORY,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
         ),
@@ -610,12 +610,12 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     assessment.allocatedToUser = assessorEntity
     realAssessmentRepository.save(assessment)
 
-    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+    val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
+    val desirableCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
-      type = ApType.normal,
+      gender = Gender.MALE,
+      type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,
@@ -737,7 +737,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .bodyValue(
         SubmitPlacementApplication(
           translatedDocument = mapOf("thingId" to 123),
-          placementType = PlacementType.additionalPlacement,
+          placementType = PlacementType.ADDITIONAL_PLACEMENT,
           placementDates = placementDates,
         ),
       )
@@ -757,7 +757,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $matcherJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(
-          decision = PlacementApplicationDecision.accepted,
+          decision = PlacementApplicationDecision.ACCEPTED,
           summaryOfChanges = "ChangeSummary",
           decisionSummary = "DecisionSummary",
         ),
@@ -819,7 +819,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(
         NewWithdrawal(
-          reason = WithdrawalReason.duplicateApplication,
+          reason = WithdrawalReason.DUPLICATE_APPLICATION,
         ),
       )
       .exchange()
@@ -837,7 +837,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         NewAppeal(
           appealDate = LocalDate.now(),
           appealDetail = "Some details about the appeal",
-          decision = AppealDecision.accepted,
+          decision = AppealDecision.ACCEPTED,
           decisionDetail = "Some details about why the appeal was accepted",
         ),
       )
@@ -861,7 +861,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         NewAppeal(
           appealDate = LocalDate.now(),
           appealDetail = "Some details about the appeal",
-          decision = AppealDecision.rejected,
+          decision = AppealDecision.REJECTED,
           decisionDetail = "Some details about why the appeal was rejected",
         ),
       )

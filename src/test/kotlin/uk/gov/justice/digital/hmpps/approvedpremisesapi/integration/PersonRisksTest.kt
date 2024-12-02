@@ -166,7 +166,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
               PersonRisks(
                 crn = offenderDetails.otherIds.crn,
                 roshRisks = RoshRisksEnvelope(
-                  status = RiskEnvelopeStatus.retrieved,
+                  status = RiskEnvelopeStatus.RETRIEVED,
                   value = RoshRisks(
                     overallRisk = "Very High",
                     riskToChildren = "Low",
@@ -177,18 +177,18 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
                   ),
                 ),
                 tier = RiskTierEnvelope(
-                  status = RiskEnvelopeStatus.retrieved,
+                  status = RiskEnvelopeStatus.RETRIEVED,
                   value = RiskTier(
                     level = "M2",
                     lastUpdated = LocalDate.parse("2022-09-06"),
                   ),
                 ),
                 flags = FlagsEnvelope(
-                  status = RiskEnvelopeStatus.retrieved,
+                  status = RiskEnvelopeStatus.RETRIEVED,
                   value = listOf("RISK FLAG"),
                 ),
                 mappa = MappaEnvelope(
-                  status = RiskEnvelopeStatus.retrieved,
+                  status = RiskEnvelopeStatus.RETRIEVED,
                   value = Mappa(
                     level = "CAT C1/LEVEL L1",
                     lastUpdated = LocalDate.parse("2022-09-06"),

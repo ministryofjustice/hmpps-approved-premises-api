@@ -90,9 +90,9 @@ class BedSummaryTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val expectedResponse = listOf(
-        BedSummary(bedWithoutBooking.id, bedWithoutBooking.name, bedWithoutBooking.room.name, BedStatus.available),
-        BedSummary(bedWithBooking.id, bedWithBooking.name, bedWithBooking.room.name, BedStatus.occupied),
-        BedSummary(bedWithLostBed.id, bedWithLostBed.name, bedWithLostBed.room.name, BedStatus.outOfService),
+        BedSummary(bedWithoutBooking.id, bedWithoutBooking.name, bedWithoutBooking.room.name, BedStatus.AVAILABLE),
+        BedSummary(bedWithBooking.id, bedWithBooking.name, bedWithBooking.room.name, BedStatus.OCCUPIED),
+        BedSummary(bedWithLostBed.id, bedWithLostBed.name, bedWithLostBed.room.name, BedStatus.OUT_OF_SERVICE),
       )
 
       webTestClient.get()

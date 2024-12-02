@@ -255,12 +255,12 @@ class Cas1AutoScript(
         isPipeApplication = null,
         isEmergencyApplication = false,
         isEsapApplication = null,
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
         releaseType = "licence",
         arrivalDate = LocalDate.of(2025, 12, 12),
         data = applicationData(),
         isInapplicable = false,
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
       ),
       userForRequest = createdByUser,
     )
@@ -320,7 +320,7 @@ class Cas1AutoScript(
         dateChanges = mutableListOf(),
         nomsNumber = personInfo.offenderDetailSummary.otherIds.nomsNumber,
         placementRequest = null,
-        status = BookingStatus.confirmed,
+        status = BookingStatus.CONFIRMED,
         adhoc = true,
       ),
     )

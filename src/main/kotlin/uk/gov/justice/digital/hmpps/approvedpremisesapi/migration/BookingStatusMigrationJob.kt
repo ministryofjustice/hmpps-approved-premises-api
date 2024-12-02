@@ -38,11 +38,11 @@ class BookingStatusMigrationJob(
 
   private fun setStatus(booking: BookingEntity) {
     booking.status = when {
-      booking.cancellations.isNotEmpty() -> BookingStatus.cancelled
-      booking.departures.isNotEmpty() -> BookingStatus.departed
-      booking.arrivals.isNotEmpty() -> BookingStatus.arrived
-      booking.confirmation != null -> BookingStatus.confirmed
-      else -> BookingStatus.provisional
+      booking.cancellations.isNotEmpty() -> BookingStatus.CANCELLED
+      booking.departures.isNotEmpty() -> BookingStatus.DEPARTED
+      booking.arrivals.isNotEmpty() -> BookingStatus.ARRIVED
+      booking.confirmation != null -> BookingStatus.CONFIRMED
+      else -> BookingStatus.PROVISIONAL
     }
 
     log.info("Updating booking status ${booking.id} to ${booking.status}")

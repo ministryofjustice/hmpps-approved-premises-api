@@ -142,16 +142,16 @@ class BedSearchService(
 
         val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
           when (it) {
-            BedSearchAttributes.singleOccupancy -> "isSingleOccupancy"
-            BedSearchAttributes.sharedProperty -> "isSharedProperty"
-            BedSearchAttributes.wheelchairAccessible -> ""
+            BedSearchAttributes.SINGLE_OCCUPANCY -> "isSingleOccupancy"
+            BedSearchAttributes.SHARED_PROPERTY -> "isSharedProperty"
+            BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> ""
           }
         }
 
         val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
         val roomCharacteristicsPropertyNames = when {
-          propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("isWheelchairAccessible")
+          propertyBedAttributes?.contains(BedSearchAttributes.WHEELCHAIR_ACCESSIBLE) == true -> listOf("isWheelchairAccessible")
           else -> null
         }
 
@@ -233,8 +233,8 @@ class BedSearchService(
   private fun getPersonType(
     personSummaryInfo: PersonSummaryInfoResult,
   ): PersonType = when (personSummaryInfo) {
-    is PersonSummaryInfoResult.Success.Full -> PersonType.fullPerson
-    is PersonSummaryInfoResult.Success.Restricted -> PersonType.restrictedPerson
-    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.unknownPerson
+    is PersonSummaryInfoResult.Success.Full -> PersonType.FULL_PERSON
+    is PersonSummaryInfoResult.Success.Restricted -> PersonType.RESTRICTED_PERSON
+    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.UNKNOWN_PERSON
   }
 }

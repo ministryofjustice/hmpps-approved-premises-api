@@ -54,22 +54,22 @@ class MigrationJobService(
 
     try {
       val job: MigrationJob = when (migrationJobType) {
-        MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromDeliusJob(
+        MigrationJobType.ALL_USERS_FROM_COMMUNITY_API -> UpdateAllUsersFromDeliusJob(
           getBean(UserRepository::class),
           getBean(UserService::class),
         )
 
-        MigrationJobType.sentenceTypeAndSituation -> UpdateSentenceTypeAndSituationJob(
+        MigrationJobType.SENTENCE_TYPE_AND_SITUATION -> UpdateSentenceTypeAndSituationJob(
           getBean(UpdateSentenceTypeAndSituationRepository::class),
         )
 
-        MigrationJobType.bookingStatus -> BookingStatusMigrationJob(
+        MigrationJobType.BOOKING_STATUS -> BookingStatusMigrationJob(
           getBean(BookingRepository::class),
           getBean(EntityManager::class),
           pageSize,
         )
 
-        MigrationJobType.taskDueDates -> Cas1TaskDueMigrationJob(
+        MigrationJobType.TASK_DUE_DATES -> Cas1TaskDueMigrationJob(
           getBean(AssessmentRepository::class),
           getBean(PlacementApplicationRepository::class),
           getBean(PlacementRequestRepository::class),
@@ -78,31 +78,31 @@ class MigrationJobService(
           pageSize,
         )
 
-        MigrationJobType.usersPduByApi -> UpdateUsersPduJob(
+        MigrationJobType.USERS_PDU_BY_API -> UpdateUsersPduJob(
           getBean(UserRepository::class),
           getBean(UserService::class),
           getBean(MigrationLogger::class),
         )
 
-        MigrationJobType.cas2ApplicationsWithAssessments -> Cas2AssessmentMigrationJob(
+        MigrationJobType.CAS2_APPLICATIONS_WITH_ASSESSMENTS -> Cas2AssessmentMigrationJob(
           getBean(Cas2AssessmentRepository::class),
           getBean(Cas2ApplicationRepository::class),
           transactionTemplate,
         )
 
-        MigrationJobType.cas2StatusUpdatesWithAssessments -> Cas2StatusUpdateMigrationJob(
+        MigrationJobType.CAS2_STATUS_UPDATES_WITH_ASSESSMENTS -> Cas2StatusUpdateMigrationJob(
           getBean(Cas2StatusUpdateRepository::class),
           transactionTemplate,
           pageSize,
         )
 
-        MigrationJobType.cas2NotesWithAssessments -> Cas2NoteMigrationJob(
+        MigrationJobType.CAS2_NOTES_WITH_ASSESSMENTS -> Cas2NoteMigrationJob(
           getBean(Cas2ApplicationNoteRepository::class),
           transactionTemplate,
           pageSize,
         )
 
-        MigrationJobType.cas1FixPlacementAppLinks -> Cas1FixPlacementApplicationLinksJob(
+        MigrationJobType.CAS1_FIX_PLACEMENT_APP_LINKS -> Cas1FixPlacementApplicationLinksJob(
           getBean(PlacementApplicationRepository::class),
           getBean(ApplicationRepository::class),
           getBean(PlacementRequestRepository::class),
@@ -110,20 +110,20 @@ class MigrationJobService(
           transactionTemplate,
         )
 
-        MigrationJobType.cas1NoticeTypes -> NoticeTypeMigrationJob(
+        MigrationJobType.CAS1_NOTICE_TYPES -> NoticeTypeMigrationJob(
           getBean(NoticeTypeMigrationJobApplicationRepository::class),
           getBean(EntityManager::class),
           pageSize,
         )
 
-        MigrationJobType.cas1BackfillUserApArea -> Cas1BackfillUserApArea(
+        MigrationJobType.CAS1_BACKFILL_USER_AP_AREA -> Cas1BackfillUserApArea(
           getBean(UserRepository::class),
           getBean(UserService::class),
           getBean(ApDeliusContextApiClient::class),
           transactionTemplate,
         )
 
-        MigrationJobType.cas3ApplicationOffenderName -> Cas3UpdateApplicationOffenderNameJob(
+        MigrationJobType.CAS3_APPLICATION_OFFENDER_NAME -> Cas3UpdateApplicationOffenderNameJob(
           getBean(ApplicationRepository::class),
           getBean(OffenderService::class),
           getBean(EntityManager::class),
@@ -131,7 +131,7 @@ class MigrationJobService(
           getBean(MigrationLogger::class),
         )
 
-        MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
+        MigrationJobType.CAS3_DOMAIN_EVENT_TYPE_FOR_PERSON_DEPARTED_UPDATED -> Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
           getBean(DomainEventRepository::class),
           getBean(ObjectMapper::class),
           getBean(MigrationLogger::class),

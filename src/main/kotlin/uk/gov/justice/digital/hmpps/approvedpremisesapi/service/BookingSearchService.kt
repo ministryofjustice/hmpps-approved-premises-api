@@ -108,8 +108,8 @@ class BookingSearchService(
     pageSize: Int,
   ): Pageable? {
     val sortDirection = when (sortOrder) {
-      SortOrder.ascending -> SortDirection.asc
-      else -> SortDirection.desc
+      SortOrder.ASCENDING -> SortDirection.ASC
+      else -> SortDirection.DESC
     }
     val sortingField = convertSortFieldToDBField(sortField)
     return getPageableOrAllPages(sortingField, sortDirection, page, pageSize)
@@ -132,8 +132,8 @@ class BookingSearchService(
     val comparator = Comparator<BookingSearchResultDto> { a, b ->
       val ascendingCompare = compareValues(a.personName, b.personName)
       when (sortOrder) {
-        SortOrder.ascending -> ascendingCompare
-        SortOrder.descending -> -ascendingCompare
+        SortOrder.ASCENDING -> ascendingCompare
+        SortOrder.DESCENDING -> -ascendingCompare
       }
     }
     return results.sortedWith(comparator)

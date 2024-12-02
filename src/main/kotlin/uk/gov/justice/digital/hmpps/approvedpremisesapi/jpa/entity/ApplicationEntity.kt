@@ -460,7 +460,7 @@ class ApprovedPremisesApplicationEntity(
       else -> {}
     }
 
-    if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+    if (noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY || noticeType == Cas1ApplicationTimelinessCategory.SHORT_NOTICE) {
       requiredQualifications += UserQualification.EMERGENCY
     }
 

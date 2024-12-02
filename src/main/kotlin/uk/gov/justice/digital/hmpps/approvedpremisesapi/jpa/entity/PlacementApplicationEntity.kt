@@ -180,8 +180,8 @@ enum class PlacementType {
 }
 
 enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
-  ACCEPTED(ApiPlacementApplicationDecision.accepted),
-  REJECTED(ApiPlacementApplicationDecision.rejected),
+  ACCEPTED(ApiPlacementApplicationDecision.ACCEPTED),
+  REJECTED(ApiPlacementApplicationDecision.REJECTED),
 
   /**
    * @deprecated isWithdrawn property supersedes the use of these two values.
@@ -199,10 +199,10 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
    * is a helpful indicator that the decision_made_at date should not be trusted
    */
   @Deprecated("Explicit isWithdrawn property supersedes this value")
-  WITHDRAW(ApiPlacementApplicationDecision.withdraw),
+  WITHDRAW(ApiPlacementApplicationDecision.WITHDRAW),
 
   @Deprecated("Explicit isWithdrawn property supersedes this value")
-  WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.withdrawnByPp),
+  WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.WITHDRAWN_BY_PP),
   ;
 
   companion object {
@@ -218,16 +218,16 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
 }
 
 enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
-  DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),
-  ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.alternativeProvisionIdentified),
-  WITHDRAWN_BY_PP(WithdrawPlacementRequestReason.withdrawnByPP),
-  CHANGE_IN_CIRCUMSTANCES(WithdrawPlacementRequestReason.changeInCircumstances),
-  CHANGE_IN_RELEASE_DECISION(WithdrawPlacementRequestReason.changeInReleaseDecision),
-  NO_CAPACITY_DUE_TO_LOST_BED(WithdrawPlacementRequestReason.noCapacityDueToLostBed),
-  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION(WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation),
-  NO_CAPACITY(WithdrawPlacementRequestReason.noCapacity),
-  ERROR_IN_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.errorInPlacementRequest),
-  RELATED_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.relatedApplicationWithdrawn),
+  DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
+  ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED),
+  WITHDRAWN_BY_PP(WithdrawPlacementRequestReason.WITHDRAWN_BY_PP),
+  CHANGE_IN_CIRCUMSTANCES(WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES),
+  CHANGE_IN_RELEASE_DECISION(WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION),
+  NO_CAPACITY_DUE_TO_LOST_BED(WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED),
+  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION(WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION),
+  NO_CAPACITY(WithdrawPlacementRequestReason.NO_CAPACITY),
+  ERROR_IN_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST),
+  RELATED_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.RELATED_APPLICATION_WITHDRAWN),
   ;
 
   companion object {

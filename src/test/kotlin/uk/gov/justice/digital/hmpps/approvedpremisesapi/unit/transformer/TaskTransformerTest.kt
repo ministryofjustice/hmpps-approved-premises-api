@@ -161,12 +161,12 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       assertThat(result.id).isEqualTo(assessment.id)
-      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
-      assertThat(result.taskType).isEqualTo(TaskType.assessment)
+      assertThat(result.status).isEqualTo(TaskStatus.NOT_STARTED)
+      assertThat(result.taskType).isEqualTo(TaskType.ASSESSMENT)
       assertThat(result.applicationId).isEqualTo(application.id)
       assertThat(result.dueDate).isEqualTo(assessment.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(assessment.dueAt!!.toInstant())
@@ -188,10 +188,10 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.inProgress)
+      assertThat(result.status).isEqualTo(TaskStatus.IN_PROGRESS)
     }
 
     @Test
@@ -203,16 +203,16 @@ class TaskTransformerTest {
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      val apiDecision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
+      val apiDecision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.ACCEPTED
 
       every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns apiDecision
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.status).isEqualTo(TaskStatus.COMPLETE)
       assertThat(result.outcome).isEqualTo(apiDecision)
       assertThat(result.outcomeRecordedAt).isEqualTo(submittedAt.toInstant())
     }
@@ -230,10 +230,10 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.infoRequested)
+      assertThat(result.status).isEqualTo(TaskStatus.INFO_REQUESTED)
     }
 
     @Test
@@ -247,7 +247,7 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       assertThat(result.apArea).isEqualTo(mockApArea)
@@ -264,7 +264,7 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       assertThat(result.createdFromAppeal).isEqualTo(createdFromAppeal)
@@ -282,7 +282,7 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformAssessmentToTask(
         assessment,
-        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       assertThat(result.createdFromAppeal).isEqualTo(false)
@@ -297,7 +297,7 @@ class TaskTransformerTest {
       .produce()
     val application = placementApplication.application
     private val mockTier = mockk<RiskTierEnvelope>()
-    private val releaseType = ReleaseTypeOption.licence
+    private val releaseType = ReleaseTypeOption.LICENCE
 
     @BeforeEach
     fun setup() {
@@ -318,10 +318,10 @@ class TaskTransformerTest {
       )
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
-        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
+      assertThat(result.status).isEqualTo(TaskStatus.NOT_STARTED)
       assertThat(result.id).isEqualTo(placementApplication.id)
       assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.releaseType).isEqualTo(releaseType)
@@ -349,15 +349,15 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
-        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       if (placementType === JpaPlacementType.ROTL) {
-        assertThat(result.placementType).isEqualTo(ApiPlacementType.rotl)
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.ROTL)
       } else if (placementType === JpaPlacementType.ADDITIONAL_PLACEMENT) {
-        assertThat(result.placementType).isEqualTo(ApiPlacementType.additionalPlacement)
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.ADDITIONAL_PLACEMENT)
       } else if (placementType === JpaPlacementType.RELEASE_FOLLOWING_DECISION) {
-        assertThat(result.placementType).isEqualTo(ApiPlacementType.releaseFollowingDecision)
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.RELEASE_FOLLOWING_DECISION)
       }
     }
 
@@ -370,10 +370,10 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
-        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.inProgress)
+      assertThat(result.status).isEqualTo(TaskStatus.IN_PROGRESS)
     }
 
     @Test
@@ -390,10 +390,10 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
-        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.status).isEqualTo(TaskStatus.COMPLETE)
       assertThat(result.outcome).isEqualTo(decision.apiValue)
       assertThat(result.outcomeRecordedAt).isEqualTo(decisionMadeAt.toInstant())
     }
@@ -408,7 +408,7 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
-        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       assertThat(result.apArea).isEqualTo(mockApArea)
@@ -425,8 +425,8 @@ class TaskTransformerTest {
     val placementRequest = placementRequestFactory.produce()
     val application = placementRequest.application
     private val mockTier = mockk<RiskTierEnvelope>()
-    private val releaseType = ReleaseTypeOption.licence
-    private val placementRequestStatus = PlacementRequestStatus.notMatched
+    private val releaseType = ReleaseTypeOption.LICENCE
+    private val placementRequestStatus = PlacementRequestStatus.NOT_MATCHED
 
     @BeforeEach
     fun setup() {
@@ -439,10 +439,10 @@ class TaskTransformerTest {
     fun `Placement request is correctly transformed`() {
       val result = taskTransformer.transformPlacementRequestToTask(
         placementRequest,
-        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
+      assertThat(result.status).isEqualTo(TaskStatus.NOT_STARTED)
       assertThat(result.id).isEqualTo(placementRequest.id)
       assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.personName).isEqualTo("First Last")
@@ -476,11 +476,11 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementRequestToTask(
         placementRequest,
-        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.complete)
-      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.matched)
+      assertThat(result.status).isEqualTo(TaskStatus.COMPLETE)
+      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.MATCHED)
       assertThat(result.outcomeRecordedAt).isEqualTo(booking.createdAt.toInstant())
     }
 
@@ -498,10 +498,10 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementRequestToTask(
         placementRequest,
-        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.unableToMatch)
+      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.UNABLE_TO_MATCH)
       assertThat(result.outcomeRecordedAt).isEqualTo(bookingNotMade.createdAt.toInstant())
     }
 
@@ -517,7 +517,7 @@ class TaskTransformerTest {
 
       val result = taskTransformer.transformPlacementRequestToTask(
         placementRequest,
-        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+        getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
       assertThat(result.apArea).isEqualTo(mockApArea)
@@ -534,7 +534,7 @@ class TaskTransformerTest {
 
     val result = taskTransformer.transformAssessmentToTask(
       assessment,
-      getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.restrictedPersonSummary),
+      getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY),
     )
 
     assertThat(result.personSummary is RestrictedPersonSummary).isTrue()
@@ -547,7 +547,7 @@ class TaskTransformerTest {
 
     val result = taskTransformer.transformAssessmentToTask(
       assessment,
-      getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.unknownPersonSummary),
+      getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY),
     )
 
     assertThat(result.personSummary is UnknownPersonSummary).isTrue()
@@ -555,9 +555,9 @@ class TaskTransformerTest {
   }
 
   fun getOffenderSummariesWithDiscriminator(crn: String, discriminator: PersonSummaryDiscriminator): List<PersonSummaryInfoResult> {
-    PersonSummaryDiscriminator.fullPersonSummary
+    PersonSummaryDiscriminator.FULL_PERSON_SUMMARY
     when (discriminator) {
-      PersonSummaryDiscriminator.fullPersonSummary ->
+      PersonSummaryDiscriminator.FULL_PERSON_SUMMARY ->
         return listOf(
           PersonSummaryInfoResult.Success.Full(
             crn,
@@ -565,12 +565,12 @@ class TaskTransformerTest {
               .produce(),
           ),
         )
-      PersonSummaryDiscriminator.restrictedPersonSummary -> {
+      PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY -> {
         return listOf(
           PersonSummaryInfoResult.Success.Restricted(crn, "nomsNumber"),
         )
       }
-      PersonSummaryDiscriminator.unknownPersonSummary -> {
+      PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY -> {
         return listOf(
           PersonSummaryInfoResult.Unknown(crn),
         )

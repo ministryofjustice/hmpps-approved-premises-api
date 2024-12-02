@@ -106,9 +106,9 @@ class TasksController(
         isCompleted = isCompleted ?: false,
       ),
       PageCriteria(
-        sortBy = sortBy ?: TaskSortField.createdAt,
+        sortBy = sortBy ?: TaskSortField.CREATED_AT,
         perPage = perPage,
-        sortDirection = sortDirection ?: SortDirection.asc,
+        sortDirection = sortDirection ?: SortDirection.ASC,
         page = page,
       ),
     )
@@ -130,17 +130,17 @@ class TasksController(
   }
 
   private fun toTaskEntityType(taskType: TaskType) = when (taskType) {
-    TaskType.assessment -> TaskEntityType.ASSESSMENT
-    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
-    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
-    TaskType.bookingAppeal -> throw BadRequestProblem()
+    TaskType.ASSESSMENT -> TaskEntityType.ASSESSMENT
+    TaskType.PLACEMENT_REQUEST -> TaskEntityType.PLACEMENT_REQUEST
+    TaskType.PLACEMENT_APPLICATION -> TaskEntityType.PLACEMENT_APPLICATION
+    TaskType.BOOKING_APPEAL -> throw BadRequestProblem()
   }
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
 
     val taskInfo = when (toTaskType(taskType)) {
-      TaskType.assessment -> {
+      TaskType.ASSESSMENT -> {
         val assessment = extractEntityFromCasResult(
           assessmentService.getAssessmentAndValidate(user, id),
         ) as ApprovedPremisesAssessmentEntity
@@ -160,7 +160,7 @@ class TasksController(
         )
       }
 
-      TaskType.placementRequest -> {
+      TaskType.PLACEMENT_REQUEST -> {
         val (placementRequest) = extractEntityFromCasResult(
           placementRequestService.getPlacementRequestForUser(user, id),
         )
@@ -174,7 +174,7 @@ class TasksController(
         )
       }
 
-      TaskType.placementApplication -> {
+      TaskType.PLACEMENT_APPLICATION -> {
         val placementApplication = extractEntityFromAuthorisableActionResult(
           placementApplicationService.getApplication(id),
         )

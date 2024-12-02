@@ -90,7 +90,7 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
           )
         }
 
-        migrationJobService.runMigrationJob(MigrationJobType.cas2NotesWithAssessments, 10)
+        migrationJobService.runMigrationJob(MigrationJobType.CAS2_NOTES_WITH_ASSESSMENTS, 10)
 
         assessment1NoteIds.forEach {
           val updatedNote = realNotesRepository.findById(it)

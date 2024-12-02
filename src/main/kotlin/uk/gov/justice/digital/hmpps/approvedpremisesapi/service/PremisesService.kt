@@ -441,7 +441,7 @@ class PremisesService(
       }
     }
 
-    if (premises is TemporaryAccommodationPremisesEntity && status == PropertyStatus.archived) {
+    if (premises is TemporaryAccommodationPremisesEntity && status == PropertyStatus.ARCHIVED) {
       premises.rooms.forEach { room ->
         room.beds.forEach { bed ->
           bed.endDate = LocalDate.now()

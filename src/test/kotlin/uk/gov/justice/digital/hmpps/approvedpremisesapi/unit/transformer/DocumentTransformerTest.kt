@@ -49,7 +49,7 @@ class DocumentTransformerTest {
     assertThat(result).containsExactlyInAnyOrder(
       Document(
         id = UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString(),
-        level = DocumentLevel.offender,
+        level = DocumentLevel.OFFENDER,
         fileName = "offender_level_doc.pdf",
         createdAt = Instant.parse("2022-12-07T11:40:00Z"),
         typeCode = "TYPE-1",
@@ -58,7 +58,7 @@ class DocumentTransformerTest {
       ),
       Document(
         id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString(),
-        level = DocumentLevel.conviction,
+        level = DocumentLevel.CONVICTION,
         fileName = "conviction_level_doc.pdf",
         createdAt = Instant.parse("2022-12-07T10:40:00Z"),
         typeCode = "TYPE-2",
@@ -183,7 +183,7 @@ class DocumentTransformerTest {
     assertThat(result).containsExactlyInAnyOrder(
       Document(
         id = offenderDocId.toString(),
-        level = DocumentLevel.offender,
+        level = DocumentLevel.OFFENDER,
         fileName = "offender_level_doc.pdf",
         createdAt = Instant.parse("2024-03-02T15:20:00Z"),
         typeCode = "TYPE-1",
@@ -192,7 +192,7 @@ class DocumentTransformerTest {
       ),
       Document(
         id = convictionDocId.toString(),
-        level = DocumentLevel.conviction,
+        level = DocumentLevel.CONVICTION,
         fileName = "conviction_level_doc.pdf",
         createdAt = Instant.parse("2024-10-02T10:40:00Z"),
         typeCode = "TYPE-2",
@@ -210,7 +210,7 @@ class DocumentTransformerTest {
       DocumentFromDeliusApiFactory()
         .withId(null)
         .withDescription("Null Id description")
-        .withLevel(DocumentLevel.offender.value)
+        .withLevel(DocumentLevel.OFFENDER.value)
         .withEventNumber("2")
         .withFilename("Null_Id.pdf")
         .withTypeCode("Null Id type")
@@ -232,7 +232,7 @@ class DocumentTransformerTest {
       DocumentFromDeliusApiFactory()
         .withId(offenderDocId.toString())
         .withDescription("Offender level doc description")
-        .withLevel(DocumentLevel.offender.value)
+        .withLevel(DocumentLevel.OFFENDER.value)
         .withEventNumber("2")
         .withFilename("offender_level_doc.pdf")
         .withTypeCode("TYPE-1")
@@ -243,7 +243,7 @@ class DocumentTransformerTest {
       DocumentFromDeliusApiFactory()
         .withId(convictionDocId.toString())
         .withDescription("Conviction level doc description")
-        .withLevel(DocumentLevel.conviction.value)
+        .withLevel(DocumentLevel.CONVICTION.value)
         .withEventNumber("1")
         .withFilename("conviction_level_doc.pdf")
         .withTypeCode("TYPE-2")

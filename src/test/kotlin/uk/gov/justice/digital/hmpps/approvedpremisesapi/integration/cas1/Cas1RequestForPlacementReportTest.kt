@@ -80,15 +80,15 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   val standardRFPSubmittedAfterReportingPeriod = StandardRFPSubmittedAfterReportingPeriod()
 
   val placementAppRotlAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.rotl,
+    type = PlacementType.ROTL,
     submittedAt = LocalDateTime.of(2021, 3, 22, 9, 49, 0),
   )
   val placementAppAdditionalAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.additionalPlacement,
+    type = PlacementType.ADDITIONAL_PLACEMENT,
     submittedAt = LocalDateTime.of(2021, 3, 23, 9, 49, 0),
   )
   val placementAppParoleAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.releaseFollowingDecision,
+    type = PlacementType.RELEASE_FOLLOWING_DECISION,
     submittedAt = LocalDateTime.of(2021, 3, 24, 9, 49, 0),
   )
   val placementAppRejectedManager = PlacementAppRejectedManager()
@@ -256,7 +256,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       withdrawPlacementRequest(
         applicationId = application.id,
         withdrawalDate = LocalDateTime.of(2021, 3, 15, 0, 10, 0),
-        reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+        reason = WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
       )
     }
 
@@ -395,7 +395,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2021, 3, 24, 15, 20, 0),
-        decision = PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecision.ACCEPTED,
       )
     }
 
@@ -403,9 +403,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("placement_application:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo(
         when (type) {
-          PlacementType.rotl -> "ROTL"
-          PlacementType.releaseFollowingDecision -> "RELEASE_FOLLOWING_DECISION"
-          PlacementType.additionalPlacement -> "ADDITIONAL_PLACEMENT"
+          PlacementType.ROTL -> "ROTL"
+          PlacementType.RELEASE_FOLLOWING_DECISION -> "RELEASE_FOLLOWING_DECISION"
+          PlacementType.ADDITIONAL_PLACEMENT -> "ADDITIONAL_PLACEMENT"
         },
       )
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
@@ -442,7 +442,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -455,7 +455,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2025, 12, 1, 15, 20, 0),
-        decision = PlacementApplicationDecision.rejected,
+        decision = PlacementApplicationDecision.REJECTED,
       )
     }
 
@@ -494,7 +494,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -527,7 +527,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -594,13 +594,13 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         isWomensApplication = false,
         isEmergencyApplication = false,
         targetLocation = "targetLocation",
-        releaseType = ReleaseTypeOption.notApplicable,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         type = "CAS1",
-        sentenceType = SentenceTypeOption.bailPlacement,
+        sentenceType = SentenceTypeOption.BAIL_PLACEMENT,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
-        apType = ApType.pipe,
-        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        apType = ApType.PIPE,
+        noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
       ),
     )
 
@@ -637,12 +637,12 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
-    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+    val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
+    val desirableCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
-      type = ApType.normal,
+      gender = Gender.MALE,
+      type = ApType.NORMAL,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,
@@ -663,7 +663,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
           expectedArrival = expectedArrival,
           duration = duration,
         ),
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
       ),
     )
   }

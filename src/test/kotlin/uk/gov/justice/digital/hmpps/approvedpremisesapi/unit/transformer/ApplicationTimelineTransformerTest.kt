@@ -133,10 +133,10 @@ class ApplicationTimelineTransformerTest {
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesApplicationSubmitted,
+        type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.APPLICATION, "http://somehost:3000/applications/$applicationId"),
         ),
         content = "Some event",
       ),
@@ -171,11 +171,11 @@ class ApplicationTimelineTransformerTest {
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = if (domainEventType == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) {
           listOf(
-            TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://somehost:3000/applications/$applicationId/appeals/$appealId"),
+            TimelineEventAssociatedUrl(TimelineEventUrlType.ASSESSMENT_APPEAL, "http://somehost:3000/applications/$applicationId/appeals/$appealId"),
           )
         } else {
           listOf(
-            TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+            TimelineEventAssociatedUrl(TimelineEventUrlType.APPLICATION, "http://somehost:3000/applications/$applicationId"),
           )
         },
         content = "Some event",
@@ -206,10 +206,10 @@ class ApplicationTimelineTransformerTest {
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesBookingMade,
+        type = TimelineEventType.APPROVED_PREMISES_BOOKING_MADE,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.booking, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.BOOKING, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
         ),
         content = "Some event",
       ),
@@ -239,10 +239,10 @@ class ApplicationTimelineTransformerTest {
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesBookingMade,
+        type = TimelineEventType.APPROVED_PREMISES_BOOKING_MADE,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.cas1SpaceBooking, "http://somehost:3000/manage/premises/$premisesId/bookings/$spaceBookingId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.CAS1_SPACE_BOOKING, "http://somehost:3000/manage/premises/$premisesId/bookings/$spaceBookingId"),
         ),
         content = "Some event",
       ),
@@ -271,10 +271,10 @@ class ApplicationTimelineTransformerTest {
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesApplicationAssessed,
+        type = TimelineEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.assessment, "http://somehost:3000/assessments/$assessmentId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.ASSESSMENT, "http://somehost:3000/assessments/$assessmentId"),
         ),
         content = "Some event",
       ),
@@ -305,10 +305,10 @@ class ApplicationTimelineTransformerTest {
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesInformationRequest,
+        type = TimelineEventType.APPROVED_PREMISES_INFORMATION_REQUEST,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.APPLICATION, "http://somehost:3000/applications/$applicationId"),
         ),
         content = "Some event",
       ),
@@ -338,16 +338,16 @@ class ApplicationTimelineTransformerTest {
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent).associatedUrls)
       .containsOnly(
-        TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+        TimelineEventAssociatedUrl(TimelineEventUrlType.APPLICATION, "http://somehost:3000/applications/$applicationId"),
       )
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesAssessmentAllocated,
+        type = TimelineEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.APPLICATION, "http://somehost:3000/applications/$applicationId"),
         ),
         content = "Some event",
       ),
@@ -380,12 +380,12 @@ class ApplicationTimelineTransformerTest {
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = TimelineEventType.approvedPremisesBookingMade,
+        type = TimelineEventType.APPROVED_PREMISES_BOOKING_MADE,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = listOf(
-          TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
-          TimelineEventAssociatedUrl(TimelineEventUrlType.assessment, "http://somehost:3000/assessments/$assessmentId"),
-          TimelineEventAssociatedUrl(TimelineEventUrlType.booking, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.APPLICATION, "http://somehost:3000/applications/$applicationId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.ASSESSMENT, "http://somehost:3000/assessments/$assessmentId"),
+          TimelineEventAssociatedUrl(TimelineEventUrlType.BOOKING, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
         ),
         content = "Some event",
       ),

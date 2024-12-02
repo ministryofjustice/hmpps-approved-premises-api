@@ -55,7 +55,7 @@ class Cas2MigrateStatusUpdatesTest : MigrationJobTestBase() {
           )
         }
 
-        migrationJobService.runMigrationJob(MigrationJobType.cas2StatusUpdatesWithAssessments, 10)
+        migrationJobService.runMigrationJob(MigrationJobType.CAS2_STATUS_UPDATES_WITH_ASSESSMENTS, 10)
 
         assessmentIds.forEach {
           val updatedStatusUpdate = realStatusUpdateRepository.findById(it)

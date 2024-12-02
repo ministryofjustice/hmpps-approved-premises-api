@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 
 class PageCriteriaFactory<S>(defaultSortBy: S) : Factory<PageCriteria<S>> {
   val sortBy: Yielded<S> = { defaultSortBy }
-  val sortDirection: Yielded<SortDirection> = { SortDirection.desc }
+  val sortDirection: Yielded<SortDirection> = { SortDirection.DESC }
   val page: Yielded<Int?> = { null }
   val perPage: Yielded<Int?> = { null }
 

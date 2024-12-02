@@ -30,7 +30,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
 
   CAS1_ASSESSOR(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.assessor,
+    ApprovedPremisesUserRole.ASSESSOR,
     listOf(
       UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
       UserPermission.CAS1_ASSESS_APPLICATION,
@@ -42,7 +42,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   @Deprecated("This role will be removed in the future. Superseded by CRU_MEMBER")
   CAS1_MATCHER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.matcher,
+    ApprovedPremisesUserRole.MATCHER,
     listOf(
       UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
       UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
@@ -52,7 +52,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   @Deprecated("This role is no longer available for assignment on the UI and should be removed")
   CAS1_MANAGER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.manager,
+    ApprovedPremisesUserRole.MANAGER,
     listOf(
       UserPermission.CAS1_BOOKING_CHANGE_DATES,
     ),
@@ -61,7 +61,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   @Deprecated("This role is no longer available for assignment on the UI and should be removed. It has been superseded by CAS1_FUTURE_MANAGER")
   CAS1_LEGACY_MANAGER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.legacyManager,
+    ApprovedPremisesUserRole.LEGACY_MANAGER,
     listOf(
       UserPermission.CAS1_BOOKING_CHANGE_DATES,
     ),
@@ -69,7 +69,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
 
   CAS1_FUTURE_MANAGER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.futureManager,
+    ApprovedPremisesUserRole.FUTURE_MANAGER,
     listOf(
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_PREMISES_VIEW_CAPACITY,
@@ -87,7 +87,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   @Deprecated("This role will be removed in the future. Superseded by Assessor, CRU Member and Future Manager")
   CAS1_WORKFLOW_MANAGER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.workflowManager,
+    ApprovedPremisesUserRole.WORKFLOW_MANAGER,
     listOf(
       UserPermission.CAS1_ADHOC_BOOKING_CREATE,
       UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
@@ -104,48 +104,48 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
 
   CAS1_CRU_MEMBER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.cruMember,
+    ApprovedPremisesUserRole.CRU_MEMBER,
     permissions = commonCruMemberPermissions + listOf(UserPermission.CAS1_BOOKING_CREATE),
   ),
 
   CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.cruMemberFindAndBookBeta,
+    ApprovedPremisesUserRole.CRU_MEMBER_FIND_AND_BOOK_BETA,
     permissions = commonCruMemberPermissions + listOf(UserPermission.CAS1_SPACE_BOOKING_CREATE),
   ),
 
-  CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
+  CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.APPLICANT),
 
   @Deprecated("This role will be removed in the future")
   CAS1_ADMIN(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.roleAdmin,
+    ApprovedPremisesUserRole.ROLE_ADMIN,
     listOf(
       UserPermission.CAS1_USER_LIST,
     ),
   ),
   CAS1_REPORT_VIEWER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.reportViewer,
+    ApprovedPremisesUserRole.REPORT_VIEWER,
     listOf(
       UserPermission.CAS1_REPORTS_VIEW,
     ),
   ),
   CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.excludedFromAssessAllocation,
+    ApprovedPremisesUserRole.EXCLUDED_FROM_ASSESS_ALLOCATION,
   ),
   CAS1_EXCLUDED_FROM_MATCH_ALLOCATION(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.excludedFromMatchAllocation,
+    ApprovedPremisesUserRole.EXCLUDED_FROM_MATCH_ALLOCATION,
   ),
   CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
+    ApprovedPremisesUserRole.EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION,
   ),
   CAS1_APPEALS_MANAGER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.appealsManager,
+    ApprovedPremisesUserRole.APPEALS_MANAGER,
     listOf(
       UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
       UserPermission.CAS1_PROCESS_AN_APPEAL,
@@ -154,12 +154,12 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   ),
   CAS1_JANITOR(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.janitor,
+    ApprovedPremisesUserRole.JANITOR,
     UserPermission.entries.toList(),
   ),
   CAS1_USER_MANAGER(
     ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.userManager,
+    ApprovedPremisesUserRole.USER_MANAGER,
     listOf(
       UserPermission.CAS1_USER_LIST,
       UserPermission.CAS1_USER_MANAGEMENT,

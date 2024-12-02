@@ -503,7 +503,7 @@ class Cas1SpaceBookingServiceTest {
           crnOrName = null,
           keyWorkerStaffCode = null,
         ),
-        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
+        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.CANONICAL_ARRIVAL_DATE)
           .produce(),
       )
 
@@ -512,11 +512,11 @@ class Cas1SpaceBookingServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "personName,personName",
-      "canonicalArrivalDate,canonicalArrivalDate",
-      "canonicalDepartureDate,canonicalDepartureDate",
-      "keyWorkerName,keyWorkerName",
-      "tier,tier",
+      "PERSON_NAME,personName",
+      "CANONICAL_ARRIVAL_DATE,canonicalArrivalDate",
+      "CANONICAL_DEPARTURE_DATE,canonicalDepartureDate",
+      "KEY_WORKER_NAME,keyWorkerName",
+      "TIER,tier",
     )
     fun `delegate to repository, defining correct sort column`(
       inputSortField: Cas1SpaceBookingSummarySortField,
@@ -546,7 +546,7 @@ class Cas1SpaceBookingServiceTest {
       val result = service.search(
         PREMISES_ID,
         Cas1SpaceBookingService.SpaceBookingFilterCriteria(
-          residency = Cas1SpaceBookingResidency.current,
+          residency = Cas1SpaceBookingResidency.CURRENT,
           crnOrName = "theCrnOrName",
           keyWorkerStaffCode = "keyWorkerStaffCode",
         ),

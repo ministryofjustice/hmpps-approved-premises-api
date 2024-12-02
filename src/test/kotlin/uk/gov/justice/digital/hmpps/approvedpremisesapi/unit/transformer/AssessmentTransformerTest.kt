@@ -165,7 +165,7 @@ class AssessmentTransformerTest {
 
       assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
       assertThat(result.schemaVersion).isEqualTo(UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"))
-      assertThat(result.decision).isEqualTo(ApiAssessmentDecision.rejected)
+      assertThat(result.decision).isEqualTo(ApiAssessmentDecision.REJECTED)
       assertThat(result.rejectionRationale).isEqualTo("reasoning")
       assertThat(result.createdAt).isEqualTo(Instant.parse("2022-12-14T12:05:00Z"))
       assertThat(result.submittedAt).isEqualTo(Instant.parse("2022-12-14T12:06:00Z"))
@@ -227,7 +227,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE)
     }
 
     @Test
@@ -240,7 +240,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.completed)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.COMPLETED)
     }
 
     @Test
@@ -254,7 +254,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.reallocated)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.REALLOCATED)
     }
 
     @Test
@@ -268,7 +268,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.inProgress)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.IN_PROGRESS)
     }
 
     @Test
@@ -282,7 +282,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.notStarted)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.NOT_STARTED)
     }
   }
 
@@ -302,7 +302,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.unallocated)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.UNALLOCATED)
     }
 
     @Test
@@ -317,7 +317,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.IN_REVIEW)
     }
 
     @Test
@@ -332,7 +332,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.readyToPlace)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.READY_TO_PLACE)
     }
 
     @Test
@@ -348,7 +348,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.closed)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.CLOSED)
     }
 
     @Test
@@ -363,7 +363,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.rejected)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.REJECTED)
     }
 
     @Test
@@ -418,7 +418,7 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.id).isEqualTo(domainSummary.id)
       assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
       assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
-      assertThat(apiSummary.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
+      assertThat(apiSummary.status).isEqualTo(TemporaryAccommodationAssessmentStatus.IN_REVIEW)
       assertThat(apiSummary.decision).isNull()
       assertThat(apiSummary.risks).isNull()
       assertThat(apiSummary.person).isNotNull
@@ -457,7 +457,7 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
       assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
       assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate)
-      assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
+      assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE)
       assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
       assertThat(apiSummary.person).isNotNull
     }

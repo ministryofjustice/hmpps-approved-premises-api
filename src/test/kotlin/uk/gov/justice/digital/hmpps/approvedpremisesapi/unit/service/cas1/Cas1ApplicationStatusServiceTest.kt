@@ -132,7 +132,7 @@ class Cas1ApplicationStatusServiceTest {
       val booking = BookingEntityFactory()
         .withDefaults()
         .withApplication(application)
-        .withStatus(BookingStatus.confirmed)
+        .withStatus(BookingStatus.CONFIRMED)
         .produce()
 
       every { applicationRepository.save(any()) } returns application

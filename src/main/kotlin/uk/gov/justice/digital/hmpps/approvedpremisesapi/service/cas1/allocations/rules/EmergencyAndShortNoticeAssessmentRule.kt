@@ -24,8 +24,8 @@ class EmergencyAndShortNoticeAssessmentRule : UserAllocatorRule {
     if (application.submittedAt == null) return UserAllocatorRuleOutcome.Skip
 
     return when (
-      application.noticeType == Cas1ApplicationTimelinessCategory.emergency ||
-        application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice
+      application.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY ||
+        application.noticeType == Cas1ApplicationTimelinessCategory.SHORT_NOTICE
     ) {
       true -> allocateByCruManagementArea(application.cruManagementArea!!)
       else -> UserAllocatorRuleOutcome.Skip

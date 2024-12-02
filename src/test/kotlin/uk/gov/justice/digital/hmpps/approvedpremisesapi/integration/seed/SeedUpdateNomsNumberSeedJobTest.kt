@@ -109,7 +109,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.updateNomsNumber, "valid-csv.csv")
+    seedService.seedData(SeedFileType.UPDATE_NOMS_NUMBER, "valid-csv.csv")
 
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)
     assertThat(updatedApplication!!.nomsNumber).isEqualTo(NEW_NOMS)

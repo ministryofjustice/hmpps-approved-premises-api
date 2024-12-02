@@ -48,22 +48,22 @@ class BookingSearchTransformerTest {
     val domainResults = listOf(
       TestBookingSearchResult()
         .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.provisional),
+        .withBookingStatus(BookingStatus.PROVISIONAL),
       TestBookingSearchResult()
-        .withBookingStatus(BookingStatus.awaitingMinusArrival),
-      TestBookingSearchResult()
-        .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.confirmed),
-      TestBookingSearchResult()
-        .withBookingStatus(BookingStatus.notMinusArrived),
+        .withBookingStatus(BookingStatus.AWAITING_MINUS_ARRIVAL),
       TestBookingSearchResult()
         .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.arrived),
+        .withBookingStatus(BookingStatus.CONFIRMED),
       TestBookingSearchResult()
-        .withBookingStatus(BookingStatus.departed),
+        .withBookingStatus(BookingStatus.NOT_MINUS_ARRIVED),
       TestBookingSearchResult()
         .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.cancelled),
+        .withBookingStatus(BookingStatus.ARRIVED),
+      TestBookingSearchResult()
+        .withBookingStatus(BookingStatus.DEPARTED),
+      TestBookingSearchResult()
+        .withPersonName(randomStringMultiCaseWithNumbers(6))
+        .withBookingStatus(BookingStatus.CANCELLED),
     )
     val bookingSearchResultDtos = domainResults.mapNotNull { rs ->
       BookingSearchResultDto(

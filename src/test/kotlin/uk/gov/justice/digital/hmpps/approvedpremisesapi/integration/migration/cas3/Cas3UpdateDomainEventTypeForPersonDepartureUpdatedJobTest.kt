@@ -68,7 +68,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       }
     }.take(3).toList()
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated)
+    migrationJobService.runMigrationJob(MigrationJobType.CAS3_DOMAIN_EVENT_TYPE_FOR_PERSON_DEPARTED_UPDATED)
 
     personDepartureUpdatedInvalidDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)

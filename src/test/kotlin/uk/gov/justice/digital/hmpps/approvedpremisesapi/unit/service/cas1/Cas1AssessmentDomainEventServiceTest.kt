@@ -226,7 +226,7 @@ class Cas1AssessmentDomainEventServiceTest {
         expectedArrival = LocalDate.now(),
         duration = 12,
       )
-      val apType = ApType.normal
+      val apType = ApType.NORMAL
 
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,

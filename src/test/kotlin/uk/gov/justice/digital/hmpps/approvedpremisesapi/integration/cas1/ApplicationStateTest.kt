@@ -470,8 +470,8 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
-      type = ApType.normal,
+      gender = Gender.MALE,
+      type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
       essentialCriteria = listOf(),
@@ -544,7 +544,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewWithdrawal(
-          reason = WithdrawalReason.duplicateApplication,
+          reason = WithdrawalReason.DUPLICATE_APPLICATION,
         ),
       )
       .exchange()
@@ -574,10 +574,10 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           isEmergencyApplication = false,
           isEsapApplication = false,
           targetLocation = "SW1A 1AA",
-          releaseType = ReleaseTypeOption.licence,
+          releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
           arrivalDate = arrivalDate,
-          sentenceType = SentenceTypeOption.nonStatutory,
+          sentenceType = SentenceTypeOption.NON_STATUTORY,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
         ),

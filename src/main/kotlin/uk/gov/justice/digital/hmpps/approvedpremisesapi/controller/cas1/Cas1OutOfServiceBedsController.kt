@@ -48,12 +48,12 @@ class Cas1OutOfServiceBedsController(
     }
 
     val (outOfServiceBeds, pageMetadata) = outOfServiceBedService.getOutOfServiceBeds(
-      temporality?.toSet() ?: setOf(Temporality.current, Temporality.future),
+      temporality?.toSet() ?: setOf(Temporality.CURRENT, Temporality.FUTURE),
       premisesId,
       apAreaId,
       PageCriteria(
-        sortBy ?: Cas1OutOfServiceBedSortField.startDate,
-        sortDirection ?: SortDirection.asc,
+        sortBy ?: Cas1OutOfServiceBedSortField.START_DATE,
+        sortDirection ?: SortDirection.ASC,
         page,
         perPage,
       ),

@@ -223,7 +223,7 @@ fun addOpenApiConfigOptions(
     }
     put("dateLibrary", "custom")
     put("useSpringBoot3", "true")
-    put("enumPropertyNaming", "camelCase")
+    put("enumPropertyNaming", "UPPERCASE")
   }
 }
 

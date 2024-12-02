@@ -116,7 +116,7 @@ class ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockPersonTransformer.inmateStatusToPersonInfoApiStatus(any()) } returns PersonStatus.inCommunity
+    every { mockPersonTransformer.inmateStatusToPersonInfoApiStatus(any()) } returns PersonStatus.IN_COMMUNITY
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
   }
 
@@ -148,7 +148,7 @@ class ApplicationsTransformerTest {
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
     assertThat(result.caseManagerIsNotApplicant).isTrue()
     assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
-    assertThat(result.genderForAp).isEqualTo(GenderForAp.male)
+    assertThat(result.genderForAp).isEqualTo(GenderForAp.MALE)
   }
 
   @Test
@@ -179,12 +179,12 @@ class ApplicationsTransformerTest {
 
   @ParameterizedTest
   @CsvSource(
-    "NORMAL,normal",
-    "PIPE,pipe",
-    "ESAP,esap",
-    "RFAP,rfap",
-    "MHAP_ST_JOSEPHS,mhapStJosephs",
-    "MHAP_ELLIOTT_HOUSE,mhapElliottHouse",
+    "NORMAL,NORMAL",
+    "PIPE,PIPE",
+    "ESAP,ESAP",
+    "RFAP,RFAP",
+    "MHAP_ST_JOSEPHS,MHAP_ST_JOSEPHS",
+    "MHAP_ELLIOTT_HOUSE,MHAP_ELLIOTT_HOUSE",
   )
   fun `transformJpaToApi transforms ap type correctly`(jpaTypeString: String, apiTypeString: String) {
     val jpaType = ApprovedPremisesType.valueOf(jpaTypeString)
@@ -218,7 +218,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
-    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.status).isEqualTo(ApplicationStatus.IN_PROGRESS)
     assertThat(result.risks).isNotNull
     assertThat(result.arrivalDate).isNull()
     assertThat(result.offenceId).isEqualTo(application.offenceId)
@@ -239,7 +239,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
     assertThat(result.arrivalDate).isEqualTo(application.arrivalDate!!.toInstant())
     assertThat(result.offenceId).isEqualTo(application.offenceId)
   }
@@ -270,7 +270,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.requestedFurtherInformation)
+    assertThat(result.status).isEqualTo(ApplicationStatus.REQUESTED_FURTHER_INFORMATION)
   }
 
   @Test
@@ -297,7 +297,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
   }
 
   @Test
@@ -335,7 +335,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
   }
 
   @ParameterizedTest
@@ -360,7 +360,7 @@ class ApplicationsTransformerTest {
       override fun getTier(): String? = null
       override fun getStatus(): String = jpaStatus.toString()
       override fun getIsWithdrawn(): Boolean = true
-      override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+      override fun getReleaseType(): String = ReleaseTypeOption.LICENCE.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
@@ -443,7 +443,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.status).isEqualTo(ApplicationStatus.IN_PROGRESS)
     assertThat(result.risks).isNotNull
   }
 
@@ -469,25 +469,25 @@ class ApplicationsTransformerTest {
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
     assertThat(result.risks).isNotNull
   }
 
   private companion object {
     @JvmStatic
     fun applicationStatusArgs() = listOf(
-      ApiApprovedPremisesApplicationStatus.assesmentInProgress to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
-      ApiApprovedPremisesApplicationStatus.started to ApprovedPremisesApplicationStatus.STARTED,
-      ApiApprovedPremisesApplicationStatus.submitted to ApprovedPremisesApplicationStatus.SUBMITTED,
-      ApiApprovedPremisesApplicationStatus.rejected to ApprovedPremisesApplicationStatus.REJECTED,
-      ApiApprovedPremisesApplicationStatus.awaitingAssesment to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
-      ApiApprovedPremisesApplicationStatus.unallocatedAssesment to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,
-      ApiApprovedPremisesApplicationStatus.awaitingPlacement to ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-      ApiApprovedPremisesApplicationStatus.placementAllocated to ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-      ApiApprovedPremisesApplicationStatus.inapplicable to ApprovedPremisesApplicationStatus.INAPPLICABLE,
-      ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
-      ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
-      ApiApprovedPremisesApplicationStatus.pendingPlacementRequest to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
+      ApiApprovedPremisesApplicationStatus.ASSESMENT_IN_PROGRESS to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
+      ApiApprovedPremisesApplicationStatus.STARTED to ApprovedPremisesApplicationStatus.STARTED,
+      ApiApprovedPremisesApplicationStatus.SUBMITTED to ApprovedPremisesApplicationStatus.SUBMITTED,
+      ApiApprovedPremisesApplicationStatus.REJECTED to ApprovedPremisesApplicationStatus.REJECTED,
+      ApiApprovedPremisesApplicationStatus.AWAITING_ASSESMENT to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
+      ApiApprovedPremisesApplicationStatus.UNALLOCATED_ASSESMENT to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,
+      ApiApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+      ApiApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+      ApiApprovedPremisesApplicationStatus.INAPPLICABLE to ApprovedPremisesApplicationStatus.INAPPLICABLE,
+      ApiApprovedPremisesApplicationStatus.WITHDRAWN to ApprovedPremisesApplicationStatus.WITHDRAWN,
+      ApiApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
+      ApiApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
     )
   }
 }

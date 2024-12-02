@@ -45,7 +45,7 @@ class TaskTransformer(
     dueAt = transformDueAtToInstant(assessment.dueAt),
     allocatedToStaffMember = transformUserOrNull(assessment.allocatedToUser),
     status = getAssessmentStatus(assessment),
-    taskType = TaskType.assessment,
+    taskType = TaskType.ASSESSMENT,
     apArea = getApArea(assessment.application),
     createdFromAppeal = when (assessment) {
       is ApprovedPremisesAssessmentEntity -> assessment.createdFromAppeal
@@ -70,7 +70,7 @@ class TaskTransformer(
       dueAt = transformDueAtToInstant(placementRequest.dueAt),
       allocatedToStaffMember = transformUserOrNull(placementRequest.allocatedToUser),
       status = getPlacementRequestStatus(placementRequest),
-      taskType = TaskType.placementRequest,
+      taskType = TaskType.PLACEMENT_REQUEST,
       tier = risksTransformer.transformTierDomainToApi(placementRequest.application.riskRatings!!.tier),
       expectedArrival = placementRequest.expectedArrival,
       duration = placementRequest.duration,
@@ -95,7 +95,7 @@ class TaskTransformer(
     dueAt = transformDueAtToInstant(placementApplication.dueAt),
     allocatedToStaffMember = transformUserOrNull(placementApplication.allocatedToUser),
     status = getPlacementApplicationStatus(placementApplication),
-    taskType = TaskType.placementApplication,
+    taskType = TaskType.PLACEMENT_APPLICATION,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
     placementDates = placementApplication.placementDates.map {
       PlacementDates(
@@ -130,27 +130,27 @@ class TaskTransformer(
   }
 
   private fun getPlacementType(placementType: JpaPlacementType): ApiPlacementType = when (placementType) {
-    JpaPlacementType.ROTL -> ApiPlacementType.rotl
-    JpaPlacementType.ADDITIONAL_PLACEMENT -> ApiPlacementType.additionalPlacement
-    JpaPlacementType.RELEASE_FOLLOWING_DECISION -> ApiPlacementType.releaseFollowingDecision
+    JpaPlacementType.ROTL -> ApiPlacementType.ROTL
+    JpaPlacementType.ADDITIONAL_PLACEMENT -> ApiPlacementType.ADDITIONAL_PLACEMENT
+    JpaPlacementType.RELEASE_FOLLOWING_DECISION -> ApiPlacementType.RELEASE_FOLLOWING_DECISION
   }
 
   private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): TaskStatus = when {
-    entity.data.isNullOrEmpty() -> TaskStatus.notStarted
-    entity.decision !== null -> TaskStatus.complete
-    else -> TaskStatus.inProgress
+    entity.data.isNullOrEmpty() -> TaskStatus.NOT_STARTED
+    entity.decision !== null -> TaskStatus.COMPLETE
+    else -> TaskStatus.IN_PROGRESS
   }
 
   private fun getAssessmentStatus(entity: AssessmentEntity): TaskStatus = when {
-    entity.data.isNullOrEmpty() -> TaskStatus.notStarted
-    entity.decision !== null -> TaskStatus.complete
-    (entity.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION -> TaskStatus.infoRequested
-    else -> TaskStatus.inProgress
+    entity.data.isNullOrEmpty() -> TaskStatus.NOT_STARTED
+    entity.decision !== null -> TaskStatus.COMPLETE
+    (entity.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION -> TaskStatus.INFO_REQUESTED
+    else -> TaskStatus.IN_PROGRESS
   }
 
   private fun getPlacementRequestStatus(entity: PlacementRequestEntity): TaskStatus = when {
-    entity.booking !== null -> TaskStatus.complete
-    else -> TaskStatus.notStarted
+    entity.booking !== null -> TaskStatus.COMPLETE
+    else -> TaskStatus.NOT_STARTED
   }
 
   private fun transformUserOrNull(userEntity: UserEntity?): ApprovedPremisesUser? {

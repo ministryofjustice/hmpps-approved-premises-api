@@ -25,7 +25,7 @@ class LostBedsTransformer(
   )
 
   private fun determineStatus(jpa: LostBedsEntity) = when {
-    jpa.cancellation != null -> LostBedStatus.cancelled
-    else -> LostBedStatus.active
+    jpa.cancellation != null -> LostBedStatus.CANCELLED
+    else -> LostBedStatus.ACTIVE
   }
 }

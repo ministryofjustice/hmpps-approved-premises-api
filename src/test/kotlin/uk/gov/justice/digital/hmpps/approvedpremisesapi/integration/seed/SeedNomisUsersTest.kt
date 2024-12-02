@@ -28,7 +28,7 @@ class SeedNomisUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.nomisUsers, "unknown-nomis-user.csv")
+    seedService.seedData(SeedFileType.NOMIS_USERS, "unknown-nomis-user.csv")
 
     val persistedUser = nomisUserRepository.findByNomisUsername("ROGER_SMITH_FAKE")
 
@@ -60,7 +60,7 @@ class SeedNomisUsersTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.nomisUsers, "existing-nomis-user.csv")
+    seedService.seedData(SeedFileType.NOMIS_USERS, "existing-nomis-user.csv")
 
     val persistedUser = nomisUserRepository.findByNomisUsername("ROGER_SMITH_FAKE")
 

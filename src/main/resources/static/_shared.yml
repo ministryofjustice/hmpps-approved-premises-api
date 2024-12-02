@@ -4833,10 +4833,10 @@ components:
         - person_name
         - person_risks_tier
       x-enum-varnames:
-        - duration
-        - expectedArrival
-        - createdAt
-        - applicationSubmittedAt
+        - DURATION
+        - EXPECTED_ARRIVAL
+        - CREATED_AT
+        - APPLICATION_SUBMITTED_AT
     UserSortField:
       type: string
       enum:

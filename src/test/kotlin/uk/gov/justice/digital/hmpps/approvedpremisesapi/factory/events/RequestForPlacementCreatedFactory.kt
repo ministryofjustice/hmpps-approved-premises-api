@@ -22,7 +22,7 @@ class RequestForPlacementCreatedFactory : Factory<RequestForPlacementCreated> {
   private var createdBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
   private var duration: Yielded<Int> = { randomInt(0, 1000) }
-  private var requestForPlacementType: Yielded<RequestForPlacementType> = { RequestForPlacementType.additionalPlacement }
+  private var requestForPlacementType: Yielded<RequestForPlacementType> = { RequestForPlacementType.ADDITIONAL_PLACEMENT }
   private var requestForPlacementId: Yielded<UUID> = { UUID.randomUUID() }
 
   fun withRequestForPlacementType(requestForPlacementType: RequestForPlacementType) = apply {

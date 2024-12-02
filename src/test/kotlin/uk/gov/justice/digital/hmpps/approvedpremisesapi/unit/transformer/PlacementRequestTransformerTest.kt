@@ -120,7 +120,7 @@ class PlacementRequestTransformerTest {
   private val mockPersonInfo = mockk<Person>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
-  private val decision = ApiAssessmentDecision.accepted
+  private val decision = ApiAssessmentDecision.ACCEPTED
 
   @BeforeEach
   fun setup() {
@@ -169,21 +169,21 @@ class PlacementRequestTransformerTest {
         duration = placementRequestEntity.duration,
         location = placementRequirementsEntity.postcodeDistrict.outcode,
         radius = placementRequirementsEntity.radius,
-        essentialCriteria = listOf(PlacementCriteria.isSemiSpecialistMentalHealth, PlacementCriteria.isRecoveryFocussed),
-        desirableCriteria = listOf(PlacementCriteria.isWheelchairDesignated, PlacementCriteria.isSingle, PlacementCriteria.hasEnSuite),
+        essentialCriteria = listOf(PlacementCriteria.IS_SEMI_SPECIALIST_MENTAL_HEALTH, PlacementCriteria.IS_RECOVERY_FOCUSSED),
+        desirableCriteria = listOf(PlacementCriteria.IS_WHEELCHAIR_DESIGNATED, PlacementCriteria.IS_SINGLE, PlacementCriteria.HAS_EN_SUITE),
         person = mockPersonInfo,
         risks = mockRisks,
         applicationId = application.id,
         assessmentId = assessment.id,
-        releaseType = ReleaseTypeOption.licence,
-        status = PlacementRequestStatus.notMatched,
+        releaseType = ReleaseTypeOption.LICENCE,
+        status = PlacementRequestStatus.NOT_MATCHED,
         assessmentDecision = decision,
         assessmentDate = assessmentSubmittedAt.toInstant(),
         applicationDate = applicationSubmittedAt.toInstant(),
         assessor = mockUser,
         notes = placementRequestEntity.notes,
         isParole = placementRequestEntity.isParole,
-        requestType = PlacementRequestRequestType.standardRelease,
+        requestType = PlacementRequestRequestType.STANDARD_RELEASE,
         booking = null,
         isWithdrawn = false,
         withdrawalReason = null,
@@ -218,7 +218,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.status).isEqualTo(PlacementRequestStatus.matched)
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.MATCHED)
     assertThat(result.booking).isEqualTo(mockBookingSummary)
   }
 
@@ -238,7 +238,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.status).isEqualTo(PlacementRequestStatus.unableToMatch)
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.UNABLE_TO_MATCH)
   }
 
   @Test
@@ -250,7 +250,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.parole)
+    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.PAROLE)
   }
 
   @Test
@@ -262,7 +262,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.standardRelease)
+    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.STANDARD_RELEASE)
   }
 
   @Test
@@ -300,7 +300,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail))
 
-    assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.NOT_MATCHED)
     assertThat(result.booking).isNull()
   }
 
@@ -321,7 +321,7 @@ class PlacementRequestTransformerTest {
     assertThat(result).isEqualTo(
       Withdrawable(
         id,
-        WithdrawableType.placementRequest,
+        WithdrawableType.PLACEMENT_REQUEST,
         listOf(
           DatePeriod(
             LocalDate.of(2023, 12, 11),
@@ -379,6 +379,6 @@ class PlacementRequestTransformerTest {
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
     assertThat(result.isWithdrawn).isEqualTo(true)
-    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST)
   }
 }

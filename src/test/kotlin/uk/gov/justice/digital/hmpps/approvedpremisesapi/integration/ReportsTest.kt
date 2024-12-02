@@ -952,7 +952,7 @@ class ReportsTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2023-04-05"),
               endDate = LocalDate.parse("2023-04-15"),
               durationOfBookingDays = 10,
-              bookingStatus = BookingStatus.provisional,
+              bookingStatus = BookingStatus.PROVISIONAL,
               voidCategory = null,
               voidNotes = null,
               uniquePropertyRef = premises.id.toShortBase58(),
@@ -1029,7 +1029,7 @@ class ReportsTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2023-04-05"),
               endDate = LocalDate.parse("2023-04-15"),
               durationOfBookingDays = 10,
-              bookingStatus = BookingStatus.provisional,
+              bookingStatus = BookingStatus.PROVISIONAL,
               voidCategory = null,
               voidNotes = null,
               uniquePropertyRef = premises.id.toShortBase58(),
@@ -1276,7 +1276,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class GetLostBedsReport {
-    private val lostBedsEndpoint = "/cas1/reports/${Cas1ReportName.lostBeds.value}"
+    private val lostBedsEndpoint = "/cas1/reports/${Cas1ReportName.LOST_BEDS.value}"
 
     @Test
     fun `Get lost beds report returns OK with correct body`() {

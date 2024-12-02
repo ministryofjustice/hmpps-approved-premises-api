@@ -21,8 +21,8 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
   }
 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var gender: Yielded<Gender> = { Gender.male }
-  private var apType: Yielded<ApType> = { ApType.normal }
+  private var gender: Yielded<Gender> = { Gender.MALE }
+  private var apType: Yielded<ApType> = { ApType.NORMAL }
   private var postcodeDistrict: Yielded<PostCodeDistrictEntity> = { PostCodeDistrictEntityFactory().produce() }
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var assessment: Yielded<ApprovedPremisesAssessmentEntity>? = null

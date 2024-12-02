@@ -93,16 +93,16 @@ class BookingTransformer(
 
   fun transformToWithdrawable(jpa: BookingEntity) = Withdrawable(
     jpa.id,
-    WithdrawableType.booking,
+    WithdrawableType.BOOKING,
     listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate)),
   )
 
   private fun determineApprovedPremisesStatus(jpa: BookingEntity) = when {
-    jpa.nonArrival != null -> BookingStatus.notMinusArrived
-    jpa.arrival != null && jpa.departure == null -> BookingStatus.arrived
-    jpa.departure != null -> BookingStatus.departed
-    jpa.cancellation != null -> BookingStatus.cancelled
-    jpa.arrival == null && jpa.nonArrival == null -> BookingStatus.awaitingMinusArrival
+    jpa.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
+    jpa.arrival != null && jpa.departure == null -> BookingStatus.ARRIVED
+    jpa.departure != null -> BookingStatus.DEPARTED
+    jpa.cancellation != null -> BookingStatus.CANCELLED
+    jpa.arrival == null && jpa.nonArrival == null -> BookingStatus.AWAITING_MINUS_ARRIVAL
     else -> throw RuntimeException("Could not determine status for Booking ${jpa.id}")
   }
 
@@ -116,13 +116,13 @@ class BookingTransformer(
     }
 
     return when {
-      jpa.cancellation != null -> BookingStatus.cancelled
-      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
-      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
-      jpa.arrival != null -> BookingStatus.arrived
-      jpa.nonArrival != null -> BookingStatus.notMinusArrived
-      jpa.confirmation != null -> BookingStatus.confirmed
-      else -> BookingStatus.provisional
+      jpa.cancellation != null -> BookingStatus.CANCELLED
+      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.DEPARTED
+      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.CLOSED
+      jpa.arrival != null -> BookingStatus.ARRIVED
+      jpa.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
+      jpa.confirmation != null -> BookingStatus.CONFIRMED
+      else -> BookingStatus.PROVISIONAL
     }
   }
 }

@@ -188,8 +188,8 @@ class Cas1ApplicationDomainEventService(
       releaseType = submitApplication.releaseType.toString(),
       age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
       gender = when (offenderDetails.gender.lowercase()) {
-        "male" -> ApplicationSubmitted.Gender.male
-        "female" -> ApplicationSubmitted.Gender.female
+        "male" -> ApplicationSubmitted.Gender.MALE
+        "female" -> ApplicationSubmitted.Gender.FEMALE
         else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
       },
       targetLocation = submitApplication.targetLocation,

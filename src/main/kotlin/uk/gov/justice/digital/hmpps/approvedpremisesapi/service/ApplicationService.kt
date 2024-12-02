@@ -141,10 +141,10 @@ class ApplicationService(
     pageSize: Int? = 10,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
     val sortField = when (sortBy) {
-      ApplicationSortField.arrivalDate -> "arrivalDate"
-      ApplicationSortField.createdAt -> "a.created_at"
-      ApplicationSortField.tier -> "tier"
-      ApplicationSortField.releaseType -> "releaseType"
+      ApplicationSortField.ARRIVAL_DATE -> "arrivalDate"
+      ApplicationSortField.CREATED_AT -> "a.created_at"
+      ApplicationSortField.TIER -> "tier"
+      ApplicationSortField.RELEASE_TYPE -> "releaseType"
       else -> "a.created_at"
     }
     val pageable = getPageable(sortField, sortDirection, page, pageSize)
@@ -606,7 +606,7 @@ class ApplicationService(
     val updatedApplication = application.apply {
       this.isWithdrawn = true
       this.withdrawalReason = withdrawalReason
-      this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
+      this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.OTHER.value) {
         otherReason
       } else {
         null
@@ -826,11 +826,11 @@ class ApplicationService(
 
   private fun getNoticeType(noticeType: Cas1ApplicationTimelinessCategory?, isEmergencyApplication: Boolean?, application: ApprovedPremisesApplicationEntity) = noticeType
     ?: if (isEmergencyApplication == true) {
-      Cas1ApplicationTimelinessCategory.emergency
+      Cas1ApplicationTimelinessCategory.EMERGENCY
     } else if (application.isShortNoticeApplication() == true) {
-      Cas1ApplicationTimelinessCategory.shortNotice
+      Cas1ApplicationTimelinessCategory.SHORT_NOTICE
     } else {
-      Cas1ApplicationTimelinessCategory.standard
+      Cas1ApplicationTimelinessCategory.STANDARD
     }
 
   fun getArrivalDate(arrivalDate: LocalDate?): OffsetDateTime? {

@@ -238,7 +238,7 @@ class BookingService(
           turnarounds = mutableListOf(),
           nomsNumber = placementRequest.application.nomsNumber,
           placementRequest = null,
-          status = BookingStatus.confirmed,
+          status = BookingStatus.CONFIRMED,
           adhoc = false,
         ),
       )
@@ -349,7 +349,7 @@ class BookingService(
         dateChanges = mutableListOf(),
         nomsNumber = nomsNumber,
         placementRequest = null,
-        status = BookingStatus.confirmed,
+        status = BookingStatus.CONFIRMED,
         adhoc = true,
       )
 
@@ -563,7 +563,7 @@ class BookingService(
           offlineApplication = null,
           turnarounds = mutableListOf(),
           placementRequest = null,
-          status = BookingStatus.provisional,
+          status = BookingStatus.PROVISIONAL,
         ),
       )
 
@@ -664,7 +664,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
-    booking.status = BookingStatus.arrived
+    booking.status = BookingStatus.ARRIVED
     updateBooking(booking)
 
     booking.arrivals += arrivalEntity
@@ -703,7 +703,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
-    booking.status = BookingStatus.arrived
+    booking.status = BookingStatus.ARRIVED
     updateBooking(booking)
 
     booking.arrivals += arrivalEntity
@@ -790,7 +790,7 @@ class BookingService(
         otherReason = otherReason,
       ),
     )
-    booking.status = BookingStatus.cancelled
+    booking.status = BookingStatus.CANCELLED
     updateBooking(booking)
     booking.cancellations += cancellationEntity
 
@@ -861,7 +861,7 @@ class BookingService(
         otherReason = null,
       ),
     )
-    booking.status = BookingStatus.cancelled
+    booking.status = BookingStatus.CANCELLED
     updateBooking(booking)
     booking.cancellations += cancellationEntity
 
@@ -897,7 +897,7 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-    booking.status = BookingStatus.confirmed
+    booking.status = BookingStatus.CONFIRMED
     updateBooking(booking)
     booking.confirmation = confirmationEntity
 
@@ -972,7 +972,7 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-    booking.status = BookingStatus.departed
+    booking.status = BookingStatus.DEPARTED
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
     booking.departures += departureEntity

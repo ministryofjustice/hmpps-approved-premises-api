@@ -247,7 +247,7 @@ class AssessmentService(
       if (createdFromAppeal) {
         cas1AssessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application)
       } else {
-        cas1AssessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
+        cas1AssessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY)
       }
       cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, allocatingUser = null)
     }
@@ -689,7 +689,7 @@ class AssessmentService(
     assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
+      cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY)
       val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {
         cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application)

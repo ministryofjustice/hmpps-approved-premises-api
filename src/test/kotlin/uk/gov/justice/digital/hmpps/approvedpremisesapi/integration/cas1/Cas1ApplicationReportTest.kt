@@ -226,7 +226,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         nomsNumber = "noms1",
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
         crn = "AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn",
         dateOfBirth = LocalDate.now().minusYears(25),
         gender = "male",
@@ -234,14 +234,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         mappaCategory = "cat1",
         mappaLevel = "level1",
         offenceId = "offenceId1",
-        sentenceType = SentenceTypeOption.nonStatutory,
-        releaseType = ReleaseTypeOption.licence,
+        sentenceType = SentenceTypeOption.NON_STATUTORY,
+        releaseType = ReleaseTypeOption.LICENCE,
         apAreaName = "apArea1",
         lduName = "ldu1",
         teamName = "refTeam1",
         targetLocation = "location1",
         submittedAt = LocalDateTime.of(2020, 2, 1, 12, 35, 0),
-        timelinessCategory = Cas1ApplicationTimelinessCategory.standard,
+        timelinessCategory = Cas1ApplicationTimelinessCategory.STANDARD,
         reasonForShortNotice = "reasonForShortNotice1",
         reasonForShortNoticeOther = "reasonForShortNoticeOther1",
         arrivalDate = LocalDate.of(2020, 5, 1),
@@ -272,13 +272,13 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createAppeal(
         application = application,
-        decision = AppealDecision.rejected,
+        decision = AppealDecision.REJECTED,
         allocationDate = LocalDateTime.of(2020, 4, 5, 14, 15, 10),
         acceptanceDate = LocalDate.of(2020, 4, 6),
       )
       createAppeal(
         application = application,
-        decision = AppealDecision.accepted,
+        decision = AppealDecision.ACCEPTED,
         allocationDate = LocalDateTime.of(2020, 4, 7, 14, 15, 10),
         acceptanceDate = LocalDate.of(2020, 4, 8),
       )
@@ -296,14 +296,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       )
       acceptLatestAssessment(
         applicationId = application.id,
-        apType = ApType.pipe,
+        apType = ApType.PIPE,
         decisionDate = LocalDateTime.of(2020, 5, 1, 9, 15, 45),
         assessorJwt = assessor2Jwt,
       )
       withdrawApplication(
         applicationId = application.id,
         withdrawalDate = LocalDateTime.of(2021, 12, 25, 2, 0, 0),
-        reason = WithdrawalReason.duplicateApplication,
+        reason = WithdrawalReason.DUPLICATE_APPLICATION,
       )
     }
 
@@ -418,7 +418,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         nomsNumber = "noms3",
-        apType = ApType.pipe,
+        apType = ApType.PIPE,
         crn = "AppSubmittedWithAcceptedAssessment",
         dateOfBirth = LocalDate.now().minusYears(50),
         gender = "female",
@@ -426,14 +426,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         mappaCategory = "cat3",
         mappaLevel = "level3",
         offenceId = "offenceId3",
-        sentenceType = SentenceTypeOption.bailPlacement,
-        releaseType = ReleaseTypeOption.rotl,
+        sentenceType = SentenceTypeOption.BAIL_PLACEMENT,
+        releaseType = ReleaseTypeOption.ROTL,
         apAreaName = "apArea3",
         lduName = "ldu3",
         teamName = "refTeam3",
         targetLocation = "location3",
         submittedAt = LocalDateTime.of(2020, 2, 15, 11, 25, 0),
-        timelinessCategory = Cas1ApplicationTimelinessCategory.emergency,
+        timelinessCategory = Cas1ApplicationTimelinessCategory.EMERGENCY,
         reasonForShortNotice = "reasonForShortNotice3",
         reasonForShortNoticeOther = "reasonForShortNoticeOther3",
         arrivalDate = LocalDate.of(2030, 12, 31),
@@ -452,7 +452,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       )
       acceptLatestAssessment(
         applicationId = application.id,
-        apType = ApType.mhapStJosephs,
+        apType = ApType.MHAP_ST_JOSEPHS,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessor4jwt,
       )
@@ -533,7 +533,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         nomsNumber = "noms2",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "AppSubmittedNoAssessment",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -541,14 +541,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         mappaCategory = "cat2",
         mappaLevel = "level2",
         offenceId = "offenceId2",
-        sentenceType = SentenceTypeOption.ipp,
-        releaseType = ReleaseTypeOption.notApplicable,
+        sentenceType = SentenceTypeOption.IPP,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
         targetLocation = "location2",
         submittedAt = LocalDateTime.of(2020, 2, 29, 11, 25, 0),
-        timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
+        timelinessCategory = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
         arrivalDate = null,
@@ -622,7 +622,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(),
         nomsNumber = "noms10",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "appWithdrawnDuringReportingPeriod",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -630,14 +630,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         mappaCategory = "cat2",
         mappaLevel = "level2",
         offenceId = "offenceId2",
-        sentenceType = SentenceTypeOption.ipp,
-        releaseType = ReleaseTypeOption.notApplicable,
+        sentenceType = SentenceTypeOption.IPP,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
         targetLocation = "location2",
         submittedAt = LocalDateTime.of(2020, 1, 30, 11, 25, 0),
-        timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
+        timelinessCategory = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
         arrivalDate = null,
@@ -645,7 +645,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       withdrawApplication(
         applicationId = application.id,
         withdrawalDate = LocalDateTime.of(2020, 2, 12, 11, 25, 0),
-        WithdrawalReason.death,
+        WithdrawalReason.DEATH,
       )
     }
 
@@ -665,7 +665,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(),
         nomsNumber = "noms2",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "submittedAppBeforeReportDate",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -673,14 +673,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         mappaCategory = "cat2",
         mappaLevel = "level2",
         offenceId = "offenceId2",
-        sentenceType = SentenceTypeOption.ipp,
-        releaseType = ReleaseTypeOption.notApplicable,
+        sentenceType = SentenceTypeOption.IPP,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
         targetLocation = "location2",
         submittedAt = LocalDateTime.of(2020, 1, 30, 11, 25, 0),
-        timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
+        timelinessCategory = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
         arrivalDate = null,
@@ -695,7 +695,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(),
         nomsNumber = "noms2",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "submittedAppBeforeReportDate",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -703,14 +703,14 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
         mappaCategory = "cat2",
         mappaLevel = "level2",
         offenceId = "offenceId2",
-        sentenceType = SentenceTypeOption.ipp,
-        releaseType = ReleaseTypeOption.notApplicable,
+        sentenceType = SentenceTypeOption.IPP,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
         targetLocation = "location2",
         submittedAt = LocalDateTime.of(2020, 3, 1, 1, 0, 0),
-        timelinessCategory = Cas1ApplicationTimelinessCategory.shortNotice,
+        timelinessCategory = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
         arrivalDate = null,
@@ -985,12 +985,12 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
-    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+    val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
+    val desirableCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
-      type = ApType.normal,
+      gender = Gender.MALE,
+      type = ApType.NORMAL,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,

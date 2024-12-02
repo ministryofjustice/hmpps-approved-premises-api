@@ -13,15 +13,15 @@ class ReportsController(private val reportService: ReportsService) : ReportsCas2
 
   override fun reportsReportNameGet(reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> {
     return when (reportName) {
-      Cas2ReportName.submittedMinusApplications -> generateXlsxStreamingResponse {
+      Cas2ReportName.SUBMITTED_MINUS_APPLICATIONS -> generateXlsxStreamingResponse {
           outputStream ->
         reportService.createSubmittedApplicationsReport(outputStream)
       }
-      Cas2ReportName.applicationMinusStatusMinusUpdates -> generateXlsxStreamingResponse {
+      Cas2ReportName.APPLICATION_MINUS_STATUS_MINUS_UPDATES -> generateXlsxStreamingResponse {
           outputStream ->
         reportService.createApplicationStatusUpdatesReport(outputStream)
       }
-      Cas2ReportName.unsubmittedMinusApplications -> generateXlsxStreamingResponse {
+      Cas2ReportName.UNSUBMITTED_MINUS_APPLICATIONS -> generateXlsxStreamingResponse {
           outputStream ->
         reportService.createUnsubmittedApplicationsReport(outputStream)
       }

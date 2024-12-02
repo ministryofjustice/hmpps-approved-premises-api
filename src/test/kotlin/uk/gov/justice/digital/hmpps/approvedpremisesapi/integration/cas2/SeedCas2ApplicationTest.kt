@@ -49,7 +49,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.cas2Applications, "unknown-cas2-application.csv")
+    seedService.seedData(SeedFileType.CAS2_APPLICATIONS, "unknown-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 
@@ -91,7 +91,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.cas2Applications, "in-progress-cas2-application.csv")
+    seedService.seedData(SeedFileType.CAS2_APPLICATIONS, "in-progress-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 
@@ -141,7 +141,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.cas2Applications, "submitted-cas2-application.csv")
+    seedService.seedData(SeedFileType.CAS2_APPLICATIONS, "submitted-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 
@@ -192,7 +192,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.cas2Applications, "in-review-cas2-application.csv")
+    seedService.seedData(SeedFileType.CAS2_APPLICATIONS, "in-review-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 

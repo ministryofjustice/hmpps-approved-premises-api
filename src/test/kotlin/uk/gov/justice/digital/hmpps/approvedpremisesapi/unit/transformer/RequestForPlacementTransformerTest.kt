@@ -84,7 +84,7 @@ class RequestForPlacementTransformerTest {
       assertThat(result.createdByUserId).isEqualTo(placementApplication.createdByUser.id)
       assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
       assertThat(result.isWithdrawn).isEqualTo(placementApplication.isWithdrawn)
-      assertThat(result.type).isEqualTo(RequestForPlacementType.manual)
+      assertThat(result.type).isEqualTo(RequestForPlacementType.MANUAL)
       assertPlacementDatesMatchPlacementDateEntities(result.placementDates, placementApplication.placementDates)
       assertThat(result.submittedAt).isEqualTo(placementApplication.submittedAt?.toInstant())
       assertThat(result.requestReviewedAt).isEqualTo(placementApplication.decisionMadeAt?.toInstant())
@@ -111,7 +111,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.REQUEST_WITHDRAWN)
     }
 
     @Test
@@ -162,7 +162,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.PLACEMENT_BOOKED)
     }
 
     @Test
@@ -181,7 +181,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestRejected)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.REQUEST_REJECTED)
     }
 
     @Test
@@ -200,7 +200,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.AWAITING_MATCH)
     }
 
     @Test
@@ -217,7 +217,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.REQUEST_SUBMITTED)
     }
 
     @Test
@@ -233,7 +233,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestUnsubmitted)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.REQUEST_UNSUBMITTED)
     }
 
     @ParameterizedTest
@@ -288,7 +288,7 @@ class RequestForPlacementTransformerTest {
       assertThat(result.createdByUserId).isEqualTo(placementRequest.application.createdByUser.id)
       assertThat(result.createdAt).isEqualTo(placementRequest.createdAt.toInstant())
       assertThat(result.isWithdrawn).isEqualTo(placementRequest.isWithdrawn)
-      assertThat(result.type).isEqualTo(RequestForPlacementType.automatic)
+      assertThat(result.type).isEqualTo(RequestForPlacementType.AUTOMATIC)
       assertThat(result.placementDates).hasSize(1)
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.placementDates[0].duration).isEqualTo(placementRequest.duration)
@@ -324,7 +324,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.REQUEST_WITHDRAWN)
     }
 
     @Test
@@ -364,7 +364,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.PLACEMENT_BOOKED)
     }
 
     @Test
@@ -392,7 +392,7 @@ class RequestForPlacementTransformerTest {
 
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.AWAITING_MATCH)
     }
 
     @ParameterizedTest

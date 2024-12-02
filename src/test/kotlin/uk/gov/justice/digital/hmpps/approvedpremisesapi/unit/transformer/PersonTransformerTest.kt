@@ -51,7 +51,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.FULL_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(FullPersonSummary::class.java)
       assertThat((result as FullPersonSummary).name).isEqualTo("max power")
     }
@@ -66,7 +66,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.restrictedPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.RESTRICTED_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(RestrictedPersonSummary::class.java)
     }
 
@@ -79,7 +79,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
     }
 
@@ -92,7 +92,7 @@ class PersonTransformerTest {
       )
 
       assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
+      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.UNKNOWN_PERSON_SUMMARY)
       assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
     }
   }
@@ -200,12 +200,12 @@ class PersonTransformerTest {
       assertThat(result is FullPerson).isTrue
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "CRN123",
           name = "Greggory Someone",
           dateOfBirth = LocalDate.parse("1980-09-12"),
           sex = "Male",
-          status = PersonStatus.unknown,
+          status = PersonStatus.UNKNOWN,
           nomsNumber = null,
           pncNumber = null,
           ethnicity = "White and Asian",
@@ -293,12 +293,12 @@ class PersonTransformerTest {
       assertThat(result is FullPerson).isTrue
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "CRN123",
           name = "Greggory Someone",
           dateOfBirth = LocalDate.parse("1980-09-12"),
           sex = "Male",
-          status = PersonStatus.inCustody,
+          status = PersonStatus.IN_CUSTODY,
           nomsNumber = "NOMS321",
           pncNumber = "PNC456",
           ethnicity = "White and Asian",
@@ -386,12 +386,12 @@ class PersonTransformerTest {
       assertThat(result is FullPerson).isTrue
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "CRN123",
           name = "Greggory Someone",
           dateOfBirth = LocalDate.parse("1980-09-12"),
           sex = "Male",
-          status = PersonStatus.inCustody,
+          status = PersonStatus.IN_CUSTODY,
           nomsNumber = "NOMS321",
           pncNumber = null,
           ethnicity = "White and Asian",
@@ -537,12 +537,12 @@ class PersonTransformerTest {
 
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = caseSummary.crn,
           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
           dateOfBirth = caseSummary.dateOfBirth,
           sex = caseSummary.gender!!,
-          status = PersonStatus.unknown,
+          status = PersonStatus.UNKNOWN,
           nomsNumber = caseSummary.nomsId,
           ethnicity = caseSummary.profile!!.ethnicity,
           nationality = caseSummary.profile!!.nationality,
@@ -601,12 +601,12 @@ class PersonTransformerTest {
 
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = crn,
           name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
           dateOfBirth = probationOffenderDetail.dateOfBirth!!,
           sex = probationOffenderDetail.gender!!,
-          status = PersonStatus.inCustody,
+          status = PersonStatus.IN_CUSTODY,
           nomsNumber = nomsNumber,
           pncNumber = pncNumber,
           nationality = probationOffenderDetail.offenderProfile?.nationality!!,
@@ -637,12 +637,12 @@ class PersonTransformerTest {
 
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = crn,
           name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
           dateOfBirth = probationOffenderDetail.dateOfBirth!!,
           sex = "Not found",
-          status = PersonStatus.inCustody,
+          status = PersonStatus.IN_CUSTODY,
           nomsNumber = nomsNumber,
           pncNumber = "Not found",
           nationality = "Not found",

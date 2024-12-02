@@ -429,11 +429,11 @@ class Cas1SpaceBookingService(
       premisesId,
       pageCriteria.toPageableOrAllPages(
         sortByConverter = when (pageCriteria.sortBy) {
-          Cas1SpaceBookingSummarySortField.personName -> "personName"
-          Cas1SpaceBookingSummarySortField.canonicalArrivalDate -> "canonicalArrivalDate"
-          Cas1SpaceBookingSummarySortField.canonicalDepartureDate -> "canonicalDepartureDate"
-          Cas1SpaceBookingSummarySortField.keyWorkerName -> "keyWorkerName"
-          Cas1SpaceBookingSummarySortField.tier -> "tier"
+          Cas1SpaceBookingSummarySortField.PERSON_NAME -> "personName"
+          Cas1SpaceBookingSummarySortField.CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
+          Cas1SpaceBookingSummarySortField.CANONICAL_DEPARTURE_DATE -> "canonicalDepartureDate"
+          Cas1SpaceBookingSummarySortField.KEY_WORKER_NAME -> "keyWorkerName"
+          Cas1SpaceBookingSummarySortField.TIER -> "tier"
         },
       ),
     )

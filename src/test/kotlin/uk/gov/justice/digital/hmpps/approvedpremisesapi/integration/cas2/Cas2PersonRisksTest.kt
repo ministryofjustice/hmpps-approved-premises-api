@@ -103,7 +103,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
               PersonRisks(
                 crn = offenderDetails.otherIds.crn,
                 roshRisks = RoshRisksEnvelope(
-                  status = RiskEnvelopeStatus.retrieved,
+                  status = RiskEnvelopeStatus.RETRIEVED,
                   value = RoshRisks(
                     overallRisk = "Very High",
                     riskToChildren = "Low",
@@ -114,15 +114,15 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
                   ),
                 ),
                 tier = RiskTierEnvelope(
-                  status = RiskEnvelopeStatus.notFound,
+                  status = RiskEnvelopeStatus.NOT_FOUND,
                   value = null,
                 ),
                 flags = FlagsEnvelope(
-                  status = RiskEnvelopeStatus.notFound,
+                  status = RiskEnvelopeStatus.NOT_FOUND,
                   value = null,
                 ),
                 mappa = MappaEnvelope(
-                  status = RiskEnvelopeStatus.notFound,
+                  status = RiskEnvelopeStatus.NOT_FOUND,
                   value = null,
                 ),
               ),

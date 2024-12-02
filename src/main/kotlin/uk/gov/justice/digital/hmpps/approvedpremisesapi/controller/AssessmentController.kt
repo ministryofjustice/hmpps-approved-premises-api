@@ -64,7 +64,7 @@ class AssessmentController(
     perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
-    val resolvedSortDirection = sortDirection ?: SortDirection.asc
+    val resolvedSortDirection = sortDirection ?: SortDirection.ASC
     val resolvedSortBy = sortBy ?: AssessmentSortField.assessmentArrivalDate
     val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 

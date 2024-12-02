@@ -83,11 +83,11 @@ class AppealService(
         cas1AppealDomainEventService.appealRecordCreated(appeal)
 
         when (decision) {
-          AppealDecision.accepted -> {
+          AppealDecision.ACCEPTED -> {
             assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
             cas1AppealEmailService.appealSuccess(application, appeal)
           }
-          AppealDecision.rejected -> {
+          AppealDecision.REJECTED -> {
             cas1AppealEmailService.appealFailed(application as ApprovedPremisesApplicationEntity)
           }
         }

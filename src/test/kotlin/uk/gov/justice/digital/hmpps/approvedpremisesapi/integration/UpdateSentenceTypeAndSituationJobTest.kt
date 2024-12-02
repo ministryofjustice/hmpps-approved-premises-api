@@ -52,7 +52,7 @@ class UpdateSentenceTypeAndSituationJobTest : IntegrationTestBase() {
       }
     }.take(50).toList()
 
-    migrationJobService.runMigrationJob(MigrationJobType.sentenceTypeAndSituation, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.SENTENCE_TYPE_AND_SITUATION, 1)
 
     applications.forEach {
       val application = applicationRepository.findByIdOrNull(it.id)!! as ApprovedPremisesApplicationEntity

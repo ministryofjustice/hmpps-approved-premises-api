@@ -380,14 +380,14 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @ParameterizedTest
   @EnumSource(ApplicationSortField::class)
   fun `findAllApprovedPremisesSummaries sorts by a given field in ascending order`(sortField: ApplicationSortField) {
-    allApplications.sort(SortDirection.asc, sortField)
+    allApplications.sort(SortDirection.ASC, sortField)
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
       val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
         page + 1,
         null,
-        SortDirection.asc,
+        SortDirection.ASC,
         emptyList(),
         sortField,
         null,
@@ -409,14 +409,14 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @ParameterizedTest
   @EnumSource(ApplicationSortField::class)
   fun `findAllApprovedPremisesSummaries sorts by a given field in descending order`(sortField: ApplicationSortField) {
-    allApplications.sort(SortDirection.desc, sortField)
+    allApplications.sort(SortDirection.DESC, sortField)
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
       val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
         page + 1,
         null,
-        SortDirection.desc,
+        SortDirection.DESC,
         emptyList(),
         sortField,
         null,
@@ -438,15 +438,15 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   private fun List<ApprovedPremisesApplicationEntity>.sort(sortDirection: SortDirection, sortField: ApplicationSortField): List<ApprovedPremisesApplicationEntity> {
     val comparator = Comparator<ApprovedPremisesApplicationEntity> { a, b ->
       val ascendingCompare = when (sortField) {
-        ApplicationSortField.createdAt -> compareValues(a.createdAt, b.createdAt)
-        ApplicationSortField.arrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
-        ApplicationSortField.tier -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
-        ApplicationSortField.releaseType -> compareValues(a.releaseType, b.releaseType)
+        ApplicationSortField.CREATED_AT -> compareValues(a.createdAt, b.createdAt)
+        ApplicationSortField.ARRIVAL_DATE -> compareValues(a.arrivalDate, b.arrivalDate)
+        ApplicationSortField.TIER -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
+        ApplicationSortField.RELEASE_TYPE -> compareValues(a.releaseType, b.releaseType)
       }
 
       when (sortDirection) {
-        SortDirection.asc, null -> ascendingCompare
-        SortDirection.desc -> -ascendingCompare
+        SortDirection.ASC, null -> ascendingCompare
+        SortDirection.DESC -> -ascendingCompare
       }
     }
 
@@ -455,7 +455,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
 
   private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean {
     return this.getIsWomensApplication() == applicationEntity.isWomensApplication &&
-      (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
+      (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY)) &&
       (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
       (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
       (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&

@@ -21,7 +21,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
         withPostcode("NW1 6XE")
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -75,7 +75,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine1("8 Knox Street")
         withAddressLine2("Flat 1")
         withPostcode("W1H 1FY")
-        withStatus(PropertyStatus.archived)
+        withStatus(PropertyStatus.ARCHIVED)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -132,7 +132,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
         withPostcode("NW1 6XE")
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -173,7 +173,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
         withPostcode("NW1 6XE")
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -226,7 +226,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
         withPostcode("NW1 6XE")
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -294,7 +294,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
         withPostcode("NW1 6XE")
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
         withApCode("APCODE")
         withService("CAS3")
       }

@@ -54,42 +54,42 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.current,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.future,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
-            Temporality.current,
+            Temporality.PAST,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
-            Temporality.future,
+            Temporality.PAST,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.current,
-            Temporality.future,
+            Temporality.CURRENT,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
-            Temporality.current,
-            Temporality.future,
+            Temporality.PAST,
+            Temporality.CURRENT,
+            Temporality.FUTURE,
           ),
         ),
       )
@@ -469,7 +469,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           initialiseOosBedsForAllTemporalities(user)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas1/out-of-service-beds?temporality=${Temporality.past}")
+            .uri("/cas1/out-of-service-beds?temporality=${Temporality.PAST}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -491,7 +491,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           initialiseOosBedsForAllTemporalities(user)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas1/out-of-service-beds?temporality=${Temporality.current}")
+            .uri("/cas1/out-of-service-beds?temporality=${Temporality.CURRENT}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -513,7 +513,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           initialiseOosBedsForAllTemporalities(user)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas1/out-of-service-beds?temporality=${Temporality.future}")
+            .uri("/cas1/out-of-service-beds?temporality=${Temporality.FUTURE}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -601,23 +601,23 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         }
 
         val sortedOutOfServiceBeds = when (sortDirection) {
-          SortDirection.asc -> when (sortField) {
-            Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
-            Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
-            Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
-            Cas1OutOfServiceBedSortField.startDate -> expectedOutOfServiceBeds.sortedBy { it.startDate }
-            Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedBy { it.endDate }
-            Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
-            Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
+          SortDirection.ASC -> when (sortField) {
+            Cas1OutOfServiceBedSortField.PREMISES_NAME -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
+            Cas1OutOfServiceBedSortField.ROOM_NAME -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
+            Cas1OutOfServiceBedSortField.BED_NAME -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
+            Cas1OutOfServiceBedSortField.START_DATE -> expectedOutOfServiceBeds.sortedBy { it.startDate }
+            Cas1OutOfServiceBedSortField.END_DATE -> expectedOutOfServiceBeds.sortedBy { it.endDate }
+            Cas1OutOfServiceBedSortField.REASON -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
+            Cas1OutOfServiceBedSortField.DAYS_LOST -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
           }
-          SortDirection.desc -> when (sortField) {
-            Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
-            Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
-            Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
-            Cas1OutOfServiceBedSortField.startDate -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
-            Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
-            Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
-            Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
+          SortDirection.DESC -> when (sortField) {
+            Cas1OutOfServiceBedSortField.PREMISES_NAME -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
+            Cas1OutOfServiceBedSortField.ROOM_NAME -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
+            Cas1OutOfServiceBedSortField.BED_NAME -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
+            Cas1OutOfServiceBedSortField.START_DATE -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
+            Cas1OutOfServiceBedSortField.END_DATE -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
+            Cas1OutOfServiceBedSortField.REASON -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
+            Cas1OutOfServiceBedSortField.DAYS_LOST -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
           }
         }
 
@@ -1014,7 +1014,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.reason.name").isEqualTo(reason.name)
           .jsonPath("$.reason.isActive").isEqualTo(true)
           .jsonPath("$.daysLostCount").isEqualTo(2)
-          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
           .jsonPath("$.referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
@@ -1024,7 +1024,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.created.value,
+              Cas1OutOfServiceBedRevisionType.CREATED.value,
             ),
           )
           .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-17")
@@ -1098,7 +1098,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.reason.name").isEqualTo(reason.name)
           .jsonPath("$.reason.isActive").isEqualTo(true)
           .jsonPath("$.daysLostCount").isEqualTo(2)
-          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
           .jsonPath("$.referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
@@ -1108,7 +1108,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.created.value,
+              Cas1OutOfServiceBedRevisionType.CREATED.value,
             ),
           )
           .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-17")
@@ -1324,7 +1324,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.reason.name").isEqualTo(reason.name)
             .jsonPath("$.reason.isActive").isEqualTo(true)
             .jsonPath("$.daysLostCount").isEqualTo(30)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
             .jsonPath("$.referenceNumber").isEqualTo("REF-123")
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
@@ -1334,7 +1334,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
+                Cas1OutOfServiceBedRevisionType.CREATED.value,
               ),
             )
             .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-01")
@@ -1523,7 +1523,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.reason.name").isEqualTo(reason.name)
           .jsonPath("$.reason.isActive").isEqualTo(true)
           .jsonPath("$.daysLostCount").isEqualTo(2)
-          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
           .jsonPath("$.referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
@@ -1533,7 +1533,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.created.value,
+              Cas1OutOfServiceBedRevisionType.CREATED.value,
             ),
           )
           .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
@@ -1548,11 +1548,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
           .jsonPath("$.revisionHistory[1].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-              Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-              Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-              Cas1OutOfServiceBedRevisionType.updatedReason.value,
-              Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_START_DATE.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_END_DATE.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_REFERENCE_NUMBER.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_REASON.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_NOTES.value,
             ),
           )
           .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-17")
@@ -1707,7 +1707,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.reason.name").isEqualTo(reason.name)
             .jsonPath("$.reason.isActive").isEqualTo(true)
             .jsonPath("$.daysLostCount").isEqualTo(15)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
             .jsonPath("$.referenceNumber").isEqualTo("REF-123")
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
@@ -1717,7 +1717,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
+                Cas1OutOfServiceBedRevisionType.CREATED.value,
               ),
             )
             .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
@@ -1732,11 +1732,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
             .jsonPath("$.revisionHistory[1].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-                Cas1OutOfServiceBedRevisionType.updatedReason.value,
-                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_START_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_END_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REFERENCE_NUMBER.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REASON.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_NOTES.value,
               ),
             )
             .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")
@@ -1931,7 +1931,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.reason.name").isEqualTo(reason.name)
             .jsonPath("$.reason.isActive").isEqualTo(true)
             .jsonPath("$.daysLostCount").isEqualTo(15)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
             .jsonPath("$.referenceNumber").isEqualTo("REF-123")
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
@@ -1941,7 +1941,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
+                Cas1OutOfServiceBedRevisionType.CREATED.value,
               ),
             )
             .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
@@ -1956,11 +1956,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
             .jsonPath("$.revisionHistory[1].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-                Cas1OutOfServiceBedRevisionType.updatedReason.value,
-                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_START_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_END_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REFERENCE_NUMBER.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REASON.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_NOTES.value,
               ),
             )
             .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")

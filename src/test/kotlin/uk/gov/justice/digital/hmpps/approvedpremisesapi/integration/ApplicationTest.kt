@@ -441,12 +441,12 @@ class ApplicationTest : IntegrationTestBase() {
               listOf(
                 ApprovedPremisesApplicationSummary(
                   createdByUserId = userEntity.id,
-                  status = ApiApprovedPremisesApplicationStatus.started,
+                  status = ApiApprovedPremisesApplicationStatus.STARTED,
                   type = "CAS1",
                   id = application.id,
                   person = UnknownPerson(
                     crn = crn,
-                    type = PersonType.unknownPerson,
+                    type = PersonType.UNKNOWN_PERSON,
                   ),
                   createdAt = application.createdAt.toInstant(),
                   isWomensApplication = null,
@@ -456,10 +456,10 @@ class ApplicationTest : IntegrationTestBase() {
                   arrivalDate = null,
                   risks = PersonRisks(
                     crn = crn,
-                    roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
-                    tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
-                    flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
-                    mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
+                    roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.NOT_FOUND),
+                    tier = RiskTierEnvelope(RiskEnvelopeStatus.NOT_FOUND),
+                    flags = FlagsEnvelope(RiskEnvelopeStatus.NOT_FOUND),
+                    mappa = MappaEnvelope(RiskEnvelopeStatus.NOT_FOUND),
                   ),
                   submittedAt = null,
                   isWithdrawn = false,
@@ -504,7 +504,7 @@ class ApplicationTest : IntegrationTestBase() {
             application.id == it[0].id &&
               application.crn == person.crn &&
               person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
+              person.status == PersonStatus.IN_CUSTODY &&
               person.prisonName == null
           }
         }
@@ -540,7 +540,7 @@ class ApplicationTest : IntegrationTestBase() {
             application.id == it[0].id &&
               application.crn == person.crn &&
               person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
+              person.status == PersonStatus.IN_CUSTODY &&
               person.prisonName == null
           }
         }
@@ -799,7 +799,7 @@ class ApplicationTest : IntegrationTestBase() {
             application.id == it.id &&
               application.crn == person.crn &&
               person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
+              person.status == PersonStatus.IN_CUSTODY &&
               person.prisonName == null
           }
         }
@@ -842,7 +842,7 @@ class ApplicationTest : IntegrationTestBase() {
             application.id == it.id &&
               application.crn == person.crn &&
               person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
+              person.status == PersonStatus.IN_CUSTODY &&
               person.prisonName == null
           }
         }
@@ -1166,7 +1166,7 @@ class ApplicationTest : IntegrationTestBase() {
               .returnResult()
               .responseBody
 
-            assertThat(result!!.person.type).isEqualTo(PersonType.restrictedPerson)
+            assertThat(result!!.person.type).isEqualTo(PersonType.RESTRICTED_PERSON)
           }
         }
       }
@@ -1899,13 +1899,13 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
-            apType = ApType.normal,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
+            apType = ApType.NORMAL,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
-            releaseType = ReleaseTypeOption.licence,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            releaseType = ReleaseTypeOption.LICENCE,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
               "applicantName",
@@ -1928,11 +1928,11 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.isWomensApplication).isFalse()
       assertThat(persistedApplication.isPipeApplication).isFalse
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
-      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.NON_STATUTORY.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
 
       val createdAssessment =
@@ -2022,13 +2022,13 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
-            apType = ApType.normal,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
+            apType = ApType.NORMAL,
             translatedDocument = {},
             isWomensApplication = true,
             targetLocation = "SW1A 1AA",
-            releaseType = ReleaseTypeOption.licence,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            releaseType = ReleaseTypeOption.LICENCE,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
               "applicantName",
@@ -2051,11 +2051,11 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.isWomensApplication).isTrue()
       assertThat(persistedApplication.isPipeApplication).isFalse
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
-      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.NON_STATUTORY.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
       assertThat(persistedApplication.cruManagementArea!!.id).isEqualTo(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
 
@@ -2144,13 +2144,13 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.emergency,
-            apType = ApType.esap,
+            noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
+            apType = ApType.ESAP,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
-            releaseType = ReleaseTypeOption.licence,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            releaseType = ReleaseTypeOption.LICENCE,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
               "applicantName",
@@ -2173,7 +2173,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.EMERGENCY)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2265,13 +2265,13 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
-            apType = ApType.pipe,
+            noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
+            apType = ApType.PIPE,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
-            releaseType = ReleaseTypeOption.licence,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            releaseType = ReleaseTypeOption.LICENCE,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
@@ -2284,7 +2284,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.shortNotice)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.SHORT_NOTICE)
       assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
       assertThat(persistedApplication.cruManagementArea?.id).isEqualTo(overriddenApArea.defaultCruManagementArea.id)
 
@@ -2365,13 +2365,13 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
-            apType = ApType.esap,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
+            apType = ApType.ESAP,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
-            releaseType = ReleaseTypeOption.licence,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            releaseType = ReleaseTypeOption.LICENCE,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
@@ -2384,7 +2384,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
 
       val createdAssessment =
@@ -2494,8 +2494,8 @@ class ApplicationTest : IntegrationTestBase() {
                       isEmergencyApplication = true,
                       isEsapApplication = true,
                       targetLocation = "SW1A 1AA",
-                      releaseType = ReleaseTypeOption.licence,
-                      sentenceType = SentenceTypeOption.nonStatutory,
+                      releaseType = ReleaseTypeOption.LICENCE,
+                      sentenceType = SentenceTypeOption.NON_STATUTORY,
                       type = "CAS1",
                       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
                       caseManagerIsNotApplicant = false,
@@ -2855,7 +2855,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewWithdrawal(
-              reason = WithdrawalReason.duplicateApplication,
+              reason = WithdrawalReason.DUPLICATE_APPLICATION,
             ),
           )
           .exchange()
@@ -2903,7 +2903,7 @@ class ApplicationTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewWithdrawal(
-                reason = WithdrawalReason.duplicateApplication,
+                reason = WithdrawalReason.DUPLICATE_APPLICATION,
               ),
             )
             .exchange()
@@ -3653,7 +3653,7 @@ class ApplicationTest : IntegrationTestBase() {
             .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(2)
-          assertThat(responseBody[0].status).isEqualTo(ApiApprovedPremisesApplicationStatus.assesmentInProgress)
+          assertThat(responseBody[0].status).isEqualTo(ApiApprovedPremisesApplicationStatus.ASSESMENT_IN_PROGRESS)
         }
       }
     }

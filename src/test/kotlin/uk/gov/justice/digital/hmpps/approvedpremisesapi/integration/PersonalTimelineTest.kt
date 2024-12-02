@@ -151,7 +151,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                     ApplicationTimeline(
                       id = application.id,
                       createdAt = application.createdAt.toInstant(),
-                      status = ApprovedPremisesApplicationStatus.started,
+                      status = ApprovedPremisesApplicationStatus.STARTED,
                       isOfflineApplication = false,
                       createdBy = ApprovedPremisesUser(
                         qualifications = emptyList(),
@@ -186,27 +186,27 @@ class PersonalTimelineTest : IntegrationTestBase() {
                       ),
                       timelineEvents = listOf(
                         TimelineEvent(
-                          type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                          type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
                           id = domainEvents[0].id.toString(),
                           occurredAt = domainEvents[0].occurredAt.toInstant(),
                           content = "The application was submitted",
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
                         ),
                         TimelineEvent(
-                          type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                          type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
                           id = domainEvents[1].id.toString(),
                           occurredAt = domainEvents[1].occurredAt.toInstant(),
                           content = "The application was submitted",
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
@@ -288,7 +288,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                     ApplicationTimeline(
                       id = application.id,
                       createdAt = application.createdAt.toInstant(),
-                      status = ApprovedPremisesApplicationStatus.started,
+                      status = ApprovedPremisesApplicationStatus.STARTED,
                       isOfflineApplication = false,
                       createdBy = ApprovedPremisesUser(
                         qualifications = emptyList(),
@@ -323,27 +323,27 @@ class PersonalTimelineTest : IntegrationTestBase() {
                       ),
                       timelineEvents = listOf(
                         TimelineEvent(
-                          type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                          type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
                           id = domainEvents[0].id.toString(),
                           occurredAt = domainEvents[0].occurredAt.toInstant(),
                           content = "The application was submitted",
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
                         ),
                         TimelineEvent(
-                          type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                          type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
                           id = domainEvents[1].id.toString(),
                           occurredAt = domainEvents[1].occurredAt.toInstant(),
                           content = "The application was submitted",
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
@@ -398,27 +398,27 @@ class PersonalTimelineTest : IntegrationTestBase() {
                     createdBy = null,
                     timelineEvents = listOf(
                       TimelineEvent(
-                        type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                        type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
                         id = domainEvents[0].id.toString(),
                         occurredAt = domainEvents[0].occurredAt.toInstant(),
                         content = "The application was submitted",
                         createdBy = null,
                         associatedUrls = listOf(
                           TimelineEventAssociatedUrl(
-                            type = TimelineEventUrlType.application,
+                            type = TimelineEventUrlType.APPLICATION,
                             url = "http://frontend/applications/${offlineApplication.id}",
                           ),
                         ),
                       ),
                       TimelineEvent(
-                        type = TimelineEventType.approvedPremisesApplicationSubmitted,
+                        type = TimelineEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
                         id = domainEvents[1].id.toString(),
                         occurredAt = domainEvents[1].occurredAt.toInstant(),
                         content = "The application was submitted",
                         createdBy = null,
                         associatedUrls = listOf(
                           TimelineEventAssociatedUrl(
-                            type = TimelineEventUrlType.application,
+                            type = TimelineEventUrlType.APPLICATION,
                             url = "http://frontend/applications/${offlineApplication.id}",
                           ),
                         ),

@@ -102,12 +102,12 @@ class AssessmentReferralHistoryNoteTransformerTest {
     assertThat(result.type).isEqualTo("system")
     assertThat(result.category).isEqualTo(
       when (noteType) {
-        ReferralHistorySystemNoteType.SUBMITTED -> ReferralHistorySystemNote.Category.submitted
-        ReferralHistorySystemNoteType.UNALLOCATED -> ReferralHistorySystemNote.Category.unallocated
-        ReferralHistorySystemNoteType.IN_REVIEW -> ReferralHistorySystemNote.Category.inReview
-        ReferralHistorySystemNoteType.READY_TO_PLACE -> ReferralHistorySystemNote.Category.readyToPlace
-        ReferralHistorySystemNoteType.REJECTED -> ReferralHistorySystemNote.Category.rejected
-        ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.completed
+        ReferralHistorySystemNoteType.SUBMITTED -> ReferralHistorySystemNote.Category.SUBMITTED
+        ReferralHistorySystemNoteType.UNALLOCATED -> ReferralHistorySystemNote.Category.UNALLOCATED
+        ReferralHistorySystemNoteType.IN_REVIEW -> ReferralHistorySystemNote.Category.IN_REVIEW
+        ReferralHistorySystemNoteType.READY_TO_PLACE -> ReferralHistorySystemNote.Category.READY_TO_PLACE
+        ReferralHistorySystemNoteType.REJECTED -> ReferralHistorySystemNote.Category.REJECTED
+        ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.COMPLETED
       },
     )
   }
@@ -153,7 +153,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
     assertThat(result.createdByUserName).isEqualTo(user.name)
     assertThat(result.message).isEqualTo(note.message)
     assertThat(result.type).isEqualTo("system")
-    assertThat(result.category).isEqualTo(ReferralHistorySystemNote.Category.rejected)
+    assertThat(result.category).isEqualTo(ReferralHistorySystemNote.Category.REJECTED)
     assertThat(result.messageDetails?.rejectionReason).isEqualTo(rejectionReason.name)
     assertThat(result.messageDetails?.rejectionReasonDetails).isEqualTo(rejectionReasonDetail)
     assertThat(result.messageDetails?.isWithdrawn).isTrue()
@@ -205,12 +205,12 @@ class AssessmentReferralHistoryNoteTransformerTest {
     assertThat(result.type).isEqualTo("system")
     assertThat(result.category).isEqualTo(
       when (noteType) {
-        ReferralHistorySystemNoteType.SUBMITTED -> ReferralHistorySystemNote.Category.submitted
-        ReferralHistorySystemNoteType.UNALLOCATED -> ReferralHistorySystemNote.Category.unallocated
-        ReferralHistorySystemNoteType.IN_REVIEW -> ReferralHistorySystemNote.Category.inReview
-        ReferralHistorySystemNoteType.READY_TO_PLACE -> ReferralHistorySystemNote.Category.readyToPlace
-        ReferralHistorySystemNoteType.REJECTED -> ReferralHistorySystemNote.Category.rejected
-        ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.completed
+        ReferralHistorySystemNoteType.SUBMITTED -> ReferralHistorySystemNote.Category.SUBMITTED
+        ReferralHistorySystemNoteType.UNALLOCATED -> ReferralHistorySystemNote.Category.UNALLOCATED
+        ReferralHistorySystemNoteType.IN_REVIEW -> ReferralHistorySystemNote.Category.IN_REVIEW
+        ReferralHistorySystemNoteType.READY_TO_PLACE -> ReferralHistorySystemNote.Category.READY_TO_PLACE
+        ReferralHistorySystemNoteType.REJECTED -> ReferralHistorySystemNote.Category.REJECTED
+        ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.COMPLETED
       },
     )
     assertThat(result.messageDetails).isNull()

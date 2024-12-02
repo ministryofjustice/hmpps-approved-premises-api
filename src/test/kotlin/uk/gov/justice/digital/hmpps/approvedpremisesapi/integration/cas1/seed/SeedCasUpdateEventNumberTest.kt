@@ -166,7 +166,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
             offenceId = application.offenceId,
             releaseType = "releaseTpye",
             age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
-            gender = ApplicationSubmitted.Gender.male,
+            gender = ApplicationSubmitted.Gender.MALE,
             targetLocation = "target location",
             submittedAt = Instant.now(),
             submittedBy = ApplicationSubmittedSubmittedBy(
@@ -274,7 +274,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesUpdateEventNumber, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_UPDATE_EVENT_NUMBER, "valid-csv.csv")
   }
 
   private fun createApplication(): Pair<ApprovedPremisesApplicationEntity, OffenderDetailSummary> {

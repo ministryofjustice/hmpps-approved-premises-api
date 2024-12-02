@@ -116,7 +116,7 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now(),
         "Some information about why the appeal is being made",
-        AppealDecision.accepted,
+        AppealDecision.ACCEPTED,
         "Some information about the decision made",
         application,
         assessment,
@@ -136,7 +136,7 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now().plusDays(1),
         "Some information about why the appeal is being made",
-        AppealDecision.accepted,
+        AppealDecision.ACCEPTED,
         "Some information about the decision made",
         application,
         assessment,
@@ -162,7 +162,7 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now(),
         appealDetail,
-        AppealDecision.accepted,
+        AppealDecision.ACCEPTED,
         "Some information about the decision made",
         application,
         assessment,
@@ -188,7 +188,7 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now(),
         "Some information about why the appeal is being made",
-        AppealDecision.accepted,
+        AppealDecision.ACCEPTED,
         decisionDetail,
         application,
         assessment,
@@ -222,7 +222,7 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          AppealDecision.accepted,
+          AppealDecision.ACCEPTED,
           "Some information about the decision made",
           application,
           assessment,
@@ -263,7 +263,7 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          AppealDecision.rejected,
+          AppealDecision.REJECTED,
           "Some information about the decision made",
           application,
           assessment,
@@ -297,7 +297,7 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          AppealDecision.rejected,
+          AppealDecision.REJECTED,
           "Some information about the decision made",
           application,
           assessment,
@@ -331,7 +331,7 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          AppealDecision.accepted,
+          AppealDecision.ACCEPTED,
           "Some information about the decision made",
           application,
           assessment,
@@ -366,7 +366,7 @@ class AppealServiceTest {
       this.id == appealId &&
         this.appealDate == now &&
         this.appealDetail == "Some information about why the appeal is being made" &&
-        this.decision == AppealDecision.accepted.value &&
+        this.decision == AppealDecision.ACCEPTED.value &&
         this.decisionDetail == "Some information about the decision made" &&
         this.application == application &&
         this.assessment == assessment &&

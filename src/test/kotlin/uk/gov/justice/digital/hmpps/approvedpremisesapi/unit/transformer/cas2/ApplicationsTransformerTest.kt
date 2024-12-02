@@ -104,7 +104,7 @@ class ApplicationsTransformerTest {
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdBy.id).isEqualTo(user.id)
-      assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+      assertThat(result.status).isEqualTo(ApplicationStatus.IN_PROGRESS)
       assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
     }
 
@@ -119,7 +119,7 @@ class ApplicationsTransformerTest {
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+      assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
       assertThat(result.telephoneNumber).isEqualTo(application.telephoneNumber)
       assertThat(result.assessment!!.id).isEqualTo(assessment.id)
     }
@@ -211,7 +211,7 @@ class ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+      assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)

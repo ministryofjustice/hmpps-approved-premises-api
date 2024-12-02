@@ -114,7 +114,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val assessment = createAssessment(
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
         isEsap = false,
         createdAt = createdAt,
       )
@@ -181,7 +181,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val assessment = createAssessment(
-        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         isEsap = false,
         createdAt = createdAt,
       )
@@ -243,7 +243,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val assessment = createAssessment(
-        noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
         isEsap = false,
         createdAt = createdAt,
       )
@@ -313,7 +313,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementRequest = createPlacementRequest(
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
         isEsap = false,
         createdAt = createdAt,
       )
@@ -380,7 +380,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementRequest = createPlacementRequest(
-        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         isEsap = false,
         createdAt = createdAt,
       )
@@ -443,7 +443,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementRequest = createPlacementRequest(
-        noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
         isEsap = false,
         createdAt = createdAt,
       )
@@ -506,7 +506,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementRequest = createPlacementRequest(
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
         isEsap = true,
         createdAt = createdAt,
       )
@@ -577,7 +577,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementApplication = createPlacementApplication(
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
         isEsap = false,
         submittedAt = submittedAt,
       )
@@ -644,7 +644,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementApplication = createPlacementApplication(
-        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
         isEsap = false,
         submittedAt = submittedAt,
       )
@@ -711,7 +711,7 @@ class TaskDeadlineServiceTest {
       expectedDeadline: OffsetDateTime,
     ) {
       val placementApplication = createPlacementApplication(
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
         isEsap = true,
         submittedAt = submittedAt,
       )

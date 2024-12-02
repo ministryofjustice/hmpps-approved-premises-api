@@ -180,8 +180,8 @@ class AssessmentTransformer(
     }
 
   fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
-    JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
-    JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
+    JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.ACCEPTED
+    JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.REJECTED
     null -> null
   }
 
@@ -199,8 +199,8 @@ class AssessmentTransformer(
   }
 
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
-    "ACCEPTED" -> ApiAssessmentDecision.accepted
-    "REJECTED" -> ApiAssessmentDecision.rejected
+    "ACCEPTED" -> ApiAssessmentDecision.ACCEPTED
+    "REJECTED" -> ApiAssessmentDecision.REJECTED
     else -> null
   }
 
@@ -210,38 +210,38 @@ class AssessmentTransformer(
    * and as such changes should be synchronized
    */
   private fun getStatusForApprovedPremisesAssessment(entity: AssessmentEntity) = when {
-    entity.decision !== null -> ApprovedPremisesAssessmentStatus.completed
-    entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.awaitingResponse
-    entity.reallocatedAt != null -> ApprovedPremisesAssessmentStatus.reallocated
-    entity.data != null -> ApprovedPremisesAssessmentStatus.inProgress
-    else -> ApprovedPremisesAssessmentStatus.notStarted
+    entity.decision !== null -> ApprovedPremisesAssessmentStatus.COMPLETED
+    entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE
+    entity.reallocatedAt != null -> ApprovedPremisesAssessmentStatus.REALLOCATED
+    entity.data != null -> ApprovedPremisesAssessmentStatus.IN_PROGRESS
+    else -> ApprovedPremisesAssessmentStatus.NOT_STARTED
   }
 
   private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary): ApprovedPremisesAssessmentStatus {
     return when (ase.status) {
-      DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.completed
-      DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.awaitingResponse
-      DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.inProgress
-      DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.reallocated
-      else -> ApprovedPremisesAssessmentStatus.notStarted
+      DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.COMPLETED
+      DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE
+      DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.IN_PROGRESS
+      DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.REALLOCATED
+      else -> ApprovedPremisesAssessmentStatus.NOT_STARTED
     }
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {
-    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
+    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.REJECTED
     entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
-      TemporaryAccommodationAssessmentStatus.closed
+      TemporaryAccommodationAssessmentStatus.CLOSED
 
-    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
-    else -> TemporaryAccommodationAssessmentStatus.unallocated
+    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.READY_TO_PLACE
+    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.IN_REVIEW
+    else -> TemporaryAccommodationAssessmentStatus.UNALLOCATED
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(ase: DomainAssessmentSummary) = when {
-    ase.decision == "REJECTED" -> TemporaryAccommodationAssessmentStatus.rejected
-    ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.closed
-    ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    ase.allocated -> TemporaryAccommodationAssessmentStatus.inReview
-    else -> TemporaryAccommodationAssessmentStatus.unallocated
+    ase.decision == "REJECTED" -> TemporaryAccommodationAssessmentStatus.REJECTED
+    ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.CLOSED
+    ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.READY_TO_PLACE
+    ase.allocated -> TemporaryAccommodationAssessmentStatus.IN_REVIEW
+    else -> TemporaryAccommodationAssessmentStatus.UNALLOCATED
   }
 }

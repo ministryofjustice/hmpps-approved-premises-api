@@ -228,8 +228,8 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results.resultsCount).isEqualTo(5)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      val expectedApType = if (apType == ApType.mhapElliottHouse) {
-        ApType.mhapStJosephs
+      val expectedApType = if (apType == ApType.MHAP_ELLIOTT_HOUSE) {
+        ApType.MHAP_ST_JOSEPHS
       } else {
         apType
       }
@@ -298,17 +298,17 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results.resultsCount).isEqualTo(4)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      assertThatResultMatches(results.results[0], expectedPremises[0], ApType.normal)
-      assertThatResultMatches(results.results[1], expectedPremises[1], ApType.pipe)
-      assertThatResultMatches(results.results[2], expectedPremises[2], ApType.esap)
-      assertThatResultMatches(results.results[3], expectedPremises[3], ApType.rfap)
+      assertThatResultMatches(results.results[0], expectedPremises[0], ApType.NORMAL)
+      assertThatResultMatches(results.results[1], expectedPremises[1], ApType.PIPE)
+      assertThatResultMatches(results.results[2], expectedPremises[2], ApType.ESAP)
+      assertThatResultMatches(results.results[3], expectedPremises[3], ApType.RFAP)
     }
   }
 
   private fun assertThatResultMatches(
     actual: Cas1SpaceSearchResult,
     expected: ApprovedPremisesEntity,
-    expectedApType: ApType = ApType.normal,
+    expectedApType: ApType = ApType.NORMAL,
   ) {
     assertThat(actual.spacesAvailable).isEmpty()
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
@@ -501,11 +501,11 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun ApType.asCharacteristicEntity() = when (this) {
-    ApType.normal -> null
-    ApType.pipe -> "isPIPE"
-    ApType.esap -> "isESAP"
-    ApType.rfap -> "isRecoveryFocussed"
-    ApType.mhapStJosephs, ApType.mhapElliottHouse -> "isSemiSpecialistMentalHealth"
+    ApType.NORMAL -> null
+    ApType.PIPE -> "isPIPE"
+    ApType.ESAP -> "isESAP"
+    ApType.RFAP -> "isRecoveryFocussed"
+    ApType.MHAP_ST_JOSEPHS, ApType.MHAP_ELLIOTT_HOUSE -> "isSemiSpecialistMentalHealth"
   }?.let {
     characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)
   }

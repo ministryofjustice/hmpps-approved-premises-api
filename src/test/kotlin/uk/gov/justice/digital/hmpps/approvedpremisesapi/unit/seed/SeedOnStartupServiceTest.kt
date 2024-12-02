@@ -154,14 +154,14 @@ class SeedOnStartupServiceTest {
     val approvedPremisesLambda = slot<SeedJob<*>.() -> String>()
     val approvedPremisesRoomLambda = slot<SeedJob<*>.() -> String>()
 
-    every { mockSeedService.seedData(SeedFileType.approvedPremises, "approved_premises", capture(approvedPremisesLambda)) } returns Unit
-    every { mockSeedService.seedData(SeedFileType.approvedPremisesRooms, "approved_premises_rooms", capture(approvedPremisesRoomLambda)) } returns Unit
+    every { mockSeedService.seedData(SeedFileType.APPROVED_PREMISES, "approved_premises", capture(approvedPremisesLambda)) } returns Unit
+    every { mockSeedService.seedData(SeedFileType.APPROVED_PREMISES_ROOMS, "approved_premises_rooms", capture(approvedPremisesRoomLambda)) } returns Unit
 
     spy.seedOnStartup()
 
     verifyOrder {
-      mockSeedService.seedData(SeedFileType.approvedPremises, "approved_premises", any<SeedJob<*>.() -> String>())
-      mockSeedService.seedData(SeedFileType.approvedPremisesRooms, "approved_premises_rooms", any<SeedJob<*>.() -> String>())
+      mockSeedService.seedData(SeedFileType.APPROVED_PREMISES, "approved_premises", any<SeedJob<*>.() -> String>())
+      mockSeedService.seedData(SeedFileType.APPROVED_PREMISES_ROOMS, "approved_premises_rooms", any<SeedJob<*>.() -> String>())
     }
 
     val approvedPremisesFilename = approvedPremisesLambda.captured.invoke(

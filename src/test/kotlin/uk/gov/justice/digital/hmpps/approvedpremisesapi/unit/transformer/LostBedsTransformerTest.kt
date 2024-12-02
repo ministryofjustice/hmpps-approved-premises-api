@@ -76,7 +76,7 @@ class LostBedsTransformerTest {
     assertThat(result.reason.id).isEqualTo(lostBed.reason.id)
     assertThat(result.notes).isEqualTo(lostBed.notes)
     assertThat(result.referenceNumber).isEqualTo(lostBed.referenceNumber)
-    assertThat(result.status).isEqualTo(LostBedStatus.active)
+    assertThat(result.status).isEqualTo(LostBedStatus.ACTIVE)
     assertThat(result.cancellation).isNull()
     assertThat(result.bedId).isEqualTo(bed.id)
     assertThat(result.bedName).isEqualTo(bed.name)
@@ -113,7 +113,7 @@ class LostBedsTransformerTest {
     assertThat(result.reason.id).isEqualTo(lostBed.reason.id)
     assertThat(result.notes).isEqualTo(lostBed.notes)
     assertThat(result.referenceNumber).isEqualTo(lostBed.referenceNumber)
-    assertThat(result.status).isEqualTo(LostBedStatus.cancelled)
+    assertThat(result.status).isEqualTo(LostBedStatus.CANCELLED)
     assertThat(result.cancellation).isNotNull
     assertThat(result.cancellation!!.id).isEqualTo(lostBed.cancellation!!.id)
     assertThat(result.cancellation!!.createdAt).isEqualTo(now)

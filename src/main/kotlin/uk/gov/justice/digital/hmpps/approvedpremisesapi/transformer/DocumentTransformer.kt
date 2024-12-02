@@ -18,7 +18,7 @@ class DocumentTransformer {
     val offenderDocuments = documentsWithIdsAndNames(groupedDocuments.documents).map {
       Document(
         id = it.id!!,
-        level = DocumentLevel.offender,
+        level = DocumentLevel.OFFENDER,
         fileName = it.documentName!!,
         createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
         typeCode = it.type.code,
@@ -34,7 +34,7 @@ class DocumentTransformer {
     val filteredConvictionDocuments = documentsWithIdsAndNames(convictionDocuments).map {
       Document(
         id = it.id!!,
-        level = DocumentLevel.conviction,
+        level = DocumentLevel.CONVICTION,
         fileName = it.documentName!!,
         createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
         typeCode = it.type.code,
@@ -53,8 +53,8 @@ class DocumentTransformer {
         Document(
           id = it.id!!,
           level = when (it.level) {
-            "Conviction" -> DocumentLevel.conviction
-            else -> DocumentLevel.offender
+            "Conviction" -> DocumentLevel.CONVICTION
+            else -> DocumentLevel.OFFENDER
           },
           fileName = it.filename,
           createdAt = it.dateCreated.toInstant(),

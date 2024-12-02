@@ -123,7 +123,7 @@ class BookingTransformerTest {
     emailAddress = "some@email",
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
-    status = PropertyStatus.active,
+    status = PropertyStatus.ACTIVE,
     probationDeliveryUnit = null,
     turnaroundWorkingDayCount = 2,
   )
@@ -174,12 +174,12 @@ class BookingTransformerTest {
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
     every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
-      type = PersonType.fullPerson,
+      type = PersonType.FULL_PERSON,
       crn = "crn",
       name = "first last",
       dateOfBirth = LocalDate.parse("2022-09-08"),
       sex = "Male",
-      status = PersonStatus.inCommunity,
+      status = PersonStatus.IN_COMMUNITY,
       nomsNumber = "NOMS321",
       nationality = "English",
       religionOrBelief = null,
@@ -206,12 +206,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -220,7 +220,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        status = BookingStatus.awaitingMinusArrival,
+        status = BookingStatus.AWAITING_MINUS_ARRIVAL,
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
@@ -284,12 +284,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -298,7 +298,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        status = BookingStatus.awaitingMinusArrival,
+        status = BookingStatus.AWAITING_MINUS_ARRIVAL,
         extensions = listOf(),
         serviceName = ServiceName.approvedPremises,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
@@ -331,12 +331,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -345,7 +345,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        status = BookingStatus.provisional,
+        status = BookingStatus.PROVISIONAL,
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
@@ -391,12 +391,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -406,7 +406,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.notMinusArrived,
+        status = BookingStatus.NOT_MINUS_ARRIVED,
         nonArrival = Nonarrival(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
@@ -461,12 +461,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -476,7 +476,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.arrived,
+        status = BookingStatus.ARRIVED,
         arrival = Arrival(
           bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -533,12 +533,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -548,7 +548,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.cancelled,
+        status = BookingStatus.CANCELLED,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           date = LocalDate.parse("2022-08-10"),
@@ -651,12 +651,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -666,7 +666,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.cancelled,
+        status = BookingStatus.CANCELLED,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           notes = null,
@@ -793,12 +793,12 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -808,7 +808,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.departed,
+        status = BookingStatus.DEPARTED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -981,12 +981,12 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -996,7 +996,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.closed,
+        status = BookingStatus.CLOSED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1195,12 +1195,12 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1210,7 +1210,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         keyWorker = null,
-        status = BookingStatus.departed,
+        status = BookingStatus.DEPARTED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1410,12 +1410,12 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1425,7 +1425,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         keyWorker = null,
-        status = BookingStatus.closed,
+        status = BookingStatus.CLOSED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1658,12 +1658,12 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1673,7 +1673,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.closed,
+        status = BookingStatus.CLOSED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1801,12 +1801,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1816,7 +1816,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.confirmed,
+        status = BookingStatus.CONFIRMED,
         cancellation = null,
         confirmation = Confirmation(
           id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
@@ -1901,12 +1901,12 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
           sex = "Male",
-          status = PersonStatus.inCommunity,
+          status = PersonStatus.IN_COMMUNITY,
           nomsNumber = "NOMS321",
           nationality = "English",
           religionOrBelief = null,
@@ -1915,7 +1915,7 @@ class BookingTransformerTest {
         ),
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
-        status = BookingStatus.provisional,
+        status = BookingStatus.PROVISIONAL,
         extensions = listOf(),
         serviceName = ServiceName.temporaryAccommodation,
         originalArrivalDate = LocalDate.parse("2022-08-10"),
@@ -1971,7 +1971,7 @@ class BookingTransformerTest {
     assertThat(result).isEqualTo(
       Withdrawable(
         id,
-        WithdrawableType.booking,
+        WithdrawableType.BOOKING,
         listOf(
           DatePeriod(
             LocalDate.of(2023, 12, 11),

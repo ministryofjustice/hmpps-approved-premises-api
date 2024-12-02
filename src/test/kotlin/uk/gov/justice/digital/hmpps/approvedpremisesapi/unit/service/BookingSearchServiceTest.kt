@@ -71,7 +71,7 @@ class BookingSearchServiceTest {
 
     val (results, metaData) = bookingSearchService.findBookings(
       null,
-      SortOrder.ascending,
+      SortOrder.ASCENDING,
       BookingSearchSortField.bookingCreatedAt,
       1,
       null,
@@ -117,7 +117,7 @@ class BookingSearchServiceTest {
 
     val (results, metadata) = bookingSearchService.findBookings(
       null,
-      SortOrder.ascending,
+      SortOrder.ASCENDING,
       BookingSearchSortField.bookingCreatedAt,
       1,
       null,
@@ -171,7 +171,7 @@ class BookingSearchServiceTest {
 
     val (results, metaData) = bookingSearchService.findBookings(
       null,
-      SortOrder.ascending,
+      SortOrder.ASCENDING,
       BookingSearchSortField.bookingCreatedAt,
       1,
       null,
@@ -192,8 +192,8 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns sorted results by person name and database default sort when page number is given`(sortOrder: SortOrder) {
     val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("personName").ascending()
-      SortOrder.descending -> Sort.by("personName").descending()
+      SortOrder.ASCENDING -> Sort.by("personName").ascending()
+      SortOrder.DESCENDING -> Sort.by("personName").descending()
     }
     val pageable = PageRequest.of(0, cas3BookingSearchPageSize, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -230,8 +230,8 @@ class BookingSearchServiceTest {
     assertThat(results).hasSize(3)
     assertThat(results.map { it.personName }).isSortedAccordingTo { a, b ->
       when (sortOrder) {
-        SortOrder.ascending -> compareValues(a, b)
-        SortOrder.descending -> compareValues(b, a)
+        SortOrder.ASCENDING -> compareValues(a, b)
+        SortOrder.DESCENDING -> compareValues(b, a)
       }
     }
     assertThat(metaData).isNotNull()
@@ -244,8 +244,8 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns sorted results by person name and database default sort when page number is not given`(sortOrder: SortOrder) {
     val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("personName").ascending()
-      SortOrder.descending -> Sort.by("personName").descending()
+      SortOrder.ASCENDING -> Sort.by("personName").ascending()
+      SortOrder.DESCENDING -> Sort.by("personName").descending()
     }
     val pageable = PageRequest.of(0, Int.MAX_VALUE, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -282,8 +282,8 @@ class BookingSearchServiceTest {
     assertThat(results).hasSize(3)
     assertThat(results.map { it.personName }).isSortedAccordingTo { a, b ->
       when (sortOrder) {
-        SortOrder.ascending -> compareValues(a, b)
-        SortOrder.descending -> compareValues(b, a)
+        SortOrder.ASCENDING -> compareValues(a, b)
+        SortOrder.DESCENDING -> compareValues(b, a)
       }
     }
     assertThat(metaData).isNull()
@@ -296,8 +296,8 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns results and database sorted by crn when page number is given`(sortOrder: SortOrder) {
     val pageSort = when (sortOrder) {
-      SortOrder.ascending -> Sort.by("crn").ascending()
-      SortOrder.descending -> Sort.by("crn").descending()
+      SortOrder.ASCENDING -> Sort.by("crn").ascending()
+      SortOrder.DESCENDING -> Sort.by("crn").descending()
     }
     val pageable = PageRequest.of(1, cas3BookingSearchPageSize, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -354,7 +354,7 @@ class BookingSearchServiceTest {
 
     val (results, metaData) = bookingSearchService.findBookings(
       null,
-      SortOrder.ascending,
+      SortOrder.ASCENDING,
       BookingSearchSortField.bookingCreatedAt,
       1,
       null,
@@ -383,7 +383,7 @@ class BookingSearchServiceTest {
 
     val (results, metaData) = bookingSearchService.findBookings(
       null,
-      SortOrder.ascending,
+      SortOrder.ASCENDING,
       BookingSearchSortField.bookingCreatedAt,
       null,
       "S448160",
@@ -416,7 +416,7 @@ class BookingSearchServiceTest {
     Assertions.assertThrows(DataRetrievalFailureException::class.java) {
       bookingSearchService.findBookings(
         null,
-        SortOrder.ascending,
+        SortOrder.ASCENDING,
         BookingSearchSortField.bookingCreatedAt,
         1,
         null,

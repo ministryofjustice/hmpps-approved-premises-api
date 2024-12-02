@@ -31,7 +31,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
       assertThat(userEntity.apArea).isNull()
       assertThat(userEntity.teamCodes).isNull()
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillUserApArea)
+      migrationJobService.runMigrationJob(MigrationJobType.CAS1_BACKFILL_USER_AP_AREA)
 
       val updatedUser = userRepository.findByIdOrNull(userEntity.id)!!
       assertThat(updatedUser.apArea!!.id).isEqualTo(apArea.id)
@@ -59,7 +59,7 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
       assertThat(userEntity.apArea).isNull()
       assertThat(userEntity.teamCodes).isNull()
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillUserApArea)
+      migrationJobService.runMigrationJob(MigrationJobType.CAS1_BACKFILL_USER_AP_AREA)
 
       val updatedUser = userRepository.findByIdOrNull(userEntity.id)!!
       assertThat(updatedUser.apArea!!.id).isEqualTo(apArea.id)
