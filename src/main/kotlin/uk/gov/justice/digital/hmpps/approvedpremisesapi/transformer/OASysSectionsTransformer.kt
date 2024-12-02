@@ -24,7 +24,7 @@ class OASysSectionsTransformer : OASysTransformer() {
   ): OASysSections {
     return OASysSections(
       assessmentId = offenceDetails.assessmentId,
-      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
+      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.COMPLETED else OASysAssessmentState.INCOMPLETE,
       dateStarted = offenceDetails.initiationDate.toInstant(),
       dateCompleted = offenceDetails.dateCompleted?.toInstant(),
       offenceDetails = listOf(
@@ -68,7 +68,7 @@ class OASysSectionsTransformer : OASysTransformer() {
   ): OASysRiskToSelf {
     return OASysRiskToSelf(
       assessmentId = offenceDetails.assessmentId,
-      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
+      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.COMPLETED else OASysAssessmentState.INCOMPLETE,
       dateStarted = offenceDetails.initiationDate.toInstant(),
       dateCompleted = offenceDetails.dateCompleted?.toInstant(),
       riskToSelf = listOf(
@@ -86,7 +86,7 @@ class OASysSectionsTransformer : OASysTransformer() {
   ): OASysRiskOfSeriousHarm {
     return OASysRiskOfSeriousHarm(
       assessmentId = offenceDetails.assessmentId,
-      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
+      assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.COMPLETED else OASysAssessmentState.INCOMPLETE,
       dateStarted = offenceDetails.initiationDate.toInstant(),
       dateCompleted = offenceDetails.dateCompleted?.toInstant(),
       rosh = listOf(
