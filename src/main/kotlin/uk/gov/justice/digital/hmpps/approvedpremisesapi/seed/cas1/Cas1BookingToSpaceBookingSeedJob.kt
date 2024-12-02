@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
@@ -50,6 +51,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val nonArrivalReasonReasonEntity: NonArrivalReasonRepository,
   private val environmentService: EnvironmentService,
+  private val placementRequestRepository: PlacementRequestRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
   requiredHeaders = setOf(
@@ -155,6 +157,12 @@ class Cas1BookingToSpaceBookingSeedJob(
     )
 
     domainEventRepository.replaceBookingIdWithSpaceBookingId(bookingId)
+
+    booking.placementRequest?.let {
+      it.booking = null
+      placementRequestRepository.save(it)
+    }
+    bookingRepository.delete(booking)
 
     log.info("Have migrated booking $bookingId to space booking")
   }

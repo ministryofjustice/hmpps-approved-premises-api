@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
@@ -27,6 +28,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
@@ -45,6 +47,10 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
   fun `Migrate bookings, removing existing`() {
     val premises = givenAnApprovedPremises(
       name = "Premises 1",
+      supportsSpaceBookings = true,
+    )
+    val otherPremise = givenAnApprovedPremises(
+      name = "Premises 2",
       supportsSpaceBookings = true,
     )
     val otherUser = givenAUser().first
@@ -186,6 +192,14 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       departureDate = LocalDate.of(2024, 8, 5),
     )
 
+    val booking5DifferentPremiseNotDeleted = givenABookingForAnOfflineApplication(
+      crn = "CRN5",
+      premises = otherPremise,
+      offlineApplication = offlineApplication,
+      arrivalDate = LocalDate.of(2025, 8, 1),
+      departureDate = LocalDate.of(2025, 8, 5),
+    )
+
     withCsv(
       "valid-csv",
       rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.id))),
@@ -197,6 +211,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(premiseSpaceBookings).hasSize(4)
 
     val migratedBooking1 = premiseSpaceBookings[0]
+    assertBookingIsDeleted(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.id).isEqualTo(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking1.placementRequest!!.id).isEqualTo(placementRequest1.id)
@@ -229,6 +244,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking2 = premiseSpaceBookings[1]
+    assertBookingIsDeleted(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
@@ -262,6 +278,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking3 = premiseSpaceBookings[2]
+    assertBookingIsDeleted(booking3OfflineApplication.id)
     assertThat(migratedBooking3.id).isEqualTo(booking3OfflineApplication.id)
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking3.placementRequest).isNull()
@@ -294,6 +311,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking3.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking4 = premiseSpaceBookings[3]
+    assertBookingIsDeleted(booking4OfflineNoDomainEvent.id)
     assertThat(migratedBooking4.id).isEqualTo(booking4OfflineNoDomainEvent.id)
     assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking4.placementRequest).isNull()
@@ -324,6 +342,8 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking4.criteria).isEmpty()
     assertThat(migratedBooking4.deliusEventNumber).isNull()
     assertThat(migratedBooking4.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
+
+    assertBookingIsNotDeleted(booking5DifferentPremiseNotDeleted.id)
   }
 
   @Test
@@ -397,12 +417,18 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val booking1CreatedDomainEvent = bookingCreatedDomainEvents.first { it.cas1SpaceBookingId == premise1SpaceBooking.id }
     assertThat(booking1CreatedDomainEvent.bookingId).isNull()
     assertThat(booking1CreatedDomainEvent.cas1SpaceBookingId).isEqualTo(premise1SpaceBooking.id)
+    assertBookingIsDeleted(booking1InPremises1.id)
 
     assertThat(cas1SpaceBookingTestRepository.findByPremisesId(premises2.id)).isEmpty()
     val booking2CreatedDomainEvent = bookingCreatedDomainEvents.first { it.bookingId == booking2InPremises2.id }
     assertThat(booking2CreatedDomainEvent.bookingId).isEqualTo(booking2InPremises2.id)
     assertThat(booking2CreatedDomainEvent.cas1SpaceBookingId).isNull()
+    assertBookingIsNotDeleted(booking2InPremises2.id)
   }
+
+  private fun assertBookingIsDeleted(bookingId: UUID) = assertThat(bookingRepository.findByIdOrNull(bookingId)).isNull()
+
+  private fun assertBookingIsNotDeleted(bookingId: UUID) = assertThat(bookingRepository.findByIdOrNull(bookingId)).isNotNull
 
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {
     val builder = CsvBuilder()

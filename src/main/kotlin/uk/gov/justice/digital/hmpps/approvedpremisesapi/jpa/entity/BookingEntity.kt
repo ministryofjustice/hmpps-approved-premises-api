@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -333,13 +334,13 @@ data class BookingEntity(
   var departureDate: LocalDate,
   @Deprecated(message = "This is a legacy CAS1-only field that is no longer captured and will be removed once bookings have been fully migrated to space bookings")
   var keyWorkerStaffCode: String?,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var arrivals: MutableList<ArrivalEntity>,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var departures: MutableList<DepartureEntity>,
-  @OneToOne(mappedBy = "booking")
+  @OneToOne(mappedBy = "booking", cascade = [ CascadeType.REMOVE ])
   var nonArrival: NonArrivalEntity?,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var cancellations: MutableList<CancellationEntity>,
   @OneToOne(mappedBy = "booking")
   var confirmation: ConfirmationEntity?,
