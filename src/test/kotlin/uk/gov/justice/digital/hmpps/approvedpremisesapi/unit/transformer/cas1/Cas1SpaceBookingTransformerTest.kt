@@ -237,6 +237,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalArrivalDate).isEqualTo(LocalDate.parse("2025-04-06"))
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalDepartureDate).isEqualTo(LocalDate.parse("2025-05-07"))
       assertThat(result.requestForPlacementId).isEqualTo(placementRequest.id)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.notArrived)
     }
 
     @Test
@@ -401,6 +402,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(departure.parentReason!!.name).isEqualTo(parentDepartureReason.name)
       assertThat(departure.notes).isNull()
       assertThat(departure.moveOnCategory).isNull()
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
     }
   }
 
