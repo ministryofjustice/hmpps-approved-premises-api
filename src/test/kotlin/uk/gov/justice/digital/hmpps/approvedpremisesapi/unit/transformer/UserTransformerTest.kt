@@ -12,22 +12,20 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.reportsView
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userManagement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.ASSESS_APPEALED_APPLICATION
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.PROCESS_AN_APPEAL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.REPORTS_VIEW
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.USER_LIST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.USER_MANAGEMENT
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.VIEW_ASSIGNED_ASSESSMENTS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.APPEALS_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.MATCHER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.approvedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.referrer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.reporter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -51,6 +49,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.OffsetDateTime
 import java.util.UUID.randomUUID
+import kotlin.jvm.internal.Ref
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.REFERRER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.REPORTER
 
 class UserTransformerTest {
   private val probationRegionTransformer = mockk<ProbationRegionTransformer>()
@@ -95,7 +96,7 @@ class UserTransformerTest {
         temporaryAccommodation,
       ) as TemporaryAccommodationUser
 
-      assertThat(result.roles).contains(reporter)
+      assertThat(result.roles).contains(REPORTER)
       assertThat(result.service).isEqualTo("CAS3")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
     }
@@ -107,7 +108,7 @@ class UserTransformerTest {
         temporaryAccommodation,
       ) as TemporaryAccommodationUser
 
-      assertThat(result.roles).contains(referrer)
+      assertThat(result.roles).contains(REFERRER)
       assertThat(result.service).isEqualTo("CAS3")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
     }
@@ -133,7 +134,7 @@ class UserTransformerTest {
 
       val result = userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
-      assertThat(result.roles).contains(matcher)
+      assertThat(result.roles).contains(MATCHER)
       assertThat(result.service).isEqualTo("CAS1")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
       assertThat(result.apArea).isEqualTo(apArea)
@@ -165,9 +166,9 @@ class UserTransformerTest {
 
       assertThat(result.roles).isEqualTo(
         listOf(
-          matcher,
-          workflowManager,
-          appealsManager,
+          MATCHER,
+          WORKFLOW_MANAGER,
+          APPEALS_MANAGER,
         ),
       )
     }
@@ -188,9 +189,9 @@ class UserTransformerTest {
 
       assertThat(result.permissions).isEqualTo(
         listOf(
-          assessAppealedApplication,
-          processAnAppeal,
-          viewAssignedAssessments,
+          ASSESS_APPEALED_APPLICATION,
+          PROCESS_AN_APPEAL,
+          VIEW_ASSIGNED_ASSESSMENTS,
         ),
       )
     }
@@ -246,9 +247,9 @@ class UserTransformerTest {
 
       assertThat(result.permissions).hasSameElementsAs(
         listOf(
-          reportsView,
-          userList,
-          userManagement,
+          REPORTS_VIEW,
+          USER_LIST,
+          USER_MANAGEMENT,
         ),
       )
     }
@@ -283,8 +284,8 @@ class UserTransformerTest {
 
       assertThat(result.roles).isEqualTo(
         listOf(
-          referrer,
-          reporter,
+          REFERRER,
+          REPORTER,
         ),
       )
     }
@@ -328,8 +329,8 @@ class UserTransformerTest {
 
       assertThat(result.roles).isEqualTo(
         listOf(
-          matcher,
-          workflowManager,
+          MATCHER,
+          WORKFLOW_MANAGER,
         ),
       )
     }

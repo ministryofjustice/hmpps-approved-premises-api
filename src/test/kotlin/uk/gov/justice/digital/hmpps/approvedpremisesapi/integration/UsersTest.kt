@@ -1234,11 +1234,11 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       val id = UUID.randomUUID()
       val qualifications = listOf(APIUserQualification.EMERGENCY, APIUserQualification.PIPE)
       val roles = listOf(
-        ApprovedPremisesUserRole.assessor,
-        ApprovedPremisesUserRole.reportViewer,
-        ApprovedPremisesUserRole.excludedFromAssessAllocation,
-        ApprovedPremisesUserRole.excludedFromMatchAllocation,
-        ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation,
+        ApprovedPremisesUserRole.ASSESSOR,
+        ApprovedPremisesUserRole.REPORT_VIEWER,
+        ApprovedPremisesUserRole.EXCLUDED_FROM_ASSESS_ALLOCATION,
+        ApprovedPremisesUserRole.EXCLUDED_FROM_MATCH_ALLOCATION,
+        ApprovedPremisesUserRole.EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION,
       )
       val region = givenAProbationRegion()
 
@@ -1266,11 +1266,11 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath(".qualifications").isArray
           .jsonPath(".qualifications[0]").isEqualTo("emergency")
           .jsonPath(".roles").isArray
-          .jsonPath(".roles[0]").isEqualTo(ApprovedPremisesUserRole.assessor.value)
-          .jsonPath(".roles[1]").isEqualTo(ApprovedPremisesUserRole.reportViewer.value)
-          .jsonPath(".roles[2]").isEqualTo(ApprovedPremisesUserRole.excludedFromAssessAllocation.value)
-          .jsonPath(".roles[3]").isEqualTo(ApprovedPremisesUserRole.excludedFromMatchAllocation.value)
-          .jsonPath(".roles[4]").isEqualTo(ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation.value)
+          .jsonPath(".roles[0]").isEqualTo(ApprovedPremisesUserRole.ASSESSOR.value)
+          .jsonPath(".roles[1]").isEqualTo(ApprovedPremisesUserRole.REPORT_VIEWER.value)
+          .jsonPath(".roles[2]").isEqualTo(ApprovedPremisesUserRole.EXCLUDED_FROM_ASSESS_ALLOCATION.value)
+          .jsonPath(".roles[3]").isEqualTo(ApprovedPremisesUserRole.EXCLUDED_FROM_MATCH_ALLOCATION.value)
+          .jsonPath(".roles[4]").isEqualTo(ApprovedPremisesUserRole.EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION.value)
           .jsonPath(".isActive").isEqualTo(true)
       }
     }
