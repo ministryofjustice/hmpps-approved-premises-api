@@ -197,7 +197,7 @@ class Cas1ApplicationDomainEventServiceTest {
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
               data.age == Period.between(LocalDate.of(1982, 3, 11), LocalDate.now()).years &&
-              data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted.Gender.male &&
+              data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted.Gender.MALE &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
                 staffMember = staffUserDetails.toStaffMember(),
                 probationArea = domainEventProbationArea,

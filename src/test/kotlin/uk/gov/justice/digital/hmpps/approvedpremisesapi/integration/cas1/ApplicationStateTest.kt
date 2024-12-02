@@ -470,7 +470,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
+      gender = Gender.MALE,
       type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,

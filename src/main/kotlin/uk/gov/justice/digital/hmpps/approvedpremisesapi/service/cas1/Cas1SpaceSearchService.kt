@@ -51,8 +51,8 @@ class Cas1SpaceSearchService(
 
     searchParameters.requirements.genders?.forEach {
       characteristicNames += when (it) {
-        Gender.male -> null
-        Gender.female -> null
+        Gender.MALE -> null
+        Gender.FEMALE -> null
       }
     }
 

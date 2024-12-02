@@ -27,7 +27,7 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var releaseType: Yielded<String> = { "rotl" }
   private var age: Yielded<Int> = { randomInt(18, 99) }
-  private var gender: Yielded<ApplicationSubmitted.Gender> = { randomOf(listOf(ApplicationSubmitted.Gender.male, ApplicationSubmitted.Gender.female)) }
+  private var gender: Yielded<ApplicationSubmitted.Gender> = { randomOf(listOf(ApplicationSubmitted.Gender.MALE, ApplicationSubmitted.Gender.FEMALE)) }
   private var targetLocation: Yielded<String> = { randomOf(listOf("AB", "KY", "L")) }
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<StaffMember> = { StaffMemberFactory().produce() }

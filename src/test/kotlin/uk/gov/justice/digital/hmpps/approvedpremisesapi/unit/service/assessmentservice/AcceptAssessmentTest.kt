@@ -162,7 +162,7 @@ class AcceptAssessmentTest {
       .withData("{\"test\": \"data\"}")
 
     placementRequirements = PlacementRequirements(
-      gender = Gender.male,
+      gender = Gender.MALE,
       type = ApType.NORMAL,
       location = "AB123",
       radius = 50,

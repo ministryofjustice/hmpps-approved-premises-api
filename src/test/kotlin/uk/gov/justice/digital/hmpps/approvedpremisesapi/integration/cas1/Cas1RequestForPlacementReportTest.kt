@@ -641,7 +641,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
+      gender = Gender.MALE,
       type = ApType.NORMAL,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,

@@ -2183,7 +2183,7 @@ class AssessmentTest : IntegrationTestBase() {
       )
 
       val placementRequirements = PlacementRequirements(
-        gender = Gender.male,
+        gender = Gender.MALE,
         type = ApType.NORMAL,
         location = "B74",
         radius = 50,
@@ -2256,7 +2256,7 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
+                gender = Gender.MALE,
                 type = ApType.NORMAL,
                 location = postcodeDistrict.outcode,
                 radius = 50,
@@ -2377,7 +2377,7 @@ class AssessmentTest : IntegrationTestBase() {
                 listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
+                gender = Gender.MALE,
                 type = ApType.NORMAL,
                 location = postcodeDistrict.outcode,
                 radius = 50,
@@ -2493,7 +2493,7 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
+                gender = Gender.MALE,
                 type = ApType.NORMAL,
                 location = "SW1",
                 radius = 50,
@@ -2592,7 +2592,7 @@ class AssessmentTest : IntegrationTestBase() {
           )
 
           val placementRequirements = PlacementRequirements(
-            gender = Gender.male,
+            gender = Gender.MALE,
             type = ApType.NORMAL,
             location = postcodeDistrict.outcode,
             radius = 50,

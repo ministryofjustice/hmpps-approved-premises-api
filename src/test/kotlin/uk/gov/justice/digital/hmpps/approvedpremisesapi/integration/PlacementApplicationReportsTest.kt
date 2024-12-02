@@ -614,7 +614,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
+      gender = Gender.MALE,
       type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,

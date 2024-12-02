@@ -561,7 +561,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     }
 
     val placementRequirements = PlacementRequirements(
-      gender = Gender.male,
+      gender = Gender.MALE,
       type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
