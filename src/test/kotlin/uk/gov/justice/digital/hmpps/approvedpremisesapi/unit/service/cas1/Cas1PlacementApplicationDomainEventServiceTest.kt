@@ -78,7 +78,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
     @ParameterizedTest
     @CsvSource(
       "ROTL,ROTL",
-      "RELEASE_FOLLOWING_DECISION,RELEASE_FOLLOWING_DECISION",
+      "RELEASE_FOLLOWING_DECISION,RELEASE_FOLLOWING_DECISIONS",
       "ADDITIONAL_PLACEMENT,ADDITIONAL_PLACEMENT",
     )
     fun `it creates a domain event`(placementType: PlacementType, expectedRequestForPlacementType: RequestForPlacementType) {

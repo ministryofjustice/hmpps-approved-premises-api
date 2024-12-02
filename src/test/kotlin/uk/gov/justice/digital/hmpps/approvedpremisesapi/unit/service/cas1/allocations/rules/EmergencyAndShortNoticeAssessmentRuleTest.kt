@@ -27,7 +27,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
   @Nested
   inner class EvaluateAssessment {
     @ParameterizedTest
-    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["EMERGENCY", "SHORT_NOTICE"])
     fun `Returns AllocateToUser with configured username for the application's cru management area when the application is for CAS1, submitted, and the application is emergency or short notice`(
       noticeType: Cas1ApplicationTimelinessCategory,
     ) {
@@ -84,7 +84,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["EMERGENCY", "SHORT_NOTICE"])
     fun `Returns Skip if the application is not submitted`(noticeType: Cas1ApplicationTimelinessCategory) {
       val apArea = ApAreaEntityFactory()
         .produce()
@@ -150,7 +150,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["EMERGENCY", "SHORT_NOTICE"])
     fun `Returns Skip with when no user is configured for the cru management area`(noticeType: Cas1ApplicationTimelinessCategory) {
       val createdByUser = UserEntityFactory()
         .withDefaults()

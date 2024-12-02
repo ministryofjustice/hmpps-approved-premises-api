@@ -377,7 +377,7 @@ class PlacementApplicationServiceTest {
     @ParameterizedTest
     @EnumSource(
       value = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision::class,
-      names = ["accepted"],
+      names = ["ACCEPTED"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Submitting rejected decisions sends a notification and returns successfully`(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) {
