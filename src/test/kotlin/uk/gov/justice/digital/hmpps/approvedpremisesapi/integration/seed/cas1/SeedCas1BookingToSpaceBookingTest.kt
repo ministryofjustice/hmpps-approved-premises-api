@@ -163,6 +163,10 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       withReason(cancellationReason)
       withOtherReason("cancellation other reason")
     }
+    dateChangeEntityFactory.produceAndPersist {
+      withBooking(booking2LegacyCas1ManagementInfo)
+      withChangedByUser(booking2CreatedByUser)
+    }
 
     val offlineApplication = givenAnOfflineApplication(
       crn = "CRN3",
