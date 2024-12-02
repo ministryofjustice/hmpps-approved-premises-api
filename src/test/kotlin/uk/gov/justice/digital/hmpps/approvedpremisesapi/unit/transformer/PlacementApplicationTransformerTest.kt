@@ -106,7 +106,7 @@ class PlacementApplicationTransformerTest {
     assertThat(result.canBeWithdrawn).isFalse
     assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
-    assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
+    assertThat(result.type).isEqualTo(PlacementApplicationType.ADDITIONAL)
 
     assertThat(result.placementDates).hasSize(2)
     assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))

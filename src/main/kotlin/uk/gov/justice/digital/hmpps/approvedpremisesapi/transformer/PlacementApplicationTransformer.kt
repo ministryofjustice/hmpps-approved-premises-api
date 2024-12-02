@@ -36,7 +36,7 @@ class PlacementApplicationTransformer(
       canBeWithdrawn = jpa.isInWithdrawableState(),
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
-      type = PlacementApplicationType.additional,
+      type = PlacementApplicationType.ADDITIONAL,
       placementDates = jpa.placementDates.map { PlacementDates(it.expectedArrival, it.duration) },
     )
   }
