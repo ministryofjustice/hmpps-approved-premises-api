@@ -688,7 +688,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val standardRelease = createPlacementRequest(offenderDetails, user, isParole = false)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?requestType=${PlacementRequestRequestType.standardRelease.name}")
+            .uri("/placement-requests/dashboard?requestType=${PlacementRequestRequestType.STANDARD_RELEASE.name}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -716,7 +716,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val parole = createPlacementRequest(offenderDetails, user, isParole = true)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?requestType=${PlacementRequestRequestType.parole.name}")
+            .uri("/placement-requests/dashboard?requestType=${PlacementRequestRequestType.PAROLE.name}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()

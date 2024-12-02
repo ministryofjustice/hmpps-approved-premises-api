@@ -183,7 +183,7 @@ class PlacementRequestTransformerTest {
         assessor = mockUser,
         notes = placementRequestEntity.notes,
         isParole = placementRequestEntity.isParole,
-        requestType = PlacementRequestRequestType.standardRelease,
+        requestType = PlacementRequestRequestType.STANDARD_RELEASE,
         booking = null,
         isWithdrawn = false,
         withdrawalReason = null,
@@ -250,7 +250,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.parole)
+    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.PAROLE)
   }
 
   @Test
@@ -262,7 +262,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.standardRelease)
+    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.STANDARD_RELEASE)
   }
 
   @Test

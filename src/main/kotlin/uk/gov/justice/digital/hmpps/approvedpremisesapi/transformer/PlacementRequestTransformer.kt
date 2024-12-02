@@ -57,7 +57,7 @@ class PlacementRequestTransformer(
       notes = jpa.notes,
       isParole = jpa.isParole,
       booking = placementRequestBookingSummaryTransformer.getBookingSummary(jpa),
-      requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
+      requestType = if (jpa.isParole) PlacementRequestRequestType.PAROLE else PlacementRequestRequestType.STANDARD_RELEASE,
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
     )

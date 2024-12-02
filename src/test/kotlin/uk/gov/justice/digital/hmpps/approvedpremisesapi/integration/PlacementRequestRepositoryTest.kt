@@ -286,7 +286,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val requestsWithTypeParole = createPlacementRequests(1, isWithdrawn = false, isReallocated = false, isParole = true)
 
       val pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("created_at")))
-      val results = realPlacementRequestRepository.allForDashboard(requestType = PlacementRequestRequestType.parole.name, pageable = pageable)
+      val results = realPlacementRequestRepository.allForDashboard(requestType = PlacementRequestRequestType.PAROLE.name, pageable = pageable)
 
       assertThat(results.content.map { it.id }).isEqualTo(requestsWithTypeParole.map { it.id })
     }
@@ -297,7 +297,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
       val requestsWithTypeStandardRelease = createPlacementRequests(1, isWithdrawn = false, isReallocated = false, isParole = false)
 
       val pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("created_at")))
-      val results = realPlacementRequestRepository.allForDashboard(requestType = PlacementRequestRequestType.standardRelease.name, pageable = pageable)
+      val results = realPlacementRequestRepository.allForDashboard(requestType = PlacementRequestRequestType.STANDARD_RELEASE.name, pageable = pageable)
 
       assertThat(results.content.map { it.id }).isEqualTo(requestsWithTypeStandardRelease.map { it.id })
     }
