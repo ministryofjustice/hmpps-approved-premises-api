@@ -105,15 +105,15 @@ class PlacementRequestTransformer(
   fun getWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {
     PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST
     PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED -> WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED
-    PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP -> WithdrawPlacementRequestReason.withdrawnByPP
+    PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP -> WithdrawPlacementRequestReason.WITHDRAWN_BY_PP
     PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES -> WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES
     PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION -> WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES
     PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED -> WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED
     PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
     PlacementRequestWithdrawalReason.NO_CAPACITY -> WithdrawPlacementRequestReason.NO_CAPACITY
     PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST
-    PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.relatedApplicationWithdrawn
-    PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.relatedPlacementRequestWithdrawn
+    PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.RELATED_APPLICATION_WITHDRAWN
+    PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.RELATED_PLACEMENT_REQUEST_WITHDRAWN
     null -> null
   }
 }

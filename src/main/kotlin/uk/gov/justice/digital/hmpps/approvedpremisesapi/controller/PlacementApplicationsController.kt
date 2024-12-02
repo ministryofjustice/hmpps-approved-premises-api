@@ -121,10 +121,10 @@ class PlacementApplicationsController(
       WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
       WithdrawPlacementRequestReason.NO_CAPACITY -> PlacementApplicationWithdrawalReason.NO_CAPACITY
       WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST -> PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.withdrawnByPP -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.relatedApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.relatedPlacementRequestWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.relatedPlacementApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.WITHDRAWN_BY_PP -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.RELATED_APPLICATION_WITHDRAWN -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.RELATED_PLACEMENT_REQUEST_WITHDRAWN -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
       null -> null
     }
 
