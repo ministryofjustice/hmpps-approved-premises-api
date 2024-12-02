@@ -61,7 +61,7 @@ class Cas1PlacementRequestDomainEventService(
       createdBy = null,
       expectedArrival = placementRequest.expectedArrival,
       duration = placementRequest.duration,
-      requestForPlacementType = RequestForPlacementType.initial,
+      requestForPlacementType = RequestForPlacementType.INITIAL,
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(

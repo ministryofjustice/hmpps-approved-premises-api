@@ -835,7 +835,7 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = EventType.requestForPlacementCreated,
         eventDetails = RequestForPlacementCreatedFactory()
-          .withRequestForPlacementType(RequestForPlacementType.initial)
+          .withRequestForPlacementType(RequestForPlacementType.INITIAL)
           .withExpectedArrival(LocalDate.of(2025, 3, 12))
           .withDuration(16)
           .produce(),

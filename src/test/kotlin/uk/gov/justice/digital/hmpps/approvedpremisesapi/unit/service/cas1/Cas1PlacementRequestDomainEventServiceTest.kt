@@ -130,7 +130,7 @@ class Cas1PlacementRequestDomainEventServiceTest {
             assertThat(eventDetails.createdBy).isNull()
             assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
             assertThat(eventDetails.duration).isEqualTo(7)
-            assertThat(eventDetails.requestForPlacementType).isEqualTo(RequestForPlacementType.initial)
+            assertThat(eventDetails.requestForPlacementType).isEqualTo(RequestForPlacementType.INITIAL)
           },
           emit = false,
         )
