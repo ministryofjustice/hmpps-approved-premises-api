@@ -76,19 +76,19 @@ class RequestForPlacementTransformer(
   )
 
   private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
-    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-    this.placementRequests.any { pr -> pr.hasActiveBooking() } -> RequestForPlacementStatus.placementBooked
-    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
-    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch
-    this.isSubmitted() -> RequestForPlacementStatus.requestSubmitted
-    else -> RequestForPlacementStatus.requestUnsubmitted
+    this.isWithdrawn -> RequestForPlacementStatus.REQUEST_WITHDRAWN
+    this.placementRequests.any { pr -> pr.hasActiveBooking() } -> RequestForPlacementStatus.PLACEMENT_BOOKED
+    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.REQUEST_REJECTED
+    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.AWAITING_MATCH
+    this.isSubmitted() -> RequestForPlacementStatus.REQUEST_SUBMITTED
+    else -> RequestForPlacementStatus.REQUEST_UNSUBMITTED
   }
 
   private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus {
     return when {
-      this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-      this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
-      else -> RequestForPlacementStatus.awaitingMatch
+      this.isWithdrawn -> RequestForPlacementStatus.REQUEST_WITHDRAWN
+      this.hasActiveBooking() -> RequestForPlacementStatus.PLACEMENT_BOOKED
+      else -> RequestForPlacementStatus.AWAITING_MATCH
     }
   }
 }
