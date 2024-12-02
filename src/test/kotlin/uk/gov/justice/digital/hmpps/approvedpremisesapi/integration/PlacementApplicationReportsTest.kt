@@ -538,7 +538,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
               mapOf(
                 "sentence-type"
                   to mapOf(
-                    "sentenceType" to SentenceTypeOption.nonStatutory.value,
+                    "sentenceType" to SentenceTypeOption.NON_STATUTORY.value,
                   ),
               ),
           ),
@@ -581,7 +581,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
-          sentenceType = SentenceTypeOption.nonStatutory,
+          sentenceType = SentenceTypeOption.NON_STATUTORY,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
         ),

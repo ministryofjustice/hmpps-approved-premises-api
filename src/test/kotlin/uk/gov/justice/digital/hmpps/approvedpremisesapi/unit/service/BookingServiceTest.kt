@@ -4339,7 +4339,7 @@ class BookingServiceTest {
       .withCreatedByUser(otherUser)
       .withSubmittedAt(OffsetDateTime.now())
       .withReleaseType(ReleaseTypeOption.LICENCE.toString())
-      .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+      .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
       .withSituation(SituationOption.bailSentence.toString())
       .produce()
 

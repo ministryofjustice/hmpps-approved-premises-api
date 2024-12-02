@@ -513,7 +513,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
-          sentenceType = SentenceTypeOption.nonStatutory,
+          sentenceType = SentenceTypeOption.NON_STATUTORY,
           arrivalDate = arrivalDate,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,

@@ -1905,7 +1905,7 @@ class ApplicationTest : IntegrationTestBase() {
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
             releaseType = ReleaseTypeOption.LICENCE,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
               "applicantName",
@@ -1932,7 +1932,7 @@ class ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.isWomensApplication).isFalse()
       assertThat(persistedApplication.isPipeApplication).isFalse
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
-      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.NON_STATUTORY.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
 
       val createdAssessment =
@@ -2028,7 +2028,7 @@ class ApplicationTest : IntegrationTestBase() {
             isWomensApplication = true,
             targetLocation = "SW1A 1AA",
             releaseType = ReleaseTypeOption.LICENCE,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
               "applicantName",
@@ -2055,7 +2055,7 @@ class ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.isWomensApplication).isTrue()
       assertThat(persistedApplication.isPipeApplication).isFalse
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
-      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+      assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.NON_STATUTORY.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
       assertThat(persistedApplication.cruManagementArea!!.id).isEqualTo(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
 
@@ -2150,7 +2150,7 @@ class ApplicationTest : IntegrationTestBase() {
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
             releaseType = ReleaseTypeOption.LICENCE,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
               "applicantName",
@@ -2271,7 +2271,7 @@ class ApplicationTest : IntegrationTestBase() {
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
             releaseType = ReleaseTypeOption.LICENCE,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
@@ -2371,7 +2371,7 @@ class ApplicationTest : IntegrationTestBase() {
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
             releaseType = ReleaseTypeOption.LICENCE,
-            sentenceType = SentenceTypeOption.nonStatutory,
+            sentenceType = SentenceTypeOption.NON_STATUTORY,
             type = "CAS1",
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
@@ -2495,7 +2495,7 @@ class ApplicationTest : IntegrationTestBase() {
                       isEsapApplication = true,
                       targetLocation = "SW1A 1AA",
                       releaseType = ReleaseTypeOption.LICENCE,
-                      sentenceType = SentenceTypeOption.nonStatutory,
+                      sentenceType = SentenceTypeOption.NON_STATUTORY,
                       type = "CAS1",
                       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
                       caseManagerIsNotApplicant = false,

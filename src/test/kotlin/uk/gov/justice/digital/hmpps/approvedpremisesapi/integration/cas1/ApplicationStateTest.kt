@@ -577,7 +577,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
           arrivalDate = arrivalDate,
-          sentenceType = SentenceTypeOption.nonStatutory,
+          sentenceType = SentenceTypeOption.NON_STATUTORY,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
         ),

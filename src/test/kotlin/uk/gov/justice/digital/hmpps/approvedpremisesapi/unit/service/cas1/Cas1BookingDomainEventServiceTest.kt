@@ -74,7 +74,7 @@ class Cas1BookingDomainEventServiceTest {
       .withCreatedByUser(otherUser)
       .withSubmittedAt(OffsetDateTime.now())
       .withReleaseType(ReleaseTypeOption.LICENCE.toString())
-      .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+      .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
       .withSituation(SituationOption.bailSentence.toString())
       .produce()
 
@@ -189,7 +189,7 @@ class Cas1BookingDomainEventServiceTest {
       .withCreatedByUser(otherUser)
       .withSubmittedAt(OffsetDateTime.now())
       .withReleaseType(ReleaseTypeOption.LICENCE.toString())
-      .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+      .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
       .withSituation(SituationOption.bailSentence.toString())
       .produce()
 
@@ -436,7 +436,7 @@ class Cas1BookingDomainEventServiceTest {
         .withCreatedByUser(otherUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withReleaseType(ReleaseTypeOption.LICENCE.toString())
-        .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+        .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
         .withSituation(SituationOption.bailSentence.toString())
         .produce()
 

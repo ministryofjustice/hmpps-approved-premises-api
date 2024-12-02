@@ -596,7 +596,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         targetLocation = "targetLocation",
         releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         type = "CAS1",
-        sentenceType = SentenceTypeOption.bailPlacement,
+        sentenceType = SentenceTypeOption.BAIL_PLACEMENT,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
         apType = ApType.PIPE,
