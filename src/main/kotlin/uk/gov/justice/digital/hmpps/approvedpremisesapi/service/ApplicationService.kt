@@ -826,11 +826,11 @@ class ApplicationService(
 
   private fun getNoticeType(noticeType: Cas1ApplicationTimelinessCategory?, isEmergencyApplication: Boolean?, application: ApprovedPremisesApplicationEntity) = noticeType
     ?: if (isEmergencyApplication == true) {
-      Cas1ApplicationTimelinessCategory.emergency
+      Cas1ApplicationTimelinessCategory.EMERGENCY
     } else if (application.isShortNoticeApplication() == true) {
-      Cas1ApplicationTimelinessCategory.shortNotice
+      Cas1ApplicationTimelinessCategory.SHORT_NOTICE
     } else {
-      Cas1ApplicationTimelinessCategory.standard
+      Cas1ApplicationTimelinessCategory.STANDARD
     }
 
   fun getArrivalDate(arrivalDate: LocalDate?): OffsetDateTime? {

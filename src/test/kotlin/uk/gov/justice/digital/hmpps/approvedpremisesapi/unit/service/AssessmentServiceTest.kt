@@ -2609,7 +2609,7 @@ class AssessmentServiceTest {
             .withQualification(UserQualification.PIPE)
             .produce()
 
-          if (timelinessCategory != Cas1ApplicationTimelinessCategory.standard) {
+          if (timelinessCategory != Cas1ApplicationTimelinessCategory.STANDARD) {
             qualifications += UserQualificationAssignmentEntityFactory()
               .withUser(this)
               .withQualification(UserQualification.EMERGENCY)
@@ -2669,7 +2669,7 @@ class AssessmentServiceTest {
             any<UUID>(),
             application,
             dueAt,
-            timelinessCategory == Cas1ApplicationTimelinessCategory.emergency,
+            timelinessCategory == Cas1ApplicationTimelinessCategory.EMERGENCY,
           )
         }
       }
@@ -2696,7 +2696,7 @@ class AssessmentServiceTest {
             .produce(),
         )
         .withApType(ApprovedPremisesType.PIPE)
-        .withNoticeType(Cas1ApplicationTimelinessCategory.shortNotice)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.SHORT_NOTICE)
         .produce()
 
       val dueAt = OffsetDateTime.now()

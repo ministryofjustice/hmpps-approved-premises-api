@@ -58,9 +58,9 @@ class NoticeTypeMigrationJob(
       slice.content.forEach {
         entityManager.detach(it)
         if (it.isShortNoticeApplication() == true) {
-          applicationRepository.updateApplicationNoticeType(it.id, Cas1ApplicationTimelinessCategory.shortNotice)
+          applicationRepository.updateApplicationNoticeType(it.id, Cas1ApplicationTimelinessCategory.SHORT_NOTICE)
         } else {
-          applicationRepository.updateApplicationNoticeType(it.id, Cas1ApplicationTimelinessCategory.standard)
+          applicationRepository.updateApplicationNoticeType(it.id, Cas1ApplicationTimelinessCategory.STANDARD)
         }
       }
 

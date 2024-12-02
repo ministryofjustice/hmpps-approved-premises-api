@@ -106,7 +106,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.applicantUserDetails).isEqualTo(sourceApplication.applicantUserDetails)
         assertThat(newApplication.caseManagerIsNotApplicant).isEqualTo(sourceApplication.caseManagerIsNotApplicant)
         assertThat(newApplication.caseManagerUserDetails).isEqualTo(sourceApplication.caseManagerUserDetails)
-        assertThat(newApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+        assertThat(newApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.EMERGENCY)
 
         assertThat(newApplication.isEsapApplication).isEqualTo(sourceApplication.isEsapApplication)
         assertThat(newApplication.isPipeApplication).isEqualTo(sourceApplication.isPipeApplication)

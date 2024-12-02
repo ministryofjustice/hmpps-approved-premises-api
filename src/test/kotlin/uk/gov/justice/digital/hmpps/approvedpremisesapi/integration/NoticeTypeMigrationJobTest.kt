@@ -42,9 +42,9 @@ class NoticeTypeMigrationJobTest : IntegrationTestBase() {
 
     migrationJobService.runMigrationJob(MigrationJobType.cas1NoticeTypes, 1)
 
-    assertApplicationsHaveCorrectNoticeType(emergencyApplicationIds, Cas1ApplicationTimelinessCategory.emergency)
-    assertApplicationsHaveCorrectNoticeType(shortNoticeApplicationIds, Cas1ApplicationTimelinessCategory.shortNotice)
-    assertApplicationsHaveCorrectNoticeType(standardApplicationIds, Cas1ApplicationTimelinessCategory.standard)
+    assertApplicationsHaveCorrectNoticeType(emergencyApplicationIds, Cas1ApplicationTimelinessCategory.EMERGENCY)
+    assertApplicationsHaveCorrectNoticeType(shortNoticeApplicationIds, Cas1ApplicationTimelinessCategory.SHORT_NOTICE)
+    assertApplicationsHaveCorrectNoticeType(standardApplicationIds, Cas1ApplicationTimelinessCategory.STANDARD)
     assertApplicationsHaveCorrectNoticeType(unsubmittedApplicationIds, null)
   }
 

@@ -948,7 +948,7 @@ class ApplicationServiceTest {
             arrivalDate = null,
             data = "{}",
             isInapplicable = null,
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
           ),
           userForRequest = user,
         ) is AuthorisableActionResult.NotFound,
@@ -981,7 +981,7 @@ class ApplicationServiceTest {
             arrivalDate = null,
             data = "{}",
             isInapplicable = null,
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
           ),
           userForRequest = otherUser,
         ) is AuthorisableActionResult.Unauthorised,
@@ -1042,7 +1042,7 @@ class ApplicationServiceTest {
           arrivalDate = null,
           data = "{}",
           isInapplicable = null,
-          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+          noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
         ),
         userForRequest = user,
       )
@@ -1120,7 +1120,7 @@ class ApplicationServiceTest {
           arrivalDate = LocalDate.parse("2023-04-17"),
           data = updatedData,
           isInapplicable = false,
-          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+          noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
         ),
         userForRequest = user,
       )
@@ -1142,7 +1142,7 @@ class ApplicationServiceTest {
       assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
-      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.EMERGENCY)
     }
 
     @ParameterizedTest
@@ -1176,7 +1176,7 @@ class ApplicationServiceTest {
           arrivalDate = LocalDate.parse("2023-04-17"),
           data = updatedData,
           isInapplicable = false,
-          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+          noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
         ),
         userForRequest = user,
       )
@@ -1200,7 +1200,7 @@ class ApplicationServiceTest {
       assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
-      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.EMERGENCY)
     }
 
     @ParameterizedTest
@@ -1227,11 +1227,11 @@ class ApplicationServiceTest {
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
           isPipeApplication = true,
-          isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
+          isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY,
           isEsapApplication = false,
           apType = null,
           releaseType = "rotl",
-          arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+          arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.SHORT_NOTICE) {
             LocalDate.now().plusDays(10)
           } else {
             LocalDate.now().plusMonths(7)
@@ -1712,7 +1712,7 @@ class ApplicationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1770,7 +1770,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
       assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
       assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.apArea).isEqualTo(apArea)
       assertThat(persistedApplication.cruManagementArea).isEqualTo(apArea.defaultCruManagementArea)
 
@@ -1796,7 +1796,7 @@ class ApplicationServiceTest {
         translatedDocument = {},
         isPipeApplication = true,
         isWomensApplication = false,
-        isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
+        isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY,
         isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
@@ -1805,7 +1805,7 @@ class ApplicationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+        arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.SHORT_NOTICE) {
           LocalDate.now().plusDays(10)
         } else {
           LocalDate.now().plusMonths(7)
@@ -1950,7 +1950,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.apType).isEqualTo(apType.asApprovedPremisesType())
       assertThat(persistedApplication.isWomensApplication).isFalse
       assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)

@@ -134,7 +134,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withNoticeType(Cas1ApplicationTimelinessCategory.standard)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.STANDARD)
         .produce()
         .apply {
           this.apArea = apArea

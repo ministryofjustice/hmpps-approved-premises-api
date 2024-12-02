@@ -455,7 +455,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
 
   private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean {
     return this.getIsWomensApplication() == applicationEntity.isWomensApplication &&
-      (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
+      (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY)) &&
       (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
       (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
       (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&

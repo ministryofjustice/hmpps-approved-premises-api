@@ -260,7 +260,7 @@ class Cas1AutoScript(
         arrivalDate = LocalDate.of(2025, 12, 12),
         data = applicationData(),
         isInapplicable = false,
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
       ),
       userForRequest = createdByUser,
     )

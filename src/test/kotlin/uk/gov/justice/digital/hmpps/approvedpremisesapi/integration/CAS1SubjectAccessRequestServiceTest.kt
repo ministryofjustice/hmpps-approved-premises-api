@@ -733,7 +733,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
            "inmate_in_out_status_on_submission": null,
            "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
-           "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
+           "notice_type":  "${Cas1ApplicationTimelinessCategory.EMERGENCY}",
            "ap_type": "${ApprovedPremisesType.NORMAL}",
            "case_manager_name": "${application.caseManagerUserDetails?.name}",
            "case_manager_is_not_applicant" : true
@@ -995,7 +995,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
       withInmateInOutStatusOnSubmission(null)
       withSentenceType(SENTENCE_TYPE_CUSTODIAL)
-      withNoticeType(Cas1ApplicationTimelinessCategory.emergency)
+      withNoticeType(Cas1ApplicationTimelinessCategory.EMERGENCY)
       withApType(ApprovedPremisesType.NORMAL)
       withApplicantUserDetails(applicantUserDetails)
       withCaseManagerUserDetails(caseManagerUserDetails)

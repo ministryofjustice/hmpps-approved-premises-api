@@ -600,7 +600,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
         apType = ApType.pipe,
-        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
       ),
     )
 

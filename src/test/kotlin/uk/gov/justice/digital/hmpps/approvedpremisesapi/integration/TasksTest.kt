@@ -1104,7 +1104,7 @@ class TasksTest {
 
               fun createAssessmentTask(
                 requiredQualification: UserQualification?,
-                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
+                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.STANDARD,
               ): Task {
                 val (assessment) = givenAnAssessmentForApprovedPremises(
                   allocatedToUser = otherUser,
@@ -1122,7 +1122,7 @@ class TasksTest {
 
               fun createPlacementRequestTask(
                 requiredQualification: UserQualification?,
-                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
+                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.STANDARD,
               ): Task {
                 val (placementRequest, _) = givenAPlacementRequest(
                   placementRequestAllocatedTo = otherUser,
@@ -1141,7 +1141,7 @@ class TasksTest {
 
               fun createPlacementApplicationTask(
                 requiredQualification: UserQualification?,
-                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
+                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.STANDARD,
               ): Task {
                 val placementApplication = givenAPlacementApplication(
                   createdByUser = user,
@@ -1179,16 +1179,16 @@ class TasksTest {
               }
 
               assessmentTasks[UserQualification.EMERGENCY] = listOf(
-                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
+                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.SHORT_NOTICE),
+                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.EMERGENCY),
               )
               placementRequestTasks[UserQualification.EMERGENCY] = listOf(
-                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.emergency),
+                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.SHORT_NOTICE),
+                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.EMERGENCY),
               )
               placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
-                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
+                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.SHORT_NOTICE),
+                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.EMERGENCY),
               )
 
               tasks = mapOf(

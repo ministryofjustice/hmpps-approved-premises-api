@@ -1899,7 +1899,7 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
             apType = ApType.normal,
             translatedDocument = {},
             isWomensApplication = false,
@@ -1928,7 +1928,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.isWomensApplication).isFalse()
       assertThat(persistedApplication.isPipeApplication).isFalse
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
@@ -2022,7 +2022,7 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
             apType = ApType.normal,
             translatedDocument = {},
             isWomensApplication = true,
@@ -2051,7 +2051,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.isWomensApplication).isTrue()
       assertThat(persistedApplication.isPipeApplication).isFalse
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
@@ -2144,7 +2144,7 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.emergency,
+            noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
             apType = ApType.esap,
             translatedDocument = {},
             isWomensApplication = false,
@@ -2173,7 +2173,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.EMERGENCY)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2265,7 +2265,7 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+            noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
             apType = ApType.pipe,
             translatedDocument = {},
             isWomensApplication = false,
@@ -2284,7 +2284,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.shortNotice)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.SHORT_NOTICE)
       assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
       assertThat(persistedApplication.cruManagementArea?.id).isEqualTo(overriddenApArea.defaultCruManagementArea.id)
 
@@ -2365,7 +2365,7 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           SubmitApprovedPremisesApplication(
-            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
             apType = ApType.esap,
             translatedDocument = {},
             isWomensApplication = false,
@@ -2384,7 +2384,7 @@ class ApplicationTest : IntegrationTestBase() {
 
       val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!!
 
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.STANDARD)
       assertThat(persistedApplication.apArea?.id).isEqualTo(overriddenApArea.id)
 
       val createdAssessment =

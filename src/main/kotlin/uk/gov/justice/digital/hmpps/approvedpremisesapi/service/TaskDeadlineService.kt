@@ -24,10 +24,10 @@ class TaskDeadlineService(
       application !is ApprovedPremisesApplicationEntity ->
         null
 
-      application.noticeType == Cas1ApplicationTimelinessCategory.emergency ->
+      application.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY ->
         effectiveAssessmentCreatedAt.plusHours(ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS)
 
-      application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice ->
+      application.noticeType == Cas1ApplicationTimelinessCategory.SHORT_NOTICE ->
         addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
 
       else ->
@@ -40,10 +40,10 @@ class TaskDeadlineService(
     val effectivePlacementRequestCreatedAt = placementRequest.createdAt.slewedToWorkingPattern()
 
     return when {
-      application.noticeType == Cas1ApplicationTimelinessCategory.emergency ->
+      application.noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY ->
         effectivePlacementRequestCreatedAt
 
-      application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice ->
+      application.noticeType == Cas1ApplicationTimelinessCategory.SHORT_NOTICE ->
         addWorkingDays(effectivePlacementRequestCreatedAt, PLACEMENT_REQUEST_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
 
       application.isEsapApplication ->
