@@ -53,7 +53,7 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
         withApplication(submittedWithAssessment)
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas2ApplicationsWithAssessments, 1)
+      migrationJobService.runMigrationJob(MigrationJobType.CAS2_APPLICATIONS_WITH_ASSESSMENTS, 1)
 
       checkUnsubmittedDoesNotHaveAssessment(unsubmittedApp)
 

@@ -40,7 +40,7 @@ class NoticeTypeMigrationJobTest : IntegrationTestBase() {
       createApplication(null, createdAt, null)
     }.take(4).toMutableList().map { it.id }
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1NoticeTypes, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.CAS1_NOTICE_TYPES, 1)
 
     assertApplicationsHaveCorrectNoticeType(emergencyApplicationIds, Cas1ApplicationTimelinessCategory.EMERGENCY)
     assertApplicationsHaveCorrectNoticeType(shortNoticeApplicationIds, Cas1ApplicationTimelinessCategory.SHORT_NOTICE)

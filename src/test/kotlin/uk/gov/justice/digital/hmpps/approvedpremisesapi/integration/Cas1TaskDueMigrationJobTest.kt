@@ -59,7 +59,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
     val placementRequests = List(5) { createPlacementRequest() }
     val placementApplications = List(2) { createPlacementApplication() }
 
-    migrationJobService.runMigrationJob(MigrationJobType.taskDueDates)
+    migrationJobService.runMigrationJob(MigrationJobType.TASK_DUE_DATES)
 
     assessments.forEach {
       val updatedAssessment = assessmentTestRepository.findByIdOrNull(it.id)!!
