@@ -65,7 +65,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.id).isEqualTo(details.id)
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
-    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.created))
+    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.CREATED))
     assertThat(result.startDate).isEqualTo(details.startDate)
     assertThat(result.endDate).isEqualTo(details.endDate)
     assertThat(result.reason).isEqualTo(expectedReason)

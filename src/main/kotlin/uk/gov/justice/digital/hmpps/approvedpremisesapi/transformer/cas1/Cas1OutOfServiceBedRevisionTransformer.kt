@@ -33,23 +33,23 @@ class Cas1OutOfServiceBedRevisionTransformer(
 
   private fun Cas1OutOfServiceBedRevisionEntity.deriveRevisionType(): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType> {
     return when (this.revisionType) {
-      DomainRevisionType.INITIAL -> listOf(ApiRevisionType.created)
+      DomainRevisionType.INITIAL -> listOf(ApiRevisionType.CREATED)
       else -> Cas1OutOfServiceBedRevisionChangeType.unpack(this.changeTypePacked).map { it.apiValue }
     }
   }
 
   private fun shouldDisplayOutOfServiceFrom(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_START_DATE)
+    revisionType.containsAny(ApiRevisionType.CREATED, ApiRevisionType.UPDATED_START_DATE)
 
   private fun shouldDisplayOutOfServiceTo(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_END_DATE)
+    revisionType.containsAny(ApiRevisionType.CREATED, ApiRevisionType.UPDATED_END_DATE)
 
   private fun shouldDisplayReason(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_REASON)
+    revisionType.containsAny(ApiRevisionType.CREATED, ApiRevisionType.UPDATED_REASON)
 
   private fun shouldDisplayReferenceNumber(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_REFERENCE_NUMBER)
+    revisionType.containsAny(ApiRevisionType.CREATED, ApiRevisionType.UPDATED_REFERENCE_NUMBER)
 
   private fun shouldDisplayNotes(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_NOTES)
+    revisionType.containsAny(ApiRevisionType.CREATED, ApiRevisionType.UPDATED_NOTES)
 }
