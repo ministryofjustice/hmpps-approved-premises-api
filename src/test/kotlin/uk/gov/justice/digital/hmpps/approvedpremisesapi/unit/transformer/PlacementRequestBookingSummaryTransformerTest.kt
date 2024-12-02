@@ -104,7 +104,7 @@ class PlacementRequestBookingSummaryTransformerTest {
     assertThat(result!!.arrivalDate).isEqualTo(booking.arrivalDate)
     assertThat(result!!.departureDate).isEqualTo(booking.departureDate)
     assertThat(result!!.createdAt).isEqualTo(booking.createdAt.toInstant())
-    assertThat(result!!.type).isEqualTo(BookingSummary.Type.legacy)
+    assertThat(result!!.type).isEqualTo(BookingSummary.Type.LEGACY)
   }
 
   @Test

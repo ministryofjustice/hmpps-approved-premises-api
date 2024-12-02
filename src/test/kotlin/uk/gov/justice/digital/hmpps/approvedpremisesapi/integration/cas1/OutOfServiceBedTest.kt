@@ -1024,7 +1024,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.created.value,
+              Cas1OutOfServiceBedRevisionType.CREATED.value,
             ),
           )
           .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-17")
@@ -1108,7 +1108,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.created.value,
+              Cas1OutOfServiceBedRevisionType.CREATED.value,
             ),
           )
           .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-17")
@@ -1334,7 +1334,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
+                Cas1OutOfServiceBedRevisionType.CREATED.value,
               ),
             )
             .jsonPath("$.revisionHistory[0].startDate").isEqualTo("2022-08-01")
@@ -1533,7 +1533,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
           .jsonPath("$.revisionHistory[0].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.created.value,
+              Cas1OutOfServiceBedRevisionType.CREATED.value,
             ),
           )
           .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
@@ -1548,11 +1548,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
           .jsonPath("$.revisionHistory[1].revisionType").value(
             containsInAnyOrder(
-              Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-              Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-              Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-              Cas1OutOfServiceBedRevisionType.updatedReason.value,
-              Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_START_DATE.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_END_DATE.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_REFERENCE_NUMBER.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_REASON.value,
+              Cas1OutOfServiceBedRevisionType.UPDATED_NOTES.value,
             ),
           )
           .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-17")
@@ -1717,7 +1717,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
+                Cas1OutOfServiceBedRevisionType.CREATED.value,
               ),
             )
             .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
@@ -1732,11 +1732,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
             .jsonPath("$.revisionHistory[1].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-                Cas1OutOfServiceBedRevisionType.updatedReason.value,
-                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_START_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_END_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REFERENCE_NUMBER.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REASON.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_NOTES.value,
               ),
             )
             .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")
@@ -1941,7 +1941,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
             .jsonPath("$.revisionHistory[0].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
+                Cas1OutOfServiceBedRevisionType.CREATED.value,
               ),
             )
             .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
@@ -1956,11 +1956,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
             .jsonPath("$.revisionHistory[1].revisionType").value(
               containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-                Cas1OutOfServiceBedRevisionType.updatedReason.value,
-                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_START_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_END_DATE.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REFERENCE_NUMBER.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_REASON.value,
+                Cas1OutOfServiceBedRevisionType.UPDATED_NOTES.value,
               ),
             )
             .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")

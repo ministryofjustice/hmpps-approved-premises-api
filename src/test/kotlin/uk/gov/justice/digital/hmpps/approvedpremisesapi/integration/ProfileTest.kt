@@ -145,9 +145,9 @@ class ProfileTest : IntegrationTestBase() {
                   ),
                   cruManagementAreaOverride = null,
                   permissions = listOf(
-                    ApprovedPremisesUserPermission.assessApplication,
-                    ApprovedPremisesUserPermission.assessAppealedApplication,
-                    ApprovedPremisesUserPermission.assessPlacementApplication,
+                    ApprovedPremisesUserPermission.ASSESS_APPLICATION,
+                    ApprovedPremisesUserPermission.ASSESS_APPEALED_APPLICATION,
+                    ApprovedPremisesUserPermission.ASSESS_PLACEMENT_APPLICATION,
                     ApprovedPremisesUserPermission.VIEW_ASSIGNED_ASSESSMENTS,
                   ),
                   version = 1950528466,
@@ -293,7 +293,7 @@ class ProfileTest : IntegrationTestBase() {
         .responseBody!!
 
       assertThat(response.deliusUsername).isEqualTo(deliusUsername)
-      assertThat(response.loadError).isEqualTo(ProfileResponse.TaskStatus.IN_PROGRESS)
+      assertThat(response.loadError).isEqualTo(ProfileResponse.LoadError.STAFF_RECORD_NOT_FOUND)
     }
 
     @Test
@@ -548,7 +548,7 @@ class ProfileTest : IntegrationTestBase() {
           objectMapper.writeValueAsString(
             ProfileResponse(
               deliusUsername = "nonStaffUser",
-              loadError = ProfileResponse.TaskStatus.IN_PROGRESS,
+              loadError = ProfileResponse.LoadError.STAFF_RECORD_NOT_FOUND,
               null,
             ),
           ),

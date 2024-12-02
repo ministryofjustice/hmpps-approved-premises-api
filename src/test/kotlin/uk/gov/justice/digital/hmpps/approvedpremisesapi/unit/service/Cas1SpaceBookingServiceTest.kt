@@ -546,7 +546,7 @@ class Cas1SpaceBookingServiceTest {
       val result = service.search(
         PREMISES_ID,
         Cas1SpaceBookingService.SpaceBookingFilterCriteria(
-          residency = Cas1SpaceBookingResidency.current,
+          residency = Cas1SpaceBookingResidency.CURRENT,
           crnOrName = "theCrnOrName",
           keyWorkerStaffCode = "keyWorkerStaffCode",
         ),

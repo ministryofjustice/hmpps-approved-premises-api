@@ -268,7 +268,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withPremises(bed.room.premises)
                 withCrn(offenderDetails.otherIds.crn)
                 withBed(bed)
-                withStatus(BookingStatus.cancelled)
+                withStatus(BookingStatus.CANCELLED)
                 withServiceName(ServiceName.temporaryAccommodation)
               }
               val cancellation = cancellationEntityFactory.produceAndPersist {

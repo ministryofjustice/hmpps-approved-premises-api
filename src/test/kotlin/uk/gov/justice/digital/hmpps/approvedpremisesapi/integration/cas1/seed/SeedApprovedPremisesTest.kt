@@ -41,7 +41,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-probation.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "invalid-probation.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -69,7 +69,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-local-authority.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "invalid-local-authority.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -107,7 +107,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-service-scope.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "invalid-service-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -145,7 +145,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-model-scope.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "invalid-model-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -172,7 +172,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "new-ap-invalid-boolean.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "new-ap-invalid-boolean.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -192,7 +192,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
         "HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds",
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "new-ap-missing-headers.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "new-ap-missing-headers.csv")
 
     val expectedErrorMessage = "The headers provided: " +
       "[name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
@@ -254,7 +254,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "new-ap.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "new-ap.csv")
 
     val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull
@@ -311,7 +311,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremises, "update-ap.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "update-ap.csv")
 
     val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull

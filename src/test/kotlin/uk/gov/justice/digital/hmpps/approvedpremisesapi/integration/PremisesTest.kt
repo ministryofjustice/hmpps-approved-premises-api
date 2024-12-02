@@ -2093,7 +2093,7 @@ class PremisesTest {
           .jsonPath("$.bookings[3].departureDate").isEqualTo(bookings[3].departureDate.toString())
           .jsonPath("$.bookings[3].person.crn").isEqualTo(bookings[3].crn)
           .jsonPath("$.bookings[3].bed.id").isEqualTo(bookings[3].bed!!.id.toString())
-          .jsonPath("$.bookings[3].status").isEqualTo(BookingStatus.cancelled.value)
+          .jsonPath("$.bookings[3].status").isEqualTo(BookingStatus.CANCELLED.value)
           .jsonPath("$.dateCapacities").isArray
           .jsonPath("$.dateCapacities[0]").isNotEmpty
       }

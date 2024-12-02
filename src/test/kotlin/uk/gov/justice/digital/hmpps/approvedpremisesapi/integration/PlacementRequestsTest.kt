@@ -589,9 +589,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It searches by tier where user is manager`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
-          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
-          val placementRequestA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
-          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a2)
+          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.A0)
+          val placementRequestA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.A1)
+          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.A2)
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?tier=A1")
@@ -746,14 +746,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val apArea1 = givenAnApArea()
             val apArea2 = givenAnApArea()
 
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.A2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A1)
             val placementOffender1On5thJanTierA2Parole =
-              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea1)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
-            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
+              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2, isParole = true, apArea = apArea1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2, isParole = true, apArea = apArea2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2, isParole = false)
+            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.A2)
 
             webTestClient.get()
               .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2&requestType=parole&apAreaId=${apArea1.id}")
@@ -786,14 +786,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val cruArea1 = givenACas1CruManagementArea()
             val cruArea2 = givenACas1CruManagementArea()
 
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.A2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A1)
             val placementOffender1On5thJanTierA2Parole =
-              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, cruManagementArea = cruArea1)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, cruManagementArea = cruArea2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
-            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
+              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2, isParole = true, cruManagementArea = cruArea1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2, isParole = true, cruManagementArea = cruArea2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2, isParole = false)
+            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.A2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.A2)
 
             webTestClient.get()
               .uri(
@@ -975,9 +975,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It sorts by personRisksTier when the user is a manager`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.b1)
-          val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
-          val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
+          val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.B1)
+          val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.A0)
+          val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.A1)
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=person_risks_tier&sortDirection=asc")
@@ -1083,7 +1083,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       createdAt: OffsetDateTime = OffsetDateTime.now(),
       applicationDate: OffsetDateTime = OffsetDateTime.now(),
       isWithdrawn: Boolean = false,
-      tier: RiskTierLevel = RiskTierLevel.b1,
+      tier: RiskTierLevel = RiskTierLevel.B1,
       isParole: Boolean = false,
       apArea: ApAreaEntity? = null,
       cruManagementArea: Cas1CruManagementAreaEntity? = null,

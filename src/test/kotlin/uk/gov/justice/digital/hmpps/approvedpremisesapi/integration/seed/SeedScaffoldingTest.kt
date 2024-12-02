@@ -14,7 +14,7 @@ class SeedScaffoldingTest : SeedTestBase() {
       .uri("/seed")
       .bodyValue(
         SeedRequest(
-          seedType = SeedFileType.approvedPremises,
+          seedType = SeedFileType.APPROVED_PREMISES,
           fileName = "file.csv",
         ),
       )
@@ -25,7 +25,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a file containing forward slashes logs an error`() {
-    seedService.seedData(SeedFileType.approvedPremises, "/afile")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "/afile")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -39,7 +39,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a file containing backward slashes logs an error`() {
-    seedService.seedData(SeedFileType.approvedPremises, "\\afile")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "\\afile")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -53,7 +53,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a non-existent file logs an error`() {
-    seedService.seedData(SeedFileType.approvedPremises, "non-existent")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES, "non-existent")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&

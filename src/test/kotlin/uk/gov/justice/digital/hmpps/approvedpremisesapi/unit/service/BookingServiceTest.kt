@@ -1155,7 +1155,7 @@ class BookingServiceTest {
       assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.value.reason).isEqualTo(reason)
       assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
@@ -1197,7 +1197,7 @@ class BookingServiceTest {
       assertThat(result.value.reason).isEqualTo(otherReason)
       assertThat(result.value.notes).isEqualTo("notes")
       assertThat(result.value.otherReason).isEqualTo("Other reason")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
@@ -1249,7 +1249,7 @@ class BookingServiceTest {
       assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.value.reason).isEqualTo(reason)
       assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas1BookingDomainEventService.bookingCancelled(
@@ -1358,7 +1358,7 @@ class BookingServiceTest {
       assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.value.reason).isEqualTo(reason)
       assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas1BookingDomainEventService.bookingCancelled(
@@ -1424,7 +1424,7 @@ class BookingServiceTest {
       assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.value.reason).isEqualTo(reason)
       assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 0) {
         mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any())
@@ -1628,7 +1628,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
@@ -1670,7 +1670,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
@@ -1711,7 +1711,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
@@ -1762,7 +1762,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
@@ -1812,7 +1812,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
@@ -1950,7 +1950,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
@@ -1994,7 +1994,7 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.CANCELLED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)

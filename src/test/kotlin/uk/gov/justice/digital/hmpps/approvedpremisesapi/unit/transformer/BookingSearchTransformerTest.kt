@@ -63,7 +63,7 @@ class BookingSearchTransformerTest {
         .withBookingStatus(BookingStatus.DEPARTED),
       TestBookingSearchResult()
         .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.cancelled),
+        .withBookingStatus(BookingStatus.CANCELLED),
     )
     val bookingSearchResultDtos = domainResults.mapNotNull { rs ->
       BookingSearchResultDto(

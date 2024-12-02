@@ -229,8 +229,8 @@ class Cas1SpaceBookingTest {
           createdByUser = applicant,
         ) { placementRequest, application ->
           val essentialCharacteristics = listOf(
-            Cas1SpaceCharacteristic.hasBrailleSignage,
-            Cas1SpaceCharacteristic.hasTactileFlooring,
+            Cas1SpaceCharacteristic.HAS_BRAILLE_SIGNAGE,
+            Cas1SpaceCharacteristic.HAS_TACTILE_FLOORING,
           )
 
           placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {

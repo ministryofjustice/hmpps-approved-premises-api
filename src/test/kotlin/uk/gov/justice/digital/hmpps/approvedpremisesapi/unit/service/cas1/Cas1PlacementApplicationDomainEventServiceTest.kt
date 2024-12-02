@@ -384,7 +384,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
       val placementApplication = getPlacementApplicationWithDecision(PlacementApplicationDecision.ACCEPTED)
       val assessedByStaffMember = StaffMemberFactory().produce()
       val decisionSummary = "Decision Summary: Accepted"
-      val decisionMade = ApiDecision.accepted
+      val decisionMade = ApiDecision.ACCEPTED
 
       every { domainEventTransformer.toStaffMember(user) } returns assessedByStaffMember
       every { domainEventService.saveRequestForPlacementAssessedEvent(any()) } returns Unit
@@ -433,7 +433,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
           placementApplication,
           user,
           PlacementApplicationDecisionEnvelope(
-            ApiDecision.withdraw,
+            ApiDecision.WITHDRAW,
             "Summary of Changes",
             "decisionSummary",
           ),
@@ -453,7 +453,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
           placementApplication,
           user,
           PlacementApplicationDecisionEnvelope(
-            ApiDecision.accepted,
+            ApiDecision.ACCEPTED,
             "Summary of Changes",
             "decisionSummary",
           ),

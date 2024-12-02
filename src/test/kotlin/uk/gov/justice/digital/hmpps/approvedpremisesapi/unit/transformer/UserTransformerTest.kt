@@ -374,7 +374,7 @@ class UserTransformerTest {
 
       assertThat(result.deliusUsername).isEqualTo("userName")
       assertThat(result.user).isEqualTo(null)
-      assertThat(result.loadError).isEqualTo(ProfileResponse.TaskStatus.IN_PROGRESS)
+      assertThat(result.loadError).isEqualTo(ProfileResponse.LoadError.STAFF_RECORD_NOT_FOUND)
     }
 
     @Test

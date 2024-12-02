@@ -1276,7 +1276,7 @@ class ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class GetLostBedsReport {
-    private val lostBedsEndpoint = "/cas1/reports/${Cas1ReportName.lostBeds.value}"
+    private val lostBedsEndpoint = "/cas1/reports/${Cas1ReportName.LOST_BEDS.value}"
 
     @Test
     fun `Get lost beds report returns OK with correct body`() {

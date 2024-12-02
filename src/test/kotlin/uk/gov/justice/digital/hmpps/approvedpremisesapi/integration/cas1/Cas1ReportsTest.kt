@@ -27,7 +27,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class Cas1ReportsTest : IntegrationTestBase() {
-  val cas1Report: String = Cas1ReportName.lostBeds.value
+  val cas1Report: String = Cas1ReportName.LOST_BEDS.value
   val approvedPremisesServiceName: String = ServiceName.approvedPremises.value
 
   @Test
@@ -118,7 +118,7 @@ class Cas1ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class GetOutOfServiceBedsReport {
-    private val outOfServiceBedsEndpoint = "/cas1/reports/${Cas1ReportName.outOfServiceBeds.value}"
+    private val outOfServiceBedsEndpoint = "/cas1/reports/${Cas1ReportName.OUT_OF_SERVICE_BEDS.value}"
 
     @Autowired
     lateinit var realOutOfServiceBedRepository: Cas1OutOfServiceBedRepository
