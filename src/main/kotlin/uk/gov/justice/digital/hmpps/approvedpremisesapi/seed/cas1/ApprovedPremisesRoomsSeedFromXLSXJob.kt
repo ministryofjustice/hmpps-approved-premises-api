@@ -70,7 +70,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     siteSurvey.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
       val rowId = dataFrame.getColumn(0).values().indexOf(question)
 
-      if (rowId == -1) throw SiteSurveyImportException("Characteristic question $question not found in sheet $sheetName.")
+      if (rowId == -1) throw SiteSurveyImportException("Characteristic question '$question' not found on sheet $sheetName.")
 
       for (colId in 1..<dataFrame.columnsCount()) {
         val roomCode = dataFrame.getColumn(colId).name
@@ -79,7 +79,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
         if (answer.equals("yes", true)) {
           premisesCharacteristics.computeIfAbsent(roomCode) { mutableListOf() }.add(characteristic!!)
         } else if (!answer.equals("no", true)) {
-          throw SiteSurveyImportException("Answer $answer for question $question is not yes or no in sheet $sheetName.")
+          throw SiteSurveyImportException("Expecting 'yes' or 'no' for question '$question' but is '$answer' on sheet $sheetName.")
         }
       }
     }
@@ -156,7 +156,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
 
   private fun findExistingPremisesOrThrow(premisesId: UUID): PremisesEntity {
     return premisesRepository.findByIdOrNull(premisesId) ?: throw SiteSurveyImportException(
-      "Error: no premises with id '$premisesId' found. ",
+      "No premises with id '$premisesId' found.",
     )
   }
 }
