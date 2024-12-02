@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
+@Component
 class UpdateUsersFromApiSeedJob(
   val userService: UserService,
 ) : SeedJob<UpdateUserFromApiCsvRow>(

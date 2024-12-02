@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -37,6 +38,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Component
 @SuppressWarnings("LongParameterList")
 class Cas1BookingToSpaceBookingSeedJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,

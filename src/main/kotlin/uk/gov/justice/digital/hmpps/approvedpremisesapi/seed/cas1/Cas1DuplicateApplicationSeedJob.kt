@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
@@ -29,6 +30,7 @@ import java.util.UUID
  * Using this seed job against a given application should always be tested in pre-prod to ensure that all the pages
  * of the application can be traversed, and the application can be submitted.
  */
+@Component
 class Cas1DuplicateApplicationSeedJob(
   private val applicationService: ApplicationService,
   private val offenderService: OffenderService,

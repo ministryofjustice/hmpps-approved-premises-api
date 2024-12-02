@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
@@ -31,6 +32,7 @@ import java.util.UUID
  * changes to the Domain Event's schema since the JSON was originally written to the Database (although historically,
  * the Domain Event JSON Schema is very stable)
  */
+@Component
 class Cas1UpdateEventNumberSeedJob(
   private val applicationService: ApplicationService,
   private val applicationRepository: ApplicationRepository,
