@@ -566,7 +566,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(null)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.DEPARTED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity, user)
@@ -641,7 +641,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(null)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo(notes)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.DEPARTED)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)

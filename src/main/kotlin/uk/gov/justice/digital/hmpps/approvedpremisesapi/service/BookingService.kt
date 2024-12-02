@@ -972,7 +972,7 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-    booking.status = BookingStatus.departed
+    booking.status = BookingStatus.DEPARTED
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
     booking.departures += departureEntity

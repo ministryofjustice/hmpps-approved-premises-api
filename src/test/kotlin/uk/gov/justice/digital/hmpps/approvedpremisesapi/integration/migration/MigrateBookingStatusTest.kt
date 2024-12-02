@@ -97,8 +97,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, BookingStatus.DEPARTED, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, BookingStatus.DEPARTED, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -175,8 +175,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
 
-        assertBookingStatus(departedBooking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(departedBooking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(departedBooking1, BookingStatus.DEPARTED, ServiceName.temporaryAccommodation)
+        assertBookingStatus(departedBooking2, BookingStatus.DEPARTED, ServiceName.temporaryAccommodation)
         assertBookingStatus(arrivedBooking, BookingStatus.ARRIVED, ServiceName.temporaryAccommodation)
         assertBookingStatus(confirmedBooking, BookingStatus.CONFIRMED, ServiceName.temporaryAccommodation)
         assertBookingStatus(provisionalBooking, BookingStatus.PROVISIONAL, ServiceName.temporaryAccommodation)

@@ -808,7 +808,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.departed,
+        status = BookingStatus.DEPARTED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1210,7 +1210,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         keyWorker = null,
-        status = BookingStatus.departed,
+        status = BookingStatus.DEPARTED,
         arrival = Arrival(
           bookingId = bookingId,
           arrivalDate = LocalDate.parse("2022-08-10"),
