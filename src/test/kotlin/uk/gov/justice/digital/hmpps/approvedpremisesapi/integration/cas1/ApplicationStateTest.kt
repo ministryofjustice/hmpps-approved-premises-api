@@ -471,7 +471,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
-      type = ApType.normal,
+      type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
       essentialCriteria = listOf(),

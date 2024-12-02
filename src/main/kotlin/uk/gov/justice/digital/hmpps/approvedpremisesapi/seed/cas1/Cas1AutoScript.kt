@@ -255,7 +255,7 @@ class Cas1AutoScript(
         isPipeApplication = null,
         isEmergencyApplication = false,
         isEsapApplication = null,
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
         releaseType = "licence",
         arrivalDate = LocalDate.of(2025, 12, 12),
         data = applicationData(),

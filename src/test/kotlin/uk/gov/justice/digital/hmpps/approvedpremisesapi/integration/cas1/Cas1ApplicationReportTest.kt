@@ -226,7 +226,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         nomsNumber = "noms1",
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
         crn = "AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn",
         dateOfBirth = LocalDate.now().minusYears(25),
         gender = "male",
@@ -296,7 +296,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       )
       acceptLatestAssessment(
         applicationId = application.id,
-        apType = ApType.pipe,
+        apType = ApType.PIPE,
         decisionDate = LocalDateTime.of(2020, 5, 1, 9, 15, 45),
         assessorJwt = assessor2Jwt,
       )
@@ -418,7 +418,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         nomsNumber = "noms3",
-        apType = ApType.pipe,
+        apType = ApType.PIPE,
         crn = "AppSubmittedWithAcceptedAssessment",
         dateOfBirth = LocalDate.now().minusYears(50),
         gender = "female",
@@ -452,7 +452,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       )
       acceptLatestAssessment(
         applicationId = application.id,
-        apType = ApType.mhapStJosephs,
+        apType = ApType.MHAP_ST_JOSEPHS,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessor4jwt,
       )
@@ -533,7 +533,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         nomsNumber = "noms2",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "AppSubmittedNoAssessment",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -622,7 +622,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(),
         nomsNumber = "noms10",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "appWithdrawnDuringReportingPeriod",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -665,7 +665,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(),
         nomsNumber = "noms2",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "submittedAppBeforeReportDate",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -695,7 +695,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(),
         nomsNumber = "noms2",
-        apType = ApType.esap,
+        apType = ApType.ESAP,
         crn = "submittedAppBeforeReportDate",
         dateOfBirth = LocalDate.now().minusYears(20),
         gender = "female",
@@ -990,7 +990,7 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
-      type = ApType.normal,
+      type = ApType.NORMAL,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,

@@ -1071,7 +1071,7 @@ class ApplicationServiceTest {
           isPipeApplication = null,
           isEmergencyApplication = false,
           isEsapApplication = false,
-          apType = ApType.normal,
+          apType = ApType.NORMAL,
           releaseType = null,
           arrivalDate = null,
           data = "{}",
@@ -1191,8 +1191,8 @@ class ApplicationServiceTest {
 
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
       assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
-      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
-      assertThat(approvedPremisesApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
+      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(apType == ApType.PIPE)
+      assertThat(approvedPremisesApplication.isEsapApplication).isEqualTo(apType == ApType.ESAP)
       assertThat(approvedPremisesApplication.apType).isEqualTo(apType.asApprovedPremisesType())
       assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
       assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
@@ -1665,7 +1665,7 @@ class ApplicationServiceTest {
         isWomensApplication = false,
         isEmergencyApplication = false,
         isEsapApplication = false,
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -1945,8 +1945,8 @@ class ApplicationServiceTest {
       assertThat(result.entity is ValidatableActionResult.Success).isTrue
       val validatableActionResult = result.entity as ValidatableActionResult.Success
       val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
-      assertThat(persistedApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
-      assertThat(persistedApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
+      assertThat(persistedApplication.isPipeApplication).isEqualTo(apType == ApType.PIPE)
+      assertThat(persistedApplication.isEsapApplication).isEqualTo(apType == ApType.ESAP)
       assertThat(persistedApplication.apType).isEqualTo(apType.asApprovedPremisesType())
       assertThat(persistedApplication.isWomensApplication).isFalse
       assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())

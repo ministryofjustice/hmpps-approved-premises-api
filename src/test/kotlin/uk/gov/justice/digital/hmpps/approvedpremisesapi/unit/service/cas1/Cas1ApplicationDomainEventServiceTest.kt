@@ -220,7 +220,7 @@ class Cas1ApplicationDomainEventServiceTest {
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals("reason for short notice") &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals("reason for short notice other") &&
               enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType()
-                .toString() == ApType.normal.value
+                .toString() == ApType.NORMAL.value
           },
         )
       }

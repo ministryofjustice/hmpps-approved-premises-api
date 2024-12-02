@@ -396,11 +396,11 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
-    return createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
+    return createAndSubmitApplication(ApType.NORMAL, crn, withArrivalDate, shortNotice)
   }
 
   private fun createApplicationWithCompletedAssessment(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
-    val application = createAndSubmitApplication(ApType.normal, crn, withArrivalDate)
+    val application = createAndSubmitApplication(ApType.NORMAL, crn, withArrivalDate)
     acceptAssessmentForApplication(application)
     return application
   }
@@ -506,10 +506,10 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .bodyValue(
         SubmitApprovedPremisesApplication(
           translatedDocument = {},
-          isPipeApplication = apType == ApType.pipe,
+          isPipeApplication = apType == ApType.PIPE,
           isWomensApplication = false,
           isEmergencyApplication = false,
-          isEsapApplication = apType == ApType.esap,
+          isEsapApplication = apType == ApType.ESAP,
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
@@ -562,7 +562,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
-      type = ApType.normal,
+      type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,

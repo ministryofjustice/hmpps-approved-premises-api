@@ -529,7 +529,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         sentenceType = SentenceTypeOption.bailPlacement,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
-        apType = ApType.pipe,
+        apType = ApType.PIPE,
         noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
       ),
     )
@@ -572,7 +572,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
-      type = ApType.normal,
+      type = ApType.NORMAL,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,
@@ -592,7 +592,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             duration = duration,
           )
         },
-        apType = ApType.normal,
+        apType = ApType.NORMAL,
       ),
     )
   }

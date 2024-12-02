@@ -1900,7 +1900,7 @@ class ApplicationTest : IntegrationTestBase() {
         .bodyValue(
           SubmitApprovedPremisesApplication(
             noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
-            apType = ApType.normal,
+            apType = ApType.NORMAL,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
@@ -2023,7 +2023,7 @@ class ApplicationTest : IntegrationTestBase() {
         .bodyValue(
           SubmitApprovedPremisesApplication(
             noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
-            apType = ApType.normal,
+            apType = ApType.NORMAL,
             translatedDocument = {},
             isWomensApplication = true,
             targetLocation = "SW1A 1AA",
@@ -2145,7 +2145,7 @@ class ApplicationTest : IntegrationTestBase() {
         .bodyValue(
           SubmitApprovedPremisesApplication(
             noticeType = Cas1ApplicationTimelinessCategory.EMERGENCY,
-            apType = ApType.esap,
+            apType = ApType.ESAP,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
@@ -2266,7 +2266,7 @@ class ApplicationTest : IntegrationTestBase() {
         .bodyValue(
           SubmitApprovedPremisesApplication(
             noticeType = Cas1ApplicationTimelinessCategory.SHORT_NOTICE,
-            apType = ApType.pipe,
+            apType = ApType.PIPE,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
@@ -2366,7 +2366,7 @@ class ApplicationTest : IntegrationTestBase() {
         .bodyValue(
           SubmitApprovedPremisesApplication(
             noticeType = Cas1ApplicationTimelinessCategory.STANDARD,
-            apType = ApType.esap,
+            apType = ApType.ESAP,
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",

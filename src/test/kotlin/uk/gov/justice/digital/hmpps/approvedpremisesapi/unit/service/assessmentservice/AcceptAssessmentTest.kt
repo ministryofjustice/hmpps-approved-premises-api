@@ -163,7 +163,7 @@ class AcceptAssessmentTest {
 
     placementRequirements = PlacementRequirements(
       gender = Gender.male,
-      type = ApType.normal,
+      type = ApType.NORMAL,
       location = "AB123",
       radius = 50,
       desirableCriteria = listOf(),

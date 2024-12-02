@@ -2184,7 +2184,7 @@ class AssessmentTest : IntegrationTestBase() {
 
       val placementRequirements = PlacementRequirements(
         gender = Gender.male,
-        type = ApType.normal,
+        type = ApType.NORMAL,
         location = "B74",
         radius = 50,
         essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
@@ -2257,7 +2257,7 @@ class AssessmentTest : IntegrationTestBase() {
 
               val placementRequirements = PlacementRequirements(
                 gender = Gender.male,
-                type = ApType.normal,
+                type = ApType.NORMAL,
                 location = postcodeDistrict.outcode,
                 radius = 50,
                 essentialCriteria = essentialCriteria,
@@ -2378,7 +2378,7 @@ class AssessmentTest : IntegrationTestBase() {
 
               val placementRequirements = PlacementRequirements(
                 gender = Gender.male,
-                type = ApType.normal,
+                type = ApType.NORMAL,
                 location = postcodeDistrict.outcode,
                 radius = 50,
                 essentialCriteria = essentialCriteria,
@@ -2494,7 +2494,7 @@ class AssessmentTest : IntegrationTestBase() {
 
               val placementRequirements = PlacementRequirements(
                 gender = Gender.male,
-                type = ApType.normal,
+                type = ApType.NORMAL,
                 location = "SW1",
                 radius = 50,
                 essentialCriteria = essentialCriteria,
@@ -2593,7 +2593,7 @@ class AssessmentTest : IntegrationTestBase() {
 
           val placementRequirements = PlacementRequirements(
             gender = Gender.male,
-            type = ApType.normal,
+            type = ApType.NORMAL,
             location = postcodeDistrict.outcode,
             radius = 50,
             essentialCriteria = essentialCriteria,

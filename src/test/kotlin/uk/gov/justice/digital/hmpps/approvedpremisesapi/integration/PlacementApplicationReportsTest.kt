@@ -567,17 +567,17 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       )
     }
 
-    val apType = ApType.normal
+    val apType = ApType.NORMAL
     webTestClient.post()
       .uri("/applications/${application.id}/submission")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         SubmitApprovedPremisesApplication(
           translatedDocument = {},
-          isPipeApplication = apType == ApType.pipe,
+          isPipeApplication = apType == ApType.PIPE,
           isWomensApplication = false,
           isEmergencyApplication = false,
-          isEsapApplication = apType == ApType.esap,
+          isEsapApplication = apType == ApType.ESAP,
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
@@ -615,7 +615,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
-      type = ApType.normal,
+      type = ApType.NORMAL,
       location = postcodeDistrict.outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,

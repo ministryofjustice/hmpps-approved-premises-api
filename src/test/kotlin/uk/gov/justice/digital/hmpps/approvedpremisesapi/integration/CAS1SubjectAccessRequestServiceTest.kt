@@ -879,7 +879,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withApplication(application)
     withAssessment(assessment)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    withApType(ApType.normal)
+    withApType(ApType.NORMAL)
     withDesirableCriteria(listOf(characteristicEntity()))
     withEssentialCriteria(listOf(characteristicEntity()))
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
