@@ -289,7 +289,7 @@ class Cas1SpaceBookingTest {
           assertThat(result.createdAt).satisfies(
             { it.isAfter(Instant.now().minusSeconds(10)) },
           )
-          assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingWithin2Weeks)
+          assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.ARRIVING_WITHIN2_WEEKS)
 
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
 
@@ -896,7 +896,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
-      assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
+      assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.ARRIVING_TODAY)
     }
   }
 
@@ -1036,7 +1036,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
-      assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
+      assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.ARRIVING_TODAY)
     }
   }
 
