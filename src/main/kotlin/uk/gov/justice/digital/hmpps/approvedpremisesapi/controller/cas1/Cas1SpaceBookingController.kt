@@ -110,7 +110,7 @@ class Cas1SpaceBookingController(
       ),
       PageCriteria(
         sortBy = sortBy ?: Cas1SpaceBookingSummarySortField.personName,
-        sortDirection = sortDirection ?: SortDirection.desc,
+        sortDirection = sortDirection ?: SortDirection.DESC,
         page = page,
         perPage = perPage,
       ),

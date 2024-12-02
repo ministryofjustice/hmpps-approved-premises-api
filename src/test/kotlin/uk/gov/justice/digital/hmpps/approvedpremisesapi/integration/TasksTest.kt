@@ -1867,7 +1867,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByCreatedAt(SortDirection.desc),
+              tasksSortedByCreatedAt(SortDirection.DESC),
             ),
           )
       }
@@ -1903,7 +1903,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByDueAt(SortDirection.desc),
+              tasksSortedByDueAt(SortDirection.DESC),
             ),
           )
       }
@@ -1939,7 +1939,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByAllocatedTo(SortDirection.desc),
+              tasksSortedByAllocatedTo(SortDirection.DESC),
             ),
           )
       }
@@ -1975,7 +1975,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByPerson(SortDirection.desc),
+              tasksSortedByPerson(SortDirection.DESC),
             ),
           )
       }
@@ -2011,7 +2011,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByCompletedAt(SortDirection.desc),
+              tasksSortedByCompletedAt(SortDirection.DESC),
             ),
           )
       }
@@ -2047,7 +2047,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByTaskType(SortDirection.desc),
+              tasksSortedByTaskType(SortDirection.DESC),
             ),
           )
       }
@@ -2083,7 +2083,7 @@ class TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              tasksSortedByDecision(SortDirection.desc),
+              tasksSortedByDecision(SortDirection.DESC),
             ),
           )
       }
@@ -2141,7 +2141,7 @@ class TasksTest {
           .apply {
             when (sortDirection) {
               SortDirection.ASC -> sortedBy(sortFunc)
-              SortDirection.desc -> sortedByDescending(sortFunc)
+              SortDirection.DESC -> sortedByDescending(sortFunc)
             }
           }
           .map { tasks[it]!! }

@@ -133,6 +133,6 @@ private fun toSort(sortBy: String, sortDirection: SortDirection?, unsafe: Boolea
 }
 
 private fun sortDirection(sortDirection: SortDirection?) = when (sortDirection) {
-  SortDirection.desc -> DESC
+  SortDirection.DESC -> DESC
   else -> ASC
 }

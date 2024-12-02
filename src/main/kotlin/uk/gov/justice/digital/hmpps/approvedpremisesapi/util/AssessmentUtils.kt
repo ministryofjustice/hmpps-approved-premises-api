@@ -11,7 +11,7 @@ fun List<AssessmentSummary>.sortByName(sortDirection: SortDirection): List<Asses
 
     when (sortDirection) {
       SortDirection.ASC, null -> ascendingCompare
-      SortDirection.desc -> -ascendingCompare
+      SortDirection.DESC -> -ascendingCompare
     }
   }
 
