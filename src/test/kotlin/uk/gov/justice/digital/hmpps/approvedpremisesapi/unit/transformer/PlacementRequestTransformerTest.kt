@@ -120,7 +120,7 @@ class PlacementRequestTransformerTest {
   private val mockPersonInfo = mockk<Person>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
-  private val decision = ApiAssessmentDecision.accepted
+  private val decision = ApiAssessmentDecision.ACCEPTED
 
   @BeforeEach
   fun setup() {

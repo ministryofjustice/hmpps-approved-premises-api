@@ -180,8 +180,8 @@ class AssessmentTransformer(
     }
 
   fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
-    JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
-    JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
+    JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.ACCEPTED
+    JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.REJECTED
     null -> null
   }
 
@@ -199,8 +199,8 @@ class AssessmentTransformer(
   }
 
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
-    "ACCEPTED" -> ApiAssessmentDecision.accepted
-    "REJECTED" -> ApiAssessmentDecision.rejected
+    "ACCEPTED" -> ApiAssessmentDecision.ACCEPTED
+    "REJECTED" -> ApiAssessmentDecision.REJECTED
     else -> null
   }
 

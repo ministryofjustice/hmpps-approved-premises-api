@@ -324,7 +324,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
 
           assertThat(applicationBody.assessmentId).isEqualTo(assessment.id)
-          assertThat(applicationBody.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
+          assertThat(applicationBody.assessmentDecision).isEqualTo(ApiAssessmentDecision.REJECTED)
           assertThat(applicationBody.assessmentDecisionDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
 
           emailAsserter.assertEmailsRequestedCount(1)

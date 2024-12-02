@@ -165,7 +165,7 @@ class AssessmentTransformerTest {
 
       assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
       assertThat(result.schemaVersion).isEqualTo(UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"))
-      assertThat(result.decision).isEqualTo(ApiAssessmentDecision.rejected)
+      assertThat(result.decision).isEqualTo(ApiAssessmentDecision.REJECTED)
       assertThat(result.rejectionRationale).isEqualTo("reasoning")
       assertThat(result.createdAt).isEqualTo(Instant.parse("2022-12-14T12:05:00Z"))
       assertThat(result.submittedAt).isEqualTo(Instant.parse("2022-12-14T12:06:00Z"))
