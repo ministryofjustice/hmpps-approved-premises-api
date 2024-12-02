@@ -116,7 +116,7 @@ class ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockPersonTransformer.inmateStatusToPersonInfoApiStatus(any()) } returns PersonStatus.inCommunity
+    every { mockPersonTransformer.inmateStatusToPersonInfoApiStatus(any()) } returns PersonStatus.IN_COMMUNITY
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
   }
 

@@ -1242,7 +1242,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               application.id == it.id &&
                 application.crn == person.crn &&
                 person.nomsNumber == null &&
-                person.status == PersonStatus.unknown &&
+                person.status == PersonStatus.IN_CUSTODY &&
                 person.prisonName == null
             }
           }

@@ -195,7 +195,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                   name = "James Someone",
                   dateOfBirth = LocalDate.parse("1985-05-05"),
                   sex = "Male",
-                  status = PersonStatus.inCustody,
+                  status = PersonStatus.IN_CUSTODY,
                   nomsNumber = "NOMS321",
                   pncNumber = "PNC123",
                   nationality = "English",

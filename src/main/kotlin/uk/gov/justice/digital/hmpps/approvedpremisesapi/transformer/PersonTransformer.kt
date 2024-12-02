@@ -70,7 +70,7 @@ class PersonTransformer {
             "Prefer to self-describe" -> offenderDetailSummary.offenderProfile.selfDescribedGender
             else -> offenderDetailSummary.offenderProfile.genderIdentity
           },
-          prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }
+          prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.IN_CUSTODY }
             ?.let {
               inmateDetail?.assignedLivingUnit?.agencyName
                 ?: inmateDetail?.assignedLivingUnit?.agencyId
@@ -101,7 +101,7 @@ class PersonTransformer {
           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
           dateOfBirth = caseSummary.dateOfBirth,
           sex = caseSummary.gender ?: "Not Found",
-          status = PersonStatus.unknown,
+          status = PersonStatus.UNKNOWN,
           nomsNumber = caseSummary.nomsId,
           ethnicity = caseSummary.profile?.ethnicity,
           nationality = caseSummary.profile?.nationality,
@@ -145,7 +145,7 @@ class PersonTransformer {
       nomsNumber = probationOffenderDetail.otherIds.nomsNumber,
       pncNumber = probationOffenderDetail.otherIds.pncNumber ?: "Not found",
       nationality = probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
-      prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }
+      prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.IN_CUSTODY }
         ?.let {
           inmateDetail?.assignedLivingUnit?.agencyName
             ?: inmateDetail?.assignedLivingUnit?.agencyId
@@ -155,9 +155,9 @@ class PersonTransformer {
   }
 
   fun inmateStatusToPersonInfoApiStatus(status: InmateStatus?) = when (status) {
-    InmateStatus.IN -> PersonStatus.inCustody
-    InmateStatus.OUT -> PersonStatus.inCommunity
-    InmateStatus.TRN -> PersonStatus.inCustody
-    null -> PersonStatus.unknown
+    InmateStatus.IN -> PersonStatus.IN_CUSTODY
+    InmateStatus.OUT -> PersonStatus.IN_COMMUNITY
+    InmateStatus.TRN -> PersonStatus.IN_CUSTODY
+    null -> PersonStatus.IN_CUSTODY
   }
 }
