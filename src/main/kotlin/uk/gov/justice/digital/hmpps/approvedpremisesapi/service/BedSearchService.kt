@@ -142,16 +142,16 @@ class BedSearchService(
 
         val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
           when (it) {
-            BedSearchAttributes.singleOccupancy -> "isSingleOccupancy"
-            BedSearchAttributes.sharedProperty -> "isSharedProperty"
-            BedSearchAttributes.wheelchairAccessible -> ""
+            BedSearchAttributes.SINGLE_OCCUPANCY -> "isSingleOccupancy"
+            BedSearchAttributes.SHARED_PROPERTY -> "isSharedProperty"
+            BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> ""
           }
         }
 
         val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
         val roomCharacteristicsPropertyNames = when {
-          propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("isWheelchairAccessible")
+          propertyBedAttributes?.contains(BedSearchAttributes.WHEELCHAIR_ACCESSIBLE) == true -> listOf("isWheelchairAccessible")
           else -> null
         }
 
