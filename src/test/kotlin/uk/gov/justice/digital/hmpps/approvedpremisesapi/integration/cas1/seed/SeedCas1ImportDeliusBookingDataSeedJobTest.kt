@@ -34,7 +34,7 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusBookingManagementData, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_IMPORT_DELIUS_BOOKING_MANAGEMENT_DATA, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
@@ -90,7 +90,7 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusBookingManagementData, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_IMPORT_DELIUS_BOOKING_MANAGEMENT_DATA, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 

@@ -274,7 +274,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesUpdateEventNumber, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_UPDATE_EVENT_NUMBER, "valid-csv.csv")
   }
 
   private fun createApplication(): Pair<ApprovedPremisesApplicationEntity, OffenderDetailSummary> {

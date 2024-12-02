@@ -209,7 +209,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.id))),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_BOOKING_TO_SPACE_BOOKING, "valid-csv.csv")
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
     assertThat(premiseSpaceBookings).hasSize(4)
@@ -412,7 +412,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises1.id))),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_BOOKING_TO_SPACE_BOOKING, "valid-csv.csv")
 
     val bookingCreatedDomainEvents = domainEventRepository.findByApplicationId(application1.id)
     assertThat(bookingCreatedDomainEvents).hasSize(2)

@@ -392,7 +392,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
       csv(config),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesOutOfServiceBeds, fileName + ".csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_OUT_OF_SERVICE_BEDS, fileName + ".csv")
   }
 
   private fun csv(config: CsvBuilder.() -> Unit) = CsvBuilder()

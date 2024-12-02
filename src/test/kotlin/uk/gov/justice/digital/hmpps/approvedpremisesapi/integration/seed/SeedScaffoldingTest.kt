@@ -76,7 +76,7 @@ RogerSmith,CAS1_MANAGER,
       """.trimIndent(),
     )
 
-    seedService.seedData(SeedFileType.user, "malformed.csv")
+    seedService.seedData(SeedFileType.USER, "malformed.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&

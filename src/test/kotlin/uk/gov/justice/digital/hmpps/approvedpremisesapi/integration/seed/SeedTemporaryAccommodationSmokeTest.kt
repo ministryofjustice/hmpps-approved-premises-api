@@ -33,8 +33,8 @@ class SeedTemporaryAccommodationSmokeTest : SeedTestBase() {
         "APP,APP-2,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,app@email.com",
     )
 
-    seedService.seedData(SeedFileType.temporaryAccommodationPremises, "ta-smoketest-premises.csv")
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "ta-smoketest-bedspace.csv")
+    seedService.seedData(SeedFileType.TEMPORARY_ACCOMMODATION_PREMISES, "ta-smoketest-premises.csv")
+    seedService.seedData(SeedFileType.TEMPORARY_ACCOMMODATION_BEDSPACE, "ta-smoketest-bedspace.csv")
 
     assertThat(logEntries).noneMatch {
       it.level == "error"

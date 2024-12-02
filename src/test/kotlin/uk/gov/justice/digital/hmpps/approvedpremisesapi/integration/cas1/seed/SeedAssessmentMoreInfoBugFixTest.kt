@@ -44,7 +44,7 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesAssessmentMoreInfoBugFix, "valid-csv.csv")
+    seedService.seedData(SeedFileType.APPROVED_PREMISES_ASSESSMENT_MORE_INFO_BUG_FIX, "valid-csv.csv")
 
     val expectedJson = """{
       "sufficient-information-confirm":{"confirm":"yes"},

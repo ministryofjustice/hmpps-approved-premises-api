@@ -26,7 +26,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "invalid-ta-bedspace-premises-name.csv")
+    seedService.seedData(SeedFileType.TEMPORARY_ACCOMMODATION_BEDSPACE, "invalid-ta-bedspace-premises-name.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -61,7 +61,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "new-ta-bedspace.csv")
+    seedService.seedData(SeedFileType.TEMPORARY_ACCOMMODATION_BEDSPACE, "new-ta-bedspace.csv")
 
     val persistedPremises = temporaryAccommodationPremisesRepository.findByName(premises.name)
     assertThat(persistedPremises).isNotNull
@@ -109,7 +109,7 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "update-ta-bedspace.csv")
+    seedService.seedData(SeedFileType.TEMPORARY_ACCOMMODATION_BEDSPACE, "update-ta-bedspace.csv")
 
     val persistedPremises = temporaryAccommodationPremisesRepository.findByName(premises.name)
     assertThat(persistedPremises).isNotNull

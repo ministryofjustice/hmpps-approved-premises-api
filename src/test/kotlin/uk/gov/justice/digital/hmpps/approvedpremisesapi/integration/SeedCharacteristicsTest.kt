@@ -24,7 +24,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,,temporary-accommodation,room\n",
     )
 
-    seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-missing-name.csv")
+    seedService.seedData(SeedFileType.CHARACTERISTICS, "invalid-characteristics-missing-name.csv")
 
     assertThat(characteristicRepository.count()).isEqualTo(0)
 
@@ -45,7 +45,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,Is the entrance wide?,temporary-accommodation,bar\n",
     )
 
-    seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-unknown-scope.csv")
+    seedService.seedData(SeedFileType.CHARACTERISTICS, "invalid-characteristics-unknown-scope.csv")
 
     assertThat(characteristicRepository.count()).isEqualTo(0)
 
@@ -66,7 +66,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,Is the entrance wide?,temporary-accommodation,\n",
     )
 
-    seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-missing-scope.csv")
+    seedService.seedData(SeedFileType.CHARACTERISTICS, "invalid-characteristics-missing-scope.csv")
 
     assertThat(characteristicRepository.count()).isEqualTo(0)
 
@@ -88,8 +88,8 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "isIap,Is this an IAP?,approved-premises,premises\n",
     )
 
-    seedService.seedData(SeedFileType.characteristics, "valid-characteristics.csv")
-    seedService.seedData(SeedFileType.characteristics, "valid-characteristics.csv")
+    seedService.seedData(SeedFileType.CHARACTERISTICS, "valid-characteristics.csv")
+    seedService.seedData(SeedFileType.CHARACTERISTICS, "valid-characteristics.csv")
 
     val apWideDoorRoom = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
@@ -138,7 +138,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,Is the DOOR wide?,approved-premises,room\n",
     )
 
-    seedService.seedData(SeedFileType.characteristics, "valid-characteristics-update.csv")
+    seedService.seedData(SeedFileType.CHARACTERISTICS, "valid-characteristics-update.csv")
 
     val updatedCharacteristic = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
