@@ -370,8 +370,8 @@ class BookingSearchTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val sortDirection = when (sortOrder) {
-          SortOrder.ascending -> "ascending"
-          SortOrder.descending -> "descending"
+          SortOrder.ASCENDING -> "ascending"
+          SortOrder.DESCENDING -> "descending"
         }
         val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         getSortedBooking(allBookings, bookingSearchSort, sortOrder)
@@ -416,8 +416,8 @@ class BookingSearchTest : IntegrationTestBase() {
   ) {
     givenAUser { userEntity, jwt ->
       val sortDirection = when (sortOrder) {
-        SortOrder.ascending -> "ascending"
-        SortOrder.descending -> "descending"
+        SortOrder.ASCENDING -> "ascending"
+        SortOrder.DESCENDING -> "descending"
       }
       val crns = mutableListOf<String>()
       repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
@@ -462,7 +462,7 @@ class BookingSearchTest : IntegrationTestBase() {
       var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       var expectedResponse = BookingSearchResults(
         10,
-        if (sortOrder == SortOrder.ascending) {
+        if (sortOrder == SortOrder.ASCENDING) {
           bookingSearchResults.results.sortedBy { it.booking.startDate }.sortedBy { it.person.name }.take(10)
         } else {
           bookingSearchResults.results.sortedByDescending { it.booking.startDate }.sortedByDescending { it.person.name }.take(10)
@@ -489,7 +489,7 @@ class BookingSearchTest : IntegrationTestBase() {
       bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       expectedResponse = BookingSearchResults(
         5,
-        if (sortOrder == SortOrder.ascending) {
+        if (sortOrder == SortOrder.ASCENDING) {
           bookingSearchResults.results.sortedBy { it.booking.startDate }.sortedBy { it.person.name }.drop(10)
         } else {
           bookingSearchResults.results.sortedByDescending { it.booking.startDate }.sortedByDescending { it.person.name }.drop(10)
@@ -518,8 +518,8 @@ class BookingSearchTest : IntegrationTestBase() {
   ) {
     givenAUser { userEntity, jwt ->
       val sortDirection = when (sortOrder) {
-        SortOrder.ascending -> "ascending"
-        SortOrder.descending -> "descending"
+        SortOrder.ASCENDING -> "ascending"
+        SortOrder.DESCENDING -> "descending"
       }
       val crns = mutableListOf<String>()
       repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
@@ -564,7 +564,7 @@ class BookingSearchTest : IntegrationTestBase() {
       var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       var expectedResponse = BookingSearchResults(
         10,
-        if (sortOrder == SortOrder.ascending) {
+        if (sortOrder == SortOrder.ASCENDING) {
           bookingSearchResults.results.sortedBy { it.booking.endDate }.sortedBy { it.person.name }.take(10)
         } else {
           bookingSearchResults.results.sortedByDescending { it.booking.endDate }.sortedByDescending { it.person.name }.take(10)
@@ -590,7 +590,7 @@ class BookingSearchTest : IntegrationTestBase() {
       bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       expectedResponse = BookingSearchResults(
         5,
-        if (sortOrder == SortOrder.ascending) {
+        if (sortOrder == SortOrder.ASCENDING) {
           bookingSearchResults.results.sortedBy { it.booking.endDate }.sortedBy { it.person.name }.drop(10)
         } else {
           bookingSearchResults.results.sortedByDescending { it.booking.endDate }.sortedByDescending { it.person.name }.drop(10)
@@ -656,8 +656,8 @@ class BookingSearchTest : IntegrationTestBase() {
   ) {
     givenAUser { userEntity, jwt ->
       val sortDirection = when (sortOrder) {
-        SortOrder.ascending -> "ascending"
-        SortOrder.descending -> "descending"
+        SortOrder.ASCENDING -> "ascending"
+        SortOrder.DESCENDING -> "descending"
       }
       val crns = mutableListOf<String>()
       repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
@@ -694,7 +694,7 @@ class BookingSearchTest : IntegrationTestBase() {
       var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       var expectedResponse = BookingSearchResults(
         10,
-        if (sortOrder == SortOrder.ascending) {
+        if (sortOrder == SortOrder.ASCENDING) {
           bookingSearchResults.results.sortedBy { it.person.name }.take(10)
         } else {
           bookingSearchResults.results.sortedByDescending { it.person.name }.take(10)
@@ -720,7 +720,7 @@ class BookingSearchTest : IntegrationTestBase() {
       bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       expectedResponse = BookingSearchResults(
         5,
-        if (sortOrder == SortOrder.ascending) {
+        if (sortOrder == SortOrder.ASCENDING) {
           bookingSearchResults.results.sortedBy { it.person.name }.drop(10)
         } else {
           bookingSearchResults.results.sortedByDescending { it.person.name }.drop(10)
@@ -1039,7 +1039,7 @@ class BookingSearchTest : IntegrationTestBase() {
     take: Int,
     skip: Int,
   ) {
-    val cases = if (sortOrder == SortOrder.ascending) {
+    val cases = if (sortOrder == SortOrder.ASCENDING) {
       applications.sortedBy { it.name }.drop(skip).take(take).map {
         CaseSummaryFactory()
           .withCrn(it.crn)
@@ -1069,7 +1069,7 @@ class BookingSearchTest : IntegrationTestBase() {
 
   fun <T : Comparable<T>> sortBookings(fn: BookingEntity.() -> T, bookings: MutableList<BookingEntity>, sortOrder: SortOrder) {
     return when (sortOrder) {
-      SortOrder.ascending -> bookings.sortBy { it.fn() }
+      SortOrder.ASCENDING -> bookings.sortBy { it.fn() }
       else -> bookings.sortByDescending { it.fn() }
     }
   }

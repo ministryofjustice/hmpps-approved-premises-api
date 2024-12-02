@@ -47,7 +47,7 @@ class BookingsController(
     page: Int?,
     crnOrName: String?,
   ): ResponseEntity<BookingSearchResults> {
-    val sortOrder = sortOrder ?: SortOrder.ascending
+    val sortOrder = sortOrder ?: SortOrder.ASCENDING
     val sortField = sortField ?: BookingSearchSortField.bookingCreatedAt
 
     val (results, metadata) = bookingSearchService.findBookings(status, sortOrder, sortField, page, crnOrName)
