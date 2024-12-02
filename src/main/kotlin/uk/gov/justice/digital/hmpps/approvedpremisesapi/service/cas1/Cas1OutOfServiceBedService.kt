@@ -264,13 +264,13 @@ class Cas1OutOfServiceBedService(
     pageCriteria: PageCriteria<Cas1OutOfServiceBedSortField>,
   ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> {
     val sortFieldString = when (pageCriteria.sortBy) {
-      Cas1OutOfServiceBedSortField.premisesName -> "p.name"
-      Cas1OutOfServiceBedSortField.roomName -> "r.name"
-      Cas1OutOfServiceBedSortField.bedName -> "b.name"
+      Cas1OutOfServiceBedSortField.PREMISES_NAME -> "p.name"
+      Cas1OutOfServiceBedSortField.ROOM_NAME -> "r.name"
+      Cas1OutOfServiceBedSortField.BED_NAME -> "b.name"
       Cas1OutOfServiceBedSortField.START_DATE -> "d.start_date"
-      Cas1OutOfServiceBedSortField.endDate -> "d.end_date"
-      Cas1OutOfServiceBedSortField.reason -> "oosr.name"
-      Cas1OutOfServiceBedSortField.daysLost -> "(d.end_date - d.start_date)"
+      Cas1OutOfServiceBedSortField.END_DATE -> "d.end_date"
+      Cas1OutOfServiceBedSortField.REASON -> "oosr.name"
+      Cas1OutOfServiceBedSortField.DAYS_LOST -> "(d.end_date - d.start_date)"
     }
 
     val excludePast = !temporality.contains(Temporality.past)

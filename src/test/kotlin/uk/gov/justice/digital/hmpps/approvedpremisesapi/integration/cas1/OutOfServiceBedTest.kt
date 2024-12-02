@@ -602,22 +602,22 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val sortedOutOfServiceBeds = when (sortDirection) {
           SortDirection.ASC -> when (sortField) {
-            Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
-            Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
-            Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
+            Cas1OutOfServiceBedSortField.PREMISES_NAME -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
+            Cas1OutOfServiceBedSortField.ROOM_NAME -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
+            Cas1OutOfServiceBedSortField.BED_NAME -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
             Cas1OutOfServiceBedSortField.START_DATE -> expectedOutOfServiceBeds.sortedBy { it.startDate }
-            Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedBy { it.endDate }
-            Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
-            Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
+            Cas1OutOfServiceBedSortField.END_DATE -> expectedOutOfServiceBeds.sortedBy { it.endDate }
+            Cas1OutOfServiceBedSortField.REASON -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
+            Cas1OutOfServiceBedSortField.DAYS_LOST -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
           }
           SortDirection.DESC -> when (sortField) {
-            Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
-            Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
-            Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
+            Cas1OutOfServiceBedSortField.PREMISES_NAME -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
+            Cas1OutOfServiceBedSortField.ROOM_NAME -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
+            Cas1OutOfServiceBedSortField.BED_NAME -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
             Cas1OutOfServiceBedSortField.START_DATE -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
-            Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
-            Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
-            Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
+            Cas1OutOfServiceBedSortField.END_DATE -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
+            Cas1OutOfServiceBedSortField.REASON -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
+            Cas1OutOfServiceBedSortField.DAYS_LOST -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
           }
         }
 
