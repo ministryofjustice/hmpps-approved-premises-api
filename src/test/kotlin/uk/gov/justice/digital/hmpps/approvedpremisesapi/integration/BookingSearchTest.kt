@@ -781,7 +781,7 @@ class BookingSearchTest : IntegrationTestBase() {
           booking = BookingSearchResultBookingSummary(
             id = booking.id,
             status = when {
-              booking.cancellation != null -> BookingStatus.cancelled
+              booking.cancellation != null -> BookingStatus.CANCELLED
               booking.departure != null -> BookingStatus.departed
               booking.arrival != null -> BookingStatus.ARRIVED
               booking.nonArrival != null -> BookingStatus.notMinusArrived
@@ -829,7 +829,7 @@ class BookingSearchTest : IntegrationTestBase() {
           booking = BookingSearchResultBookingSummary(
             id = booking.id,
             status = when {
-              booking.cancellation != null -> BookingStatus.cancelled
+              booking.cancellation != null -> BookingStatus.CANCELLED
               booking.departure != null -> BookingStatus.departed
               booking.arrival != null -> BookingStatus.ARRIVED
               booking.nonArrival != null -> BookingStatus.notMinusArrived
@@ -876,7 +876,7 @@ class BookingSearchTest : IntegrationTestBase() {
           booking = BookingSearchResultBookingSummary(
             id = booking.id,
             status = when {
-              booking.cancellation != null -> BookingStatus.cancelled
+              booking.cancellation != null -> BookingStatus.CANCELLED
               booking.departure != null -> BookingStatus.departed
               booking.arrival != null -> BookingStatus.ARRIVED
               booking.nonArrival != null -> BookingStatus.notMinusArrived

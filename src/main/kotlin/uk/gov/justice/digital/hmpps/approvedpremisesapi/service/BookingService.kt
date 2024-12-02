@@ -790,7 +790,7 @@ class BookingService(
         otherReason = otherReason,
       ),
     )
-    booking.status = BookingStatus.cancelled
+    booking.status = BookingStatus.CANCELLED
     updateBooking(booking)
     booking.cancellations += cancellationEntity
 
@@ -861,7 +861,7 @@ class BookingService(
         otherReason = null,
       ),
     )
-    booking.status = BookingStatus.cancelled
+    booking.status = BookingStatus.CANCELLED
     updateBooking(booking)
     booking.cancellations += cancellationEntity
 

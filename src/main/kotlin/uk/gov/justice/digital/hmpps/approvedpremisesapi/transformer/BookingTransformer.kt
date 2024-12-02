@@ -101,7 +101,7 @@ class BookingTransformer(
     jpa.nonArrival != null -> BookingStatus.notMinusArrived
     jpa.arrival != null && jpa.departure == null -> BookingStatus.ARRIVED
     jpa.departure != null -> BookingStatus.departed
-    jpa.cancellation != null -> BookingStatus.cancelled
+    jpa.cancellation != null -> BookingStatus.CANCELLED
     jpa.arrival == null && jpa.nonArrival == null -> BookingStatus.awaitingMinusArrival
     else -> throw RuntimeException("Could not determine status for Booking ${jpa.id}")
   }
@@ -116,7 +116,7 @@ class BookingTransformer(
     }
 
     return when {
-      jpa.cancellation != null -> BookingStatus.cancelled
+      jpa.cancellation != null -> BookingStatus.CANCELLED
       jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
       jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
       jpa.arrival != null -> BookingStatus.ARRIVED

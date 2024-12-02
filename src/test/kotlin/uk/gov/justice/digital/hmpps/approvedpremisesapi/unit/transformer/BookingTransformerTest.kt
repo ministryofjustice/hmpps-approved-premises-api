@@ -548,7 +548,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.cancelled,
+        status = BookingStatus.CANCELLED,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           date = LocalDate.parse("2022-08-10"),
@@ -666,7 +666,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.cancelled,
+        status = BookingStatus.CANCELLED,
         cancellation = Cancellation(
           bookingId = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
           notes = null,
