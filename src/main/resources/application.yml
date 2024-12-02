@@ -108,7 +108,7 @@ spring:
 
 springdoc:
   swagger-ui:
-    urls-primary-name: "All CAS"
+    urls-primary-name: "Shared"
 
 server:
   port: 8080
