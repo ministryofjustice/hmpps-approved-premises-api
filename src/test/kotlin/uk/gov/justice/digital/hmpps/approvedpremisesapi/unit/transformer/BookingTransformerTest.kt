@@ -174,7 +174,7 @@ class BookingTransformerTest {
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
     every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
-      type = PersonType.fullPerson,
+      type = PersonType.FULL_PERSON,
       crn = "crn",
       name = "first last",
       dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -206,7 +206,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -284,7 +284,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -331,7 +331,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -391,7 +391,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -461,7 +461,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -533,7 +533,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -651,7 +651,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -793,7 +793,7 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -981,7 +981,7 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -1195,7 +1195,7 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -1410,7 +1410,7 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -1658,7 +1658,7 @@ class BookingTransformerTest {
       Booking(
         id = bookingId,
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -1801,7 +1801,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),
@@ -1901,7 +1901,7 @@ class BookingTransformerTest {
       Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
         person = FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "crn",
           name = "first last",
           dateOfBirth = LocalDate.parse("2022-09-08"),

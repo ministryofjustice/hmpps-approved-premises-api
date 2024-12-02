@@ -545,7 +545,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "${fullPersonCaseSummary.name.forename} ${fullPersonCaseSummary.name.surname}",
                           crn = fullPersonCaseSummary.crn,
-                          personType = PersonType.fullPerson,
+                          personType = PersonType.FULL_PERSON,
                           sex = fullPersonCaseSummary.gender!!,
                           days = 15,
                           bookingId = overlappingBookingSameRoom.id,
@@ -555,7 +555,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "Limited Access Offender",
                           crn = currentRestrictionCaseSummary.crn,
-                          personType = PersonType.restrictedPerson,
+                          personType = PersonType.RESTRICTED_PERSON,
                           days = 5,
                           bookingId = currentRestrictionOverlappingBooking.id,
                           roomId = roomThree.id,
@@ -564,7 +564,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "Limited Access Offender",
                           crn = userExcludedCaseSummary.crn,
-                          personType = PersonType.restrictedPerson,
+                          personType = PersonType.RESTRICTED_PERSON,
                           days = 7,
                           bookingId = userExcludedOverlappingBooking.id,
                           roomId = roomFour.id,
@@ -727,7 +727,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
                           crn = overlappingBookingForBedInPremisesOne.crn,
-                          personType = PersonType.fullPerson,
+                          personType = PersonType.FULL_PERSON,
                           sex = caseSummary.gender!!,
                           days = 15,
                           bookingId = overlappingBookingForBedInPremisesOne.id,
@@ -749,7 +749,7 @@ class BedSearchTest : IntegrationTestBase() {
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
                           crn = overlappingBookingForBedInPremisesTwo.crn,
-                          personType = PersonType.fullPerson,
+                          personType = PersonType.FULL_PERSON,
                           sex = caseSummary.gender!!,
                           days = 7,
                           bookingId = overlappingBookingForBedInPremisesTwo.id,

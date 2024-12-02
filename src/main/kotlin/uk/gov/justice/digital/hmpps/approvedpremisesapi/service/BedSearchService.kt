@@ -233,8 +233,8 @@ class BedSearchService(
   private fun getPersonType(
     personSummaryInfo: PersonSummaryInfoResult,
   ): PersonType = when (personSummaryInfo) {
-    is PersonSummaryInfoResult.Success.Full -> PersonType.fullPerson
-    is PersonSummaryInfoResult.Success.Restricted -> PersonType.restrictedPerson
-    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.unknownPerson
+    is PersonSummaryInfoResult.Success.Full -> PersonType.FULL_PERSON
+    is PersonSummaryInfoResult.Success.Restricted -> PersonType.RESTRICTED_PERSON
+    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.UNKNOWN_PERSON
   }
 }

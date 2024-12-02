@@ -693,7 +693,7 @@ class BedSearchServiceTest {
           TemporaryAccommodationBedSearchResultOverlap(
             name = caseSummary.name.forename,
             sex = caseSummary.gender,
-            personType = PersonType.fullPerson,
+            personType = PersonType.FULL_PERSON,
             crn = overlapBookingsSearchResult.crn,
             days = 7,
             premisesId = overlapBookingsSearchResult.premisesId,

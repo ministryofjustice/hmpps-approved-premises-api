@@ -446,7 +446,7 @@ class ApplicationTest : IntegrationTestBase() {
                   id = application.id,
                   person = UnknownPerson(
                     crn = crn,
-                    type = PersonType.unknownPerson,
+                    type = PersonType.UNKNOWN_PERSON,
                   ),
                   createdAt = application.createdAt.toInstant(),
                   isWomensApplication = null,
@@ -1166,7 +1166,7 @@ class ApplicationTest : IntegrationTestBase() {
               .returnResult()
               .responseBody
 
-            assertThat(result!!.person.type).isEqualTo(PersonType.restrictedPerson)
+            assertThat(result!!.person.type).isEqualTo(PersonType.RESTRICTED_PERSON)
           }
         }
       }

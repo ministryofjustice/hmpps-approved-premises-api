@@ -200,7 +200,7 @@ class PersonTransformerTest {
       assertThat(result is FullPerson).isTrue
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "CRN123",
           name = "Greggory Someone",
           dateOfBirth = LocalDate.parse("1980-09-12"),
@@ -293,7 +293,7 @@ class PersonTransformerTest {
       assertThat(result is FullPerson).isTrue
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "CRN123",
           name = "Greggory Someone",
           dateOfBirth = LocalDate.parse("1980-09-12"),
@@ -386,7 +386,7 @@ class PersonTransformerTest {
       assertThat(result is FullPerson).isTrue
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = "CRN123",
           name = "Greggory Someone",
           dateOfBirth = LocalDate.parse("1980-09-12"),
@@ -537,7 +537,7 @@ class PersonTransformerTest {
 
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = caseSummary.crn,
           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
           dateOfBirth = caseSummary.dateOfBirth,
@@ -601,7 +601,7 @@ class PersonTransformerTest {
 
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = crn,
           name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
           dateOfBirth = probationOffenderDetail.dateOfBirth!!,
@@ -637,7 +637,7 @@ class PersonTransformerTest {
 
       assertThat(result).isEqualTo(
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = crn,
           name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
           dateOfBirth = probationOffenderDetail.dateOfBirth!!,

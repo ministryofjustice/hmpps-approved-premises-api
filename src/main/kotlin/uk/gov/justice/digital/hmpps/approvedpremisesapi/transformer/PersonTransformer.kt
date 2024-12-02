@@ -55,7 +55,7 @@ class PersonTransformer {
         val offenderDetailSummary = personInfoResult.offenderDetailSummary
         val inmateDetail = personInfoResult.inmateDetail
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = offenderDetailSummary.otherIds.crn,
           pncNumber = offenderDetailSummary.otherIds.pncNumber,
           name = "${offenderDetailSummary.firstName} ${offenderDetailSummary.surname}",
@@ -80,12 +80,12 @@ class PersonTransformer {
       }
 
       is PersonInfoResult.Success.Restricted -> RestrictedPerson(
-        type = PersonType.restrictedPerson,
+        type = PersonType.RESTRICTED_PERSON,
         crn = personInfoResult.crn,
       )
 
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
-        type = PersonType.unknownPerson,
+        type = PersonType.UNKNOWN_PERSON,
         crn = personInfoResult.crn,
       )
     }
@@ -96,7 +96,7 @@ class PersonTransformer {
       is PersonSummaryInfoResult.Success.Full -> {
         val caseSummary = personInfoResult.summary
         FullPerson(
-          type = PersonType.fullPerson,
+          type = PersonType.FULL_PERSON,
           crn = personInfoResult.crn,
           name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
           dateOfBirth = caseSummary.dateOfBirth,
@@ -113,12 +113,12 @@ class PersonTransformer {
       }
 
       is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
-        type = PersonType.restrictedPerson,
+        type = PersonType.RESTRICTED_PERSON,
         crn = personInfoResult.crn,
       )
 
       is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> UnknownPerson(
-        type = PersonType.unknownPerson,
+        type = PersonType.UNKNOWN_PERSON,
         crn = personInfoResult.crn,
       )
     }
@@ -136,7 +136,7 @@ class PersonTransformer {
     val probationOffenderDetail = probationOffenderResult.probationOffenderDetail
     val inmateDetail = probationOffenderResult.inmateDetail
     return FullPerson(
-      type = PersonType.fullPerson,
+      type = PersonType.FULL_PERSON,
       crn = probationOffenderDetail.otherIds.crn,
       name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
       dateOfBirth = probationOffenderDetail.dateOfBirth!!,

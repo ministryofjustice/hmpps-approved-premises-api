@@ -190,7 +190,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 FullPerson(
-                  type = PersonType.fullPerson,
+                  type = PersonType.FULL_PERSON,
                   crn = "CRN",
                   name = "James Someone",
                   dateOfBirth = LocalDate.parse("1985-05-05"),

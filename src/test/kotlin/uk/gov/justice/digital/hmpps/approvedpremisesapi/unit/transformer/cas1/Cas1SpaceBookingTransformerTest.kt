@@ -84,7 +84,7 @@ class Cas1SpaceBookingTransformerTest {
 
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
-        PersonType.restrictedPerson,
+        PersonType.RESTRICTED_PERSON,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -250,7 +250,7 @@ class Cas1SpaceBookingTransformerTest {
 
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
-        PersonType.restrictedPerson,
+        PersonType.RESTRICTED_PERSON,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -331,7 +331,7 @@ class Cas1SpaceBookingTransformerTest {
 
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
-        PersonType.restrictedPerson,
+        PersonType.RESTRICTED_PERSON,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
