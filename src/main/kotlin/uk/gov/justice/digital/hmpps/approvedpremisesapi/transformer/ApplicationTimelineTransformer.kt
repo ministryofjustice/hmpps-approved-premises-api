@@ -34,8 +34,8 @@ class ApplicationTimelineTransformer(
       content = domainEventDescriber.getDescription(domainEventSummary),
       createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
       triggerSource = when (domainEventSummary.triggerSource) {
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.USER -> TriggerSourceType.user
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.SYSTEM -> TriggerSourceType.system
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.USER -> TriggerSourceType.USER
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.SYSTEM -> TriggerSourceType.SYSTEM
         null -> null
       },
     )
@@ -44,7 +44,7 @@ class ApplicationTimelineTransformer(
   private fun appealUrlOrNull(domainEventSummary: DomainEventSummary): TimelineEventAssociatedUrl? {
     return if (domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED && domainEventSummary.appealId !== null) {
       TimelineEventAssociatedUrl(
-        TimelineEventUrlType.assessmentAppeal,
+        TimelineEventUrlType.ASSESSMENT_APPEAL,
         appealUrlTemplate.resolve(
           mapOf(
             "applicationId" to domainEventSummary.applicationId.toString(),
@@ -59,14 +59,14 @@ class ApplicationTimelineTransformer(
 
   private fun applicationUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.applicationId?.let {
     TimelineEventAssociatedUrl(
-      TimelineEventUrlType.application,
+      TimelineEventUrlType.APPLICATION,
       applicationUrlTemplate.resolve(mapOf("id" to domainEventSummary.applicationId.toString())),
     )
   }
 
   private fun assessmentUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.assessmentId?.let {
     TimelineEventAssociatedUrl(
-      TimelineEventUrlType.assessment,
+      TimelineEventUrlType.ASSESSMENT,
       assessmentUrlTemplate.resolve(mapOf("id" to domainEventSummary.assessmentId.toString())),
     )
   }
@@ -74,7 +74,7 @@ class ApplicationTimelineTransformer(
   private fun bookingUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.bookingId?.let {
     domainEventSummary.premisesId?.let {
       TimelineEventAssociatedUrl(
-        TimelineEventUrlType.booking,
+        TimelineEventUrlType.BOOKING,
         bookingUrlTemplate.resolve(
           mapOf(
             "premisesId" to domainEventSummary.premisesId.toString(),
@@ -88,7 +88,7 @@ class ApplicationTimelineTransformer(
   private fun cas1SpaceBookingUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.cas1SpaceBookingId?.let {
     domainEventSummary.premisesId?.let {
       TimelineEventAssociatedUrl(
-        TimelineEventUrlType.cas1SpaceBooking,
+        TimelineEventUrlType.CAS1_SPACE_BOOKING,
         cas1SpaceBookingUrlTemplate.resolve(
           mapOf(
             "premisesId" to domainEventSummary.premisesId.toString(),

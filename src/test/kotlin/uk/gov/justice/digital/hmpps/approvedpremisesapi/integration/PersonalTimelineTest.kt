@@ -193,7 +193,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
@@ -206,7 +206,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
@@ -330,7 +330,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
@@ -343,7 +343,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                           createdBy = null,
                           associatedUrls = listOf(
                             TimelineEventAssociatedUrl(
-                              type = TimelineEventUrlType.application,
+                              type = TimelineEventUrlType.APPLICATION,
                               url = "http://frontend/applications/${application.id}",
                             ),
                           ),
@@ -405,7 +405,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         createdBy = null,
                         associatedUrls = listOf(
                           TimelineEventAssociatedUrl(
-                            type = TimelineEventUrlType.application,
+                            type = TimelineEventUrlType.APPLICATION,
                             url = "http://frontend/applications/${offlineApplication.id}",
                           ),
                         ),
@@ -418,7 +418,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
                         createdBy = null,
                         associatedUrls = listOf(
                           TimelineEventAssociatedUrl(
-                            type = TimelineEventUrlType.application,
+                            type = TimelineEventUrlType.APPLICATION,
                             url = "http://frontend/applications/${offlineApplication.id}",
                           ),
                         ),
