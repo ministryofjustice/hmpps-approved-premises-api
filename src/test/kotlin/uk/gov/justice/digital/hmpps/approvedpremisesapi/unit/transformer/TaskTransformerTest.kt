@@ -353,11 +353,11 @@ class TaskTransformerTest {
       )
 
       if (placementType === JpaPlacementType.ROTL) {
-        assertThat(result.placementType).isEqualTo(ApiPlacementType.rotl)
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.ROTL)
       } else if (placementType === JpaPlacementType.ADDITIONAL_PLACEMENT) {
-        assertThat(result.placementType).isEqualTo(ApiPlacementType.additionalPlacement)
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.ADDITIONAL_PLACEMENT)
       } else if (placementType === JpaPlacementType.RELEASE_FOLLOWING_DECISION) {
-        assertThat(result.placementType).isEqualTo(ApiPlacementType.releaseFollowingDecision)
+        assertThat(result.placementType).isEqualTo(ApiPlacementType.RELEASE_FOLLOWING_DECISION)
       }
     }
 

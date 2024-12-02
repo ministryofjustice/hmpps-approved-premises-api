@@ -710,7 +710,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .bodyValue(
         SubmitPlacementApplication(
           translatedDocument = mapOf("thingId" to 123),
-          placementType = PlacementType.additionalPlacement,
+          placementType = PlacementType.ADDITIONAL_PLACEMENT,
           placementDates = placementDates,
         ),
       )

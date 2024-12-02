@@ -166,7 +166,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         emptyList(),
       )
 
@@ -192,7 +192,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         listOf(
           PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
         ),
@@ -222,7 +222,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         listOf(
           PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
         ),
@@ -262,7 +262,7 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
-        PlacementType.releaseFollowingDecision,
+        PlacementType.RELEASE_FOLLOWING_DECISION,
         listOf(
           PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
           PlacementDates(expectedArrival = LocalDate.of(2024, 5, 2), duration = 10),

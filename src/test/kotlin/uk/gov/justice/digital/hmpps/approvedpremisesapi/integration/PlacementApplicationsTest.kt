@@ -597,7 +597,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .bodyValue(
           SubmitPlacementApplication(
             translatedDocument = mapOf("thingId" to 123),
-            placementType = PlacementType.additionalPlacement,
+            placementType = PlacementType.ADDITIONAL_PLACEMENT,
             placementDates = listOf(
               PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -627,7 +627,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -663,7 +663,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -699,7 +699,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -735,7 +735,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
+                placementType = PlacementType.ADDITIONAL_PLACEMENT,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -780,7 +780,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .bodyValue(
                   SubmitPlacementApplication(
                     translatedDocument = mapOf("thingId" to 123),
-                    placementType = PlacementType.additionalPlacement,
+                    placementType = PlacementType.ADDITIONAL_PLACEMENT,
                     placementDates = placementDates,
                   ),
                 )
@@ -883,7 +883,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .bodyValue(
                   SubmitPlacementApplication(
                     translatedDocument = mapOf("thingId" to 123),
-                    placementType = PlacementType.additionalPlacement,
+                    placementType = PlacementType.ADDITIONAL_PLACEMENT,
                     placementDates = placementDates,
                   ),
                 )

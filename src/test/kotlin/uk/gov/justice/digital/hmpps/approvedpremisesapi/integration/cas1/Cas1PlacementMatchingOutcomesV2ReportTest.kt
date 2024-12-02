@@ -355,7 +355,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
@@ -395,7 +395,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH - 1, 31),
@@ -423,7 +423,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH + 1, 2),

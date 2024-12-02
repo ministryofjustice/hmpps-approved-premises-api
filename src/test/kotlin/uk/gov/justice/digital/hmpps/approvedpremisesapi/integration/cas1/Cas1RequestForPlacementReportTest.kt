@@ -80,15 +80,15 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   val standardRFPSubmittedAfterReportingPeriod = StandardRFPSubmittedAfterReportingPeriod()
 
   val placementAppRotlAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.rotl,
+    type = PlacementType.ROTL,
     submittedAt = LocalDateTime.of(2021, 3, 22, 9, 49, 0),
   )
   val placementAppAdditionalAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.additionalPlacement,
+    type = PlacementType.ADDITIONAL_PLACEMENT,
     submittedAt = LocalDateTime.of(2021, 3, 23, 9, 49, 0),
   )
   val placementAppParoleAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.releaseFollowingDecision,
+    type = PlacementType.RELEASE_FOLLOWING_DECISION,
     submittedAt = LocalDateTime.of(2021, 3, 24, 9, 49, 0),
   )
   val placementAppRejectedManager = PlacementAppRejectedManager()
@@ -403,9 +403,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("placement_application:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo(
         when (type) {
-          PlacementType.rotl -> "ROTL"
-          PlacementType.releaseFollowingDecision -> "RELEASE_FOLLOWING_DECISION"
-          PlacementType.additionalPlacement -> "ADDITIONAL_PLACEMENT"
+          PlacementType.ROTL -> "ROTL"
+          PlacementType.RELEASE_FOLLOWING_DECISION -> "RELEASE_FOLLOWING_DECISION"
+          PlacementType.ADDITIONAL_PLACEMENT -> "ADDITIONAL_PLACEMENT"
         },
       )
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
@@ -442,7 +442,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -494,7 +494,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -527,7 +527,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        placementType = PlacementType.ROTL,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),

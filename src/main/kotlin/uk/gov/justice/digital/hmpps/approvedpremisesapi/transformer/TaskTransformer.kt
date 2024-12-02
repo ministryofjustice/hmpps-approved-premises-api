@@ -130,9 +130,9 @@ class TaskTransformer(
   }
 
   private fun getPlacementType(placementType: JpaPlacementType): ApiPlacementType = when (placementType) {
-    JpaPlacementType.ROTL -> ApiPlacementType.rotl
-    JpaPlacementType.ADDITIONAL_PLACEMENT -> ApiPlacementType.additionalPlacement
-    JpaPlacementType.RELEASE_FOLLOWING_DECISION -> ApiPlacementType.releaseFollowingDecision
+    JpaPlacementType.ROTL -> ApiPlacementType.ROTL
+    JpaPlacementType.ADDITIONAL_PLACEMENT -> ApiPlacementType.ADDITIONAL_PLACEMENT
+    JpaPlacementType.RELEASE_FOLLOWING_DECISION -> ApiPlacementType.RELEASE_FOLLOWING_DECISION
   }
 
   private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): TaskStatus = when {

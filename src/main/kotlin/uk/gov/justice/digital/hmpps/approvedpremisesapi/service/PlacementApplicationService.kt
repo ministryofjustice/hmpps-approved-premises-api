@@ -426,9 +426,9 @@ class PlacementApplicationService(
 
   private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {
     return when (apiPlacementType) {
-      ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
-      ApiPlacementType.rotl -> PlacementType.ROTL
-      ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
+      ApiPlacementType.ADDITIONAL_PLACEMENT -> PlacementType.ADDITIONAL_PLACEMENT
+      ApiPlacementType.ROTL -> PlacementType.ROTL
+      ApiPlacementType.RELEASE_FOLLOWING_DECISION -> PlacementType.RELEASE_FOLLOWING_DECISION
     }
   }
 
