@@ -90,7 +90,7 @@ class Cas1OutOfServiceBedTransformerTest {
       id = UUID.randomUUID(),
       updatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres().toInstant(),
       updatedBy = ApprovedPremisesUserFactory().produce(),
-      revisionType = listOf(Cas1OutOfServiceBedRevisionType.created),
+      revisionType = listOf(Cas1OutOfServiceBedRevisionType.CREATED),
     )
 
     every { cas1OutOfServiceBedReasonTransformer.transformJpaToApi(outOfServiceBed.reason) } returns reason
@@ -113,7 +113,7 @@ class Cas1OutOfServiceBedTransformerTest {
     assertThat(result.reason).isEqualTo(reason)
     assertThat(result.daysLostCount).isEqualTo(expectedDaysCount)
     assertThat(result.temporality).isEqualTo(expectedTemporality)
-    assertThat(result.status).isEqualTo(Cas1OutOfServiceBedStatus.active)
+    assertThat(result.status).isEqualTo(Cas1OutOfServiceBedStatus.ACTIVE)
     assertThat(result.referenceNumber).isEqualTo(outOfServiceBed.referenceNumber)
     assertThat(result.notes).isEqualTo(outOfServiceBed.notes)
     assertThat(result.cancellation).isNull()
@@ -163,7 +163,7 @@ class Cas1OutOfServiceBedTransformerTest {
       id = UUID.randomUUID(),
       updatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres().toInstant(),
       updatedBy = ApprovedPremisesUserFactory().produce(),
-      revisionType = listOf(Cas1OutOfServiceBedRevisionType.created),
+      revisionType = listOf(Cas1OutOfServiceBedRevisionType.CREATED),
     )
 
     every { cas1OutOfServiceBedReasonTransformer.transformJpaToApi(outOfServiceBed.reason) } returns reason
@@ -172,7 +172,7 @@ class Cas1OutOfServiceBedTransformerTest {
 
     val result = transformer.transformJpaToApi(outOfServiceBed)
 
-    assertThat(result.status).isEqualTo(Cas1OutOfServiceBedStatus.cancelled)
+    assertThat(result.status).isEqualTo(Cas1OutOfServiceBedStatus.CANCELLED)
     assertThat(result.cancellation).isEqualTo(cancellation)
   }
 }

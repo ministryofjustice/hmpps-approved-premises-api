@@ -35,8 +35,8 @@ class Cas1OutOfServiceBedTransformer(
   )
 
   private fun Cas1OutOfServiceBedEntity.deriveStatus() = when (this.cancellation) {
-    null -> Cas1OutOfServiceBedStatus.active
-    else -> Cas1OutOfServiceBedStatus.cancelled
+    null -> Cas1OutOfServiceBedStatus.ACTIVE
+    else -> Cas1OutOfServiceBedStatus.CANCELLED
   }
 
   private fun Cas1OutOfServiceBedEntity.deriveDaysLost() = Duration
