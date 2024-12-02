@@ -888,8 +888,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun characteristicEntity() =
     characteristicEntityFactory.produceAndPersist {
       withName(randomStringMultiCaseWithNumbers(10))
-      withServiceScope(Characteristic.ServiceScope.star.value)
-      withModelScope(Characteristic.ModelScope.room.value)
+      withServiceScope(Characteristic.ServiceScope.STAR.value)
+      withModelScope(Characteristic.ModelScope.ROOM.value)
       withPropertyName(randomStringMultiCaseWithNumbers(6))
     }
 

@@ -78,8 +78,8 @@ class PremisesTransformerTest {
     val characteristic = Characteristic(
       UUID.randomUUID(),
       "name",
-      Characteristic.ServiceScope.star,
-      Characteristic.ModelScope.premises,
+      Characteristic.ServiceScope.STAR,
+      Characteristic.ModelScope.PREMISES,
       "propertyName",
     )
     every { characteristicTransformer.transformJpaToApi(characteristics[0]) } returns characteristic
