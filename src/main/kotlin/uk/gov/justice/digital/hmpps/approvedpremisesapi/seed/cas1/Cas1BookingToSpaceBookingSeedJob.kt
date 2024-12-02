@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -48,6 +49,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val nonArrivalReasonReasonEntity: NonArrivalReasonRepository,
+  private val environmentService: EnvironmentService,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   id = UUID.randomUUID(),
   requiredHeaders = setOf(
@@ -61,6 +63,12 @@ class Cas1BookingToSpaceBookingSeedJob(
     premisesId = UUID.fromString(columns["premises_id"]!!.trim()),
   )
 
+  override fun preSeed() {
+    if (environmentService.isProd()) {
+      error("Cannot run seed job in prod")
+    }
+  }
+
   override fun processRow(row: Cas1BookingToSpaceBookingSeedCsvRow) {
     transactionTemplate.executeWithoutResult {
       migratePremise(row.premisesId)
@@ -70,6 +78,10 @@ class Cas1BookingToSpaceBookingSeedJob(
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun migratePremise(premisesId: UUID) {
     val premises = approvedPremisesRepository.findByIdOrNull(premisesId) ?: error("Premises with id $premisesId not found")
+
+    if (!premises.supportsSpaceBookings) {
+      error("premise ${premises.name} doesn't support space bookings, can't migrate bookings")
+    }
 
     log.info("Deleting all existing migrated space bookings for premises ${premises.name}")
     val deletedCount = spaceBookingRepository.deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId)

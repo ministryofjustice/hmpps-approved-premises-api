@@ -63,6 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -229,6 +230,7 @@ class SeedService(
           getBean(DepartureReasonRepository::class),
           getBean(MoveOnCategoryRepository::class),
           getBean(NonArrivalReasonRepository::class),
+          getBean(EnvironmentService::class),
         )
 
         SeedFileType.approvedPremisesSpacePlanningDryRun -> Cas1PlanSpacePlanningDryRunSeedJob(
