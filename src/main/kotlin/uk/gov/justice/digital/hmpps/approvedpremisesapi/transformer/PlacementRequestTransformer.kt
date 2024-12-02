@@ -77,7 +77,7 @@ class PlacementRequestTransformer(
 
   fun transformToWithdrawable(jpa: PlacementRequestEntity) = Withdrawable(
     jpa.id,
-    WithdrawableType.placementRequest,
+    WithdrawableType.PLACEMENT_REQUEST,
     listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture())),
   )
 

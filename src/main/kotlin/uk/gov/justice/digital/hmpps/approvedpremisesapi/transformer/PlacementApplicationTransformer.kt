@@ -43,7 +43,7 @@ class PlacementApplicationTransformer(
 
   fun transformToWithdrawable(placementApplication: PlacementApplicationEntity): Withdrawable = Withdrawable(
     placementApplication.id,
-    WithdrawableType.placementApplication,
+    WithdrawableType.PLACEMENT_APPLICATION,
     placementApplication.placementDates.map {
       DatePeriod(it.expectedArrival, it.expectedDeparture())
     },

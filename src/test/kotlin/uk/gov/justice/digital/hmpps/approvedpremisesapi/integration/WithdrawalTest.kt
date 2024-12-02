@@ -1869,20 +1869,20 @@ class WithdrawalTest : IntegrationTestBase() {
 
   fun toWithdrawable(application: ApplicationEntity) = Withdrawable(
     application.id,
-    WithdrawableType.application,
+    WithdrawableType.APPLICATION,
     emptyList(),
   )
 
   fun toWithdrawable(placementRequest: PlacementRequestEntity) = Withdrawable(
     placementRequest.id,
-    WithdrawableType.placementRequest,
+    WithdrawableType.PLACEMENT_REQUEST,
     listOf(toDatePeriod(placementRequest.expectedArrival, placementRequest.duration)),
   )
 
   fun toWithdrawable(placementApplication: PlacementApplicationEntity) =
     Withdrawable(
       placementApplication.id,
-      WithdrawableType.placementApplication,
+      WithdrawableType.PLACEMENT_APPLICATION,
       placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
     )
 
@@ -1896,7 +1896,7 @@ class WithdrawalTest : IntegrationTestBase() {
   fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) =
     Withdrawable(
       spaceBooking.id,
-      WithdrawableType.spaceBooking,
+      WithdrawableType.SPACE_BOOKING,
       listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
     )
 }

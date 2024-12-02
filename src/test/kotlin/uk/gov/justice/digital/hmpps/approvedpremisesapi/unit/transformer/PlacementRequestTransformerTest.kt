@@ -321,7 +321,7 @@ class PlacementRequestTransformerTest {
     assertThat(result).isEqualTo(
       Withdrawable(
         id,
-        WithdrawableType.placementRequest,
+        WithdrawableType.PLACEMENT_REQUEST,
         listOf(
           DatePeriod(
             LocalDate.of(2023, 12, 11),

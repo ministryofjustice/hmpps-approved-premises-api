@@ -13,11 +13,11 @@ class WithdrawableTransformer {
   fun toApi(entity: WithdrawableEntity) = Withdrawable(
     entity.id,
     when (entity.type) {
-      WithdrawableEntityType.Application -> WithdrawableType.application
-      WithdrawableEntityType.PlacementRequest -> WithdrawableType.placementRequest
-      WithdrawableEntityType.PlacementApplication -> WithdrawableType.placementApplication
+      WithdrawableEntityType.Application -> WithdrawableType.APPLICATION
+      WithdrawableEntityType.PlacementRequest -> WithdrawableType.PLACEMENT_REQUEST
+      WithdrawableEntityType.PlacementApplication -> WithdrawableType.PLACEMENT_APPLICATION
       WithdrawableEntityType.Booking -> WithdrawableType.BOOKING
-      WithdrawableEntityType.SpaceBooking -> WithdrawableType.spaceBooking
+      WithdrawableEntityType.SpaceBooking -> WithdrawableType.SPACE_BOOKING
     },
     entity.dates.map { DatePeriod(it.startDate, it.endDate) },
   )
