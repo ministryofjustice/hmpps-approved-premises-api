@@ -180,8 +180,8 @@ enum class PlacementType {
 }
 
 enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
-  ACCEPTED(ApiPlacementApplicationDecision.accepted),
-  REJECTED(ApiPlacementApplicationDecision.rejected),
+  ACCEPTED(ApiPlacementApplicationDecision.ACCEPTED),
+  REJECTED(ApiPlacementApplicationDecision.REJECTED),
 
   /**
    * @deprecated isWithdrawn property supersedes the use of these two values.

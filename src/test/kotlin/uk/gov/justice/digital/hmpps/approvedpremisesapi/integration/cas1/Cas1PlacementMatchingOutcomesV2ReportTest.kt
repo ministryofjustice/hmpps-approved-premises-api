@@ -643,7 +643,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       placementApplicationId = getPlacementApplication(application).id,
       assessorJwt = assessorJwt,
       body = PlacementApplicationDecisionEnvelope(
-        decision = PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecision.ACCEPTED,
         summaryOfChanges = "summary",
         decisionSummary = "decisionSummary",
       ),

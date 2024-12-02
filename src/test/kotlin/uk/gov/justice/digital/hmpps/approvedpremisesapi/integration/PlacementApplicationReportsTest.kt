@@ -757,7 +757,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .header("Authorization", "Bearer $matcherJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(
-          decision = PlacementApplicationDecision.accepted,
+          decision = PlacementApplicationDecision.ACCEPTED,
           summaryOfChanges = "ChangeSummary",
           decisionSummary = "DecisionSummary",
         ),

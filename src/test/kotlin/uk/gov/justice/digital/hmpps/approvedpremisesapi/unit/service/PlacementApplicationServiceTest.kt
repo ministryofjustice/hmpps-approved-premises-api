@@ -338,7 +338,7 @@ class PlacementApplicationServiceTest {
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
-        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted,
+        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.ACCEPTED,
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary accepted",
       )
@@ -412,8 +412,8 @@ class PlacementApplicationServiceTest {
       val updatedApplication = (result as CasResult.Success).value
 
       val expectedDecision = when (decision) {
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted -> PlacementApplicationDecision.ACCEPTED
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.rejected -> PlacementApplicationDecision.REJECTED
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.ACCEPTED -> PlacementApplicationDecision.ACCEPTED
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.REJECTED -> PlacementApplicationDecision.REJECTED
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdraw -> PlacementApplicationDecision.WITHDRAW
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
       }

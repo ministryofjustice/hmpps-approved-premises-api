@@ -395,7 +395,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2021, 3, 24, 15, 20, 0),
-        decision = PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecision.ACCEPTED,
       )
     }
 
@@ -455,7 +455,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2025, 12, 1, 15, 20, 0),
-        decision = PlacementApplicationDecision.rejected,
+        decision = PlacementApplicationDecision.REJECTED,
       )
     }
 

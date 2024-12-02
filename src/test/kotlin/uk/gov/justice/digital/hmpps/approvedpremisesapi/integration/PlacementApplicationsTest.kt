@@ -947,7 +947,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .uri("/placement-applications/${UUID.randomUUID()}/decision")
         .bodyValue(
           PlacementApplicationDecisionEnvelope(
-            decision = PlacementApplicationDecision.accepted,
+            decision = PlacementApplicationDecision.ACCEPTED,
             summaryOfChanges = "ChangeSummary",
             decisionSummary = "DecisionSummary",
           ),
@@ -965,7 +965,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             PlacementApplicationDecisionEnvelope(
-              decision = PlacementApplicationDecision.accepted,
+              decision = PlacementApplicationDecision.ACCEPTED,
               summaryOfChanges = "ChangeSummary",
               decisionSummary = "DecisionSummary",
             ),
@@ -990,7 +990,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 PlacementApplicationDecisionEnvelope(
-                  decision = PlacementApplicationDecision.accepted,
+                  decision = PlacementApplicationDecision.ACCEPTED,
                   summaryOfChanges = "ChangeSummary",
                   decisionSummary = "DecisionSummary",
                 ),
@@ -1018,7 +1018,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   PlacementApplicationDecisionEnvelope(
-                    decision = PlacementApplicationDecision.accepted,
+                    decision = PlacementApplicationDecision.ACCEPTED,
                     summaryOfChanges = "ChangeSummary",
                     decisionSummary = "DecisionSummary",
                   ),
@@ -1042,7 +1042,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 PlacementApplicationDecisionEnvelope(
-                  decision = PlacementApplicationDecision.accepted,
+                  decision = PlacementApplicationDecision.ACCEPTED,
                   summaryOfChanges = "ChangeSummary",
                   decisionSummary = "DecisionSummary",
                 ),
@@ -1071,7 +1071,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   PlacementApplicationDecisionEnvelope(
-                    decision = PlacementApplicationDecision.accepted,
+                    decision = PlacementApplicationDecision.ACCEPTED,
                     summaryOfChanges = "ChangeSummary",
                     decisionSummary = "DecisionSummary",
                   ),
@@ -1107,7 +1107,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                         .header("Authorization", "Bearer $jwt")
                         .bodyValue(
                           PlacementApplicationDecisionEnvelope(
-                            decision = PlacementApplicationDecision.accepted,
+                            decision = PlacementApplicationDecision.ACCEPTED,
                             summaryOfChanges = "ChangeSummary",
                             decisionSummary = "DecisionSummary",
                           ),
@@ -1166,7 +1166,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                         .header("Authorization", "Bearer $jwt")
                         .bodyValue(
                           PlacementApplicationDecisionEnvelope(
-                            decision = PlacementApplicationDecision.rejected,
+                            decision = PlacementApplicationDecision.REJECTED,
                             summaryOfChanges = "ChangeSummary",
                             decisionSummary = "DecisionSummary",
                           ),

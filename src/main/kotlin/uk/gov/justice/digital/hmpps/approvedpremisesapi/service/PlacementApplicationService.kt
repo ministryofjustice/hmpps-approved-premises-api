@@ -389,7 +389,7 @@ class PlacementApplicationService(
       return CasResult.GeneralValidationError("This application has already had a decision set")
     }
 
-    if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.accepted) {
+    if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.ACCEPTED) {
       val placementRequestResult =
         placementRequestService.createPlacementRequestsFromPlacementApplication(
           placementApplicationEntity,
@@ -409,8 +409,8 @@ class PlacementApplicationService(
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
     when (placementApplicationDecisionEnvelope.decision) {
-      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
-      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+      ApiPlacementApplicationDecision.ACCEPTED -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
+      ApiPlacementApplicationDecision.REJECTED -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
       ApiPlacementApplicationDecision.withdraw -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
       ApiPlacementApplicationDecision.withdrawnByPp -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
     }
