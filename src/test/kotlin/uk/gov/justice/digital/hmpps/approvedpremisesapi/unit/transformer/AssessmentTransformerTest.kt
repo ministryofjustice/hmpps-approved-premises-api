@@ -227,7 +227,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE)
     }
 
     @Test
@@ -240,7 +240,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.completed)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.COMPLETED)
     }
 
     @Test
@@ -254,7 +254,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.reallocated)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.REALLOCATED)
     }
 
     @Test
@@ -268,7 +268,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.inProgress)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.IN_PROGRESS)
     }
 
     @Test
@@ -282,7 +282,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
       result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.notStarted)
+      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.NOT_STARTED)
     }
   }
 
@@ -457,7 +457,7 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
       assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
       assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate)
-      assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
+      assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE)
       assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
       assertThat(apiSummary.person).isNotNull
     }

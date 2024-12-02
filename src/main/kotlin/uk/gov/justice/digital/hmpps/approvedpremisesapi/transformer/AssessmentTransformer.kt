@@ -210,20 +210,20 @@ class AssessmentTransformer(
    * and as such changes should be synchronized
    */
   private fun getStatusForApprovedPremisesAssessment(entity: AssessmentEntity) = when {
-    entity.decision !== null -> ApprovedPremisesAssessmentStatus.completed
-    entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.awaitingResponse
-    entity.reallocatedAt != null -> ApprovedPremisesAssessmentStatus.reallocated
-    entity.data != null -> ApprovedPremisesAssessmentStatus.inProgress
-    else -> ApprovedPremisesAssessmentStatus.notStarted
+    entity.decision !== null -> ApprovedPremisesAssessmentStatus.COMPLETED
+    entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE
+    entity.reallocatedAt != null -> ApprovedPremisesAssessmentStatus.REALLOCATED
+    entity.data != null -> ApprovedPremisesAssessmentStatus.IN_PROGRESS
+    else -> ApprovedPremisesAssessmentStatus.NOT_STARTED
   }
 
   private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary): ApprovedPremisesAssessmentStatus {
     return when (ase.status) {
-      DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.completed
-      DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.awaitingResponse
-      DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.inProgress
-      DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.reallocated
-      else -> ApprovedPremisesAssessmentStatus.notStarted
+      DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.COMPLETED
+      DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.AWAITING_RESPONSE
+      DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.IN_PROGRESS
+      DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.REALLOCATED
+      else -> ApprovedPremisesAssessmentStatus.NOT_STARTED
     }
   }
 
