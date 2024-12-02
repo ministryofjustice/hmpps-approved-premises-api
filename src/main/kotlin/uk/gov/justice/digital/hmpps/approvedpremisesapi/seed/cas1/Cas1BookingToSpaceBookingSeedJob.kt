@@ -159,6 +159,8 @@ class Cas1BookingToSpaceBookingSeedJob(
       ),
     )
 
+    domainEventRepository.replaceBookingIdWithSpaceBookingId(bookingId)
+
     log.info("Have migrated booking $bookingId to space booking")
   }
 

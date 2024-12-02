@@ -340,6 +340,84 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking4.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
   }
 
+  @Test
+  fun `Update domain event links from booking to space booking when migrating`() {
+    val premises1 = givenAnApprovedPremises(
+      name = "Premises 1",
+      supportsSpaceBookings = true,
+    )
+    val premises2 = givenAnApprovedPremises(
+      name = "Premises 2",
+      supportsSpaceBookings = true,
+    )
+    val user = givenAUser().first
+
+    val application1 = givenACas1Application(createdByUser = user, eventNumber = "25")
+    val booking1InPremises1 = givenABooking(
+      crn = "CRN1",
+      premises = premises1,
+      application = application1,
+      arrivalDate = LocalDate.of(2024, 5, 1),
+      departureDate = LocalDate.of(2024, 5, 5),
+    )
+    val placementRequest1 = givenAPlacementRequest(
+      application = application1,
+      placementRequestAllocatedTo = user,
+      assessmentAllocatedTo = user,
+      createdByUser = user,
+      booking = booking1InPremises1,
+    ).first
+    val (booking1CreatedByUser) = givenAUser()
+    cas1BookingDomainEventSet.bookingMade(
+      application1,
+      booking1InPremises1,
+      booking1CreatedByUser,
+      placementRequest1,
+    )
+
+    val booking2InPremises2 = givenABooking(
+      crn = "CRN1",
+      premises = premises2,
+      application = application1,
+      arrivalDate = LocalDate.of(2024, 5, 1),
+      departureDate = LocalDate.of(2024, 5, 5),
+    )
+    val placementRequest2 = givenAPlacementRequest(
+      application = application1,
+      placementRequestAllocatedTo = user,
+      assessmentAllocatedTo = user,
+      createdByUser = user,
+      booking = booking2InPremises2,
+    ).first
+    val (booking2CreatedByUser) = givenAUser()
+    cas1BookingDomainEventSet.bookingMade(
+      application1,
+      booking2InPremises2,
+      booking2CreatedByUser,
+      placementRequest2,
+    )
+
+    withCsv(
+      "valid-csv",
+      rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises1.id))),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
+
+    val bookingCreatedDomainEvents = domainEventRepository.findByApplicationId(application1.id)
+    assertThat(bookingCreatedDomainEvents).hasSize(2)
+
+    val premise1SpaceBooking = cas1SpaceBookingTestRepository.findByPremisesId(premises1.id)[0]
+    val booking1CreatedDomainEvent = bookingCreatedDomainEvents.first { it.cas1SpaceBookingId == premise1SpaceBooking.id }
+    assertThat(booking1CreatedDomainEvent.bookingId).isNull()
+    assertThat(booking1CreatedDomainEvent.cas1SpaceBookingId).isEqualTo(premise1SpaceBooking.id)
+
+    assertThat(cas1SpaceBookingTestRepository.findByPremisesId(premises2.id)).isEmpty()
+    val booking2CreatedDomainEvent = bookingCreatedDomainEvents.first { it.bookingId == booking2InPremises2.id }
+    assertThat(booking2CreatedDomainEvent.bookingId).isEqualTo(booking2InPremises2.id)
+    assertThat(booking2CreatedDomainEvent.cas1SpaceBookingId).isNull()
+  }
+
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
