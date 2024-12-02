@@ -256,7 +256,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       withdrawPlacementRequest(
         applicationId = application.id,
         withdrawalDate = LocalDateTime.of(2021, 3, 15, 0, 10, 0),
-        reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+        reason = WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
       )
     }
 

@@ -175,10 +175,10 @@ class PlacementRequestsController(
     val user = userService.getUserForRequest()
 
     val reason = when (body?.reason) {
-      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
-      WithdrawPlacementRequestReason.changeInCircumstances -> PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
-      WithdrawPlacementRequestReason.changeInReleaseDecision -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
+      WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
+      WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
       WithdrawPlacementRequestReason.noCapacityDueToLostBed -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
       WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
       WithdrawPlacementRequestReason.noCapacity -> PlacementRequestWithdrawalReason.NO_CAPACITY

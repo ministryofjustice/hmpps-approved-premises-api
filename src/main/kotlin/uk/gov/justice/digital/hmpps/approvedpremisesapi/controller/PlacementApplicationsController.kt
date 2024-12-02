@@ -113,10 +113,10 @@ class PlacementApplicationsController(
     withdrawPlacementApplication: WithdrawPlacementApplication?,
   ): ResponseEntity<PlacementApplication> {
     val withdrawalReason = when (withdrawPlacementApplication?.reason) {
-      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
-      WithdrawPlacementRequestReason.changeInCircumstances -> PlacementApplicationWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
-      WithdrawPlacementRequestReason.changeInReleaseDecision -> PlacementApplicationWithdrawalReason.CHANGE_IN_RELEASE_DECISION
+      WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementApplicationWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
+      WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION -> PlacementApplicationWithdrawalReason.CHANGE_IN_RELEASE_DECISION
       WithdrawPlacementRequestReason.noCapacityDueToLostBed -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
       WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
       WithdrawPlacementRequestReason.noCapacity -> PlacementApplicationWithdrawalReason.NO_CAPACITY

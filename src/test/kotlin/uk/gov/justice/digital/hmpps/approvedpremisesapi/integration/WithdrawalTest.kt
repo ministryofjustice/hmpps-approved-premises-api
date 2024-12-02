@@ -1126,7 +1126,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             withdrawPlacementApplication(
               placementApplication1,
-              WithdrawPlacementRequestReason.duplicatePlacementRequest,
+              WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
               jwt,
             )
 
@@ -1233,7 +1233,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementApplication(
             placementApplication1,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1304,7 +1304,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementRequest(
             placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1362,7 +1362,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementRequest(
             placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
@@ -1423,7 +1423,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           withdrawPlacementRequest(
             placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
             jwt,
           )
 
