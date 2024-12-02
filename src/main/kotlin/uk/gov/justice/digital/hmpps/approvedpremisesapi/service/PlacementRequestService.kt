@@ -92,9 +92,9 @@ class PlacementRequestService(
         PlacementRequestSortField.createdAt -> "created_at"
         PlacementRequestSortField.expectedArrival -> "expected_arrival"
         PlacementRequestSortField.duration -> "duration"
-        PlacementRequestSortField.requestType -> "request_type"
-        PlacementRequestSortField.personName -> "person_name"
-        PlacementRequestSortField.personRisksTier -> "person_risks_tier"
+        PlacementRequestSortField.REQUEST_TYPE -> "request_type"
+        PlacementRequestSortField.PERSON_NAME -> "person_name"
+        PlacementRequestSortField.PERSON_RISKS_TIER -> "person_risks_tier"
       },
     )
 
