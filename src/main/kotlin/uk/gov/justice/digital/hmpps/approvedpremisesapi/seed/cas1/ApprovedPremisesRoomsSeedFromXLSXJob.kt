@@ -104,19 +104,19 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   }
 
   private fun createOrUpdateRooms(rooms: MutableList<RoomEntity>): MutableList<RoomEntity> {
-    rooms.forEachIndexed { index, it ->
-      var room = roomRepository.findByCode(it.code!!)
+    rooms.forEachIndexed { index, room ->
+      var persistedRoom = roomRepository.findByCode(room.code!!)
 
-      if (room == null) {
-        roomRepository.save(it)
-        log.info("Created new room ${it.id} with code ${it.code} and name ${it.name} in premise ${it.premises.name}.")
-        log.info("Added characteristic(s) ${it.characteristics.joinToString()} to room code ${it.code}.")
-      } else {
-        rooms[index] = room
-        room.characteristics.clear()
-        room.characteristics.addAll(it.characteristics)
+      if (persistedRoom == null) {
         roomRepository.save(room)
+        log.info("Created new room ${room.id} with code ${room.code} and name ${room.name} in premise ${room.premises.name}.")
         log.info("Added characteristic(s) ${room.characteristics.joinToString()} to room code ${room.code}.")
+      } else {
+        rooms[index] = persistedRoom
+        persistedRoom.characteristics.clear()
+        persistedRoom.characteristics.addAll(room.characteristics)
+        roomRepository.save(persistedRoom)
+        log.info("Added characteristic(s) ${persistedRoom.characteristics.joinToString()} to room code ${persistedRoom.code}.")
       }
     }
     return rooms
