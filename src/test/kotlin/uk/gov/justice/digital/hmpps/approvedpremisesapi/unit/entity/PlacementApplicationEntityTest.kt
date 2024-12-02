@@ -12,10 +12,10 @@ class PlacementApplicationEntityTest {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "ACCEPTED,accepted",
-      "REJECTED,rejected",
-      "WITHDRAW,withdraw",
-      "WITHDRAWN_BY_PP,withdrawnByPp",
+      "ACCEPTED,ACCEPTED",
+      "REJECTED,REJECTED",
+      "WITHDRAW,WITHDRAW",
+      "WITHDRAWN_BY_PP,WITHDRAWN_BY_PP",
     ],
   )
   fun `PlacementApplicationDecision#apiValue converts to the API enum values correctly`(decision: PlacementApplicationDecision, apiDecision: ApiPlacementApplicationDecision) {
@@ -25,10 +25,10 @@ class PlacementApplicationEntityTest {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "accepted,ACCEPTED",
-      "rejected,REJECTED",
-      "withdraw,WITHDRAW",
-      "withdrawnByPp,WITHDRAWN_BY_PP",
+      "ACCEPTED,ACCEPTED",
+      "REJECTED,REJECTED",
+      "WITHDRAW,WITHDRAW",
+      "WITHDRAWN_BY_PP,WITHDRAWN_BY_PP",
     ],
   )
   fun `PlacementApplicationDecision#valueOf gets the enum value from the API value`(apiDecision: ApiPlacementApplicationDecision, decision: PlacementApplicationDecision) {
@@ -38,16 +38,16 @@ class PlacementApplicationEntityTest {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "DUPLICATE_PLACEMENT_REQUEST,duplicatePlacementRequest",
-      "ALTERNATIVE_PROVISION_IDENTIFIED,alternativeProvisionIdentified",
-      "WITHDRAWN_BY_PP,withdrawnByPP",
-      "CHANGE_IN_CIRCUMSTANCES,changeInCircumstances",
-      "CHANGE_IN_RELEASE_DECISION,changeInReleaseDecision",
-      "NO_CAPACITY_DUE_TO_LOST_BED,noCapacityDueToLostBed",
-      "NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,noCapacityDueToPlacementPrioritisation",
-      "NO_CAPACITY,noCapacity",
-      "ERROR_IN_PLACEMENT_REQUEST,errorInPlacementRequest",
-      "RELATED_APPLICATION_WITHDRAWN,relatedApplicationWithdrawn",
+      "DUPLICATE_PLACEMENT_REQUEST,DUPLICATE_PLACEMENT_REQUEST",
+      "ALTERNATIVE_PROVISION_IDENTIFIED,ALTERNATIVE_PROVISION_IDENTIFIED",
+      "WITHDRAWN_BY_PP,WITHDRAWN_BY_PP",
+      "CHANGE_IN_CIRCUMSTANCES,CHANGE_IN_CIRCUMSTANCES",
+      "CHANGE_IN_RELEASE_DECISION,CHANGE_IN_RELEASE_DECISION",
+      "NO_CAPACITY_DUE_TO_LOST_BED,NO_CAPACITY_DUE_TO_LOST_BED",
+      "NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION",
+      "NO_CAPACITY,NO_CAPACITY",
+      "ERROR_IN_PLACEMENT_REQUEST,ERROR_IN_PLACEMENT_REQUEST",
+      "RELATED_APPLICATION_WITHDRAWN,RELATED_APPLICATION_WITHDRAWN",
     ],
   )
   fun `PlacementApplicationWithdrawalReason#apiValue converts to the API enum values correctly`(withdrawalReason: PlacementApplicationWithdrawalReason, apiReason: WithdrawPlacementRequestReason) {
@@ -57,16 +57,16 @@ class PlacementApplicationEntityTest {
   @ParameterizedTest
   @CsvSource(
     value = [
-      "DUPLICATE_PLACEMENT_REQUEST,duplicatePlacementRequest",
-      "ALTERNATIVE_PROVISION_IDENTIFIED,alternativeProvisionIdentified",
-      "WITHDRAWN_BY_PP,withdrawnByPP",
-      "CHANGE_IN_CIRCUMSTANCES,changeInCircumstances",
-      "CHANGE_IN_RELEASE_DECISION,changeInReleaseDecision",
-      "NO_CAPACITY_DUE_TO_LOST_BED,noCapacityDueToLostBed",
-      "NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,noCapacityDueToPlacementPrioritisation",
-      "NO_CAPACITY,noCapacity",
-      "ERROR_IN_PLACEMENT_REQUEST,errorInPlacementRequest",
-      "RELATED_APPLICATION_WITHDRAWN,relatedApplicationWithdrawn",
+      "DUPLICATE_PLACEMENT_REQUEST,DUPLICATE_PLACEMENT_REQUEST",
+      "ALTERNATIVE_PROVISION_IDENTIFIED,ALTERNATIVE_PROVISION_IDENTIFIED",
+      "WITHDRAWN_BY_PP,WITHDRAWN_BY_PP",
+      "CHANGE_IN_CIRCUMSTANCES,CHANGE_IN_CIRCUMSTANCES",
+      "CHANGE_IN_RELEASE_DECISION,CHANGE_IN_RELEASE_DECISION",
+      "NO_CAPACITY_DUE_TO_LOST_BED,NO_CAPACITY_DUE_TO_LOST_BED",
+      "NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION",
+      "NO_CAPACITY,NO_CAPACITY",
+      "ERROR_IN_PLACEMENT_REQUEST,ERROR_IN_PLACEMENT_REQUEST",
+      "RELATED_APPLICATION_WITHDRAWN,RELATED_APPLICATION_WITHDRAWN",
     ],
   )
   fun `PlacementApplicationWithdrawalReason#valueOf gets the enum value from the API value`(withdrawalReason: PlacementApplicationWithdrawalReason, apiReason: WithdrawPlacementRequestReason) {
