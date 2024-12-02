@@ -223,7 +223,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withOriginalDepartureDate(LocalDate.parse(departedAtDateOnly))
       withPremises(bed.room.premises)
       withStaffKeyWorkerCode("KEYWORKERSTAFFCODE")
-      withStatus(BookingStatus.arrived)
+      withStatus(BookingStatus.ARRIVED)
       withBed(bed)
       withServiceName(serviceName)
     }

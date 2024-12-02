@@ -58,7 +58,7 @@ class BookingSearchTransformerTest {
         .withBookingStatus(BookingStatus.notMinusArrived),
       TestBookingSearchResult()
         .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.arrived),
+        .withBookingStatus(BookingStatus.ARRIVED),
       TestBookingSearchResult()
         .withBookingStatus(BookingStatus.departed),
       TestBookingSearchResult()

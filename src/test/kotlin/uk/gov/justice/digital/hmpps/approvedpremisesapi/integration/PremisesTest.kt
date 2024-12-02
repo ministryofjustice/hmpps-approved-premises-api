@@ -2081,7 +2081,7 @@ class PremisesTest {
           .jsonPath("$.bookings[1].departureDate").isEqualTo(bookings[1].departureDate.toString())
           .jsonPath("$.bookings[1].person.crn").isEqualTo(bookings[1].crn)
           .jsonPath("$.bookings[1].bed.id").isEqualTo(bookings[1].bed!!.id.toString())
-          .jsonPath("$.bookings[1].status").isEqualTo(BookingStatus.arrived.value)
+          .jsonPath("$.bookings[1].status").isEqualTo(BookingStatus.ARRIVED.value)
           .jsonPath("$.bookings[2].id").isEqualTo(bookings[2].id.toString())
           .jsonPath("$.bookings[2].arrivalDate").isEqualTo(bookings[2].arrivalDate.toString())
           .jsonPath("$.bookings[2].departureDate").isEqualTo(bookings[2].departureDate.toString())

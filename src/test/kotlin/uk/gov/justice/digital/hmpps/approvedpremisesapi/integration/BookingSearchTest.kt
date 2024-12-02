@@ -230,7 +230,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withPremises(bed.room.premises)
                 withCrn(offenderDetails.otherIds.crn)
                 withBed(bed)
-                withStatus(BookingStatus.arrived)
+                withStatus(BookingStatus.ARRIVED)
                 withServiceName(ServiceName.temporaryAccommodation)
               }
               val arrival = arrivalEntityFactory.produceAndPersist {
@@ -783,7 +783,7 @@ class BookingSearchTest : IntegrationTestBase() {
             status = when {
               booking.cancellation != null -> BookingStatus.cancelled
               booking.departure != null -> BookingStatus.departed
-              booking.arrival != null -> BookingStatus.arrived
+              booking.arrival != null -> BookingStatus.ARRIVED
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.PROVISIONAL
@@ -831,7 +831,7 @@ class BookingSearchTest : IntegrationTestBase() {
             status = when {
               booking.cancellation != null -> BookingStatus.cancelled
               booking.departure != null -> BookingStatus.departed
-              booking.arrival != null -> BookingStatus.arrived
+              booking.arrival != null -> BookingStatus.ARRIVED
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.PROVISIONAL
@@ -878,7 +878,7 @@ class BookingSearchTest : IntegrationTestBase() {
             status = when {
               booking.cancellation != null -> BookingStatus.cancelled
               booking.departure != null -> BookingStatus.departed
-              booking.arrival != null -> BookingStatus.arrived
+              booking.arrival != null -> BookingStatus.ARRIVED
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.PROVISIONAL

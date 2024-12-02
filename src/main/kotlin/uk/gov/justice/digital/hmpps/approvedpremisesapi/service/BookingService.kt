@@ -664,7 +664,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
-    booking.status = BookingStatus.arrived
+    booking.status = BookingStatus.ARRIVED
     updateBooking(booking)
 
     booking.arrivals += arrivalEntity
@@ -703,7 +703,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
-    booking.status = BookingStatus.arrived
+    booking.status = BookingStatus.ARRIVED
     updateBooking(booking)
 
     booking.arrivals += arrivalEntity

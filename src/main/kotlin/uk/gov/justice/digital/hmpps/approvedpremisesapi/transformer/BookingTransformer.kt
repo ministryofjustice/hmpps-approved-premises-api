@@ -99,7 +99,7 @@ class BookingTransformer(
 
   private fun determineApprovedPremisesStatus(jpa: BookingEntity) = when {
     jpa.nonArrival != null -> BookingStatus.notMinusArrived
-    jpa.arrival != null && jpa.departure == null -> BookingStatus.arrived
+    jpa.arrival != null && jpa.departure == null -> BookingStatus.ARRIVED
     jpa.departure != null -> BookingStatus.departed
     jpa.cancellation != null -> BookingStatus.cancelled
     jpa.arrival == null && jpa.nonArrival == null -> BookingStatus.awaitingMinusArrival
@@ -119,7 +119,7 @@ class BookingTransformer(
       jpa.cancellation != null -> BookingStatus.cancelled
       jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
       jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
-      jpa.arrival != null -> BookingStatus.arrived
+      jpa.arrival != null -> BookingStatus.ARRIVED
       jpa.nonArrival != null -> BookingStatus.notMinusArrived
       jpa.confirmation != null -> BookingStatus.CONFIRMED
       else -> BookingStatus.PROVISIONAL

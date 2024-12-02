@@ -43,11 +43,11 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
           withMoveOnCategory(moveOnCategoryEntityFactory.produceAndPersist())
         }.toMutableList()
 
-        assertBookingStatus(booking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking, BookingStatus.ARRIVED, ServiceName.temporaryAccommodation)
 
         migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
 
-        assertBookingStatus(booking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking, BookingStatus.ARRIVED, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -133,8 +133,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.arrived, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, BookingStatus.ARRIVED, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, BookingStatus.ARRIVED, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -177,7 +177,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         assertBookingStatus(departedBooking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
         assertBookingStatus(departedBooking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(arrivedBooking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(arrivedBooking, BookingStatus.ARRIVED, ServiceName.temporaryAccommodation)
         assertBookingStatus(confirmedBooking, BookingStatus.CONFIRMED, ServiceName.temporaryAccommodation)
         assertBookingStatus(provisionalBooking, BookingStatus.PROVISIONAL, ServiceName.temporaryAccommodation)
       }

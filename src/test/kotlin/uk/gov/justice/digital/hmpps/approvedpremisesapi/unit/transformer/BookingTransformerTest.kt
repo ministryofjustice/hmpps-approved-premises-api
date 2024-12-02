@@ -476,7 +476,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.arrived,
+        status = BookingStatus.ARRIVED,
         arrival = Arrival(
           bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
           arrivalDate = LocalDate.parse("2022-08-10"),
