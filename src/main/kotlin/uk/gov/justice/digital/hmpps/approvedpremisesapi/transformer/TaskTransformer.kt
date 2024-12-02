@@ -136,21 +136,21 @@ class TaskTransformer(
   }
 
   private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): TaskStatus = when {
-    entity.data.isNullOrEmpty() -> TaskStatus.notStarted
-    entity.decision !== null -> TaskStatus.complete
-    else -> TaskStatus.inProgress
+    entity.data.isNullOrEmpty() -> TaskStatus.NOT_STARTED
+    entity.decision !== null -> TaskStatus.COMPLETE
+    else -> TaskStatus.IN_PROGRESS
   }
 
   private fun getAssessmentStatus(entity: AssessmentEntity): TaskStatus = when {
-    entity.data.isNullOrEmpty() -> TaskStatus.notStarted
-    entity.decision !== null -> TaskStatus.complete
+    entity.data.isNullOrEmpty() -> TaskStatus.NOT_STARTED
+    entity.decision !== null -> TaskStatus.COMPLETE
     (entity.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION -> TaskStatus.infoRequested
-    else -> TaskStatus.inProgress
+    else -> TaskStatus.IN_PROGRESS
   }
 
   private fun getPlacementRequestStatus(entity: PlacementRequestEntity): TaskStatus = when {
-    entity.booking !== null -> TaskStatus.complete
-    else -> TaskStatus.notStarted
+    entity.booking !== null -> TaskStatus.COMPLETE
+    else -> TaskStatus.NOT_STARTED
   }
 
   private fun transformUserOrNull(userEntity: UserEntity?): ApprovedPremisesUser? {

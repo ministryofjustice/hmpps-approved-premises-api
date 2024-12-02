@@ -165,7 +165,7 @@ class TaskTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(assessment.id)
-      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
+      assertThat(result.status).isEqualTo(TaskStatus.NOT_STARTED)
       assertThat(result.taskType).isEqualTo(TaskType.ASSESSMENT)
       assertThat(result.applicationId).isEqualTo(application.id)
       assertThat(result.dueDate).isEqualTo(assessment.dueAt!!.toLocalDate())
@@ -191,7 +191,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.inProgress)
+      assertThat(result.status).isEqualTo(TaskStatus.IN_PROGRESS)
     }
 
     @Test
@@ -212,7 +212,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.status).isEqualTo(TaskStatus.COMPLETE)
       assertThat(result.outcome).isEqualTo(apiDecision)
       assertThat(result.outcomeRecordedAt).isEqualTo(submittedAt.toInstant())
     }
@@ -321,7 +321,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
+      assertThat(result.status).isEqualTo(TaskStatus.NOT_STARTED)
       assertThat(result.id).isEqualTo(placementApplication.id)
       assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.releaseType).isEqualTo(releaseType)
@@ -373,7 +373,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.inProgress)
+      assertThat(result.status).isEqualTo(TaskStatus.IN_PROGRESS)
     }
 
     @Test
@@ -393,7 +393,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.status).isEqualTo(TaskStatus.COMPLETE)
       assertThat(result.outcome).isEqualTo(decision.apiValue)
       assertThat(result.outcomeRecordedAt).isEqualTo(decisionMadeAt.toInstant())
     }
@@ -442,7 +442,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.notStarted)
+      assertThat(result.status).isEqualTo(TaskStatus.NOT_STARTED)
       assertThat(result.id).isEqualTo(placementRequest.id)
       assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.personName).isEqualTo("First Last")
@@ -479,7 +479,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.status).isEqualTo(TaskStatus.COMPLETE)
       assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.MATCHED)
       assertThat(result.outcomeRecordedAt).isEqualTo(booking.createdAt.toInstant())
     }
