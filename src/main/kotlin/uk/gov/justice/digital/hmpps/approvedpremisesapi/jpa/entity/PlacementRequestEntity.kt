@@ -260,11 +260,11 @@ data class PlacementRequestEntity(
     val bookingNotMades = this.bookingNotMades
 
     if (bookingNotMades.size > 0) {
-      return Pair(bookingNotMades.last().createdAt, PlacementRequestTaskOutcome.unableToMatch)
+      return Pair(bookingNotMades.last().createdAt, PlacementRequestTaskOutcome.UNABLE_TO_MATCH)
     }
 
     if (this.hasActiveBooking()) {
-      return Pair(this.booking!!.createdAt, PlacementRequestTaskOutcome.matched)
+      return Pair(this.booking!!.createdAt, PlacementRequestTaskOutcome.MATCHED)
     }
 
     return Pair(null, null)

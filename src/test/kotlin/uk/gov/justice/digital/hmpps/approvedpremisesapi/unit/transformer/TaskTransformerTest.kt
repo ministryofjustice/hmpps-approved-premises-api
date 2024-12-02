@@ -480,7 +480,7 @@ class TaskTransformerTest {
       )
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
-      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.matched)
+      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.MATCHED)
       assertThat(result.outcomeRecordedAt).isEqualTo(booking.createdAt.toInstant())
     }
 
@@ -501,7 +501,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(placementRequest.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
       )
 
-      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.unableToMatch)
+      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.UNABLE_TO_MATCH)
       assertThat(result.outcomeRecordedAt).isEqualTo(bookingNotMade.createdAt.toInstant())
     }
 

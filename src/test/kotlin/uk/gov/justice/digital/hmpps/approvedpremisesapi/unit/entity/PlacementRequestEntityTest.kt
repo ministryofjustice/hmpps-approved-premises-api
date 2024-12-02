@@ -59,7 +59,7 @@ class PlacementRequestEntityTest {
       val (actualOutcomeTimestamp, outcome) = placementRequest.getOutcomeDetails()
 
       assertThat(actualOutcomeTimestamp).isEqualTo(expectedOutcomeTimestamp)
-      assertThat(outcome).isEqualTo(PlacementRequestTaskOutcome.unableToMatch)
+      assertThat(outcome).isEqualTo(PlacementRequestTaskOutcome.UNABLE_TO_MATCH)
     }
 
     @Test
@@ -98,7 +98,7 @@ class PlacementRequestEntityTest {
       val (actualOutcomeTimestamp, outcome) = placementRequest.getOutcomeDetails()
 
       assertThat(actualOutcomeTimestamp).isEqualTo(expectedOutcomeTimestamp)
-      assertThat(outcome).isEqualTo(PlacementRequestTaskOutcome.matched)
+      assertThat(outcome).isEqualTo(PlacementRequestTaskOutcome.MATCHED)
     }
 
     @Test
